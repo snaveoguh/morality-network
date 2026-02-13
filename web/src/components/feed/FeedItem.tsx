@@ -34,7 +34,7 @@ export function FeedItem({ item }: FeedItemProps) {
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Source + Category */}
-          <div className="mb-1.5 flex items-center gap-2 text-xs">
+          <div className="mb-1.5 flex items-center gap-2 text-xs font-comic">
             <span className="font-medium text-[#31F387]">{item.source}</span>
             <span className="text-zinc-600">|</span>
             <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-400">
@@ -43,28 +43,28 @@ export function FeedItem({ item }: FeedItemProps) {
             <span className="text-zinc-600">{timeSince}</span>
           </div>
 
-          {/* Title */}
+          {/* Title — Cooper Black / newspaper style */}
           <a
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="mb-1.5 block text-base font-semibold text-white transition-colors group-hover:text-[#31F387]"
+            className="font-headline mb-1.5 block text-lg text-white transition-colors group-hover:text-[#2F80ED]"
           >
             {item.title}
           </a>
 
-          {/* Description */}
-          <p className="mb-3 line-clamp-2 text-sm text-zinc-400">
+          {/* Description — Comic Neue */}
+          <p className="font-comic mb-3 line-clamp-2 text-sm text-zinc-400">
             {item.description}
           </p>
 
           {/* Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 font-comic">
             <StarRating rating={0} size="sm" count={0} />
 
             <Link
               href={`/entity/${entityHash}`}
-              className="text-xs text-zinc-500 transition-colors hover:text-[#31F387]"
+              className="text-xs text-zinc-500 transition-colors hover:text-[#2F80ED]"
             >
               Discuss
             </Link>

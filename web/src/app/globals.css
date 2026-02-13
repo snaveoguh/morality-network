@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -6,6 +7,8 @@
   --mo-blue: #2F80ED;
   --mo-green: #31F387;
   --mo-red: #D0021B;
+  --font-headline: 'Cooper Black', 'Cooper Std', 'Rockwell', 'Georgia', serif;
+  --font-body: 'Comic Neue', 'Comic Sans MS', cursive;
 }
 
 @theme inline {
@@ -21,6 +24,37 @@
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/* Chaotic newspaper headline font */
+.font-headline {
+  font-family: var(--font-headline);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+/* Comic body font */
+.font-comic {
+  font-family: var(--font-body);
+}
+
+/* Marquee animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+  display: inline-flex;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
 }
 
 /* Scrollbar styling */
@@ -42,4 +76,9 @@ body {
 ::selection {
   background: #2F80ED40;
   color: #ffffff;
+}
+
+/* Stumble page full-bleed */
+.stumble-page {
+  min-height: calc(100vh - 5rem);
 }

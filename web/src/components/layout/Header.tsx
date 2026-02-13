@@ -17,7 +17,7 @@ export function Header() {
             alt="MO"
             className="h-8 w-8"
           />
-          <span className="text-lg font-bold tracking-wider text-white">
+          <span className="font-headline text-lg text-white">
             MO
           </span>
         </Link>
@@ -32,6 +32,12 @@ export function Header() {
             active={pathname === "/leaderboard"}
           >
             Leaderboard
+          </TabLink>
+          <TabLink
+            href="/stumble"
+            active={pathname === "/stumble"}
+          >
+            Stumble
           </TabLink>
         </nav>
 
@@ -58,7 +64,7 @@ function TabLink({
   return (
     <Link
       href={href}
-      className={`rounded-lg px-4 py-2 text-sm font-medium tracking-wide transition-colors ${
+      className={`rounded-lg px-4 py-2 text-sm font-medium tracking-wide transition-colors font-comic ${
         active
           ? "bg-[#2F80ED]/10 text-[#2F80ED]"
           : "text-zinc-400 hover:bg-white/5 hover:text-white"
