@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MO — Permissionless News & Onchain Discussion",
+  title: "pooter world — Permissionless News & Onchain Discussion",
   description:
     "Rate, discuss, and tip news content directly onchain. Censorship-resistant conversations powered by Base.",
   icons: {
