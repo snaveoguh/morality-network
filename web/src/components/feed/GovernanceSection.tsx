@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { GovernanceCard } from "./GovernanceCard";
 import type { Proposal } from "@/lib/governance";
 
@@ -50,9 +51,12 @@ export function GovernanceSection({ proposals }: GovernanceSectionProps) {
             </span>
           )}
         </div>
-        <p className="text-xs text-zinc-500">
-          Tip proposers directly
-        </p>
+        <Link
+          href="/proposals"
+          className="text-xs text-[#2F80ED] transition-colors hover:text-[#2F80ED]/80"
+        >
+          View all &rarr;
+        </Link>
       </div>
 
       {/* Filters */}

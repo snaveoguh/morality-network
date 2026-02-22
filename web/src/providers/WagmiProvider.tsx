@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider as WagmiProviderBase, createConfig, http } from "wagmi";
-import { base, baseSepolia } from "wagmi/chains";
+import { base, baseSepolia, mainnet } from "wagmi/chains";
 import {
   RainbowKitProvider,
   getDefaultConfig,
@@ -14,10 +14,11 @@ import { type ReactNode } from "react";
 const config = getDefaultConfig({
   appName: "MO",
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "demo",
-  chains: [base, baseSepolia],
+  chains: [base, baseSepolia, mainnet],
   transports: {
     [base.id]: http(),
     [baseSepolia.id]: http(),
+    [mainnet.id]: http("https://ethereum-rpc.publicnode.com"),
   },
   ssr: true,
 });

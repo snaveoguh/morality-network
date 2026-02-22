@@ -1,14 +1,34 @@
 // DAO Governance Fetcher
-// Pulls live proposals from Snapshot (off-chain) and onchain Governor contracts via The Graph
+// Pulls live proposals from: Snapshot (off-chain), Nouns (onchain), Nouns Candidates, UK Parliament
+
+import { fetchNounsProposals, type NounsProposal } from "./nouns";
+import {
+  fetchCandidateProposals,
+  type CandidateProposal,
+} from "./nouns-candidates";
+import { fetchAllDivisions, type ParliamentDivision } from "./parliament";
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 export interface Proposal {
   id: string;
   title: string;
   body: string; // truncated description
+  fullBody?: string; // full description for detail view
   proposer: string; // ETH address — tippable!
   dao: string; // display name
   daoLogo: string;
-  status: "active" | "pending" | "closed" | "defeated" | "succeeded" | "queued" | "executed";
+  status:
+    | "active"
+    | "pending"
+    | "closed"
+    | "defeated"
+    | "succeeded"
+    | "queued"
+    | "executed"
+    | "candidate";
   votesFor: number;
   votesAgainst: number;
   votesAbstain: number;
@@ -16,32 +36,78 @@ export interface Proposal {
   startTime: number; // unix timestamp
   endTime: number; // unix timestamp
   link: string; // external link to vote
-  source: "snapshot" | "onchain";
+  source: "snapshot" | "onchain" | "parliament";
   isControversial: boolean; // close vote or high engagement
   chain?: string;
+  proposalNumber?: number; // numeric proposal ID for display
+  totalSupply?: number; // total token supply at snapshot (for quorum context)
+  executionETA?: number; // timestamp for queued proposals
+  targets?: string[]; // contract addresses being called
+  values?: string[]; // ETH values in each call
+  snapshotSpace?: string; // snapshot space id for voting link
+  // Candidate-specific fields
+  candidateSlug?: string;
+  candidateSignatures?: number;
+  candidateThreshold?: number;
+  candidateIsPromotable?: boolean;
+  // Parliament-specific fields
+  chamber?: string; // "Commons" | "Lords"
+  divisionId?: number;
 }
 
 // ============================================================================
-// SNAPSHOT — Off-chain governance (ENS, Aave, Gitcoin, Safe, etc.)
+// SNAPSHOT — Off-chain governance
 // ============================================================================
 
 const SNAPSHOT_GQL = "https://hub.snapshot.org/graphql";
 
 const SNAPSHOT_SPACES = [
-  { id: "ens.eth", name: "ENS DAO", logo: "https://cdn.stamp.fyi/space/ens.eth?w=64" },
-  { id: "uniswapgovernance.eth", name: "Uniswap", logo: "https://cdn.stamp.fyi/space/uniswapgovernance.eth?w=64" },
-  { id: "opcollective.eth", name: "Optimism", logo: "https://cdn.stamp.fyi/space/opcollective.eth?w=64" },
-  { id: "aave.eth", name: "Aave", logo: "https://cdn.stamp.fyi/space/aave.eth?w=64" },
-  { id: "safe.eth", name: "Safe", logo: "https://cdn.stamp.fyi/space/safe.eth?w=64" },
-  { id: "gitcoindao.eth", name: "Gitcoin", logo: "https://cdn.stamp.fyi/space/gitcoindao.eth?w=64" },
-  { id: "arbitrumfoundation.eth", name: "Arbitrum", logo: "https://cdn.stamp.fyi/space/arbitrumfoundation.eth?w=64" },
-  { id: "lido-snapshot.eth", name: "Lido", logo: "https://cdn.stamp.fyi/space/lido-snapshot.eth?w=64" },
+  {
+    id: "ens.eth",
+    name: "ENS DAO",
+    logo: "https://cdn.stamp.fyi/space/ens.eth?w=64",
+  },
+  {
+    id: "uniswapgovernance.eth",
+    name: "Uniswap",
+    logo: "https://cdn.stamp.fyi/space/uniswapgovernance.eth?w=64",
+  },
+  {
+    id: "opcollective.eth",
+    name: "Optimism",
+    logo: "https://cdn.stamp.fyi/space/opcollective.eth?w=64",
+  },
+  {
+    id: "aave.eth",
+    name: "Aave",
+    logo: "https://cdn.stamp.fyi/space/aave.eth?w=64",
+  },
+  {
+    id: "safe.eth",
+    name: "Safe",
+    logo: "https://cdn.stamp.fyi/space/safe.eth?w=64",
+  },
+  {
+    id: "gitcoindao.eth",
+    name: "Gitcoin",
+    logo: "https://cdn.stamp.fyi/space/gitcoindao.eth?w=64",
+  },
+  {
+    id: "arbitrumfoundation.eth",
+    name: "Arbitrum",
+    logo: "https://cdn.stamp.fyi/space/arbitrumfoundation.eth?w=64",
+  },
+  {
+    id: "lido-snapshot.eth",
+    name: "Lido",
+    logo: "https://cdn.stamp.fyi/space/lido-snapshot.eth?w=64",
+  },
 ];
 
 const SNAPSHOT_QUERY = `
   query Proposals($spaces: [String!], $now: Int!) {
     active: proposals(
-      first: 20,
+      first: 30,
       skip: 0,
       where: { space_in: $spaces, state: "active" },
       orderBy: "created",
@@ -85,7 +151,7 @@ const SNAPSHOT_QUERY = `
       votes
     }
     closed: proposals(
-      first: 10,
+      first: 20,
       skip: 0,
       where: { space_in: $spaces, start_gte: $now },
       orderBy: "end",
@@ -109,6 +175,93 @@ const SNAPSHOT_QUERY = `
   }
 `;
 
+// Single proposal query for detail view
+const SNAPSHOT_SINGLE_QUERY = `
+  query Proposal($id: String!) {
+    proposal(id: $id) {
+      id
+      title
+      body
+      author
+      space { id name }
+      state
+      scores_total
+      scores
+      choices
+      quorum
+      start
+      end
+      link
+      votes
+    }
+  }
+`;
+
+// Votes for a single proposal
+const SNAPSHOT_VOTES_QUERY = `
+  query Votes($proposalId: String!) {
+    votes(
+      first: 100,
+      where: { proposal: $proposalId },
+      orderBy: "vp",
+      orderDirection: desc
+    ) {
+      id
+      voter
+      choice
+      vp
+      reason
+      created
+    }
+  }
+`;
+
+function mapSnapshotProposal(p: any): Proposal {
+  const spaceInfo = SNAPSHOT_SPACES.find((s) => s.id === p.space.id);
+  const scores = p.scores || [];
+  const choices = (p.choices || []).map((c: string) => c.toLowerCase());
+
+  const forIdx = choices.findIndex(
+    (c: string) => c.includes("for") || c.includes("yes") || c === "yae"
+  );
+  const againstIdx = choices.findIndex(
+    (c: string) => c.includes("against") || c.includes("no") || c === "nay"
+  );
+  const abstainIdx = choices.findIndex((c: string) => c.includes("abstain"));
+
+  const votesFor = forIdx >= 0 ? scores[forIdx] || 0 : scores[0] || 0;
+  const votesAgainst =
+    againstIdx >= 0 ? scores[againstIdx] || 0 : scores[1] || 0;
+  const votesAbstain = abstainIdx >= 0 ? scores[abstainIdx] || 0 : 0;
+
+  const total = votesFor + votesAgainst;
+  const isControversial =
+    total > 0 &&
+    (Math.abs(votesFor - votesAgainst) / total < 0.2 || p.votes > 500);
+
+  return {
+    id: p.id,
+    title: p.title,
+    body: p.body?.slice(0, 300) || "",
+    fullBody: p.body || "",
+    proposer: p.author,
+    dao: spaceInfo?.name || p.space.name || p.space.id,
+    daoLogo:
+      spaceInfo?.logo || `https://cdn.stamp.fyi/space/${p.space.id}?w=64`,
+    status: mapStatus(p.state),
+    votesFor,
+    votesAgainst,
+    votesAbstain,
+    quorum: p.quorum || undefined,
+    startTime: p.start,
+    endTime: p.end,
+    link: p.link || `https://snapshot.org/#/${p.space.id}/proposal/${p.id}`,
+    source: "snapshot" as const,
+    isControversial,
+    snapshotSpace: p.space.id,
+  };
+}
+
 async function fetchSnapshotProposals(): Promise<Proposal[]> {
   try {
     const now = Math.floor(Date.now() / 1000);
@@ -124,7 +277,7 @@ async function fetchSnapshotProposals(): Promise<Proposal[]> {
           now: thirtyDaysAgo,
         },
       }),
-      next: { revalidate: 120 }, // cache 2 min
+      next: { revalidate: 120 },
     });
 
     if (!res.ok) return [];
@@ -138,7 +291,6 @@ async function fetchSnapshotProposals(): Promise<Proposal[]> {
       ...(data.closed || []).filter((p: any) => p.state === "closed"),
     ];
 
-    // Deduplicate by id
     const seen = new Set<string>();
     const unique = allRaw.filter((p: any) => {
       if (seen.has(p.id)) return false;
@@ -146,44 +298,7 @@ async function fetchSnapshotProposals(): Promise<Proposal[]> {
       return true;
     });
 
-    return unique.map((p: any) => {
-      const spaceInfo = SNAPSHOT_SPACES.find((s) => s.id === p.space.id);
-      const scores = p.scores || [];
-      const choices = (p.choices || []).map((c: string) => c.toLowerCase());
-
-      // Try to map For/Against/Abstain from choices
-      const forIdx = choices.findIndex((c: string) => c.includes("for") || c.includes("yes") || c === "yae");
-      const againstIdx = choices.findIndex((c: string) => c.includes("against") || c.includes("no") || c === "nay");
-      const abstainIdx = choices.findIndex((c: string) => c.includes("abstain"));
-
-      const votesFor = forIdx >= 0 ? scores[forIdx] || 0 : scores[0] || 0;
-      const votesAgainst = againstIdx >= 0 ? scores[againstIdx] || 0 : scores[1] || 0;
-      const votesAbstain = abstainIdx >= 0 ? scores[abstainIdx] || 0 : 0;
-
-      const total = votesFor + votesAgainst;
-      const isControversial =
-        total > 0 &&
-        (Math.abs(votesFor - votesAgainst) / total < 0.2 || p.votes > 500);
-
-      return {
-        id: p.id,
-        title: p.title,
-        body: p.body?.slice(0, 200) || "",
-        proposer: p.author,
-        dao: spaceInfo?.name || p.space.name || p.space.id,
-        daoLogo: spaceInfo?.logo || `https://cdn.stamp.fyi/space/${p.space.id}?w=64`,
-        status: mapStatus(p.state),
-        votesFor,
-        votesAgainst,
-        votesAbstain,
-        quorum: p.quorum || undefined,
-        startTime: p.start,
-        endTime: p.end,
-        link: p.link || `https://snapshot.org/#/${p.space.id}/proposal/${p.id}`,
-        source: "snapshot" as const,
-        isControversial,
-      };
-    });
+    return unique.map(mapSnapshotProposal);
   } catch (error) {
     console.error("Snapshot fetch failed:", error);
     return [];
@@ -191,145 +306,198 @@ async function fetchSnapshotProposals(): Promise<Proposal[]> {
 }
 
 // ============================================================================
-// NOUNS DAO — Onchain governance via The Graph
+// NOUNS ONCHAIN — Convert NounsProposal to unified Proposal
 // ============================================================================
 
-const NOUNS_SUBGRAPH =
-  "https://api.thegraph.com/subgraphs/name/nounsdao/nouns-subgraph";
-
-const NOUNS_QUERY = `
-  query {
-    proposals(first: 15, orderBy: createdTimestamp, orderDirection: desc) {
-      id
-      title
-      description
-      proposer { id }
-      status
-      forVotes
-      againstVotes
-      abstainVotes
-      quorumVotes
-      startBlock
-      endBlock
-      createdTimestamp
-      executionETA
-    }
-  }
-`;
-
-async function fetchNounsProposals(): Promise<Proposal[]> {
-  try {
-    const res = await fetch(NOUNS_SUBGRAPH, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: NOUNS_QUERY }),
-      next: { revalidate: 120 },
-    });
-
-    if (!res.ok) return [];
-    const json = await res.json();
-    const proposals = json.data?.proposals || [];
-
-    return proposals.map((p: any) => {
-      const votesFor = parseInt(p.forVotes || "0");
-      const votesAgainst = parseInt(p.againstVotes || "0");
-      const total = votesFor + votesAgainst;
-      const isControversial =
-        total > 0 && Math.abs(votesFor - votesAgainst) / total < 0.2;
-
-      return {
-        id: `nouns-${p.id}`,
-        title: p.title || `Nouns Proposal #${p.id}`,
-        body: (p.description || "").slice(0, 200),
-        proposer: p.proposer?.id || "0x0000000000000000000000000000000000000000",
-        dao: "Nouns DAO",
-        daoLogo: "https://nouns.wtf/static/media/noggles.7644bfd0.svg",
-        status: mapOnchainStatus(p.status),
-        votesFor,
-        votesAgainst,
-        votesAbstain: parseInt(p.abstainVotes || "0"),
-        quorum: parseInt(p.quorumVotes || "0"),
-        startTime: parseInt(p.createdTimestamp || "0"),
-        endTime: parseInt(p.createdTimestamp || "0") + 7 * 24 * 60 * 60, // ~7 day voting
-        link: `https://nouns.wtf/vote/${p.id}`,
-        source: "onchain" as const,
-        isControversial,
-        chain: "ethereum",
-      };
-    });
-  } catch (error) {
-    console.error("Nouns fetch failed:", error);
-    return [];
+function mapNounsStatus(status: string): Proposal["status"] {
+  switch (status) {
+    case "Active":
+    case "ObjectionPeriod":
+    case "Updatable":
+      return "active";
+    case "Pending":
+      return "pending";
+    case "Succeeded":
+      return "succeeded";
+    case "Queued":
+      return "queued";
+    case "Executed":
+      return "executed";
+    case "Defeated":
+    case "Canceled":
+    case "Expired":
+    case "Vetoed":
+      return "defeated";
+    default:
+      return "closed";
   }
 }
 
+function convertNounsToProposal(p: NounsProposal): Proposal {
+  const total = p.forVotes + p.againstVotes;
+  const isControversial =
+    total > 0 && Math.abs(p.forVotes - p.againstVotes) / total < 0.2;
+
+  return {
+    id: `nouns-${p.id}`,
+    title: p.title,
+    body: p.description?.slice(0, 300) || "",
+    fullBody: p.description || "",
+    proposer: p.proposer,
+    dao: "Nouns DAO",
+    daoLogo: "https://noun.pics/1",
+    status: mapNounsStatus(p.status),
+    votesFor: p.forVotes,
+    votesAgainst: p.againstVotes,
+    votesAbstain: p.abstainVotes,
+    quorum: p.quorumVotes,
+    startTime: 0,
+    endTime: 0,
+    link: `https://nouns.wtf/vote/${p.id}`,
+    source: "onchain",
+    isControversial,
+    chain: "ethereum",
+    proposalNumber: p.id,
+    totalSupply: p.totalSupply,
+  };
+}
+
 // ============================================================================
-// COMPOUND — Onchain governance via The Graph
+// NOUNS CANDIDATES — Convert CandidateProposal to unified Proposal
 // ============================================================================
 
-const COMPOUND_SUBGRAPH =
-  "https://api.thegraph.com/subgraphs/name/arr00/compound-governance-2";
+function convertCandidateToProposal(c: CandidateProposal): Proposal {
+  return {
+    id: `candidate-${c.proposer}-${c.slug}`,
+    title: c.title,
+    body: c.description?.slice(0, 300) || "",
+    fullBody: c.description || "",
+    proposer: c.proposer,
+    dao: "Nouns DAO",
+    daoLogo: "https://noun.pics/1",
+    status: "candidate",
+    votesFor: c.signatureCount,
+    votesAgainst: 0,
+    votesAbstain: 0,
+    quorum: c.requiredThreshold,
+    startTime: c.createdTimestamp,
+    endTime: 0,
+    link: `https://nouns.wtf/candidates/${encodeURIComponent(c.slug)}`,
+    source: "onchain",
+    isControversial: false,
+    chain: "ethereum",
+    candidateSlug: c.slug,
+    candidateSignatures: c.signatureCount,
+    candidateThreshold: c.requiredThreshold,
+    candidateIsPromotable: c.isPromotable,
+  };
+}
 
-const COMPOUND_QUERY = `
-  query {
-    proposals(first: 10, orderBy: startBlock, orderDirection: desc) {
-      id
-      description
-      proposer { id }
-      status
-      forVotes
-      againstVotes
-      abstainVotes
-      startBlock
-      endBlock
-    }
-  }
-`;
+// ============================================================================
+// UK PARLIAMENT — Convert ParliamentDivision to unified Proposal
+// ============================================================================
 
-async function fetchCompoundProposals(): Promise<Proposal[]> {
+function convertDivisionToProposal(d: ParliamentDivision): Proposal {
+  const total = d.ayeCount + d.noeCount;
+  const isControversial =
+    total > 0 && Math.abs(d.ayeCount - d.noeCount) / total < 0.2;
+
+  return {
+    id: `parliament-${d.house.toLowerCase()}-${d.id}`,
+    title: d.title,
+    body: "",
+    proposer: "",
+    dao: "UK Parliament",
+    daoLogo: "",
+    status: "closed",
+    votesFor: d.ayeCount,
+    votesAgainst: d.noeCount,
+    votesAbstain: d.abstentionCount,
+    startTime: Math.floor(new Date(d.date).getTime() / 1000),
+    endTime: Math.floor(new Date(d.date).getTime() / 1000),
+    link:
+      d.house === "Commons"
+        ? `https://votes.parliament.uk/votes/commons/division/${d.id}`
+        : `https://votes.parliament.uk/votes/lords/division/${d.id}`,
+    source: "parliament",
+    isControversial,
+    chamber: d.house,
+    divisionId: d.id,
+  };
+}
+
+// ============================================================================
+// SINGLE PROPOSAL DETAIL — For /proposals/[id] page
+// ============================================================================
+
+export interface SnapshotVote {
+  voter: string;
+  support: number;
+  votes: number;
+  reason: string;
+}
+
+export interface ProposalDetail extends Proposal {
+  onchainVotes: SnapshotVote[];
+}
+
+export async function fetchProposalById(
+  proposalId: string
+): Promise<ProposalDetail | null> {
   try {
-    const res = await fetch(COMPOUND_SUBGRAPH, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: COMPOUND_QUERY }),
-      next: { revalidate: 120 },
-    });
+    const [proposalRes, votesRes] = await Promise.all([
+      fetch(SNAPSHOT_GQL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: SNAPSHOT_SINGLE_QUERY,
+          variables: { id: proposalId },
+        }),
+        next: { revalidate: 60 },
+      }),
+      fetch(SNAPSHOT_GQL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: SNAPSHOT_VOTES_QUERY,
+          variables: { proposalId },
+        }),
+        next: { revalidate: 60 },
+      }),
+    ]);
 
-    if (!res.ok) return [];
-    const json = await res.json();
-    const proposals = json.data?.proposals || [];
+    if (!proposalRes.ok) return null;
+    const proposalJson = await proposalRes.json();
+    const p = proposalJson.data?.proposal;
+    if (!p) return null;
 
-    return proposals.map((p: any) => {
-      const desc = p.description || "";
-      const title = desc.split("\n")[0]?.slice(0, 120) || `Compound Proposal #${p.id}`;
-      const votesFor = parseFloat(p.forVotes || "0") / 1e18;
-      const votesAgainst = parseFloat(p.againstVotes || "0") / 1e18;
-      const total = votesFor + votesAgainst;
+    const base = mapSnapshotProposal(p);
 
-      return {
-        id: `compound-${p.id}`,
-        title,
-        body: desc.slice(0, 200),
-        proposer: p.proposer?.id || "0x0000000000000000000000000000000000000000",
-        dao: "Compound",
-        daoLogo: "https://cdn.stamp.fyi/space/comp-vote.eth?w=64",
-        status: mapOnchainStatus(p.status),
-        votesFor: Math.round(votesFor),
-        votesAgainst: Math.round(votesAgainst),
-        votesAbstain: Math.round(parseFloat(p.abstainVotes || "0") / 1e18),
-        startTime: 0,
-        endTime: 0,
-        link: `https://compound.finance/governance/proposals/${p.id}`,
-        source: "onchain" as const,
-        isControversial: total > 0 && Math.abs(votesFor - votesAgainst) / total < 0.2,
-        chain: "ethereum",
-      };
-    });
+    let onchainVotes: SnapshotVote[] = [];
+    if (votesRes.ok) {
+      const votesJson = await votesRes.json();
+      const rawVotes = votesJson.data?.votes || [];
+      onchainVotes = rawVotes.map((v: any) => ({
+        voter: v.voter || "",
+        support: typeof v.choice === "number" ? v.choice : 1,
+        votes: v.vp || 0,
+        reason: v.reason || "",
+      }));
+    }
+
+    return { ...base, onchainVotes };
   } catch (error) {
-    console.error("Compound fetch failed:", error);
-    return [];
+    console.error("Proposal detail fetch failed:", error);
+    return null;
   }
 }
+
+// Keep old export name for backwards compat
+export { fetchProposalById as fetchNounsProposalById };
+export type {
+  SnapshotVote as NounsVote,
+  ProposalDetail as NounsProposalDetail,
+};
 
 // ============================================================================
 // AGGREGATOR — Fetch all sources, merge, sort, dedupe
@@ -338,8 +506,9 @@ async function fetchCompoundProposals(): Promise<Proposal[]> {
 export async function fetchAllProposals(): Promise<Proposal[]> {
   const results = await Promise.allSettled([
     fetchSnapshotProposals(),
-    fetchNounsProposals(),
-    fetchCompoundProposals(),
+    fetchNounsProposals(10).then((ps) => ps.map(convertNounsToProposal)),
+    fetchCandidateProposals().then((cs) => cs.map(convertCandidateToProposal)),
+    fetchAllDivisions().then((ds) => ds.map(convertDivisionToProposal)),
   ]);
 
   const all: Proposal[] = [];
@@ -349,14 +518,22 @@ export async function fetchAllProposals(): Promise<Proposal[]> {
     }
   }
 
-  // Sort: active first, then by end time (soonest ending first), then recent
+  // Sort: active/candidate first, then by end time, then recent
   all.sort((a, b) => {
-    const statusOrder = { active: 0, pending: 1, queued: 2, succeeded: 3, closed: 4, executed: 5, defeated: 6 };
-    const aOrder = statusOrder[a.status] ?? 4;
-    const bOrder = statusOrder[b.status] ?? 4;
+    const statusOrder: Record<string, number> = {
+      active: 0,
+      candidate: 1,
+      pending: 2,
+      queued: 3,
+      succeeded: 4,
+      closed: 5,
+      executed: 6,
+      defeated: 7,
+    };
+    const aOrder = statusOrder[a.status] ?? 5;
+    const bOrder = statusOrder[b.status] ?? 5;
     if (aOrder !== bOrder) return aOrder - bOrder;
 
-    // Active proposals: soonest ending first
     if (a.status === "active" && b.status === "active") {
       return a.endTime - b.endTime;
     }
@@ -398,27 +575,6 @@ function mapStatus(state: string): Proposal["status"] {
     case "queued":
       return "queued";
     case "executed":
-      return "executed";
-    default:
-      return "closed";
-  }
-}
-
-function mapOnchainStatus(status: string): Proposal["status"] {
-  switch (status?.toUpperCase()) {
-    case "ACTIVE":
-      return "active";
-    case "PENDING":
-      return "pending";
-    case "CANCELED":
-    case "DEFEATED":
-    case "EXPIRED":
-      return "defeated";
-    case "SUCCEEDED":
-      return "succeeded";
-    case "QUEUED":
-      return "queued";
-    case "EXECUTED":
       return "executed";
     default:
       return "closed";

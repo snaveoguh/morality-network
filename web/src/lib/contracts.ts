@@ -356,3 +356,174 @@ export enum EntityType {
   ADDRESS = 2,
   CONTRACT = 3,
 }
+
+// ============================================================================
+// NOUNS TOKEN (Ethereum mainnet)
+// ============================================================================
+
+export const NOUNS_TOKEN_ADDRESS = "0x9C8fF314C9Bc7F6e59A9d9225Fb22946427eDC03" as Address;
+
+// ============================================================================
+// PROPOSAL VOTING — Signal votes on DAO proposals
+// Update after deployment
+// ============================================================================
+
+export const PROPOSAL_VOTING_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
+
+export const PROPOSAL_VOTING_ABI = [
+  {
+    type: "function",
+    name: "castVote",
+    inputs: [
+      { name: "dao", type: "string" },
+      { name: "proposalId", type: "string" },
+      { name: "support", type: "uint8" },
+      { name: "reason", type: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "getProposalVotes",
+    inputs: [
+      { name: "dao", type: "string" },
+      { name: "proposalId", type: "string" },
+    ],
+    outputs: [
+      { name: "forVotes", type: "uint256" },
+      { name: "againstVotes", type: "uint256" },
+      { name: "abstainVotes", type: "uint256" },
+      { name: "totalVoters", type: "uint256" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getVote",
+    inputs: [
+      { name: "dao", type: "string" },
+      { name: "proposalId", type: "string" },
+      { name: "voter", type: "address" },
+    ],
+    outputs: [
+      { name: "support", type: "uint8" },
+      { name: "reason", type: "string" },
+      { name: "timestamp", type: "uint256" },
+      { name: "voted", type: "bool" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "event",
+    name: "VoteCast",
+    inputs: [
+      { name: "proposalKey", type: "bytes32", indexed: true },
+      { name: "voter", type: "address", indexed: true },
+      { name: "support", type: "uint8", indexed: false },
+      { name: "isNounHolder", type: "bool", indexed: false },
+      { name: "reason", type: "string", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "RefundIssued",
+    inputs: [
+      { name: "voter", type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
+] as const;
+
+// ============================================================================
+// PREDICTION MARKET — Parimutuel betting on DAO proposals
+// Oracle = actual onchain vote result. Winners take the pot.
+// Update after deployment
+// ============================================================================
+
+export const PREDICTION_MARKET_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
+
+export const PREDICTION_MARKET_ABI = [
+  {
+    type: "function",
+    name: "stake",
+    inputs: [
+      { name: "dao", type: "string" },
+      { name: "proposalId", type: "string" },
+      { name: "isFor", type: "bool" },
+    ],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "claim",
+    inputs: [
+      { name: "dao", type: "string" },
+      { name: "proposalId", type: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "getMarket",
+    inputs: [
+      { name: "dao", type: "string" },
+      { name: "proposalId", type: "string" },
+    ],
+    outputs: [
+      { name: "forPool", type: "uint256" },
+      { name: "againstPool", type: "uint256" },
+      { name: "forStakers", type: "uint256" },
+      { name: "againstStakers", type: "uint256" },
+      { name: "forOddsBps", type: "uint256" },
+      { name: "againstOddsBps", type: "uint256" },
+      { name: "outcome", type: "uint8" },
+      { name: "exists", type: "bool" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getPosition",
+    inputs: [
+      { name: "dao", type: "string" },
+      { name: "proposalId", type: "string" },
+      { name: "user", type: "address" },
+    ],
+    outputs: [
+      { name: "forStake", type: "uint256" },
+      { name: "againstStake", type: "uint256" },
+      { name: "claimed", type: "bool" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "event",
+    name: "StakePlaced",
+    inputs: [
+      { name: "proposalKey", type: "bytes32", indexed: true },
+      { name: "staker", type: "address", indexed: true },
+      { name: "isFor", type: "bool", indexed: false },
+      { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "MarketResolved",
+    inputs: [
+      { name: "proposalKey", type: "bytes32", indexed: true },
+      { name: "outcome", type: "uint8", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "WinningsClaimed",
+    inputs: [
+      { name: "proposalKey", type: "bytes32", indexed: true },
+      { name: "staker", type: "address", indexed: true },
+      { name: "payout", type: "uint256", indexed: false },
+    ],
+  },
+] as const;

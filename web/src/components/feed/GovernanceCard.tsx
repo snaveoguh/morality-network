@@ -76,14 +76,12 @@ export function GovernanceCard({ proposal }: GovernanceCardProps) {
       </div>
 
       {/* Title */}
-      <a
-        href={proposal.link}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href={`/proposals/${encodeURIComponent(proposal.id)}`}
         className="mb-2 block text-base font-semibold text-white transition-colors group-hover:text-[#2F80ED]"
       >
         {proposal.title}
-      </a>
+      </Link>
 
       {/* Description snippet */}
       {proposal.body && (
