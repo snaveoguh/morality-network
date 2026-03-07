@@ -18,8 +18,12 @@ export interface ArticleContent {
   relatedSources: FeedItem[];
   /** Contextual subheadline generated for this specific story */
   subheadline: string;
+  /** English companion line for non-English stories */
+  subheadlineEnglish?: string | null;
   /** Editorial body paragraphs grounded in this story's specific context */
   editorialBody: string[];
+  /** English companion paragraphs for non-English stories */
+  editorialBodyEnglish?: string[];
   /** Compact multi-source wire summary */
   wireSummary: string | null;
   /** Source bias context note */
@@ -46,6 +50,9 @@ const SOURCE_CONTEXT_CACHE = new Map<string, { summary: string; expiresAt: numbe
 const CONTEXT_CACHE_TTL_MS = 30 * 60 * 1000;
 const CONTEXT_FETCH_TIMEOUT_MS = 8_000;
 const MAX_RELATED_CONTEXT_FETCH = 3;
+const ENGLISH_TRANSLATION_CACHE = new Map<string, { text: string; expiresAt: number }>();
+const TRANSLATION_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+const TRANSLATION_TIMEOUT_MS = 5_000;
 
 // ============================================================================
 // RELATED ARTICLE FINDER — richer matching than headline-only overlap
@@ -200,11 +207,22 @@ export async function generateEditorial(
   const biasContext = generateBiasContext(primary, related);
   const tags = deriveTags(primary, storyContext);
 
+  let subheadlineEnglish: string | null = null;
+  let editorialBodyEnglish: string[] | undefined;
+
+  if (lang.isNonLatinHeavy) {
+    const translated = await translateBlocksToEnglish([subheadline, ...editorialBody]);
+    subheadlineEnglish = translated[0] || null;
+    editorialBodyEnglish = translated.slice(1);
+  }
+
   return {
     primary,
     relatedSources: related,
     subheadline,
+    subheadlineEnglish,
     editorialBody,
+    editorialBodyEnglish,
     wireSummary,
     biasContext,
     tags,
@@ -776,6 +794,76 @@ function detectLanguageProfile(primary: FeedItem, context: StoryContext): Langua
 
 function containsCjk(text: string): boolean {
   return /[\u3040-\u30FF\u31F0-\u31FF\u4E00-\u9FFF]/.test(text);
+}
+
+async function translateBlocksToEnglish(texts: string[]): Promise<string[]> {
+  const translated = await Promise.all(texts.map((text) => translateToEnglish(text)));
+  return translated.map((value, index) => value || texts[index]);
+}
+
+async function translateToEnglish(input: string): Promise<string | null> {
+  const text = cleanSnippet(input);
+  if (!text) return null;
+  if (!/[^\x00-\x7F]/.test(text)) return text;
+
+  const now = Date.now();
+  const cached = ENGLISH_TRANSLATION_CACHE.get(text);
+  if (cached && cached.expiresAt > now) {
+    return cached.text;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TRANSLATION_TIMEOUT_MS);
+
+  try {
+    const url = new URL("https://translate.googleapis.com/translate_a/single");
+    url.searchParams.set("client", "gtx");
+    url.searchParams.set("sl", "auto");
+    url.searchParams.set("tl", "en");
+    url.searchParams.set("dt", "t");
+    url.searchParams.set("q", text.slice(0, 1800));
+
+    const res = await fetch(url.toString(), {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "PooterWorld/1.0 (+https://pooter.world)",
+      },
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json() as unknown;
+    const translated = parseGoogleTranslatePayload(data);
+    if (!translated) return null;
+
+    ENGLISH_TRANSLATION_CACHE.set(text, {
+      text: translated,
+      expiresAt: now + TRANSLATION_CACHE_TTL_MS,
+    });
+
+    return translated;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function parseGoogleTranslatePayload(payload: unknown): string | null {
+  if (!Array.isArray(payload) || !Array.isArray(payload[0])) return null;
+
+  const chunks = payload[0] as unknown[];
+  const out: string[] = [];
+  for (const chunk of chunks) {
+    if (!Array.isArray(chunk)) continue;
+    const piece = chunk[0];
+    if (typeof piece === "string") {
+      out.push(piece);
+    }
+  }
+
+  const merged = out.join("").trim();
+  return merged.length > 0 ? merged : null;
 }
 
 // ============================================================================

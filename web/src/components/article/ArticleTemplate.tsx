@@ -23,7 +23,7 @@ export function ArticleTemplate({
   entityHash,
 }: ArticleTemplateProps) {
   const { isConnected } = useAccount();
-  const { primary, relatedSources, subheadline, editorialBody, wireSummary, biasContext, tags, contextSnippets } =
+  const { primary, relatedSources, subheadline, subheadlineEnglish, editorialBody, editorialBodyEnglish, wireSummary, biasContext, tags, contextSnippets } =
     article;
 
   return (
@@ -60,6 +60,12 @@ export function ArticleTemplate({
         <p className="mt-3 font-body-serif text-base italic leading-relaxed text-[var(--ink-light)] sm:text-lg">
           {subheadline}
         </p>
+        {subheadlineEnglish &&
+          subheadlineEnglish.trim() !== subheadline.trim() && (
+            <p className="mt-1 font-body-serif text-sm leading-relaxed text-[var(--ink-faint)] sm:text-base">
+              {subheadlineEnglish}
+            </p>
+          )}
 
         {/* Dateline — monospace ruled */}
         <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-b border-[var(--rule-light)] py-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
@@ -100,14 +106,21 @@ export function ArticleTemplate({
       {/* ══════════════ ARTICLE BODY ══════════════ */}
       <article className="mb-8">
         {editorialBody.map((paragraph, i) => (
-          <p
-            key={i}
-            className={`mb-4 font-body-serif text-base leading-[1.8] text-[var(--ink-light)] ${
-              i === 0 ? "drop-cap text-lg" : ""
-            }`}
-          >
-            {paragraph}
-          </p>
+          <div key={i} className="mb-4">
+            <p
+              className={`font-body-serif text-base leading-[1.8] text-[var(--ink-light)] ${
+                i === 0 ? "drop-cap text-lg" : ""
+              }`}
+            >
+              {paragraph}
+            </p>
+            {editorialBodyEnglish?.[i] &&
+              editorialBodyEnglish[i].trim() !== paragraph.trim() && (
+                <p className="mt-1 font-body-serif text-sm leading-relaxed text-[var(--ink-faint)]">
+                  {editorialBodyEnglish[i]}
+                </p>
+              )}
+          </div>
         ))}
       </article>
 
