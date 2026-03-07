@@ -498,6 +498,13 @@ export const PREDICTION_MARKET_ADDRESS = (process.env.NEXT_PUBLIC_PREDICTION_MAR
 export const PREDICTION_MARKET_ABI = [
   {
     type: "function",
+    name: "isDaoResolvable",
+    inputs: [{ name: "dao", type: "string" }],
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "stake",
     inputs: [
       { name: "dao", type: "string" },

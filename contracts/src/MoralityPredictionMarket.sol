@@ -9,8 +9,18 @@ pragma solidity ^0.8.24;
 /// @dev Uses a parimutuel pool model: total pot is split among winners
 ///      proportional to their stake. No AMM/orderbook needed.
 
+/// @notice Governor-like interface (Governor Bravo/DAOs with `state(uint256)`).
+interface IProposalState {
+    function state(uint256 proposalId) external view returns (uint8);
+}
+
 contract MoralityPredictionMarket {
     enum Outcome { UNRESOLVED, FOR, AGAINST, VOID }
+
+    struct DaoResolverConfig {
+        address governor;
+        bool enabled;
+    }
 
     struct Market {
         bytes32 proposalKey;       // keccak256(dao:proposalId)
@@ -34,6 +44,9 @@ contract MoralityPredictionMarket {
     uint256 public protocolFeeBps = 200; // 2% fee on winnings
     uint256 public totalFeesCollected;
 
+    // dao key hash => resolver config
+    mapping(bytes32 => DaoResolverConfig) public daoResolverConfigs;
+
     // proposalKey => Market
     mapping(bytes32 => Market) public markets;
     // proposalKey => user => Position
@@ -42,8 +55,10 @@ contract MoralityPredictionMarket {
     event MarketCreated(bytes32 indexed proposalKey, string dao, string proposalId);
     event StakePlaced(bytes32 indexed proposalKey, address indexed staker, bool isFor, uint256 amount);
     event MarketResolved(bytes32 indexed proposalKey, Outcome outcome);
+    event MarketResolvedFromChain(bytes32 indexed proposalKey, uint8 chainState, Outcome outcome);
     event WinningsClaimed(bytes32 indexed proposalKey, address indexed staker, uint256 payout);
     event MarketVoided(bytes32 indexed proposalKey);
+    event DaoResolverSet(string dao, address indexed governor, bool enabled);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
@@ -64,6 +79,7 @@ contract MoralityPredictionMarket {
         string calldata dao,
         string calldata proposalId
     ) external {
+        require(_isDaoResolvable(dao), "DAO not onchain-resolvable");
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
         require(!markets[key].exists, "Market exists");
 
@@ -96,6 +112,7 @@ contract MoralityPredictionMarket {
         bool isFor
     ) external payable {
         require(msg.value > 0, "Must stake ETH");
+        require(_isDaoResolvable(dao), "DAO not onchain-resolvable");
 
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
 
@@ -137,15 +154,13 @@ contract MoralityPredictionMarket {
     // RESOLUTION — Oracle is the actual DAO vote result
     // ========================================================================
 
-    /// @notice Resolve a market based on the actual DAO vote outcome.
-    ///         Only owner can resolve (reads the blockchain result off-chain
-    ///         and submits it here — trustless verification via proposal status).
+    /// @notice Resolve a market from DAO governor state (fully onchain query).
+    ///         Anyone can trigger once the proposal is in a terminal state.
     function resolve(
         string calldata dao,
-        string calldata proposalId,
-        Outcome outcome
-    ) external onlyOwner {
-        require(outcome == Outcome.FOR || outcome == Outcome.AGAINST || outcome == Outcome.VOID, "Invalid outcome");
+        string calldata proposalId
+    ) external {
+        (Outcome outcome, uint8 chainState) = _resolveOutcomeFromChain(dao, proposalId);
 
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
         Market storage m = markets[key];
@@ -160,6 +175,7 @@ contract MoralityPredictionMarket {
         } else {
             emit MarketResolved(key, outcome);
         }
+        emit MarketResolvedFromChain(key, chainState, outcome);
     }
 
     // ========================================================================
@@ -269,6 +285,69 @@ contract MoralityPredictionMarket {
     function setProtocolFee(uint256 _feeBps) external onlyOwner {
         require(_feeBps <= 1000, "Fee too high"); // max 10%
         protocolFeeBps = _feeBps;
+    }
+
+    /// @notice Configure a DAO to resolve from an onchain governor contract.
+    /// @dev dao should match the UI key used in stake/create (e.g. "nouns", "lil-nouns").
+    function setDaoResolver(string calldata dao, address governor, bool enabled) external onlyOwner {
+        require(bytes(dao).length > 0, "DAO key required");
+        if (enabled) {
+            require(governor != address(0), "Governor required");
+        }
+
+        daoResolverConfigs[keccak256(bytes(dao))] = DaoResolverConfig({
+            governor: governor,
+            enabled: enabled
+        });
+
+        emit DaoResolverSet(dao, governor, enabled);
+    }
+
+    /// @notice Returns whether a DAO key is enabled for onchain resolution.
+    function isDaoResolvable(string calldata dao) external view returns (bool) {
+        return _isDaoResolvable(dao);
+    }
+
+    function _isDaoResolvable(string calldata dao) internal view returns (bool) {
+        DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
+        return cfg.enabled && cfg.governor != address(0);
+    }
+
+    function _resolveOutcomeFromChain(string calldata dao, string calldata proposalId)
+        internal
+        view
+        returns (Outcome outcome, uint8 chainState)
+    {
+        DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
+        require(cfg.enabled && cfg.governor != address(0), "DAO not configured");
+
+        uint256 proposalNumericId = _parseUintStrict(proposalId);
+        chainState = IProposalState(cfg.governor).state(proposalNumericId);
+
+        // Governor Bravo states:
+        // 2=Canceled, 3=Defeated, 4=Succeeded, 5=Queued, 6=Expired, 7=Executed, 8=Vetoed
+        if (chainState == 4 || chainState == 5 || chainState == 7) {
+            return (Outcome.FOR, chainState);
+        }
+        if (chainState == 3 || chainState == 8) {
+            return (Outcome.AGAINST, chainState);
+        }
+        if (chainState == 2 || chainState == 6) {
+            return (Outcome.VOID, chainState);
+        }
+
+        revert("Proposal not final");
+    }
+
+    function _parseUintStrict(string calldata input) internal pure returns (uint256 value) {
+        bytes calldata b = bytes(input);
+        require(b.length > 0, "Proposal ID required");
+
+        for (uint256 i = 0; i < b.length; i++) {
+            uint8 c = uint8(b[i]);
+            require(c >= 48 && c <= 57, "Proposal ID must be numeric");
+            value = (value * 10) + (c - 48);
+        }
     }
 
     function withdrawFees() external onlyOwner {
