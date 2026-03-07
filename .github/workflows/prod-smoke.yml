@@ -1,0 +1,17 @@
+name: Prod Smoke Check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Production Smoke Check
+        run: bash web/scripts/smoke-check.sh https://pooter.world

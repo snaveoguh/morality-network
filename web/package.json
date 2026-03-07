@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "smoke:prod": "bash ./scripts/smoke-check.sh https://pooter.world",
+    "smoke:local": "bash ./scripts/smoke-check.sh http://localhost:3000"
   },
   "dependencies": {
     "@prisma/client": "^7.4.0",
