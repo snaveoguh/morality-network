@@ -7,6 +7,7 @@
     "watch": "node esbuild.config.mjs --watch"
   },
   "dependencies": {
+    "compromise": "^14.15.0",
     "viem": "^2.21.0"
   },
   "devDependencies": {

@@ -8,7 +8,7 @@ let entityCount = 0;
 export interface DetectedEntity {
   element: HTMLElement;
   identifier: string;
-  type: 'ADDRESS' | 'URL' | 'DOMAIN';
+  type: 'ADDRESS' | 'URL' | 'DOMAIN' | 'KEYWORD';
 }
 
 const detected: DetectedEntity[] = [];
@@ -40,6 +40,7 @@ export function scanNode(root: Node): void {
     el.classList.add('pw-highlight');
     el.dataset.pwType = 'URL';
     el.dataset.pwId = href;
+    el.dataset.pwOpenMode = 'modifier';
 
     detected.push({ element: el, identifier: href, type: 'URL' });
     entityCount++;
@@ -95,6 +96,7 @@ function wrapAddresses(textNode: Text): void {
     span.className = 'pw-highlight';
     span.dataset.pwType = 'ADDRESS';
     span.dataset.pwId = match[1];
+    span.dataset.pwOpenMode = 'direct';
     span.textContent = match[1];
     frag.appendChild(span);
 

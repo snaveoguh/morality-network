@@ -51,6 +51,7 @@ export type Message =
   | { type: 'GET_COMMENTS'; entityHash: string; offset: number; limit: number }
   | { type: 'SUBMIT_COMMENT'; entityHash: string; content: string; parentId: number }
   | { type: 'RATE_ENTITY'; entityHash: string; score: number }
+  | { type: 'RATE_WITH_REASON'; entityHash: string; score: number; reason: string }
   | { type: 'TIP_ENTITY'; entityHash: string; amountWei: string }
   | { type: 'TIP_COMMENT'; commentId: number; amountWei: string }
   | { type: 'VOTE_COMMENT'; commentId: number; vote: number }
@@ -64,7 +65,9 @@ export type Message =
   | { type: 'SEND_ETH'; to: string; amountWei: string }
   | { type: 'GET_CURRENT_PAGE_DATA' }
   | { type: 'SET_RPC_URL'; url: string }
-  | { type: 'GET_SETTINGS' };
+  | { type: 'GET_SETTINGS' }
+  // EIP-1193 Provider
+  | { type: 'EIP1193_REQUEST'; method: string; params: unknown[] };
 
 export type MessageResponse =
   | { ok: true; data?: unknown }

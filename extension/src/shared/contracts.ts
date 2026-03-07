@@ -2,11 +2,11 @@ import { type Address } from 'viem';
 
 // Contract addresses — update after deployment to ETH mainnet
 export const CONTRACTS = {
-  registry:    '0x0000000000000000000000000000000000000000' as Address,
-  ratings:     '0x0000000000000000000000000000000000000000' as Address,
-  comments:    '0x0000000000000000000000000000000000000000' as Address,
-  tipping:     '0x0000000000000000000000000000000000000000' as Address,
-  leaderboard: '0x0000000000000000000000000000000000000000' as Address,
+  registry:    '0x2ea7502C4db5B8cfB329d8a9866EB6705b036608' as Address,
+  ratings:     '0xb61bE51E8aEd1360EaA03Eb673F74D66eC4898D7' as Address,
+  comments:    '0x29F66D8b15326cE7232c0277DBc2CbFDaaf93405' as Address,
+  tipping:     '0x622cD30124e24dFFe77c29921bD7622e30d57F8B' as Address,
+  leaderboard: '0x57dc0C9833A124FE39193dC6a554e0Ff37606202' as Address,
 } as const;
 
 export const REGISTRY_ABI = [
@@ -17,8 +17,10 @@ export const REGISTRY_ABI = [
 
 export const RATINGS_ABI = [
   { type: 'function', name: 'rate', inputs: [{ name: 'entityHash', type: 'bytes32' }, { name: 'score', type: 'uint8' }], outputs: [], stateMutability: 'nonpayable' },
+  { type: 'function', name: 'rateWithReason', inputs: [{ name: 'entityHash', type: 'bytes32' }, { name: 'score', type: 'uint8' }, { name: 'reason', type: 'string' }], outputs: [], stateMutability: 'nonpayable' },
   { type: 'function', name: 'getAverageRating', inputs: [{ name: 'entityHash', type: 'bytes32' }], outputs: [{ name: 'avg', type: 'uint256' }, { name: 'count', type: 'uint256' }], stateMutability: 'view' },
   { type: 'function', name: 'getUserRating', inputs: [{ name: 'entityHash', type: 'bytes32' }, { name: 'user', type: 'address' }], outputs: [{ name: 'score', type: 'uint8' }, { name: 'timestamp', type: 'uint256' }], stateMutability: 'view' },
+  { type: 'function', name: 'getRatingReason', inputs: [{ name: 'entityHash', type: 'bytes32' }, { name: 'user', type: 'address' }], outputs: [{ name: 'reason', type: 'string' }, { name: 'timestamp', type: 'uint256' }, { name: 'exists', type: 'bool' }], stateMutability: 'view' },
 ] as const;
 
 export const COMMENTS_ABI = [

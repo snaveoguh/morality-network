@@ -10,6 +10,12 @@ contract MoralityRatings {
         uint256 timestamp;
     }
 
+    struct RatingReason {
+        string reason;
+        uint256 timestamp;
+        bool exists;
+    }
+
     struct EntityRatingStats {
         uint256 totalScore;
         uint256 ratingCount;
@@ -26,15 +32,43 @@ contract MoralityRatings {
     mapping(bytes32 => EntityRatingStats) public entityStats;
     // Track if user has rated (to avoid duplicate entries in raters array)
     mapping(bytes32 => mapping(address => bool)) public hasRated;
+    // entityHash => rater => reason metadata
+    mapping(bytes32 => mapping(address => RatingReason)) public ratingReasons;
+
+    uint256 public constant MAX_REASON_LENGTH = 500;
 
     event Rated(bytes32 indexed entityHash, address indexed rater, uint8 score);
     event RatingUpdated(bytes32 indexed entityHash, address indexed rater, uint8 oldScore, uint8 newScore);
+    event RatedWithReason(bytes32 indexed entityHash, address indexed rater, uint8 score, string reason);
+    event RatingWithReasonUpdated(
+        bytes32 indexed entityHash, address indexed rater, uint8 oldScore, uint8 newScore, string reason
+    );
 
     constructor(address _registry) {
         registry = MoralityRegistry(_registry);
     }
 
     function rate(bytes32 entityHash, uint8 score) external {
+        _rate(entityHash, score);
+    }
+
+    function rateWithReason(bytes32 entityHash, uint8 score, string calldata reason) external {
+        bytes memory reasonBytes = bytes(reason);
+        require(reasonBytes.length > 0, "Reason required");
+        require(reasonBytes.length <= MAX_REASON_LENGTH, "Reason too long");
+
+        (bool updated, uint8 oldScore) = _rate(entityHash, score);
+
+        ratingReasons[entityHash][msg.sender] = RatingReason({reason: reason, timestamp: block.timestamp, exists: true});
+
+        if (updated) {
+            emit RatingWithReasonUpdated(entityHash, msg.sender, oldScore, score, reason);
+        } else {
+            emit RatedWithReason(entityHash, msg.sender, score, reason);
+        }
+    }
+
+    function _rate(bytes32 entityHash, uint8 score) internal returns (bool updated, uint8 oldScore) {
         require(score >= 1 && score <= 5, "Score must be 1-5");
 
         // Auto-register entity if needed — caller can register via registry first for metadata
@@ -42,12 +76,13 @@ contract MoralityRatings {
 
         if (hasRated[entityHash][msg.sender]) {
             // Update existing rating
-            uint8 oldScore = userRatings[entityHash][msg.sender].score;
+            oldScore = userRatings[entityHash][msg.sender].score;
             entityStats[entityHash].totalScore = entityStats[entityHash].totalScore - oldScore + score;
             userRatings[entityHash][msg.sender].score = score;
             userRatings[entityHash][msg.sender].timestamp = block.timestamp;
             entityStats[entityHash].lastUpdated = block.timestamp;
             emit RatingUpdated(entityHash, msg.sender, oldScore, score);
+            updated = true;
         } else {
             // New rating
             userRatings[entityHash][msg.sender] = Rating({
@@ -76,6 +111,15 @@ contract MoralityRatings {
     function getUserRating(bytes32 entityHash, address user) external view returns (uint8 score, uint256 timestamp) {
         Rating memory r = userRatings[entityHash][user];
         return (r.score, r.timestamp);
+    }
+
+    function getRatingReason(bytes32 entityHash, address user)
+        external
+        view
+        returns (string memory reason, uint256 timestamp, bool exists)
+    {
+        RatingReason storage r = ratingReasons[entityHash][user];
+        return (r.reason, r.timestamp, r.exists);
     }
 
     function getRaters(bytes32 entityHash, uint256 offset, uint256 limit) external view returns (address[] memory) {

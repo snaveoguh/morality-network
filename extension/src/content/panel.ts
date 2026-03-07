@@ -1,4 +1,5 @@
 import { shortenAddress, formatEth, timeAgo, computeEntityHash } from '../shared/entity';
+import { deriveTagsFromIdentifier } from '../shared/known-entities';
 import { showToast } from './toast';
 import type { EntityData, CommentData } from '../shared/types';
 import CSS from './styles.css';
@@ -46,6 +47,9 @@ function renderPanel(data: EntityData, comments: CommentData[]): string {
     ? comments.map(c => renderComment(c)).join('')
     : '<div class="pw-empty">No comments yet. Start the conversation.</div>';
 
+  // Build tags from data-pw-tags if available
+  const tagsHtml = data.identifier ? deriveTagsHtml(data.identifier) : '';
+
   const starsHtml = [1, 2, 3, 4, 5].map(i =>
     `<button class="pw-rate-star" data-score="${i}">☆</button>`
   ).join('');
@@ -59,6 +63,7 @@ function renderPanel(data: EntityData, comments: CommentData[]): string {
       <span class="pw-panel-title" title="${data.identifier}">${displayId}</span>
       <button class="pw-panel-close" id="pw-close">×</button>
     </div>
+    ${tagsHtml}
     <div class="pw-panel-stats">
       <div class="pw-stat"><div class="pw-stat-value">${score}</div><div class="pw-stat-label">Score</div></div>
       <div class="pw-stat"><div class="pw-stat-value">${avgRating}</div><div class="pw-stat-label">Rating</div></div>
@@ -68,6 +73,9 @@ function renderPanel(data: EntityData, comments: CommentData[]): string {
     <div class="pw-rate-row">
       ${starsHtml}
       <span class="pw-rate-label">Rate this entity</span>
+    </div>
+    <div class="pw-rate-reason">
+      <input type="text" id="pw-reason" placeholder="Add a reason for your rating (optional)" maxlength="500" />
     </div>
     <div class="pw-tip-row">
       ${tipBtns}
@@ -129,12 +137,13 @@ function wireEvents(): void {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Posting…';
 
-    chrome.runtime.sendMessage(
+      chrome.runtime.sendMessage(
       { type: 'SUBMIT_COMMENT', entityHash: currentEntityHash, content: input.value.trim(), parentId: 0 },
       (response) => {
         if (response?.ok) {
           showToast('Comment posted onchain');
           input.value = '';
+          submitBtn.disabled = true;
           submitBtn.textContent = 'Post';
           refreshComments();
         } else {
@@ -152,11 +161,21 @@ function wireEvents(): void {
       const score = Number((star as HTMLElement).dataset.score);
       if (!currentEntityHash || !score) return;
 
-      chrome.runtime.sendMessage(
-        { type: 'RATE_ENTITY', entityHash: currentEntityHash, score },
-        (response) => {
+      const reasonInput = shadow!.getElementById('pw-reason') as HTMLInputElement | null;
+      const reason = reasonInput?.value?.trim() || '';
+      if (reason.length > 500) {
+        showToast('Reason too long (max 500 chars)', true);
+        return;
+      }
+
+      const msg = reason
+        ? { type: 'RATE_WITH_REASON' as const, entityHash: currentEntityHash, score, reason }
+        : { type: 'RATE_ENTITY' as const, entityHash: currentEntityHash, score };
+
+      chrome.runtime.sendMessage(msg, (response) => {
           if (response?.ok) {
-            showToast(`Rated ${score}/5 onchain`);
+            showToast(`Rated ${score}/5 onchain${reason ? ' with reason' : ''}`);
+            if (reasonInput) reasonInput.value = '';
             // Highlight stars
             shadow!.querySelectorAll('.pw-rate-star').forEach((s, i) => {
               s.textContent = i < score ? '★' : '☆';
@@ -319,11 +338,25 @@ export function closePanel(): void {
 export function setupPanel(): void {
   // Click on any detected entity to open panel
   document.addEventListener('click', (e) => {
-    const target = (e.target as HTMLElement).closest?.('[data-pw-id]') as HTMLElement | null;
+    if (e.defaultPrevented || e.button !== 0) return;
+
+    const clickTarget = e.target as HTMLElement | null;
+    if (!clickTarget) return;
+    if (clickTarget.closest?.('[data-pw-root]')) return;
+    if (window.getSelection()?.type === 'Range') return;
+
+    const target = clickTarget.closest?.('[data-pw-id]') as HTMLElement | null;
     if (!target) return;
 
     const identifier = target.dataset.pwId;
     if (!identifier) return;
+    const openMode = target.dataset.pwOpenMode ?? 'direct';
+
+    // Never hijack normal link navigation.
+    // Use Alt+Click on highlighted links/keywords to open the panel.
+    const anchor = clickTarget.closest?.('a[href]') as HTMLAnchorElement | null;
+    if (anchor && !e.altKey) return;
+    if (openMode === 'modifier' && !e.altKey) return;
 
     e.preventDefault();
     e.stopPropagation();
@@ -334,4 +367,12 @@ export function setupPanel(): void {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closePanel();
   });
+}
+
+function deriveTagsHtml(identifier: string): string {
+  const tags = deriveTagsFromIdentifier(identifier);
+  if (tags.length === 0) return '';
+  return `<div style="display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 16px; border-bottom: 1px solid #27272a;">${
+    tags.map(t => `<span style="background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 2px 8px; font-size: 10px; color: #2F80ED; font-weight: 600;">#${t}</span>`).join('')
+  }</div>`;
 }

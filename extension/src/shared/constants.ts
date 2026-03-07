@@ -1,8 +1,8 @@
-// Chain
-export const CHAIN_ID = 1;
-export const CHAIN_NAME = 'Ethereum Mainnet';
-export const DEFAULT_RPC = 'https://ethereum-rpc.publicnode.com';
-export const FALLBACK_RPC = 'https://eth.llamarpc.com';
+// Chain — Base Sepolia (testnet)
+export const CHAIN_ID = 84532;
+export const CHAIN_NAME = 'Base Sepolia';
+export const DEFAULT_RPC = 'https://sepolia.base.org';
+export const FALLBACK_RPC = 'https://base-sepolia-rpc.publicnode.com';
 
 // UI
 export const BRAND_BLUE = '#2F80ED';
@@ -18,6 +18,9 @@ export const TEXT_MUTED = '#52525b';
 // Limits
 export const MAX_COMMENT_LENGTH = 2000;
 export const MAX_ENTITIES_PER_PAGE = 50;
+export const MAX_KEYWORD_HIGHLIGHTS = 60;
+export const NLP_TEXT_SCAN_LIMIT = 120_000;
+export const NLP_DELAY_MS = 500;
 export const CACHE_TTL_MS = 60_000;
 export const TOOLTIP_DELAY_MS = 200;
 export const OBSERVER_DEBOUNCE_MS = 300;

@@ -24,6 +24,13 @@ async function run() {
       format: 'iife',
       loader: { '.css': 'text' },
     }),
+    // EIP-1193 Provider — IIFE, runs in MAIN world (page context)
+    build({
+      ...commonOptions,
+      entryPoints: ['src/content/provider.ts'],
+      outfile: 'dist/provider.js',
+      format: 'iife',
+    }),
     // Service worker — ESM
     build({
       ...commonOptions,

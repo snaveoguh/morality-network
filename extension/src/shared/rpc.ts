@@ -1,5 +1,5 @@
 import { createPublicClient, createWalletClient, http, type PublicClient, type WalletClient, type Account } from 'viem';
-import { mainnet } from 'viem/chains';
+import { baseSepolia } from 'viem/chains';
 import { DEFAULT_RPC, STORAGE_RPC } from './constants';
 
 let rpcUrl = DEFAULT_RPC;
@@ -24,7 +24,7 @@ export function getRpcUrl(): string {
 export function getPublicClient(): PublicClient {
   if (!publicClient) {
     publicClient = createPublicClient({
-      chain: mainnet,
+      chain: baseSepolia,
       transport: http(rpcUrl),
       batch: { multicall: true },
     });
@@ -35,7 +35,7 @@ export function getPublicClient(): PublicClient {
 export function createWallet(account: Account): WalletClient {
   return createWalletClient({
     account,
-    chain: mainnet,
+    chain: baseSepolia,
     transport: http(rpcUrl),
   });
 }

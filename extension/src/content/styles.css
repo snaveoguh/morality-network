@@ -392,6 +392,34 @@
   color: #52525b;
 }
 
+/* Rate reason input */
+.pw-rate-reason {
+  padding: 4px 16px 8px;
+  border-bottom: 1px solid #27272a;
+  flex-shrink: 0;
+}
+
+.pw-rate-reason input {
+  width: 100%;
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #fafafa;
+  font-size: 11px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.pw-rate-reason input:focus {
+  border-color: #2F80ED;
+}
+
+.pw-rate-reason input::placeholder {
+  color: #52525b;
+}
+
 /* Tip button in panel */
 .pw-tip-row {
   display: flex;
@@ -455,6 +483,18 @@
 
 .pw-highlight:hover {
   border-bottom-color: #2F80ED;
+}
+
+.pw-highlight[data-pw-open-mode="modifier"] {
+  cursor: text;
+}
+
+.pw-highlight-keyword {
+  background: rgba(47, 128, 237, 0.12);
+  border-bottom-style: solid;
+  border-bottom-color: rgba(47, 128, 237, 0.55);
+  border-radius: 2px;
+  padding: 0 1px;
 }
 
 /* Toast notification */
