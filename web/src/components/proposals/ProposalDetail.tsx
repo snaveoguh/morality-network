@@ -333,7 +333,9 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
       {/* ══ SIDEBAR ══ */}
       <div className="space-y-5">
         {/* Prediction market */}
-        {proposal.source === "onchain" && proposal.status !== "candidate" && (
+        {proposal.dao === "Nouns DAO" &&
+          proposal.source === "onchain" &&
+          proposal.status !== "candidate" && (
           <PredictionMarket proposal={proposal} />
         )}
 

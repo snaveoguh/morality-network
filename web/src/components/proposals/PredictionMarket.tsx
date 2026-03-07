@@ -26,6 +26,7 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
   const hasNumericProposalId = Number.isFinite(proposal.proposalNumber);
   const isOnchainProposal = proposal.source === "onchain";
   const isCandidate = proposal.status === "candidate";
+  const isNounsDao = proposal.dao === "Nouns DAO";
 
   const daoKey =
     proposal.dao === "Lil Nouns"
@@ -35,7 +36,7 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
         : proposal.dao.toLowerCase().replace(/\s+/g, "-");
   const proposalId = hasNumericProposalId ? String(proposal.proposalNumber) : "0";
   const isStructurallyEligible =
-    isOnchainProposal && !isCandidate && hasNumericProposalId;
+    isNounsDao && isOnchainProposal && !isCandidate && hasNumericProposalId;
 
   // Check whether this DAO is configured for deterministic onchain resolution.
   const { data: daoResolvableData, isLoading: isDaoResolvableLoading } =
@@ -156,6 +157,8 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
         <p className="mb-3 border border-[var(--rule-light)] px-2 py-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
           {!isOnchainProposal
             ? "Only available for onchain proposals."
+            : !isNounsDao
+              ? "Phase 1: Nouns DAO only."
             : isCandidate
               ? "Candidates are not final-state resolvable onchain."
               : !hasNumericProposalId
