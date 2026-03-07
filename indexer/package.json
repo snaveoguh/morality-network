@@ -1,0 +1,28 @@
+{
+  "name": "pooter-world-indexer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "ponder dev",
+    "start": "ponder start",
+    "codegen": "ponder codegen",
+    "serve": "ponder serve",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "healthcheck": "bash ./scripts/healthcheck.sh",
+    "bootstrap:local": "bash ./scripts/bootstrap-local.sh"
+  },
+  "dependencies": {
+    "@ponder/core": "^0.7.17",
+    "hono": "^4.0.0",
+    "viem": "^2.20.0"
+  },
+  "devDependencies": {
+    "ponder": "^0.16.3",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

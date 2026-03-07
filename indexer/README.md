@@ -45,14 +45,21 @@ LEADERBOARD_ADDRESS=0x57dc0C9833A124FE39193dC6a554e0Ff37606202
 START_BLOCK=<optional>
 ```
 
-3. Generate and run:
+3. Start Postgres + indexer + healthcheck in one command:
 
 ```bash
-npm run codegen
-npm run dev
+npm run bootstrap:local
 ```
 
 Default server port: `42069`
+
+## Utility Scripts
+
+```bash
+npm run db:up         # start postgres container
+npm run db:down       # stop postgres container
+npm run healthcheck   # verify root/health/feed/graphql endpoints
+```
 
 ## Notes
 
