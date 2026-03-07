@@ -50,18 +50,18 @@ export const ERC20_ABI = [
 ] as const;
 
 // Contract addresses
-// Defaults point to local Anvil deployment; override via NEXT_PUBLIC_* env vars.
+// Defaults point to deployed Base Sepolia contracts; override via NEXT_PUBLIC_* env vars.
 export const CONTRACTS = {
   registry: (process.env.NEXT_PUBLIC_REGISTRY_ADDRESS ??
-    "0x5FbDB2315678afecb367f032d93F642f64180aa3") as Address,
+    "0x2ea7502C4db5B8cfB329d8a9866EB6705b036608") as Address,
   ratings: (process.env.NEXT_PUBLIC_RATINGS_ADDRESS ??
-    "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512") as Address,
+    "0xb61bE51E8aEd1360EaA03Eb673F74D66eC4898D7") as Address,
   comments: (process.env.NEXT_PUBLIC_COMMENTS_ADDRESS ??
-    "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0") as Address,
+    "0x29F66D8b15326cE7232c0277DBc2CbFDaaf93405") as Address,
   tipping: (process.env.NEXT_PUBLIC_TIPPING_ADDRESS ??
-    "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9") as Address,
+    "0x622cD30124e24dFFe77c29921bD7622e30d57F8B") as Address,
   leaderboard: (process.env.NEXT_PUBLIC_LEADERBOARD_ADDRESS ??
-    "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707") as Address,
+    "0x57dc0C9833A124FE39193dC6a554e0Ff37606202") as Address,
 } as const;
 
 export const REGISTRY_ABI = [
