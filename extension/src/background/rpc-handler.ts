@@ -1,6 +1,6 @@
 import { getPublicClient } from '../shared/rpc';
 import { CONTRACTS, RATINGS_ABI, COMMENTS_ABI, TIPPING_ABI, LEADERBOARD_ABI } from '../shared/contracts';
-import { computeEntityHash } from '../shared/entity';
+import { computeEntityHashCandidates } from '../shared/entity';
 import { getSourceBias, type SourceBias } from '../shared/bias';
 import { get, set } from './cache';
 import type { EntityData, CommentData, BiasInfo } from '../shared/types';
@@ -23,8 +23,9 @@ function sourceBiasToInfo(sb: SourceBias): BiasInfo {
 }
 
 export async function fetchEntityData(identifier: string): Promise<EntityData> {
-  const entityHash = computeEntityHash(identifier);
-  const cacheKey = `entity:${entityHash}`;
+  const entityHashes = computeEntityHashCandidates(identifier);
+  const primaryEntityHash = entityHashes[0];
+  const cacheKey = `entity:${primaryEntityHash}`;
   const cached = get<EntityData>(cacheKey);
   if (cached) return cached;
 
@@ -36,7 +37,7 @@ export async function fetchEntityData(identifier: string): Promise<EntityData> {
   // If contracts aren't deployed, return empty data with bias only
   if (!isDeployed()) {
     const data: EntityData = {
-      entityHash,
+      entityHash: primaryEntityHash,
       identifier,
       compositeScore: 0,
       avgRating: 0,
@@ -52,28 +53,57 @@ export async function fetchEntityData(identifier: string): Promise<EntityData> {
   try {
     const client = getPublicClient();
 
-    const results = await client.multicall({
-      contracts: [
-        { address: CONTRACTS.leaderboard, abi: LEADERBOARD_ABI, functionName: 'getCompositeScore', args: [entityHash as `0x${string}`] },
-        { address: CONTRACTS.ratings, abi: RATINGS_ABI, functionName: 'getAverageRating', args: [entityHash as `0x${string}`] },
-        { address: CONTRACTS.comments, abi: COMMENTS_ABI, functionName: 'getEntityCommentCount', args: [entityHash as `0x${string}`] },
-        { address: CONTRACTS.tipping, abi: TIPPING_ABI, functionName: 'entityTipTotals', args: [entityHash as `0x${string}`] },
-      ],
-    });
+    const perHashStats = await Promise.all(
+      entityHashes.map(async (entityHash) => {
+        const results = await client.multicall({
+          contracts: [
+            { address: CONTRACTS.leaderboard, abi: LEADERBOARD_ABI, functionName: 'getCompositeScore', args: [entityHash] },
+            { address: CONTRACTS.ratings, abi: RATINGS_ABI, functionName: 'getAverageRating', args: [entityHash] },
+            { address: CONTRACTS.comments, abi: COMMENTS_ABI, functionName: 'getEntityCommentCount', args: [entityHash] },
+            { address: CONTRACTS.tipping, abi: TIPPING_ABI, functionName: 'entityTipTotals', args: [entityHash] },
+          ],
+        });
 
-    const compositeScore = results[0].status === 'success' ? Number(results[0].result) : 0;
-    const ratingResult = results[1].status === 'success' ? results[1].result as [bigint, bigint] : [0n, 0n];
-    const commentCount = results[2].status === 'success' ? Number(results[2].result) : 0;
-    const tipTotal = results[3].status === 'success' ? String(results[3].result) : '0';
+        const compositeScore = results[0].status === 'success' ? Number(results[0].result) : 0;
+        const ratingResult = results[1].status === 'success' ? (results[1].result as [bigint, bigint]) : [0n, 0n];
+        const commentCount = results[2].status === 'success' ? Number(results[2].result) : 0;
+        const tipTotal = results[3].status === 'success' ? BigInt(results[3].result as bigint) : 0n;
+
+        return {
+          compositeScore,
+          avgRating: Number(ratingResult[0]),
+          ratingCount: Number(ratingResult[1]),
+          commentCount,
+          tipTotal,
+        };
+      }),
+    );
+
+    let compositeScore = 0;
+    let ratingCount = 0;
+    let weightedRatingTotal = 0;
+    let commentCount = 0;
+    let tipTotal = 0n;
+
+    for (const stats of perHashStats) {
+      compositeScore = Math.max(compositeScore, stats.compositeScore);
+      ratingCount += stats.ratingCount;
+      weightedRatingTotal += stats.avgRating * stats.ratingCount;
+      commentCount += stats.commentCount;
+      tipTotal += stats.tipTotal;
+    }
+
+    const avgRating =
+      ratingCount > 0 ? Math.round(weightedRatingTotal / ratingCount) : 0;
 
     const data: EntityData = {
-      entityHash,
+      entityHash: primaryEntityHash,
       identifier,
       compositeScore,
-      avgRating: Number(ratingResult[0]),
-      ratingCount: Number(ratingResult[1]),
+      avgRating,
+      ratingCount,
       commentCount,
-      tipTotal,
+      tipTotal: tipTotal.toString(),
       bias,
     };
 
@@ -82,7 +112,7 @@ export async function fetchEntityData(identifier: string): Promise<EntityData> {
   } catch (err) {
     console.error('RPC error fetching entity data:', err);
     return {
-      entityHash,
+      entityHash: primaryEntityHash,
       identifier,
       compositeScore: 0,
       avgRating: 0,

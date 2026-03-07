@@ -96,7 +96,7 @@ function wrapAddresses(textNode: Text): void {
     span.className = 'pw-highlight';
     span.dataset.pwType = 'ADDRESS';
     span.dataset.pwId = match[1];
-    span.dataset.pwOpenMode = 'direct';
+    span.dataset.pwOpenMode = 'modifier';
     span.textContent = match[1];
     frag.appendChild(span);
 

@@ -1,4 +1,4 @@
-import { shortenAddress, formatEth, timeAgo, computeEntityHash } from '../shared/entity';
+import { shortenAddress, formatEth, timeAgo, computeEntityHashCandidates } from '../shared/entity';
 import { deriveTagsFromIdentifier } from '../shared/known-entities';
 import { showToast } from './toast';
 import type { EntityData, CommentData } from '../shared/types';
@@ -7,6 +7,7 @@ import CSS from './styles.css';
 let shadow: ShadowRoot | null = null;
 let panelEl: HTMLElement | null = null;
 let currentEntityHash: string | null = null;
+let currentEntityHashes: string[] = [];
 let currentIdentifier: string | null = null;
 
 const TIP_AMOUNTS = ['0.001', '0.005', '0.01', '0.05'];
@@ -269,21 +270,15 @@ function wireEvents(): void {
 }
 
 function refreshComments(): void {
-  if (!currentEntityHash) return;
+  if (!currentEntityHash || !shadow) return;
 
-  chrome.runtime.sendMessage(
-    { type: 'GET_COMMENTS', entityHash: currentEntityHash, offset: 0, limit: 50 },
-    (response) => {
-      if (!response?.ok || !shadow) return;
-      const comments = (response.data || []) as CommentData[];
-      const container = shadow.getElementById('pw-comments');
-      if (container) {
-        container.innerHTML = comments.length > 0
-          ? comments.map(c => renderComment(c)).join('')
-          : '<div class="pw-empty">No comments yet. Start the conversation.</div>';
-      }
-    }
-  );
+  void loadCommentsForCurrentEntity().then((comments) => {
+    const container = shadow?.getElementById('pw-comments');
+    if (!container) return;
+    container.innerHTML = comments.length > 0
+      ? comments.map(c => renderComment(c)).join('')
+      : '<div class="pw-empty">No comments yet. Start the conversation.</div>';
+  });
 }
 
 export function openPanel(identifier: string): void {
@@ -291,7 +286,8 @@ export function openPanel(identifier: string): void {
   if (!panelEl) return;
 
   currentIdentifier = identifier;
-  currentEntityHash = computeEntityHash(identifier);
+  currentEntityHashes = computeEntityHashCandidates(identifier);
+  currentEntityHash = currentEntityHashes[0] ?? null;
 
   // Show loading state
   panelEl.innerHTML = `
@@ -317,14 +313,10 @@ export function openPanel(identifier: string): void {
 
       const entityData = entityResponse.data as EntityData;
 
-      chrome.runtime.sendMessage(
-        { type: 'GET_COMMENTS', entityHash: currentEntityHash!, offset: 0, limit: 50 },
-        (commentsResponse) => {
-          const comments = (commentsResponse?.ok ? commentsResponse.data : []) as CommentData[];
+      void loadCommentsForCurrentEntity().then((comments) => {
           panelEl!.innerHTML = renderPanel(entityData, comments);
           wireEvents();
-        }
-      );
+        });
     }
   );
 }
@@ -332,6 +324,7 @@ export function openPanel(identifier: string): void {
 export function closePanel(): void {
   panelEl?.classList.remove('open');
   currentEntityHash = null;
+  currentEntityHashes = [];
   currentIdentifier = null;
 }
 
@@ -375,4 +368,36 @@ function deriveTagsHtml(identifier: string): string {
   return `<div style="display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 16px; border-bottom: 1px solid #27272a;">${
     tags.map(t => `<span style="background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 2px 8px; font-size: 10px; color: #2F80ED; font-weight: 600;">#${t}</span>`).join('')
   }</div>`;
+}
+
+function fetchCommentsForHash(entityHash: string): Promise<CommentData[]> {
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage(
+      { type: 'GET_COMMENTS', entityHash, offset: 0, limit: 50 },
+      (response) => {
+        if (!response?.ok) {
+          resolve([]);
+          return;
+        }
+        resolve((response.data || []) as CommentData[]);
+      },
+    );
+  });
+}
+
+async function loadCommentsForCurrentEntity(): Promise<CommentData[]> {
+  if (currentEntityHashes.length === 0) return [];
+
+  const batches = await Promise.all(
+    currentEntityHashes.map((entityHash) => fetchCommentsForHash(entityHash)),
+  );
+
+  const deduped = new Map<number, CommentData>();
+  for (const comments of batches) {
+    for (const comment of comments) {
+      deduped.set(comment.id, comment);
+    }
+  }
+
+  return Array.from(deduped.values()).sort((a, b) => b.timestamp - a.timestamp);
 }

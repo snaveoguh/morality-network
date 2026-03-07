@@ -8,7 +8,61 @@ export enum EntityType {
 }
 
 export function computeEntityHash(identifier: string): `0x${string}` {
-  return keccak256(toBytes(identifier));
+  return keccak256(toBytes(normalizeIdentifier(identifier)));
+}
+
+export function computeEntityHashCandidates(identifier: string): `0x${string}`[] {
+  const trimmed = identifier.trim();
+  const normalized = normalizeIdentifier(trimmed);
+  const keys = [normalized];
+
+  // Legacy compatibility: keep the raw trimmed identifier hash if it differs.
+  if (trimmed.length > 0 && trimmed !== normalized) {
+    keys.push(trimmed);
+  }
+
+  return Array.from(new Set(keys.map((value) => keccak256(toBytes(value)))));
+}
+
+export function normalizeIdentifier(identifier: string): string {
+  const trimmed = identifier.trim();
+  if (!trimmed) return trimmed;
+
+  if (/^0x[a-fA-F0-9]{40}$/.test(trimmed)) {
+    return trimmed.toLowerCase();
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const url = new URL(trimmed);
+      url.hash = '';
+      url.hostname = url.hostname.toLowerCase();
+
+      for (const key of Array.from(url.searchParams.keys())) {
+        if (
+          key.toLowerCase().startsWith('utm_') ||
+          key === 'fbclid' ||
+          key === 'gclid' ||
+          key === 'ref' ||
+          key === 'ref_src' ||
+          key === 'mc_cid' ||
+          key === 'mc_eid'
+        ) {
+          url.searchParams.delete(key);
+        }
+      }
+
+      if (url.pathname.length > 1) {
+        url.pathname = url.pathname.replace(/\/+$/, '');
+      }
+
+      return url.toString();
+    } catch {
+      return trimmed;
+    }
+  }
+
+  return trimmed;
 }
 
 export function detectEntityType(identifier: string): EntityType {
