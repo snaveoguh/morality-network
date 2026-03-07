@@ -680,7 +680,8 @@ function dedupeStrings(values: string[]): string[] {
 function normalizeForDedup(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, "")
+    // Keep Unicode letters/numbers so CJK and other non-Latin text can dedupe safely.
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 180);
