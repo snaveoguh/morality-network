@@ -139,7 +139,7 @@ const STOP_WORDS = new Set([
   "one", "two", "first", "last", "according", "report", "reports",
   "amid", "set", "via", "per", "still", "now", "back", "into", "onto",
   "after", "before", "during", "around", "across", "through", "their",
-  "there", "here", "them", "they", "you", "your", "our", "ours",
+  "there", "here", "them", "they", "you", "your", "our", "ours", "going",
 ]);
 
 function extractKeywords(text: string): Set<string> {
@@ -238,7 +238,7 @@ async function buildStoryContext(
     ...relatedSnippets.map((s) => s.summary),
   ].join(" ");
 
-  const keyTerms = Array.from(extractKeywords(termText)).slice(0, 8);
+  const keyTerms = extractTopTerms(termText, 8);
 
   return {
     primarySummary,
@@ -474,7 +474,7 @@ function generateEditorialBody(primary: FeedItem, context: StoryContext): string
     paragraphs.push(`Cross-source context: ${corroboration}`);
   }
 
-  const watchTerms = context.keyTerms.slice(0, 3);
+  const watchTerms = context.keyTerms.slice(0, 2);
   if (watchTerms.length > 0) {
     const watchline =
       watchTerms.length === 1
@@ -649,11 +649,49 @@ function rewriteAsBrief(text: string): string {
   }
 
   const first = truncateWords(sentences[0], 26);
-  const second = sentences.find((s) => normalizeForDedup(s) !== normalizeForDedup(first));
+  const second = sentences.find((s) => !isNearDuplicateSentence(s, first));
 
   if (!second) return first;
 
   return `${first} ${truncateWords(second, 18)}`;
+}
+
+function isNearDuplicateSentence(a: string, b: string): boolean {
+  const na = normalizeForDedup(a);
+  const nb = normalizeForDedup(b);
+  if (!na || !nb) return true;
+  if (na === nb) return true;
+  if (na.startsWith(nb.slice(0, 80)) || nb.startsWith(na.slice(0, 80))) return true;
+
+  const aWords = new Set(na.split(" ").filter(Boolean));
+  const bWords = new Set(nb.split(" ").filter(Boolean));
+  let overlap = 0;
+  for (const word of aWords) {
+    if (bWords.has(word)) overlap++;
+  }
+  const minSize = Math.max(1, Math.min(aWords.size, bWords.size));
+  return overlap / minSize >= 0.8;
+}
+
+function extractTopTerms(text: string, maxTerms: number): string[] {
+  const counts = new Map<string, number>();
+  const words = text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s'-]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
+
+  for (const word of words) {
+    counts.set(word, (counts.get(word) || 0) + 1);
+  }
+
+  return Array.from(counts.entries())
+    .sort((a, b) => {
+      if (b[1] !== a[1]) return b[1] - a[1];
+      return b[0].length - a[0].length;
+    })
+    .slice(0, maxTerms)
+    .map(([word]) => word);
 }
 
 function dedupeParagraphs(paragraphs: string[]): string[] {
