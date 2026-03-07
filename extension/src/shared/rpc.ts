@@ -1,9 +1,9 @@
-import { createPublicClient, createWalletClient, http, type PublicClient, type WalletClient, type Account } from 'viem';
+import { createPublicClient, createWalletClient, http, type Account } from 'viem';
 import { baseSepolia } from 'viem/chains';
 import { DEFAULT_RPC, STORAGE_RPC } from './constants';
 
 let rpcUrl = DEFAULT_RPC;
-let publicClient: PublicClient | null = null;
+let publicClient: any = null;
 
 export async function initRpc(): Promise<void> {
   const stored = await chrome.storage.local.get(STORAGE_RPC);
@@ -21,18 +21,18 @@ export function getRpcUrl(): string {
   return rpcUrl;
 }
 
-export function getPublicClient(): PublicClient {
+export function getPublicClient() {
   if (!publicClient) {
     publicClient = createPublicClient({
       chain: baseSepolia,
       transport: http(rpcUrl),
       batch: { multicall: true },
-    });
+    }) as any;
   }
-  return publicClient;
+  return publicClient as any;
 }
 
-export function createWallet(account: Account): WalletClient {
+export function createWallet(account: Account) {
   return createWalletClient({
     account,
     chain: baseSepolia,

@@ -7,6 +7,7 @@ import { fetchEntityData, fetchComments } from './rpc-handler';
 import { rateEntity, rateEntityWithReason, submitComment, tipEntity, tipComment, voteComment, sendEth } from './wallet-handler';
 import type { Message, MessageResponse } from '../shared/types';
 import { CHAIN_ID } from '../shared/constants';
+import { baseSepolia } from 'viem/chains';
 import { formatEther, parseEther, type Hex } from 'viem';
 import { createWallet as createWalletClient } from '../shared/rpc';
 
@@ -184,6 +185,8 @@ async function handleEip1193(method: string, params: unknown[]): Promise<unknown
       const [txParams] = params as [{ to: string; value?: string; data?: string; gas?: string; gasPrice?: string }];
       const walletClient = createWalletClient(account);
       const hash = await walletClient.sendTransaction({
+        account,
+        chain: baseSepolia,
         to: txParams.to as Hex,
         value: txParams.value ? BigInt(txParams.value) : undefined,
         data: txParams.data as Hex | undefined,

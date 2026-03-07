@@ -148,12 +148,18 @@ export async function fetchComments(entityHash: string, offset: number, limit: n
       args: [id],
     }));
 
-    const results = await client.multicall({ contracts: commentCalls });
+    const results = (await client.multicall({ contracts: commentCalls })) as Array<{
+      status: 'success' | 'failure';
+      result?: unknown;
+    }>;
 
-    return results
-      .filter(r => r.status === 'success')
-      .map(r => {
-        const c = r.result as unknown as [bigint, `0x${string}`, `0x${string}`, string, bigint, bigint, bigint, bigint, boolean];
+    const successfulResults = results.filter(
+      (result): result is { status: 'success'; result: unknown } =>
+        result.status === 'success',
+    );
+
+    return successfulResults.map((result) => {
+        const c = result.result as unknown as [bigint, `0x${string}`, `0x${string}`, string, bigint, bigint, bigint, bigint, boolean];
         return {
           id: Number(c[0]),
           author: c[2],
