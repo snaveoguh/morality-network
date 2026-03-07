@@ -1,84 +1,186 @@
-@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
 @import "tailwindcss";
 
+/* ============================================================================
+   E-INK NEWSPAPER — pooter world
+   ============================================================================ */
+
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
-  --mo-blue: #2F80ED;
-  --mo-green: #31F387;
-  --mo-red: #D0021B;
-  --font-headline: 'Cooper Black', 'Cooper Std', 'Rockwell', 'Georgia', serif;
-  --font-body: 'Comic Neue', 'Comic Sans MS', cursive;
+  --paper: #F5F0E8;
+  --paper-dark: #EDE6D6;
+  --ink: #1A1A1A;
+  --ink-light: #4A4A4A;
+  --ink-faint: #8A8A8A;
+  --rule: #2A2A2A;
+  --rule-light: #C8C0B0;
+  --accent-red: #8B0000;
+  --background: var(--paper);
+  --foreground: var(--ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-mo-blue: #2F80ED;
-  --color-mo-green: #31F387;
-  --color-mo-red: #D0021B;
+  --color-paper: #F5F0E8;
+  --color-paper-dark: #EDE6D6;
+  --color-ink: #1A1A1A;
+  --color-ink-light: #4A4A4A;
+  --color-ink-faint: #8A8A8A;
+  --color-rule: #2A2A2A;
+  --color-rule-light: #C8C0B0;
+  --color-accent-red: #8B0000;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
+body { background: var(--paper); color: var(--ink); }
+
+/* ── Fonts ── */
+.font-masthead { font-family: var(--font-fraktur), 'Old English Text MT', serif; font-weight: 700; }
+.font-headline-serif { font-family: var(--font-playfair), 'Georgia', 'Times New Roman', serif; }
+.font-body-serif { font-family: var(--font-baskerville), 'Georgia', serif; }
+.font-headline { font-family: var(--font-playfair), 'Georgia', serif; font-weight: 900; letter-spacing: -0.01em; }
+.font-comic { font-family: 'Comic Neue', 'Comic Sans MS', cursive; }
+
+/* ── E-ink image filter ── */
+.newspaper-img { filter: grayscale(100%) contrast(1.2) brightness(1.05); mix-blend-mode: multiply; }
+.newspaper-img-hero { position: relative; }
+.newspaper-img-hero::after {
+  content: ""; position: absolute; inset: 0;
+  background-image: radial-gradient(circle, var(--ink) 1px, transparent 1px);
+  background-size: 3px 3px; mix-blend-mode: screen; opacity: 0.1; pointer-events: none;
 }
 
-/* Chaotic newspaper headline font */
-.font-headline {
-  font-family: var(--font-headline);
+/* ── Newspaper grid ── */
+.newspaper-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-flow: dense; gap: 0; overflow: hidden; max-width: 100%; }
+.newspaper-cell { border-right: 1px solid var(--rule-light); border-bottom: 1px solid var(--rule-light); padding: 14px 16px; overflow-wrap: anywhere; min-width: 0; overflow: hidden; }
+.newspaper-hero     { grid-column: span 6; border-right: none; }
+.newspaper-major    { grid-column: span 3; }
+.newspaper-standard { grid-column: span 2; }
+.newspaper-minor    { grid-column: span 2; }
+.newspaper-filler   { grid-column: span 1; }
+
+@media (max-width: 1024px) {
+  .newspaper-grid { grid-template-columns: repeat(4, 1fr); }
+  .newspaper-hero { grid-column: span 4; }
+  .newspaper-major { grid-column: span 2; }
+  .newspaper-standard, .newspaper-minor { grid-column: span 2; }
+  .newspaper-filler { grid-column: span 1; }
+}
+@media (max-width: 640px) {
+  .newspaper-grid { grid-template-columns: 1fr; }
+  .newspaper-cell { grid-column: span 1 !important; border-right: none; }
+}
+
+.newspaper-rule { grid-column: 1 / -1; border: none; border-top: 1px solid var(--rule); margin: 0; }
+.newspaper-double-rule { grid-column: 1 / -1; border: none; border-top: 1px solid var(--rule); border-bottom: 2px solid var(--rule); height: 4px; margin: 0; }
+
+/* ── Drop cap — tall thin Baskerville serif ── */
+.drop-cap::first-letter {
+  float: left;
+  font-family: var(--font-baskerville), 'Georgia', serif;
+  font-size: 5.5em;
+  line-height: 0.72;
+  padding-right: 10px;
+  padding-top: 6px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+
+/* ── Breaking stamp ── */
+.breaking-stamp { position: absolute; top: 8px; right: 8px; transform: rotate(-3deg); border: 2px solid var(--accent-red); color: var(--accent-red); font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 2px 6px; background: var(--paper); }
+
+/* ── Marquee ── */
+@keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
+.animate-marquee { animation: marquee 30s linear infinite; display: inline-flex; }
+.animate-marquee:hover { animation-play-state: paused; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--paper); }
+::-webkit-scrollbar-thumb { background: var(--rule-light); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: var(--rule); }
+::selection { background: var(--ink); color: var(--paper); }
+
+.stumble-page { min-height: calc(100vh - 5rem); }
+
+/* ── MO Heartbeat Loader ── */
+@keyframes mo-heartbeat {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  15% { opacity: 1; transform: scale(1.15); }
+  30% { opacity: 1; transform: scale(1); }
+  45% { opacity: 1; transform: scale(1.08); }
+  60% { opacity: 0.7; transform: scale(1); }
+}
+@keyframes mo-pixel-pulse {
+  0%, 100% { opacity: 0.85; }
+  15% { opacity: 1; }
+  50% { opacity: 0.4; }
+  75% { opacity: 0.85; }
+}
+.mo-heartbeat { animation: mo-heartbeat 1.4s ease-in-out infinite; transform-origin: center; }
+.mo-pixel { animation: mo-pixel-pulse 1.4s ease-in-out infinite; }
+
+/* ── Chaotic tilts ── */
+.tilt-cw-sm { transform: rotate(0.4deg); }
+.tilt-cw-md { transform: rotate(0.9deg); }
+.tilt-ccw-sm { transform: rotate(-0.35deg); }
+.tilt-ccw-md { transform: rotate(-0.8deg); }
+
+/* ── Pull quote row ── */
+.pull-quote-row {
+  grid-column: 1 / -1;
+  border-top: 2px solid var(--rule);
+  border-bottom: 2px solid var(--rule);
+  padding: 10px 24px;
+  text-align: center;
+}
+
+/* ── Inverted ink block ── */
+.ink-block {
+  background: var(--ink) !important;
+  color: var(--paper) !important;
+}
+.ink-block a,
+.ink-block span,
+.ink-block p,
+.ink-block h3,
+.ink-block h2 { color: inherit !important; }
+.ink-block .newspaper-img { filter: grayscale(100%) contrast(1.2) brightness(1.3) invert(1); }
+.ink-block .breaking-stamp { border-color: var(--paper); color: var(--paper); background: var(--ink); }
+
+/* ── Intro Splash / Mission ── */
+.intro-lofi {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(245, 240, 232, 0.12), transparent 34%),
+    radial-gradient(circle at 84% 78%, rgba(245, 240, 232, 0.08), transparent 36%),
+    linear-gradient(135deg, #111111 0%, #1c1c1c 45%, #0f0f0f 100%);
+}
+
+.intro-lofi::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(245, 240, 232, 0.25) 0.8px, transparent 0.8px);
+  background-size: 3px 3px;
+  mix-blend-mode: screen;
+  opacity: 0.12;
+  animation: intro-grain 6s linear infinite;
+}
+
+.intro-mission-text {
+  font-family: var(--font-playfair), "Georgia", serif;
   font-weight: 900;
   letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
-/* Comic body font */
-.font-comic {
-  font-family: var(--font-body);
-}
-
-/* Marquee animation */
-@keyframes marquee {
-  0% {
-    transform: translateX(0%);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.animate-marquee {
-  animation: marquee 30s linear infinite;
-  display: inline-flex;
-}
-
-.animate-marquee:hover {
-  animation-play-state: paused;
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #0a0a0a;
-}
-::-webkit-scrollbar-thumb {
-  background: #2F80ED40;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #2F80ED80;
-}
-
-/* Selection color */
-::selection {
-  background: #2F80ED40;
-  color: #ffffff;
-}
-
-/* Stumble page full-bleed */
-.stumble-page {
-  min-height: calc(100vh - 5rem);
+@keyframes intro-grain {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(0.5px, -0.5px); }
+  50% { transform: translate(-0.5px, 0.5px); }
+  75% { transform: translate(0.5px, 0.5px); }
+  100% { transform: translate(0, 0); }
 }
