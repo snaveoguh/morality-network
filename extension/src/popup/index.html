@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=360">
+  <title>pooter world</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header id="header">
+    <span class="logo">pw</span>
+    <span class="title">pooter world</span>
+  </header>
+
+  <nav id="tabs">
+    <button class="tab active" data-tab="entity">Page</button>
+    <button class="tab" data-tab="wallet">Wallet</button>
+    <button class="tab" data-tab="settings">Settings</button>
+  </nav>
+
+  <main>
+    <section id="entity-tab" class="tab-content active"></section>
+    <section id="wallet-tab" class="tab-content"></section>
+    <section id="settings-tab" class="tab-content"></section>
+  </main>
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>
