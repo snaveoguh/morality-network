@@ -18,6 +18,7 @@ Next.js product surface for feed, proposals, leaderboard, article views, and sty
 - `/api/feed/sources`
 - `/api/governance`
 - `/api/governance/[id]`
+- `/api/v1/governance/live`
 - `/api/stumble`
 - `/api/auth/nonce`
 - `/api/auth/verify`

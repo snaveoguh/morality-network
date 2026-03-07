@@ -20,6 +20,7 @@ Use this log for periodic updates tied to deliverable IDs.
 - Deliverable IDs: `B-001`, `B-002`, `B-003`, `B-004`, `E-005`, `G-001`
 - Progress:
   - Added first indexer API endpoints for entity and feed queries.
+  - Added normalized web endpoint `GET /api/v1/governance/live` with filters and cursor pagination.
   - Added dedicated style guide route in web app (`/style-guide`).
   - Added architecture/API/deployments/roadmap/style docs under `v2/docs`.
   - Added execution framework docs (tracker + plan + GitHub workflow).

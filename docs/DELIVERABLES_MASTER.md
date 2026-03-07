@@ -26,7 +26,7 @@ Status legend:
 | B-002 | Ship `GET /api/v1/entities/:entityHash` | Data | Done | Returns normalized entity profile and recent activity |
 | B-003 | Ship `GET /api/v1/entities/:entityHash/feed` | Data | Done | Cursor pagination + action-type filters |
 | B-004 | Ship `GET /api/v1/feed/global` | Data | Done | Global feed with cursor + actor/entity filters |
-| B-005 | Ship `GET /api/v1/governance/live` | Data | Not Started | Unified normalized governance feed |
+| B-005 | Ship `GET /api/v1/governance/live` | Data | In Progress | Unified normalized governance feed |
 | B-006 | Add tag index + query API for high-volume filtering | Data | Not Started | Tag filters support large cardinality |
 | B-007 | Add API auth/rate limit middleware | Data | Not Started | Key-based quotas enforced and logged |
 | B-008 | Add export job endpoint for paid tier | Data | Not Started | Async dataset exports with status polling |
