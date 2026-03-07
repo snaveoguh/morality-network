@@ -17,6 +17,7 @@ This folder is the source of truth for architecture, style, deployments, and pub
 - Status log: `v2/docs/STATUS_LOG.md`
 - Next actions queue: `v2/docs/NEXT_ACTIONS.md`
 - README sync checklist: `v2/docs/README_UPDATES_CHECKLIST.md`
+- Indexer runbook: `v2/docs/RUNBOOK_INDEXER.md`
 
 ## Context
 

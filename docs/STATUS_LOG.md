@@ -17,12 +17,14 @@ Use this log for periodic updates tied to deliverable IDs.
 ## 2026-03-07
 
 - Owner: Codex
-- Deliverable IDs: `B-002`, `B-003`, `B-004`, `E-005`, `G-001`
+- Deliverable IDs: `B-001`, `B-002`, `B-003`, `B-004`, `E-005`, `G-001`
 - Progress:
   - Added first indexer API endpoints for entity and feed queries.
   - Added dedicated style guide route in web app (`/style-guide`).
   - Added architecture/API/deployments/roadmap/style docs under `v2/docs`.
   - Added execution framework docs (tracker + plan + GitHub workflow).
+  - Hardened indexer config with RPC fallback transport and explicit DB mode configuration.
+  - Added indexer runbook and refreshed env examples for stable runtime setup.
 - Validation:
   - `v2/indexer`: `npm run codegen` passed.
   - `v2/web`: targeted eslint checks passed for new files.

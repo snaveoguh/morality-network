@@ -64,3 +64,4 @@ Default server port: `42069`
 - `v2/docs/API_REFERENCE.md`
 - `v2/docs/ARCHITECTURE.md`
 - `v2/docs/DELIVERABLES_MASTER.md`
+- `v2/docs/RUNBOOK_INDEXER.md`
