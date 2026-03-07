@@ -52,3 +52,14 @@ MIT
 
 - Website: [mo.network](https://mo.network)
 - Token: [MO on Base](https://basescan.org/token/0x8729c70061739140ee6bE00A3875Cbf6d09A746C)
+
+## Documentation
+
+- Docs index: [`v2/docs/README.md`](docs/README.md)
+- Dedicated style guide page: [`v2/docs/style-guide.html`](docs/style-guide.html)
+- API reference: [`v2/docs/API_REFERENCE.md`](docs/API_REFERENCE.md)
+- Architecture: [`v2/docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- Deployments: [`v2/docs/DEPLOYMENTS.md`](docs/DEPLOYMENTS.md)
+- Deliverables tracker: [`v2/docs/DELIVERABLES_MASTER.md`](docs/DELIVERABLES_MASTER.md)
+- Execution plan: [`v2/docs/EXECUTION_PLAN.md`](docs/EXECUTION_PLAN.md)
+- Status log: [`v2/docs/STATUS_LOG.md`](docs/STATUS_LOG.md)
