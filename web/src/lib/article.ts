@@ -36,6 +36,12 @@ interface StoryContext {
   keyTerms: string[];
 }
 
+interface LanguageProfile {
+  isNonLatinHeavy: boolean;
+  isJapanese: boolean;
+  isCjk: boolean;
+}
+
 const SOURCE_CONTEXT_CACHE = new Map<string, { summary: string; expiresAt: number }>();
 const CONTEXT_CACHE_TTL_MS = 30 * 60 * 1000;
 const CONTEXT_FETCH_TIMEOUT_MS = 8_000;
@@ -186,9 +192,10 @@ export async function generateEditorial(
   related: FeedItem[],
 ): Promise<ArticleContent> {
   const storyContext = await buildStoryContext(primary, related);
+  const lang = detectLanguageProfile(primary, storyContext);
 
-  const subheadline = generateSubheadline(primary, storyContext);
-  const editorialBody = generateEditorialBody(primary, storyContext);
+  const subheadline = generateSubheadline(primary, storyContext, lang);
+  const editorialBody = generateEditorialBody(primary, storyContext, lang);
   const wireSummary = generateWireSummary(storyContext);
   const biasContext = generateBiasContext(primary, related);
   const tags = deriveTags(primary, storyContext);
@@ -441,7 +448,15 @@ function scoreCandidate(text: string, targetKeywords: Set<string>): number {
 // CONTEXTUAL COPY GENERATION
 // ============================================================================
 
-function generateSubheadline(primary: FeedItem, context: StoryContext): string {
+function generateSubheadline(
+  primary: FeedItem,
+  context: StoryContext,
+  lang: LanguageProfile,
+): string {
+  if (lang.isNonLatinHeavy) {
+    return truncateWords(context.primarySummary, lang.isCjk ? 36 : 20);
+  }
+
   const terms = context.keyTerms.slice(0, 3);
   const termPart =
     terms.length >= 2 ? `${terms[0]} and ${terms[1]}` :
@@ -459,8 +474,26 @@ function generateSubheadline(primary: FeedItem, context: StoryContext): string {
   return `${primary.source} focuses on ${termPart}, with context pulled from source reporting instead of recycled feed copy.${corroboration}`;
 }
 
-function generateEditorialBody(primary: FeedItem, context: StoryContext): string[] {
+function generateEditorialBody(
+  primary: FeedItem,
+  context: StoryContext,
+  lang: LanguageProfile,
+): string[] {
   const paragraphs: string[] = [];
+
+  if (lang.isNonLatinHeavy) {
+    paragraphs.push(context.primarySummary);
+
+    if (context.relatedSnippets.length > 0) {
+      const related = context.relatedSnippets
+        .slice(0, 2)
+        .map((snippet) => `${snippet.source}: ${snippet.summary}`)
+        .join(" / ");
+      paragraphs.push(related);
+    }
+
+    return dedupeParagraphs(paragraphs).slice(0, 3);
+  }
 
   const lead = `What happened: ${context.primarySummary}`;
   paragraphs.push(lead);
@@ -714,9 +747,35 @@ function toLowerStart(text: string): string {
 }
 
 function truncateWords(text: string, maxWords: number): string {
+  if (containsCjk(text)) {
+    if (text.length <= maxWords) return text;
+    return `${text.slice(0, maxWords)}...`;
+  }
+
   const words = text.split(/\s+/).filter(Boolean);
   if (words.length <= maxWords) return text;
   return `${words.slice(0, maxWords).join(" ")}...`;
+}
+
+function detectLanguageProfile(primary: FeedItem, context: StoryContext): LanguageProfile {
+  const text = [primary.title, primary.description, context.primarySummary].join(" ");
+  const latinMatches = text.match(/[A-Za-z]/g) || [];
+  const nonLatinMatches = text.match(/[^\x00-\x7F]/g) || [];
+  const japaneseMatches = text.match(/[\u3040-\u30FF\u31F0-\u31FF]/g) || [];
+  const cjkMatches = text.match(/[\u4E00-\u9FFF]/g) || [];
+
+  const latinCount = latinMatches.length;
+  const nonLatinCount = nonLatinMatches.length;
+
+  return {
+    isNonLatinHeavy: nonLatinCount > latinCount * 1.2 && nonLatinCount > 20,
+    isJapanese: japaneseMatches.length > 4,
+    isCjk: cjkMatches.length > 4 || japaneseMatches.length > 4,
+  };
+}
+
+function containsCjk(text: string): boolean {
+  return /[\u3040-\u30FF\u31F0-\u31FF\u4E00-\u9FFF]/.test(text);
 }
 
 // ============================================================================
