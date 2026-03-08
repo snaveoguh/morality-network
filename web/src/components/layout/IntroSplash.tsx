@@ -9,25 +9,16 @@ export function IntroSplash() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
     try {
       const seen = window.localStorage.getItem(INTRO_STORAGE_KEY);
       if (!seen) {
         setIsVisible(true);
-        timer = setTimeout(() => {
-          dismiss();
-        }, 3400);
       }
     } catch {
       // Ignore storage errors and continue without blocking page load.
     } finally {
       setIsReady(true);
     }
-
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
   }, []);
 
   function dismiss() {
@@ -47,8 +38,12 @@ export function IntroSplash() {
       role="dialog"
       aria-modal="true"
       aria-label="pooter world mission statement"
+      onClick={dismiss}
     >
-      <div className="intro-lofi relative w-full max-w-5xl overflow-hidden border-2 border-[var(--rule)] p-8 shadow-2xl sm:p-10 md:p-14">
+      <div
+        className="intro-lofi relative w-full max-w-5xl overflow-hidden border-2 border-[var(--rule)] p-8 shadow-2xl sm:p-10 md:p-14"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="absolute right-3 top-3 z-10">
           <button
             type="button"
@@ -64,7 +59,7 @@ export function IntroSplash() {
         </p>
 
         <h1 className="intro-mission-text text-3xl leading-[1.03] text-[var(--paper)] sm:text-5xl md:text-6xl lg:text-7xl">
-          A public ledger of world events and their moral evaluation.
+          A public ledger of world events and their interpretation.
         </h1>
 
         <p className="mt-4 max-w-2xl font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--paper-dark)]/90">
