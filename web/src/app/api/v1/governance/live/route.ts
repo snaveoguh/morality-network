@@ -3,8 +3,27 @@ import { fetchAllProposals, fetchLiveProposals, type Proposal } from "@/lib/gove
 
 const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 500;
+const LIVE_GOVERNANCE_CACHE_TTL_MS = 45_000;
 
 type SourceKind = "dao" | "government" | "corporate";
+
+interface GovernanceLivePayload {
+  data: ReturnType<typeof normalizeProposal>[];
+  meta: {
+    scope: string;
+    totalFiltered: number;
+    limit: number;
+    nextCursor: number | null;
+    generatedAt: number;
+  };
+}
+
+interface GovernanceLiveCacheEntry {
+  expiresAt: number;
+  payload: GovernanceLivePayload;
+}
+
+const governanceLiveCache = new Map<string, GovernanceLiveCacheEntry>();
 
 function parseLimit(value: string | null): number {
   const parsed = Number(value ?? DEFAULT_LIMIT);
@@ -75,6 +94,12 @@ function normalizeProposal(proposal: Proposal) {
   };
 }
 
+function cacheControlHeader(ttlMs: number): string {
+  const sMaxAge = Math.max(1, Math.floor(ttlMs / 1000));
+  const staleWhileRevalidate = sMaxAge * 2;
+  return `public, s-maxage=${sMaxAge}, stale-while-revalidate=${staleWhileRevalidate}`;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -89,6 +114,28 @@ export async function GET(request: Request) {
 
     if (searchParams.get("cursor") && (!Number.isFinite(cursor) || cursor <= 0)) {
       return NextResponse.json({ error: "invalid cursor (expected unix seconds)" }, { status: 400 });
+    }
+
+    const normalizedCursor = Number.isFinite(cursor) && cursor > 0 ? cursor : null;
+    const cacheKey = JSON.stringify({
+      scope,
+      source: [...sourceFilter].sort(),
+      sourceKind: [...sourceKindFilter].sort(),
+      status: [...statusFilter].sort(),
+      tag: [...tagFilter].sort(),
+      limit,
+      cursor: normalizedCursor,
+    });
+    const now = Date.now();
+
+    const cached = governanceLiveCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return NextResponse.json(cached.payload, {
+        headers: {
+          "cache-control": cacheControlHeader(LIVE_GOVERNANCE_CACHE_TTL_MS),
+          "x-cache": "HIT",
+        },
+      });
     }
 
     const proposals = scope === "all" ? await fetchAllProposals() : await fetchLiveProposals();
@@ -114,7 +161,7 @@ export async function GET(request: Request) {
         }
       }
 
-      if (Number.isFinite(cursor) && cursor > 0 && proposal.startTime >= cursor) {
+      if (normalizedCursor !== null && proposal.startTime >= normalizedCursor) {
         return false;
       }
 
@@ -128,14 +175,26 @@ export async function GET(request: Request) {
 
     const nextCursor = hasMore ? page[page.length - 1]?.startTime ?? null : null;
 
-    return NextResponse.json({
+    const payload: GovernanceLivePayload = {
       data: page.map(normalizeProposal),
       meta: {
         scope,
         totalFiltered: filtered.length,
         limit,
         nextCursor,
-        generatedAt: Date.now(),
+        generatedAt: now,
+      },
+    };
+
+    governanceLiveCache.set(cacheKey, {
+      expiresAt: now + LIVE_GOVERNANCE_CACHE_TTL_MS,
+      payload,
+    });
+
+    return NextResponse.json(payload, {
+      headers: {
+        "cache-control": cacheControlHeader(LIVE_GOVERNANCE_CACHE_TTL_MS),
+        "x-cache": "MISS",
       },
     });
   } catch (error) {
