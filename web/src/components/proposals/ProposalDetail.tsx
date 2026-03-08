@@ -5,7 +5,10 @@ import { AddressDisplay } from "@/components/shared/AddressDisplay";
 import { TipButton } from "@/components/entity/TipButton";
 import { VotePanel } from "./VotePanel";
 import { PredictionMarket } from "./PredictionMarket";
+import { InterpretationPanel } from "./InterpretationPanel";
 import { computeEntityHash } from "@/lib/entity";
+import { CommentThread } from "@/components/entity/CommentThread";
+import { getDaoPredictionKey, getPrimaryProposalEntityIdentifier } from "@/lib/proposal-entity";
 import {
   type Proposal,
   type NounsVote,
@@ -57,6 +60,14 @@ const SOURCE_FLAGS: Record<string, string> = {
 export function ProposalDetail({ proposal }: ProposalDetailProps) {
   const { isConnected } = useAccount();
   const proposerHash = computeEntityHash(proposal.proposer);
+  const discussionProposalId = Number.isFinite(proposal.proposalNumber)
+    ? String(proposal.proposalNumber)
+    : proposal.id;
+  const proposalDiscussionIdentifier = getPrimaryProposalEntityIdentifier(
+    getDaoPredictionKey(proposal.dao),
+    discussionProposalId
+  );
+  const proposalDiscussionHash = computeEntityHash(proposalDiscussionIdentifier);
   const { forPct, againstPct } = getVotePercentage(
     proposal.votesFor,
     proposal.votesAgainst
@@ -328,10 +339,19 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
             </div>
           )}
         </div>
+
+        <div className="mt-8 border-t border-[var(--rule)] pt-4">
+          <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+            Interpretation Thread
+          </h2>
+          <CommentThread entityHash={proposalDiscussionHash} compact />
+        </div>
       </div>
 
       {/* ══ SIDEBAR ══ */}
       <div className="space-y-5">
+        <InterpretationPanel proposal={proposal} />
+
         {/* Prediction market */}
         {proposal.dao === "Nouns DAO" &&
           proposal.source === "onchain" &&

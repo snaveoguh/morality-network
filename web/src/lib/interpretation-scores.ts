@@ -2,6 +2,7 @@ import { createPublicClient, http, parseAbiItem, type Address } from "viem";
 import { baseSepolia } from "viem/chains";
 import { COMMENTS_ABI, CONTRACTS, PREDICTION_MARKET_ADDRESS } from "./contracts";
 import { computeEntityHash } from "./entity";
+import { getProposalEntityIdentifiers } from "./proposal-entity";
 
 const DEFAULT_RPC_URL = "https://sepolia.base.org";
 const DEFAULT_LOOKBACK_BLOCKS = BigInt("90000");
@@ -113,37 +114,9 @@ function round(value: number, precision = 3): number {
   return Math.round(value * base) / base;
 }
 
-function normalizeDao(dao: string): string {
-  return dao.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-}
-
 function buildProposalEntityHashes(dao: string, proposalId: string): Set<`0x${string}`> {
-  const normalized = normalizeDao(dao);
-  const raw = dao.trim().toLowerCase();
-  const pid = proposalId.trim();
-
-  const candidates = new Set<string>([
-    `${raw}:${pid}`,
-    `${normalized}:${pid}`,
-    `proposal:${raw}:${pid}`,
-    `proposal:${normalized}:${pid}`,
-    `${raw}-${pid}`,
-    `${normalized}-${pid}`,
-    `${raw}/${pid}`,
-    `${normalized}/${pid}`,
-    `proposals/${raw}/${pid}`,
-    `proposals/${normalized}/${pid}`,
-  ]);
-
-  if (raw.includes("nouns") || normalized.includes("nouns")) {
-    candidates.add(`nouns:${pid}`);
-    candidates.add(`nouns-${pid}`);
-    candidates.add(`proposal:nouns:${pid}`);
-    candidates.add(`proposal:nouns-${pid}`);
-  }
-
   const hashes = new Set<`0x${string}`>();
-  for (const identifier of candidates) {
+  for (const identifier of getProposalEntityIdentifiers(dao, proposalId)) {
     hashes.add(computeEntityHash(identifier));
   }
 
