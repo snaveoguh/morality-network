@@ -1,4 +1,8 @@
 import type { FeedItem } from "./rss";
+import {
+  buildAgentResearchPack,
+  type AgentResearchPack,
+} from "./agent-swarm";
 
 // ============================================================================
 // ARTICLE CONTENT GENERATION
@@ -14,6 +18,8 @@ export interface SourceContextSnippet {
 export interface ArticleContent {
   /** The primary RSS item this article is about */
   primary: FeedItem;
+  /** Canonical claim sentence extracted from the story */
+  claim: string;
   /** Related items from other sources covering the same/similar story */
   relatedSources: FeedItem[];
   /** Contextual subheadline generated for this specific story */
@@ -32,6 +38,8 @@ export interface ArticleContent {
   tags: string[];
   /** Extra context scraped from source pages */
   contextSnippets: SourceContextSnippet[];
+  /** Structured swarm output: evidence, claims, contradiction flags */
+  agentResearch: AgentResearchPack;
 }
 
 interface StoryContext {
@@ -68,8 +76,12 @@ export function findRelatedArticles(
   maxResults = 5,
 ): FeedItem[] {
   const targetKeywords = extractKeywords(`${target.title} ${target.description}`);
+  const targetTitleKeywords = extractKeywords(target.title);
+  const targetSignalKeywords = extractSignalKeywords(target.title);
   const targetPhrases = extractPhrases(target.title);
-  if (targetKeywords.size === 0) return [];
+  const targetTags = new Set((target.tags || []).map((tag) => tag.toLowerCase()));
+
+  if (targetKeywords.size === 0 || targetTitleKeywords.size === 0) return [];
 
   const scored: { item: FeedItem; score: number }[] = [];
 
@@ -81,11 +93,14 @@ export function findRelatedArticles(
 
     const itemText = `${item.title} ${item.description}`;
     const itemKeywords = extractKeywords(itemText);
+    const itemTitleKeywords = extractKeywords(item.title);
+    const itemSignalKeywords = extractSignalKeywords(item.title);
+    const itemTags = new Set((item.tags || []).map((tag) => tag.toLowerCase()));
 
-    let keywordOverlap = 0;
-    for (const word of targetKeywords) {
-      if (itemKeywords.has(word)) keywordOverlap++;
-    }
+    const keywordOverlap = countOverlap(targetKeywords, itemKeywords);
+    const titleKeywordOverlap = countOverlap(targetTitleKeywords, itemTitleKeywords);
+    const signalOverlap = countOverlap(targetSignalKeywords, itemSignalKeywords);
+    const sharedTagCount = countOverlap(targetTags, itemTags);
 
     let phraseOverlap = 0;
     const itemTitleLower = item.title.toLowerCase();
@@ -93,8 +108,16 @@ export function findRelatedArticles(
       if (itemTitleLower.includes(phrase)) phraseOverlap++;
     }
 
-    // Ignore weak matches.
-    if (keywordOverlap < 2 && phraseOverlap === 0) continue;
+    const hasStrongAnchor = signalOverlap > 0 || phraseOverlap > 0 || titleKeywordOverlap >= 2;
+    if (!hasStrongAnchor) continue;
+
+    if (targetSignalKeywords.size > 0 && signalOverlap === 0 && phraseOverlap === 0) {
+      continue;
+    }
+
+    if (targetTags.size > 0 && sharedTagCount === 0 && signalOverlap === 0 && phraseOverlap === 0) {
+      continue;
+    }
 
     const overlapRatio = keywordOverlap / Math.max(1, targetKeywords.size);
 
@@ -110,18 +133,25 @@ export function findRelatedArticles(
     const categoryScore = item.category === target.category ? 1 : 0;
 
     const score =
-      (keywordOverlap * 2) +
-      (phraseOverlap * 4) +
-      Math.round(overlapRatio * 3) +
+      (signalOverlap * 6) +
+      (titleKeywordOverlap * 3) +
+      (phraseOverlap * 5) +
+      (sharedTagCount * 2) +
+      keywordOverlap +
+      Math.round(overlapRatio * 2) +
       categoryScore +
       timeScore;
 
-    if (score >= 6) {
+    const minScore = signalOverlap > 0 || phraseOverlap > 0 ? 9 : 11;
+    if (score >= minScore) {
       scored.push({ item, score });
     }
   }
 
+  if (scored.length === 0) return [];
+
   scored.sort((a, b) => b.score - a.score);
+  if (scored[0].score < 9) return [];
 
   // Keep source diversity in the final set.
   const seenSources = new Set<string>();
@@ -153,6 +183,55 @@ const STOP_WORDS = new Set([
   "amid", "set", "via", "per", "still", "now", "back", "into", "onto",
   "after", "before", "during", "around", "across", "through", "their",
   "there", "here", "them", "they", "you", "your", "our", "ours", "going",
+  "his", "her", "hers", "him", "she", "he", "its", "itself", "theirs",
+  "year", "years", "month", "months", "week", "weeks", "day", "days",
+  "today", "yesterday", "tomorrow", "breaking", "latest", "live", "update",
+  "updates", "story", "stories", "video", "photos", "images", "opinion",
+]);
+
+const SHORT_SIGNAL_TERMS = new Set([
+  "ai",
+  "uk",
+  "us",
+  "eu",
+  "nft",
+  "dao",
+  "btc",
+  "eth",
+  "fed",
+  "sec",
+  "ipo",
+  "nato",
+  "opec",
+  "iran",
+  "gaza",
+  "china",
+  "trump",
+]);
+
+const LOW_SIGNAL_TERMS = new Set([
+  "people",
+  "person",
+  "official",
+  "officials",
+  "workers",
+  "work",
+  "global",
+  "world",
+  "country",
+  "countries",
+  "government",
+  "governments",
+  "public",
+  "private",
+  "issue",
+  "issues",
+  "event",
+  "events",
+  "thing",
+  "things",
+  "matter",
+  "matters",
 ]);
 
 function extractKeywords(text: string): Set<string> {
@@ -185,6 +264,29 @@ function extractPhrases(text: string): Set<string> {
   return phrases;
 }
 
+function extractSignalKeywords(text: string): Set<string> {
+  const base = extractKeywords(text);
+  const out = new Set<string>();
+
+  for (const word of base) {
+    if (LOW_SIGNAL_TERMS.has(word)) continue;
+    if (word.length >= 4 || SHORT_SIGNAL_TERMS.has(word)) {
+      out.add(word);
+    }
+  }
+
+  return out;
+}
+
+function countOverlap(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 || b.size === 0) return 0;
+  let overlap = 0;
+  for (const value of a) {
+    if (b.has(value)) overlap++;
+  }
+  return overlap;
+}
+
 // ============================================================================
 // CONTEXTUAL ARTICLE GENERATION (async)
 // ============================================================================
@@ -200,12 +302,24 @@ export async function generateEditorial(
 ): Promise<ArticleContent> {
   const storyContext = await buildStoryContext(primary, related);
   const lang = detectLanguageProfile(primary, storyContext);
+  const claim = extractClaim(primary, storyContext);
 
   const subheadline = generateSubheadline(primary, storyContext, lang);
   const editorialBody = generateEditorialBody(primary, storyContext, lang);
   const wireSummary = generateWireSummary(storyContext);
   const biasContext = generateBiasContext(primary, related);
   const tags = deriveTags(primary, storyContext);
+
+  const relatedSummaryByLink = Object.fromEntries(
+    storyContext.relatedSnippets.map((snippet) => [snippet.link, snippet.summary]),
+  );
+  const agentResearch = buildAgentResearchPack({
+    primary,
+    related,
+    fallbackClaim: claim,
+    primarySummary: storyContext.primarySummary,
+    relatedSummaryByLink,
+  });
 
   let subheadlineEnglish: string | null = null;
   let editorialBodyEnglish: string[] | undefined;
@@ -218,6 +332,7 @@ export async function generateEditorial(
 
   return {
     primary,
+    claim,
     relatedSources: related,
     subheadline,
     subheadlineEnglish,
@@ -227,6 +342,7 @@ export async function generateEditorial(
     biasContext,
     tags,
     contextSnippets: storyContext.relatedSnippets,
+    agentResearch,
   };
 }
 
@@ -235,6 +351,7 @@ async function buildStoryContext(
   related: FeedItem[],
 ): Promise<StoryContext> {
   const relatedForContext = related.slice(0, MAX_RELATED_CONTEXT_FETCH);
+  const primaryAnchorTerms = extractSignalKeywords(primary.title);
 
   const summaries = await Promise.all([
     getContextSummaryForItem(primary),
@@ -250,6 +367,7 @@ async function buildStoryContext(
       summary: summaries[index + 1],
     }))
     .filter((snippet) => snippet.summary.length > 0)
+    .filter((snippet) => isContextSnippetRelevant(snippet.summary, primaryAnchorTerms))
     .filter((snippet, index, arr) => {
       const norm = normalizeForDedup(snippet.summary);
       return arr.findIndex((s) => normalizeForDedup(s.summary) === norm) === index;
@@ -462,6 +580,18 @@ function scoreCandidate(text: string, targetKeywords: Set<string>): number {
   return (overlap * 4) + sentenceLikeBonus - lengthPenalty;
 }
 
+function isContextSnippetRelevant(summary: string, primaryAnchorTerms: Set<string>): boolean {
+  if (primaryAnchorTerms.size === 0) return true;
+
+  const summarySignalTerms = extractSignalKeywords(summary);
+  if (countOverlap(summarySignalTerms, primaryAnchorTerms) >= 1) {
+    return true;
+  }
+
+  const summaryLooseTerms = extractKeywords(summary);
+  return countOverlap(summaryLooseTerms, primaryAnchorTerms) >= 2;
+}
+
 // ============================================================================
 // CONTEXTUAL COPY GENERATION
 // ============================================================================
@@ -475,7 +605,8 @@ function generateSubheadline(
     return truncateWords(context.primarySummary, lang.isCjk ? 36 : 20);
   }
 
-  const terms = context.keyTerms.slice(0, 3);
+  const titleTerms = extractTopTerms(primary.title, 4);
+  const terms = (titleTerms.length > 0 ? titleTerms : context.keyTerms).slice(0, 3);
   const termPart =
     terms.length >= 2 ? `${terms[0]} and ${terms[1]}` :
     terms.length === 1 ? terms[0] :
@@ -490,6 +621,27 @@ function generateSubheadline(
         : ` Cross-checked against ${corroborators[0]} and ${corroborators[1]}.`;
 
   return `${primary.source} focuses on ${termPart}, with context pulled from source reporting instead of recycled feed copy.${corroboration}`;
+}
+
+function extractClaim(primary: FeedItem, context: StoryContext): string {
+  const cleanedTitle = cleanSnippet(primary.title);
+  const cleanedSummary = cleanSnippet(context.primarySummary);
+  let claim = cleanedTitle.length >= 16 ? cleanedTitle : cleanedSummary;
+  if (!claim) claim = cleanedTitle || cleanedSummary || "Claim unavailable";
+
+  // Remove trailing publication suffixes like " - Reuters" that are common in feeds.
+  claim = claim.replace(/\s+-\s+[A-Za-z][A-Za-z0-9 .&-]{2,}$/g, "").trim();
+  claim = claim.replace(/^["'“”]+|["'“”]+$/g, "").trim();
+
+  if (!claim) return "Claim unavailable.";
+
+  if (containsCjk(claim)) {
+    if (!/[。！？]$/.test(claim)) claim += "。";
+  } else if (!/[.!?]$/.test(claim)) {
+    claim += ".";
+  }
+
+  return claim;
 }
 
 function generateEditorialBody(
@@ -525,7 +677,8 @@ function generateEditorialBody(
     paragraphs.push(`Cross-source context: ${corroboration}`);
   }
 
-  const watchTerms = context.keyTerms.slice(0, 2);
+  const titleWatchTerms = extractTopTerms(primary.title, 3);
+  const watchTerms = (titleWatchTerms.length > 0 ? titleWatchTerms : context.keyTerms).slice(0, 2);
   if (watchTerms.length > 0) {
     const watchline =
       watchTerms.length === 1
@@ -599,7 +752,7 @@ function generateBiasContext(primary: FeedItem, related: FeedItem[]): string | n
 
 const TAG_KEYWORDS: Record<string, string[]> = {
   climate: ["climate", "warming", "carbon", "emission", "environmental", "green"],
-  war: ["war", "conflict", "military", "troops", "invasion", "defense"],
+  war: ["war", "conflict", "military", "troops", "invasion"],
   economy: ["economy", "inflation", "gdp", "recession", "market", "growth", "trade"],
   election: ["election", "vote", "ballot", "campaign", "candidate", "poll"],
   tech: ["ai", "artificial", "algorithm", "data", "software", "app", "digital"],
@@ -623,18 +776,34 @@ function deriveTags(item: FeedItem, context: StoryContext): string[] {
   const tags: string[] = [item.category.toLowerCase()];
 
   for (const [tag, keywords] of Object.entries(TAG_KEYWORDS)) {
-    if (keywords.some((kw) => text.includes(kw))) {
+    if (keywords.some((kw) => containsKeyword(text, kw))) {
       tags.push(tag);
     }
   }
 
+  const titleTerms = extractSignalKeywords(item.title);
   for (const term of context.keyTerms.slice(0, 2)) {
     if (/^[a-z0-9-]{4,24}$/.test(term)) {
-      tags.push(term);
+      if (titleTerms.has(term)) {
+        tags.push(term);
+      }
     }
   }
 
   return [...new Set(tags)].slice(0, 8);
+}
+
+function containsKeyword(text: string, keyword: string): boolean {
+  if (!keyword) return false;
+  if (keyword.includes(" ")) {
+    return text.includes(keyword);
+  }
+  const pattern = new RegExp(`\\b${escapeRegex(keyword)}\\b`, "i");
+  return pattern.test(text);
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 // ============================================================================
@@ -731,7 +900,12 @@ function extractTopTerms(text: string, maxTerms: number): string[] {
     .toLowerCase()
     .replace(/[^a-z0-9\s'-]/g, " ")
     .split(/\s+/)
-    .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
+    .filter((w) => {
+      if (!w) return false;
+      if (STOP_WORDS.has(w) || LOW_SIGNAL_TERMS.has(w)) return false;
+      if (w.length >= 4) return true;
+      return SHORT_SIGNAL_TERMS.has(w);
+    });
 
   for (const word of words) {
     counts.set(word, (counts.get(word) || 0) + 1);

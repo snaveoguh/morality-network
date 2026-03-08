@@ -23,7 +23,20 @@ export function ArticleTemplate({
   entityHash,
 }: ArticleTemplateProps) {
   const { isConnected } = useAccount();
-  const { primary, claim, relatedSources, subheadline, subheadlineEnglish, editorialBody, editorialBodyEnglish, wireSummary, biasContext, tags, contextSnippets } =
+  const {
+    primary,
+    claim,
+    relatedSources,
+    subheadline,
+    subheadlineEnglish,
+    editorialBody,
+    editorialBodyEnglish,
+    wireSummary,
+    biasContext,
+    tags,
+    contextSnippets,
+    agentResearch,
+  } =
     article;
 
   return (
@@ -156,6 +169,59 @@ export function ArticleTemplate({
           </div>
         </section>
       )}
+
+      {/* ══════════════ AGENT RESEARCH PACK ══════════════ */}
+      <section className="mb-8 border-t border-b-2 border-[var(--rule)] py-4">
+        <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
+          Agent Research Pack
+        </h2>
+        <p className="mb-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          {agentResearch.sourceCount} sources · {agentResearch.evidence.length} evidence links
+        </p>
+
+        <div className="mb-3 border-l-2 border-[var(--rule)] pl-3">
+          <p className="font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--ink-faint)]">Swarm Claim</p>
+          <p className="font-body-serif text-sm leading-relaxed text-[var(--ink)]">{agentResearch.canonicalClaim}</p>
+        </div>
+
+        {agentResearch.contradictionFlags.length > 0 && (
+          <div className="mb-3 border border-[var(--accent-red)]/50 bg-[color-mix(in_oklab,var(--paper)_94%,var(--accent-red)_6%)] p-2.5">
+            <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--accent-red)]">
+              Conflicting Claims Detected
+            </p>
+            <div className="space-y-2">
+              {agentResearch.contradictionFlags.slice(0, 2).map((flag) => (
+                <div key={flag.id} className="text-[12px] leading-relaxed text-[var(--ink-light)]">
+                  <span className="font-bold">{flag.sourceA}</span>: {flag.claimA}
+                  {" "}vs{" "}
+                  <span className="font-bold">{flag.sourceB}</span>: {flag.claimB}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          {agentResearch.evidence.slice(0, 4).map((evidence) => (
+            <div key={`${evidence.source}-${evidence.link}`} className="border-b border-[var(--rule-light)] pb-2 last:border-0">
+              <p className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                {evidence.source} · {evidence.kind}
+              </p>
+              <a
+                href={evidence.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-body-serif text-sm leading-relaxed text-[var(--ink)] underline decoration-[var(--rule-light)] underline-offset-2 transition-colors hover:text-[var(--accent-red)]"
+              >
+                {evidence.title}
+              </a>
+              <p className="mt-0.5 font-body-serif text-xs leading-relaxed text-[var(--ink-faint)]">
+                {evidence.summary}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* ══════════════ BIAS CONTEXT ══════════════ */}
       {biasContext && (
