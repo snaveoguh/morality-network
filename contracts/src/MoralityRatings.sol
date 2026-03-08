@@ -22,6 +22,22 @@ contract MoralityRatings {
         uint256 lastUpdated;
     }
 
+    struct InterpretationRating {
+        uint8 truth;
+        uint8 importance;
+        uint8 moralImpact;
+        uint256 timestamp;
+        bool exists;
+    }
+
+    struct InterpretationStats {
+        uint256 totalTruth;
+        uint256 totalImportance;
+        uint256 totalMoralImpact;
+        uint256 ratingCount;
+        uint256 lastUpdated;
+    }
+
     MoralityRegistry public registry;
 
     // entityHash => rater => Rating
@@ -34,6 +50,10 @@ contract MoralityRatings {
     mapping(bytes32 => mapping(address => bool)) public hasRated;
     // entityHash => rater => reason metadata
     mapping(bytes32 => mapping(address => RatingReason)) public ratingReasons;
+    // entityHash => rater => multidimensional interpretation
+    mapping(bytes32 => mapping(address => InterpretationRating)) public interpretationRatings;
+    // entityHash => aggregated multidimensional stats
+    mapping(bytes32 => InterpretationStats) public interpretationStats;
 
     uint256 public constant MAX_REASON_LENGTH = 500;
 
@@ -42,6 +62,25 @@ contract MoralityRatings {
     event RatedWithReason(bytes32 indexed entityHash, address indexed rater, uint8 score, string reason);
     event RatingWithReasonUpdated(
         bytes32 indexed entityHash, address indexed rater, uint8 oldScore, uint8 newScore, string reason
+    );
+    event InterpretationRated(
+        bytes32 indexed entityHash,
+        address indexed rater,
+        uint8 truth,
+        uint8 importance,
+        uint8 moralImpact,
+        string reason
+    );
+    event InterpretationRatingUpdated(
+        bytes32 indexed entityHash,
+        address indexed rater,
+        uint8 oldTruth,
+        uint8 oldImportance,
+        uint8 oldMoralImpact,
+        uint8 newTruth,
+        uint8 newImportance,
+        uint8 newMoralImpact,
+        string reason
     );
 
     constructor(address _registry) {
@@ -100,6 +139,75 @@ contract MoralityRatings {
         }
     }
 
+    /// @notice Rate interpretation dimensions on a 0-100 scale.
+    function rateInterpretation(
+        bytes32 entityHash,
+        uint8 truth,
+        uint8 importance,
+        uint8 moralImpact,
+        string calldata reason
+    ) external {
+        require(truth <= 100 && importance <= 100 && moralImpact <= 100, "Dimensions must be 0-100");
+        require(bytes(reason).length <= MAX_REASON_LENGTH, "Reason too long");
+
+        InterpretationStats storage stats = interpretationStats[entityHash];
+        InterpretationRating storage existing = interpretationRatings[entityHash][msg.sender];
+
+        if (existing.exists) {
+            uint8 oldTruth = existing.truth;
+            uint8 oldImportance = existing.importance;
+            uint8 oldMoralImpact = existing.moralImpact;
+
+            stats.totalTruth = stats.totalTruth - oldTruth + truth;
+            stats.totalImportance = stats.totalImportance - oldImportance + importance;
+            stats.totalMoralImpact = stats.totalMoralImpact - oldMoralImpact + moralImpact;
+            stats.lastUpdated = block.timestamp;
+
+            existing.truth = truth;
+            existing.importance = importance;
+            existing.moralImpact = moralImpact;
+            existing.timestamp = block.timestamp;
+
+            if (bytes(reason).length > 0) {
+                ratingReasons[entityHash][msg.sender] =
+                    RatingReason({reason: reason, timestamp: block.timestamp, exists: true});
+            }
+
+            emit InterpretationRatingUpdated(
+                entityHash,
+                msg.sender,
+                oldTruth,
+                oldImportance,
+                oldMoralImpact,
+                truth,
+                importance,
+                moralImpact,
+                reason
+            );
+            return;
+        }
+
+        interpretationRatings[entityHash][msg.sender] = InterpretationRating({
+            truth: truth,
+            importance: importance,
+            moralImpact: moralImpact,
+            timestamp: block.timestamp,
+            exists: true
+        });
+
+        stats.totalTruth += truth;
+        stats.totalImportance += importance;
+        stats.totalMoralImpact += moralImpact;
+        stats.ratingCount += 1;
+        stats.lastUpdated = block.timestamp;
+
+        if (bytes(reason).length > 0) {
+            ratingReasons[entityHash][msg.sender] = RatingReason({reason: reason, timestamp: block.timestamp, exists: true});
+        }
+
+        emit InterpretationRated(entityHash, msg.sender, truth, importance, moralImpact, reason);
+    }
+
     function getAverageRating(bytes32 entityHash) external view returns (uint256 avg, uint256 count) {
         EntityRatingStats memory stats = entityStats[entityHash];
         if (stats.ratingCount == 0) return (0, 0);
@@ -139,5 +247,28 @@ contract MoralityRatings {
             result[i] = allRaters[offset + i];
         }
         return result;
+    }
+
+    function getAverageInterpretation(bytes32 entityHash)
+        external
+        view
+        returns (uint256 avgTruth, uint256 avgImportance, uint256 avgMoralImpact, uint256 count)
+    {
+        InterpretationStats memory stats = interpretationStats[entityHash];
+        if (stats.ratingCount == 0) return (0, 0, 0, 0);
+        // average * 100 for 2 decimal precision (e.g., 9234 = 92.34)
+        avgTruth = (stats.totalTruth * 100) / stats.ratingCount;
+        avgImportance = (stats.totalImportance * 100) / stats.ratingCount;
+        avgMoralImpact = (stats.totalMoralImpact * 100) / stats.ratingCount;
+        count = stats.ratingCount;
+    }
+
+    function getUserInterpretation(bytes32 entityHash, address user)
+        external
+        view
+        returns (uint8 truth, uint8 importance, uint8 moralImpact, uint256 timestamp, bool exists)
+    {
+        InterpretationRating memory r = interpretationRatings[entityHash][user];
+        return (r.truth, r.importance, r.moralImpact, r.timestamp, r.exists);
     }
 }

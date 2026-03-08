@@ -94,6 +94,16 @@ export const REGISTRY_ABI = [
   },
   {
     type: "function",
+    name: "setCanonicalClaim",
+    inputs: [
+      { name: "entityHash", type: "bytes32" },
+      { name: "claimText", type: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "getEntity",
     inputs: [{ name: "entityHash", type: "bytes32" }],
     outputs: [
@@ -122,9 +132,66 @@ export const REGISTRY_ABI = [
   },
   {
     type: "function",
+    name: "computeClaimHash",
+    inputs: [{ name: "claimText", type: "string" }],
+    outputs: [{ name: "", type: "bytes32" }],
+    stateMutability: "pure",
+  },
+  {
+    type: "function",
     name: "getEntityCount",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getCanonicalClaim",
+    inputs: [{ name: "entityHash", type: "bytes32" }],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "claimHash", type: "bytes32" },
+          { name: "text", type: "string" },
+          { name: "setBy", type: "address" },
+          { name: "createdAt", type: "uint256" },
+          { name: "updatedAt", type: "uint256" },
+          { name: "version", type: "uint64" },
+          { name: "exists", type: "bool" },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getClaimRevisionCount",
+    inputs: [{ name: "entityHash", type: "bytes32" }],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getClaimRevision",
+    inputs: [
+      { name: "entityHash", type: "bytes32" },
+      { name: "index", type: "uint256" },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "claimHash", type: "bytes32" },
+          { name: "text", type: "string" },
+          { name: "updatedBy", type: "address" },
+          { name: "timestamp", type: "uint256" },
+          { name: "version", type: "uint64" },
+        ],
+      },
+    ],
     stateMutability: "view",
   },
   {
@@ -135,6 +202,29 @@ export const REGISTRY_ABI = [
       { name: "entityType", type: "uint8", indexed: false },
       { name: "identifier", type: "string", indexed: false },
       { name: "registeredBy", type: "address", indexed: true },
+    ],
+  },
+  {
+    type: "event",
+    name: "CanonicalClaimSet",
+    inputs: [
+      { name: "entityHash", type: "bytes32", indexed: true },
+      { name: "claimHash", type: "bytes32", indexed: true },
+      { name: "claimText", type: "string", indexed: false },
+      { name: "setBy", type: "address", indexed: true },
+      { name: "version", type: "uint64", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "CanonicalClaimUpdated",
+    inputs: [
+      { name: "entityHash", type: "bytes32", indexed: true },
+      { name: "previousClaimHash", type: "bytes32", indexed: true },
+      { name: "newClaimHash", type: "bytes32", indexed: true },
+      { name: "claimText", type: "string", indexed: false },
+      { name: "updatedBy", type: "address", indexed: false },
+      { name: "version", type: "uint64", indexed: false },
     ],
   },
 ] as const;
@@ -163,11 +253,52 @@ export const RATINGS_ABI = [
   },
   {
     type: "function",
+    name: "rateInterpretation",
+    inputs: [
+      { name: "entityHash", type: "bytes32" },
+      { name: "truth", type: "uint8" },
+      { name: "importance", type: "uint8" },
+      { name: "moralImpact", type: "uint8" },
+      { name: "reason", type: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "getAverageRating",
     inputs: [{ name: "entityHash", type: "bytes32" }],
     outputs: [
       { name: "avg", type: "uint256" },
       { name: "count", type: "uint256" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getAverageInterpretation",
+    inputs: [{ name: "entityHash", type: "bytes32" }],
+    outputs: [
+      { name: "avgTruth", type: "uint256" },
+      { name: "avgImportance", type: "uint256" },
+      { name: "avgMoralImpact", type: "uint256" },
+      { name: "count", type: "uint256" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getUserInterpretation",
+    inputs: [
+      { name: "entityHash", type: "bytes32" },
+      { name: "user", type: "address" },
+    ],
+    outputs: [
+      { name: "truth", type: "uint8" },
+      { name: "importance", type: "uint8" },
+      { name: "moralImpact", type: "uint8" },
+      { name: "timestamp", type: "uint256" },
+      { name: "exists", type: "bool" },
     ],
     stateMutability: "view",
   },
@@ -217,6 +348,33 @@ export const RATINGS_ABI = [
       { name: "reason", type: "string", indexed: false },
     ],
   },
+  {
+    type: "event",
+    name: "InterpretationRated",
+    inputs: [
+      { name: "entityHash", type: "bytes32", indexed: true },
+      { name: "rater", type: "address", indexed: true },
+      { name: "truth", type: "uint8", indexed: false },
+      { name: "importance", type: "uint8", indexed: false },
+      { name: "moralImpact", type: "uint8", indexed: false },
+      { name: "reason", type: "string", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "InterpretationRatingUpdated",
+    inputs: [
+      { name: "entityHash", type: "bytes32", indexed: true },
+      { name: "rater", type: "address", indexed: true },
+      { name: "oldTruth", type: "uint8", indexed: false },
+      { name: "oldImportance", type: "uint8", indexed: false },
+      { name: "oldMoralImpact", type: "uint8", indexed: false },
+      { name: "newTruth", type: "uint8", indexed: false },
+      { name: "newImportance", type: "uint8", indexed: false },
+      { name: "newMoralImpact", type: "uint8", indexed: false },
+      { name: "reason", type: "string", indexed: false },
+    ],
+  },
 ] as const;
 
 export const COMMENTS_ABI = [
@@ -240,6 +398,13 @@ export const COMMENTS_ABI = [
     ],
     outputs: [],
     stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "nextCommentId",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
   },
   {
     type: "function",

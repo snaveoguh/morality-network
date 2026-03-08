@@ -23,7 +23,7 @@ export function ArticleTemplate({
   entityHash,
 }: ArticleTemplateProps) {
   const { isConnected } = useAccount();
-  const { primary, relatedSources, subheadline, subheadlineEnglish, editorialBody, editorialBodyEnglish, wireSummary, biasContext, tags, contextSnippets } =
+  const { primary, claim, relatedSources, subheadline, subheadlineEnglish, editorialBody, editorialBodyEnglish, wireSummary, biasContext, tags, contextSnippets } =
     article;
 
   return (
@@ -66,6 +66,15 @@ export function ArticleTemplate({
               {subheadlineEnglish}
             </p>
           )}
+
+        <aside className="mt-5 border-l-2 border-[var(--rule)] pl-4">
+          <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--ink-faint)]">
+            Canonical Claim
+          </p>
+          <p className="font-body-serif text-base leading-relaxed text-[var(--ink)]">
+            {claim}
+          </p>
+        </aside>
 
         {/* Dateline — monospace ruled */}
         <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-b border-[var(--rule-light)] py-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
@@ -270,16 +279,39 @@ export function ArticleTemplate({
           >
             {primary.source}: {primary.title}
           </a>
+          {primary.sourceUrl &&
+            primary.sourceUrl !== primary.link && (
+              <a
+                href={primary.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)] underline decoration-[var(--rule-light)] underline-offset-2 transition-colors hover:text-[var(--ink)] hover:decoration-[var(--ink)]"
+              >
+                Feed Source: {primary.sourceUrl}
+              </a>
+            )}
           {relatedSources.map((rel, i) => (
-            <a
-              key={i}
-              href={rel.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block font-body-serif text-sm text-[var(--ink-light)] underline decoration-[var(--rule-light)] underline-offset-2 transition-colors hover:text-[var(--accent-red)] hover:decoration-[var(--accent-red)]"
-            >
-              {rel.source}: {rel.title}
-            </a>
+            <div key={i} className="space-y-1">
+              <a
+                href={rel.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block font-body-serif text-sm text-[var(--ink-light)] underline decoration-[var(--rule-light)] underline-offset-2 transition-colors hover:text-[var(--accent-red)] hover:decoration-[var(--accent-red)]"
+              >
+                {rel.source}: {rel.title}
+              </a>
+              {rel.sourceUrl &&
+                rel.sourceUrl !== rel.link && (
+                  <a
+                    href={rel.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)] underline decoration-[var(--rule-light)] underline-offset-2 transition-colors hover:text-[var(--ink)] hover:decoration-[var(--ink)]"
+                  >
+                    Feed Source: {rel.sourceUrl}
+                  </a>
+                )}
+            </div>
           ))}
         </div>
 
