@@ -107,5 +107,9 @@ export function getTraderConfig(): TraderExecutionConfig {
       takeProfitPct: numberFromEnv("TRADER_TAKE_PROFIT_PCT", 0.45),
       slippageBps: numberFromEnv("TRADER_SLIPPAGE_BPS", 250),
     },
+    safety: {
+      minScannerCandidatesLive: numberFromEnv("TRADER_MIN_SCANNER_CANDIDATES_LIVE", 2),
+      minBaseEthForGas: numberFromEnv("TRADER_MIN_BASE_ETH_FOR_GAS", 0.002),
+    },
   };
 }

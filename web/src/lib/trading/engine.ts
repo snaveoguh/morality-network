@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { Hash } from "viem";
+import { formatUnits, type Hash } from "viem";
 import { ERC20_TRADE_ABI } from "./abi";
 import { createTraderClients } from "./clients";
 import { getTraderConfig } from "./config";
@@ -12,6 +12,8 @@ import type {
   ScannerLaunch,
   TraderCycleReport,
   TraderExecutionConfig,
+  TraderReadinessBalance,
+  TraderReadinessReport,
 } from "./types";
 
 class TraderEngine {
@@ -41,6 +43,14 @@ class TraderEngine {
       skipped: [],
       errors: [],
     };
+
+    const readiness = await this.getReadiness();
+    report.readiness = readiness;
+    if (!this.config.dryRun && !readiness.liveReady) {
+      report.errors.push(`live-gate:${readiness.reasons.join(",")}`);
+      report.finishedAt = Date.now();
+      return report;
+    }
 
     await this.evaluateOpenPositions(report);
 
@@ -83,6 +93,92 @@ class TraderEngine {
   async listPositions(): Promise<Position[]> {
     await this.initPromise;
     return this.store.getAll();
+  }
+
+  async getReadiness(): Promise<TraderReadinessReport> {
+    await this.initPromise;
+
+    const reasons: string[] = [];
+    let scannerCandidates = 0;
+    let scannerFetchError: string | undefined;
+
+    try {
+      scannerCandidates = (await fetchScannerCandidates(this.config)).length;
+    } catch (error) {
+      scannerFetchError = error instanceof Error ? error.message : "scanner fetch failed";
+      reasons.push("scanner_unavailable");
+    }
+
+    if (scannerCandidates < this.config.safety.minScannerCandidatesLive) {
+      reasons.push(`scanner_candidates_lt_${this.config.safety.minScannerCandidatesLive}`);
+    }
+
+    const balances: TraderReadinessBalance[] = [];
+
+    const nativeBalance = await this.clients.publicClient.getBalance({
+      address: this.clients.address,
+    });
+    const nativeFormatted = formatUnits(nativeBalance, 18);
+    const nativeMeets = Number(nativeFormatted) >= this.config.safety.minBaseEthForGas;
+    balances.push({
+      symbol: "ETH",
+      address: "native",
+      raw: nativeBalance.toString(),
+      decimals: 18,
+      formatted: nativeFormatted,
+      requiredFormatted: this.config.safety.minBaseEthForGas.toString(),
+      meetsRequirement: nativeMeets,
+    });
+    if (!nativeMeets) {
+      reasons.push(`eth_balance_lt_${this.config.safety.minBaseEthForGas}`);
+    }
+
+    for (const [symbol, tokenAddress] of Object.entries(this.config.quoteTokens)) {
+      const decimals = this.config.quoteTokenDecimals[symbol] ?? 18;
+      const requiredRaw = this.config.entryBudgetRaw[symbol] ?? BigInt(0);
+      const requiredFormatted = formatUnits(requiredRaw, decimals);
+
+      let raw = BigInt(0);
+      try {
+        raw = await this.clients.publicClient.readContract({
+          address: tokenAddress,
+          abi: ERC20_TRADE_ABI,
+          functionName: "balanceOf",
+          args: [this.clients.address],
+        });
+      } catch {
+        reasons.push(`${symbol.toLowerCase()}_balance_unreadable`);
+      }
+
+      const formatted = formatUnits(raw, decimals);
+      const meetsRequirement = raw >= requiredRaw;
+      balances.push({
+        symbol,
+        address: tokenAddress,
+        raw: raw.toString(),
+        decimals,
+        formatted,
+        requiredRaw: requiredRaw.toString(),
+        requiredFormatted,
+        meetsRequirement,
+      });
+
+      if (!meetsRequirement) {
+        reasons.push(`${symbol.toLowerCase()}_balance_lt_entry_budget`);
+      }
+    }
+
+    return {
+      timestamp: Date.now(),
+      dryRun: this.config.dryRun,
+      account: this.clients.address,
+      scannerCandidates,
+      scannerFetchError,
+      minScannerCandidatesLive: this.config.safety.minScannerCandidatesLive,
+      balances,
+      liveReady: reasons.length === 0,
+      reasons,
+    };
   }
 
   private async evaluateOpenPositions(report: TraderCycleReport): Promise<void> {
@@ -300,6 +396,10 @@ export async function listTraderPositions(): Promise<Position[]> {
   return getTraderEngine().listPositions();
 }
 
+export async function getTraderReadiness(): Promise<TraderReadinessReport> {
+  return getTraderEngine().getReadiness();
+}
+
 export function redactedConfigSummary() {
   const config = getTraderConfig();
   return {
@@ -308,6 +408,7 @@ export function redactedConfigSummary() {
     scannerApiUrl: config.scannerApiUrl,
     quoteTokens: config.quoteTokens,
     risk: config.risk,
+    safety: config.safety,
     gasMultiplierBps: config.gasMultiplierBps,
     maxPriorityFeePerGas: config.maxPriorityFeePerGas.toString(),
   };

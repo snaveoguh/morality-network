@@ -67,6 +67,11 @@ export interface TraderRiskConfig {
   slippageBps: number;
 }
 
+export interface TraderSafetyConfig {
+  minScannerCandidatesLive: number;
+  minBaseEthForGas: number;
+}
+
 export interface TraderExecutionConfig {
   dryRun: boolean;
   rpcUrl: string;
@@ -85,6 +90,7 @@ export interface TraderExecutionConfig {
   quoteTokenDecimals: Record<string, number>;
   entryBudgetRaw: Record<string, bigint>;
   risk: TraderRiskConfig;
+  safety: TraderSafetyConfig;
 }
 
 export interface SwapResult {
@@ -102,4 +108,28 @@ export interface TraderCycleReport {
   exits: Position[];
   skipped: string[];
   errors: string[];
+  readiness?: TraderReadinessReport;
+}
+
+export interface TraderReadinessBalance {
+  symbol: string;
+  address: Address | "native";
+  raw: string;
+  decimals: number;
+  formatted: string;
+  requiredRaw?: string;
+  requiredFormatted?: string;
+  meetsRequirement: boolean;
+}
+
+export interface TraderReadinessReport {
+  timestamp: number;
+  dryRun: boolean;
+  account: Address;
+  scannerCandidates: number;
+  scannerFetchError?: string;
+  minScannerCandidatesLive: number;
+  balances: TraderReadinessBalance[];
+  liveReady: boolean;
+  reasons: string[];
 }
