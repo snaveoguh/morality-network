@@ -136,7 +136,7 @@ class TraderEngine {
     }
 
     const amountIn = BigInt(position.quantityTokenRaw);
-    if (amountIn <= 0n) {
+    if (amountIn <= BigInt(0)) {
       throw new Error("position amount is zero");
     }
 
@@ -188,7 +188,7 @@ class TraderEngine {
     const quoteDecimals = this.config.quoteTokenDecimals[quoteSymbol];
     const amountIn = this.config.entryBudgetRaw[quoteSymbol];
 
-    if (!quoteToken || quoteDecimals === undefined || amountIn === undefined || amountIn <= 0n) {
+    if (!quoteToken || quoteDecimals === undefined || amountIn === undefined || amountIn <= BigInt(0)) {
       return null;
     }
 
@@ -228,7 +228,7 @@ class TraderEngine {
       tokenPriceUsd,
       slippageBps: this.config.risk.slippageBps,
     });
-    if (!this.config.dryRun && amountOutMin <= 0n) {
+    if (!this.config.dryRun && amountOutMin <= BigInt(0)) {
       throw new Error("amountOutMin resolved to zero");
     }
 
@@ -263,7 +263,7 @@ class TraderEngine {
       dex: candidate.dex,
       poolAddress: candidate.poolAddress,
       entryPriceUsd: tokenPriceUsd,
-      quantityTokenRaw: amountOutMin > 0n ? amountOutMin.toString() : "1",
+      quantityTokenRaw: amountOutMin > BigInt(0) ? amountOutMin.toString() : "1",
       quoteSpentRaw: amountIn.toString(),
       entryNotionalUsd: notionalUsd,
       stopLossPct: this.config.risk.stopLossPct,

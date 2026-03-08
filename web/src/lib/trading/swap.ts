@@ -3,7 +3,7 @@ import { AERODROME_ROUTER_ABI, ERC20_TRADE_ABI, UNISWAP_V3_ROUTER_ABI } from "./
 import { fastFeeOverrides } from "./gas";
 import type { DexKind, TraderExecutionConfig } from "./types";
 
-const MAX_UINT256 = (1n << 256n) - 1n;
+const MAX_UINT256 = (BigInt(1) << BigInt(256)) - BigInt(1);
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const decimalsCache = new Map<string, number>();
@@ -99,7 +99,7 @@ async function swapUniswapV3(ctx: SwapContext, params: SwapParams): Promise<Hash
         deadline,
         amountIn: params.amountIn,
         amountOutMinimum: params.amountOutMin,
-        sqrtPriceLimitX96: 0n,
+        sqrtPriceLimitX96: BigInt(0),
       },
     ],
     ...fees,
@@ -164,9 +164,9 @@ export function estimateAmountOutMin(args: {
   const amountIn = Number(args.amountInRaw) / 10 ** args.quoteDecimals;
   const expectedOutFloat = (amountIn * args.quotePriceUsd) / args.tokenPriceUsd;
   const expectedOutRaw = Math.floor(expectedOutFloat * 10 ** args.tokenDecimals);
-  if (!Number.isFinite(expectedOutRaw) || expectedOutRaw <= 0) return 0n;
+  if (!Number.isFinite(expectedOutRaw) || expectedOutRaw <= 0) return BigInt(0);
 
   const expectedOut = BigInt(expectedOutRaw);
-  const min = (expectedOut * BigInt(10_000 - args.slippageBps)) / 10_000n;
-  return min > 0n ? min : 0n;
+  const min = (expectedOut * BigInt(10_000 - args.slippageBps)) / BigInt(10_000);
+  return min > BigInt(0) ? min : BigInt(0);
 }

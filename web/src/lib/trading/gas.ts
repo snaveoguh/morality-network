@@ -10,7 +10,7 @@ export async function fastFeeOverrides(
   config: TraderExecutionConfig
 ): Promise<FeeOverrides> {
   const latestBlock = await publicClient.getBlock({ blockTag: "latest" });
-  const baseFeePerGas = latestBlock.baseFeePerGas ?? 0n;
+  const baseFeePerGas = latestBlock.baseFeePerGas ?? BigInt(0);
 
   const estimate = await publicClient.estimateFeesPerGas({ type: "eip1559" });
 
@@ -19,14 +19,14 @@ export async function fastFeeOverrides(
       ? estimate.maxPriorityFeePerGas
       : config.maxPriorityFeePerGas;
 
-  const baselineFee = estimate.maxFeePerGas && estimate.maxFeePerGas > 0n
+  const baselineFee = estimate.maxFeePerGas && estimate.maxFeePerGas > BigInt(0)
     ? estimate.maxFeePerGas
     : baseFeePerGas + maxPriorityFeePerGas;
 
-  const maxFeePerGas = (baselineFee * BigInt(config.gasMultiplierBps)) / 10_000n;
+  const maxFeePerGas = (baselineFee * BigInt(config.gasMultiplierBps)) / BigInt(10_000);
 
   return {
-    maxFeePerGas: maxFeePerGas > maxPriorityFeePerGas ? maxFeePerGas : maxPriorityFeePerGas + 1n,
+    maxFeePerGas: maxFeePerGas > maxPriorityFeePerGas ? maxFeePerGas : maxPriorityFeePerGas + BigInt(1),
     maxPriorityFeePerGas,
   };
 }
