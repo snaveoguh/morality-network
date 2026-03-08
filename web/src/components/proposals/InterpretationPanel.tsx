@@ -7,7 +7,7 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
-import { keccak256, parseEther, toBytes } from "viem";
+import { parseEther } from "viem";
 import {
   COMMENTS_ABI,
   CONTRACTS,
@@ -16,6 +16,7 @@ import {
 } from "@/lib/contracts";
 import { computeEntityHash } from "@/lib/entity";
 import { getDaoPredictionKey, getPrimaryProposalEntityIdentifier } from "@/lib/proposal-entity";
+import { parseEvidenceInput } from "@/lib/evidence";
 import type { Proposal } from "@/lib/governance";
 
 interface InterpretationPanelProps {
@@ -45,6 +46,7 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
     () => computeEntityHash(entityIdentifier),
     [entityIdentifier]
   );
+  const evidencePreview = useMemo(() => parseEvidenceInput(evidence), [evidence]);
 
   const { data: daoResolvableData, isLoading: isDaoResolvableLoading } = useReadContract({
     address: PREDICTION_MARKET_ADDRESS,
@@ -152,7 +154,7 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
     isEligible &&
     !isBusy &&
     claim.trim().length > 20 &&
-    evidence.trim().length > 6 &&
+    evidencePreview.isValidUrl &&
     selectedSide !== null &&
     Number.isFinite(stakeValue) &&
     stakeValue > 0;
@@ -161,14 +163,15 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
     if (!canSubmit || selectedSide === null) return;
     setErrorMessage(null);
 
-    const evidenceHash = keccak256(toBytes(evidence.trim()));
+    const evidenceHash = evidencePreview.evidenceHash;
     const argumentType = selectedSide === "for" ? 1 : 2;
+    const commentContent = `${claim.trim()}\n\nEvidence: ${evidencePreview.normalized}`;
 
     writeInterpretation({
       address: CONTRACTS.comments,
       abi: COMMENTS_ABI,
       functionName: "commentStructured",
-      args: [entityHash, claim.trim(), BigInt(0), argumentType, BigInt(0), evidenceHash],
+      args: [entityHash, commentContent, BigInt(0), argumentType, BigInt(0), evidenceHash],
     });
 
     setFlowStep("posting");
@@ -208,10 +211,42 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
           type="text"
           value={evidence}
           onChange={(e) => setEvidence(e.target.value)}
-          placeholder="Evidence URL or source note"
+          placeholder="https://example.com/source"
           className="w-full border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-1.5 font-mono text-[10px] text-[var(--ink)] placeholder-[var(--ink-faint)] outline-none transition-colors focus:border-[var(--rule)]"
           disabled={isBusy}
         />
+        {evidence.trim().length > 0 && (
+          <div className="border border-[var(--rule-light)] p-2">
+            {evidencePreview.isValidUrl ? (
+              <>
+                <div className="mb-1 flex items-center gap-2 font-mono text-[8px] uppercase tracking-wider">
+                  <span className="font-bold text-[var(--ink)]">{evidencePreview.sourceType}</span>
+                  <span className="text-[var(--rule-light)]">|</span>
+                  <span className="text-[var(--ink-faint)]">{evidencePreview.qualityTier} confidence</span>
+                </div>
+                <p className="font-mono text-[9px] text-[var(--ink-faint)]">
+                  {evidencePreview.host}
+                </p>
+                <p className="mt-1 line-clamp-2 font-mono text-[9px] text-[var(--ink-light)]">
+                  {evidencePreview.normalized}
+                </p>
+                <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+                  hash: {evidencePreview.evidenceHash.slice(0, 10)}...
+                  {evidencePreview.evidenceHash.slice(-6)}
+                </p>
+                {evidencePreview.warnings.map((warning) => (
+                  <p key={warning} className="mt-1 font-mono text-[8px] text-[var(--ink-faint)]">
+                    {warning}
+                  </p>
+                ))}
+              </>
+            ) : (
+              <p className="font-mono text-[9px] text-[var(--accent-red)]">
+                {evidencePreview.warnings[0]}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center gap-0 font-mono text-[10px] uppercase tracking-wider">
           {["for", "against"].map((side, i) => (
@@ -270,6 +305,11 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
 
         {errorMessage && (
           <p className="font-mono text-[9px] text-[var(--accent-red)]">{errorMessage}</p>
+        )}
+        {!evidencePreview.isValidUrl && evidence.trim().length > 0 && (
+          <p className="font-mono text-[8px] text-[var(--ink-faint)]">
+            Use a full URL so this interpretation can be scored reliably.
+          </p>
         )}
       </div>
     </div>
