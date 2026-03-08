@@ -31,8 +31,10 @@ export const RATINGS_ABI = [
 
 export const COMMENTS_ABI = [
   { type: 'function', name: 'comment', inputs: [{ name: 'entityHash', type: 'bytes32' }, { name: 'content', type: 'string' }, { name: 'parentId', type: 'uint256' }], outputs: [{ name: '', type: 'uint256' }], stateMutability: 'nonpayable' },
+  { type: 'function', name: 'commentStructured', inputs: [{ name: 'entityHash', type: 'bytes32' }, { name: 'content', type: 'string' }, { name: 'parentId', type: 'uint256' }, { name: 'argumentType', type: 'uint8' }, { name: 'referenceCommentId', type: 'uint256' }, { name: 'evidenceHash', type: 'bytes32' }], outputs: [{ name: '', type: 'uint256' }], stateMutability: 'nonpayable' },
   { type: 'function', name: 'vote', inputs: [{ name: 'commentId', type: 'uint256' }, { name: 'v', type: 'int8' }], outputs: [], stateMutability: 'nonpayable' },
   { type: 'function', name: 'getComment', inputs: [{ name: 'commentId', type: 'uint256' }], outputs: [{ name: '', type: 'tuple', components: [{ name: 'id', type: 'uint256' }, { name: 'entityHash', type: 'bytes32' }, { name: 'author', type: 'address' }, { name: 'content', type: 'string' }, { name: 'parentId', type: 'uint256' }, { name: 'score', type: 'int256' }, { name: 'tipTotal', type: 'uint256' }, { name: 'timestamp', type: 'uint256' }, { name: 'exists', type: 'bool' }] }], stateMutability: 'view' },
+  { type: 'function', name: 'getArgumentMeta', inputs: [{ name: 'commentId', type: 'uint256' }], outputs: [{ name: 'argumentType', type: 'uint8' }, { name: 'referenceCommentId', type: 'uint256' }, { name: 'evidenceHash', type: 'bytes32' }, { name: 'exists', type: 'bool' }], stateMutability: 'view' },
   { type: 'function', name: 'getEntityComments', inputs: [{ name: 'entityHash', type: 'bytes32' }, { name: 'offset', type: 'uint256' }, { name: 'limit', type: 'uint256' }], outputs: [{ name: '', type: 'uint256[]' }], stateMutability: 'view' },
   { type: 'function', name: 'getEntityCommentCount', inputs: [{ name: 'entityHash', type: 'bytes32' }], outputs: [{ name: '', type: 'uint256' }], stateMutability: 'view' },
 ] as const;

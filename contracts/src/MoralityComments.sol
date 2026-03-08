@@ -2,6 +2,14 @@
 pragma solidity ^0.8.24;
 
 contract MoralityComments {
+    enum ArgumentType {
+        DISCUSSION,
+        CLAIM,
+        COUNTERCLAIM,
+        EVIDENCE,
+        SOURCE
+    }
+
     struct Comment {
         uint256 id;
         bytes32 entityHash;
@@ -14,16 +22,102 @@ contract MoralityComments {
         bool exists;
     }
 
+    struct ArgumentMeta {
+        ArgumentType argumentType;
+        uint256 referenceCommentId;
+        bytes32 evidenceHash;
+        bool exists;
+    }
+
     uint256 public nextCommentId = 1;
     mapping(uint256 => Comment) public comments;
+    mapping(uint256 => ArgumentMeta) public argumentMetaByComment;
     mapping(bytes32 => uint256[]) public entityComments; // entityHash => commentIds
     mapping(uint256 => uint256[]) public childComments; // parentId => childIds
     mapping(uint256 => mapping(address => int8)) public votes; // commentId => voter => vote (+1/-1)
+    address public owner;
+    address public tippingContract;
 
     event CommentCreated(uint256 indexed commentId, bytes32 indexed entityHash, address indexed author, uint256 parentId);
+    event StructuredCommentCreated(
+        uint256 indexed commentId,
+        bytes32 indexed entityHash,
+        address indexed author,
+        uint256 parentId,
+        ArgumentType argumentType,
+        uint256 referenceCommentId,
+        bytes32 evidenceHash
+    );
     event CommentVoted(uint256 indexed commentId, address indexed voter, int8 vote);
+    event TippingContractUpdated(address indexed oldTippingContract, address indexed newTippingContract);
+    event OwnershipTransferred(address indexed oldOwner, address indexed newOwner);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    modifier onlyTipping() {
+        require(msg.sender == tippingContract, "Not tipping contract");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function setTippingContract(address _tippingContract) external onlyOwner {
+        require(_tippingContract != address(0), "Zero address");
+        emit TippingContractUpdated(tippingContract, _tippingContract);
+        tippingContract = _tippingContract;
+    }
+
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "Zero address");
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+    }
 
     function comment(bytes32 entityHash, string calldata content, uint256 parentId) external returns (uint256) {
+        return _createComment(entityHash, content, parentId);
+    }
+
+    /// @notice Add a structured argument node on top of comment text for graph/indexer consumption.
+    function commentStructured(
+        bytes32 entityHash,
+        string calldata content,
+        uint256 parentId,
+        ArgumentType argumentType,
+        uint256 referenceCommentId,
+        bytes32 evidenceHash
+    ) external returns (uint256) {
+        uint256 commentId = _createComment(entityHash, content, parentId);
+
+        if (referenceCommentId > 0) {
+            require(comments[referenceCommentId].exists, "Reference does not exist");
+            require(comments[referenceCommentId].entityHash == entityHash, "Reference entity mismatch");
+        }
+
+        argumentMetaByComment[commentId] = ArgumentMeta({
+            argumentType: argumentType,
+            referenceCommentId: referenceCommentId,
+            evidenceHash: evidenceHash,
+            exists: true
+        });
+
+        emit StructuredCommentCreated(
+            commentId,
+            entityHash,
+            msg.sender,
+            parentId,
+            argumentType,
+            referenceCommentId,
+            evidenceHash
+        );
+        return commentId;
+    }
+
+    function _createComment(bytes32 entityHash, string calldata content, uint256 parentId) internal returns (uint256) {
         require(bytes(content).length > 0, "Empty comment");
         require(bytes(content).length <= 2000, "Comment too long");
 
@@ -73,6 +167,15 @@ contract MoralityComments {
         return comments[commentId];
     }
 
+    function getArgumentMeta(uint256 commentId)
+        external
+        view
+        returns (ArgumentType argumentType, uint256 referenceCommentId, bytes32 evidenceHash, bool exists)
+    {
+        ArgumentMeta memory meta = argumentMetaByComment[commentId];
+        return (meta.argumentType, meta.referenceCommentId, meta.evidenceHash, meta.exists);
+    }
+
     function getEntityComments(bytes32 entityHash, uint256 offset, uint256 limit) external view returns (uint256[] memory) {
         uint256[] storage allIds = entityComments[entityHash];
         uint256 total = allIds.length;
@@ -99,7 +202,7 @@ contract MoralityComments {
     }
 
     /// @dev Called by MoralityTipping to update tip totals
-    function addTipToComment(uint256 commentId, uint256 amount) external {
+    function addTipToComment(uint256 commentId, uint256 amount) external onlyTipping {
         require(comments[commentId].exists, "Comment does not exist");
         comments[commentId].tipTotal += amount;
     }

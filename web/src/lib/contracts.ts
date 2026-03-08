@@ -391,6 +391,20 @@ export const COMMENTS_ABI = [
   },
   {
     type: "function",
+    name: "commentStructured",
+    inputs: [
+      { name: "entityHash", type: "bytes32" },
+      { name: "content", type: "string" },
+      { name: "parentId", type: "uint256" },
+      { name: "argumentType", type: "uint8" },
+      { name: "referenceCommentId", type: "uint256" },
+      { name: "evidenceHash", type: "bytes32" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "vote",
     inputs: [
       { name: "commentId", type: "uint256" },
@@ -448,6 +462,18 @@ export const COMMENTS_ABI = [
     stateMutability: "view",
   },
   {
+    type: "function",
+    name: "getArgumentMeta",
+    inputs: [{ name: "commentId", type: "uint256" }],
+    outputs: [
+      { name: "argumentType", type: "uint8" },
+      { name: "referenceCommentId", type: "uint256" },
+      { name: "evidenceHash", type: "bytes32" },
+      { name: "exists", type: "bool" },
+    ],
+    stateMutability: "view",
+  },
+  {
     type: "event",
     name: "CommentCreated",
     inputs: [
@@ -455,6 +481,19 @@ export const COMMENTS_ABI = [
       { name: "entityHash", type: "bytes32", indexed: true },
       { name: "author", type: "address", indexed: true },
       { name: "parentId", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "StructuredCommentCreated",
+    inputs: [
+      { name: "commentId", type: "uint256", indexed: true },
+      { name: "entityHash", type: "bytes32", indexed: true },
+      { name: "author", type: "address", indexed: true },
+      { name: "parentId", type: "uint256", indexed: false },
+      { name: "argumentType", type: "uint8", indexed: false },
+      { name: "referenceCommentId", type: "uint256", indexed: false },
+      { name: "evidenceHash", type: "bytes32", indexed: false },
     ],
   },
 ] as const;
