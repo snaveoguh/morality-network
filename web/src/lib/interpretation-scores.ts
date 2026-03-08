@@ -25,6 +25,7 @@ const COMMENT_CREATED_EVENT = parseAbiItem(
 
 const OUTCOME_FOR = 1;
 const OUTCOME_AGAINST = 2;
+const ZERO_HASH = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 type BinaryOutcome = "for" | "against";
 
@@ -62,6 +63,8 @@ export interface InterpretationOutcomeScore {
   parentId: string;
   argumentType: "discussion" | "claim" | "counterclaim" | "evidence" | "source";
   interpretation: string;
+  evidenceHash: `0x${string}`;
+  hasEvidence: boolean;
   predictedOutcome: BinaryOutcome;
   resolvedOutcome: BinaryOutcome;
   wasCorrect: boolean;
@@ -69,6 +72,7 @@ export interface InterpretationOutcomeScore {
   stakeEth: number;
   commentScore: number;
   tipEth: number;
+  reasoningScore: number;
   outcomeScore: number;
   createdAt: string;
   txHash: `0x${string}`;
@@ -216,6 +220,8 @@ export async function buildInterpretationOutcomeScores(options?: {
   maxCommentCandidates?: number;
   minOutcomeScore?: number;
   onlyCorrect?: boolean;
+  requireStructured?: boolean;
+  requireEvidence?: boolean;
 }): Promise<InterpretationOutcomeSnapshot> {
   const marketAddress = PREDICTION_MARKET_ADDRESS;
   const commentsAddress = CONTRACTS.comments;
@@ -224,6 +230,8 @@ export async function buildInterpretationOutcomeScores(options?: {
   const maxCommentCandidates = Math.max(limit, Math.min(1200, options?.maxCommentCandidates ?? limit * 20));
   const minOutcomeScore = options?.minOutcomeScore ?? -100;
   const onlyCorrect = options?.onlyCorrect ?? false;
+  const requireStructured = options?.requireStructured ?? true;
+  const requireEvidence = options?.requireEvidence ?? true;
 
   const empty: InterpretationOutcomeSnapshot = {
     generatedAt: new Date().toISOString(),
@@ -400,6 +408,8 @@ export async function buildInterpretationOutcomeScores(options?: {
       if (!comment || !comment.exists) continue;
 
       let argumentType: InterpretationOutcomeScore["argumentType"] = "discussion";
+      let evidenceHash = ZERO_HASH as `0x${string}`;
+      let hasStructuredMeta = false;
       try {
         const meta = (await client.readContract({
           address: commentsAddress,
@@ -410,10 +420,20 @@ export async function buildInterpretationOutcomeScores(options?: {
 
         if (meta && meta[3]) {
           argumentType = toArgumentType(Number(meta[0]));
+          evidenceHash = meta[2];
+          hasStructuredMeta = true;
         }
       } catch {
         // Older deployments may not expose structured metadata for all comments.
       }
+
+      if (requireStructured) {
+        if (!hasStructuredMeta) continue;
+        if (argumentType !== "claim" && argumentType !== "counterclaim") continue;
+      }
+
+      const hasEvidence = evidenceHash.toLowerCase() !== ZERO_HASH;
+      if (requireEvidence && !hasEvidence) continue;
 
       const forStake = BigInt(userStake.forStake || BIGINT_ZERO);
       const againstStake = BigInt(userStake.againstStake || BIGINT_ZERO);
@@ -431,7 +451,13 @@ export async function buildInterpretationOutcomeScores(options?: {
       const socialComponent = clamp(commentScore, -10, 10) * 1.5 + Math.min(tipEth, 0.2) * 50;
       const accuracyComponent = wasCorrect ? 70 : -70;
       const confidenceComponent = (wasCorrect ? 1 : -1) * confidence * 20;
-      const outcomeScore = round(clamp(accuracyComponent + confidenceComponent + socialComponent, -100, 100), 1);
+      const reasoningScore = (hasEvidence ? 8 : -12) + (
+        argumentType === "claim" || argumentType === "counterclaim" ? 4 : -4
+      );
+      const outcomeScore = round(
+        clamp(accuracyComponent + confidenceComponent + socialComponent + reasoningScore, -100, 100),
+        1
+      );
 
       if (onlyCorrect && !wasCorrect) continue;
       if (outcomeScore < minOutcomeScore) continue;
@@ -447,6 +473,8 @@ export async function buildInterpretationOutcomeScores(options?: {
         parentId: candidate.parentId.toString(),
         argumentType,
         interpretation: String(comment.content || "").trim(),
+        evidenceHash,
+        hasEvidence,
         predictedOutcome: toBinaryOutcome(predictedOutcome),
         resolvedOutcome: toBinaryOutcome(linkedMarket.outcome),
         wasCorrect,
@@ -454,6 +482,7 @@ export async function buildInterpretationOutcomeScores(options?: {
         stakeEth: round(stakeEth, 6),
         commentScore,
         tipEth: round(tipEth, 6),
+        reasoningScore,
         outcomeScore,
         createdAt: new Date(Number(comment.timestamp || 0) * 1000).toISOString(),
         txHash: candidate.txHash,
@@ -516,5 +545,7 @@ export function parseInterpretationScoreQuery(searchParams: URLSearchParams) {
     minOutcomeScore,
     lookbackBlocks,
     onlyCorrect: parseBoolParam(searchParams.get("onlyCorrect"), false),
+    requireStructured: parseBoolParam(searchParams.get("requireStructured"), true),
+    requireEvidence: parseBoolParam(searchParams.get("requireEvidence"), true),
   };
 }

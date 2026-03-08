@@ -22,6 +22,8 @@ export async function GET(request: Request) {
       lookbackBlocks: parsed.lookbackBlocks.toString(),
       minOutcomeScore: parsed.minOutcomeScore,
       onlyCorrect: parsed.onlyCorrect,
+      requireStructured: parsed.requireStructured,
+      requireEvidence: parsed.requireEvidence,
     });
 
     const now = Date.now();

@@ -184,7 +184,9 @@ export default async function LeaderboardPage() {
           Analyst Discovery
         </h2>
         <p className="mb-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
-          Resolved markets: {analystSnapshot.resolvedMarkets} · Right over loud
+          {analystSnapshot.scoringUnit === "interpretation"
+            ? `Interpretations scored: ${analystSnapshot.scoredInterpretations} · Ideas first`
+            : `Resolved markets: ${analystSnapshot.resolvedMarkets} · Right over loud`}
         </p>
 
         {topAnalysts.length === 0 ? (
@@ -256,7 +258,8 @@ export default async function LeaderboardPage() {
                         : "text-[var(--accent-red)]"
                     }
                   >
-                    {row.wasCorrect ? "correct" : "incorrect"}
+                    {row.wasCorrect ? "correct" : "incorrect"} ·{" "}
+                    {row.hasEvidence ? "evidence" : "no evidence"}
                   </span>
                   <span className="text-[var(--ink-faint)]">
                     score {row.outcomeScore.toFixed(1)}

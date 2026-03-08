@@ -34,7 +34,12 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
 
     const limit = parseIntParam(searchParams.get("limit"), 50, 1, 200);
-    const minPredictions = parseIntParam(searchParams.get("minPredictions"), 2, 1, 100);
+    const minPredictions = parseIntParam(
+      searchParams.get("minInterpretations") ?? searchParams.get("minPredictions"),
+      2,
+      1,
+      100
+    );
     const lookbackBlocks = parseBigIntParam(
       searchParams.get("lookbackBlocks"),
       DEFAULT_LOOKBACK_BLOCKS,
@@ -68,6 +73,7 @@ export async function GET(request: Request) {
       params: {
         limit,
         minPredictions,
+        minInterpretations: minPredictions,
         lookbackBlocks: lookbackBlocks.toString(),
       },
     };
