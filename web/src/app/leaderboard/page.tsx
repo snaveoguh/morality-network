@@ -1,95 +1,221 @@
-"use client";
-
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
+import { fetchAllFeeds } from "@/lib/rss";
+import { fetchAllProposals } from "@/lib/governance";
+import { computeEntityHash } from "@/lib/entity";
 import { EntityType } from "@/lib/contracts";
+import { buildAnalystReputationFromPredictionMarkets } from "@/lib/analyst-reputation";
 
-// Placeholder data — in production this comes from the indexer/subgraph
-const PLACEHOLDER_ENTRIES = [
-  {
-    rank: 1,
-    entityHash: "0xabc123",
-    identifier: "reuters.com",
-    entityType: EntityType.DOMAIN,
-    avgRating: 4.2,
-    ratingCount: 156,
-    tipTotal: "0.85 ETH",
-    commentCount: 89,
-    aiScore: 92,
-    compositeScore: 87.4,
-  },
-  {
-    rank: 2,
-    entityHash: "0xdef456",
-    identifier: "bbc.co.uk",
-    entityType: EntityType.DOMAIN,
-    avgRating: 4.0,
-    ratingCount: 134,
-    tipTotal: "0.62 ETH",
-    commentCount: 72,
-    aiScore: 89,
-    compositeScore: 82.1,
-  },
-  {
-    rank: 3,
-    entityHash: "0x789abc",
-    identifier: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-    entityType: EntityType.ADDRESS,
-    avgRating: 4.8,
-    ratingCount: 312,
-    tipTotal: "2.1 ETH",
-    commentCount: 201,
-    aiScore: 95,
-    compositeScore: 94.2,
-  },
-  {
-    rank: 4,
-    entityHash: "0x456def",
-    identifier: "techcrunch.com",
-    entityType: EntityType.DOMAIN,
-    avgRating: 3.8,
-    ratingCount: 98,
-    tipTotal: "0.34 ETH",
-    commentCount: 45,
-    aiScore: 78,
-    compositeScore: 71.5,
-  },
-  {
-    rank: 5,
-    entityHash: "0xcde789",
-    identifier: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    entityType: EntityType.CONTRACT,
-    avgRating: 4.5,
-    ratingCount: 89,
-    tipTotal: "0.55 ETH",
-    commentCount: 67,
-    aiScore: 88,
-    compositeScore: 79.8,
-  },
-];
+export const revalidate = 300; // 5 min
 
-export default function LeaderboardPage() {
+// Derive leaderboard from real feed + governance data
+async function buildLeaderboard() {
+  const [rssItems, proposals] = await Promise.all([
+    fetchAllFeeds(),
+    fetchAllProposals(),
+  ]);
+
+  // Aggregate by source domain
+  const sourceMap = new Map<
+    string,
+    {
+      domain: string;
+      articleCount: number;
+      totalEngagement: number;
+      biasRating: string | null;
+      factuality: string | null;
+      categories: Set<string>;
+    }
+  >();
+
+  for (const item of rssItems) {
+    const domain = item.source;
+    const existing = sourceMap.get(domain) || {
+      domain,
+      articleCount: 0,
+      totalEngagement: 0,
+      biasRating: null,
+      factuality: null,
+      categories: new Set<string>(),
+    };
+    existing.articleCount++;
+    existing.categories.add(item.category);
+    if (item.bias) {
+      existing.biasRating = item.bias.bias;
+      existing.factuality = item.bias.factuality;
+    }
+    sourceMap.set(domain, existing);
+  }
+
+  // Aggregate DAOs from governance
+  const daoMap = new Map<
+    string,
+    { name: string; proposalCount: number; activeCount: number; totalVotes: number; logo: string }
+  >();
+
+  for (const p of proposals) {
+    const name = p.dao;
+    const existing = daoMap.get(name) || {
+      name,
+      proposalCount: 0,
+      activeCount: 0,
+      totalVotes: 0,
+      logo: p.daoLogo,
+    };
+    existing.proposalCount++;
+    if (p.status === "active") existing.activeCount++;
+    existing.totalVotes += p.votesFor + p.votesAgainst;
+    daoMap.set(name, existing);
+  }
+
+  // Build entries for sources
+  const entries = [];
+  let rank = 1;
+
+  // Score factuality
+  const factScores: Record<string, number> = {
+    "very-high": 95,
+    high: 85,
+    "mostly-factual": 70,
+    mixed: 50,
+    low: 30,
+    "very-low": 15,
+  };
+
+  // Sort sources by article count (proxy for engagement)
+  const sortedSources = [...sourceMap.values()].sort(
+    (a, b) => b.articleCount - a.articleCount
+  );
+
+  for (const src of sortedSources) {
+    const factScore = src.factuality ? factScores[src.factuality] || 60 : 60;
+    const volumeScore = Math.min(100, src.articleCount * 5);
+    const composite = factScore * 0.5 + volumeScore * 0.3 + 60 * 0.2;
+
+    entries.push({
+      rank: rank++,
+      entityHash: computeEntityHash(src.domain),
+      identifier: src.domain,
+      entityType: EntityType.DOMAIN,
+      avgRating: factScore / 20, // normalize to 0-5
+      ratingCount: src.articleCount,
+      tipTotal: "0 ETH",
+      commentCount: 0,
+      aiScore: factScore,
+      compositeScore: Math.round(composite * 10) / 10,
+      categories: [...src.categories],
+      biasRating: src.biasRating,
+      factuality: src.factuality,
+    });
+  }
+
+  // Add DAOs
+  const sortedDaos = [...daoMap.values()].sort(
+    (a, b) => b.proposalCount - a.proposalCount
+  );
+
+  for (const dao of sortedDaos) {
+    const activityScore = Math.min(100, dao.proposalCount * 3 + dao.activeCount * 20);
+    const voteScore = Math.min(100, Math.log10(dao.totalVotes + 1) * 25);
+    const composite = activityScore * 0.4 + voteScore * 0.4 + 50 * 0.2;
+
+    entries.push({
+      rank: rank++,
+      entityHash: computeEntityHash(dao.name),
+      identifier: dao.name,
+      entityType: EntityType.CONTRACT,
+      avgRating: Math.min(5, composite / 20),
+      ratingCount: dao.proposalCount,
+      tipTotal: "0 ETH",
+      commentCount: dao.totalVotes,
+      aiScore: Math.round(activityScore),
+      compositeScore: Math.round(composite * 10) / 10,
+      logo: dao.logo,
+    });
+  }
+
+  // Re-sort by composite and re-rank
+  entries.sort((a, b) => b.compositeScore - a.compositeScore);
+  entries.forEach((e, i) => (e.rank = i + 1));
+
+  return entries;
+}
+
+export default async function LeaderboardPage() {
+  const [entries, analystSnapshot] = await Promise.all([
+    buildLeaderboard(),
+    buildAnalystReputationFromPredictionMarkets({
+      limit: 8,
+      minPredictions: 2,
+      lookbackBlocks: BigInt("90000"),
+    }),
+  ]);
+  const topAnalysts = analystSnapshot.analysts.slice(0, 5);
+
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Leaderboard</h1>
-        <p className="mt-2 text-zinc-400">
-          Universal reputation rankings — domains, addresses, contracts, and
-          content scored by community ratings, AI analysis, tips, and engagement.
+      {/* Page header — newspaper style */}
+      <div className="mb-6 border-b-2 border-[var(--rule)] pb-4">
+        <h1 className="font-headline text-3xl text-[var(--ink)]">
+          The Universal Ledger
+        </h1>
+        <p className="mt-1 font-body-serif text-sm italic text-[var(--ink-light)]">
+          Reputation rankings for every source, domain, contract, and entity on the network
         </p>
       </div>
 
       {/* Scoring explanation */}
-      <div className="mb-6 rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
-        <p className="text-sm text-zinc-400">
-          <span className="font-medium text-zinc-300">Composite Score</span> ={" "}
-          <span className="text-yellow-400">Rating (40%)</span> +{" "}
-          <span className="text-[#2F80ED]">AI Score (30%)</span> +{" "}
-          <span className="text-[#31F387]">Tips (20%)</span> +{" "}
-          <span className="text-purple-400">Engagement (10%)</span>
+      <div className="mb-6 border border-[var(--rule-light)] p-4">
+        <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
+          <span className="font-bold text-[var(--ink)]">Composite Score</span> ={" "}
+          Factuality (50%) + Volume (30%) + Community (20%)
         </p>
       </div>
 
-      <LeaderboardTable entries={PLACEHOLDER_ENTRIES} />
+      <div className="mb-6 border border-[var(--rule-light)] p-4">
+        <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+          Analyst Discovery
+        </h2>
+        <p className="mb-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          Resolved markets: {analystSnapshot.resolvedMarkets} · Right over loud
+        </p>
+
+        {topAnalysts.length === 0 ? (
+          <p className="font-body-serif text-sm italic text-[var(--ink-faint)]">
+            No resolved analyst predictions yet.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {topAnalysts.map((analyst, index) => (
+              <div
+                key={analyst.address}
+                className="grid grid-cols-[28px_1fr_auto] items-center gap-3 border-b border-[var(--rule-light)] pb-2 last:border-0"
+              >
+                <span className="font-mono text-[10px] text-[var(--ink-faint)]">
+                  {index + 1}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate font-mono text-[10px] text-[var(--ink)]">
+                    {analyst.address}
+                  </p>
+                  <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+                    {analyst.correctPredictions}/{analyst.totalPredictions} correct · {analyst.totalStakedEth.toFixed(3)} ETH signaled
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-headline text-lg text-[var(--ink)]">
+                    {analyst.credibilityScore.toFixed(1)}
+                  </p>
+                  <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+                    credibility
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <LeaderboardTable entries={entries} />
     </div>
   );
 }
