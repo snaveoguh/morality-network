@@ -20,6 +20,9 @@ Event indexer and API server for onchain activity.
 - `GET /api/v1/entities/:entityHash`
 - `GET /api/v1/entities/:entityHash/feed`
 - `GET /api/v1/feed/global`
+- `GET /api/v1/scanner/launches`
+- `GET /api/v1/scanner/launches/:address`
+- `POST /api/v1/scanner/sync`
 - `GET /graphql`
 
 Implementation: `src/api/routes.ts`
@@ -52,6 +55,13 @@ npm run bootstrap:local
 ```
 
 Default server port: `42069`
+
+Seed scanner data (optional):
+
+```bash
+curl -X POST 'http://localhost:42069/api/v1/scanner/sync?limit=50'
+curl 'http://localhost:42069/api/v1/scanner/launches?minScore=50&limit=20'
+```
 
 ## Utility Scripts
 

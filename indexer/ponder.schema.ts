@@ -117,6 +117,36 @@ export const commentVote = onchainTable("comment_vote", (t) => ({
 }));
 
 // ============================================================================
+// SCANNER LAUNCHES — Persistent token scanner output (offchain ingestion)
+// ============================================================================
+
+export const scannerLaunch = onchainTable("scanner_launch", (t) => ({
+  id: t.hex().primaryKey(),             // pool address (or token address fallback)
+  tokenAddress: t.hex().notNull(),
+  poolAddress: t.hex().notNull(),
+  pairedAsset: t.hex().notNull(),
+  dex: t.text().notNull(),              // "uniswap-v3" | "aerodrome"
+  source: t.text().notNull(),           // "dexscreener-search" | ...
+  score: t.integer().default(0),
+  tokenSymbol: t.text(),
+  tokenName: t.text(),
+  priceUsd: t.text(),
+  liquidityUsd: t.integer().default(0),
+  volume24h: t.integer().default(0),
+  txns24h: t.integer().default(0),
+  pairUrl: t.text(),
+  pairCreatedAt: t.bigint(),
+  discoveredAt: t.bigint().notNull(),
+  updatedAt: t.bigint().notNull(),
+  enriched: t.boolean().default(false),
+}), (table) => ({
+  tokenIdx: index().on(table.tokenAddress),
+  scoreIdx: index().on(table.score),
+  discoveredIdx: index().on(table.discoveredAt),
+  updatedIdx: index().on(table.updatedAt),
+}));
+
+// ============================================================================
 // RELATIONS
 // ============================================================================
 

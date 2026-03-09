@@ -57,6 +57,17 @@ else
   fail "$GQL_CODE"
 fi
 
+# 5) Scanner launches endpoint
+echo -n "GET /api/v1/scanner/launches?limit=1 ... "
+SCANNER_BODY="$(curl -sS "$BASE_URL/api/v1/scanner/launches?limit=1" || true)"
+SCANNER_CODE="$(curl -sS -o /dev/null -w "%{http_code}" "$BASE_URL/api/v1/scanner/launches?limit=1" || true)"
+if [ "$SCANNER_CODE" = "200" ] \
+  && echo "$SCANNER_BODY" | grep -q '"items"'; then
+  pass "$SCANNER_CODE (shape ok)"
+else
+  fail "$SCANNER_CODE"
+fi
+
 echo ""
 if [ "$FAILURES" -gt 0 ]; then
   echo "Healthcheck failed with $FAILURES failing check(s)." >&2

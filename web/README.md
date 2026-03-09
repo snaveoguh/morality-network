@@ -26,6 +26,10 @@ Next.js product surface for feed, proposals, leaderboard, article views, and sty
 
 For indexer-backed APIs, see `v2/indexer` and `v2/docs/API_REFERENCE.md`.
 
+Scanner integration (optional):
+
+- `SCANNER_BACKEND_URL` — if set, `/api/agents/scanner` proxies persisted scanner launches from indexer (`/api/v1/scanner/*`) instead of relying on in-memory serverless state.
+
 ## Local Run
 
 ```bash

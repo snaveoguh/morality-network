@@ -11,6 +11,7 @@ import "@/lib/agents/scanner";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+const BACKEND_TIMEOUT_MS = 10_000;
 
 export async function GET(
   _request: Request,
@@ -28,6 +29,34 @@ export async function GET(
         { error: "Invalid address format" },
         { status: 400 }
       );
+    }
+
+    const scannerBackendUrl = process.env.SCANNER_BACKEND_URL?.trim();
+    if (scannerBackendUrl) {
+      const baseUrl = scannerBackendUrl.replace(/\/$/, "");
+      const url = new URL(`/api/v1/scanner/launches/${address}`, baseUrl);
+      const backendRes = await fetch(url.toString(), {
+        cache: "no-store",
+        signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+      });
+
+      if (backendRes.ok) {
+        const payload = (await backendRes.json()) as { launch?: unknown };
+        if (payload.launch) {
+          return NextResponse.json(
+            {
+              launch: payload.launch,
+              timestamp: Date.now(),
+              backend: "indexer",
+            },
+            {
+              headers: {
+                "cache-control": "no-store, max-age=0",
+              },
+            }
+          );
+        }
+      }
     }
 
     // Try pool address first (that's the store key)

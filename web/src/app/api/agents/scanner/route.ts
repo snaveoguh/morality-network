@@ -17,6 +17,7 @@ import "@/lib/agents/scanner";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 const API_POLL_TIMEOUT_MS = 7_000;
+const BACKEND_TIMEOUT_MS = 10_000;
 
 export async function GET(request: Request) {
   try {
@@ -32,6 +33,74 @@ export async function GET(request: Request) {
     const dexFilter = searchParams.get("dex") || undefined;
     const enrichedOnly = searchParams.get("enriched") === "true";
     const forceRefresh = searchParams.get("refresh") === "1";
+    const scannerBackendUrl = process.env.SCANNER_BACKEND_URL?.trim();
+
+    if (scannerBackendUrl) {
+      const baseUrl = scannerBackendUrl.replace(/\/$/, "");
+
+      if (forceRefresh) {
+        try {
+          const syncUrl = new URL("/api/v1/scanner/sync", baseUrl);
+          syncUrl.searchParams.set("limit", String(Math.max(limit, 25)));
+          await fetch(syncUrl.toString(), {
+            method: "POST",
+            cache: "no-store",
+            signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+          });
+        } catch {
+          // Non-fatal: if sync fails, still attempt to read existing persisted launches.
+        }
+      }
+
+      const launchesUrl = new URL("/api/v1/scanner/launches", baseUrl);
+      launchesUrl.searchParams.set("limit", String(limit));
+      launchesUrl.searchParams.set("minScore", String(minScore));
+      if (dexFilter) launchesUrl.searchParams.set("dex", dexFilter);
+
+      const backendRes = await fetch(launchesUrl.toString(), {
+        cache: "no-store",
+        signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+      });
+
+      if (backendRes.ok) {
+        const payload = (await backendRes.json()) as {
+          items?: unknown[];
+          count?: number;
+        };
+        let launches = (Array.isArray(payload.items) ? payload.items : []) as unknown as TokenLaunch[];
+
+        if (enrichedOnly) {
+          launches = launches.filter((launch) => Boolean(launch.enriched));
+        }
+
+        return NextResponse.json(
+          {
+            agent: {
+              status: "running",
+              stats: {
+                totalLaunches: payload.count ?? launches.length,
+                launchesLastHour: 0,
+                avgScore: 0,
+                pollCount: 0,
+                uptimeSeconds: 0,
+              },
+              errors: [],
+            },
+            launches,
+            count: launches.length,
+            totalStored: payload.count ?? launches.length,
+            pollTriggered: forceRefresh,
+            backend: "indexer",
+            timestamp: Date.now(),
+          },
+          {
+            headers: {
+              "cache-control": "no-store, max-age=0",
+            },
+          }
+        );
+      }
+    }
 
     // On serverless, interval timers are not reliable; trigger bounded on-demand polling.
     const pollTriggered = await Promise.race([
