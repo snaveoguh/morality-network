@@ -3,6 +3,13 @@
 import { parseAbiItem } from "viem";
 import type { DexId } from "./types";
 
+function numberFromEnv(key: string, fallback: number): number {
+  const raw = process.env[key];
+  if (!raw) return fallback;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 // ─── DEX Factory Addresses (Base Mainnet) ───────────────────────────────────
 
 export interface FactoryConfig {
@@ -79,8 +86,29 @@ export const POLL_INTERVAL_MS = 4_000;
 /** Max blocks per getLogs chunk (Base = fast blocks, keep chunks small) */
 export const LOG_CHUNK_SIZE = 2_000;
 
-/** How far back to scan on first start (roughly ~2 hours on Base at 2s blocks) */
-export const INITIAL_LOOKBACK_BLOCKS = 4_000;
+/** Hard cap of blocks scanned per factory in a single poll cycle */
+export const MAX_BLOCKS_PER_POLL = numberFromEnv(
+  "SCANNER_MAX_BLOCKS_PER_POLL",
+  1_200
+);
+
+/** Hard cap of PoolCreated logs processed per factory per poll */
+export const MAX_LOGS_PER_FACTORY_PER_POLL = numberFromEnv(
+  "SCANNER_MAX_LOGS_PER_FACTORY_PER_POLL",
+  20
+);
+
+/** How far back to scan on first start (default ~12 hours on Base) */
+export const INITIAL_LOOKBACK_BLOCKS = numberFromEnv(
+  "SCANNER_INITIAL_LOOKBACK_BLOCKS",
+  20_000
+);
+
+/** Minimum time between API-triggered polls in serverless mode */
+export const API_POLL_COOLDOWN_MS = numberFromEnv(
+  "SCANNER_API_POLL_COOLDOWN_MS",
+  15_000
+);
 
 /** Max launches to store (FIFO eviction) */
 export const MAX_STORED_LAUNCHES = 500;

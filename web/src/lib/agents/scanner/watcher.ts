@@ -13,8 +13,9 @@ import {
   FACTORIES,
   KNOWN_QUOTE_TOKENS,
   QUOTE_TOKEN_NAMES,
-  ERC20_META_ABI,
   LOG_CHUNK_SIZE,
+  MAX_BLOCKS_PER_POLL,
+  MAX_LOGS_PER_FACTORY_PER_POLL,
   INITIAL_LOOKBACK_BLOCKS,
   MAX_STORED_LAUNCHES,
   DEXSCREENER_DELAY_MS,
@@ -30,8 +31,10 @@ const BASE_RPC =
 
 const client = createPublicClient({
   chain: base,
-  transport: http(BASE_RPC, { timeout: 15_000 }),
+  transport: http(BASE_RPC, { timeout: 3_000 }),
 });
+const DEXSCREENER_PROFILES_API = "https://api.dexscreener.com/token-profiles/latest/v1";
+const RPC_BLOCK_TIMEOUT_MS = 1_500;
 
 // ─── Launch Store ───────────────────────────────────────────────────────────
 
@@ -56,16 +59,36 @@ export function getLastBlocks(): Record<string, number> {
 // ─── Main Poll Function ─────────────────────────────────────────────────────
 
 export async function poll(): Promise<TokenLaunch[]> {
-  const currentBlock = await client.getBlockNumber();
   const newLaunches: TokenLaunch[] = [];
+  let currentBlock: bigint | null = null;
 
-  for (const factory of FACTORIES) {
-    try {
-      const launches = await pollFactory(factory, currentBlock);
-      newLaunches.push(...launches);
-    } catch (err) {
-      console.error(`[Scanner] Error polling ${factory.label}:`, err);
+  try {
+    currentBlock = await Promise.race<bigint | null>([
+      client.getBlockNumber(),
+      new Promise<null>((resolve) =>
+        setTimeout(() => resolve(null), RPC_BLOCK_TIMEOUT_MS)
+      ),
+    ]);
+  } catch (err) {
+    console.warn("[Scanner] Failed to fetch Base block number, using fallback source");
+    console.warn(err);
+  }
+
+  if (currentBlock !== null) {
+    for (const factory of FACTORIES) {
+      try {
+        const launches = await pollFactory(factory, currentBlock);
+        newLaunches.push(...launches);
+      } catch (err) {
+        console.error(`[Scanner] Error polling ${factory.label}:`, err);
+      }
     }
+  }
+
+  // Serverless fallback source: if no onchain hits, seed from DexScreener profiles.
+  if (newLaunches.length === 0) {
+    const fallbackLaunches = await pollDexScreenerProfiles();
+    newLaunches.push(...fallbackLaunches);
   }
 
   return newLaunches;
@@ -76,6 +99,7 @@ async function pollFactory(
   currentBlock: bigint
 ): Promise<TokenLaunch[]> {
   const factoryAddr = factory.address.toLowerCase();
+  const maxBlocksPerPoll = BigInt(Math.max(MAX_BLOCKS_PER_POLL, 1));
 
   // Determine scan range
   let fromBlock = lastBlockByFactory.get(factoryAddr);
@@ -92,14 +116,21 @@ async function pollFactory(
     return []; // Already caught up
   }
 
+  // Bound scan work per request/poll to keep serverless latencies predictable.
+  if (currentBlock - fromBlock + BigInt(1) > maxBlocksPerPoll) {
+    fromBlock = currentBlock - maxBlocksPerPoll + BigInt(1);
+  }
+
+  const toBlock = currentBlock;
+
   // Chunked getLogs (same pattern as live-comments.ts)
   const allLogs: Log[] = [];
   let cursor = fromBlock;
 
-  while (cursor <= currentBlock) {
+  while (cursor <= toBlock) {
     const chunkEnd =
-      cursor + BigInt(LOG_CHUNK_SIZE) - BigInt(1) > currentBlock
-        ? currentBlock
+      cursor + BigInt(LOG_CHUNK_SIZE) - BigInt(1) > toBlock
+        ? toBlock
         : cursor + BigInt(LOG_CHUNK_SIZE) - BigInt(1);
 
     try {
@@ -121,12 +152,16 @@ async function pollFactory(
   }
 
   // Update cursor
-  lastBlockByFactory.set(factoryAddr, currentBlock);
+  lastBlockByFactory.set(factoryAddr, toBlock);
 
   // Process logs
+  const logsToProcess =
+    allLogs.length > MAX_LOGS_PER_FACTORY_PER_POLL
+      ? allLogs.slice(-MAX_LOGS_PER_FACTORY_PER_POLL)
+      : allLogs;
   const launches: TokenLaunch[] = [];
 
-  for (const log of allLogs) {
+  for (const log of logsToProcess) {
     try {
       const launch = await processPoolCreatedLog(log, factory);
       if (launch) {
@@ -139,7 +174,7 @@ async function pollFactory(
 
   if (launches.length > 0) {
     console.log(
-      `[Scanner] Found ${launches.length} new launch(es) on ${factory.label} (blocks ${fromBlock}-${currentBlock})`
+      `[Scanner] Found ${launches.length} new launch(es) on ${factory.label} (blocks ${fromBlock}-${toBlock})`
     );
   }
 
@@ -171,19 +206,9 @@ async function processPoolCreatedLog(
 
   const pairedAsset = newToken === token0 ? token1 : token0;
 
-  // Get deployer from the transaction
-  let deployer = "0x0000000000000000000000000000000000000000";
-  if (log.transactionHash) {
-    try {
-      const tx = await client.getTransaction({ hash: log.transactionHash });
-      deployer = tx.from.toLowerCase();
-    } catch {
-      // Non-critical — just use zero address
-    }
-  }
-
-  // Fetch ERC20 metadata
-  const tokenMeta = await fetchTokenMeta(newToken);
+  // Keep discovery lightweight for serverless runtimes.
+  const deployer = "0x0000000000000000000000000000000000000000";
+  const tokenMeta: TokenMeta | null = null;
 
   const launch: TokenLaunch = {
     poolAddress,
@@ -213,7 +238,7 @@ async function processPoolCreatedLog(
     payload: {
       tokenAddress: newToken,
       poolAddress,
-      symbol: tokenMeta?.symbol ?? "???",
+      symbol: "???",
       dex: factory.id,
       pairedWith: QUOTE_TOKEN_NAMES[pairedAsset] ?? pairedAsset.slice(0, 10),
     },
@@ -239,57 +264,6 @@ function identifyNewToken(
   if (!t0Known && t1Known) return token0; // token0 is the new one
   if (!t0Known && !t1Known) return token0; // Both unknown — take token0 as "new"
   return null; // Both known (e.g. WETH/USDC pool) — not a new launch
-}
-
-// ─── ERC20 Metadata ─────────────────────────────────────────────────────────
-
-async function fetchTokenMeta(
-  tokenAddress: string
-): Promise<TokenMeta | null> {
-  try {
-    const addr = tokenAddress as `0x${string}`;
-
-    const [name, symbol, decimals, totalSupply] = await Promise.all([
-      client
-        .readContract({
-          address: addr,
-          abi: ERC20_META_ABI,
-          functionName: "name",
-        })
-        .catch(() => "Unknown"),
-      client
-        .readContract({
-          address: addr,
-          abi: ERC20_META_ABI,
-          functionName: "symbol",
-        })
-        .catch(() => "???"),
-      client
-        .readContract({
-          address: addr,
-          abi: ERC20_META_ABI,
-          functionName: "decimals",
-        })
-        .catch(() => 18),
-      client
-        .readContract({
-          address: addr,
-          abi: ERC20_META_ABI,
-          functionName: "totalSupply",
-        })
-        .catch(() => BigInt(0)),
-    ]);
-
-    return {
-      name: name as string,
-      symbol: symbol as string,
-      decimals: Number(decimals),
-      totalSupply: String(totalSupply),
-    };
-  } catch (err) {
-    console.error(`[Scanner] Failed to fetch token meta for ${tokenAddress}:`, err);
-    return null;
-  }
 }
 
 // ─── DexScreener Enrichment ─────────────────────────────────────────────────
@@ -365,5 +339,76 @@ async function fetchDexScreenerData(
     };
   } catch {
     return null;
+  }
+}
+
+interface DexProfile {
+  chainId?: string;
+  tokenAddress?: string;
+  url?: string;
+}
+
+function asAddress(value: string | undefined): string | null {
+  if (!value) return null;
+  return /^0x[a-fA-F0-9]{40}$/.test(value) ? value.toLowerCase() : null;
+}
+
+function extractPairAddress(url: string | undefined): string | null {
+  if (!url) return null;
+  const parts = url.split("/").filter(Boolean);
+  const last = parts[parts.length - 1];
+  return asAddress(last);
+}
+
+async function pollDexScreenerProfiles(): Promise<TokenLaunch[]> {
+  try {
+    const res = await fetch(DEXSCREENER_PROFILES_API, {
+      signal: AbortSignal.timeout(2_500),
+    });
+    if (!res.ok) return [];
+
+    const json = (await res.json()) as DexProfile[];
+    if (!Array.isArray(json)) return [];
+
+    const now = Math.floor(Date.now() / 1000);
+    const launches: TokenLaunch[] = [];
+
+    for (const entry of json.slice(0, 80)) {
+      if (entry.chainId?.toLowerCase() !== "base") continue;
+      const tokenAddress = asAddress(entry.tokenAddress);
+      if (!tokenAddress) continue;
+
+      const poolAddress = extractPairAddress(entry.url) ?? tokenAddress;
+      if (launchStore.has(poolAddress)) continue;
+
+      const launch: TokenLaunch = {
+        poolAddress,
+        tokenAddress,
+        pairedAsset: "0x4200000000000000000000000000000000000006", // WETH
+        dex: "uniswap-v3",
+        blockNumber: 0,
+        txHash: "0x",
+        deployer: "0x0000000000000000000000000000000000000000",
+        discoveredAt: now,
+        tokenMeta: null,
+        dexScreenerData: null,
+        score: 0,
+        scoreBreakdown: null,
+        enriched: false,
+      };
+
+      launchStore.add(launch);
+      launches.push(launch);
+
+      if (launches.length >= 20) break;
+    }
+
+    if (launches.length > 0) {
+      console.log(`[Scanner] DexScreener fallback seeded ${launches.length} launch(es)`);
+    }
+
+    return launches;
+  } catch {
+    return [];
   }
 }

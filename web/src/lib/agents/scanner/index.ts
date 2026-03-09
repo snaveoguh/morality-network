@@ -6,10 +6,15 @@
 import type { Agent, AgentSnapshot, AgentStatus } from "../core/types";
 import { agentRegistry } from "../core/registry";
 import { messageBus } from "../core/bus";
-import { poll, launchStore, getLastBlocks } from "./watcher";
+import { poll, launchStore } from "./watcher";
 import { scoreLaunch } from "./analyzer";
-import { POLL_INTERVAL_MS } from "./constants";
+import { API_POLL_COOLDOWN_MS, POLL_INTERVAL_MS } from "./constants";
 import type { TokenLaunch } from "./types";
+
+const SERVERLESS_RUNTIME =
+  process.env.VERCEL === "1" ||
+  process.env.AWS_EXECUTION_ENV?.toLowerCase().includes("lambda") === true;
+const BACKGROUND_POLL_ENABLED = process.env.SCANNER_ENABLE_BACKGROUND_POLL === "true";
 
 class ScannerAgent implements Agent {
   readonly id = "launch-scanner";
@@ -25,6 +30,8 @@ class ScannerAgent implements Agent {
   private pollCount = 0;
   private totalDiscovered = 0;
   private polling = false;
+  private lastPollStartedAt: number | null = null;
+  private lastPollFinishedAt: number | null = null;
 
   status(): AgentStatus {
     return this._status;
@@ -67,11 +74,21 @@ class ScannerAgent implements Agent {
       }
     });
 
-    // Initial poll immediately
-    this.runPoll();
+    if (!BACKGROUND_POLL_ENABLED || SERVERLESS_RUNTIME) {
+      // Polling is request-driven by default to support serverless runtimes.
+      // Enable interval polling explicitly with SCANNER_ENABLE_BACKGROUND_POLL=true.
+      console.log("[ScannerAgent] Using on-demand polling mode");
+      this._status = "running";
+      return;
+    }
 
-    // Recurring poll
-    this.pollTimer = setInterval(() => this.runPoll(), POLL_INTERVAL_MS);
+    // Initial poll immediately
+    void this.runPoll("startup");
+
+    // Recurring poll (non-serverless runtimes only)
+    this.pollTimer = setInterval(() => {
+      void this.runPoll("interval");
+    }, POLL_INTERVAL_MS);
     this._status = "running";
   }
 
@@ -82,6 +99,27 @@ class ScannerAgent implements Agent {
     }
     this._status = "idle";
     console.log("[ScannerAgent] Stopped");
+  }
+
+  async pollNow(options?: { force?: boolean; reason?: string }): Promise<boolean> {
+    if (this.polling) {
+      return false;
+    }
+
+    const now = Date.now();
+    const force = options?.force === true;
+    const reason = options?.reason ?? "api";
+
+    if (
+      !force &&
+      this.lastPollFinishedAt &&
+      now - this.lastPollFinishedAt < API_POLL_COOLDOWN_MS
+    ) {
+      return false;
+    }
+
+    await this.runPoll(reason);
+    return true;
   }
 
   snapshot(): AgentSnapshot {
@@ -108,6 +146,9 @@ class ScannerAgent implements Agent {
         launchesLastHour: recentLaunches.length,
         avgScore: Math.round(avgScore * 10) / 10,
         pollCount: this.pollCount,
+        totalDiscovered: this.totalDiscovered,
+        lastPollStartedAt: this.lastPollStartedAt ?? 0,
+        lastPollFinishedAt: this.lastPollFinishedAt ?? 0,
         uptimeSeconds: this.startedAt
           ? Math.floor((now - this.startedAt) / 1000)
           : 0,
@@ -118,9 +159,10 @@ class ScannerAgent implements Agent {
 
   // ─── Private ────────────────────────────────────────────────────────────
 
-  private async runPoll(): Promise<void> {
+  private async runPoll(trigger: string): Promise<void> {
     if (this.polling) return; // Prevent overlapping polls
     this.polling = true;
+    this.lastPollStartedAt = Date.now();
 
     try {
       this.pollCount++;
@@ -140,8 +182,9 @@ class ScannerAgent implements Agent {
         err instanceof Error ? err.message : String(err);
       this.errors.push(`[${new Date().toISOString()}] ${errMsg}`);
       if (this.errors.length > 20) this.errors = this.errors.slice(-20);
-      console.error("[ScannerAgent] Poll error:", errMsg);
+      console.error(`[ScannerAgent] Poll error (${trigger}):`, errMsg);
     } finally {
+      this.lastPollFinishedAt = Date.now();
       this.polling = false;
     }
   }

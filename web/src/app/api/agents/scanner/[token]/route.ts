@@ -4,12 +4,13 @@
 
 import { NextResponse } from "next/server";
 import { agentRegistry } from "@/lib/agents/core";
-import { launchStore } from "@/lib/agents/scanner";
+import { launchStore, scannerAgent } from "@/lib/agents/scanner";
 
 // Ensure scanner is registered + initialized
 import "@/lib/agents/scanner";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(
   _request: Request,
@@ -17,6 +18,7 @@ export async function GET(
 ) {
   try {
     agentRegistry.ensureInitialized();
+    void scannerAgent.pollNow({ reason: "api:scanner-token" });
 
     const { token } = await params;
     const address = token.toLowerCase();
@@ -44,10 +46,17 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({
-      launch,
-      timestamp: Date.now(),
-    });
+    return NextResponse.json(
+      {
+        launch,
+        timestamp: Date.now(),
+      },
+      {
+        headers: {
+          "cache-control": "no-store, max-age=0",
+        },
+      }
+    );
   } catch (err) {
     console.error("[API /agents/scanner/:token] Error:", err);
     return NextResponse.json(
