@@ -1,8 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { parseEther } from "viem";
-import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
+import { formatEther, parseEther } from "viem";
+import {
+  useAccount,
+  useChainId,
+  useSendTransaction,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+import { AGENT_VAULT_ABI } from "@/lib/contracts";
 
 interface Position {
   id: string;
@@ -74,8 +81,39 @@ interface TraderPerformanceReport {
   closed: ClosedPositionMetric[];
 }
 
+interface VaultFunderSnapshot {
+  address: `0x${string}`;
+  shares: string;
+  equityWei: string;
+  depositedWei: string;
+  withdrawnWei: string;
+  pnlWei: string;
+  pnlBps: string;
+}
+
+interface VaultOverview {
+  enabled: true;
+  chainId: number;
+  address: `0x${string}`;
+  manager: `0x${string}`;
+  feeRecipient: `0x${string}`;
+  performanceFeeBps: number;
+  totalManagedAssetsWei: string;
+  liquidAssetsWei: string;
+  deployedCapitalWei: string;
+  totalShares: string;
+  sharePriceE18: string;
+  cumulativeStrategyProfitWei: string;
+  cumulativeStrategyLossWei: string;
+  totalFeesPaidWei: string;
+  funderCount: number;
+  funders: VaultFunderSnapshot[];
+  account: VaultFunderSnapshot | null;
+}
+
 interface MetricsResponse {
   performance?: TraderPerformanceReport;
+  vault?: VaultOverview | null;
   error?: string;
 }
 
@@ -89,6 +127,36 @@ function formatPct(value: number | null | undefined): string {
   return `${(value * 100).toFixed(2)}%`;
 }
 
+function formatSignedPctBps(value: string): string {
+  try {
+    const bps = Number(value);
+    if (!Number.isFinite(bps)) return "--";
+    return `${(bps / 100).toFixed(2)}%`;
+  } catch {
+    return "--";
+  }
+}
+
+function trimDecimal(raw: string, maxFractionDigits = 4): string {
+  if (!raw.includes(".")) return raw;
+  const [whole, frac] = raw.split(".");
+  const trimmed = frac.slice(0, maxFractionDigits).replace(/0+$/, "");
+  return trimmed.length > 0 ? `${whole}.${trimmed}` : whole;
+}
+
+function formatEthFromWei(value: string | null | undefined): string {
+  if (!value) return "--";
+  try {
+    const asWei = BigInt(value);
+    const isNegative = asWei < BigInt(0);
+    const absolute = isNegative ? -asWei : asWei;
+    const base = trimDecimal(formatEther(absolute), 5);
+    return `${isNegative ? "-" : ""}${base} ETH`;
+  } catch {
+    return "--";
+  }
+}
+
 function shortHex(value: string): string {
   if (!value || value.length < 12) return value;
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
@@ -100,32 +168,81 @@ function symbolForPosition(position: Position): string {
 }
 
 function pnlClass(value: number | null | undefined): string {
-  if (value === null || value === undefined || !Number.isFinite(value)) return "text-[var(--ink-faint)]";
+  if (value === null || value === undefined || !Number.isFinite(value))
+    return "text-[var(--ink-faint)]";
   if (value > 0) return "text-emerald-700";
   if (value < 0) return "text-red-700";
   return "text-[var(--ink-faint)]";
 }
 
+function pnlWeiClass(value: string): string {
+  try {
+    const parsed = BigInt(value);
+    if (parsed > BigInt(0)) return "text-emerald-700";
+    if (parsed < BigInt(0)) return "text-red-700";
+    return "text-[var(--ink-faint)]";
+  } catch {
+    return "text-[var(--ink-faint)]";
+  }
+}
+
+function txExplorerUrl(chainId: number, txHash: string): string {
+  if (chainId === 84532) {
+    return `https://sepolia.basescan.org/tx/${txHash}`;
+  }
+  return `https://basescan.org/tx/${txHash}`;
+}
+
+function sortFundersByEquity(
+  funders: VaultFunderSnapshot[]
+): VaultFunderSnapshot[] {
+  return funders.slice().sort((a, b) => {
+    try {
+      const diff = BigInt(b.equityWei) - BigInt(a.equityWei);
+      if (diff > BigInt(0)) return 1;
+      if (diff < BigInt(0)) return -1;
+      return 0;
+    } catch {
+      return 0;
+    }
+  });
+}
+
 export function AgentMarketDashboard() {
+  const { address: connectedAddress } = useAccount();
+  const connectedChainId = useChainId();
+
   const [data, setData] = useState<TraderPerformanceReport | null>(null);
+  const [vault, setVault] = useState<VaultOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [fundAmount, setFundAmount] = useState("0.01");
-  const [fundInputError, setFundInputError] = useState<string | null>(null);
+  const [depositAmount, setDepositAmount] = useState("0.01");
+  const [withdrawAmount, setWithdrawAmount] = useState("0.01");
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [lastTxHash, setLastTxHash] = useState<`0x${string}` | undefined>();
+  const [lastTxChainId, setLastTxChainId] = useState<number>(8453);
 
   const {
     sendTransactionAsync,
-    data: fundingTxHash,
-    isPending: isFundingPending,
-    error: fundingError,
+    isPending: isDirectFundingPending,
+    error: directFundingError,
   } = useSendTransaction();
-  const { isLoading: isFundingConfirming, isSuccess: fundingSuccess } = useWaitForTransactionReceipt({
-    hash: fundingTxHash,
-  });
+  const {
+    writeContractAsync,
+    isPending: isVaultWritePending,
+    error: vaultWriteError,
+  } = useWriteContract();
+  const { isLoading: isTxConfirming, isSuccess: txSuccess } =
+    useWaitForTransactionReceipt({
+      hash: lastTxHash,
+    });
 
   const refresh = useCallback(async () => {
     try {
-      const response = await fetch("/api/trading/metrics", { cache: "no-store" });
+      const query = connectedAddress ? `?account=${connectedAddress}` : "";
+      const response = await fetch(`/api/trading/metrics${query}`, {
+        cache: "no-store",
+      });
       const payload = (await response.json()) as MetricsResponse;
       if (!response.ok || payload.error) {
         throw new Error(payload.error || `HTTP ${response.status}`);
@@ -135,13 +252,16 @@ export function AgentMarketDashboard() {
       }
 
       setData(payload.performance);
+      setVault(payload.vault ?? null);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load market metrics");
+      setError(
+        err instanceof Error ? err.message : "Failed to load market metrics"
+      );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [connectedAddress]);
 
   useEffect(() => {
     refresh();
@@ -150,32 +270,126 @@ export function AgentMarketDashboard() {
   }, [refresh]);
 
   const feePct = useMemo(() => {
+    if (vault?.enabled) return vault.performanceFeeBps / 100;
     if (!data) return 5;
     return data.performanceFeeBps / 100;
-  }, [data]);
+  }, [data, vault]);
 
-  const handleFund = useCallback(async () => {
+  const funderRows = useMemo(
+    () => (vault?.funders ? sortFundersByEquity(vault.funders) : []),
+    [vault]
+  );
+
+  // Use a type guard so TS narrows `vault` in branches checking `isVaultEnabled`
+  const isVaultEnabled = vault?.enabled === true;
+  const safeVault = isVaultEnabled ? vault : null;
+  const isActionPending =
+    isDirectFundingPending || isVaultWritePending || isTxConfirming;
+
+  const handleDeposit = useCallback(async () => {
     try {
-      setFundInputError(null);
-      if (!data) return;
-      if (!fundAmount || Number(fundAmount) <= 0) {
-        setFundInputError("Enter an amount greater than 0");
+      setActionError(null);
+      if (!vault || !isVaultEnabled) return;
+      if (!connectedAddress) {
+        setActionError("Connect wallet to deposit");
+        return;
+      }
+      if (!depositAmount || Number(depositAmount) <= 0) {
+        setActionError("Enter a deposit amount greater than 0");
         return;
       }
 
-      await sendTransactionAsync({
-        to: data.fundingAddress,
-        value: parseEther(fundAmount),
+      const txHash = await writeContractAsync({
+        address: vault.address,
+        abi: AGENT_VAULT_ABI,
+        functionName: "deposit",
+        value: parseEther(depositAmount),
+        chainId: vault.chainId,
       });
+      setLastTxHash(txHash);
+      setLastTxChainId(vault.chainId);
       setTimeout(() => {
         refresh().catch(() => {
-          // ignored: UI already has polling fallback
+          // ignored, polling fallback covers this
         });
       }, 2_000);
     } catch (err) {
-      setFundInputError(err instanceof Error ? err.message : "Funding transaction failed");
+      setActionError(err instanceof Error ? err.message : "Deposit failed");
     }
-  }, [data, fundAmount, refresh, sendTransactionAsync]);
+  }, [
+    connectedAddress,
+    depositAmount,
+    isVaultEnabled,
+    refresh,
+    vault,
+    writeContractAsync,
+  ]);
+
+  const handleWithdraw = useCallback(async () => {
+    try {
+      setActionError(null);
+      if (!vault || !isVaultEnabled) return;
+      if (!connectedAddress) {
+        setActionError("Connect wallet to withdraw");
+        return;
+      }
+      if (!withdrawAmount || Number(withdrawAmount) <= 0) {
+        setActionError("Enter a withdrawal amount greater than 0");
+        return;
+      }
+
+      const txHash = await writeContractAsync({
+        address: vault.address,
+        abi: AGENT_VAULT_ABI,
+        functionName: "withdraw",
+        args: [parseEther(withdrawAmount)],
+        chainId: vault.chainId,
+      });
+      setLastTxHash(txHash);
+      setLastTxChainId(vault.chainId);
+      setTimeout(() => {
+        refresh().catch(() => {
+          // ignored, polling fallback covers this
+        });
+      }, 2_000);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Withdraw failed");
+    }
+  }, [
+    connectedAddress,
+    isVaultEnabled,
+    refresh,
+    vault,
+    withdrawAmount,
+    writeContractAsync,
+  ]);
+
+  const handleDirectFund = useCallback(async () => {
+    try {
+      setActionError(null);
+      if (!data) return;
+      if (!depositAmount || Number(depositAmount) <= 0) {
+        setActionError("Enter an amount greater than 0");
+        return;
+      }
+
+      const txHash = await sendTransactionAsync({
+        to: data.fundingAddress,
+        value: parseEther(depositAmount),
+      });
+      setLastTxHash(txHash);
+      setLastTxChainId(connectedChainId || 8453);
+      setTimeout(() => {
+        refresh().catch(() => {
+          // ignored, polling fallback covers this
+        });
+      }, 2_000);
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : "Funding transaction failed"
+      );
+    }
+  }, [connectedChainId, data, depositAmount, refresh, sendTransactionAsync]);
 
   if (loading && !data) {
     return (
@@ -191,7 +405,9 @@ export function AgentMarketDashboard() {
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--accent-red)]">
           Market dashboard unavailable
         </p>
-        <p className="mt-1 font-body-serif text-sm text-[var(--ink-faint)]">{error ?? "Unknown error"}</p>
+        <p className="mt-1 font-body-serif text-sm text-[var(--ink-faint)]">
+          {error ?? "Unknown error"}
+        </p>
       </div>
     );
   }
@@ -202,23 +418,65 @@ export function AgentMarketDashboard() {
   return (
     <div className="space-y-6">
       <section className="border-b-2 border-[var(--rule)] pb-4">
-        <h1 className="font-headline text-2xl font-bold text-[var(--ink)]">Agent Markets</h1>
+        <h1 className="font-headline text-2xl font-bold text-[var(--ink)]">
+          Agent Markets
+        </h1>
         <p className="mt-1 font-body-serif text-sm text-[var(--ink-light)]">
-          Live agent performance, balances, and funding flow.
+          Live agent performance, balances, and onchain vault accounting.
         </p>
         <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--ink-faint)]">
-          Venue: {data.executionVenue} | {data.dryRun ? "Dry Run" : "Live"} | Updated{" "}
-          {new Date(data.timestamp).toLocaleTimeString()}
+          Venue: {data.executionVenue} | {data.dryRun ? "Dry Run" : "Live"} |
+          Updated {new Date(data.timestamp).toLocaleTimeString()}
         </p>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <MetricCard label="Open PnL" value={formatUsd(data.totals.unrealizedPnlUsd)} valueClass={pnlClass(data.totals.unrealizedPnlUsd)} />
-        <MetricCard label="Realized PnL" value={formatUsd(data.totals.realizedPnlUsd)} valueClass={pnlClass(data.totals.realizedPnlUsd)} />
-        <MetricCard label="Gross PnL" value={formatUsd(data.totals.grossPnlUsd)} valueClass={pnlClass(data.totals.grossPnlUsd)} />
-        <MetricCard label={`Fee (${feePct.toFixed(2)}%)`} value={formatUsd(data.totals.performanceFeeUsd)} />
-        <MetricCard label="Net PnL" value={formatUsd(data.totals.netPnlAfterFeeUsd)} valueClass={pnlClass(data.totals.netPnlAfterFeeUsd)} />
+        <MetricCard
+          label="Open PnL"
+          value={formatUsd(data.totals.unrealizedPnlUsd)}
+          valueClass={pnlClass(data.totals.unrealizedPnlUsd)}
+        />
+        <MetricCard
+          label="Realized PnL"
+          value={formatUsd(data.totals.realizedPnlUsd)}
+          valueClass={pnlClass(data.totals.realizedPnlUsd)}
+        />
+        <MetricCard
+          label="Gross PnL"
+          value={formatUsd(data.totals.grossPnlUsd)}
+          valueClass={pnlClass(data.totals.grossPnlUsd)}
+        />
+        <MetricCard
+          label={`Fee (${feePct.toFixed(2)}%)`}
+          value={formatUsd(data.totals.performanceFeeUsd)}
+        />
+        <MetricCard
+          label="Net PnL"
+          value={formatUsd(data.totals.netPnlAfterFeeUsd)}
+          valueClass={pnlClass(data.totals.netPnlAfterFeeUsd)}
+        />
       </section>
+
+      {vault?.enabled ? (
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <MetricCard
+            label="Vault AUM"
+            value={formatEthFromWei(vault.totalManagedAssetsWei)}
+          />
+          <MetricCard
+            label="Liquid"
+            value={formatEthFromWei(vault.liquidAssetsWei)}
+          />
+          <MetricCard
+            label="Deployed"
+            value={formatEthFromWei(vault.deployedCapitalWei)}
+          />
+          <MetricCard
+            label="Fees Paid"
+            value={formatEthFromWei(vault.totalFeesPaidWei)}
+          />
+        </section>
+      ) : null}
 
       <section className="grid gap-4 lg:grid-cols-3">
         <div className="border border-[var(--rule-light)] p-4 lg:col-span-2">
@@ -226,16 +484,26 @@ export function AgentMarketDashboard() {
             Readiness & Balances
           </h2>
           <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
-            {data.readiness.liveReady ? "Live Ready" : "Gated"} | {shortHex(data.account)}
+            {data.readiness.liveReady ? "Live Ready" : "Gated"} |{" "}
+            {shortHex(data.account)}
           </p>
 
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {balances.map((balance) => (
-              <div key={balance.symbol} className="border border-[var(--rule-light)] p-2">
+              <div
+                key={balance.symbol}
+                className="border border-[var(--rule-light)] p-2"
+              >
                 <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
                   {balance.symbol}
                 </p>
-                <p className={`font-headline text-sm ${balance.meetsRequirement ? "text-[var(--ink)]" : "text-red-700"}`}>
+                <p
+                  className={`font-headline text-sm ${
+                    balance.meetsRequirement
+                      ? "text-[var(--ink)]"
+                      : "text-red-700"
+                  }`}
+                >
                   {balance.formatted}
                 </p>
                 {balance.requiredFormatted ? (
@@ -261,57 +529,187 @@ export function AgentMarketDashboard() {
 
         <div className="border border-[var(--rule-light)] p-4">
           <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-            Fund Agent
+            {isVaultEnabled ? "Fund Vault" : "Fund Agent"}
           </h2>
-          <p className="mt-1 break-all font-mono text-[9px] text-[var(--ink-faint)]">{data.fundingAddress}</p>
+          <p className="mt-1 break-all font-mono text-[9px] text-[var(--ink-faint)]">
+            {isVaultEnabled ? vault!.address : data.fundingAddress}
+          </p>
           <p className="mt-2 font-body-serif text-xs text-[var(--ink-light)]">
-            Send ETH to the trading wallet. Performance fee is {feePct.toFixed(2)}% of realized profits.
+            {isVaultEnabled
+              ? `Deposit ETH into the vault and receive shares. Withdrawals are limited by liquid capital. Performance fee is ${feePct.toFixed(
+                  2
+                )}% on realized strategy profit.`
+              : `Direct transfer to trading wallet fallback. Performance fee target is ${feePct.toFixed(
+                  2
+                )}% on realized profits.`}
           </p>
 
-          <div className="mt-3 flex gap-2">
-            <input
-              value={fundAmount}
-              onChange={(event) => setFundAmount(event.target.value)}
-              placeholder="0.01"
-              className="w-full border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-1 font-mono text-[10px] text-[var(--ink)] outline-none focus:border-[var(--rule)]"
-            />
-            <button
-              onClick={handleFund}
-              disabled={isFundingPending || isFundingConfirming}
-              className="border border-[var(--ink)] bg-[var(--ink)] px-3 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)] disabled:opacity-50"
-            >
-              {isFundingPending ? "Sign..." : isFundingConfirming ? "Confirm..." : "Fund"}
-            </button>
+          <div className="mt-3 space-y-2">
+            <div className="flex gap-2">
+              <input
+                value={depositAmount}
+                onChange={(event) => setDepositAmount(event.target.value)}
+                placeholder="0.01"
+                className="w-full border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-1 font-mono text-[10px] text-[var(--ink)] outline-none focus:border-[var(--rule)]"
+              />
+              <button
+                onClick={isVaultEnabled ? handleDeposit : handleDirectFund}
+                disabled={isActionPending}
+                className="border border-[var(--ink)] bg-[var(--ink)] px-3 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)] disabled:opacity-50"
+              >
+                {isActionPending ? "Pending..." : isVaultEnabled ? "Deposit" : "Fund"}
+              </button>
+            </div>
+
+            {isVaultEnabled ? (
+              <div className="flex gap-2">
+                <input
+                  value={withdrawAmount}
+                  onChange={(event) => setWithdrawAmount(event.target.value)}
+                  placeholder="0.01"
+                  className="w-full border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-1 font-mono text-[10px] text-[var(--ink)] outline-none focus:border-[var(--rule)]"
+                />
+                <button
+                  onClick={handleWithdraw}
+                  disabled={isActionPending}
+                  className="border border-[var(--rule)] bg-[var(--paper)] px-3 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--ink)] transition-colors hover:bg-[var(--paper-dark)] disabled:opacity-50"
+                >
+                  {isActionPending ? "Pending..." : "Withdraw"}
+                </button>
+              </div>
+            ) : null}
           </div>
 
-          {fundingTxHash ? (
+          {lastTxHash ? (
             <a
-              href={`https://basescan.org/tx/${fundingTxHash}`}
+              href={txExplorerUrl(lastTxChainId, lastTxHash)}
               target="_blank"
               rel="noreferrer"
               className="mt-2 block font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink-faint)] underline"
             >
-              View Funding Tx
+              View Transaction
             </a>
           ) : null}
-          {fundingSuccess ? (
-            <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.14em] text-emerald-700">Funding confirmed</p>
+          {txSuccess ? (
+            <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.14em] text-emerald-700">
+              Transaction confirmed
+            </p>
           ) : null}
-          {fundingError ? (
-            <p className="mt-2 font-mono text-[8px] text-red-700">{fundingError.message}</p>
+          {directFundingError ? (
+            <p className="mt-2 font-mono text-[8px] text-red-700">
+              {directFundingError.message}
+            </p>
           ) : null}
-          {fundInputError ? (
-            <p className="mt-2 font-mono text-[8px] text-red-700">{fundInputError}</p>
+          {vaultWriteError ? (
+            <p className="mt-2 font-mono text-[8px] text-red-700">
+              {vaultWriteError.message}
+            </p>
+          ) : null}
+          {actionError ? (
+            <p className="mt-2 font-mono text-[8px] text-red-700">{actionError}</p>
           ) : null}
         </div>
       </section>
+
+      {vault?.enabled ? (
+        <section className="grid gap-4 lg:grid-cols-3">
+          <div className="border border-[var(--rule-light)] p-4 lg:col-span-1">
+            <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+              My Vault Position
+            </h2>
+            {connectedAddress ? (
+              vault.account ? (
+                <div className="mt-2 space-y-1 font-mono text-[10px] text-[var(--ink-light)]">
+                  <p>Address: {shortHex(connectedAddress)}</p>
+                  <p>Shares: {vault.account.shares}</p>
+                  <p>Equity: {formatEthFromWei(vault.account.equityWei)}</p>
+                  <p>Deposited: {formatEthFromWei(vault.account.depositedWei)}</p>
+                  <p>Withdrawn: {formatEthFromWei(vault.account.withdrawnWei)}</p>
+                  <p className={pnlWeiClass(vault.account.pnlWei)}>
+                    PnL: {formatEthFromWei(vault.account.pnlWei)} (
+                    {formatSignedPctBps(vault.account.pnlBps)})
+                  </p>
+                </div>
+              ) : (
+                <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+                  No vault position yet.
+                </p>
+              )
+            ) : (
+              <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+                Connect wallet to view your vault position.
+              </p>
+            )}
+          </div>
+
+          <div className="border border-[var(--rule-light)] p-4 lg:col-span-2">
+            <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+              Funder Leaderboard ({vault.funderCount})
+            </h2>
+            {funderRows.length === 0 ? (
+              <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+                No funders yet.
+              </p>
+            ) : (
+              <div className="mt-3 overflow-x-auto">
+                <table className="min-w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b border-[var(--rule-light)] font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+                      <th className="py-2 pr-3">Funder</th>
+                      <th className="py-2 pr-3">Equity</th>
+                      <th className="py-2 pr-3">Deposited</th>
+                      <th className="py-2 pr-3">Withdrawn</th>
+                      <th className="py-2 pr-3">Shares</th>
+                      <th className="py-2 pr-0">PnL</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {funderRows.map((row) => (
+                      <tr
+                        key={row.address}
+                        className="border-b border-[var(--rule-light)] last:border-0"
+                      >
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
+                          {shortHex(row.address)}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                          {formatEthFromWei(row.equityWei)}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                          {formatEthFromWei(row.depositedWei)}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                          {formatEthFromWei(row.withdrawnWei)}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                          {row.shares}
+                        </td>
+                        <td
+                          className={`py-2 pr-0 font-mono text-[10px] ${pnlWeiClass(
+                            row.pnlWei
+                          )}`}
+                        >
+                          {formatEthFromWei(row.pnlWei)} (
+                          {formatSignedPctBps(row.pnlBps)})
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <section className="border border-[var(--rule-light)] p-4">
         <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
           Open Positions ({data.totals.openPositions})
         </h2>
         {data.open.length === 0 ? (
-          <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">No open positions.</p>
+          <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+            No open positions.
+          </p>
         ) : (
           <div className="mt-3 overflow-x-auto">
             <table className="min-w-full border-collapse text-left">
@@ -327,13 +725,29 @@ export function AgentMarketDashboard() {
               </thead>
               <tbody>
                 {data.open.map((row) => (
-                  <tr key={row.position.id} className="border-b border-[var(--rule-light)] last:border-0">
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">{symbolForPosition(row.position)}</td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">{formatUsd(row.position.entryPriceUsd)}</td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">{formatUsd(row.currentPriceUsd)}</td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">{formatUsd(row.position.entryNotionalUsd)}</td>
-                    <td className={`py-2 pr-3 font-mono text-[10px] ${pnlClass(row.unrealizedPnlUsd)}`}>
-                      {formatUsd(row.unrealizedPnlUsd)} ({formatPct(row.unrealizedPnlPct)})
+                  <tr
+                    key={row.position.id}
+                    className="border-b border-[var(--rule-light)] last:border-0"
+                  >
+                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
+                      {symbolForPosition(row.position)}
+                    </td>
+                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                      {formatUsd(row.position.entryPriceUsd)}
+                    </td>
+                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                      {formatUsd(row.currentPriceUsd)}
+                    </td>
+                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                      {formatUsd(row.position.entryNotionalUsd)}
+                    </td>
+                    <td
+                      className={`py-2 pr-3 font-mono text-[10px] ${pnlClass(
+                        row.unrealizedPnlUsd
+                      )}`}
+                    >
+                      {formatUsd(row.unrealizedPnlUsd)} (
+                      {formatPct(row.unrealizedPnlPct)})
                     </td>
                     <td className="py-2 pr-0 font-mono text-[10px] text-[var(--ink-faint)]">
                       {new Date(row.position.openedAt).toLocaleString()}
@@ -351,7 +765,9 @@ export function AgentMarketDashboard() {
           Closed Positions ({data.totals.closedPositions})
         </h2>
         {closedRows.length === 0 ? (
-          <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">No closed positions yet.</p>
+          <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+            No closed positions yet.
+          </p>
         ) : (
           <div className="mt-3 overflow-x-auto">
             <table className="min-w-full border-collapse text-left">
@@ -366,15 +782,31 @@ export function AgentMarketDashboard() {
               </thead>
               <tbody>
                 {closedRows.map((row) => (
-                  <tr key={row.position.id} className="border-b border-[var(--rule-light)] last:border-0">
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">{symbolForPosition(row.position)}</td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">{formatUsd(row.position.entryPriceUsd)}</td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">{formatUsd(row.position.exitPriceUsd)}</td>
-                    <td className={`py-2 pr-3 font-mono text-[10px] ${pnlClass(row.realizedPnlUsd)}`}>
-                      {formatUsd(row.realizedPnlUsd)} ({formatPct(row.realizedPnlPct)})
+                  <tr
+                    key={row.position.id}
+                    className="border-b border-[var(--rule-light)] last:border-0"
+                  >
+                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
+                      {symbolForPosition(row.position)}
+                    </td>
+                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                      {formatUsd(row.position.entryPriceUsd)}
+                    </td>
+                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                      {formatUsd(row.position.exitPriceUsd)}
+                    </td>
+                    <td
+                      className={`py-2 pr-3 font-mono text-[10px] ${pnlClass(
+                        row.realizedPnlUsd
+                      )}`}
+                    >
+                      {formatUsd(row.realizedPnlUsd)} (
+                      {formatPct(row.realizedPnlPct)})
                     </td>
                     <td className="py-2 pr-0 font-mono text-[10px] text-[var(--ink-faint)]">
-                      {row.position.closedAt ? new Date(row.position.closedAt).toLocaleString() : "--"}
+                      {row.position.closedAt
+                        ? new Date(row.position.closedAt).toLocaleString()
+                        : "--"}
                     </td>
                   </tr>
                 ))}
@@ -387,11 +819,23 @@ export function AgentMarketDashboard() {
   );
 }
 
-function MetricCard({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
+function MetricCard({
+  label,
+  value,
+  valueClass,
+}: {
+  label: string;
+  value: string;
+  valueClass?: string;
+}) {
   return (
     <div className="border border-[var(--rule-light)] p-3">
-      <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">{label}</p>
-      <p className={`mt-1 font-headline text-xl ${valueClass ?? "text-[var(--ink)]"}`}>{value}</p>
+      <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+        {label}
+      </p>
+      <p className={`mt-1 font-headline text-xl ${valueClass ?? "text-[var(--ink)]"}`}>
+        {value}
+      </p>
     </div>
   );
 }

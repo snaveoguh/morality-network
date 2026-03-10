@@ -49,6 +49,23 @@ export const ERC20_ABI = [
   },
 ] as const;
 
+// Chain where morality contracts are deployed.
+// All writeContract calls MUST include this chainId or the tx goes to the wrong chain.
+import { base, baseSepolia } from "viem/chains";
+export const CONTRACTS_CHAIN_ID = baseSepolia.id;
+export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
+
+const parsedVaultChainId = Number(
+  process.env.NEXT_PUBLIC_AGENT_VAULT_CHAIN_ID ?? `${base.id}`
+);
+
+export const AGENT_VAULT_CHAIN_ID =
+  Number.isFinite(parsedVaultChainId) && parsedVaultChainId > 0
+    ? Math.trunc(parsedVaultChainId)
+    : base.id;
+export const AGENT_VAULT_ADDRESS = (process.env.NEXT_PUBLIC_AGENT_VAULT_ADDRESS ??
+  ZERO_ADDRESS) as Address;
+
 // Contract addresses
 // Defaults point to deployed Base Sepolia contracts; override via NEXT_PUBLIC_* env vars.
 export const CONTRACTS = {
@@ -474,6 +491,13 @@ export const COMMENTS_ABI = [
     stateMutability: "view",
   },
   {
+    type: "function",
+    name: "getChildComments",
+    inputs: [{ name: "parentId", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256[]" }],
+    stateMutability: "view",
+  },
+  {
     type: "event",
     name: "CommentCreated",
     inputs: [
@@ -670,6 +694,13 @@ export const PROPOSAL_VOTING_ABI = [
     stateMutability: "view",
   },
   {
+    type: "function",
+    name: "isDaoResolvable",
+    inputs: [{ name: "dao", type: "string" }],
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "view",
+  },
+  {
     type: "event",
     name: "VoteCast",
     inputs: [
@@ -686,6 +717,119 @@ export const PROPOSAL_VOTING_ABI = [
     inputs: [
       { name: "voter", type: "address", indexed: true },
       { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
+] as const;
+
+// ============================================================================
+// AGENT VAULT — Shared capital pool for autonomous agent trading
+// ============================================================================
+
+export const AGENT_VAULT_ABI = [
+  {
+    type: "function",
+    name: "deposit",
+    inputs: [],
+    outputs: [{ name: "sharesMinted", type: "uint256" }],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "withdraw",
+    inputs: [{ name: "assets", type: "uint256" }],
+    outputs: [{ name: "sharesBurned", type: "uint256" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "redeem",
+    inputs: [{ name: "shares", type: "uint256" }],
+    outputs: [{ name: "assetsOut", type: "uint256" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "shareBalance",
+    inputs: [{ name: "", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "convertToAssets",
+    inputs: [{ name: "shares", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "maxWithdraw",
+    inputs: [{ name: "funder", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getVaultState",
+    inputs: [],
+    outputs: [
+      { name: "totalManagedAssets_", type: "uint256" },
+      { name: "liquidAssets_", type: "uint256" },
+      { name: "deployedCapital_", type: "uint256" },
+      { name: "totalShares_", type: "uint256" },
+      { name: "sharePriceE18_", type: "uint256" },
+      { name: "performanceFeeBps_", type: "uint256" },
+      { name: "manager_", type: "address" },
+      { name: "feeRecipient_", type: "address" },
+      { name: "cumulativeStrategyProfit_", type: "uint256" },
+      { name: "cumulativeStrategyLoss_", type: "uint256" },
+      { name: "totalFeesPaid_", type: "uint256" },
+      { name: "funderCount_", type: "uint256" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getFunders",
+    inputs: [
+      { name: "offset", type: "uint256" },
+      { name: "limit", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "address[]" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getFunderSnapshot",
+    inputs: [{ name: "funder", type: "address" }],
+    outputs: [
+      { name: "shares", type: "uint256" },
+      { name: "equityAssets", type: "uint256" },
+      { name: "deposited", type: "uint256" },
+      { name: "withdrawn", type: "uint256" },
+      { name: "pnl", type: "int256" },
+      { name: "pnlBps", type: "int256" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "event",
+    name: "Deposited",
+    inputs: [
+      { name: "funder", type: "address", indexed: true },
+      { name: "assets", type: "uint256", indexed: false },
+      { name: "sharesMinted", type: "uint256", indexed: false },
+      { name: "sharePriceE18", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "Withdrawn",
+    inputs: [
+      { name: "funder", type: "address", indexed: true },
+      { name: "assets", type: "uint256", indexed: false },
+      { name: "sharesBurned", type: "uint256", indexed: false },
+      { name: "sharePriceE18", type: "uint256", indexed: false },
     ],
   },
 ] as const;
