@@ -1,6 +1,7 @@
 import type { Address, Hash } from "viem";
 
 export type DexKind = "uniswap-v3" | "aerodrome";
+export type ExecutionVenue = "base-spot" | "hyperliquid-perp";
 
 export interface ScoreBreakdown {
   [key: string]: number;
@@ -34,12 +35,16 @@ export interface ScannerLaunch {
 
 export interface Position {
   id: string;
+  venue?: ExecutionVenue;
   tokenAddress: Address;
   tokenDecimals: number;
   quoteTokenAddress: Address;
   quoteSymbol: string;
   quoteTokenDecimals: number;
   dex: DexKind;
+  marketSymbol?: string;
+  marketId?: number;
+  leverage?: number;
   poolAddress?: Address;
   entryPriceUsd: number;
   quantityTokenRaw: string;
@@ -72,8 +77,20 @@ export interface TraderSafetyConfig {
   minBaseEthForGas: number;
 }
 
+export interface HyperliquidConfig {
+  apiUrl: string;
+  isTestnet: boolean;
+  accountAddress?: Address;
+  defaultMarket: string;
+  defaultLeverage: number;
+  entryNotionalUsd: number;
+  minAccountValueUsd: number;
+}
+
 export interface TraderExecutionConfig {
+  executionVenue: ExecutionVenue;
   dryRun: boolean;
+  performanceFeeBps: number;
   rpcUrl: string;
   privateKey: `0x${string}`;
   scannerApiUrl: string;
@@ -91,6 +108,7 @@ export interface TraderExecutionConfig {
   entryBudgetRaw: Record<string, bigint>;
   risk: TraderRiskConfig;
   safety: TraderSafetyConfig;
+  hyperliquid: HyperliquidConfig;
 }
 
 export interface SwapResult {
@@ -102,6 +120,7 @@ export interface TraderCycleReport {
   startedAt: number;
   finishedAt: number;
   dryRun: boolean;
+  executionVenue: ExecutionVenue;
   scannerCandidates: number;
   openPositions: number;
   entries: Position[];
@@ -124,6 +143,7 @@ export interface TraderReadinessBalance {
 
 export interface TraderReadinessReport {
   timestamp: number;
+  executionVenue: ExecutionVenue;
   dryRun: boolean;
   account: Address;
   scannerCandidates: number;
@@ -132,4 +152,43 @@ export interface TraderReadinessReport {
   balances: TraderReadinessBalance[];
   liveReady: boolean;
   reasons: string[];
+}
+
+export interface TraderOpenPositionMetric {
+  position: Position;
+  currentPriceUsd: number | null;
+  marketValueUsd: number | null;
+  unrealizedPnlUsd: number | null;
+  unrealizedPnlPct: number | null;
+}
+
+export interface TraderClosedPositionMetric {
+  position: Position;
+  realizedPnlUsd: number | null;
+  realizedPnlPct: number | null;
+}
+
+export interface TraderPerformanceTotals {
+  openPositions: number;
+  closedPositions: number;
+  deployedUsd: number;
+  openMarketValueUsd: number;
+  unrealizedPnlUsd: number;
+  realizedPnlUsd: number;
+  grossPnlUsd: number;
+  performanceFeeUsd: number;
+  netPnlAfterFeeUsd: number;
+}
+
+export interface TraderPerformanceReport {
+  timestamp: number;
+  executionVenue: ExecutionVenue;
+  dryRun: boolean;
+  account: Address;
+  fundingAddress: Address;
+  performanceFeeBps: number;
+  readiness: TraderReadinessReport;
+  totals: TraderPerformanceTotals;
+  open: TraderOpenPositionMetric[];
+  closed: TraderClosedPositionMetric[];
 }

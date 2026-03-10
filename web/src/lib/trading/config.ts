@@ -1,5 +1,5 @@
-import { parseGwei, type Address } from "viem";
-import type { TraderExecutionConfig } from "./types";
+import { isAddress, parseGwei, type Address } from "viem";
+import type { ExecutionVenue, TraderExecutionConfig } from "./types";
 
 const WETH_BASE = "0x4200000000000000000000000000000000000006";
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
@@ -8,8 +8,16 @@ const AERODROME_ROUTER_BASE = "0x0000000000000000000000000000000000000000";
 const AERODROME_FACTORY_BASE = "0x420DD381b31aEf6683db6B902084cB0FFECe40Da";
 
 function asAddress(value: string, fallback: string): Address {
-  const raw = value || fallback;
-  return raw as Address;
+  const candidate = (value || "").trim();
+  if (candidate && isAddress(candidate)) {
+    return candidate as Address;
+  }
+
+  const fallbackTrimmed = fallback.trim();
+  if (!isAddress(fallbackTrimmed)) {
+    throw new Error(`Invalid fallback address configured: ${fallback}`);
+  }
+  return fallbackTrimmed as Address;
 }
 
 function numberFromEnv(key: string, fallback: number): number {
@@ -17,6 +25,14 @@ function numberFromEnv(key: string, fallback: number): number {
   if (!raw) return fallback;
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function basisPointsFromEnv(key: string, fallback: number): number {
+  const parsed = Math.floor(numberFromEnv(key, fallback));
+  if (!Number.isFinite(parsed)) return fallback;
+  if (parsed < 0) return 0;
+  if (parsed > 10_000) return 10_000;
+  return parsed;
 }
 
 function boolFromEnv(key: string, fallback: boolean): boolean {
@@ -31,6 +47,22 @@ function boolFromEnv(key: string, fallback: boolean): boolean {
 function stringFromEnv(key: string, fallback: string): string {
   const raw = process.env[key];
   return raw && raw.trim().length > 0 ? raw.trim() : fallback;
+}
+
+function optionalAddressFromEnv(key: string): Address | undefined {
+  const raw = process.env[key];
+  if (!raw) return undefined;
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  return isAddress(trimmed) ? (trimmed as Address) : undefined;
+}
+
+function executionVenueFromEnv(): ExecutionVenue {
+  const raw = stringFromEnv("TRADER_EXECUTION_VENUE", "base-spot").toLowerCase();
+  if (raw === "base-spot" || raw === "hyperliquid-perp") {
+    return raw;
+  }
+  return "base-spot";
 }
 
 function privateKeyFromEnv(): `0x${string}` {
@@ -60,6 +92,7 @@ function entryBudget(symbol: string, fallback: string, decimals: number): bigint
 
 export function getTraderConfig(): TraderExecutionConfig {
   const rpcUrl = stringFromEnv("BASE_MAINNET_RPC_URL", "https://mainnet.base.org");
+  const executionVenue = executionVenueFromEnv();
   const scannerApiUrl = stringFromEnv(
     "TRADER_SCANNER_API_URL",
     "https://pooter.world/api/agents/scanner?limit=50&minScore=50"
@@ -81,7 +114,9 @@ export function getTraderConfig(): TraderExecutionConfig {
   };
 
   return {
+    executionVenue,
     dryRun: boolFromEnv("TRADER_DRY_RUN", true),
+    performanceFeeBps: basisPointsFromEnv("TRADER_PERFORMANCE_FEE_BPS", 500),
     rpcUrl,
     privateKey: privateKeyFromEnv(),
     scannerApiUrl,
@@ -110,6 +145,15 @@ export function getTraderConfig(): TraderExecutionConfig {
     safety: {
       minScannerCandidatesLive: numberFromEnv("TRADER_MIN_SCANNER_CANDIDATES_LIVE", 2),
       minBaseEthForGas: numberFromEnv("TRADER_MIN_BASE_ETH_FOR_GAS", 0.002),
+    },
+    hyperliquid: {
+      apiUrl: stringFromEnv("HYPERLIQUID_API_URL", "https://api.hyperliquid.xyz"),
+      isTestnet: boolFromEnv("HYPERLIQUID_IS_TESTNET", false),
+      accountAddress: optionalAddressFromEnv("HYPERLIQUID_ACCOUNT_ADDRESS"),
+      defaultMarket: stringFromEnv("HYPERLIQUID_DEFAULT_MARKET", "BTC").toUpperCase(),
+      defaultLeverage: numberFromEnv("HYPERLIQUID_DEFAULT_LEVERAGE", 2),
+      entryNotionalUsd: numberFromEnv("HYPERLIQUID_ENTRY_USD", 50),
+      minAccountValueUsd: numberFromEnv("HYPERLIQUID_MIN_ACCOUNT_VALUE_USD", 100),
     },
   };
 }

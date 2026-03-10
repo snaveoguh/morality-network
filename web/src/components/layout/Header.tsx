@@ -1,157 +1,140 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MoChrome } from "@/components/layout/Masthead";
-import { MoPrice } from "@/components/layout/MoPrice";
-import { SearchBar } from "@/components/layout/SearchBar";
-import { SubmitLink } from "@/components/layout/SubmitLink";
-import { TranslateMenu } from "@/components/layout/TranslateMenu";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const NAV_LINKS = [
   { href: "/", label: "Feed" },
+  { href: "/stumble", label: "Stumble" },
+  { href: "/markets", label: "Markets" },
+  { href: "/archive", label: "Archive" },
   { href: "/proposals", label: "Proposals" },
+  { href: "/predictions", label: "Predictions" },
+  { href: "/discuss", label: "Discuss" },
   { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/style-guide", label: "Style Guide" },
+  { href: "/bots", label: "Bots" },
 ];
 
 export function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 border-b-2 border-[var(--rule)] bg-[var(--paper)]">
-      <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-4">
-        {/* Logo — small fraktur + hover popover */}
-        <LogoWithPopover />
+    <header className="sticky top-0 z-50 border-b border-[var(--rule)] bg-[var(--paper)]">
+      <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4">
+        <div className="flex min-w-0 items-center gap-2">
+          <Link
+            href="/"
+            className="flex h-4 w-4 shrink-0 items-center justify-center"
+            aria-label="pooter world home"
+            title="pooter world"
+          >
+            <img
+              src="https://morality.s3.eu-west-2.amazonaws.com/brand/glyph.png"
+              alt=""
+              className="h-4 w-4 object-contain grayscale contrast-200 brightness-0"
+            />
+          </Link>
 
-        {/* Nav — monospace, underline-on-active */}
-        <nav className="flex items-center gap-0">
-          {NAV_LINKS.map(({ href, label }, i) => {
-            const isActive =
-              href === "/" ? pathname === "/" : pathname.startsWith(href);
-            return (
-              <span key={href} className="flex items-center">
-                {i > 0 && <span className="mx-2 text-[var(--rule-light)]">|</span>}
-                <Link
-                  href={href}
-                  className={`font-mono text-xs uppercase tracking-wider transition-colors ${
-                    isActive
-                      ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-2 decoration-[var(--rule)]"
-                      : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
-                  }`}
-                >
-                  {label}
-                </Link>
-              </span>
-            );
-          })}
-        </nav>
+          <nav className="flex min-w-0 items-center gap-0 overflow-x-auto whitespace-nowrap">
+            {NAV_LINKS.map(({ href, label }, i) => {
+              const isActive =
+                href === "/" ? pathname === "/" : pathname.startsWith(href);
+              return (
+                <span key={href} className="flex items-center">
+                  {i > 0 && <span className="mx-2 text-[var(--rule-light)]">|</span>}
+                  <Link
+                    href={href}
+                    className={`font-mono text-[9px] uppercase tracking-[0.16em] transition-colors ${
+                      isActive
+                        ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-[1px] decoration-[var(--rule)]"
+                        : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                </span>
+              );
+            })}
+          </nav>
 
-        {/* Search + Submit + Price */}
-        <div className="flex items-center gap-2">
-          <TranslateMenu />
-          <SearchBar />
-          <SubmitLink />
-          <MoPrice />
+          <span className="hidden text-[var(--rule-light)] lg:inline">|</span>
+          <p className="hidden max-w-[24rem] truncate font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)] lg:block">
+            A public ledger of world events and their interpretation.
+          </p>
         </div>
 
-        {/* Wallet */}
-        <ConnectButton
-          accountStatus="address"
-          chainStatus="icon"
-          showBalance={false}
-        />
+        <MiniWalletButton />
       </div>
     </header>
   );
 }
 
-// ============================================================================
-// LOGO WITH HOVER POPOVER — "wtf is this?"
-// ============================================================================
-
-function LogoWithPopover() {
-  const [show, setShow] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function handleEnter() {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setShow(true), 350);
-  }
-  function handleLeave() {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setShow(false), 200);
-  }
-
-  useEffect(() => () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }, []);
-
+function MiniWalletButton() {
   return (
-    <div
-      className="relative"
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
-    >
-      <Link href="/" className="flex items-center gap-1.5">
-        <MoChrome className="h-5 w-auto" />
-        <span className="font-masthead text-lg text-[var(--ink)]">
-          pooter world
-          <sup className="ml-0.5 font-mono text-[7px] tracking-tight text-[var(--ink-faint)]">
-            {"\u2310\u25E8-\u25E8"}
-          </sup>
-        </span>
-      </Link>
+    <ConnectButton.Custom>
+      {({
+        account,
+        chain,
+        openAccountModal,
+        openChainModal,
+        openConnectModal,
+        authenticationStatus,
+        mounted,
+      }) => {
+        const ready = mounted && authenticationStatus !== "loading";
+        const connected =
+          ready &&
+          account &&
+          chain &&
+          (!authenticationStatus || authenticationStatus === "authenticated");
 
-      {/* Hover popover */}
-      {show && (
-        <div
-          className="absolute left-0 top-full z-[9999] mt-2 w-80 border-2 border-[var(--rule)] bg-[var(--paper)] p-4 shadow-xl"
-          onMouseEnter={() => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }}
-          onMouseLeave={handleLeave}
-        >
-          {/* Top rule */}
-          <div className="mb-2 h-px w-full bg-[var(--rule)]" />
-          <div className="mb-3 mt-px h-[2px] w-full bg-[var(--rule)]" />
+        if (!connected) {
+          return (
+            <button
+              type="button"
+              onClick={openConnectModal}
+              className="h-5 border border-[var(--rule)] bg-[var(--ink)] px-2 font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)]"
+            >
+              Connect
+            </button>
+          );
+        }
 
-          <p className="font-headline text-sm font-bold leading-snug text-[var(--ink)]">
-            A decentralised information highway.
-          </p>
-          <p className="mt-2 font-body-serif text-xs leading-relaxed text-[var(--ink-light)]">
-            Real-time current affairs from 70+ sources across the political spectrum.
-            Rate, discuss, and tip content directly onchain. No middlemen, no censorship,
-            no algorithmic feeds &mdash; just raw signal.
-          </p>
+        if (chain.unsupported) {
+          return (
+            <button
+              type="button"
+              onClick={openChainModal}
+              className="h-5 border border-[var(--accent-red)] bg-[var(--paper)] px-2 font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--accent-red)] transition-colors hover:bg-[var(--accent-red)] hover:text-[var(--paper)]"
+            >
+              Wrong Net
+            </button>
+          );
+        }
 
-          <div className="mt-3 border-t border-[var(--rule-light)] pt-2">
-            <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-              Coming Soon
-            </p>
-            <ul className="mt-1 space-y-0.5 font-body-serif text-[11px] text-[var(--ink-light)]">
-              <li>&bull; VoIP &amp; free landline calls for members</li>
-              <li>&bull; Original editorial content &amp; AI analysis</li>
-              <li>&bull; Live discussion rooms</li>
-              <li>&bull; BankrBot integration</li>
-            </ul>
-          </div>
-
-          <div className="mt-3 border-t border-[var(--rule-light)] pt-2">
-            <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-              Subscribe
-            </p>
-            <p className="mt-0.5 font-body-serif text-[11px] text-[var(--ink-light)]">
-              $50 of <span className="font-mono font-bold">$MO</span> per month for full access.
-            </p>
-          </div>
-
-          {/* Bottom rule */}
-          <div className="mt-3 h-px w-full bg-[var(--rule)]" />
-          <div className="mt-px h-[2px] w-full bg-[var(--rule)]" />
-          <p className="mt-1 text-center font-mono text-[7px] uppercase tracking-[0.3em] text-[var(--ink-faint)]">
-            Permissionless &bull; Onchain &bull; Base L2
-          </p>
-        </div>
-      )}
-    </div>
+        return (
+          <button
+            type="button"
+            onClick={openAccountModal}
+            className="inline-flex h-5 items-center gap-1 border border-[var(--rule)] bg-[var(--paper)] px-1.5 font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--ink)] transition-colors hover:bg-[var(--paper-dark)]"
+          >
+            {chain.hasIcon && chain.iconUrl ? (
+              <span
+                className="inline-flex h-2 w-2 overflow-hidden rounded-full"
+                style={{ background: chain.iconBackground }}
+              >
+                <img
+                  alt={chain.name ?? "chain"}
+                  src={chain.iconUrl}
+                  className="h-2 w-2"
+                />
+              </span>
+            ) : null}
+            <span>{account.displayName}</span>
+          </button>
+        );
+      }}
+    </ConnectButton.Custom>
   );
 }
