@@ -23,14 +23,21 @@ import { pooterWallet } from "@/lib/pooterWallet";
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
 
 // RainbowKit's connectorsForWallets ALWAYS opens a WalletConnect WebSocket relay,
-// even for MetaMask/Coinbase (they use WC for QR scanning).
-// With an invalid project ID the relay rejects immediately → "Connection closed" → app crash.
-// When no valid WC project ID is set, fall back to raw wagmi connectors (no WC relay).
+// even for MetaMask/Coinbase (they use WC for QR code scanning).
+// With an invalid project ID the relay rejects → "Connection closed" → React crash.
+// When no valid WC project ID, use raw wagmi connectors (no WC relay at all).
 const hasValidWC =
   projectId.length > 0 && projectId !== "demo" && projectId !== "placeholder";
 
 const chains = [baseSepolia, base, mainnet] as const;
 
+const transports = {
+  [baseSepolia.id]: http(),
+  [base.id]: http(),
+  [mainnet.id]: http("https://ethereum-rpc.publicnode.com"),
+};
+
+// Two config paths: with WC (full RainbowKit) or without (raw connectors, no WC relay)
 const config = hasValidWC
   ? createConfig({
       connectors: connectorsForWallets(
@@ -38,32 +45,19 @@ const config = hasValidWC
           { groupName: "pooter world", wallets: [pooterWallet] },
           {
             groupName: "Popular",
-            wallets: [
-              metaMaskWallet,
-              coinbaseWallet,
-              walletConnectWallet,
-              injectedWallet,
-            ],
+            wallets: [metaMaskWallet, coinbaseWallet, walletConnectWallet, injectedWallet],
           },
         ],
         { appName: "pooter world", projectId }
       ),
       chains,
-      transports: {
-        [baseSepolia.id]: http(),
-        [base.id]: http(),
-        [mainnet.id]: http("https://ethereum-rpc.publicnode.com"),
-      },
+      transports,
       ssr: true,
     })
   : createConfig({
       connectors: [injected(), cbWallet({ appName: "pooter world" })],
       chains,
-      transports: {
-        [baseSepolia.id]: http(),
-        [base.id]: http(),
-        [mainnet.id]: http("https://ethereum-rpc.publicnode.com"),
-      },
+      transports,
       ssr: true,
     });
 
@@ -80,12 +74,9 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <WagmiProviderBase config={config}>
       <QueryClientProvider client={queryClient}>
-        {hasValidWC ? (
-          <RainbowKitProvider theme={rkTheme}>{children}</RainbowKitProvider>
-        ) : (
-          // No RainbowKit when WC is unavailable — just wagmi + injected/coinbase
-          children
-        )}
+        <RainbowKitProvider theme={rkTheme}>
+          {children}
+        </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProviderBase>
   );
