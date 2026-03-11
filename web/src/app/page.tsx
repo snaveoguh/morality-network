@@ -21,14 +21,15 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 }
 
 export default async function FeedPage() {
-  // All fetches race against a 6s timeout (Vercel hobby = 10s max).
-  // Any slow source returns empty rather than killing the whole page.
+  // All fetches race against a 25s timeout (Vercel hobby = 60s for serverless).
+  // RSS alone takes ~7s on cold start. Any source that exceeds the timeout
+  // returns empty gracefully rather than crashing the page.
   const [rssItems, proposals, casts, videos, dailyEdition] = await Promise.all([
-    withTimeout(fetchAllFeeds(), 6000, []),
-    withTimeout(fetchAllProposals(), 6000, []),
-    withTimeout(fetchFarcasterContent("pip"), 6000, []),
-    withTimeout(fetchDailyVideos(12), 6000, []),
-    withTimeout(getDailyEdition().catch(() => null), 6000, null),
+    withTimeout(fetchAllFeeds(), 25000, []),
+    withTimeout(fetchAllProposals(), 25000, []),
+    withTimeout(fetchFarcasterContent("pip"), 25000, []),
+    withTimeout(fetchDailyVideos(12), 25000, []),
+    withTimeout(getDailyEdition().catch(() => null), 25000, null),
   ]);
 
   // Auto-archive all live feed items in one batch write.

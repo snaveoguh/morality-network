@@ -35,6 +35,7 @@ export function CommentThread({ entityHash, compact = false }: CommentThreadProp
     abi: COMMENTS_ABI,
     functionName: "getEntityCommentCount",
     args: [entityHash],
+    chainId: CONTRACTS_CHAIN_ID,
   });
 
   const count = commentCount !== undefined ? Number(commentCount) : 0;
@@ -46,6 +47,7 @@ export function CommentThread({ entityHash, compact = false }: CommentThreadProp
     abi: COMMENTS_ABI,
     functionName: "getEntityComments",
     args: [entityHash, commentsOffset, BigInt(COMMENT_PAGE_SIZE)],
+    chainId: CONTRACTS_CHAIN_ID,
   });
 
   const {
@@ -56,6 +58,7 @@ export function CommentThread({ entityHash, compact = false }: CommentThreadProp
     abi: COMMENTS_ABI,
     functionName: "getArgumentMeta",
     args: [BigInt(1)],
+    chainId: CONTRACTS_CHAIN_ID,
     query: { retry: false },
   });
 
@@ -263,6 +266,7 @@ function CommentParentReader({
     abi: COMMENTS_ABI,
     functionName: "getComment",
     args: [commentId],
+    chainId: CONTRACTS_CHAIN_ID,
   });
 
   // Use a ref to hold the callback so the effect deps stay stable
@@ -349,6 +353,7 @@ function FlatCommentItem({
     abi: COMMENTS_ABI,
     functionName: "getComment",
     args: [commentId],
+    chainId: CONTRACTS_CHAIN_ID,
   });
 
   const { data: argMeta } = useReadContract({
@@ -356,6 +361,7 @@ function FlatCommentItem({
     abi: COMMENTS_ABI,
     functionName: "getArgumentMeta",
     args: [commentId],
+    chainId: CONTRACTS_CHAIN_ID,
     query: { enabled: supportsStructuredComments, retry: false },
   });
 

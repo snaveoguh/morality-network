@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import type { Proposal } from "@/lib/governance";
 import { PROPOSAL_VOTING_ABI, PROPOSAL_VOTING_ADDRESS, NOUNS_TOKEN_ADDRESS, CONTRACTS_CHAIN_ID } from "@/lib/contracts";
+import { getDaoPredictionKey } from "@/lib/proposal-entity";
 
 interface VotePanelProps {
   proposal: Proposal;
@@ -39,12 +40,7 @@ export function VotePanel({ proposal }: VotePanelProps) {
 
   const isNounHolder = nounBalance != null && nounBalance > BigInt(0);
 
-  const daoKey =
-    proposal.dao === "Lil Nouns"
-      ? "lil-nouns"
-      : proposal.dao === "Nouns DAO"
-        ? "nouns"
-        : proposal.dao.toLowerCase().replace(/\s+/g, "-");
+  const daoKey = getDaoPredictionKey(proposal.dao);
 
   const proposalId =
     Number.isFinite(proposal.proposalNumber) && proposal.proposalNumber != null
@@ -56,6 +52,7 @@ export function VotePanel({ proposal }: VotePanelProps) {
     abi: PROPOSAL_VOTING_ABI,
     functionName: "isDaoResolvable",
     args: [daoKey],
+    chainId: CONTRACTS_CHAIN_ID,
     query: { enabled: votingAvailable },
   });
 
@@ -66,6 +63,7 @@ export function VotePanel({ proposal }: VotePanelProps) {
     abi: PROPOSAL_VOTING_ABI,
     functionName: "getVote",
     args: [daoKey, proposalId, address || ZERO_ADDRESS],
+    chainId: CONTRACTS_CHAIN_ID,
     query: { enabled: votingAvailable && !!address },
   });
 
@@ -74,6 +72,8 @@ export function VotePanel({ proposal }: VotePanelProps) {
   const { data: txHash, writeContract, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: txHash,
+    chainId: CONTRACTS_CHAIN_ID,
+    query: { enabled: !!txHash },
   });
 
   const handleVote = () => {

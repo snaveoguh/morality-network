@@ -3,17 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   useAccount,
-  useReadContract,
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
-import { parseEther } from "viem";
 import {
   COMMENTS_ABI,
   CONTRACTS,
   CONTRACTS_CHAIN_ID,
-  PREDICTION_MARKET_ABI,
-  PREDICTION_MARKET_ADDRESS,
 } from "@/lib/contracts";
 import { computeEntityHash } from "@/lib/entity";
 import { getDaoPredictionKey, getPrimaryProposalEntityIdentifier } from "@/lib/proposal-entity";
@@ -29,15 +25,13 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
   const [claim, setClaim] = useState("");
   const [evidence, setEvidence] = useState("");
   const [selectedSide, setSelectedSide] = useState<"for" | "against" | null>(null);
-  const [stakeAmount, setStakeAmount] = useState("0.01");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [flowStep, setFlowStep] = useState<"idle" | "posting" | "staking" | "done">("idle");
+  const [flowStep, setFlowStep] = useState<"idle" | "posting" | "done">("idle");
 
-  const hasNumericProposalId = Number.isFinite(proposal.proposalNumber);
-  const proposalId = hasNumericProposalId ? String(proposal.proposalNumber) : "0";
+  const proposalId = Number.isFinite(proposal.proposalNumber)
+    ? String(proposal.proposalNumber)
+    : proposal.id;
   const daoKey = getDaoPredictionKey(proposal.dao);
-  const isStructurallyEligible =
-    proposal.source === "onchain" && proposal.status !== "candidate" && hasNumericProposalId;
 
   const entityIdentifier = useMemo(
     () => getPrimaryProposalEntityIdentifier(daoKey, proposalId),
@@ -49,17 +43,6 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
   );
   const evidencePreview = useMemo(() => parseEvidenceInput(evidence), [evidence]);
 
-  const { data: daoResolvableData, isLoading: isDaoResolvableLoading } = useReadContract({
-    address: PREDICTION_MARKET_ADDRESS,
-    abi: PREDICTION_MARKET_ABI,
-    functionName: "isDaoResolvable",
-    args: [daoKey],
-    query: { enabled: isStructurallyEligible },
-  });
-
-  const isDaoResolvable = daoResolvableData === true;
-  const isEligible = isStructurallyEligible && isDaoResolvable;
-
   const {
     data: interpretationTxHash,
     writeContract: writeInterpretation,
@@ -70,55 +53,21 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
   const {
     isLoading: isInterpretationConfirming,
     isSuccess: isInterpretationConfirmed,
-  } = useWaitForTransactionReceipt({ hash: interpretationTxHash });
-
-  const {
-    data: stakeTxHash,
-    writeContract: writeStake,
-    isPending: isSigningStake,
-    error: stakeWriteError,
-  } = useWriteContract();
-
-  const { isLoading: isStakeConfirming, isSuccess: isStakeConfirmed } =
-    useWaitForTransactionReceipt({ hash: stakeTxHash });
+  } = useWaitForTransactionReceipt({
+    hash: interpretationTxHash,
+    chainId: CONTRACTS_CHAIN_ID,
+    query: { enabled: !!interpretationTxHash },
+  });
 
   useEffect(() => {
-    if (flowStep === "posting" && isInterpretationConfirmed) {
-      try {
-        const amount = parseEther(stakeAmount);
-        writeStake({
-          chainId: CONTRACTS_CHAIN_ID,
-          address: PREDICTION_MARKET_ADDRESS,
-          abi: PREDICTION_MARKET_ABI,
-          functionName: "stake",
-          args: [daoKey, proposalId, selectedSide === "for"],
-          value: amount,
-        });
-        setFlowStep("staking");
-      } catch (error) {
-        setFlowStep("idle");
-        setErrorMessage((error as Error).message || "Invalid stake amount.");
-      }
-    }
-  }, [
-    flowStep,
-    isInterpretationConfirmed,
-    daoKey,
-    proposalId,
-    selectedSide,
-    stakeAmount,
-    writeStake,
-  ]);
-
-  useEffect(() => {
-    if (isStakeConfirmed && flowStep === "staking") {
+    if (isInterpretationConfirmed && flowStep === "posting") {
       setFlowStep("done");
       setClaim("");
       setEvidence("");
       setSelectedSide(null);
       setErrorMessage(null);
     }
-  }, [isStakeConfirmed, flowStep]);
+  }, [isInterpretationConfirmed, flowStep]);
 
   useEffect(() => {
     if (flowStep === "posting" && interpretationWriteError) {
@@ -127,43 +76,29 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
         (interpretationWriteError as { shortMessage?: string }).shortMessage ||
           interpretationWriteError.message
       );
-    } else if (flowStep === "staking" && stakeWriteError) {
-      setFlowStep("idle");
-      setErrorMessage(
-        (stakeWriteError as { shortMessage?: string }).shortMessage || stakeWriteError.message
-      );
     }
-  }, [flowStep, interpretationWriteError, stakeWriteError]);
+  }, [flowStep, interpretationWriteError]);
 
   useEffect(() => {
     if (flowStep !== "done") return;
-    if (claim || evidence || selectedSide || stakeAmount !== "0.01") {
+    if (claim || evidence || selectedSide) {
       setFlowStep("idle");
     }
-  }, [flowStep, claim, evidence, selectedSide, stakeAmount]);
+  }, [flowStep, claim, evidence, selectedSide]);
 
-  const stakeValue = Number(stakeAmount);
-  const isBusy =
-    flowStep === "posting" ||
-    flowStep === "staking" ||
-    isSigningInterpretation ||
-    isInterpretationConfirming ||
-    isSigningStake ||
-    isStakeConfirming;
+  const isBusy = flowStep === "posting" || isSigningInterpretation || isInterpretationConfirming;
 
   const canSubmit =
     isConnected &&
-    isEligible &&
     !isBusy &&
     claim.trim().length > 20 &&
     evidencePreview.isValidUrl &&
-    selectedSide !== null &&
-    Number.isFinite(stakeValue) &&
-    stakeValue > 0;
+    selectedSide !== null;
 
   function handleSubmit() {
     if (!canSubmit || selectedSide === null) return;
     setErrorMessage(null);
+    setFlowStep("posting");
 
     const evidenceHash = evidencePreview.evidenceHash;
     const argumentType = selectedSide === "for" ? 1 : 2;
@@ -176,8 +111,6 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
       functionName: "commentStructured",
       args: [entityHash, commentContent, BigInt(0), argumentType, BigInt(0), evidenceHash],
     });
-
-    setFlowStep("posting");
   }
 
   return (
@@ -186,18 +119,8 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
         Post Interpretation
       </h3>
       <p className="mt-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-        Claim + evidence + prediction stake
+        Claim + evidence
       </p>
-
-      {!isEligible && (
-        <p className="mt-3 border border-[var(--rule-light)] px-2 py-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
-          {!isStructurallyEligible
-            ? "Requires an onchain proposal with numeric proposal ID."
-            : isDaoResolvableLoading
-              ? "Checking resolver support..."
-              : "DAO resolver not configured for interpretation markets on this chain."}
-        </p>
-      )}
 
       <div className="mt-3 space-y-2">
         <textarea
@@ -264,24 +187,10 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
                 }`}
                 disabled={isBusy}
               >
-                predict {side}
+                {side === "for" ? "supports proposal" : "opposes proposal"}
               </button>
             </span>
           ))}
-        </div>
-
-        <div className="flex items-center border border-[var(--rule-light)] bg-[var(--paper)]">
-          <input
-            type="number"
-            min="0.001"
-            step="0.001"
-            value={stakeAmount}
-            onChange={(e) => setStakeAmount(e.target.value)}
-            className="w-full bg-transparent px-2 py-1.5 font-mono text-xs text-[var(--ink)] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            placeholder="0.01"
-            disabled={isBusy}
-          />
-          <span className="shrink-0 pr-2 font-mono text-[10px] text-[var(--ink-faint)]">ETH</span>
         </div>
 
         <button
@@ -295,12 +204,14 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
         >
           {flowStep === "posting" || isInterpretationConfirming
             ? "Confirming interpretation..."
-            : flowStep === "staking" || isStakeConfirming
-              ? "Confirming prediction stake..."
-              : flowStep === "done"
-                ? "Interpretation posted"
-                : "Post interpretation"}
+            : flowStep === "done"
+              ? "Interpretation posted"
+              : "Post interpretation"}
         </button>
+
+        <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+          Interpretations post onchain directly. Prediction stakes happen separately below.
+        </p>
 
         <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
           ID: {entityIdentifier}

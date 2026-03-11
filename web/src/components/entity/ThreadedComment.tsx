@@ -41,6 +41,7 @@ export function ThreadedComment({
     abi: COMMENTS_ABI,
     functionName: "getComment",
     args: [commentId],
+    chainId: CONTRACTS_CHAIN_ID,
   });
 
   const { data: argMeta } = useReadContract({
@@ -48,6 +49,7 @@ export function ThreadedComment({
     abi: COMMENTS_ABI,
     functionName: "getArgumentMeta",
     args: [commentId],
+    chainId: CONTRACTS_CHAIN_ID,
     query: { enabled: supportsStructuredComments, retry: false },
   });
 

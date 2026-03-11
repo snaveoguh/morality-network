@@ -8,9 +8,15 @@ import {
   useWaitForTransactionReceipt,
 } from "wagmi";
 import { parseEther } from "viem";
-import { PREDICTION_MARKET_ADDRESS, PREDICTION_MARKET_ABI, CONTRACTS_CHAIN_ID } from "@/lib/contracts";
+import {
+  PREDICTION_MARKET_ADDRESS,
+  PREDICTION_MARKET_ABI,
+  CONTRACTS_CHAIN_ID,
+  ZERO_ADDRESS,
+} from "@/lib/contracts";
 import { parseMarketData, parsePosition, MarketOutcome, type ParsedMarketData } from "@/lib/market-utils";
 import { formatEth } from "@/lib/entity";
+import { getDaoPredictionKey } from "@/lib/proposal-entity";
 
 interface MarketCardProps {
   dao: string;
@@ -54,19 +60,22 @@ export function MarketCard({
   quorum,
 }: MarketCardProps) {
   const { address } = useAccount();
+  const daoKey = getDaoPredictionKey(dao);
 
   const { data: marketRaw } = useReadContract({
     address: PREDICTION_MARKET_ADDRESS,
     abi: PREDICTION_MARKET_ABI,
     functionName: "getMarket",
-    args: [dao, proposalId],
+    args: [daoKey, proposalId],
+    chainId: CONTRACTS_CHAIN_ID,
   });
 
   const { data: positionRaw } = useReadContract({
     address: PREDICTION_MARKET_ADDRESS,
     abi: PREDICTION_MARKET_ABI,
     functionName: "getPosition",
-    args: [dao, proposalId, address!],
+    args: [daoKey, proposalId, address ?? ZERO_ADDRESS],
+    chainId: CONTRACTS_CHAIN_ID,
     query: { enabled: !!address },
   });
 
@@ -174,12 +183,12 @@ export function MarketCard({
 
       {/* Inline wager UI */}
       {!isResolved && (
-        <InlineWager dao={dao} proposalId={proposalId} />
+        <InlineWager dao={daoKey} proposalId={proposalId} />
       )}
 
       {/* Claim button for resolved markets */}
       {isResolved && position && position.totalStake > BigInt(0) && !position.claimed && (
-        <ClaimButton dao={dao} proposalId={proposalId} />
+        <ClaimButton dao={daoKey} proposalId={proposalId} />
       )}
     </div>
   );
@@ -195,6 +204,7 @@ function InlineWager({ dao, proposalId }: { dao: string; proposalId: string }) {
   const { writeContract, data: txHash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: txHash,
+    chainId: CONTRACTS_CHAIN_ID,
     query: { enabled: !!txHash },
   });
 
@@ -284,6 +294,7 @@ function ClaimButton({ dao, proposalId }: { dao: string; proposalId: string }) {
   const { writeContract, data: txHash, isPending } = useWriteContract();
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({
     hash: txHash,
+    chainId: CONTRACTS_CHAIN_ID,
     query: { enabled: !!txHash },
   });
 

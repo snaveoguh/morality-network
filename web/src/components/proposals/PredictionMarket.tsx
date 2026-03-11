@@ -13,6 +13,7 @@ import {
   PREDICTION_MARKET_ABI,
   CONTRACTS_CHAIN_ID,
 } from "@/lib/contracts";
+import { getDaoPredictionKey } from "@/lib/proposal-entity";
 import type { Proposal } from "@/lib/governance";
 
 interface PredictionMarketProps {
@@ -27,15 +28,9 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
   const hasNumericProposalId = Number.isFinite(proposal.proposalNumber);
   const isOnchainProposal = proposal.source === "onchain";
   const isCandidate = proposal.status === "candidate";
-  const isNounsDao = proposal.dao === "Nouns DAO";
-
-  const daoKey =
-    proposal.dao === "Lil Nouns"
-      ? "lil-nouns"
-      : proposal.dao === "Nouns DAO"
-        ? "nouns"
-        : proposal.dao.toLowerCase().replace(/\s+/g, "-");
-  const proposalId = hasNumericProposalId ? String(proposal.proposalNumber) : "0";
+  const daoKey = getDaoPredictionKey(proposal.dao);
+  const proposalId = hasNumericProposalId ? String(proposal.proposalNumber) : proposal.id;
+  const isNounsDao = daoKey === "nouns";
   const isStructurallyEligible =
     isNounsDao && isOnchainProposal && !isCandidate && hasNumericProposalId;
 
@@ -77,13 +72,21 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
   const { data: stakeTxHash, writeContract: writeStake, isPending: isStaking } =
     useWriteContract();
   const { isLoading: isStakeConfirming, isSuccess: stakeSuccess } =
-    useWaitForTransactionReceipt({ hash: stakeTxHash });
+    useWaitForTransactionReceipt({
+      hash: stakeTxHash,
+      chainId: CONTRACTS_CHAIN_ID,
+      query: { enabled: !!stakeTxHash },
+    });
 
   // Claim transaction
   const { data: claimTxHash, writeContract: writeClaim, isPending: isClaiming } =
     useWriteContract();
   const { isLoading: isClaimConfirming, isSuccess: claimSuccess } =
-    useWaitForTransactionReceipt({ hash: claimTxHash });
+    useWaitForTransactionReceipt({
+      hash: claimTxHash,
+      chainId: CONTRACTS_CHAIN_ID,
+      query: { enabled: !!claimTxHash },
+    });
 
   useEffect(() => {
     if (stakeSuccess || claimSuccess) {

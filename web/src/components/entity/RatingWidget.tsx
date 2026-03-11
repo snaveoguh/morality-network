@@ -18,6 +18,7 @@ export function RatingWidget({ entityHash }: RatingWidgetProps) {
     abi: RATINGS_ABI,
     functionName: "getAverageRating",
     args: [entityHash],
+    chainId: CONTRACTS_CHAIN_ID,
   });
 
   const { data: userRatingData, refetch: refetchUserRating } = useReadContract({
@@ -25,6 +26,7 @@ export function RatingWidget({ entityHash }: RatingWidgetProps) {
     abi: RATINGS_ABI,
     functionName: "getUserRating",
     args: [entityHash, address!],
+    chainId: CONTRACTS_CHAIN_ID,
     query: { enabled: !!address },
   });
 
@@ -32,6 +34,7 @@ export function RatingWidget({ entityHash }: RatingWidgetProps) {
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
       hash: ratingTxHash,
+      chainId: CONTRACTS_CHAIN_ID,
       query: { enabled: !!ratingTxHash },
     });
 

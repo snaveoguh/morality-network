@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useReadContract } from "wagmi";
-import { CONTRACTS, REGISTRY_ABI, TIPPING_ABI, LEADERBOARD_ABI } from "@/lib/contracts";
+import {
+  CONTRACTS,
+  CONTRACTS_CHAIN_ID,
+  REGISTRY_ABI,
+  TIPPING_ABI,
+  LEADERBOARD_ABI,
+} from "@/lib/contracts";
 import { EntityBadge } from "@/components/shared/EntityBadge";
 import { RatingWidget } from "./RatingWidget";
 import { CommentThread } from "./CommentThread";
@@ -30,6 +36,7 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
     abi: REGISTRY_ABI,
     functionName: "getEntity",
     args: [entityHash],
+    chainId: CONTRACTS_CHAIN_ID,
   });
 
   const { data: tipTotal } = useReadContract({
@@ -37,6 +44,7 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
     abi: TIPPING_ABI,
     functionName: "entityTipTotals",
     args: [entityHash],
+    chainId: CONTRACTS_CHAIN_ID,
   });
 
   const { data: compositeScore } = useReadContract({
@@ -44,6 +52,7 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
     abi: LEADERBOARD_ABI,
     functionName: "getCompositeScore",
     args: [entityHash],
+    chainId: CONTRACTS_CHAIN_ID,
   });
 
   const { data: aiScore } = useReadContract({
@@ -51,6 +60,7 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
     abi: LEADERBOARD_ABI,
     functionName: "aiScores",
     args: [entityHash],
+    chainId: CONTRACTS_CHAIN_ID,
   });
 
   useEffect(() => {
