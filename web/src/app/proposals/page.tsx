@@ -3,8 +3,16 @@ import { ProposalsList } from "@/components/proposals/ProposalsList";
 
 export const dynamic = "force-dynamic";
 
+/** Race a promise against a timeout — returns fallback on timeout */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
 export default async function ProposalsPage() {
-  const proposals = await fetchAllProposals();
+  const proposals = await withTimeout(fetchAllProposals(), 8000, []);
 
   return (
     <div>

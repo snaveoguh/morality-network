@@ -12,13 +12,23 @@ import { getDailyEdition } from "@/lib/daily-edition";
 
 export const dynamic = "force-dynamic";
 
+/** Race a promise against a timeout — returns fallback on timeout */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
 export default async function FeedPage() {
+  // All fetches race against a 6s timeout (Vercel hobby = 10s max).
+  // Any slow source returns empty rather than killing the whole page.
   const [rssItems, proposals, casts, videos, dailyEdition] = await Promise.all([
-    fetchAllFeeds(),
-    fetchAllProposals(),
-    fetchFarcasterContent("pip"),
-    fetchDailyVideos(12),
-    getDailyEdition().catch(() => null),
+    withTimeout(fetchAllFeeds(), 6000, []),
+    withTimeout(fetchAllProposals(), 6000, []),
+    withTimeout(fetchFarcasterContent("pip"), 6000, []),
+    withTimeout(fetchDailyVideos(12), 6000, []),
+    withTimeout(getDailyEdition().catch(() => null), 6000, null),
   ]);
 
   // Auto-archive all live feed items in one batch write.
@@ -34,7 +44,11 @@ export default async function FeedPage() {
   }
   const sourceList = [...uniqueSources.values()].filter(Boolean);
   const headlines = rssItems.slice(0, 20).map((i) => i.title);
-  const biasDigest = await generateBiasDigest(sourceList as import("@/lib/bias").SourceBias[], headlines).catch(() => null);
+  const biasDigest = await withTimeout(
+    generateBiasDigest(sourceList as import("@/lib/bias").SourceBias[], headlines).catch(() => null),
+    3000,
+    null,
+  );
 
   return (
     <>
