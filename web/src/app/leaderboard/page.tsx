@@ -6,14 +6,21 @@ import { EntityType } from "@/lib/contracts";
 import { buildAnalystReputationFromPredictionMarkets } from "@/lib/analyst-reputation";
 import { buildInterpretationOutcomeScores } from "@/lib/interpretation-scores";
 
-export const revalidate = 300; // 5 min
 export const dynamic = "force-dynamic";
+
+/** Race a promise against a timeout — returns fallback on timeout */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
 
 // Derive leaderboard from real feed + governance data
 async function buildLeaderboard() {
   const [rssItems, proposals] = await Promise.all([
-    fetchAllFeeds(),
-    fetchAllProposals(),
+    withTimeout(fetchAllFeeds(), 25000, []),
+    withTimeout(fetchAllProposals(), 25000, []),
   ]);
 
   // Aggregate by source domain

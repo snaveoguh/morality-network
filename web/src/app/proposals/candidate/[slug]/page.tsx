@@ -2,7 +2,15 @@ import { fetchCandidateProposals } from "@/lib/nouns-candidates";
 import { CandidateDetail } from "@/components/proposals/CandidateDetail";
 import Link from "next/link";
 
-export const revalidate = 120;
+export const dynamic = "force-dynamic";
+
+/** Race a promise against a timeout — returns fallback on timeout */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -12,7 +20,7 @@ export default async function CandidatePage({ params }: Props) {
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
 
-  const candidates = await fetchCandidateProposals();
+  const candidates = await withTimeout(fetchCandidateProposals(), 15000, []);
   const candidate = candidates.find((c) => c.slug === decodedSlug);
 
   if (!candidate) {

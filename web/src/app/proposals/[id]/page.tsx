@@ -2,7 +2,15 @@ import { fetchAllProposals, fetchSingleProposal } from "@/lib/governance";
 import { ProposalDetail } from "@/components/proposals/ProposalDetail";
 import Link from "next/link";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+
+/** Race a promise against a timeout — returns fallback on timeout */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -13,11 +21,11 @@ export default async function ProposalPage({ params }: Props) {
   const decodedId = decodeURIComponent(id);
 
   // Try direct fetch first (fast — fetches only the one proposal)
-  let detailedProposal = await fetchSingleProposal(decodedId);
+  let detailedProposal = await withTimeout(fetchSingleProposal(decodedId), 15000, null);
 
   // Fallback: find from all proposals list (slow — fetches everything)
   if (!detailedProposal) {
-    const all = await fetchAllProposals();
+    const all = await withTimeout(fetchAllProposals(), 15000, []);
     const found = all.find((p) => p.id === decodedId);
     if (!found) {
       return (

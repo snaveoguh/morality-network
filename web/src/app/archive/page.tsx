@@ -3,7 +3,15 @@ import { getAllArchivedItemsWithHashes } from "@/lib/archive";
 import { BiasPill } from "@/components/feed/BiasBar";
 import { BRAND_NAME, withBrand } from "@/lib/brand";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+
+/** Race a promise against a timeout — returns fallback on timeout */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
 
 export const metadata = {
   title: withBrand("Archive"),
@@ -12,7 +20,7 @@ export const metadata = {
 };
 
 export default async function ArchivePage() {
-  const items = await getAllArchivedItemsWithHashes();
+  const items = await withTimeout(getAllArchivedItemsWithHashes(), 15000, []);
 
   // Sort by pubDate descending (newest first)
   const sorted = [...items].sort(

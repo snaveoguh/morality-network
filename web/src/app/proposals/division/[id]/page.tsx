@@ -5,7 +5,15 @@ import {
 import { DivisionDetail } from "@/components/proposals/DivisionDetail";
 import Link from "next/link";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+
+/** Race a promise against a timeout — returns fallback on timeout */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -35,8 +43,8 @@ export default async function DivisionPage({ params, searchParams }: Props) {
 
   const isLords = chamber === "lords";
   const division = isLords
-    ? await fetchLordsDivisionById(divisionId)
-    : await fetchCommonsDivisionById(divisionId);
+    ? await withTimeout(fetchLordsDivisionById(divisionId), 15000, null)
+    : await withTimeout(fetchCommonsDivisionById(divisionId), 15000, null);
 
   if (!division) {
     return (

@@ -27,7 +27,15 @@ import { BRAND_NAME, withBrand } from "@/lib/brand";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-export const revalidate = 300; // 5 min
+export const dynamic = "force-dynamic";
+
+/** Race a promise against a timeout — returns fallback on timeout */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
 
 interface ArticlePageProps {
   params: Promise<{ hash: string }>;
@@ -39,7 +47,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  const allItems = await fetchAllFeeds();
+  const allItems = await withTimeout(fetchAllFeeds(), 15000, []);
 
   // Find the article matching this hash
   const livePrimary = allItems.find(
@@ -140,7 +148,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   }
 
   // Expand search pool with archived items for better context matching
-  const archivedItems = await getAllArchivedFeedItems();
+  const archivedItems = await withTimeout(getAllArchivedFeedItems(), 5000, []);
 
   // Merge live + archive, dedup by link to avoid double-counting
   const seenLinks = new Set(allItems.map((i) => i.link));
@@ -156,7 +164,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const related = findRelatedArticles(primary, combinedPool, 5);
 
   // Find archived items related to this story (with hashes for linking)
-  const archivedWithHashes = await getAllArchivedItemsWithHashes();
+  const archivedWithHashes = await withTimeout(getAllArchivedItemsWithHashes(), 5000, []);
   const archivedRelated = findRelatedArticles(
     primary,
     archivedWithHashes,
@@ -167,10 +175,15 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     return { ...item, hash: match?.hash ?? "" };
   }).filter((item) => item.hash); // only items with valid hashes
 
-  // Generate editorial content — wrap in try/catch so page degrades gracefully
+  // Generate editorial content — 30s timeout, falls back to raw feed data
   let article;
   try {
-    article = await generateEditorial(primary, related);
+    article = await withTimeout(
+      generateEditorial(primary, related),
+      30000,
+      null as Awaited<ReturnType<typeof generateEditorial>> | null,
+    );
+    if (!article) throw new Error("Editorial generation timed out");
   } catch (err) {
     console.error("[article] generateEditorial failed:", err);
     // Render a minimal version with raw feed data
@@ -305,13 +318,17 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     return { title: "Article Not Found" };
   }
 
-  const allItems = await fetchAllFeeds();
+  const allItems = await withTimeout(fetchAllFeeds(), 10000, []);
   const liveItem = allItems.find(
     (item) => computeEntityHash(item.link) === hash
   );
   const archivedItem = liveItem
     ? null
-    : await getArchivedFeedItemByHash(hash as `0x${string}`);
+    : await withTimeout(
+        getArchivedFeedItemByHash(hash as `0x${string}`),
+        5000,
+        null,
+      );
   const item = liveItem ?? archivedItem;
 
   if (!item) {
