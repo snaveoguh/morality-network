@@ -19,7 +19,11 @@ import "@rainbow-me/rainbowkit/styles.css";
 import { type ReactNode } from "react";
 import { pooterWallet } from "@/lib/pooterWallet";
 
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "demo";
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
+
+// Only include WalletConnect when a real project ID is configured
+// "demo" or empty string causes "Connection closed" WebSocket crash
+const hasWC = projectId.length > 0 && projectId !== "demo";
 
 const connectors = connectorsForWallets(
   [
@@ -29,12 +33,17 @@ const connectors = connectorsForWallets(
     },
     {
       groupName: "Popular",
-      wallets: [metaMaskWallet, coinbaseWallet, walletConnectWallet, injectedWallet],
+      wallets: [
+        metaMaskWallet,
+        coinbaseWallet,
+        ...(hasWC ? [walletConnectWallet] : []),
+        injectedWallet,
+      ],
     },
   ],
   {
     appName: "pooter world",
-    projectId,
+    projectId: projectId || "placeholder",
   }
 );
 
