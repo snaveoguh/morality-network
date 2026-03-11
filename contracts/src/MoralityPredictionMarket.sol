@@ -31,6 +31,8 @@ contract MoralityPredictionMarket {
         uint256 createdAt;
         uint256 resolvedAt;
         Outcome outcome;
+        address governor;          // resolver locked at market creation
+        uint256 proposalNumericId; // parsed proposal id locked at creation
         bool exists;
     }
 
@@ -69,6 +71,13 @@ contract MoralityPredictionMarket {
         owner = msg.sender;
     }
 
+    // Governor state enum compatibility:
+    // 0=Pending, 1=Active, 2=Canceled, 3=Defeated, 4=Succeeded, 5=Queued, 6=Expired, 7=Executed, 8=Vetoed
+    // Nouns extensions may include 9=ObjectionPeriod, 10=Updatable.
+    function _isStakeableState(uint8 chainState) internal pure returns (bool) {
+        return chainState == 0 || chainState == 1 || chainState == 9 || chainState == 10;
+    }
+
     // ========================================================================
     // MARKET CREATION
     // ========================================================================
@@ -79,7 +88,13 @@ contract MoralityPredictionMarket {
         string calldata dao,
         string calldata proposalId
     ) external {
-        require(_isDaoResolvable(dao), "DAO not onchain-resolvable");
+        DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
+        require(cfg.enabled && cfg.governor != address(0), "DAO not onchain-resolvable");
+
+        uint256 proposalNumericId = _parseUintStrict(proposalId);
+        uint8 chainState = _readGovernorState(cfg.governor, proposalNumericId);
+        require(_isStakeableState(chainState), "Proposal not open");
+
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
         require(!markets[key].exists, "Market exists");
 
@@ -92,6 +107,8 @@ contract MoralityPredictionMarket {
             createdAt: block.timestamp,
             resolvedAt: 0,
             outcome: Outcome.UNRESOLVED,
+            governor: cfg.governor,
+            proposalNumericId: proposalNumericId,
             exists: true
         });
 
@@ -112,12 +129,17 @@ contract MoralityPredictionMarket {
         bool isFor
     ) external payable {
         require(msg.value > 0, "Must stake ETH");
-        require(_isDaoResolvable(dao), "DAO not onchain-resolvable");
 
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
 
         // Auto-create market if it doesn't exist
         if (!markets[key].exists) {
+            DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
+            require(cfg.enabled && cfg.governor != address(0), "DAO not onchain-resolvable");
+            uint256 proposalNumericId = _parseUintStrict(proposalId);
+            uint8 chainState = _readGovernorState(cfg.governor, proposalNumericId);
+            require(_isStakeableState(chainState), "Proposal not open");
+
             markets[key] = Market({
                 proposalKey: key,
                 forPool: 0,
@@ -127,6 +149,8 @@ contract MoralityPredictionMarket {
                 createdAt: block.timestamp,
                 resolvedAt: 0,
                 outcome: Outcome.UNRESOLVED,
+                governor: cfg.governor,
+                proposalNumericId: proposalNumericId,
                 exists: true
             });
             emit MarketCreated(key, dao, proposalId);
@@ -134,6 +158,9 @@ contract MoralityPredictionMarket {
 
         Market storage m = markets[key];
         require(m.outcome == Outcome.UNRESOLVED, "Market resolved");
+        require(m.governor != address(0), "Market not resolvable");
+        uint8 latestState = _readGovernorState(m.governor, m.proposalNumericId);
+        require(_isStakeableState(latestState), "Proposal not open");
 
         Position storage pos = positions[key][msg.sender];
 
@@ -160,12 +187,22 @@ contract MoralityPredictionMarket {
         string calldata dao,
         string calldata proposalId
     ) external {
-        (Outcome outcome, uint8 chainState) = _resolveOutcomeFromChain(dao, proposalId);
-
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
         Market storage m = markets[key];
         require(m.exists, "No market");
         require(m.outcome == Outcome.UNRESOLVED, "Already resolved");
+
+        // Legacy safety: if a market was created before resolver fields existed,
+        // initialize from current dao resolver config once.
+        if (m.governor == address(0)) {
+            DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
+            require(cfg.enabled && cfg.governor != address(0), "DAO not configured");
+            m.governor = cfg.governor;
+            m.proposalNumericId = _parseUintStrict(proposalId);
+        }
+
+        uint8 chainState = _readGovernorState(m.governor, m.proposalNumericId);
+        Outcome outcome = _mapOutcome(chainState);
 
         m.outcome = outcome;
         m.resolvedAt = block.timestamp;
@@ -313,30 +350,28 @@ contract MoralityPredictionMarket {
         return cfg.enabled && cfg.governor != address(0);
     }
 
-    function _resolveOutcomeFromChain(string calldata dao, string calldata proposalId)
-        internal
-        view
-        returns (Outcome outcome, uint8 chainState)
-    {
-        DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
-        require(cfg.enabled && cfg.governor != address(0), "DAO not configured");
-
-        uint256 proposalNumericId = _parseUintStrict(proposalId);
-        chainState = IProposalState(cfg.governor).state(proposalNumericId);
-
+    function _mapOutcome(uint8 chainState) internal pure returns (Outcome outcome) {
         // Governor Bravo states:
         // 2=Canceled, 3=Defeated, 4=Succeeded, 5=Queued, 6=Expired, 7=Executed, 8=Vetoed
         if (chainState == 4 || chainState == 5 || chainState == 7) {
-            return (Outcome.FOR, chainState);
+            return Outcome.FOR;
         }
         if (chainState == 3 || chainState == 8) {
-            return (Outcome.AGAINST, chainState);
+            return Outcome.AGAINST;
         }
         if (chainState == 2 || chainState == 6) {
-            return (Outcome.VOID, chainState);
+            return Outcome.VOID;
         }
 
         revert("Proposal not final");
+    }
+
+    function _readGovernorState(address governor, uint256 proposalNumericId) internal view returns (uint8 chainState) {
+        try IProposalState(governor).state(proposalNumericId) returns (uint8 stateValue) {
+            return stateValue;
+        } catch {
+            revert("Invalid proposal");
+        }
     }
 
     function _parseUintStrict(string calldata input) internal pure returns (uint256 value) {

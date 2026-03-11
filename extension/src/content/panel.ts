@@ -20,6 +20,11 @@ function getShadow(): ShadowRoot {
   document.body.appendChild(host);
   shadow = host.attachShadow({ mode: 'closed' });
 
+  const fontLink = document.createElement('link');
+  fontLink.rel = 'stylesheet';
+  fontLink.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap';
+  shadow.appendChild(fontLink);
+
   const style = document.createElement('style');
   style.textContent = CSS;
   shadow.appendChild(style);
@@ -107,7 +112,7 @@ function renderComment(c: CommentData): string {
         <span class="pw-comment-score">${c.score}</span>
         <button class="pw-comment-btn" data-vote="-1">▼</button>
         <button class="pw-comment-btn" data-tip-comment="${c.id}">tip</button>
-        ${c.tipTotal !== '0' ? `<span style="color: #31F387; font-size: 10px;">${formatEth(c.tipTotal)}</span>` : ''}
+        ${c.tipTotal !== '0' ? `<span class="pw-comment-tip-total">${formatEth(c.tipTotal)}</span>` : ''}
       </div>
     </div>
   `;
@@ -365,8 +370,8 @@ export function setupPanel(): void {
 function deriveTagsHtml(identifier: string): string {
   const tags = deriveTagsFromIdentifier(identifier);
   if (tags.length === 0) return '';
-  return `<div style="display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 16px; border-bottom: 1px solid #27272a;">${
-    tags.map(t => `<span style="background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 2px 8px; font-size: 10px; color: #2F80ED; font-weight: 600;">#${t}</span>`).join('')
+  return `<div style="display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 16px; border-bottom: 1px solid #C8C0B0;">${
+    tags.map(t => `<span style="background: #EDE6D6; border: 1px solid #C8C0B0; border-radius: 0; padding: 2px 8px; font-size: 8px; color: #4A4A4A; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em;">#${t}</span>`).join('')
   }</div>`;
 }
 

@@ -18,11 +18,9 @@ export function DivisionDetail({ division }: DivisionDetailProps) {
   const ayeMembers = division.ayeMembers || [];
   const noeMembers = division.noeMembers || [];
 
-  // Group by party
   const ayeByParty = useMemo(() => groupByParty(ayeMembers), [ayeMembers]);
   const noeByParty = useMemo(() => groupByParty(noeMembers), [noeMembers]);
 
-  // Party breakdown for summary
   const allParties = useMemo(() => {
     const partyMap = new Map<
       string,
@@ -55,128 +53,148 @@ export function DivisionDetail({ division }: DivisionDetailProps) {
     division.house === "Commons"
       ? `https://votes.parliament.uk/votes/commons/division/${division.id}`
       : `https://votes.parliament.uk/votes/lords/division/${division.id}`;
+  const houseLabel =
+    division.house === "Commons" ? "House of Commons" : "House of Lords";
+  const resultPassed = division.ayeCount > division.noeCount;
+  const totalVotes = division.ayeCount + division.noeCount;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      {/* Main content */}
-      <div className="lg:col-span-2">
-        {/* Header */}
-        <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <span className="text-2xl" role="img" aria-label="UK">
-              🇬🇧
-            </span>
-            <span className="text-sm font-medium text-white">UK Parliament</span>
-            <span
-              className={`rounded-full border px-3 py-1 text-xs font-medium ${
-                division.house === "Commons"
-                  ? "border-green-500/30 bg-green-500/10 text-green-400"
-                  : "border-red-500/30 bg-red-500/10 text-red-400"
-              }`}
-            >
-              House of {division.house}
-            </span>
-            <span className="text-xs text-zinc-500">
-              {new Date(division.date).toLocaleDateString("en-GB", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-            </span>
-          </div>
+    <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+      <div className="min-w-0">
+        <div className="mb-1 flex flex-wrap items-center gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
+            🇬🇧 UK Parliament
+          </span>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-faint)]">
+            · {houseLabel}
+          </span>
+          <span className="font-mono text-[10px] text-[var(--ink-faint)]">
+            ·{" "}
+            {new Date(division.date).toLocaleDateString("en-GB", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
+        </div>
 
-          <h1 className="mb-3 text-2xl font-bold text-white sm:text-3xl">
-            {division.title}
-          </h1>
+        <h1 className="font-headline text-3xl leading-tight text-[var(--ink)] sm:text-4xl lg:text-5xl">
+          {division.title}
+        </h1>
 
+        <div className="mt-3 flex flex-wrap items-center gap-3 border-b border-[var(--rule-light)] pb-3">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
+            Division #{division.id}
+          </span>
           <a
             href={officialLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-[#2F80ED] hover:underline"
+            className="ml-auto font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
           >
-            View on Parliament website &rarr;
+            View on Parliament website &rsaquo;
           </a>
         </div>
 
-        {/* Vote bar — big version */}
-        <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-zinc-500">
+        <div className="mt-5 border-b border-t border-[var(--rule)] py-4">
+          <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
             Division Result
           </h2>
-          <div className="mb-3 grid grid-cols-3 gap-4 text-center">
+
+          <div className="mb-3 flex items-baseline gap-6">
             <div>
-              <p className="text-2xl font-bold text-[#31F387]">
-                {division.ayeCount}
-              </p>
-              <p className="text-xs text-zinc-500">Ayes ({forPct}%)</p>
+              <span className="font-headline text-2xl font-black text-[var(--ink)]">
+                {division.ayeCount.toLocaleString()}
+              </span>
+              <span className="ml-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                Ayes ({forPct}%)
+              </span>
             </div>
+            <span className="font-headline text-lg text-[var(--ink-faint)]">&mdash;</span>
             <div>
-              <p className="text-2xl font-bold text-[#D0021B]">
-                {division.noeCount}
-              </p>
-              <p className="text-xs text-zinc-500">Noes ({againstPct}%)</p>
+              <span className="font-headline text-2xl font-black text-[var(--ink)]">
+                {division.noeCount.toLocaleString()}
+              </span>
+              <span className="ml-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                Noes ({againstPct}%)
+              </span>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-zinc-400">
-                {division.didNotVoteCount}
-              </p>
-              <p className="text-xs text-zinc-500">Did Not Vote</p>
-            </div>
+            {division.didNotVoteCount > 0 && (
+              <>
+                <span className="font-headline text-lg text-[var(--ink-faint)]">&mdash;</span>
+                <div>
+                  <span className="font-headline text-2xl font-black text-[var(--ink-faint)]">
+                    {division.didNotVoteCount.toLocaleString()}
+                  </span>
+                  <span className="ml-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                    Did Not Vote
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
-          <div className="flex h-4 overflow-hidden rounded-full bg-zinc-800">
+          <div className="flex h-1.5 overflow-hidden bg-[var(--paper-dark)]">
             <div
-              className="bg-[#31F387] transition-all"
+              className="bg-[var(--ink)] transition-all"
               style={{ width: `${forPct}%` }}
             />
             <div
-              className="bg-[#D0021B] transition-all"
+              className="bg-[var(--rule)] transition-all"
               style={{ width: `${againstPct}%` }}
             />
           </div>
 
-          <p className="mt-3 text-center text-sm font-medium">
-            {division.ayeCount > division.noeCount ? (
-              <span className="text-[#31F387]">Motion passed</span>
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+            {resultPassed ? (
+              <span className="font-bold text-[var(--ink)]">Motion passed</span>
             ) : (
-              <span className="text-[#D0021B]">Motion defeated</span>
+              <span className="font-bold text-[var(--ink)]">Motion defeated</span>
             )}
           </p>
         </div>
 
-        {/* Party breakdown table */}
         {allParties.length > 0 && (
-          <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-zinc-500">
+          <div className="mt-5 border-b border-[var(--rule)] pb-4">
+            <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
               Party Breakdown
             </h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-800 text-left text-xs text-zinc-500">
-                    <th className="pb-2 pr-4">Party</th>
-                    <th className="pb-2 pr-4 text-right text-[#31F387]">Ayes</th>
-                    <th className="pb-2 pr-4 text-right text-[#D0021B]">Noes</th>
-                    <th className="pb-2 text-right">Total</th>
+                  <tr className="border-b border-[var(--rule-light)] text-left">
+                    <th className="pb-2 pr-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                      Party
+                    </th>
+                    <th className="pb-2 pr-3 text-right font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                      Ayes
+                    </th>
+                    <th className="pb-2 pr-3 text-right font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                      Noes
+                    </th>
+                    <th className="pb-2 text-right font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                      Total
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {allParties.map((p) => (
+                  {allParties.map((party) => (
                     <tr
-                      key={p.party}
-                      className="border-b border-zinc-800/50 last:border-0"
+                      key={party.party}
+                      className="border-b border-[var(--rule-light)] last:border-0"
                     >
-                      <td className="py-2 pr-4 text-white">{p.party}</td>
-                      <td className="py-2 pr-4 text-right text-[#31F387]">
-                        {p.ayes}
+                      <td className="py-2 pr-3 font-body-serif text-[var(--ink)]">
+                        {party.party}
                       </td>
-                      <td className="py-2 pr-4 text-right text-[#D0021B]">
-                        {p.noes}
+                      <td className="py-2 pr-3 text-right font-mono text-[11px] text-[var(--ink)]">
+                        {party.ayes}
                       </td>
-                      <td className="py-2 text-right text-zinc-400">
-                        {p.ayes + p.noes}
+                      <td className="py-2 pr-3 text-right font-mono text-[11px] text-[var(--ink)]">
+                        {party.noes}
+                      </td>
+                      <td className="py-2 text-right font-mono text-[11px] text-[var(--ink-faint)]">
+                        {party.ayes + party.noes}
                       </td>
                     </tr>
                   ))}
@@ -186,90 +204,64 @@ export function DivisionDetail({ division }: DivisionDetailProps) {
           </div>
         )}
 
-        {/* Individual MPs tabs */}
         {(ayeMembers.length > 0 || noeMembers.length > 0) && (
-          <>
-            <div className="mb-4 flex gap-1 border-b border-zinc-800">
-              {(["ayes", "noes"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
-                    activeTab === tab
-                      ? tab === "ayes"
-                        ? "border-[#31F387] text-[#31F387]"
-                        : "border-[#D0021B] text-[#D0021B]"
-                      : "border-transparent text-zinc-500 hover:text-white"
-                  }`}
-                >
-                  {tab === "ayes"
-                    ? `Ayes (${ayeMembers.length})`
-                    : `Noes (${noeMembers.length})`}
-                </button>
+          <div className="mt-4">
+            <div className="flex items-center gap-0 font-mono text-[10px] uppercase tracking-wider">
+              {(["ayes", "noes"] as const).map((tab, index) => (
+                <span key={tab} className="flex items-center">
+                  {index > 0 && (
+                    <span className="mx-2 text-[var(--rule-light)]">|</span>
+                  )}
+                  <button
+                    onClick={() => setActiveTab(tab)}
+                    className={`transition-colors ${
+                      activeTab === tab
+                        ? "font-bold text-[var(--ink)] underline underline-offset-4"
+                        : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+                    }`}
+                  >
+                    {tab === "ayes"
+                      ? `Ayes (${ayeMembers.length})`
+                      : `Noes (${noeMembers.length})`}
+                  </button>
+                </span>
               ))}
             </div>
 
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+            <div className="mt-4 border-t border-[var(--rule)] pt-4">
               {activeTab === "ayes" ? (
-                <MemberList members={ayeByParty} isAye={true} />
+                <MemberList members={ayeByParty} isAye />
               ) : (
                 <MemberList members={noeByParty} isAye={false} />
               )}
             </div>
-          </>
+          </div>
         )}
       </div>
 
-      {/* Sidebar */}
-      <div className="space-y-4">
-        {/* Division metadata */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500">
+      <div className="space-y-5">
+        <div className="border-t border-[var(--rule)] pt-4">
+          <h3 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
             Details
           </h3>
-          <dl className="space-y-3 text-sm">
-            <div>
-              <dt className="text-zinc-500">House</dt>
-              <dd
-                className={
-                  division.house === "Commons"
-                    ? "text-green-400"
-                    : "text-red-400"
-                }
-              >
-                House of {division.house}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-zinc-500">Division ID</dt>
-              <dd className="text-white">#{division.id}</dd>
-            </div>
-            <div>
-              <dt className="text-zinc-500">Date</dt>
-              <dd className="text-white">
-                {new Date(division.date).toLocaleDateString("en-GB")}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-zinc-500">Total Votes</dt>
-              <dd className="text-white">
-                {division.ayeCount + division.noeCount}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-zinc-500">Did Not Vote</dt>
-              <dd className="text-white">{division.didNotVoteCount}</dd>
-            </div>
-            <div>
-              <dt className="text-zinc-500">Result</dt>
-              <dd>
-                {division.ayeCount > division.noeCount ? (
-                  <span className="text-[#31F387]">Passed</span>
-                ) : (
-                  <span className="text-[#D0021B]">Defeated</span>
-                )}
-              </dd>
-            </div>
+          <dl className="space-y-2">
+            {[
+              ["House", houseLabel],
+              ["Division ID", `#${division.id}`],
+              ["Date", new Date(division.date).toLocaleDateString("en-GB")],
+              ["Total Votes", totalVotes.toLocaleString()],
+              ["Did Not Vote", division.didNotVoteCount.toLocaleString()],
+              ["Result", resultPassed ? "Passed" : "Defeated"],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-baseline justify-between">
+                <dt className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                  {label}
+                </dt>
+                <dd className="font-body-serif text-xs text-[var(--ink)]">
+                  {value}
+                </dd>
+              </div>
+            ))}
           </dl>
         </div>
       </div>
@@ -277,18 +269,15 @@ export function DivisionDetail({ division }: DivisionDetailProps) {
   );
 }
 
-// ============================================================================
-// HELPERS
-// ============================================================================
-
 function groupByParty(
   members: MPVote[]
 ): { party: string; members: MPVote[] }[] {
   const map = new Map<string, MPVote[]>();
   for (const m of members) {
-    const arr = map.get(m.party) || [];
+    const party = m.party?.trim() || "Independent";
+    const arr = map.get(party) || [];
     arr.push(m);
-    map.set(m.party, arr);
+    map.set(party, arr);
   }
   return Array.from(map.entries())
     .map(([party, members]) => ({ party, members }))
@@ -304,7 +293,7 @@ function MemberList({
 }) {
   if (members.length === 0) {
     return (
-      <p className="text-sm text-zinc-500">
+      <p className="font-body-serif text-sm italic text-[var(--ink-faint)]">
         No individual vote data available.
       </p>
     );
@@ -312,19 +301,19 @@ function MemberList({
 
   return (
     <div className="space-y-4">
-      {members.map(({ party, members: mps }) => (
+      {members.map(({ party, members: mps }, partyIndex) => (
         <div key={party}>
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          <h4 className="mb-2 border-b border-[var(--rule-light)] pb-1 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
             {party} ({mps.length})
           </h4>
-          <div className="flex flex-wrap gap-2">
-            {mps.map((mp) => (
+          <div className="flex flex-wrap gap-1.5">
+            {mps.map((mp, index) => (
               <span
-                key={mp.memberId}
-                className={`rounded-full px-2 py-0.5 text-xs ${
+                key={`${partyIndex}-${mp.memberId}-${index}`}
+                className={`border px-2 py-0.5 font-mono text-[10px] ${
                   isAye
-                    ? "bg-[#31F387]/10 text-[#31F387]"
-                    : "bg-[#D0021B]/10 text-[#D0021B]"
+                    ? "border-[var(--rule)] text-[var(--ink)]"
+                    : "border-[var(--rule-light)] text-[var(--ink-faint)]"
                 }`}
               >
                 {mp.name}

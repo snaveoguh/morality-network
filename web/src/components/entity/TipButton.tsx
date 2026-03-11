@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther } from "viem";
-import { CONTRACTS, TIPPING_ABI } from "@/lib/contracts";
+import { CONTRACTS, CONTRACTS_CHAIN_ID, TIPPING_ABI } from "@/lib/contracts";
 
 const TIP_AMOUNTS = [
   { label: "0.001", value: "0.001" },
@@ -12,6 +13,9 @@ const TIP_AMOUNTS = [
   { label: "0.1", value: "0.1" },
 ];
 
+const POPOVER_W = 220;
+const POPOVER_H = 180; // taller now with explainer text
+
 interface TipButtonProps {
   entityHash: `0x${string}`;
   commentId?: bigint;
@@ -19,18 +23,88 @@ interface TipButtonProps {
 
 export function TipButton({ entityHash, commentId }: TipButtonProps) {
   const [open, setOpen] = useState(false);
-  const [selectedAmount, setSelectedAmount] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
   const { writeContract, data: txHash, isPending } = useWriteContract();
-
   const { isLoading: isConfirming, isSuccess } =
     useWaitForTransactionReceipt({ hash: txHash });
 
-  function handleTip(amount: string) {
-    setSelectedAmount(amount);
+  // SSR guard
+  useEffect(() => setMounted(true), []);
 
+  // Compute position — flip above if near bottom of viewport
+  const computePos = useCallback(() => {
+    if (!btnRef.current) return null;
+    const rect = btnRef.current.getBoundingClientRect();
+    const vh = window.innerHeight;
+
+    let top = rect.bottom + 6;
+    let left = Math.max(8, Math.min(rect.right - POPOVER_W, window.innerWidth - POPOVER_W - 8));
+
+    if (rect.bottom + POPOVER_H + 16 > vh) {
+      top = rect.top - POPOVER_H - 6;
+    }
+
+    return { top, left };
+  }, []);
+
+  const handleToggle = useCallback(() => {
+    if (!open) {
+      const p = computePos();
+      if (p) setPos(p);
+    }
+    setOpen((o) => !o);
+  }, [open, computePos]);
+
+  // Reposition on scroll/resize while open
+  useEffect(() => {
+    if (!open) return;
+    function reposition() {
+      const p = computePos();
+      if (p) setPos(p);
+    }
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open, computePos]);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (
+        popRef.current &&
+        !popRef.current.contains(e.target as Node) &&
+        btnRef.current &&
+        !btnRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [open]);
+
+  function handleTip(amount: string) {
     if (commentId !== undefined) {
       writeContract({
+        chainId: CONTRACTS_CHAIN_ID,
         address: CONTRACTS.tipping,
         abi: TIPPING_ABI,
         functionName: "tipComment",
@@ -39,6 +113,7 @@ export function TipButton({ entityHash, commentId }: TipButtonProps) {
       });
     } else {
       writeContract({
+        chainId: CONTRACTS_CHAIN_ID,
         address: CONTRACTS.tipping,
         abi: TIPPING_ABI,
         functionName: "tipEntity",
@@ -46,43 +121,125 @@ export function TipButton({ entityHash, commentId }: TipButtonProps) {
         value: parseEther(amount),
       });
     }
-
     setOpen(false);
   }
 
+  const isComment = commentId !== undefined;
+
   return (
-    <div className="relative">
+    <>
       <button
-        onClick={() => setOpen(!open)}
+        ref={btnRef}
+        onClick={handleToggle}
         disabled={isPending || isConfirming}
-        className="flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:border-[#2F80ED] hover:text-[#31F387] disabled:opacity-50"
+        className="flex items-center gap-1 border border-[var(--rule-light)] px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:border-[var(--rule)] hover:text-[var(--ink)] disabled:opacity-50"
       >
         {isPending || isConfirming ? (
-          <span className="h-3 w-3 animate-spin rounded-full border-2 border-[#31F387] border-t-transparent" />
+          <span className="h-2 w-2 animate-spin border border-[var(--ink)] border-t-transparent" />
         ) : (
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <span>$</span>
         )}
-        {isSuccess ? "Tipped!" : isPending ? "Signing..." : isConfirming ? "Confirming..." : "Tip"}
+        {isSuccess
+          ? "Tipped"
+          : isPending
+            ? "Sign\u2026"
+            : isConfirming
+              ? "Conf\u2026"
+              : "Tip"}
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-full z-10 mt-2 w-48 rounded-lg border border-zinc-700 bg-zinc-900 p-2 shadow-xl">
-          <p className="mb-2 text-xs text-zinc-400">Select tip amount (ETH)</p>
-          <div className="grid grid-cols-2 gap-1.5">
-            {TIP_AMOUNTS.map((tip) => (
-              <button
-                key={tip.value}
-                onClick={() => handleTip(tip.value)}
-                className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-white transition-colors hover:border-[#2F80ED] hover:bg-[#2F80ED]/10"
-              >
-                {tip.label} ETH
-              </button>
-            ))}
+      {mounted && open && pos && createPortal(
+        <>
+          {/* Invisible backdrop */}
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 99998 }}
+            onClick={() => setOpen(false)}
+          />
+          {/* Popover */}
+          <div
+            ref={popRef}
+            style={{
+              position: "fixed",
+              top: pos.top,
+              left: pos.left,
+              zIndex: 99999,
+              width: POPOVER_W,
+              backgroundColor: "#F5F0E8",
+              border: "2px solid #2A2A2A",
+              padding: "10px",
+              boxShadow: "4px 4px 0 rgba(26,26,26,0.15)",
+            }}
+          >
+            {/* ── Explainer ── */}
+            <div style={{ marginBottom: "8px", borderBottom: "1px solid #C8C0B0", paddingBottom: "8px" }}>
+              <p style={{
+                margin: 0,
+                fontFamily: "'Libre Baskerville', Georgia, serif",
+                fontSize: "11px",
+                lineHeight: "1.5",
+                color: "#4A4A4A",
+              }}>
+                {isComment
+                  ? "Tip this commenter directly. ETH goes straight to their wallet."
+                  : "Tip this content onchain. If the source has verified ownership, ETH goes directly to them. Otherwise it\u2019s held in escrow until they claim it."}
+              </p>
+              <p style={{
+                margin: "4px 0 0 0",
+                fontFamily: "monospace",
+                fontSize: "8px",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#8A8A8A",
+              }}>
+                Base L2 &bull; gas costs ~$0.01
+              </p>
+            </div>
+
+            {/* ── Amount grid ── */}
+            <p
+              style={{
+                margin: "0 0 5px 0",
+                fontFamily: "monospace",
+                fontSize: "8px",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                color: "#8A8A8A",
+              }}
+            >
+              Select amount (ETH)
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px" }}>
+              {TIP_AMOUNTS.map((tip) => (
+                <button
+                  key={tip.value}
+                  onClick={() => handleTip(tip.value)}
+                  style={{
+                    border: "1px solid #C8C0B0",
+                    background: "#F5F0E8",
+                    padding: "6px 8px",
+                    fontFamily: "monospace",
+                    fontSize: "11px",
+                    color: "#1A1A1A",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#1A1A1A";
+                    e.currentTarget.style.color = "#F5F0E8";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "#F5F0E8";
+                    e.currentTarget.style.color = "#1A1A1A";
+                  }}
+                >
+                  {tip.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        </>,
+        document.body
       )}
-    </div>
+    </>
   );
 }

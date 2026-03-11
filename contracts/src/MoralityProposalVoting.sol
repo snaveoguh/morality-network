@@ -9,8 +9,17 @@ interface INounsToken {
     function balanceOf(address owner) external view returns (uint256);
 }
 
+interface IProposalState {
+    function state(uint256 proposalId) external view returns (uint8);
+}
+
 contract MoralityProposalVoting {
     enum VoteType { AGAINST, FOR, ABSTAIN }
+
+    struct DaoResolverConfig {
+        address governor;
+        bool enabled;
+    }
 
     struct Vote {
         VoteType support;
@@ -31,6 +40,7 @@ contract MoralityProposalVoting {
 
     // Max gas refund per vote (prevents abuse)
     uint256 public maxRefund = 0.01 ether;
+    uint256 public constant MAX_REASON_LENGTH = 500;
 
     // proposalKey (keccak256 of dao+proposalId) => voter => Vote
     mapping(bytes32 => mapping(address => Vote)) public votes;
@@ -38,6 +48,8 @@ contract MoralityProposalVoting {
     mapping(bytes32 => ProposalVotes) public proposalVotes;
     // Track all voters per proposal for enumeration
     mapping(bytes32 => address[]) public proposalVoters;
+    // dao key hash => resolver config
+    mapping(bytes32 => DaoResolverConfig) public daoResolverConfigs;
 
     event VoteCast(
         bytes32 indexed proposalKey,
@@ -47,6 +59,7 @@ contract MoralityProposalVoting {
         string reason
     );
     event RefundIssued(address indexed voter, uint256 amount);
+    event DaoResolverSet(string dao, address indexed governor, bool enabled);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
@@ -54,6 +67,7 @@ contract MoralityProposalVoting {
     }
 
     constructor(address _nounsToken) {
+        require(_nounsToken != address(0), "Nouns token required");
         nounsToken = INounsToken(_nounsToken);
         owner = msg.sender;
     }
@@ -69,10 +83,13 @@ contract MoralityProposalVoting {
         VoteType support,
         string calldata reason
     ) external {
+        require(bytes(reason).length <= MAX_REASON_LENGTH, "Reason too long");
         bytes32 proposalKey = keccak256(abi.encodePacked(dao, ":", proposalId));
         require(!hasVoted[proposalKey][msg.sender], "Already voted");
 
         uint256 startGas = gasleft();
+        bool isNounHolder = _isNounHolder(msg.sender);
+        bool refundEligible = isNounHolder && _isRefundEligible(dao, proposalId);
 
         // Record vote
         votes[proposalKey][msg.sender] = Vote({
@@ -93,10 +110,10 @@ contract MoralityProposalVoting {
         }
         proposalVotes[proposalKey].totalVoters++;
 
-        emit VoteCast(proposalKey, msg.sender, support, _isNounHolder(msg.sender), reason);
+        emit VoteCast(proposalKey, msg.sender, support, isNounHolder, reason);
 
-        // Gas refund for Noun holders
-        if (_isNounHolder(msg.sender)) {
+        // Gas refund for verified onchain-resolvable proposals only.
+        if (refundEligible) {
             uint256 gasUsed = startGas - gasleft() + 30000; // +30k for refund overhead
             uint256 refund = gasUsed * tx.gasprice;
             if (refund > maxRefund) refund = maxRefund;
@@ -137,9 +154,56 @@ contract MoralityProposalVoting {
         }
     }
 
+    function _isRefundEligible(string calldata dao, string calldata proposalId) internal view returns (bool) {
+        DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
+        if (!cfg.enabled || cfg.governor == address(0)) return false;
+
+        (uint256 proposalNumericId, bool okParse) = _tryParseUint(proposalId);
+        if (!okParse) return false;
+
+        try IProposalState(cfg.governor).state(proposalNumericId) returns (uint8) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function _tryParseUint(string calldata input) internal pure returns (uint256 value, bool ok) {
+        bytes calldata b = bytes(input);
+        if (b.length == 0) return (0, false);
+
+        for (uint256 i = 0; i < b.length; i++) {
+            uint8 c = uint8(b[i]);
+            if (c < 48 || c > 57) return (0, false);
+            value = (value * 10) + (c - 48);
+        }
+        return (value, true);
+    }
+
     /// @notice Update max refund amount
     function setMaxRefund(uint256 _maxRefund) external onlyOwner {
         maxRefund = _maxRefund;
+    }
+
+    /// @notice Configure which DAO proposal IDs can receive gas refunds.
+    /// @dev Voting remains open for all keys; refunds are only for configured onchain resolvers.
+    function setDaoResolver(string calldata dao, address governor, bool enabled) external onlyOwner {
+        require(bytes(dao).length > 0, "DAO key required");
+        if (enabled) {
+            require(governor != address(0), "Governor required");
+        }
+
+        daoResolverConfigs[keccak256(bytes(dao))] = DaoResolverConfig({
+            governor: governor,
+            enabled: enabled
+        });
+
+        emit DaoResolverSet(dao, governor, enabled);
+    }
+
+    function isDaoResolvable(string calldata dao) external view returns (bool) {
+        DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
+        return cfg.enabled && cfg.governor != address(0);
     }
 
     /// @notice Fund the contract for gas refunds

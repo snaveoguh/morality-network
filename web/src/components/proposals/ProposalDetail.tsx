@@ -17,6 +17,7 @@ import {
 } from "@/lib/governance";
 import Link from "next/link";
 import { useState, useMemo } from "react";
+import ReactMarkdown from "react-markdown";
 
 interface ProposalDetailProps {
   proposal: Proposal & { onchainVotes?: NounsVote[] };
@@ -46,6 +47,7 @@ const SOURCE_LABELS: Record<string, string> = {
   canada: "House of Commons",
   australia: "Parliament",
   sec: "SEC EDGAR",
+  hyperliquid: "Hyperliquid",
 };
 
 const SOURCE_FLAGS: Record<string, string> = {
@@ -55,11 +57,62 @@ const SOURCE_FLAGS: Record<string, string> = {
   canada: "🇨🇦",
   australia: "🇦🇺",
   sec: "📊",
+  hyperliquid: "💧",
 };
+
+function VoterWeightMap({ votes }: { votes: NounsVote[] }) {
+  if (votes.length === 0) return null;
+
+  const topVotes = [...votes].sort((a, b) => b.votes - a.votes).slice(0, 60);
+  const maxVotes = Math.max(...topVotes.map((v) => v.votes), 1);
+
+  return (
+    <div className="mt-4 border border-[var(--rule-light)] p-3">
+      <h3 className="mb-2 font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+        Voter Weight Map
+      </h3>
+      <div className="flex flex-wrap items-end gap-1.5">
+        {topVotes.map((v) => {
+          const size = 6 + Math.round((v.votes / maxVotes) * 18);
+          const tone =
+            v.support === 1
+              ? "var(--ink)"
+              : v.support === 0
+                ? "var(--ink-faint)"
+                : "var(--rule-light)";
+
+          return (
+            <div
+              key={`${v.voter}-${v.support}`}
+              title={`${v.voter} • ${v.votes.toLocaleString()} votes`}
+              className="rounded-full border border-[var(--rule-light)]"
+              style={{
+                width: `${size}px`,
+                height: `${size}px`,
+                background: tone,
+              }}
+            />
+          );
+        })}
+      </div>
+      <p className="mt-2 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+        Top {topVotes.length} voters • bubble size = voting power
+      </p>
+    </div>
+  );
+}
 
 export function ProposalDetail({ proposal }: ProposalDetailProps) {
   const { isConnected } = useAccount();
-  const proposerHash = computeEntityHash(proposal.proposer);
+  const proposer = proposal.proposer?.trim() || "";
+  const hasProposerAddress = /^0x[a-fA-F0-9]{40}$/.test(proposer);
+  const proposerHash = hasProposerAddress
+    ? computeEntityHash(proposer)
+    : ("0x0000000000000000000000000000000000000000000000000000000000000000" as const);
+  const sourceHref =
+    typeof proposal.link === "string" && /^https?:\/\//i.test(proposal.link)
+      ? proposal.link
+      : null;
   const discussionProposalId = Number.isFinite(proposal.proposalNumber)
     ? String(proposal.proposalNumber)
     : proposal.id;
@@ -135,26 +188,38 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
 
         {/* ── Byline ── */}
         <div className="mt-3 flex flex-wrap items-center gap-3 border-b border-[var(--rule-light)] pb-3">
-          <div className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--ink-faint)]">
-            <span>Proposed by</span>
-            <Link href={`/entity/${proposerHash}`}>
-              <AddressDisplay
-                address={proposal.proposer}
-                className="text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]"
-              />
-            </Link>
-          </div>
-          {isConnected && (
+          {hasProposerAddress ? (
+            <div className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--ink-faint)]">
+              <span>Proposed by</span>
+              <Link href={`/entity/${proposerHash}`}>
+                <AddressDisplay
+                  address={proposer}
+                  className="text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]"
+                />
+              </Link>
+            </div>
+          ) : (
+            <div className="font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
+              Source: {sourceLabel}
+            </div>
+          )}
+          {isConnected && hasProposerAddress && (
             <TipButton entityHash={proposerHash} />
           )}
-          <a
-            href={proposal.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
-          >
-            View on {sourceLabel} &rsaquo;
-          </a>
+          {sourceHref ? (
+            <a
+              href={sourceHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
+            >
+              View on {sourceLabel} &rsaquo;
+            </a>
+          ) : (
+            <span className="ml-auto font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+              Source link unavailable
+            </span>
+          )}
         </div>
 
         {/* ── Hero image (extracted from body) ── */}
@@ -269,10 +334,74 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
         <div className="mt-4">
           {activeTab === "description" ? (
             <div>
-              <div className="font-body-serif text-sm leading-relaxed text-[var(--ink-light)]">
-                <pre className="whitespace-pre-wrap break-words font-[inherit] leading-relaxed">
+              <div className="proposal-markdown font-body-serif text-sm leading-relaxed text-[var(--ink-light)]">
+                <ReactMarkdown
+                  components={{
+                    img: ({ src, alt }) => (
+                      <img
+                        src={src}
+                        alt={alt || ""}
+                        className="newspaper-img my-4 w-full max-w-2xl"
+                        loading="lazy"
+                      />
+                    ),
+                    h1: ({ children }) => (
+                      <h1 className="mb-3 mt-6 font-headline text-2xl text-[var(--ink)]">{children}</h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2 className="mb-2 mt-5 font-headline text-xl text-[var(--ink)]">{children}</h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3 className="mb-2 mt-4 font-mono text-xs font-bold uppercase tracking-wider text-[var(--ink)]">{children}</h3>
+                    ),
+                    p: ({ children }) => (
+                      <p className="mb-3 leading-relaxed">{children}</p>
+                    ),
+                    a: ({ href, children }) => (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--ink)] underline decoration-[var(--rule)] underline-offset-2 hover:decoration-[var(--ink)]"
+                      >
+                        {children}
+                      </a>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="mb-3 ml-4 list-disc space-y-1">{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="mb-3 ml-4 list-decimal space-y-1">{children}</ol>
+                    ),
+                    blockquote: ({ children }) => (
+                      <blockquote className="my-3 border-l-2 border-[var(--rule)] pl-4 italic text-[var(--ink-faint)]">
+                        {children}
+                      </blockquote>
+                    ),
+                    code: ({ children }) => (
+                      <code className="bg-[var(--paper-dark)] px-1 py-0.5 font-mono text-xs">{children}</code>
+                    ),
+                    pre: ({ children }) => (
+                      <pre className="my-3 overflow-x-auto bg-[var(--paper-dark)] p-3 font-mono text-xs">{children}</pre>
+                    ),
+                    hr: () => (
+                      <hr className="my-4 border-[var(--rule-light)]" />
+                    ),
+                    table: ({ children }) => (
+                      <div className="my-3 overflow-x-auto">
+                        <table className="min-w-full border-collapse border border-[var(--rule-light)] text-xs">{children}</table>
+                      </div>
+                    ),
+                    th: ({ children }) => (
+                      <th className="border border-[var(--rule-light)] bg-[var(--paper-dark)] px-2 py-1 text-left font-mono text-[9px] uppercase tracking-wider">{children}</th>
+                    ),
+                    td: ({ children }) => (
+                      <td className="border border-[var(--rule-light)] px-2 py-1">{children}</td>
+                    ),
+                  }}
+                >
                   {displayDesc}
-                </pre>
+                </ReactMarkdown>
               </div>
               {isLong && (
                 <button
@@ -291,6 +420,7 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
                 </p>
               ) : (
                 <div className="space-y-4">
+                  <VoterWeightMap votes={onchainVotes} />
                   {[
                     { label: isParliamentary ? "Ayes" : "For", votes: forVotes },
                     { label: isParliamentary ? "Noes" : "Against", votes: againstVotes },
@@ -369,6 +499,7 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
           </h3>
           <dl className="space-y-2">
             {[
+              ["ID", proposal.id],
               ["DAO", proposal.dao],
               ["Source", `${flag} ${sourceLabel}`],
               proposal.chain ? ["Chain", proposal.chain] : null,

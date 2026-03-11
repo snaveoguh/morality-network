@@ -11,6 +11,7 @@ import { parseEther } from "viem";
 import {
   COMMENTS_ABI,
   CONTRACTS,
+  CONTRACTS_CHAIN_ID,
   PREDICTION_MARKET_ABI,
   PREDICTION_MARKET_ADDRESS,
 } from "@/lib/contracts";
@@ -86,6 +87,7 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
       try {
         const amount = parseEther(stakeAmount);
         writeStake({
+          chainId: CONTRACTS_CHAIN_ID,
           address: PREDICTION_MARKET_ADDRESS,
           abi: PREDICTION_MARKET_ABI,
           functionName: "stake",
@@ -168,6 +170,7 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
     const commentContent = `${claim.trim()}\n\nEvidence: ${evidencePreview.normalized}`;
 
     writeInterpretation({
+      chainId: CONTRACTS_CHAIN_ID,
       address: CONTRACTS.comments,
       abi: COMMENTS_ABI,
       functionName: "commentStructured",

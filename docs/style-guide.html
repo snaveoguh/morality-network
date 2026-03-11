@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pooter world v2 Style Guide</title>
+    <style>
+      :root {
+        --paper: #f5f0e8;
+        --paper-dark: #ede6d6;
+        --ink: #1a1a1a;
+        --ink-light: #4a4a4a;
+        --ink-faint: #8a8a8a;
+        --rule: #2a2a2a;
+        --rule-light: #c8c0b0;
+        --accent-red: #8b0000;
+
+        --dark-bg: #0a0a0a;
+        --dark-surface: #18181b;
+        --dark-border: #27272a;
+        --dark-text: #fafafa;
+        --dark-muted: #71717a;
+
+        --accent-blue: #2f80ed;
+        --accent-green: #31f387;
+        --accent-red-dark: #d0021b;
+        --accent-gold: #fcd34d;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--paper);
+        font-family: Georgia, "Times New Roman", serif;
+        line-height: 1.4;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .hero {
+        border-top: 3px double var(--rule);
+        border-bottom: 3px double var(--rule);
+        text-align: center;
+        padding: 20px 12px;
+      }
+
+      .eyebrow {
+        font-family: "Courier New", monospace;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.28em;
+        color: var(--ink-faint);
+      }
+
+      h1 {
+        margin: 12px 0 8px;
+        font-size: clamp(30px, 5vw, 52px);
+        line-height: 1;
+        letter-spacing: -0.01em;
+      }
+
+      .subtitle {
+        margin: 0;
+        color: var(--ink-light);
+        font-style: italic;
+      }
+
+      .quick-links {
+        margin-top: 14px;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .quick-links a {
+        text-decoration: none;
+        border-bottom: 1px solid var(--rule-light);
+      }
+
+      .quick-links span {
+        color: var(--rule-light);
+        margin: 0 6px;
+      }
+
+      .section {
+        margin-top: 28px;
+        border-top: 1px solid var(--rule);
+        padding-top: 16px;
+      }
+
+      .section h2 {
+        margin: 0 0 10px;
+        font-size: 22px;
+      }
+
+      .section p,
+      .section li {
+        color: var(--ink-light);
+      }
+
+      .tokens {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+      }
+
+      .swatch {
+        border: 1px solid var(--rule-light);
+        background: var(--paper);
+      }
+
+      .swatch-color {
+        height: 60px;
+      }
+
+      .swatch-meta {
+        padding: 8px;
+        border-top: 1px solid var(--rule-light);
+        font-family: "Courier New", monospace;
+        font-size: 11px;
+      }
+
+      .type-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .type-card {
+        border: 1px solid var(--rule-light);
+        background: var(--paper);
+        padding: 12px;
+      }
+
+      .type-label {
+        font-family: "Courier New", monospace;
+        text-transform: uppercase;
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        color: var(--ink-faint);
+      }
+
+      .spec-headline {
+        margin-top: 8px;
+        font-size: clamp(22px, 4vw, 34px);
+        line-height: 1.05;
+      }
+
+      .spec-body {
+        margin-top: 8px;
+        font-size: 16px;
+      }
+
+      .spec-ui {
+        margin-top: 8px;
+        font-family: "Courier New", monospace;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.13em;
+      }
+
+      .component-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 16px;
+      }
+
+      .panel {
+        border: 1px solid var(--rule-light);
+        background: var(--paper);
+      }
+
+      .panel-header {
+        border-bottom: 1px solid var(--rule-light);
+        padding: 10px 12px;
+        font-family: "Courier New", monospace;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+      }
+
+      .panel-body {
+        padding: 12px;
+      }
+
+      .feed-tile {
+        border: 1px solid var(--rule-light);
+        background: var(--paper);
+      }
+
+      .tile-head {
+        font-family: "Courier New", monospace;
+        font-size: 10px;
+        color: var(--ink-faint);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 6px;
+      }
+
+      .tile-title {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1.15;
+      }
+
+      .tile-body {
+        margin-top: 8px;
+        color: var(--ink-light);
+      }
+
+      .tile-footer {
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px solid var(--rule-light);
+        font-family: "Courier New", monospace;
+        font-size: 10px;
+        color: var(--ink-faint);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .dark-panel {
+        background: var(--dark-bg);
+        color: var(--dark-text);
+        border: 1px solid var(--dark-border);
+      }
+
+      .dark-panel .panel-header {
+        border-bottom-color: var(--dark-border);
+      }
+
+      .dark-panel .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .dark-panel .stat {
+        border: 1px solid var(--dark-border);
+        background: var(--dark-surface);
+        padding: 8px;
+        text-align: center;
+      }
+
+      .dark-panel .stat-value {
+        color: var(--accent-blue);
+        font-weight: 700;
+        font-size: 18px;
+      }
+
+      .dark-panel .stat-label {
+        color: var(--dark-muted);
+        font-family: "Courier New", monospace;
+        font-size: 10px;
+        text-transform: uppercase;
+      }
+
+      .rate-row {
+        margin-top: 10px;
+        font-size: 22px;
+        color: var(--accent-gold);
+      }
+
+      .rate-row span {
+        color: #3f3f46;
+      }
+
+      .rate-row .active {
+        color: var(--accent-gold);
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .chip {
+        border: 1px solid var(--rule-light);
+        padding: 2px 6px;
+        font-family: "Courier New", monospace;
+        font-size: 10px;
+        text-transform: uppercase;
+      }
+
+      .chip.dark {
+        border-color: var(--dark-border);
+        color: var(--dark-muted);
+      }
+
+      .rules {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .rule-list {
+        border: 1px solid var(--rule-light);
+        padding: 10px 12px;
+      }
+
+      .rule-list h3 {
+        margin: 0 0 8px;
+        font-size: 15px;
+      }
+
+      .rule-list ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .motion {
+        border: 1px solid var(--rule-light);
+        padding: 12px;
+      }
+
+      .marquee-wrap {
+        border: 1px solid var(--rule-light);
+        background: var(--paper-dark);
+        overflow: hidden;
+        white-space: nowrap;
+        padding: 6px;
+        font-family: "Courier New", monospace;
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .marquee {
+        display: inline-block;
+        animation: slide 16s linear infinite;
+      }
+
+      @keyframes slide {
+        from {
+          transform: translateX(0%);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+
+      .footer {
+        margin: 30px 0 10px;
+        border-top: 3px double var(--rule);
+        padding-top: 12px;
+        font-family: "Courier New", monospace;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--ink-faint);
+      }
+
+      @media (max-width: 900px) {
+        .component-grid,
+        .rules,
+        .type-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div class="eyebrow">pooter world v2 design system</div>
+        <h1>Style Guide</h1>
+        <p class="subtitle">
+          Editorial newspaper shell + tactical dark overlays for onchain interaction.
+        </p>
+        <div class="quick-links">
+          <a href="STYLE_GUIDE.md">Markdown Guide</a>
+          <span>|</span>
+          <a href="API_REFERENCE.md">API Reference</a>
+          <span>|</span>
+          <a href="ARCHITECTURE.md">Architecture</a>
+        </div>
+      </header>
+
+      <section class="section">
+        <h2>Color Tokens</h2>
+        <div class="tokens">
+          <div class="swatch"><div class="swatch-color" style="background:#F5F0E8"></div><div class="swatch-meta">--paper<br>#F5F0E8</div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#EDE6D6"></div><div class="swatch-meta">--paper-dark<br>#EDE6D6</div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#1A1A1A"></div><div class="swatch-meta">--ink<br>#1A1A1A</div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#C8C0B0"></div><div class="swatch-meta">--rule-light<br>#C8C0B0</div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#8B0000"></div><div class="swatch-meta">--accent-red<br>#8B0000</div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#0A0A0A"></div><div class="swatch-meta">dark-bg<br>#0A0A0A</div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#2F80ED"></div><div class="swatch-meta">accent-blue<br>#2F80ED</div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#31F387"></div><div class="swatch-meta">accent-green<br>#31F387</div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#D0021B"></div><div class="swatch-meta">accent-red-dark<br>#D0021B</div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#FCD34D"></div><div class="swatch-meta">accent-gold<br>#FCD34D</div></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Typography</h2>
+        <div class="type-grid">
+          <div class="type-card">
+            <div class="type-label">Masthead / Headline</div>
+            <div class="spec-headline">The Parliamentary Gazette</div>
+            <div class="spec-body">
+              High-contrast serif headlines for editorial gravity and scan hierarchy.
+            </div>
+          </div>
+          <div class="type-card">
+            <div class="type-label">UI / Utility Labels</div>
+            <div class="spec-ui">Feed | Proposals | Leaderboard</div>
+            <div class="spec-body">
+              Mono uppercase labels for system controls, counters, and metadata.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Core Components</h2>
+        <div class="component-grid">
+          <div class="panel">
+            <div class="panel-header">Newspaper Feed Tile</div>
+            <div class="panel-body">
+              <article class="feed-tile">
+                <div style="padding: 12px">
+                  <div class="tile-head">Reuters | World | 2h ago</div>
+                  <h3 class="tile-title">Central Banks Signal Coordinated Rate Pause</h3>
+                  <p class="tile-body">
+                    Markets rebalance as investors parse mixed inflation prints and policy tone.
+                  </p>
+                  <div class="chips" style="margin-top: 8px">
+                    <span class="chip">#macro</span>
+                    <span class="chip">#policy</span>
+                    <span class="chip">#rates</span>
+                  </div>
+                  <div class="tile-footer">Rating 4.2 | 38 comments | 0.213 ETH tipped</div>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="panel dark-panel">
+            <div class="panel-header">Extension Side Panel</div>
+            <div class="panel-body">
+              <div class="stat-grid">
+                <div class="stat"><div class="stat-value">7.8</div><div class="stat-label">Score</div></div>
+                <div class="stat"><div class="stat-value">4.1</div><div class="stat-label">Rating</div></div>
+                <div class="stat"><div class="stat-value">52</div><div class="stat-label">Comments</div></div>
+              </div>
+              <div class="rate-row">
+                <span class="active">★</span><span class="active">★</span><span class="active">★</span><span>★</span><span>★</span>
+              </div>
+              <div class="chips" style="margin-top: 8px">
+                <span class="chip dark">#governance</span>
+                <span class="chip dark">#uk-parliament</span>
+                <span class="chip dark">#climate</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Interaction Rules</h2>
+        <div class="rules">
+          <div class="rule-list">
+            <h3>Do</h3>
+            <ul>
+              <li>Use token variables before adding new colors.</li>
+              <li>Keep feed scan density high and card chrome low.</li>
+              <li>Use explicit click intent in extension interactions.</li>
+              <li>Preserve keyboard and focus accessibility paths.</li>
+            </ul>
+          </div>
+          <div class="rule-list">
+            <h3>Do Not</h3>
+            <ul>
+              <li>Hijack normal link clicks with panel behavior.</li>
+              <li>Mix bright gradients into paper mode layouts.</li>
+              <li>Hide critical controls behind hover-only behavior.</li>
+              <li>Introduce one-off accent colors per component.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Motion</h2>
+        <div class="motion">
+          <p>Use subtle linear motion for ambient status surfaces only.</p>
+          <div class="marquee-wrap">
+            <span class="marquee">
+              live governance updates | new ratings onchain | comments settled on base | paid api planning | live governance updates | new ratings onchain | comments settled on base | paid api planning |
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        Version: v2 docs baseline | update with each visual/system contract change
+      </footer>
+    </div>
+  </body>
+</html>

@@ -43,7 +43,8 @@ const rpcTransport =
 
 const databaseMode = (process.env.PONDER_DB_KIND ?? "pglite").toLowerCase();
 const postgresConnectionString =
-  process.env.DATABASE_PRIVATE_URL ?? process.env.DATABASE_URL;
+  process.env.DATABASE_PRIVATE_URL?.trim() ||
+  process.env.DATABASE_URL?.trim();
 
 const database =
   databaseMode === "postgres" && postgresConnectionString

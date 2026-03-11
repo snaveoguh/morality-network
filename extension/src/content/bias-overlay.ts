@@ -22,6 +22,11 @@ export function setupBiasOverlay(): void {
   document.body.appendChild(host);
   shadow = host.attachShadow({ mode: 'closed' });
 
+  const fontLink = document.createElement('link');
+  fontLink.rel = 'stylesheet';
+  fontLink.href = 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap';
+  shadow.appendChild(fontLink);
+
   const style = document.createElement('style');
   style.textContent = CSS;
   shadow.appendChild(style);

@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import {
   buildInterpretationOutcomeScores,
   parseInterpretationScoreQuery,
+  toCanonicalInterpretation,
 } from "@/lib/interpretation-scores";
+import { DELIBERATION_SCHEMA_VERSION } from "@/lib/types/deliberation";
 
 const CACHE_MS = 2 * 60 * 1000;
 let cached:
@@ -32,9 +34,12 @@ export async function GET(request: Request) {
     }
 
     const snapshot = await buildInterpretationOutcomeScores(parsed);
+    const canonicalInterpretations = snapshot.interpretations.map(toCanonicalInterpretation);
 
     const payload = {
       ...snapshot,
+      schemaVersion: DELIBERATION_SCHEMA_VERSION,
+      canonicalInterpretations,
       cacheHit: false,
       params: {
         ...parsed,

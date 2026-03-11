@@ -11,6 +11,7 @@ import { parseEther, formatEther } from "viem";
 import {
   PREDICTION_MARKET_ADDRESS,
   PREDICTION_MARKET_ABI,
+  CONTRACTS_CHAIN_ID,
 } from "@/lib/contracts";
 import type { Proposal } from "@/lib/governance";
 
@@ -45,6 +46,7 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
       abi: PREDICTION_MARKET_ABI,
       functionName: "isDaoResolvable",
       args: [daoKey],
+      chainId: CONTRACTS_CHAIN_ID,
       query: { enabled: isStructurallyEligible },
     });
 
@@ -57,6 +59,7 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
     abi: PREDICTION_MARKET_ABI,
     functionName: "getMarket",
     args: [daoKey, proposalId],
+    chainId: CONTRACTS_CHAIN_ID,
     query: { enabled: isEligible },
   });
 
@@ -66,6 +69,7 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
     abi: PREDICTION_MARKET_ABI,
     functionName: "getPosition",
     args: [daoKey, proposalId, address || "0x0000000000000000000000000000000000000000"],
+    chainId: CONTRACTS_CHAIN_ID,
     query: { enabled: !!address && isEligible },
   });
 
@@ -124,6 +128,7 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
       functionName: "stake",
       args: [daoKey, proposalId, selectedSide === "for"],
       value: parseEther(stakeAmount),
+      chainId: CONTRACTS_CHAIN_ID,
     });
   };
 
@@ -134,6 +139,7 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
       abi: PREDICTION_MARKET_ABI,
       functionName: "claim",
       args: [daoKey, proposalId],
+      chainId: CONTRACTS_CHAIN_ID,
     });
   };
 

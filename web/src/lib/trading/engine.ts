@@ -1,19 +1,21 @@
 import { randomUUID } from "node:crypto";
-import { formatUnits, type Hash } from "viem";
+import { formatUnits, type Address, type Hash } from "viem";
 import { ERC20_TRADE_ABI } from "./abi";
 import { createTraderClients } from "./clients";
-import { getTraderConfig } from "./config";
+import { getParallelBaseConfig, getTraderConfig } from "./config";
 import {
   executeHyperliquidOrderLive,
   fetchHyperliquidAccountValueUsd,
+  fetchHyperliquidLivePositions,
   fetchHyperliquidMarketBySymbol,
   resolveHyperliquidAccountAddress,
   resolveHyperliquidMarketForLaunch,
   simulateHyperliquidOrder,
 } from "./hyperliquid";
-import { fetchTokenMarketSnapshot, normalizeQuoteSymbol } from "./market";
+import { fetchTokenMarketSnapshot, normalizeQuoteSymbol, type DexScreenerChainId } from "./market";
 import { PositionStore } from "./position-store";
 import { fetchScannerCandidates } from "./scanner-client";
+import { getAggregatedMarketSignals, type AggregatedMarketSignal } from "./signals";
 import { estimateAmountOutMin, executeSwap, readTokenDecimals, waitForSuccess } from "./swap";
 import type {
   Position,
@@ -25,6 +27,36 @@ import type {
   TraderReadinessBalance,
   TraderReadinessReport,
 } from "./types";
+
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
+
+function computeHyperliquidMinOrderNotionalUsd(priceUsd: number, szDecimals: number): number {
+  if (!Number.isFinite(priceUsd) || priceUsd <= 0) return Number.POSITIVE_INFINITY;
+  const lotStep = 10 ** -Math.max(0, szDecimals);
+  const minLots = Math.ceil(10 / (priceUsd * lotStep));
+  return minLots * lotStep * priceUsd;
+}
+
+function decimalStringToRaw(value: string, decimals: number): string {
+  const normalized = value.trim();
+  if (!/^\d+(\.\d+)?$/.test(normalized)) {
+    return "0";
+  }
+  const [whole, fractional = ""] = normalized.split(".");
+  const units = `${whole}${fractional.padEnd(Math.max(0, decimals), "0").slice(0, Math.max(0, decimals))}`
+    .replace(/^0+/, "");
+  return units.length > 0 ? units : "0";
+}
+
+function isSpotVenue(venue: TraderExecutionConfig["executionVenue"]): boolean {
+  return venue === "base-spot" || venue === "ethereum-spot";
+}
+
+function dexScreenerChainForVenue(
+  venue: TraderExecutionConfig["executionVenue"] | Position["venue"] | undefined
+): DexScreenerChainId {
+  return venue === "ethereum-spot" ? "ethereum" : "base";
+}
 
 class TraderEngine {
   private readonly config: TraderExecutionConfig;
@@ -54,6 +86,7 @@ class TraderEngine {
       skipped: [],
       errors: [],
     };
+    report.openPositions = await this.getCurrentOpenPositionCount();
 
     const readiness = await this.getReadiness();
     report.readiness = readiness;
@@ -64,6 +97,20 @@ class TraderEngine {
     }
 
     await this.evaluateOpenPositions(report);
+
+    let marketSignals: AggregatedMarketSignal[] = [];
+    if (this.config.executionVenue === "hyperliquid-perp") {
+      try {
+        marketSignals = await getAggregatedMarketSignals({
+          limit: 250,
+          minAbsScore: 0.2,
+        });
+      } catch (error) {
+        report.errors.push(
+          `signals:${error instanceof Error ? error.message : "signal aggregation failed"}`
+        );
+      }
+    }
 
     let candidates: ScannerLaunch[] = [];
     try {
@@ -85,7 +132,7 @@ class TraderEngine {
       }
 
       try {
-        const opened = await this.tryOpenPosition(candidate);
+        const opened = await this.tryOpenPosition(candidate, marketSignals);
         if (!opened) continue;
         report.entries.push(opened);
         entries += 1;
@@ -96,22 +143,80 @@ class TraderEngine {
       }
     }
 
-    report.openPositions = this.store.getOpen().length;
+    report.openPositions = await this.getCurrentOpenPositionCount();
     report.finishedAt = Date.now();
     return report;
   }
 
   async listPositions(): Promise<Position[]> {
     await this.initPromise;
-    return this.store.getAll();
+    if (this.config.executionVenue !== "hyperliquid-perp" || this.config.dryRun) {
+      return this.store.getAll();
+    }
+
+    const liveOpen = await this.getHyperliquidOpenPositionsFromVenue();
+    const closed = this.store.getAll().filter((position) => position.status === "closed");
+    return [...liveOpen, ...closed];
+  }
+
+  private async getHyperliquidOpenPositionsFromVenue(): Promise<Position[]> {
+    const accountAddress = resolveHyperliquidAccountAddress(this.config, this.clients.address);
+    const livePositions = await fetchHyperliquidLivePositions(this.config, accountAddress);
+    const quoteTokenAddress = this.config.quoteTokens.USDC ?? ZERO_ADDRESS;
+    const quoteTokenDecimals = this.config.quoteTokenDecimals.USDC ?? 6;
+
+    return livePositions.map((live) => {
+      const quantityRaw = decimalStringToRaw(live.size, live.szDecimals);
+      const sizeNumeric = Number(live.size);
+      const entryNotionalUsd = Number.isFinite(sizeNumeric) ? sizeNumeric * live.entryPriceUsd : live.positionValueUsd;
+      const quoteSpentRaw = Math.max(1, Math.floor(entryNotionalUsd * 10 ** quoteTokenDecimals)).toString();
+
+      return {
+        id: `hl:${live.symbol}:${live.marketId ?? "unknown"}`,
+        venue: "hyperliquid-perp",
+        tokenAddress: quoteTokenAddress,
+        tokenDecimals: live.szDecimals,
+        quoteTokenAddress,
+        quoteSymbol: "USD",
+        quoteTokenDecimals,
+        dex: "uniswap-v3",
+        marketSymbol: live.symbol,
+        marketId: live.marketId ?? undefined,
+        leverage: live.leverage ?? this.config.hyperliquid.defaultLeverage,
+        poolAddress: undefined,
+        entryPriceUsd: live.entryPriceUsd,
+        quantityTokenRaw: quantityRaw,
+        quoteSpentRaw,
+        entryNotionalUsd,
+        stopLossPct: this.config.risk.stopLossPct,
+        takeProfitPct: this.config.risk.takeProfitPct,
+        openedAt: Date.now(),
+        txHash: undefined,
+        status: "open",
+      };
+    });
+  }
+
+  private async getCurrentOpenPositionCount(): Promise<number> {
+    if (this.config.executionVenue !== "hyperliquid-perp" || this.config.dryRun) {
+      return this.store.getOpen().length;
+    }
+    try {
+      return (await this.getHyperliquidOpenPositionsFromVenue()).length;
+    } catch {
+      return this.store.getOpen().length;
+    }
   }
 
   async getPerformance(): Promise<TraderPerformanceReport> {
     await this.initPromise;
 
-    const positions = this.store.getAll();
-    const openPositions = positions.filter((position) => position.status === "open");
-    const closedPositions = positions.filter((position) => position.status === "closed");
+    const persistedPositions = this.store.getAll();
+    const openPositions =
+      this.config.executionVenue === "hyperliquid-perp" && !this.config.dryRun
+        ? await this.getHyperliquidOpenPositionsFromVenue()
+        : persistedPositions.filter((position) => position.status === "open");
+    const closedPositions = persistedPositions.filter((position) => position.status === "closed");
 
     const open: TraderPerformanceReport["open"] = [];
     const closed: TraderPerformanceReport["closed"] = [];
@@ -224,7 +329,7 @@ class TraderEngine {
 
     const balances: TraderReadinessBalance[] = [];
 
-    if (this.config.executionVenue === "base-spot") {
+    if (isSpotVenue(this.config.executionVenue)) {
       const nativeBalance = await this.clients.publicClient.getBalance({
         address: this.clients.address,
       });
@@ -377,7 +482,9 @@ class TraderEngine {
       const market = await fetchHyperliquidMarketBySymbol(this.config, position.marketSymbol);
       return market?.priceUsd ?? null;
     }
-    const market = await fetchTokenMarketSnapshot(position.tokenAddress);
+    const market = await fetchTokenMarketSnapshot(position.tokenAddress, {
+      chainId: dexScreenerChainForVenue(position.venue ?? this.config.executionVenue),
+    });
     return market.priceUsd;
   }
 
@@ -398,7 +505,9 @@ class TraderEngine {
       });
     }
 
-    const quoteMarket = await fetchTokenMarketSnapshot(position.quoteTokenAddress);
+    const quoteMarket = await fetchTokenMarketSnapshot(position.quoteTokenAddress, {
+      chainId: dexScreenerChainForVenue(position.venue ?? this.config.executionVenue),
+    });
     if (!quoteMarket.priceUsd) {
       throw new Error(`missing quote price for exit ${position.quoteTokenAddress}`);
     }
@@ -480,28 +589,76 @@ class TraderEngine {
     });
   }
 
-  private async tryOpenPosition(candidate: ScannerLaunch): Promise<Position | null> {
+  private async tryOpenPosition(
+    candidate: ScannerLaunch,
+    marketSignals: AggregatedMarketSignal[] = []
+  ): Promise<Position | null> {
     if (this.config.executionVenue === "hyperliquid-perp") {
-      return this.tryOpenHyperliquidPosition(candidate);
+      return this.tryOpenHyperliquidPosition(candidate, marketSignals);
     }
     return this.tryOpenSpotPosition(candidate);
   }
 
-  private async tryOpenHyperliquidPosition(candidate: ScannerLaunch): Promise<Position | null> {
-    const openPositions = this.store.getOpen();
+  private async tryOpenHyperliquidPosition(
+    candidate: ScannerLaunch,
+    marketSignals: AggregatedMarketSignal[]
+  ): Promise<Position | null> {
+    const openPositions =
+      !this.config.dryRun ? await this.getHyperliquidOpenPositionsFromVenue() : this.store.getOpen();
     if (openPositions.length >= this.config.risk.maxOpenPositions) {
       return null;
     }
 
-    const market = await resolveHyperliquidMarketForLaunch(this.config, candidate);
+    let selectedSignal: AggregatedMarketSignal | null = null;
+    let market = null;
+
+    // News-first routing: pick strongest bullish market signal that exists on Hyperliquid.
+    // Skip conflicted signals (high contradiction = sources disagree on direction).
+    for (const signal of marketSignals) {
+      if (signal.direction !== "bullish") continue;
+      if (signal.contradictionPenalty > 0.7) {
+        console.log(
+          `[trader] skipping conflicted signal: ${signal.symbol} contradiction=${signal.contradictionPenalty.toFixed(2)}`,
+        );
+        continue;
+      }
+      const signaledMarket = await fetchHyperliquidMarketBySymbol(this.config, signal.symbol);
+      if (!signaledMarket) continue;
+      selectedSignal = signal;
+      market = signaledMarket;
+      console.log(
+        `[trader] signal-route: ${signal.symbol} score=${signal.score.toFixed(3)} contradiction=${signal.contradictionPenalty.toFixed(2)} obs=${signal.observations}`,
+      );
+      break;
+    }
+
+    if (!market) {
+      console.log("[trader] no qualifying signal, falling back to scanner candidate");
+      market = await resolveHyperliquidMarketForLaunch(this.config, candidate);
+    }
     if (!market || !market.priceUsd || market.priceUsd <= 0) {
       return null;
     }
-
-    const notionalUsd = Math.min(this.config.hyperliquid.entryNotionalUsd, this.config.risk.maxPositionUsd);
-    if (!Number.isFinite(notionalUsd) || notionalUsd <= 0) {
+    if (openPositions.some((position) => position.marketSymbol === market.symbol)) {
       return null;
     }
+
+    const rawConviction = selectedSignal ? selectedSignal.score : 1;
+    const convictionMultiplier = Number.isFinite(rawConviction)
+      ? Math.min(1.5, Math.max(0.75, rawConviction))
+      : 1;
+    const requestedNotionalUsd = Math.min(
+      this.config.hyperliquid.entryNotionalUsd * convictionMultiplier,
+      this.config.risk.maxPositionUsd
+    );
+    if (!Number.isFinite(requestedNotionalUsd) || requestedNotionalUsd <= 0) {
+      return null;
+    }
+    const exchangeMinNotionalUsd = computeHyperliquidMinOrderNotionalUsd(market.priceUsd, market.szDecimals);
+    if (!Number.isFinite(exchangeMinNotionalUsd) || exchangeMinNotionalUsd <= 0) {
+      return null;
+    }
+    const notionalUsd = Math.max(requestedNotionalUsd, exchangeMinNotionalUsd);
 
     const portfolioNotional = openPositions.reduce((sum, position) => sum + position.entryNotionalUsd, 0);
     if (portfolioNotional + notionalUsd > this.config.risk.maxPortfolioUsd) {
@@ -534,7 +691,7 @@ class TraderEngine {
     const opened: Position = {
       id: randomUUID(),
       venue: "hyperliquid-perp",
-      tokenAddress: candidate.tokenAddress,
+      tokenAddress: quoteTokenAddress,
       tokenDecimals: market.szDecimals,
       quoteTokenAddress,
       quoteSymbol: "USD",
@@ -565,7 +722,17 @@ class TraderEngine {
       return null;
     }
 
-    const tokenMarket = await fetchTokenMarketSnapshot(candidate.tokenAddress);
+    const chainId = dexScreenerChainForVenue(this.config.executionVenue);
+    const tokenCode = await this.clients.publicClient.getBytecode({
+      address: candidate.tokenAddress,
+    });
+    if (!tokenCode || tokenCode === "0x") {
+      return null;
+    }
+
+    const tokenMarket = await fetchTokenMarketSnapshot(candidate.tokenAddress, {
+      chainId,
+    });
     const quoteSymbol =
       normalizeQuoteSymbol(candidate.pairedAsset) ??
       normalizeQuoteSymbol(tokenMarket.quoteSymbol) ??
@@ -578,21 +745,25 @@ class TraderEngine {
       return null;
     }
 
-    const quoteMarket = await fetchTokenMarketSnapshot(quoteToken);
+    const quoteMarket = await fetchTokenMarketSnapshot(quoteToken, {
+      chainId,
+    });
     const quotePriceUsd = quoteMarket.priceUsd ?? (quoteSymbol === "USDC" ? 1 : null);
     const tokenPriceUsd = tokenMarket.priceUsd ?? Number(candidate.dexScreenerData?.priceUsd ?? "");
     if (!quotePriceUsd || !Number.isFinite(tokenPriceUsd) || tokenPriceUsd <= 0) {
       return null;
     }
 
-    const balance = await this.clients.publicClient.readContract({
-      address: quoteToken,
-      abi: ERC20_TRADE_ABI,
-      functionName: "balanceOf",
-      args: [this.clients.address],
-    });
-    if (balance < amountIn) {
-      throw new Error(`insufficient ${quoteSymbol} balance`);
+    if (!this.config.dryRun) {
+      const balance = await this.clients.publicClient.readContract({
+        address: quoteToken,
+        abi: ERC20_TRADE_ABI,
+        functionName: "balanceOf",
+        args: [this.clients.address],
+      });
+      if (balance < amountIn) {
+        throw new Error(`insufficient ${quoteSymbol} balance`);
+      }
     }
 
     const notionalUsd = (Number(amountIn) / 10 ** quoteDecimals) * quotePriceUsd;
@@ -641,7 +812,7 @@ class TraderEngine {
 
     const opened: Position = {
       id: randomUUID(),
-      venue: "base-spot",
+      venue: this.config.executionVenue,
       tokenAddress: candidate.tokenAddress,
       tokenDecimals,
       quoteTokenAddress: quoteToken,
@@ -670,33 +841,21 @@ function syntheticHash(): Hash {
   return `0x${raw}` as Hash;
 }
 
-let singleton: TraderEngine | null = null;
+type RunnerId = "primary" | "base-parallel";
 
-export function getTraderEngine(): TraderEngine {
-  if (!singleton) {
-    singleton = new TraderEngine(getTraderConfig());
-  }
-  return singleton;
+interface RunnerDescriptor {
+  id: RunnerId;
+  label: string;
+  config: TraderExecutionConfig;
+  engine: TraderEngine;
 }
 
-export async function runTraderCycle(): Promise<TraderCycleReport> {
-  return getTraderEngine().runCycle();
-}
+let runnerCache: {
+  key: string;
+  runners: RunnerDescriptor[];
+} | null = null;
 
-export async function listTraderPositions(): Promise<Position[]> {
-  return getTraderEngine().listPositions();
-}
-
-export async function getTraderReadiness(): Promise<TraderReadinessReport> {
-  return getTraderEngine().getReadiness();
-}
-
-export async function getTraderPerformance(): Promise<TraderPerformanceReport> {
-  return getTraderEngine().getPerformance();
-}
-
-export function redactedConfigSummary() {
-  const config = getTraderConfig();
+function redactedConfigFrom(config: TraderExecutionConfig) {
   return {
     executionVenue: config.executionVenue,
     dryRun: config.dryRun,
@@ -717,5 +876,184 @@ export function redactedConfigSummary() {
     },
     gasMultiplierBps: config.gasMultiplierBps,
     maxPriorityFeePerGas: config.maxPriorityFeePerGas.toString(),
+  };
+}
+
+function buildRunnerCacheKey(primary: TraderExecutionConfig, baseParallel: TraderExecutionConfig | null): string {
+  return JSON.stringify({
+    primary: {
+      executionVenue: primary.executionVenue,
+      dryRun: primary.dryRun,
+      scannerApiUrl: primary.scannerApiUrl,
+      positionStorePath: primary.positionStorePath,
+      minScore: primary.risk.minScore,
+      maxOpenPositions: primary.risk.maxOpenPositions,
+      maxPositionUsd: primary.risk.maxPositionUsd,
+    },
+    baseParallel: baseParallel
+      ? {
+          enabled: true,
+          executionVenue: baseParallel.executionVenue,
+          dryRun: baseParallel.dryRun,
+          scannerApiUrl: baseParallel.scannerApiUrl,
+          positionStorePath: baseParallel.positionStorePath,
+          minScore: baseParallel.risk.minScore,
+          maxOpenPositions: baseParallel.risk.maxOpenPositions,
+          maxPositionUsd: baseParallel.risk.maxPositionUsd,
+        }
+      : { enabled: false },
+  });
+}
+
+function getTraderRunners(): RunnerDescriptor[] {
+  const primaryConfig = getTraderConfig();
+  const baseParallelConfig = getParallelBaseConfig();
+  const key = buildRunnerCacheKey(primaryConfig, baseParallelConfig);
+
+  if (runnerCache && runnerCache.key === key) {
+    return runnerCache.runners;
+  }
+
+  const nextRunners: RunnerDescriptor[] = [
+    {
+      id: "primary",
+      label: "primary",
+      config: primaryConfig,
+      engine: new TraderEngine(primaryConfig),
+    },
+  ];
+
+  if (baseParallelConfig) {
+    nextRunners.push({
+      id: "base-parallel",
+      label: "base-parallel",
+      config: baseParallelConfig,
+      engine: new TraderEngine(baseParallelConfig),
+    });
+  }
+
+  runnerCache = {
+    key,
+    runners: nextRunners,
+  };
+  return nextRunners;
+}
+
+export function getTraderEngine(): TraderEngine {
+  return getTraderRunners()[0].engine;
+}
+
+export function getParallelTraderEngines(): Array<{ runnerId: RunnerId; label: string }> {
+  return getTraderRunners()
+    .slice(1)
+    .map((runner) => ({
+      runnerId: runner.id,
+      label: runner.label,
+    }));
+}
+
+export async function runTraderCycle(): Promise<TraderCycleReport> {
+  return getTraderEngine().runCycle();
+}
+
+export async function runTraderCycles(): Promise<{
+  primary: TraderCycleReport;
+  parallel: Array<{ runnerId: RunnerId; label: string; report: TraderCycleReport }>;
+}> {
+  const runners = getTraderRunners();
+  const executed = await Promise.all(
+    runners.map(async (runner) => ({
+      runnerId: runner.id,
+      label: runner.label,
+      report: await runner.engine.runCycle(),
+    }))
+  );
+
+  return {
+    primary: executed[0].report,
+    parallel: executed.slice(1),
+  };
+}
+
+export async function listTraderPositions(): Promise<Position[]> {
+  return getTraderEngine().listPositions();
+}
+
+export async function listTraderPositionsByRunner(): Promise<{
+  primary: Position[];
+  parallel: Array<{ runnerId: RunnerId; label: string; positions: Position[] }>;
+}> {
+  const runners = getTraderRunners();
+  const collected = await Promise.all(
+    runners.map(async (runner) => ({
+      runnerId: runner.id,
+      label: runner.label,
+      positions: await runner.engine.listPositions(),
+    }))
+  );
+
+  return {
+    primary: collected[0].positions,
+    parallel: collected.slice(1),
+  };
+}
+
+export async function getTraderReadiness(): Promise<TraderReadinessReport> {
+  return getTraderEngine().getReadiness();
+}
+
+export async function getTraderReadinessByRunner(): Promise<{
+  primary: TraderReadinessReport;
+  parallel: Array<{ runnerId: RunnerId; label: string; readiness: TraderReadinessReport }>;
+}> {
+  const runners = getTraderRunners();
+  const collected = await Promise.all(
+    runners.map(async (runner) => ({
+      runnerId: runner.id,
+      label: runner.label,
+      readiness: await runner.engine.getReadiness(),
+    }))
+  );
+
+  return {
+    primary: collected[0].readiness,
+    parallel: collected.slice(1),
+  };
+}
+
+export async function getTraderPerformance(): Promise<TraderPerformanceReport> {
+  return getTraderEngine().getPerformance();
+}
+
+export async function getTraderPerformanceByRunner(): Promise<{
+  primary: TraderPerformanceReport;
+  parallel: Array<{ runnerId: RunnerId; label: string; performance: TraderPerformanceReport }>;
+}> {
+  const runners = getTraderRunners();
+  const collected = await Promise.all(
+    runners.map(async (runner) => ({
+      runnerId: runner.id,
+      label: runner.label,
+      performance: await runner.engine.getPerformance(),
+    }))
+  );
+
+  return {
+    primary: collected[0].performance,
+    parallel: collected.slice(1),
+  };
+}
+
+export function redactedConfigSummary() {
+  const runners = getTraderRunners();
+  const primary = redactedConfigFrom(runners[0].config);
+  const parallelRunners = runners.slice(1).map((runner) => ({
+    runnerId: runner.id,
+    label: runner.label,
+    config: redactedConfigFrom(runner.config),
+  }));
+  return {
+    ...primary,
+    parallelRunners,
   };
 }

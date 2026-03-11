@@ -99,6 +99,9 @@ export function highlightKeywords(root: Node, keywords: ExtractedKeyword[]): Det
       if (processed.has(node)) return NodeFilter.FILTER_REJECT;
       if (node.parentElement.closest('[data-pw-root]')) return NodeFilter.FILTER_REJECT;
       if (node.parentElement.closest('.pw-highlight')) return NodeFilter.FILTER_REJECT;
+      if (node.parentElement.closest('a[href], button, [role="button"], [role="menu"], [role="navigation"]')) {
+        return NodeFilter.FILTER_REJECT;
+      }
       if (!node.textContent || !regex.test(node.textContent)) {
         regex.lastIndex = 0;
         return NodeFilter.FILTER_REJECT;

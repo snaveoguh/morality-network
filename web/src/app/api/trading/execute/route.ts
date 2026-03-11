@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
-import { redactedConfigSummary, runTraderCycle } from "@/lib/trading/engine";
+import { redactedConfigSummary, runTraderCycles } from "@/lib/trading/engine";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const maxDuration = 60;
 
 async function execute() {
-  const report = await runTraderCycle();
+  const cycles = await runTraderCycles();
   return NextResponse.json(
     {
-      report,
+      report: cycles.primary,
+      parallel: cycles.parallel,
       config: redactedConfigSummary(),
     },
     {
@@ -19,7 +21,19 @@ async function execute() {
   );
 }
 
-export async function GET() {
+function isAuthorized(request: Request): boolean {
+  const secret = process.env.CRON_SECRET?.trim();
+  if (!secret) return true;
+
+  const auth = request.headers.get("authorization")?.trim();
+  return auth === `Bearer ${secret}`;
+}
+
+export async function GET(request: Request) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
   try {
     return await execute();
   } catch (error) {
@@ -32,6 +46,6 @@ export async function GET() {
   }
 }
 
-export async function POST() {
-  return GET();
+export async function POST(request: Request) {
+  return GET(request);
 }

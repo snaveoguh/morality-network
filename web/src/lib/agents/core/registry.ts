@@ -14,6 +14,16 @@ class AgentRegistry {
     }
     this.agents.set(agent.id, agent);
     console.log(`[AgentRegistry] Registered: ${agent.id}`);
+
+    // If registry is already running, start hot-registered agents immediately.
+    if (this.initialized) {
+      try {
+        agent.start();
+        console.log(`[AgentRegistry] Started (hot): ${agent.id}`);
+      } catch (err) {
+        console.error(`[AgentRegistry] Failed to start hot agent ${agent.id}:`, err);
+      }
+    }
   }
 
   /** Initialize and start all registered agents (idempotent) */

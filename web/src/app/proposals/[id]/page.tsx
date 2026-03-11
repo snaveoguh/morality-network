@@ -1,4 +1,4 @@
-import { fetchAllProposals, fetchProposalById } from "@/lib/governance";
+import { fetchAllProposals, fetchSingleProposal } from "@/lib/governance";
 import { ProposalDetail } from "@/components/proposals/ProposalDetail";
 import Link from "next/link";
 
@@ -12,25 +12,27 @@ export default async function ProposalPage({ params }: Props) {
   const { id } = await params;
   const decodedId = decodeURIComponent(id);
 
-  // Try fetching detailed proposal with votes from Snapshot
-  let detailedProposal = await fetchProposalById(decodedId);
+  // Try direct fetch first (fast — fetches only the one proposal)
+  let detailedProposal = await fetchSingleProposal(decodedId);
 
-  // Fallback: find from all proposals list
+  // Fallback: find from all proposals list (slow — fetches everything)
   if (!detailedProposal) {
     const all = await fetchAllProposals();
     const found = all.find((p) => p.id === decodedId);
     if (!found) {
       return (
         <div className="py-20 text-center">
-          <h1 className="text-2xl font-bold text-white">Proposal not found</h1>
-          <p className="mt-2 text-zinc-400">
-            The proposal &quot;{decodedId}&quot; could not be found.
+          <h1 className="font-headline text-3xl text-[var(--ink)]">
+            Proposal Not Found
+          </h1>
+          <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+            The proposal &quot;{decodedId}&quot; could not be located in our records.
           </p>
           <Link
             href="/proposals"
-            className="mt-4 inline-block text-[#2F80ED] hover:underline"
+            className="mt-4 inline-block font-mono text-xs uppercase tracking-wider text-[var(--ink-light)] hover:text-[var(--ink)]"
           >
-            Back to Proposals
+            &larr; Return to Governance
           </Link>
         </div>
       );
@@ -42,9 +44,9 @@ export default async function ProposalPage({ params }: Props) {
     <div>
       <Link
         href="/proposals"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-white"
+        className="mb-4 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
       >
-        <span>&larr;</span> All Proposals
+        &larr; All Governance
       </Link>
 
       <ProposalDetail proposal={detailedProposal} />

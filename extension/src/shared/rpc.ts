@@ -25,7 +25,7 @@ export function getPublicClient() {
   if (!publicClient) {
     publicClient = createPublicClient({
       chain: baseSepolia,
-      transport: http(rpcUrl),
+      transport: http(rpcUrl, { timeout: 10000, retryCount: 1 }),
       batch: { multicall: true },
     }) as any;
   }
@@ -36,6 +36,6 @@ export function createWallet(account: Account) {
   return createWalletClient({
     account,
     chain: baseSepolia,
-    transport: http(rpcUrl),
+    transport: http(rpcUrl, { timeout: 10000, retryCount: 1 }),
   });
 }

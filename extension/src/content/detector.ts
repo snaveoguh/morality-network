@@ -2,6 +2,22 @@ import { MAX_ENTITIES_PER_PAGE } from '../shared/constants';
 
 const ETH_ADDRESS_RE = /\b(0x[a-fA-F0-9]{40})\b/g;
 const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'INPUT', 'CODE', 'PRE', 'SVG']);
+const UI_ACTION_TEXTS = new Set([
+  'read',
+  'source',
+  'discuss',
+  'comment',
+  'comments',
+  'reply',
+  'share',
+  'menu',
+  'open',
+  'close',
+  'next',
+  'previous',
+  'back',
+]);
+const UI_CONTAINER_SELECTOR = 'nav,header,footer,[role=\"navigation\"],[role=\"menu\"],[role=\"tablist\"],[data-pw-root]';
 const processed = new WeakSet<Node>();
 let entityCount = 0;
 
@@ -34,6 +50,7 @@ export function scanNode(root: Node): void {
     processed.add(anchor);
 
     const el = anchor as HTMLAnchorElement;
+    if (shouldSkipAnchor(el)) continue;
     const href = el.href;
     if (!href || href.length > 500) continue;
 
@@ -45,6 +62,63 @@ export function scanNode(root: Node): void {
     detected.push({ element: el, identifier: href, type: 'URL' });
     entityCount++;
   }
+}
+
+function shouldSkipAnchor(anchor: HTMLAnchorElement): boolean {
+  if (anchor.closest(UI_CONTAINER_SELECTOR)) return true;
+
+  const hrefAttr = anchor.getAttribute('href') || '';
+  if (
+    !hrefAttr ||
+    hrefAttr.startsWith('#') ||
+    hrefAttr.startsWith('javascript:') ||
+    hrefAttr.startsWith('mailto:') ||
+    hrefAttr.startsWith('tel:')
+  ) {
+    return true;
+  }
+
+  const text = normalizeActionText(anchor.textContent || '');
+  if (text && text.length <= 18 && UI_ACTION_TEXTS.has(text)) return true;
+
+  const compactText = (anchor.textContent || '').replace(/\s+/g, ' ').trim();
+  if (compactText && compactText.length <= 20 && /^[A-Z0-9\s›>]+$/.test(compactText)) {
+    return true;
+  }
+
+  const className = typeof anchor.className === 'string' ? anchor.className : '';
+  if (/(^|\s)(btn|button|nav|menu|tab|toolbar|pager|pagination)(-|_|\b)/i.test(className)) {
+    return true;
+  }
+
+  try {
+    const url = new URL(anchor.href, window.location.href);
+    if (url.origin === window.location.origin) {
+      const path = url.pathname.toLowerCase();
+      if (
+        path === '/' ||
+        path.startsWith('/article/') ||
+        path.startsWith('/entity/') ||
+        path.startsWith('/proposals') ||
+        path.startsWith('/leaderboard') ||
+        path.startsWith('/style-guide')
+      ) {
+        return true;
+      }
+    }
+  } catch {
+    return true;
+  }
+
+  return false;
+}
+
+function normalizeActionText(text: string): string {
+  return text
+    .replace(/\s+/g, ' ')
+    .replace(/[›»→]/g, '')
+    .trim()
+    .toLowerCase();
 }
 
 function scanTextNodes(root: Node): void {

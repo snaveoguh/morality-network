@@ -12,11 +12,11 @@ export function renderSettingsTab(container: HTMLElement): void {
       <button class="btn btn-secondary" id="pw-save-rpc">Save RPC</button>
       <div id="pw-settings-status" style="margin-top: 8px;"></div>
 
-      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #27272a;">
-        <div style="font-size: 10px; color: #52525b; text-align: center;">
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #C8C0B0;">
+        <div style="font-size: 9px; color: #8A8A8A; text-align: center; font-family: monospace; text-transform: uppercase; letter-spacing: 0.12em;">
           pooter world v0.1.0<br>
-          ETH Mainnet · Onchain interactions<br>
-          <a href="https://pooter.world" target="_blank" style="color: #2F80ED; text-decoration: none;">pooter.world</a>
+          Base Sepolia · Onchain<br>
+          <a href="https://pooter.world" target="_blank" style="color: #1A1A1A; text-decoration: underline; text-underline-offset: 2px;">pooter.world</a>
         </div>
       </div>
     `;

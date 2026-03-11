@@ -1,152 +1,225 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
-import { StumbleCard } from "./StumbleCard";
+import Link from "next/link";
+import { useAccount } from "wagmi";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { StumbleItem } from "@/lib/stumble";
+import { getEmbeddableUrl, normalizeStumbleUrl } from "@/lib/stumble";
+import { computeEntityHash } from "@/lib/entity";
+import { saveStumbleContext } from "@/lib/stumble-context";
+import { RatingWidget } from "@/components/entity/RatingWidget";
+import { TipButton } from "@/components/entity/TipButton";
+import { CommentThread } from "@/components/entity/CommentThread";
 
 interface StumbleViewProps {
   initialItems: StumbleItem[];
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  article: "Article",
+  video: "Video",
+  image: "Image",
+  discussion: "Discussion",
+  wiki: "Wiki",
+  tool: "Tool",
+  music: "Music",
+};
+
 export function StumbleView({ initialItems }: StumbleViewProps) {
+  const { isConnected } = useAccount();
   const [items, setItems] = useState<StumbleItem[]>(initialItems);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPending, startTransition] = useTransition();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [history, setHistory] = useState<number[]>([0]);
+  const [panelOpen, setPanelOpen] = useState(true);
 
   const currentItem = items[currentIndex];
+  const canonicalUrl = useMemo(
+    () => (currentItem ? normalizeStumbleUrl(currentItem.url) : ""),
+    [currentItem],
+  );
+  const embedUrl = useMemo(
+    () => (canonicalUrl ? getEmbeddableUrl(canonicalUrl) : ""),
+    [canonicalUrl],
+  );
+  const entityHash = useMemo(
+    () => (canonicalUrl ? computeEntityHash(canonicalUrl) : null),
+    [canonicalUrl],
+  );
+  const entityContextHref = useMemo(() => {
+    if (!entityHash || !canonicalUrl || !currentItem) return "";
+    const params = new URLSearchParams({
+      url: canonicalUrl,
+      title: currentItem.title,
+      source: currentItem.source,
+      type: currentItem.type,
+    });
+    return `/entity/${entityHash}?${params.toString()}`;
+  }, [entityHash, canonicalUrl, currentItem]);
 
-  // Go to next random item
+  useEffect(() => {
+    if (!entityHash || !currentItem || !canonicalUrl) return;
+    saveStumbleContext({
+      hash: entityHash,
+      url: canonicalUrl,
+      title: currentItem.title,
+      source: currentItem.source,
+      type: currentItem.type,
+      description: currentItem.description || "",
+      savedAt: new Date().toISOString(),
+    });
+  }, [entityHash, canonicalUrl, currentItem]);
+
   const stumble = useCallback(() => {
     if (currentIndex < items.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentIndex(nextIndex);
       setHistory((prev) => [...prev, nextIndex]);
-    } else {
-      // Ran out of items — fetch more
-      setIsRefreshing(true);
-      fetch("/api/stumble")
-        .then((res) => res.json())
-        .then((newItems: StumbleItem[]) => {
-          if (Array.isArray(newItems) && newItems.length > 0) {
-            setItems(newItems);
-            setCurrentIndex(0);
-            setHistory([0]);
-          }
-        })
-        .catch(console.error)
-        .finally(() => setIsRefreshing(false));
+      return;
     }
+
+    setIsRefreshing(true);
+    fetch("/api/stumble", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((newItems: StumbleItem[]) => {
+        if (Array.isArray(newItems) && newItems.length > 0) {
+          setItems(newItems);
+          setCurrentIndex(0);
+          setHistory([0]);
+        }
+      })
+      .catch((err) => {
+        console.error("[stumble] refresh failed", err);
+      })
+      .finally(() => setIsRefreshing(false));
   }, [currentIndex, items.length]);
 
-  // Go back in history
   const goBack = useCallback(() => {
-    if (history.length > 1) {
-      const newHistory = [...history];
-      newHistory.pop();
-      setHistory(newHistory);
-      setCurrentIndex(newHistory[newHistory.length - 1]);
-    }
+    if (history.length <= 1) return;
+    const newHistory = [...history];
+    newHistory.pop();
+    setHistory(newHistory);
+    setCurrentIndex(newHistory[newHistory.length - 1]!);
   }, [history]);
 
-  // Filter by type
-  const [typeFilter, setTypeFilter] = useState<string | null>(null);
-  const filteredItems = typeFilter
-    ? items.filter((item) => item.type === typeFilter)
-    : items;
-
-  if (!currentItem) {
+  if (!currentItem || !entityHash) {
     return (
-      <div className="stumble-page flex items-center justify-center">
-        <div className="text-center">
-          <div className="font-headline mb-4 text-4xl text-white">
-            Nothing to Stumble Upon
-          </div>
-          <p className="font-comic mb-6 text-zinc-400">
-            The internet is vast but sometimes... empty.
+      <div className="stumble-page flex items-center justify-center px-4">
+        <div className="max-w-xl border-2 border-[var(--rule)] bg-[var(--paper)] p-6 text-center">
+          <h2 className="font-headline text-2xl text-[var(--ink)]">Stumble is empty</h2>
+          <p className="mt-2 font-body-serif text-sm text-[var(--ink-light)]">
+            Could not load random pages right now. Try another jump.
           </p>
           <button
             onClick={stumble}
-            className="font-comic rounded-xl bg-[#2F80ED] px-8 py-3 text-lg font-bold text-white transition-all hover:bg-[#2F80ED]/80 hover:scale-105"
+            className="mt-4 border border-[var(--rule)] bg-[var(--ink)] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)]"
           >
-            Try Again
+            Load Stumble
           </button>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="stumble-page relative flex flex-col">
-      {/* The content card */}
-      <div className="flex-1">
-        <StumbleCard item={currentItem} />
-      </div>
+  const typeLabel = TYPE_LABELS[currentItem.type] ?? "Link";
 
-      {/* Stumble controls — fixed bottom bar */}
-      <div className="sticky bottom-0 z-50 border-t border-white/10 bg-black/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          {/* Left: navigation */}
-          <div className="flex items-center gap-3">
+  return (
+    <div className="stumble-page relative overflow-hidden bg-[var(--paper-dark)]">
+      <iframe
+        key={embedUrl}
+        src={embedUrl}
+        title={currentItem.title}
+        className="h-[calc(100vh-3rem)] w-full border-0 bg-white"
+        loading="eager"
+        referrerPolicy="no-referrer"
+        allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
+      />
+
+      <div className="pointer-events-none absolute inset-0 p-3 sm:p-4">
+        <div className="pointer-events-auto flex items-start justify-between gap-3">
+          <div className="w-[min(22rem,72vw)] border border-[var(--rule)] bg-[var(--paper)]/32 p-2 shadow-sm backdrop-blur-[1px] transition-all duration-200 hover:bg-[var(--paper)]/74 hover:shadow-lg sm:w-[min(24rem,56vw)] sm:p-2.5">
+            <div className="mb-1 flex items-center gap-1.5 font-mono text-[7px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+              <span>Stumble</span>
+              <span>&bull;</span>
+              <span>{typeLabel}</span>
+              <span>&bull;</span>
+              <span>{currentItem.source}</span>
+            </div>
+
+            <h1 className="line-clamp-2 font-headline-serif text-base font-bold leading-snug text-[var(--ink)] sm:text-lg">
+              {currentItem.title}
+            </h1>
+
+            {currentItem.description && (
+              <p className="mt-1 line-clamp-2 font-body-serif text-[11px] leading-snug text-[var(--ink-light)]">
+                {currentItem.description}
+              </p>
+            )}
+
+            <div className="mt-1.5 border-t border-[var(--rule-light)] pt-1.5 font-mono text-[7px] text-[var(--ink-faint)]">
+              Asset hash: {entityHash.slice(0, 12)}...{entityHash.slice(-8)}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
             <button
               onClick={goBack}
               disabled={history.length <= 1}
-              className="font-comic rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-400 transition-colors hover:border-zinc-500 hover:text-white disabled:opacity-30"
+              className="pointer-events-auto border border-[var(--rule)] bg-[var(--paper)]/38 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink)] transition-all duration-200 hover:bg-[var(--paper)]/78 disabled:opacity-40"
             >
-              ← Back
+              Back
             </button>
-            <span className="font-comic text-xs text-zinc-600">
-              {currentIndex + 1} / {items.length}
-            </span>
-          </div>
-
-          {/* Center: THE STUMBLE BUTTON */}
-          <button
-            onClick={stumble}
-            disabled={isRefreshing}
-            className="font-headline group relative overflow-hidden rounded-xl bg-[#2F80ED] px-8 py-3 text-lg text-white shadow-lg shadow-[#2F80ED]/20 transition-all hover:bg-[#2F80ED]/90 hover:shadow-xl hover:shadow-[#2F80ED]/30 active:scale-95 disabled:opacity-50"
-          >
-            {isRefreshing ? (
-              <span className="flex items-center gap-2">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Loading...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <svg className="h-5 w-5 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Stumble
-              </span>
-            )}
-          </button>
-
-          {/* Right: type filters */}
-          <div className="flex items-center gap-1">
-            {["article", "video", "discussion", "wiki"].map((type) => (
-              <button
-                key={type}
-                onClick={() =>
-                  setTypeFilter(typeFilter === type ? null : type)
-                }
-                className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                  typeFilter === type
-                    ? "bg-[#2F80ED]/10 text-[#2F80ED]"
-                    : "text-zinc-500 hover:text-zinc-300"
-                }`}
+            <button
+              onClick={stumble}
+              disabled={isRefreshing}
+              className="pointer-events-auto border border-[var(--rule)] bg-[var(--ink)]/72 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--paper)] transition-all duration-200 hover:bg-[var(--ink)]/90 disabled:opacity-40"
+            >
+              {isRefreshing ? "Loading" : "Stumble"}
+            </button>
+            <a
+              href={canonicalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pointer-events-auto border border-[var(--rule-light)] bg-[var(--paper)]/32 px-2 py-1 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink)] transition-all duration-200 hover:border-[var(--rule)] hover:bg-[var(--paper)]/72"
+            >
+              Open Source
+            </a>
+            {entityContextHref && (
+              <Link
+                href={entityContextHref}
+                className="pointer-events-auto border border-[var(--rule-light)] bg-[var(--paper)]/32 px-2 py-1 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink)] transition-all duration-200 hover:border-[var(--rule)] hover:bg-[var(--paper)]/72"
               >
-                {type === "article"
-                  ? "📰"
-                  : type === "video"
-                    ? "🎬"
-                    : type === "discussion"
-                      ? "💬"
-                      : "📚"}
-              </button>
-            ))}
+                Entity
+              </Link>
+            )}
+            <button
+              onClick={() => setPanelOpen((p) => !p)}
+              className="pointer-events-auto border border-[var(--rule-light)] bg-[var(--paper)]/32 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink)] transition-all duration-200 hover:border-[var(--rule)] hover:bg-[var(--paper)]/72"
+            >
+              {panelOpen ? "Hide Panel" : "Show Panel"}
+            </button>
           </div>
         </div>
+
+        {panelOpen && (
+          <aside className="pointer-events-auto absolute bottom-3 right-3 max-h-[15vh] w-[min(20rem,72vw)] overflow-y-auto border border-[var(--rule)] bg-[var(--paper)]/30 p-2 shadow-sm backdrop-blur-[1px] transition-all duration-200 hover:bg-[var(--paper)]/80 hover:shadow-xl">
+            <div className="mb-1.5 flex items-center justify-between">
+              <h2 className="font-mono text-[7px] uppercase tracking-[0.22em] text-[var(--ink)]">
+                Onchain Layer
+              </h2>
+              <span className="font-mono text-[7px] text-[var(--ink-faint)]">
+                #{currentIndex + 1}/{items.length}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1 border border-[var(--rule-light)] bg-[var(--paper)]/65 p-1.5">
+                <RatingWidget entityHash={entityHash} />
+              </div>
+              {isConnected && <TipButton entityHash={entityHash} />}
+            </div>
+          </aside>
+        )}
       </div>
     </div>
   );

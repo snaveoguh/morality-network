@@ -313,7 +313,7 @@ function estimateClaimConfidence(claim: string, item: FeedItem): number {
   return Math.max(0.05, Math.min(0.99, score));
 }
 
-function detectContradictions(variants: AgentClaimVariant[]): AgentContradictionFlag[] {
+export function detectContradictions(variants: AgentClaimVariant[]): AgentContradictionFlag[] {
   const flags: AgentContradictionFlag[] = [];
 
   for (let i = 0; i < variants.length; i++) {
@@ -356,7 +356,7 @@ function dedupeContradictions(flags: AgentContradictionFlag[]): AgentContradicti
   return output;
 }
 
-function claimPolarity(claim: string): -1 | 0 | 1 {
+export function claimPolarity(claim: string): -1 | 0 | 1 {
   const lower = claim.toLowerCase();
   const negHits = CONTRADICTION_NEGATIVE.filter((m) => lower.includes(m)).length;
   const posHits = CONTRADICTION_POSITIVE.filter((m) => lower.includes(m)).length;
@@ -366,7 +366,7 @@ function claimPolarity(claim: string): -1 | 0 | 1 {
   return 0;
 }
 
-function subjectTokens(text: string): Set<string> {
+export function subjectTokens(text: string): Set<string> {
   const words = tokenize(text).filter((w) => !CONTRADICTION_NEGATIVE.includes(w) && !CONTRADICTION_POSITIVE.includes(w));
   return new Set(words.filter((w) => w.length > 2));
 }

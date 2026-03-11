@@ -36,7 +36,7 @@ contract MoralityLeaderboard {
     constructor(address _registry, address _ratings, address _tipping, address _comments) {
         registry = MoralityRegistry(_registry);
         ratings = MoralityRatings(_ratings);
-        tipping = MoralityTipping(_tipping);
+        tipping = MoralityTipping(payable(_tipping));
         comments = MoralityComments(_comments);
         owner = msg.sender;
     }

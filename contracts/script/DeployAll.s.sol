@@ -10,6 +10,7 @@ import {MoralityLeaderboard} from "../src/MoralityLeaderboard.sol";
 import {MoralityProposalVoting} from "../src/MoralityProposalVoting.sol";
 import {MoralityPredictionMarket} from "../src/MoralityPredictionMarket.sol";
 import {MoralityAgentVault} from "../src/MoralityAgentVault.sol";
+import {PooterEditions} from "../src/PooterEditions.sol";
 
 contract DeployAll is Script {
     address internal constant DEFAULT_NOUNS_GOVERNOR = 0x6f3E6272A167e8AcCb32072d08E0957F9c79223d;
@@ -34,6 +35,10 @@ contract DeployAll is Script {
             vm.envOr("VAULT_FEE_RECIPIENT", deployer),
             vm.envOr("VAULT_FEE_BPS", uint256(500))
         );
+
+        // PooterEditions — 1/1 daily edition NFTs
+        string memory baseTokenURI = vm.envOr("POOTER_EDITIONS_BASE_URI", string("https://pooter.world/api/edition/"));
+        PooterEditions pooterEditions = new PooterEditions(baseTokenURI);
 
         MoralityProposalVoting voting;
         address nounsToken = vm.envOr("NOUNS_TOKEN", address(0));
@@ -73,6 +78,7 @@ contract DeployAll is Script {
         console2.log("MoralityLeaderboard:", address(leaderboard));
         console2.log("MoralityPredictionMarket:", address(market));
         console2.log("MoralityAgentVault:", address(vault));
+        console2.log("PooterEditions:", address(pooterEditions));
         if (address(voting) != address(0)) {
             console2.log("MoralityProposalVoting:", address(voting));
         } else {

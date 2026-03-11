@@ -18,15 +18,17 @@ export default async function CandidatePage({ params }: Props) {
   if (!candidate) {
     return (
       <div className="py-20 text-center">
-        <h1 className="text-2xl font-bold text-white">Candidate not found</h1>
-        <p className="mt-2 text-zinc-400">
-          The candidate proposal &quot;{decodedSlug}&quot; could not be found.
+        <h1 className="font-headline text-3xl text-[var(--ink)]">
+          Candidate Not Found
+        </h1>
+        <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+          The candidate proposal &quot;{decodedSlug}&quot; could not be located.
         </p>
         <Link
           href="/proposals"
-          className="mt-4 inline-block text-[#2F80ED] hover:underline"
+          className="mt-4 inline-block font-mono text-xs uppercase tracking-wider text-[var(--ink-light)] hover:text-[var(--ink)]"
         >
-          Back to Proposals
+          &larr; Return to Proposals
         </Link>
       </div>
     );
@@ -36,9 +38,9 @@ export default async function CandidatePage({ params }: Props) {
     <div>
       <Link
         href="/proposals"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-white"
+        className="mb-4 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
       >
-        <span>&larr;</span> All Proposals
+        &larr; All Proposals
       </Link>
 
       <CandidateDetail candidate={candidate} />

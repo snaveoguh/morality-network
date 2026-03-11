@@ -56,6 +56,17 @@ Exit criteria:
 - Public API is documented, keyed, and monetization-ready.
 - Incident and rollback procedures are operational.
 
+## Phase 5: Deliberation Intelligence + Polis Interop
+
+Targets:
+- `I-001..I-008`
+
+Exit criteria:
+- Every entity has a canonical claim and structured interpretation graph.
+- Multi-dimensional scoring is available (`truth`, `importance`, `moralImpact`).
+- Polis conversations can be imported and merged into the same graph model.
+- Offchain deliberation data is periodically archived with onchain integrity anchors.
+
 ## Working Agreement for PRs
 
 Each PR must include:

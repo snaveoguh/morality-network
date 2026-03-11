@@ -12,15 +12,14 @@ interface ProposalRowProps {
   proposal: Proposal;
 }
 
-const STATUS_COLORS: Record<string, { bg: string; text: string; dot?: string }> = {
-  active: { bg: "bg-[#31F387]/10", text: "text-[#31F387]", dot: "bg-[#31F387]" },
-  pending: { bg: "bg-yellow-400/10", text: "text-yellow-400", dot: "bg-yellow-400" },
-  candidate: { bg: "bg-amber-400/10", text: "text-amber-400", dot: "bg-amber-400" },
-  succeeded: { bg: "bg-[#2F80ED]/10", text: "text-[#2F80ED]" },
-  queued: { bg: "bg-purple-400/10", text: "text-purple-400" },
-  executed: { bg: "bg-zinc-700/50", text: "text-zinc-400" },
-  defeated: { bg: "bg-[#D0021B]/10", text: "text-[#D0021B]" },
-  closed: { bg: "bg-zinc-700/50", text: "text-zinc-500" },
+const GOV_FLAGS: Record<string, string> = {
+  parliament: "🇬🇧",
+  congress: "🇺🇸",
+  eu: "🇪🇺",
+  canada: "🇨🇦",
+  australia: "🇦🇺",
+  sec: "📊",
+  hyperliquid: "💧",
 };
 
 export function ProposalRow({ proposal }: ProposalRowProps) {
@@ -28,12 +27,14 @@ export function ProposalRow({ proposal }: ProposalRowProps) {
     proposal.votesFor,
     proposal.votesAgainst
   );
-  const colors = STATUS_COLORS[proposal.status] || STATUS_COLORS.closed;
   const isActive = proposal.status === "active";
   const isCandidate = proposal.status === "candidate";
   const isParliament = proposal.source === "parliament";
+  const isGov = ["parliament", "congress", "eu", "canada", "australia", "hyperliquid"].includes(proposal.source);
+  const flag = GOV_FLAGS[proposal.source] || "";
+  const hasDaoLogo = typeof proposal.daoLogo === "string" && proposal.daoLogo.trim().length > 0;
+  const hasVotes = proposal.votesFor + proposal.votesAgainst > 0;
 
-  // Build the appropriate link
   let href = `/proposals/${encodeURIComponent(proposal.id)}`;
   if (isCandidate && proposal.candidateSlug) {
     href = `/proposals/candidate/${encodeURIComponent(proposal.candidateSlug)}`;
@@ -44,21 +45,25 @@ export function ProposalRow({ proposal }: ProposalRowProps) {
 
   return (
     <Link href={href}>
-      <div className="group flex items-center gap-4 rounded-xl border border-zinc-800 bg-zinc-900/40 px-5 py-4 transition-all hover:border-zinc-600 hover:bg-zinc-900/80">
-        {/* Proposal number / DAO icon */}
-        <div className="flex shrink-0 flex-col items-center gap-1">
-          {isParliament ? (
-            <span className="text-2xl" role="img" aria-label="UK">🇬🇧</span>
-          ) : (
+      <div className="group flex items-center gap-4 border-b border-[var(--rule-light)] px-4 py-3 transition-colors hover:bg-[var(--paper-dark)]">
+        {/* Icon / flag */}
+        <div className="flex shrink-0 flex-col items-center gap-0.5">
+          {flag ? (
+            <span className="text-lg">{flag}</span>
+          ) : hasDaoLogo ? (
             <img
               src={proposal.daoLogo}
               alt={proposal.dao}
-              className="h-8 w-8 rounded-full"
+              className="newspaper-img h-7 w-7 rounded-full"
               loading="lazy"
             />
+          ) : (
+            <span className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+              DAO
+            </span>
           )}
           {proposal.proposalNumber != null && (
-            <span className="text-[10px] font-bold text-zinc-500">
+            <span className="font-mono text-[8px] text-[var(--ink-faint)]">
               #{proposal.proposalNumber}
             </span>
           )}
@@ -66,37 +71,27 @@ export function ProposalRow({ proposal }: ProposalRowProps) {
 
         {/* Title + meta */}
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="truncate text-sm font-semibold text-white transition-colors group-hover:text-[#2F80ED]">
-              {proposal.title}
-            </h3>
-          </div>
-          <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500">
+          <h3 className="truncate font-headline-serif text-sm font-semibold text-[var(--ink)] transition-colors group-hover:text-[var(--accent-red)]">
+            {proposal.title}
+          </h3>
+          <div className="mt-0.5 flex items-center gap-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
             <span>{proposal.dao}</span>
-            {isParliament && proposal.chamber && (
+            {isGov && proposal.chamber && (
               <>
                 <span>&middot;</span>
-                <span className={proposal.chamber === "Commons" ? "text-green-400" : "text-red-400"}>
-                  {proposal.chamber}
-                </span>
+                <span>{proposal.chamber}</span>
               </>
             )}
-            {!isParliament && proposal.proposer && (
+            {!isGov && proposal.proposer && (
               <>
                 <span>&middot;</span>
                 <AddressDisplay address={proposal.proposer} />
               </>
             )}
-            {proposal.source === "onchain" && !isCandidate && (
-              <>
-                <span>&middot;</span>
-                <span className="uppercase tracking-wider">Onchain</span>
-              </>
-            )}
             {isCandidate && (
               <>
                 <span>&middot;</span>
-                <span className="text-amber-400">
+                <span className="font-bold text-[var(--ink-light)]">
                   {proposal.candidateSignatures || 0}/{proposal.candidateThreshold || 0} sponsors
                 </span>
               </>
@@ -104,14 +99,13 @@ export function ProposalRow({ proposal }: ProposalRowProps) {
           </div>
         </div>
 
-        {/* Vote bar (compact) */}
-        <div className="hidden w-32 shrink-0 sm:block">
+        {/* Monochrome vote bar */}
+        <div className="hidden w-28 shrink-0 sm:block">
           {isCandidate ? (
-            /* Sponsor progress bar for candidates */
             <>
-              <div className="flex h-1.5 overflow-hidden rounded-full bg-zinc-800">
+              <div className="flex h-1 overflow-hidden bg-[var(--paper-dark)]">
                 <div
-                  className={`transition-all ${proposal.candidateIsPromotable ? "bg-[#31F387]" : "bg-amber-400"}`}
+                  className="bg-[var(--ink)]"
                   style={{
                     width: `${
                       (proposal.candidateThreshold || 0) > 0
@@ -121,49 +115,36 @@ export function ProposalRow({ proposal }: ProposalRowProps) {
                   }}
                 />
               </div>
-              <div className="mt-1 text-center text-[10px] text-amber-400">
+              <p className="mt-0.5 text-center font-mono text-[8px] text-[var(--ink-faint)]">
                 {proposal.candidateSignatures || 0} / {proposal.candidateThreshold || 0}
-              </div>
+              </p>
             </>
-          ) : (
-            /* Standard vote bar */
+          ) : hasVotes ? (
             <>
-              <div className="flex h-1.5 overflow-hidden rounded-full bg-zinc-800">
-                <div
-                  className="bg-[#31F387] transition-all"
-                  style={{ width: `${forPct}%` }}
-                />
-                <div
-                  className="bg-[#D0021B] transition-all"
-                  style={{ width: `${againstPct}%` }}
-                />
+              <div className="flex h-1 overflow-hidden bg-[var(--paper-dark)]">
+                <div className="bg-[var(--ink)]" style={{ width: `${forPct}%` }} />
               </div>
-              <div className="mt-1 flex justify-between text-[10px]">
-                <span className="text-[#31F387]">
-                  {isParliament ? `${proposal.votesFor} Ayes` : `${forPct}%`}
-                </span>
-                <span className="text-[#D0021B]">
-                  {isParliament ? `${proposal.votesAgainst} Noes` : `${againstPct}%`}
-                </span>
+              <div className="mt-0.5 flex justify-between font-mono text-[8px] text-[var(--ink-faint)]">
+                <span>{isGov ? `${proposal.votesFor} Ayes` : `${forPct}%`}</span>
+                <span>{isGov ? `${proposal.votesAgainst} Noes` : `${againstPct}%`}</span>
               </div>
             </>
-          )}
+          ) : null}
         </div>
 
-        {/* Status badge */}
-        <div
-          className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${colors.bg} ${colors.text}`}
-        >
-          {colors.dot && (
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${colors.dot} ${isActive ? "animate-pulse" : ""}`}
-            />
-          )}
-          {isActive
-            ? getTimeRemaining(proposal.endTime)
-            : isCandidate
-            ? "Candidate"
-            : proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
+        {/* Status — monospace text label */}
+        <div className="shrink-0">
+          <span
+            className={`font-mono text-[9px] font-bold uppercase tracking-widest ${
+              isActive ? "text-[var(--ink)]" : "text-[var(--ink-faint)]"
+            }`}
+          >
+            {isActive
+              ? getTimeRemaining(proposal.endTime)
+              : isCandidate
+              ? "Candidate"
+              : proposal.status}
+          </span>
         </div>
       </div>
     </Link>

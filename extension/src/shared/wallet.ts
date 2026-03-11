@@ -125,7 +125,12 @@ export async function getWalletInfo(): Promise<WalletInfo> {
   if (account) {
     try {
       const client = getPublicClient();
-      const bal = await client.getBalance({ address: account.address });
+      const bal = await Promise.race<bigint>([
+        client.getBalance({ address: account.address }) as Promise<bigint>,
+        new Promise<bigint>((_, reject) => {
+          setTimeout(() => reject(new Error('Balance request timeout')), 4500);
+        }),
+      ]);
       balance = formatEther(bal);
     } catch {
       balance = '?';

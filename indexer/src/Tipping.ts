@@ -1,8 +1,11 @@
 import { ponder } from "@/generated";
 import { entity, comment, tip, feedItem } from "../ponder.schema";
+import { ensureEntityRow } from "./entity-utils";
 
 ponder.on("MoralityTipping:TipSent", async ({ event, context }) => {
   const { db } = context;
+
+  await ensureEntityRow(db, event.args.entityHash, event.block.timestamp);
 
   await db.insert(tip).values({
     id: `${event.transaction.hash}-${event.log.logIndex}`,
@@ -36,6 +39,8 @@ ponder.on("MoralityTipping:TipSent", async ({ event, context }) => {
 ponder.on("MoralityTipping:TipEscrowed", async ({ event, context }) => {
   const { db } = context;
 
+  await ensureEntityRow(db, event.args.entityHash, event.block.timestamp);
+
   await db.insert(tip).values({
     id: `${event.transaction.hash}-${event.log.logIndex}`,
     entityId: event.args.entityHash,
@@ -68,13 +73,22 @@ ponder.on("MoralityTipping:CommentTipped", async ({ event, context }) => {
   }).onConflictDoNothing();
 
   // Update comment tip total
-  await db.update(comment, { id: event.args.commentId }).set((row) => ({
-    tipTotal: (row.tipTotal ?? 0n) + event.args.amount,
-  }));
+  try {
+    await db.update(comment, { id: event.args.commentId }).set((row) => ({
+      tipTotal: (row.tipTotal ?? 0n) + event.args.amount,
+    }));
+  } catch (error) {
+    console.warn("[indexer] tip for missing comment", {
+      commentId: event.args.commentId.toString(),
+      txHash: event.transaction.hash,
+      error,
+    });
+  }
 });
 
 ponder.on("MoralityTipping:EscrowClaimed", async ({ event, context }) => {
   const { db } = context;
+  await ensureEntityRow(db, event.args.entityHash, event.block.timestamp);
   await db.update(entity, { id: event.args.entityHash }).set({
     owner: event.args.owner,
     lastActivity: event.block.timestamp,

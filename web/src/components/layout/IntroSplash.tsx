@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BRAND_NAME } from "@/lib/brand";
 
 const INTRO_STORAGE_KEY = "pooter_intro_seen_v1";
 
@@ -37,7 +38,7 @@ export function IntroSplash() {
       className="fixed inset-0 z-[140] flex items-center justify-center bg-black/70 p-6 backdrop-blur-[1px]"
       role="dialog"
       aria-modal="true"
-      aria-label="pooter world mission statement"
+      aria-label={`${BRAND_NAME} mission statement`}
       onClick={dismiss}
     >
       <div
@@ -55,7 +56,7 @@ export function IntroSplash() {
         </div>
 
         <p className="mb-3 font-mono text-[9px] uppercase tracking-[0.28em] text-[var(--paper-dark)]/90">
-          pooter world
+          {BRAND_NAME}
         </p>
 
         <h1 className="intro-mission-text text-3xl leading-[1.03] text-[var(--paper)] sm:text-5xl md:text-6xl lg:text-7xl">

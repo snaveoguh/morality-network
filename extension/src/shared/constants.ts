@@ -4,16 +4,15 @@ export const CHAIN_NAME = 'Base Sepolia';
 export const DEFAULT_RPC = 'https://sepolia.base.org';
 export const FALLBACK_RPC = 'https://base-sepolia-rpc.publicnode.com';
 
-// UI
-export const BRAND_BLUE = '#2F80ED';
-export const BRAND_GREEN = '#31F387';
-export const BRAND_RED = '#D0021B';
-export const BG_DARK = '#0a0a0a';
-export const BG_CARD = '#18181b';
-export const BORDER = '#27272a';
-export const TEXT_PRIMARY = '#fafafa';
-export const TEXT_SECONDARY = '#a1a1aa';
-export const TEXT_MUTED = '#52525b';
+// UI — Newspaper / E-Ink palette (matches pooter.world)
+export const INK = '#1A1A1A';
+export const INK_LIGHT = '#4A4A4A';
+export const INK_FAINT = '#8A8A8A';
+export const PAPER = '#F5F0E8';
+export const PAPER_DARK = '#EDE6D6';
+export const RULE = '#2A2A2A';
+export const RULE_LIGHT = '#C8C0B0';
+export const ACCENT_RED = '#8B0000';
 
 // Limits
 export const MAX_COMMENT_LENGTH = 2000;

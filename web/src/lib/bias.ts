@@ -53,6 +53,21 @@ export const BIAS_DATABASE: Record<string, SourceBias> = {
     bias: "left", factuality: "high",
     ownership: "Independent", country: "US", fundingModel: "nonprofit",
   },
+  "vox.com": {
+    name: "Vox", domain: "vox.com",
+    bias: "left", factuality: "high",
+    ownership: "Vox Media", country: "US", fundingModel: "corporate",
+  },
+  "thecanary.co": {
+    name: "The Canary", domain: "thecanary.co",
+    bias: "left", factuality: "mixed",
+    ownership: "Independent", country: "UK", fundingModel: "independent",
+  },
+  "newstatesman.com": {
+    name: "New Statesman", domain: "newstatesman.com",
+    bias: "left", factuality: "high",
+    ownership: "Independent", country: "UK", fundingModel: "corporate",
+  },
 
   // ===== LEAN LEFT =====
   "bbc.co.uk": {
@@ -89,6 +104,26 @@ export const BIAS_DATABASE: Record<string, SourceBias> = {
     name: "The Atlantic", domain: "theatlantic.com",
     bias: "lean-left", factuality: "high",
     ownership: "Emerson Collective", country: "US", fundingModel: "corporate",
+  },
+  "theverge.com": {
+    name: "The Verge", domain: "theverge.com",
+    bias: "lean-left", factuality: "high",
+    ownership: "Vox Media", country: "US", fundingModel: "corporate",
+  },
+  "wired.com": {
+    name: "Wired", domain: "wired.com",
+    bias: "lean-left", factuality: "high",
+    ownership: "Condé Nast", country: "US", fundingModel: "corporate",
+  },
+  "ft.com": {
+    name: "Financial Times", domain: "ft.com",
+    bias: "lean-left", factuality: "very-high",
+    ownership: "Nikkei Inc.", country: "UK", fundingModel: "corporate",
+  },
+  "middleeasteye.net": {
+    name: "Middle East Eye", domain: "middleeasteye.net",
+    bias: "lean-left", factuality: "mostly-factual",
+    ownership: "Independent", country: "UK", fundingModel: "independent",
   },
 
   // ===== CENTER =====
@@ -127,6 +162,71 @@ export const BIAS_DATABASE: Record<string, SourceBias> = {
     bias: "center", factuality: "high",
     ownership: "Independent", country: "Canada", fundingModel: "independent",
   },
+  "bloomberg.com": {
+    name: "Bloomberg", domain: "bloomberg.com",
+    bias: "center", factuality: "high",
+    ownership: "Bloomberg LP", country: "US", fundingModel: "corporate",
+  },
+  "cnbc.com": {
+    name: "CNBC", domain: "cnbc.com",
+    bias: "center", factuality: "high",
+    ownership: "NBCUniversal (Comcast)", country: "US", fundingModel: "corporate",
+  },
+  "marketwatch.com": {
+    name: "MarketWatch", domain: "marketwatch.com",
+    bias: "center", factuality: "high",
+    ownership: "Dow Jones (News Corp)", country: "US", fundingModel: "corporate",
+  },
+  "nhk.or.jp": {
+    name: "NHK World", domain: "nhk.or.jp",
+    bias: "center", factuality: "high",
+    ownership: "NHK (Public)", country: "Japan", fundingModel: "public",
+  },
+  "timesofindia.indiatimes.com": {
+    name: "Times of India", domain: "timesofindia.indiatimes.com",
+    bias: "center", factuality: "mostly-factual",
+    ownership: "Bennett, Coleman & Co.", country: "India", fundingModel: "corporate",
+  },
+  "kyivindependent.com": {
+    name: "Kyiv Independent", domain: "kyivindependent.com",
+    bias: "center", factuality: "high",
+    ownership: "Independent", country: "Ukraine", fundingModel: "nonprofit",
+  },
+  "politico.com": {
+    name: "Politico", domain: "politico.com",
+    bias: "center", factuality: "high",
+    ownership: "Axel Springer", country: "US", fundingModel: "corporate",
+  },
+  "thehill.com": {
+    name: "The Hill", domain: "thehill.com",
+    bias: "center", factuality: "high",
+    ownership: "Nexstar Media", country: "US", fundingModel: "corporate",
+  },
+  "thedefiant.io": {
+    name: "The Defiant", domain: "thedefiant.io",
+    bias: "center", factuality: "high",
+    ownership: "Independent", country: "US", fundingModel: "independent",
+  },
+  "cointelegraph.com": {
+    name: "Cointelegraph", domain: "cointelegraph.com",
+    bias: "center", factuality: "mostly-factual",
+    ownership: "Independent", country: "US", fundingModel: "corporate",
+  },
+  "nature.com": {
+    name: "Nature", domain: "nature.com",
+    bias: "center", factuality: "very-high",
+    ownership: "Springer Nature", country: "UK", fundingModel: "corporate",
+  },
+  "newscientist.com": {
+    name: "New Scientist", domain: "newscientist.com",
+    bias: "center", factuality: "high",
+    ownership: "DMGT", country: "UK", fundingModel: "corporate",
+  },
+  "carbonbrief.org": {
+    name: "Carbon Brief", domain: "carbonbrief.org",
+    bias: "center", factuality: "very-high",
+    ownership: "Independent", country: "UK", fundingModel: "nonprofit",
+  },
 
   // ===== LEAN RIGHT =====
   "reason.com": {
@@ -144,12 +244,32 @@ export const BIAS_DATABASE: Record<string, SourceBias> = {
     bias: "lean-right", factuality: "mostly-factual",
     ownership: "Press Holdings", country: "UK", fundingModel: "corporate",
   },
+  "wsj.com": {
+    name: "Wall Street Journal", domain: "wsj.com",
+    bias: "lean-right", factuality: "high",
+    ownership: "Dow Jones (News Corp)", country: "US", fundingModel: "corporate",
+  },
 
   // ===== RIGHT =====
   "freebeacon.com": {
     name: "Washington Free Beacon", domain: "freebeacon.com",
     bias: "right", factuality: "mostly-factual",
     ownership: "Center for American Freedom", country: "US", fundingModel: "nonprofit",
+  },
+  "breitbart.com": {
+    name: "Breitbart", domain: "breitbart.com",
+    bias: "right", factuality: "mixed",
+    ownership: "Independent", country: "US", fundingModel: "independent",
+  },
+  "dailywire.com": {
+    name: "Daily Wire", domain: "dailywire.com",
+    bias: "right", factuality: "mixed",
+    ownership: "Independent (Ben Shapiro)", country: "US", fundingModel: "corporate",
+  },
+  "order-order.com": {
+    name: "Guido Fawkes", domain: "order-order.com",
+    bias: "right", factuality: "mixed",
+    ownership: "Independent", country: "UK", fundingModel: "independent",
   },
 
   // ===== CRYPTO (mostly center, tech-oriented) =====
@@ -216,6 +336,82 @@ export const BIAS_DATABASE: Record<string, SourceBias> = {
     name: "South China Morning Post", domain: "scmp.com",
     bias: "center", factuality: "high",
     ownership: "Alibaba Group", country: "Hong Kong", fundingModel: "corporate",
+  },
+
+  // ===== USER-GENERATED / FORUMS =====
+  "reddit.com": {
+    name: "Reddit", domain: "reddit.com",
+    bias: "lean-left", factuality: "mixed",
+    ownership: "Reddit Inc / Advance Publications", country: "US", fundingModel: "corporate",
+  },
+  "4chan.org": {
+    name: "4chan", domain: "4chan.org",
+    bias: "right", factuality: "low",
+    ownership: "Hiroyuki Nishimura", country: "US", fundingModel: "independent",
+  },
+
+  // ===== ENVIRONMENT / NATURE =====
+  "mongabay.com": {
+    name: "Mongabay", domain: "mongabay.com",
+    bias: "lean-left", factuality: "very-high",
+    ownership: "Independent (Rhett Butler)", country: "US", fundingModel: "nonprofit",
+  },
+  "e360.yale.edu": {
+    name: "Yale E360", domain: "e360.yale.edu",
+    bias: "center", factuality: "very-high",
+    ownership: "Yale School of the Environment", country: "US", fundingModel: "academic",
+  },
+  "earth.org": {
+    name: "Earth.org", domain: "earth.org",
+    bias: "lean-left", factuality: "high",
+    ownership: "Earth.org Ltd", country: "Hong Kong", fundingModel: "nonprofit",
+  },
+  "insideclimatenews.org": {
+    name: "Inside Climate News", domain: "insideclimatenews.org",
+    bias: "lean-left", factuality: "very-high",
+    ownership: "Independent", country: "US", fundingModel: "nonprofit",
+  },
+  "grist.org": {
+    name: "Grist", domain: "grist.org",
+    bias: "lean-left", factuality: "high",
+    ownership: "Independent", country: "US", fundingModel: "nonprofit",
+  },
+
+  // ===== GOVERNMENT / INSTITUTIONAL =====
+  "news.un.org": {
+    name: "UN News", domain: "news.un.org",
+    bias: "center", factuality: "high",
+    ownership: "United Nations", country: "International", fundingModel: "intergovernmental",
+  },
+  "who.int": {
+    name: "WHO", domain: "who.int",
+    bias: "center", factuality: "high",
+    ownership: "World Health Organization", country: "International", fundingModel: "intergovernmental",
+  },
+  "blogs.worldbank.org": {
+    name: "World Bank", domain: "blogs.worldbank.org",
+    bias: "center", factuality: "high",
+    ownership: "World Bank Group", country: "International", fundingModel: "intergovernmental",
+  },
+  "imf.org": {
+    name: "IMF", domain: "imf.org",
+    bias: "center", factuality: "high",
+    ownership: "International Monetary Fund", country: "International", fundingModel: "intergovernmental",
+  },
+  "gao.gov": {
+    name: "GAO", domain: "gao.gov",
+    bias: "center", factuality: "very-high",
+    ownership: "US Government", country: "US", fundingModel: "state",
+  },
+  "cbo.gov": {
+    name: "CBO", domain: "cbo.gov",
+    bias: "center", factuality: "very-high",
+    ownership: "US Government", country: "US", fundingModel: "state",
+  },
+  "oecd.org": {
+    name: "OECD", domain: "oecd.org",
+    bias: "center", factuality: "high",
+    ownership: "OECD", country: "International", fundingModel: "intergovernmental",
   },
 };
 

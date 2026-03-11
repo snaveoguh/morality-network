@@ -38,5 +38,21 @@ function loadTab(name: string): void {
   }
 }
 
+// Populate dateline with newspaper-style date
+const dateline = document.getElementById('dateline');
+if (dateline) {
+  const now = new Date();
+  const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+  const months = [
+    'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+    'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+  ];
+  const dayName = days[now.getDay()];
+  const monthName = months[now.getMonth()];
+  const date = now.getDate();
+  const year = now.getFullYear();
+  dateline.textContent = `${dayName}, ${monthName} ${date}, ${year}`;
+}
+
 // Load initial tab
 loadTab('entity');

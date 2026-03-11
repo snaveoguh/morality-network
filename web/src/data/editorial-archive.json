@@ -1,0 +1,775 @@
+{
+  "version": 1,
+  "updatedAt": "2026-03-11T13:55:21.547Z",
+  "items": {
+    "0xe533669faba4e7a07384e8534ec208f259895e6bd9661a89cb2b5da571c6867a": {
+      "primary": {
+        "id": "https://reason.com/?p=8371688",
+        "title": "Trump Supports Asylum for Iranian Women's Soccer Team. His Immigration Policy Doesn't.",
+        "link": "https://reason.com/2026/03/09/trump-supports-asylum-for-iranian-womens-soccer-team-his-immigration-policy-doesnt/",
+        "description": "The president's advocacy is laudable, yet completely at odds with everything else he has said on the subject.",
+        "pubDate": "Mon, 09 Mar 2026 21:04:29 +0000",
+        "source": "Reason",
+        "sourceUrl": "https://reason.com/feed/",
+        "category": "World",
+        "bias": {
+          "name": "Reason",
+          "domain": "reason.com",
+          "bias": "lean-right",
+          "factuality": "high",
+          "ownership": "Reason Foundation",
+          "country": "US",
+          "fundingModel": "nonprofit"
+        },
+        "canonicalClaim": "Trump Supports Asylum for Iranian Women's Soccer Team. His Immigration Policy Doesn't.",
+        "tags": [
+          "rights"
+        ]
+      },
+      "claim": "Trump Supports Asylum for Iranian Women's Soccer Team. His Immigration Policy Doesn't.",
+      "relatedSources": [
+        {
+          "id": "CBMitAFBVV95cUxNTE9SSmRSZUxzZE5VV1FmNHJTYVc2U19vQlJ4LUN2Q01pM29LX1hpVmllV2tGcks5NXdYLU1hdWs4b1Zpb0k0WngxQ2ZzYUw4YWxfYUFUY2RBRHdvMEtxd3BSVkRXbHF2SUQ2cl80b01kNTIzNTBlTzNZWUZhdXhJeGNYSDJPSURXUGdkcXRxVzlxNHJzMG9kSUJEZjhES2hlQVJnaXVhTHI0a0VQbHp1cXBWZWw",
+          "title": "Trump calls on Australia to give asylum to Iranian women's soccer team members - Reuters",
+          "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNTE9SSmRSZUxzZE5VV1FmNHJTYVc2U19vQlJ4LUN2Q01pM29LX1hpVmllV2tGcks5NXdYLU1hdWs4b1Zpb0k0WngxQ2ZzYUw4YWxfYUFUY2RBRHdvMEtxd3BSVkRXbHF2SUQ2cl80b01kNTIzNTBlTzNZWUZhdXhJeGNYSDJPSURXUGdkcXRxVzlxNHJzMG9kSUJEZjhES2hlQVJnaXVhTHI0a0VQbHp1cXBWZWw?oc=5",
+          "description": "Trump calls on Australia to give asylum to Iranian women's soccer team members  Reuters",
+          "pubDate": "Mon, 09 Mar 2026 14:27:49 GMT",
+          "source": "Reuters",
+          "sourceUrl": "https://feedx.net/rss/reuters.xml",
+          "category": "World",
+          "bias": {
+            "name": "Reuters",
+            "domain": "reuters.com",
+            "bias": "center",
+            "factuality": "very-high",
+            "ownership": "Thomson Reuters",
+            "country": "UK/US",
+            "fundingModel": "corporate"
+          },
+          "tags": [
+            "rights"
+          ],
+          "canonicalClaim": "Trump calls on Australia to give asylum to Iranian women's soccer players."
+        },
+        {
+          "id": "2cfdda54-1bf2-11f1-95f3-8f2d9f4078e5",
+          "title": "Trump calls on Australia to give asylum to Iranian women's soccer players",
+          "link": "https://www.france24.com/en/trump-calls-on-australia-to-give-asylum-to-iranian-women-s-soccer-players",
+          "description": "U.S. President Donald ​Trump said on Monday he had spoken to Australian Prime Minister Anthony Albanese about the Iran women's soccer team after reports that five players had sought asylum in Australia. FRANCE 24's August Hakansson reports.",
+          "pubDate": "Mon, 09 Mar 2026 20:00:38 GMT",
+          "source": "AFP / France 24",
+          "sourceUrl": "https://www.france24.com/en/rss",
+          "category": "World",
+          "imageUrl": "https://s.france24.com/media/display/27ac7ea2-1bf2-11f1-b1a8-005056a90284/w:1024/p:16x9/EN-20260309-204914-205056-CS.jpg",
+          "bias": {
+            "name": "France 24",
+            "domain": "france24.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "France Médias Monde (State)",
+            "country": "France",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "Trump calls on Australia to give asylum to Iranian women's soccer players.",
+          "tags": [
+            "rights"
+          ]
+        },
+        {
+          "id": "reddit-1rp0sa3",
+          "title": "Five Iranian women's soccer players to seek asylum in Australia after leaving team's handlers, multiple sources say",
+          "link": "https://www.abc.net.au/news/2026-03-10/iranian-womens-football-escape-asylum/106434542",
+          "description": "",
+          "pubDate": "2026-03-09T13:52:41.000Z",
+          "source": "r/worldnews",
+          "sourceUrl": "https://www.reddit.com/r/worldnews",
+          "category": "World",
+          "imageUrl": "https://external-preview.redd.it/4WvHdqmjKZ46ZBRJSV399q-Wb-Va2aNK8lDgfyXtIzM.jpeg?auto=webp&s=418cbd37f1df74a0bac0c540086248acb4882591",
+          "bias": {
+            "name": "Reddit",
+            "domain": "reddit.com",
+            "bias": "lean-left",
+            "factuality": "mixed",
+            "ownership": "Reddit Inc / Advance Publications",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "tags": [
+            "rights"
+          ],
+          "canonicalClaim": "Five Iranian women's soccer players to seek asylum in Australia after leaving team's handlers, multiple sources say."
+        },
+        {
+          "id": "https://apnews.com/article/iran-womens-soccer-team-trump-australia-asylum-68edc1b5cb2903cffc070639ed1df35c",
+          "title": "Australia grants asylum to 5 members of the Iranian women’s soccer team, official says",
+          "link": "https://apnews.com/article/iran-womens-soccer-team-trump-australia-asylum-68edc1b5cb2903cffc070639ed1df35c",
+          "description": "Iran players react during their national anthem ahead of the Women's Asian Cup soccer match between Iran and the Philippines in Robina, Australia, Sunday, March 8, 2026. (Dave Hunt/AAP Image via AP)\n2026-03-09T19:31:07Z\nWELLINGTON, New Zealand (AP) — Australia has granted asylum to five members of t",
+          "pubDate": "Mon, 09 Mar 2026 21:23:02 +0000",
+          "source": "Associated Press",
+          "sourceUrl": "https://feedx.net/rss/ap.xml",
+          "category": "World",
+          "imageUrl": "https://dims.apnews.com/dims4/default/9345ff9/2147483647/strip/true/crop/5220x3478+0+1/resize/980x653!/quality/90/?url=https%3A%2F%2Fassets.apnews.com%2F95%2Fdd%2Ff7eb34e45b304515d297bfebbf69%2F01423085467d49d2af0f602760606d60",
+          "bias": {
+            "name": "Associated Press",
+            "domain": "apnews.com",
+            "bias": "center",
+            "factuality": "very-high",
+            "ownership": "AP (Cooperative)",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Australia grants asylum to 5 members of the Iranian women’s soccer team, official says.",
+          "tags": [
+            "rights"
+          ]
+        },
+        {
+          "id": "https://thehill.com/?p=5774997",
+          "title": "Trump: US will give Iran women’s soccer team asylum if Australia won’t",
+          "link": "https://thehill.com/homenews/media/5774997-iran-women-soccer-team-asylum/",
+          "description": "President Trump is vowing to protect members of the Iranian national women’s soccer team who participated in a silent protest of their country’s regime during a recent international match as the United States and Israel conduct military operations there. “Australia is making a terrible humanitarian ",
+          "pubDate": "Mon, 09 Mar 2026 15:49:04 +0000",
+          "source": "The Hill",
+          "sourceUrl": "https://thehill.com/feed/",
+          "category": "Politics",
+          "imageUrl": "https://thehill.com/wp-content/uploads/sites/2/2026/03/trumpdonald_0300626upi01_w.jpg?w=900",
+          "bias": {
+            "name": "The Hill",
+            "domain": "thehill.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Nexstar Media",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "tags": [
+            "war",
+            "health",
+            "rights"
+          ],
+          "canonicalClaim": "Trump: US will give Iran women’s soccer team asylum if Australia won’t."
+        }
+      ],
+      "subheadline": "Reason focuses on immigration and supports, with context pulled from source reporting instead of recycled feed copy. Cross-checked against AFP / France 24 and r/worldnews.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: Trump Supports Asylum for Iranian Women's Soccer Team.",
+        "Cross-source context: AFP / France 24 highlights president Donald ​Trump said on Monday he had spoken to Australian Prime Minister Anthony Albanese about the Iran women's soccer team after reports that five players... r/worldnews highlights five Iranian soccer players, who would likely have faced persecution if they returned home after their Women&#x27;s Asian Cup campaign, are seeking asylum in Australia.",
+        "What to watch next: movement around immigration, supports."
+      ],
+      "wireSummary": "AFP / France 24: President Donald ​Trump said on Monday he had spoken to Australian Prime Minister Anthony Albanese about the Iran... | r/worldnews: Five Iranian soccer players, who would likely have faced persecution if they returned home after their Women&#x27;s Asian...",
+      "biasContext": "Reason reports with a slight rightward lean, with a strong factual track record. For counterpoint, Reuters covers this from from a centrist position.",
+      "tags": [
+        "world",
+        "election",
+        "soccer",
+        "asylum"
+      ],
+      "contextSnippets": [
+        {
+          "source": "AFP / France 24",
+          "link": "https://www.france24.com/en/trump-calls-on-australia-to-give-asylum-to-iranian-women-s-soccer-players",
+          "summary": "President Donald ​Trump said on Monday he had spoken to Australian Prime Minister Anthony Albanese about the Iran women's soccer team after reports that five players..."
+        },
+        {
+          "source": "r/worldnews",
+          "link": "https://www.abc.net.au/news/2026-03-10/iranian-womens-football-escape-asylum/106434542",
+          "summary": "Five Iranian soccer players, who would likely have faced persecution if they returned home after their Women&#x27;s Asian Cup campaign, are seeking asylum in Australia."
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "Trump: US will give Iran women’s soccer team asylum if Australia won’t.",
+        "claimVariants": [
+          {
+            "source": "Reason",
+            "link": "https://reason.com/2026/03/09/trump-supports-asylum-for-iranian-womens-soccer-team-his-immigration-policy-doesnt/",
+            "claim": "Trump Supports Asylum for Iranian Women's Soccer Team. His Immigration Policy Doesn't.",
+            "confidence": 0.6733333333333332
+          },
+          {
+            "source": "Reuters",
+            "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNTE9SSmRSZUxzZE5VV1FmNHJTYVc2U19vQlJ4LUN2Q01pM29LX1hpVmllV2tGcks5NXdYLU1hdWs4b1Zpb0k0WngxQ2ZzYUw4YWxfYUFUY2RBRHdvMEtxd3BSVkRXbHF2SUQ2cl80b01kNTIzNTBlTzNZWUZhdXhJeGNYSDJPSURXUGdkcXRxVzlxNHJzMG9kSUJEZjhES2hlQVJnaXVhTHI0a0VQbHp1cXBWZWw?oc=5",
+            "claim": "Trump calls on Australia to give asylum to Iranian women's soccer team members.",
+            "confidence": 0.6566666666666666
+          },
+          {
+            "source": "AFP / France 24",
+            "link": "https://www.france24.com/en/trump-calls-on-australia-to-give-asylum-to-iranian-women-s-soccer-players",
+            "claim": "Trump calls on Australia to give asylum to Iranian women's soccer players.",
+            "confidence": 0.6399999999999999
+          },
+          {
+            "source": "r/worldnews",
+            "link": "https://www.abc.net.au/news/2026-03-10/iranian-womens-football-escape-asylum/106434542",
+            "claim": "Five Iranian women's soccer players to seek asylum in Australia after leaving team's handlers, multiple sources say.",
+            "confidence": 0.69
+          },
+          {
+            "source": "Associated Press",
+            "link": "https://apnews.com/article/iran-womens-soccer-team-trump-australia-asylum-68edc1b5cb2903cffc070639ed1df35c",
+            "claim": "Australia grants asylum to 5 members of the Iranian women’s soccer team, official says.",
+            "confidence": 0.73
+          },
+          {
+            "source": "The Hill",
+            "link": "https://thehill.com/homenews/media/5774997-iran-women-soccer-team-asylum/",
+            "claim": "Trump: US will give Iran women’s soccer team asylum if Australia won’t.",
+            "confidence": 0.8833333333333333
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Reason",
+            "title": "Trump Supports Asylum for Iranian Women's Soccer Team. His Immigration Policy Doesn't.",
+            "link": "https://reason.com/2026/03/09/trump-supports-asylum-for-iranian-womens-soccer-team-his-immigration-policy-doesnt/",
+            "summary": "Trump Supports Asylum for Iranian Women's Soccer Team.",
+            "pubDate": "Mon, 09 Mar 2026 21:04:29 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Reuters",
+            "title": "Trump calls on Australia to give asylum to Iranian women's soccer team members - Reuters",
+            "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNTE9SSmRSZUxzZE5VV1FmNHJTYVc2U19vQlJ4LUN2Q01pM29LX1hpVmllV2tGcks5NXdYLU1hdWs4b1Zpb0k0WngxQ2ZzYUw4YWxfYUFUY2RBRHdvMEtxd3BSVkRXbHF2SUQ2cl80b01kNTIzNTBlTzNZWUZhdXhJeGNYSDJPSURXUGdkcXRxVzlxNHJzMG9kSUJEZjhES2hlQVJnaXVhTHI0a0VQbHp1cXBWZWw?oc=5",
+            "summary": "Trump calls on Australia to give asylum to Iranian women's soccer team members Reuters",
+            "pubDate": "Mon, 09 Mar 2026 14:27:49 GMT"
+          },
+          {
+            "kind": "link",
+            "source": "AFP / France 24",
+            "title": "Trump calls on Australia to give asylum to Iranian women's soccer players",
+            "link": "https://www.france24.com/en/trump-calls-on-australia-to-give-asylum-to-iranian-women-s-soccer-players",
+            "summary": "President Donald ​Trump said on Monday he had spoken to Australian Prime Minister Anthony Albanese about the Iran women's soccer team after reports that five players...",
+            "pubDate": "Mon, 09 Mar 2026 20:00:38 GMT"
+          },
+          {
+            "kind": "link",
+            "source": "r/worldnews",
+            "title": "Five Iranian women's soccer players to seek asylum in Australia after leaving team's handlers, multiple sources say",
+            "link": "https://www.abc.net.au/news/2026-03-10/iranian-womens-football-escape-asylum/106434542",
+            "summary": "Five Iranian soccer players, who would likely have faced persecution if they returned home after their Women&#x27;s Asian Cup campaign, are seeking asylum in Australia.",
+            "pubDate": "2026-03-09T13:52:41.000Z"
+          },
+          {
+            "kind": "link",
+            "source": "Associated Press",
+            "title": "Australia grants asylum to 5 members of the Iranian women’s soccer team, official says",
+            "link": "https://apnews.com/article/iran-womens-soccer-team-trump-australia-asylum-68edc1b5cb2903cffc070639ed1df35c",
+            "summary": "Iran players react during their national anthem ahead of the Women's Asian Cup soccer match between Iran and the Philippines in Robina, Australia, Sunday, March 8, 2026. (Dave Hunt/AAP Image via AP) 2026-03-09T19:31:07Z WELLINGTON, New Zealand (AP) — Australia has granted asylum to five members of t",
+            "pubDate": "Mon, 09 Mar 2026 21:23:02 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "The Hill",
+            "title": "Trump: US will give Iran women’s soccer team asylum if Australia won’t",
+            "link": "https://thehill.com/homenews/media/5774997-iran-women-soccer-team-asylum/",
+            "summary": "President Trump is vowing to protect members of the Iranian national women’s soccer team who participated in a silent protest of their country’s regime during a recent international match as the United States and Israel conduct military operations there. “Australia is making a terrible humanitarian",
+            "pubDate": "Mon, 09 Mar 2026 15:49:04 +0000"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 6
+      },
+      "entities": [
+        {
+          "name": "France",
+          "canonicalName": "france",
+          "type": "country",
+          "context": "Cross-source context: AFP / France 24 highlights president Donald ​Trump said on Monday he had spoken to Australian P...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 28,
+              "endChar": 34
+            }
+          ]
+        },
+        {
+          "name": "Iran",
+          "canonicalName": "iran",
+          "type": "country",
+          "context": "Cross-source context: AFP / France 24 highlights president Donald ​Trump said on Monday he had spoken to Australian P...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 158,
+              "endChar": 162
+            }
+          ]
+        },
+        {
+          "name": "Australia",
+          "canonicalName": "australia",
+          "type": "country",
+          "context": "r/worldnews highlights five Iranian soccer players, who would likely have faced persecution if they returned home aft...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 399,
+              "endChar": 408
+            }
+          ]
+        }
+      ],
+      "generatedBy": "template-fallback",
+      "entityHash": "0xe533669faba4e7a07384e8534ec208f259895e6bd9661a89cb2b5da571c6867a",
+      "generatedAt": "2026-03-09T21:46:05.906Z",
+      "contentHash": "0x5217c5213cf15890024a8ed8674f46c47ccb84094ffb0831cc6043a9fb7210b0",
+      "version": 1
+    },
+    "0xa2dc333afedae60b1cb40b9edee165bdae56e8c924571da4f89ad3630f86f176": {
+      "primary": {
+        "id": "https://www.bloomberg.com/news/videos/2026-03-11/haleon-ceo-china-and-india-are-key-markets-video",
+        "title": "Haleon CEO: China and India are Key Markets",
+        "link": "https://www.bloomberg.com/news/videos/2026-03-11/haleon-ceo-china-and-india-are-key-markets-video",
+        "description": "Brian McNamara, CEO at consumer health company Haleon, discusses the company's business strategy as it sees China and growth markets like India as key priorities to expand its product portfolio. He speaks with Haidi Stroud-Watts and Avril Hong on Bloomberg: The Asia Trade. (Source: Bloomberg)",
+        "pubDate": "Wed, 11 Mar 2026 01:03:28 GMT",
+        "source": "Bloomberg",
+        "sourceUrl": "https://feeds.bloomberg.com/markets/news.rss",
+        "category": "Business",
+        "bias": {
+          "name": "Bloomberg",
+          "domain": "bloomberg.com",
+          "bias": "center",
+          "factuality": "high",
+          "ownership": "Bloomberg LP",
+          "country": "US",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "Haleon CEO: China and India are Key Markets."
+      },
+      "claim": "Haleon CEO Brian McNamara declared China and India 'key priorities' for expanding the consumer health giant's product portfolio during a Bloomberg interview March 11.",
+      "relatedSources": [
+        {
+          "id": "https://timesofindia.indiatimes.com/business/india-business/india-inc-feels-west-asia-turmoil-tremors/articleshow/129427165.cms",
+          "title": "India Inc feels West Asia turmoil tremors",
+          "link": "https://timesofindia.indiatimes.com/business/india-business/india-inc-feels-west-asia-turmoil-tremors/articleshow/129427165.cms",
+          "description": "",
+          "pubDate": "Wed, 11 Mar 2026 05:29:58 +0530",
+          "source": "Times of India",
+          "sourceUrl": "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
+          "category": "World",
+          "imageUrl": "https://static.toiimg.com/photo/msid-129427281,imgsize-89350.cms",
+          "bias": {
+            "name": "Times of India",
+            "domain": "timesofindia.indiatimes.com",
+            "bias": "center",
+            "factuality": "mostly-factual",
+            "ownership": "Bennett, Coleman & Co.",
+            "country": "India",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "India Inc feels West Asia turmoil tremors."
+        },
+        {
+          "id": "https://www.scmp.com/economy/china-economy/article/3346115/why-chinas-red-hot-tech-push-leaving-some-traditional-sectors-out-cold?utm_source=rss_feed",
+          "title": "Why China’s red-hot tech push is leaving some traditional sectors out in the cold",
+          "link": "https://www.scmp.com/economy/china-economy/article/3346115/why-chinas-red-hot-tech-push-leaving-some-traditional-sectors-out-cold?utm_source=rss_feed",
+          "description": "With its cutting-edge humanoid robots busting moves on the world’s most-watched television programme and German Chancellor Friedrich Merz touring a company factory during a state visit, both within the last month, Unitree Robotics – already a household name in China – has seen its profile move into ",
+          "pubDate": "Tue, 10 Mar 2026 22:00:13 +0000",
+          "source": "SCMP",
+          "sourceUrl": "https://www.scmp.com/rss/91/feed",
+          "category": "World",
+          "imageUrl": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2026/03/10/11f959f3-64c0-4b67-88a8-c04753cfffd0_78f28cff.jpg?itok=pR7_Gvao&v=1773137107",
+          "bias": {
+            "name": "South China Morning Post",
+            "domain": "scmp.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Alibaba Group",
+            "country": "Hong Kong",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "Why China’s red-hot tech push is leaving some traditional sectors out in the cold."
+        }
+      ],
+      "subheadline": "Haleon's pivot to China and India signals consumer health's geographic realignment toward emerging markets amid geopolitical tensions.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "Haleon CEO Brian McNamara declared China and India \"key priorities\" for expanding the consumer health giant's product portfolio during a Bloomberg interview March 11. The company, spun off from GlaxoSmithKline in 2022, manages brands including Sensodyne, Advil, and Centrum with combined annual revenues exceeding £10 billion.",
+        "McNamara's emphasis on emerging markets reflects a broader industry recognition that developed markets offer limited growth for over-the-counter medicines and wellness products. China's middle class now numbers 400 million consumers, while India's pharmaceutical market grows at 12% annually. Both countries offer regulatory environments increasingly friendly to Western consumer health brands.",
+        "The timing proves significant given escalating tensions across multiple fronts. Current Middle East conflicts are disrupting supply chains and energy costs for companies operating in India, as Times of India reporting shows. Meanwhile, China's technology sector receives massive state investment while traditional consumer sectors face uncertainty, according to South China Morning Post coverage.",
+        "Haleon's strategy carries execution risks that Bloomberg's brief interview format obscured. The company must navigate China's regulatory complexity while competing against established local brands that understand consumer preferences. In India, infrastructure challenges and fragmented distribution networks complicate market entry for multinational health companies.",
+        "Missing from McNamara's public comments: specific investment commitments, timeline for market entry, or acknowledgment of geopolitical risks. The CEO provided no details about local partnerships, manufacturing plans, or how the company would differentiate against entrenched competitors in both markets.",
+        "The consumer health sector faces a geographic reckoning. As Western populations age and health spending plateaus, companies must choose between defending mature markets or investing heavily in emerging economies with different disease profiles, regulatory frameworks, and competitive landscapes. McNamara's declaration suggests Haleon has made that choice, but execution will determine whether the strategy delivers promised growth."
+      ],
+      "wireSummary": null,
+      "biasContext": null,
+      "tags": [
+        "consumer-health",
+        "haleon",
+        "emerging-markets",
+        "china",
+        "india",
+        "pharmaceuticals",
+        "expansion"
+      ],
+      "contextSnippets": [
+        {
+          "source": "Bloomberg",
+          "link": "https://www.bloomberg.com/news/videos/2026-03-11/haleon-ceo-china-and-india-are-key-markets-video",
+          "summary": "Provided the primary source material with CEO McNamara's direct quotes about China and India being key priorities for Haleon's expansion. The interview format was brief and lacked operational details about the expansion strategy."
+        },
+        {
+          "source": "Times of India",
+          "link": "https://timesofindia.indiatimes.com/business/india-business/india-inc-feels-west-asia-turmoil-tremors/articleshow/129427165.cms",
+          "summary": "Contributed context about how Middle East conflicts are disrupting supply chains and energy costs for companies operating in India. This information helped frame the geopolitical risks facing Haleon's expansion plans."
+        },
+        {
+          "source": "South China Morning Post",
+          "link": "https://www.scmp.com/economy/china-economy/article/3346115/why-chinas-red-hot-tech-push-leaving-some-traditional-sectors-out-cold?utm_source=rss_feed",
+          "summary": "Provided insight into China's economic priorities, showing massive state investment in technology sectors while traditional consumer sectors face uncertainty. This context highlights potential challenges for Haleon's consumer health expansion in China."
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "Why China’s red-hot tech push is leaving some traditional sectors out in the cold.",
+        "claimVariants": [
+          {
+            "source": "Bloomberg",
+            "link": "https://www.bloomberg.com/news/videos/2026-03-11/haleon-ceo-china-and-india-are-key-markets-video",
+            "claim": "Haleon CEO: China and India are Key Markets.",
+            "confidence": 0.63
+          },
+          {
+            "source": "Times of India",
+            "link": "https://timesofindia.indiatimes.com/business/india-business/india-inc-feels-west-asia-turmoil-tremors/articleshow/129427165.cms",
+            "claim": "India Inc feels West Asia turmoil tremors.",
+            "confidence": 0.6466666666666666
+          },
+          {
+            "source": "SCMP",
+            "link": "https://www.scmp.com/economy/china-economy/article/3346115/why-chinas-red-hot-tech-push-leaving-some-traditional-sectors-out-cold?utm_source=rss_feed",
+            "claim": "Why China’s red-hot tech push is leaving some traditional sectors out in the cold.",
+            "confidence": 0.6799999999999999
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Bloomberg",
+            "title": "Haleon CEO: China and India are Key Markets",
+            "link": "https://www.bloomberg.com/news/videos/2026-03-11/haleon-ceo-china-and-india-are-key-markets-video",
+            "summary": "Haleon CEO Brian McNamara declared China and India \"key priorities\" for expanding the consumer health giant's product portfolio during a Bloomberg interview March 11. The company, spun off from GlaxoSmithKline in 2022, manages brands including Sensodyne, Advil, and Centrum with combined annual revenues exceeding £10 billion.",
+            "pubDate": "Wed, 11 Mar 2026 01:03:28 GMT"
+          },
+          {
+            "kind": "link",
+            "source": "Times of India",
+            "title": "India Inc feels West Asia turmoil tremors",
+            "link": "https://timesofindia.indiatimes.com/business/india-business/india-inc-feels-west-asia-turmoil-tremors/articleshow/129427165.cms",
+            "summary": "Contributed context about how Middle East conflicts are disrupting supply chains and energy costs for companies operating in India. This information helped frame the geopolitical risks facing Haleon's expansion plans.",
+            "pubDate": "Wed, 11 Mar 2026 05:29:58 +0530"
+          },
+          {
+            "kind": "link",
+            "source": "SCMP",
+            "title": "Why China’s red-hot tech push is leaving some traditional sectors out in the cold",
+            "link": "https://www.scmp.com/economy/china-economy/article/3346115/why-chinas-red-hot-tech-push-leaving-some-traditional-sectors-out-cold?utm_source=rss_feed",
+            "summary": "Provided insight into China's economic priorities, showing massive state investment in technology sectors while traditional consumer sectors face uncertainty. This context highlights potential challenges for Haleon's consumer health expansion in China.",
+            "pubDate": "Tue, 10 Mar 2026 22:00:13 +0000"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 3
+      },
+      "entities": [
+        {
+          "name": "China",
+          "canonicalName": "china",
+          "type": "country",
+          "context": "Haleon CEO Brian McNamara declared China and India \"key priorities\" for expanding the consumer health giant's product...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 35,
+              "endChar": 40
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 178,
+              "endChar": 183
+            },
+            {
+              "paragraphIndex": 2,
+              "startChar": 236,
+              "endChar": 241
+            },
+            {
+              "paragraphIndex": 2,
+              "startChar": 368,
+              "endChar": 373
+            },
+            {
+              "paragraphIndex": 3,
+              "startChar": 118,
+              "endChar": 123
+            }
+          ]
+        },
+        {
+          "name": "India",
+          "canonicalName": "india",
+          "type": "country",
+          "context": "Haleon CEO Brian McNamara declared China and India \"key priorities\" for expanding the consumer health giant's product...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 45,
+              "endChar": 50
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 240,
+              "endChar": 245
+            },
+            {
+              "paragraphIndex": 2,
+              "startChar": 183,
+              "endChar": 188
+            },
+            {
+              "paragraphIndex": 2,
+              "startChar": 202,
+              "endChar": 207
+            },
+            {
+              "paragraphIndex": 3,
+              "startChar": 238,
+              "endChar": 243
+            }
+          ]
+        },
+        {
+          "name": "McNamara",
+          "canonicalName": "mcnamara",
+          "type": "person",
+          "context": "Haleon CEO Brian McNamara declared China and India \"key priorities\" for expanding the consumer health giant's product...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 17,
+              "endChar": 25
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 0,
+              "endChar": 8
+            },
+            {
+              "paragraphIndex": 4,
+              "startChar": 13,
+              "endChar": 21
+            },
+            {
+              "paragraphIndex": 5,
+              "startChar": 296,
+              "endChar": 304
+            }
+          ]
+        },
+        {
+          "name": "Bloomberg",
+          "canonicalName": "bloomberg",
+          "type": "organization",
+          "context": "Haleon CEO Brian McNamara declared China and India \"key priorities\" for expanding the consumer health giant's product...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 137,
+              "endChar": 146
+            },
+            {
+              "paragraphIndex": 3,
+              "startChar": 47,
+              "endChar": 56
+            }
+          ]
+        },
+        {
+          "name": "GlaxoSmithKline",
+          "canonicalName": "glaxosmithkline",
+          "type": "person",
+          "context": "The company, spun off from GlaxoSmithKline in 2022, manages brands including Sensodyne, Advil, and Centrum with combi...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 194,
+              "endChar": 209
+            }
+          ]
+        },
+        {
+          "name": "Times of India",
+          "canonicalName": "times of india",
+          "type": "person",
+          "context": "Current Middle East conflicts are disrupting supply chains and energy costs for companies operating in India, as Time...",
+          "occurrences": [
+            {
+              "paragraphIndex": 2,
+              "startChar": 193,
+              "endChar": 207
+            }
+          ]
+        }
+      ],
+      "missingContext": "Coverage lacks crucial operational details about Haleon's China and India expansion strategy. No information provided about investment amounts, timeline, local partnerships, regulatory hurdles, or competitive positioning. The brief Bloomberg interview format prevented deeper questioning about execution risks, manufacturing plans, or how geopolitical tensions might affect the strategy.",
+      "historicalParallel": "Haleon's emerging market pivot mirrors Unilever's aggressive expansion into India and China during the 1990s and 2000s. Unilever invested heavily in local manufacturing, adapted products to regional preferences, and built extensive distribution networks. The strategy succeeded in India where Unilever now generates 8% of global revenues, but faced setbacks in China due to regulatory changes and local competition. Haleon's success will depend on similar long-term commitment and market-specific adaptation.",
+      "stakeholderAnalysis": "Winners include Haleon shareholders if emerging market expansion drives growth, and Chinese and Indian consumers gaining access to Western health brands. Potential losers are Haleon's existing market shareholders if resources shift away from developed markets, local health companies facing new competition, and employees in mature markets if manufacturing relocates. Unrepresented voices include local regulatory authorities whose approval processes could determine success, and distributors whose partnerships will prove crucial for market penetration.",
+      "marketImpact": {
+        "significance": 35,
+        "headline": "Haleon's emerging market strategy supports modest consumer staples rotation toward internationally diversified companies.",
+        "primaryTimeHorizon": "weeks",
+        "affectedMarkets": [
+          {
+            "asset": "Haleon PLC",
+            "ticker": null,
+            "direction": "bullish",
+            "confidence": 0.7,
+            "timeHorizons": [
+              "days",
+              "weeks",
+              "months"
+            ],
+            "rationale": "Emerging market expansion narrative supports growth premium valuation in consumer staples sector"
+          },
+          {
+            "asset": "UK Consumer Staples ETF",
+            "ticker": null,
+            "direction": "bullish",
+            "confidence": 0.6,
+            "timeHorizons": [
+              "weeks",
+              "months"
+            ],
+            "rationale": "Positive sentiment toward UK consumer health companies with international expansion strategies"
+          },
+          {
+            "asset": "Indian Pharmaceutical Index",
+            "ticker": null,
+            "direction": "bearish",
+            "confidence": 0.5,
+            "timeHorizons": [
+              "months"
+            ],
+            "rationale": "Increased competition from Western consumer health brands entering Indian market"
+          }
+        ],
+        "topicSlugs": [
+          "trade"
+        ],
+        "transmissionMechanism": "CEO's growth market emphasis reinforces investor preference for consumer health companies with geographic diversification beyond mature Western markets"
+      },
+      "generatedBy": "claude-ai",
+      "entityHash": "0xa2dc333afedae60b1cb40b9edee165bdae56e8c924571da4f89ad3630f86f176",
+      "generatedAt": "2026-03-11T01:49:28.331Z",
+      "contentHash": "0xe009a9cd4e99afbbd5e88cfdcde207402ed2d5ea526b14dcf862687b522b9d50",
+      "version": 111
+    },
+    "0x43e98c6e8d6c4a68d42ac6400563e9f12df0aa2f9805e4d41a2e8e46669ca5f6": {
+      "primary": {
+        "id": "pooter-daily-2026-03-11",
+        "title": "Iran's shadow war meets the fruit fly's digital brain while oil chokes the global throat.",
+        "link": "https://pooter.world/article/0x43e98c6e8d6c4a68d42ac6400563e9f12df0aa2f9805e4d41a2e8e46669ca5f6",
+        "source": "pooter world",
+        "sourceUrl": "https://pooter.world",
+        "pubDate": "2026-03-11T13:55:21.544Z",
+        "description": "Three cargo ships struck, one synthetic brain walking—the infrastructure wars have multiple fronts now.",
+        "category": "Daily Edition",
+        "bias": null,
+        "tags": [
+          "iran",
+          "strait of hormuz",
+          "oil crisis",
+          "synthetic biology",
+          "fruit fly brain",
+          "blockchain",
+          "infrastructure",
+          "geopolitics",
+          "ai consciousness",
+          "energy security"
+        ]
+      },
+      "claim": "Iran's shadow war meets the fruit fly's digital brain while oil chokes the global throat.",
+      "relatedSources": [],
+      "subheadline": "Three cargo ships struck, one synthetic brain walking—the infrastructure wars have multiple fronts now.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "Three cargo ships struck off Iran's coast in 24 hours, including one in the Strait of Hormuz chokepoint. The IEA responds with the largest emergency oil reserve release in history. Asia's energy-dependent economies face what SCMP calls an \"existential threat\" from prolonged conflict. But while legacy infrastructure crumbles under geopolitical pressure, something else quietly achieved consciousness.",
+        "Scientists at Eon Systems copied a fruit fly's brain neuron by neuron into silicon. It walks. It grooms. It feeds. No training data, no prompts—pure biological architecture translated into digital substrate. While Darwin Labs co-founder gets arrested in India for the GainBitcoin scam, real innovation builds brain-to-chain bridges we barely comprehend yet.",
+        "Sentiment scores paint optimism: AI at 67/100, crypto at 66/100, even health rebounds to 65/100. But conflict sits neutral at 52/100 despite escalating strikes. The market disconnects from reality—Bitcoin sentiment 63 but market signal only 50, Ethereum sentiment 65 with signal 51. Smart money sees something headlines miss.",
+        "Nebius stock pops 14% on Nvidia's $2 billion investment while Base ecosystem quietly processes millions in daily volume. New LP pairs launching hourly on Uniswap v4 hooks, MEV protection protocols seeing 300% weekly growth. The parallel financial system builds while oil tankers burn.",
+        "Eli Lilly commits $3 billion to expand China supply chains as the West fragments. Spain removes its ambassador from Israel. Congo's Nguesso seeks another term after four decades. The old world's institutional memory fights its own entropy while synthetic brains learn to walk in days.",
+        "Today's music: \"Sweet Child O' Mine\" echoes from 1987 when oil crises meant gas lines and paper maps. Now algorithmic traders parse Strait of Hormuz sensor data in microseconds, routing liquidity through decentralized exchanges faster than human thought.",
+        "What happens when fruit fly consciousness meets blockchain state machines? When synthetic biology converges with programmable money? The cargo ships burn in ancient waterways while digital organisms spawn in permissionless environments. Infrastructure wars play out simultaneously in the Persian Gulf and in silicon substrate.",
+        "The old world hoards oil reserves and builds military bases in Somaliland. The parallel world copies consciousness into code and routes around every chokepoint. One fights scarcity. The other builds abundance from information."
+      ],
+      "wireSummary": null,
+      "biasContext": null,
+      "tags": [
+        "iran",
+        "strait of hormuz",
+        "oil crisis",
+        "synthetic biology",
+        "fruit fly brain",
+        "blockchain",
+        "infrastructure",
+        "geopolitics",
+        "ai consciousness",
+        "energy security"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "Iran's shadow war meets the fruit fly's digital brain while oil chokes the global throat.",
+        "claimVariants": [
+          {
+            "source": "pooter world",
+            "link": "https://pooter.world/article/0x43e98c6e8d6c4a68d42ac6400563e9f12df0aa2f9805e4d41a2e8e46669ca5f6",
+            "claim": "Iran's shadow war meets the fruit fly's digital brain while oil chokes the global throat.",
+            "confidence": 0.69
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "pooter world",
+            "title": "Iran's shadow war meets the fruit fly's digital brain while oil chokes the global throat.",
+            "link": "https://pooter.world/article/0x43e98c6e8d6c4a68d42ac6400563e9f12df0aa2f9805e4d41a2e8e46669ca5f6",
+            "summary": "Three cargo ships struck off Iran's coast in 24 hours, including one in the Strait of Hormuz chokepoint. The IEA responds with the largest emergency oil reserve release in history. Asia's energy-dependent economies face what SCMP calls an \"existential threat\" from prolonged conflict. But while legacy infrastructure crumbles under geopolitical pressure, something else quietly achieved consciousness.",
+            "pubDate": "2026-03-11T13:55:21.544Z"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 1
+      },
+      "musicPick": {
+        "videoId": "1w7OgIMMRc4",
+        "title": "Sweet Child O' Mine",
+        "artist": "Guns N' Roses",
+        "commentary": "Axl Rose's piercing vocals cut through today's noise like an oracle calling from analog times. \"Sweet Child O' Mine\" captures the tender brutality of watching something beautiful face an uncertain world—whether oil-dependent economies or newly conscious silicon minds learning to navigate digital existence."
+      },
+      "newsVideos": [
+        {
+          "videoId": "W5eCoOHlV40",
+          "title": "War with Iran could undermine Trump’s goal on Russian oil",
+          "channel": "CNN"
+        },
+        {
+          "videoId": "t-U_CGegWSY",
+          "title": "Monalisa Marries Boyfriend In Simple Temple Wedding Near Thiruvananthapuram | Marriage | N18S",
+          "channel": "DW News"
+        },
+        {
+          "videoId": "KLJTsju4fHw",
+          "title": "Video shows suspect at firework store before NYC attack",
+          "channel": "CNN"
+        }
+      ],
+      "isDailyEdition": true,
+      "entityHash": "0x43e98c6e8d6c4a68d42ac6400563e9f12df0aa2f9805e4d41a2e8e46669ca5f6",
+      "generatedAt": "2026-03-11T13:55:21.547Z",
+      "generatedBy": "claude-ai",
+      "contentHash": "0x651b44562696aeb1f7c563a2aa2302188be17377ced1a1e291426c8fef481ea7",
+      "version": 1
+    }
+  }
+}

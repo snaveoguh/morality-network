@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useReadContract } from "wagmi";
 import { CONTRACTS, REGISTRY_ABI, TIPPING_ABI, LEADERBOARD_ABI } from "@/lib/contracts";
 import { EntityBadge } from "@/components/shared/EntityBadge";
@@ -8,6 +10,11 @@ import { CommentThread } from "./CommentThread";
 import { TipButton } from "./TipButton";
 import { formatEth } from "@/lib/entity";
 import { useAccount } from "wagmi";
+import {
+  getStumbleContext,
+  saveStumbleContext,
+  type StumbleContextEntry,
+} from "@/lib/stumble-context";
 
 interface EntityProfileProps {
   entityHash: `0x${string}`;
@@ -15,6 +22,8 @@ interface EntityProfileProps {
 
 export function EntityProfile({ entityHash }: EntityProfileProps) {
   const { isConnected } = useAccount();
+  const searchParams = useSearchParams();
+  const [stumbleContext, setStumbleContext] = useState<StumbleContextEntry | null>(null);
 
   const { data: entity } = useReadContract({
     address: CONTRACTS.registry,
@@ -44,87 +53,107 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
     args: [entityHash],
   });
 
+  useEffect(() => {
+    const url = searchParams.get("url")?.trim() || "";
+    const title = searchParams.get("title")?.trim() || "";
+    const source = searchParams.get("source")?.trim() || "";
+    const type = searchParams.get("type")?.trim() || "link";
+
+    if (url) {
+      const entry: StumbleContextEntry = {
+        hash: entityHash,
+        url,
+        title: title || url,
+        source: source || "stumble",
+        type,
+        savedAt: new Date().toISOString(),
+      };
+      saveStumbleContext(entry);
+      setStumbleContext(entry);
+      return;
+    }
+
+    setStumbleContext(getStumbleContext(entityHash));
+  }, [entityHash, searchParams]);
+
+  const resolvedIdentifier = entity?.identifier || stumbleContext?.url || entityHash;
+  const resolvedTitle = entity?.identifier || stumbleContext?.title || entityHash;
+
+  // Broadcast context to extension
+  useEffect(() => {
+    window.postMessage({
+      type: 'POOTER_SITE_CONTEXT',
+      payload: {
+        entityHash,
+        identifier: resolvedIdentifier,
+        title: resolvedTitle,
+      },
+    }, '*');
+  }, [entityHash, resolvedIdentifier, resolvedTitle]);
+
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
-      {/* Header */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-        <div className="mb-4 flex items-start justify-between">
-          <div>
-            {entity && <EntityBadge entityType={entity.entityType} />}
-            <h1 className="mt-2 break-all text-xl font-bold text-white">
-              {entity?.identifier || entityHash}
+    <div className="mx-auto max-w-3xl py-6">
+      {/* ── Entity Header ── */}
+      <div className="border-b-2 border-[var(--rule)] pb-4 mb-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              {entity && <EntityBadge entityType={entity.entityType} />}
+              <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">Entity Profile</span>
+            </div>
+            <h1 className="break-all font-mono text-sm font-bold text-[var(--ink)]">
+              {resolvedIdentifier}
             </h1>
             {entity?.claimedOwner &&
-              entity.claimedOwner !==
-                "0x0000000000000000000000000000000000000000" && (
-                <p className="mt-1 text-sm text-zinc-400">
+              entity.claimedOwner !== "0x0000000000000000000000000000000000000000" && (
+                <p className="mt-1 font-mono text-[10px] text-[var(--ink-faint)]">
                   Verified owner:{" "}
-                  <span className="font-mono text-[#31F387]">
-                    {entity.claimedOwner}
-                  </span>
+                  <span className="font-bold text-[var(--ink)]">{entity.claimedOwner}</span>
                 </p>
               )}
+            {!entity?.identifier && stumbleContext && (
+              <div className="mt-2 border-t border-[var(--rule-light)] pt-2">
+                <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+                  Stumble Context
+                </p>
+                <p className="mt-1 font-body-serif text-sm text-[var(--ink-light)]">
+                  {stumbleContext.title}
+                </p>
+                <p className="mt-1 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                  {stumbleContext.source} &middot; {stumbleContext.type}
+                </p>
+              </div>
+            )}
           </div>
-
           {isConnected && <TipButton entityHash={entityHash} />}
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatCard
-            label="Composite Score"
-            value={
-              compositeScore
-                ? (Number(compositeScore) / 100).toFixed(1)
-                : "—"
-            }
-          />
-          <StatCard
-            label="AI Score"
-            value={
-              aiScore ? (Number(aiScore) / 100).toFixed(1) : "—"
-            }
-          />
-          <StatCard
-            label="Total Tips"
-            value={tipTotal ? formatEth(tipTotal) : "0 ETH"}
-          />
-          <StatCard
-            label="Entity Hash"
-            value={`${entityHash.slice(0, 10)}...`}
-            mono
-          />
+        {/* ── Stats row — compact monospace ── */}
+        <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-[var(--rule-light)] pt-3 font-mono text-[10px] uppercase tracking-wider">
+          <StatItem label="Score" value={compositeScore ? (Number(compositeScore) / 100).toFixed(1) : "\u2014"} />
+          <span className="text-[var(--rule-light)]">|</span>
+          <StatItem label="AI" value={aiScore ? (Number(aiScore) / 100).toFixed(1) : "\u2014"} />
+          <span className="text-[var(--rule-light)]">|</span>
+          <StatItem label="Tips" value={tipTotal ? formatEth(tipTotal) : "0 ETH"} />
         </div>
 
-        {/* Rating */}
-        <div className="mt-4 border-t border-zinc-800 pt-4">
+        {/* ── Rating ── */}
+        <div className="mt-3 border-t border-[var(--rule-light)] pt-3">
           <RatingWidget entityHash={entityHash} />
         </div>
       </div>
 
-      {/* Comments */}
+      {/* ── Discussion ── */}
       <CommentThread entityHash={entityHash} />
     </div>
   );
 }
 
-function StatCard({
-  label,
-  value,
-  mono = false,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
+function StatItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-800/30 p-3">
-      <p className="text-xs text-zinc-500">{label}</p>
-      <p
-        className={`mt-1 text-lg font-bold text-white ${mono ? "font-mono text-sm" : ""}`}
-      >
-        {value}
-      </p>
+    <div className="flex items-center gap-1.5">
+      <span className="text-[var(--ink-faint)]">{label}</span>
+      <span className="font-bold text-[var(--ink)]">{value}</span>
     </div>
   );
 }

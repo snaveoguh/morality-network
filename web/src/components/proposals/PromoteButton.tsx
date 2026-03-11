@@ -18,7 +18,9 @@ export function PromoteButton({ candidate }: PromoteButtonProps) {
   const { isConnected } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient({ chainId: mainnet.id });
-  const [status, setStatus] = useState<"idle" | "estimating" | "promoting" | "done" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "estimating" | "promoting" | "done" | "error"
+  >("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [txHash, setTxHash] = useState("");
 
@@ -37,7 +39,6 @@ export function PromoteButton({ candidate }: PromoteButtonProps) {
       }));
 
       // Build the full description with clientId appended
-      // Nouns client incentive format: description + "\n\n---\nClient: {clientId}"
       const descriptionWithClient = `${candidate.description}\n\n---\nClient: ${PROMOTE_CLIENT_ID}`;
 
       setStatus("promoting");
@@ -66,63 +67,67 @@ export function PromoteButton({ candidate }: PromoteButtonProps) {
   };
 
   return (
-    <div className="rounded-xl border border-[#31F387]/30 bg-[#31F387]/5 p-5">
-      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-[#31F387]">
+    <div className="border border-[var(--rule)] p-4">
+      <h3 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
         Promote to Proposal
       </h3>
 
       {status === "done" ? (
         <div>
-          <p className="mb-2 text-sm font-medium text-[#31F387]">
-            Proposal created successfully!
+          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink)]">
+            Proposal created successfully
           </p>
           {txHash && (
             <a
               href={`https://etherscan.io/tx/${txHash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-[#2F80ED] hover:underline"
+              className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
             >
-              View transaction on Etherscan &rarr;
+              View on Etherscan &rsaquo;
             </a>
           )}
         </div>
       ) : (
         <>
-          <p className="mb-3 text-xs text-zinc-400">
+          <p className="mb-3 font-body-serif text-xs text-[var(--ink-faint)]">
             This candidate has reached the required sponsor threshold. You can
             promote it to become an official Nouns DAO proposal.
           </p>
 
-          <div className="mb-3 rounded-lg bg-zinc-800/50 p-3 text-xs text-zinc-500">
-            <div className="flex justify-between">
+          <div className="mb-3 border border-[var(--rule-light)] p-2 font-mono text-[9px]">
+            <div className="flex justify-between text-[var(--ink-faint)]">
               <span>Sponsors</span>
-              <span className="text-[#31F387]">{candidate.signatureCount} / {candidate.requiredThreshold}</span>
+              <span className="font-bold text-[var(--ink)]">
+                {candidate.signatureCount} / {candidate.requiredThreshold}
+              </span>
             </div>
-            <div className="mt-1 flex justify-between">
+            <div className="mt-1 flex justify-between text-[var(--ink-faint)]">
               <span>Client ID</span>
-              <span className="font-mono text-white">{PROMOTE_CLIENT_ID}</span>
+              <span className="text-[var(--ink)]">{PROMOTE_CLIENT_ID}</span>
             </div>
-            <div className="mt-1 flex justify-between">
+            <div className="mt-1 flex justify-between text-[var(--ink-faint)]">
               <span>Network</span>
-              <span className="text-white">Ethereum Mainnet</span>
+              <span className="text-[var(--ink)]">Ethereum Mainnet</span>
             </div>
           </div>
 
           <button
             onClick={handlePromote}
             disabled={status === "estimating" || status === "promoting"}
-            className="w-full rounded-lg bg-[#31F387] px-4 py-2.5 text-sm font-bold text-black transition-colors hover:bg-[#2ae076] disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full border border-[var(--ink)] bg-[var(--ink)] px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {status === "estimating"
               ? "Estimating gas..."
               : status === "promoting"
-              ? "Confirm in wallet..."
-              : "Promote Proposal"}
+                ? "Confirm in wallet..."
+                : "Promote Proposal"}
           </button>
 
           {status === "error" && (
-            <p className="mt-2 text-xs text-[#D0021B]">{errorMsg}</p>
+            <p className="mt-2 font-mono text-[9px] text-[var(--accent-red)]">
+              {errorMsg}
+            </p>
           )}
         </>
       )}

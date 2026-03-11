@@ -1,8 +1,11 @@
 import { ponder } from "@/generated";
 import { entity, comment, commentVote, feedItem } from "../ponder.schema";
+import { ensureEntityRow } from "./entity-utils";
 
 ponder.on("MoralityComments:CommentCreated", async ({ event, context }) => {
   const { db } = context;
+
+  await ensureEntityRow(db, event.args.entityHash, event.block.timestamp);
 
   await db.insert(comment).values({
     id: event.args.commentId,
@@ -52,9 +55,17 @@ ponder.on("MoralityComments:CommentVoted", async ({ event, context }) => {
   });
 
   // Update comment score
-  await db.update(comment, { id: event.args.commentId }).set((row) => ({
-    score: (row.score ?? 0) + event.args.vote,
-  }));
+  try {
+    await db.update(comment, { id: event.args.commentId }).set((row) => ({
+      score: (row.score ?? 0) + event.args.vote,
+    }));
+  } catch (error) {
+    console.warn("[indexer] comment vote for missing comment", {
+      commentId: event.args.commentId.toString(),
+      txHash: event.transaction.hash,
+      error,
+    });
+  }
 
   // Feed item
   await db.insert(feedItem).values({

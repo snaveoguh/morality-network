@@ -1,27 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useAccount,
   useReadContract,
   useWriteContract,
-  useWaitForTransactionReceipt,
 } from "wagmi";
-import { CONTRACTS, COMMENTS_ABI } from "@/lib/contracts";
+import { CONTRACTS, CONTRACTS_CHAIN_ID, COMMENTS_ABI } from "@/lib/contracts";
 import { AddressDisplay } from "@/components/shared/AddressDisplay";
 import { TipButton } from "./TipButton";
+import { ArgumentBadge } from "./ArgumentBadge";
+import { StructuredCommentForm } from "./StructuredCommentForm";
+import { ThreadedComment } from "./ThreadedComment";
 import { timeAgo, formatEth } from "@/lib/entity";
+import {
+  deriveArgumentTypeFromContent,
+  normalizeArgumentMeta,
+  stripArgumentPrefix,
+} from "@/lib/comment-arguments";
 
 interface CommentThreadProps {
   entityHash: `0x${string}`;
-  /** Compact mode hides the header and uses tighter spacing (for embedding in articles) */
   compact?: boolean;
 }
 
+type ViewMode = "flat" | "threaded";
+const COMMENT_PAGE_SIZE = 100;
+
 export function CommentThread({ entityHash, compact = false }: CommentThreadProps) {
-  const { address, isConnected } = useAccount();
-  const [newComment, setNewComment] = useState("");
-  const [replyTo, setReplyTo] = useState<bigint | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("threaded");
 
   const { data: commentCount, refetch: refetchCommentCount } = useReadContract({
     address: CONTRACTS.comments,
@@ -30,121 +37,104 @@ export function CommentThread({ entityHash, compact = false }: CommentThreadProp
     args: [entityHash],
   });
 
+  const count = commentCount !== undefined ? Number(commentCount) : 0;
+  const commentsOffset =
+    count > COMMENT_PAGE_SIZE ? BigInt(count - COMMENT_PAGE_SIZE) : BigInt(0);
+
   const { data: commentIds, refetch: refetchCommentIds } = useReadContract({
     address: CONTRACTS.comments,
     abi: COMMENTS_ABI,
     functionName: "getEntityComments",
-    args: [entityHash, BigInt(0), BigInt(50)],
+    args: [entityHash, commentsOffset, BigInt(COMMENT_PAGE_SIZE)],
   });
 
   const {
-    writeContract: submitComment,
-    data: commentTx,
-    isPending: isSubmitting,
-    error: submitError,
-  } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash: commentTx,
-    query: { enabled: !!commentTx },
+    error: structuredSupportError,
+    isSuccess: structuredSupportConfirmed,
+  } = useReadContract({
+    address: CONTRACTS.comments,
+    abi: COMMENTS_ABI,
+    functionName: "getArgumentMeta",
+    args: [BigInt(1)],
+    query: { retry: false },
   });
 
-  useEffect(() => {
-    if (!isConfirmed) return;
+  const supportsStructuredComments =
+    structuredSupportConfirmed && !structuredSupportError;
+
+  function handleRefetch() {
     void refetchCommentCount();
     void refetchCommentIds();
-  }, [isConfirmed, refetchCommentCount, refetchCommentIds]);
-
-  function handleSubmit() {
-    if (!newComment.trim() || !isConnected) return;
-
-    submitComment({
-      address: CONTRACTS.comments,
-      abi: COMMENTS_ABI,
-      functionName: "comment",
-      args: [entityHash, newComment.trim(), replyTo || BigInt(0)],
-    });
-
-    setNewComment("");
-    setReplyTo(null);
   }
-
-  const count = commentCount !== undefined ? Number(commentCount) : 0;
 
   return (
     <div className={compact ? "space-y-3" : "space-y-4"}>
-      {/* Header */}
+      {/* Header with view toggle */}
       {!compact && (
-        <div className="flex items-center gap-2 border-b border-[var(--rule)] pb-2">
-          <h3 className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
-            Discussion
-          </h3>
-          {count > 0 && (
-            <span className="font-mono text-[10px] text-[var(--ink-faint)]">
-              ({count})
-            </span>
-          )}
+        <div className="flex items-center justify-between border-b border-[var(--rule)] pb-2">
+          <div className="flex items-center gap-2">
+            <h3 className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
+              Discussion
+            </h3>
+            {count > 0 && (
+              <span className="font-mono text-[10px] text-[var(--ink-faint)]">
+                ({count})
+              </span>
+            )}
+          </div>
+          {/* View mode toggle */}
+          <div className="flex items-center gap-0 font-mono text-[9px] uppercase tracking-wider">
+            <button
+              onClick={() => setViewMode("flat")}
+              className={`transition-colors ${
+                viewMode === "flat"
+                  ? "font-bold text-[var(--ink)] underline underline-offset-2"
+                  : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+              }`}
+            >
+              Flat
+            </button>
+            <span className="mx-1.5 text-[var(--rule-light)]">|</span>
+            <button
+              onClick={() => setViewMode("threaded")}
+              className={`transition-colors ${
+                viewMode === "threaded"
+                  ? "font-bold text-[var(--ink)] underline underline-offset-2"
+                  : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+              }`}
+            >
+              Threaded
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Comment form */}
-      {isConnected ? (
-        <div className={compact ? "" : "border border-[var(--rule-light)] p-3"}>
-          {replyTo && (
-            <div className="mb-2 flex items-center gap-2 font-mono text-[9px] text-[var(--ink-faint)]">
-              Replying to #{replyTo.toString()}
-              <button
-                onClick={() => setReplyTo(null)}
-                className="font-bold text-[var(--accent-red)] transition-colors hover:text-[var(--ink)]"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-          <textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Share your thoughts onchain..."
-            className="w-full resize-none border border-[var(--rule-light)] bg-[var(--paper)] p-2.5 font-body-serif text-sm text-[var(--ink)] placeholder-[var(--ink-faint)] focus:border-[var(--rule)] focus:outline-none"
-            rows={compact ? 2 : 3}
-            maxLength={2000}
-          />
-          <div className="mt-1.5 flex items-center justify-between">
-            <span className="font-mono text-[8px] text-[var(--ink-faint)]">
-              {newComment.length}/2000 &mdash; Stored permanently onchain
-            </span>
-            <button
-              onClick={handleSubmit}
-              disabled={!newComment.trim() || isSubmitting || isConfirming}
-              className="border border-[var(--rule)] bg-[var(--ink)] px-3 py-1 font-mono text-[9px] uppercase tracking-wider text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)] disabled:opacity-50"
-            >
-              {isSubmitting ? "Signing\u2026" : isConfirming ? "Confirming\u2026" : "Post Onchain"}
-            </button>
-          </div>
-          {submitError && (
-            <p className="mt-1 font-mono text-[9px] text-[var(--accent-red)]">
-              {(submitError as { shortMessage?: string }).shortMessage ||
-                submitError.message}
-            </p>
-          )}
-        </div>
-      ) : (
-        <p className="border border-[var(--rule-light)] p-4 text-center font-body-serif text-sm italic text-[var(--ink-faint)]">
-          Connect your wallet to join the discussion.
-        </p>
-      )}
+      {/* Comment form -- now structured */}
+      <StructuredCommentForm
+        entityHash={entityHash}
+        onSuccess={handleRefetch}
+        compact={compact}
+        supportsStructuredComments={supportsStructuredComments}
+      />
 
       {/* Comment list */}
       <div className={compact ? "space-y-2" : "space-y-3"}>
-        {commentIds?.map((commentId) => (
-          <CommentItem
-            key={commentId.toString()}
-            commentId={commentId}
+        {viewMode === "threaded" ? (
+          <ThreadedView
+            commentIds={commentIds || []}
             entityHash={entityHash}
-            onReply={() => setReplyTo(commentId)}
-            compact={compact}
+            onRefetch={handleRefetch}
+            supportsStructuredComments={supportsStructuredComments}
           />
-        ))}
+        ) : (
+          <FlatView
+            commentIds={commentIds || []}
+            entityHash={entityHash}
+            onRefetch={handleRefetch}
+            compact={compact}
+            supportsStructuredComments={supportsStructuredComments}
+          />
+        )}
 
         {(!commentIds || commentIds.length === 0) && (
           <p className="py-6 text-center font-body-serif text-sm italic text-[var(--ink-faint)]">
@@ -156,16 +146,201 @@ export function CommentThread({ entityHash, compact = false }: CommentThreadProp
   );
 }
 
-function CommentItem({
+// --- Threaded View -----------------------------------------------------------
+
+function ThreadedView({
+  commentIds,
+  entityHash,
+  onRefetch,
+  supportsStructuredComments,
+}: {
+  commentIds: readonly bigint[];
+  entityHash: `0x${string}`;
+  onRefetch: () => void;
+  supportsStructuredComments: boolean;
+}) {
+  // We need to read parentId for each comment to build the tree
+  // For now, render all as ThreadedComment and let them self-organize
+  // Build a child map by reading each comment's parentId
+  return (
+    <ThreadedViewInner
+      commentIds={commentIds}
+      entityHash={entityHash}
+      onRefetch={onRefetch}
+      supportsStructuredComments={supportsStructuredComments}
+    />
+  );
+}
+
+function ThreadedViewInner({
+  commentIds,
+  entityHash,
+  onRefetch,
+  supportsStructuredComments,
+}: {
+  commentIds: readonly bigint[];
+  entityHash: `0x${string}`;
+  onRefetch: () => void;
+  supportsStructuredComments: boolean;
+}) {
+  // Track parent IDs for each comment to build the thread tree.
+  // Use a ref + state pair to avoid the infinite re-render loop:
+  // - ref holds the actual data (mutated without triggering renders)
+  // - state counter triggers a single re-render when new data arrives
+  const commentDataRef = useRef<Map<string, { parentId: bigint }>>(new Map());
+  const [, setDataVersion] = useState(0);
+
+  // Stable callback that doesn't change between renders
+  const reportParentId = useCallback((commentId: bigint, parentId: bigint) => {
+    const key = commentId.toString();
+    const existing = commentDataRef.current.get(key);
+    // Only update if the data actually changed
+    if (existing && existing.parentId === parentId) return;
+    commentDataRef.current.set(key, { parentId });
+    setDataVersion((v) => v + 1);
+  }, []);
+
+  // Build child map from comment data
+  const childMap = new Map<string, bigint[]>();
+  const rootIds: bigint[] = [];
+  const loadedIds = new Set(commentIds.map((id) => id.toString()));
+
+  for (const id of commentIds) {
+    const data = commentDataRef.current.get(id.toString());
+    const parentId = data?.parentId || BigInt(0);
+    const parentKey = parentId.toString();
+    const parentLoaded = parentId > BigInt(0) && loadedIds.has(parentKey);
+
+    // Treat replies whose parent is outside the loaded window as roots so they stay visible.
+    if (parentId === BigInt(0) || !parentLoaded) {
+      rootIds.push(id);
+    } else {
+      const key = parentKey;
+      if (!childMap.has(key)) childMap.set(key, []);
+      childMap.get(key)!.push(id);
+    }
+  }
+
+  return (
+    <>
+      {/* Hidden readers to fetch parent IDs */}
+      {commentIds.map((id) => (
+        <CommentParentReader
+          key={`reader-${id.toString()}`}
+          commentId={id}
+          reportParentId={reportParentId}
+        />
+      ))}
+
+      {/* Render root comments */}
+      {rootIds.map((id) => (
+        <ThreadedComment
+          key={id.toString()}
+          commentId={id}
+          entityHash={entityHash}
+          childMap={childMap}
+          onRefetch={onRefetch}
+          supportsStructuredComments={supportsStructuredComments}
+        />
+      ))}
+    </>
+  );
+}
+
+/**
+ * Hidden component that reads a single comment from the contract
+ * and reports its parentId to the parent via a stable callback.
+ */
+function CommentParentReader({
+  commentId,
+  reportParentId,
+}: {
+  commentId: bigint;
+  reportParentId: (commentId: bigint, parentId: bigint) => void;
+}) {
+  const { data: comment } = useReadContract({
+    address: CONTRACTS.comments,
+    abi: COMMENTS_ABI,
+    functionName: "getComment",
+    args: [commentId],
+  });
+
+  // Use a ref to hold the callback so the effect deps stay stable
+  const callbackRef = useRef(reportParentId);
+  callbackRef.current = reportParentId;
+
+  useEffect(() => {
+    if (comment?.exists) {
+      callbackRef.current(commentId, comment.parentId);
+    }
+    // commentId is a bigint prop (stable identity per key), comment changes when data loads
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comment, commentId]);
+
+  return null;
+}
+
+// --- Flat View ---------------------------------------------------------------
+
+function FlatView({
+  commentIds,
+  entityHash,
+  onRefetch,
+  compact,
+  supportsStructuredComments,
+}: {
+  commentIds: readonly bigint[];
+  entityHash: `0x${string}`;
+  onRefetch: () => void;
+  compact: boolean;
+  supportsStructuredComments: boolean;
+}) {
+  const [replyTo, setReplyTo] = useState<bigint | null>(null);
+
+  return (
+    <>
+      {commentIds.map((commentId) => (
+        <FlatCommentItem
+          key={commentId.toString()}
+          commentId={commentId}
+          entityHash={entityHash}
+          onReply={() => setReplyTo(commentId)}
+          compact={compact}
+          supportsStructuredComments={supportsStructuredComments}
+        />
+      ))}
+
+      {replyTo && (
+        <div className="mt-2 border-l-2 border-[var(--rule)] pl-3">
+          <StructuredCommentForm
+            entityHash={entityHash}
+            parentId={replyTo}
+            onCancel={() => setReplyTo(null)}
+            onSuccess={() => {
+              setReplyTo(null);
+              onRefetch();
+            }}
+            compact
+            supportsStructuredComments={supportsStructuredComments}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+function FlatCommentItem({
   commentId,
   entityHash,
   onReply,
   compact = false,
+  supportsStructuredComments,
 }: {
   commentId: bigint;
   entityHash: `0x${string}`;
   onReply: () => void;
   compact?: boolean;
+  supportsStructuredComments: boolean;
 }) {
   const { isConnected } = useAccount();
 
@@ -176,12 +351,31 @@ function CommentItem({
     args: [commentId],
   });
 
+  const { data: argMeta } = useReadContract({
+    address: CONTRACTS.comments,
+    abi: COMMENTS_ABI,
+    functionName: "getArgumentMeta",
+    args: [commentId],
+    query: { enabled: supportsStructuredComments, retry: false },
+  });
+
   const { writeContract: voteOnComment } = useWriteContract();
 
   if (!comment || !comment.exists) return null;
 
+  const score = Number(comment.score);
+  const normalizedMeta = normalizeArgumentMeta(argMeta);
+  const fallbackArgumentType = deriveArgumentTypeFromContent(comment.content);
+  const argumentType = normalizedMeta.exists
+    ? normalizedMeta.argumentType
+    : fallbackArgumentType;
+  const renderedContent = normalizedMeta.exists
+    ? comment.content
+    : stripArgumentPrefix(comment.content);
+
   function handleVote(v: 1 | -1) {
     voteOnComment({
+      chainId: CONTRACTS_CHAIN_ID,
       address: CONTRACTS.comments,
       abi: COMMENTS_ABI,
       functionName: "vote",
@@ -189,14 +383,15 @@ function CommentItem({
     });
   }
 
-  const score = Number(comment.score);
-
   return (
     <div className={`border-b border-[var(--rule-light)] ${compact ? "pb-2" : "pb-3"}`}>
-      {/* Header */}
       <div className="mb-1 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <AddressDisplay address={comment.author} className="font-mono text-[10px] font-bold text-[var(--ink-light)]" />
+          <AddressDisplay
+            address={comment.author}
+            className="font-mono text-[10px] font-bold text-[var(--ink-light)]"
+          />
+          <ArgumentBadge argumentType={argumentType} />
           {comment.parentId > BigInt(0) && (
             <span className="font-mono text-[8px] text-[var(--ink-faint)]">
               &rarr; #{comment.parentId.toString()}
@@ -208,14 +403,11 @@ function CommentItem({
         </span>
       </div>
 
-      {/* Content */}
       <p className="mb-2 font-body-serif text-sm leading-relaxed text-[var(--ink-light)]">
-        {comment.content}
+        {renderedContent}
       </p>
 
-      {/* Actions — compact monospace row */}
       <div className="flex items-center gap-3 font-mono text-[9px] text-[var(--ink-faint)]">
-        {/* Vote arrows + score */}
         <div className="flex items-center gap-0.5">
           <button
             onClick={() => isConnected && handleVote(1)}
@@ -224,7 +416,15 @@ function CommentItem({
           >
             &#9650;
           </button>
-          <span className={`min-w-[2ch] text-center font-bold ${score > 0 ? "text-[var(--ink)]" : score < 0 ? "text-[var(--accent-red)]" : ""}`}>
+          <span
+            className={`min-w-[2ch] text-center font-bold ${
+              score > 0
+                ? "text-[var(--ink)]"
+                : score < 0
+                  ? "text-[var(--accent-red)]"
+                  : ""
+            }`}
+          >
             {score}
           </span>
           <button
@@ -237,7 +437,6 @@ function CommentItem({
         </div>
 
         <span className="text-[var(--rule-light)]">|</span>
-
         <button
           onClick={onReply}
           className="uppercase tracking-wider transition-colors hover:text-[var(--ink)]"

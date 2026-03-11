@@ -1,18 +1,19 @@
 import { privateKeyToAccount } from "viem/accounts";
 import { createPublicClient, createWalletClient, http } from "viem";
-import { base } from "viem/chains";
+import { base, mainnet } from "viem/chains";
 import type { TraderExecutionConfig } from "./types";
 
 export function createTraderClients(config: TraderExecutionConfig) {
   const account = privateKeyToAccount(config.privateKey);
+  const chain = config.executionVenue === "ethereum-spot" ? mainnet : base;
 
   const publicClient = createPublicClient({
-    chain: base,
+    chain,
     transport: http(config.rpcUrl, { timeout: 12_000 }),
   });
 
   const walletClient = createWalletClient({
-    chain: base,
+    chain,
     account,
     transport: http(config.rpcUrl, { timeout: 12_000 }),
   });

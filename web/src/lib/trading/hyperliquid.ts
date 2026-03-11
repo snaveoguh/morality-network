@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { ExchangeClient, HttpTransport, InfoClient } from "@nktkas/hyperliquid";
+import { formatPrice, formatSize } from "@nktkas/hyperliquid/utils";
 import { privateKeyToAccount } from "viem/accounts";
 import type { Address, Hash } from "viem";
 import type { ScannerLaunch, TraderExecutionConfig } from "./types";
@@ -46,6 +47,17 @@ export interface HyperliquidOrderIntent {
   orderId?: number;
 }
 
+export interface HyperliquidLivePosition {
+  symbol: string;
+  marketId: number | null;
+  szDecimals: number;
+  size: string;
+  entryPriceUsd: number;
+  positionValueUsd: number;
+  unrealizedPnlUsd: number;
+  leverage: number | null;
+}
+
 interface ParsedStatus {
   orderId?: number;
   filledSize?: string;
@@ -59,6 +71,49 @@ function parsePositive(value: unknown): number | null {
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
   }
   return null;
+}
+
+function parseNonNegative(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value) && value >= 0) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed) && parsed >= 0) return parsed;
+  }
+  return null;
+}
+
+function parseFinite(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+async function fetchSpotUsdcBalance(config: TraderExecutionConfig, address: Address): Promise<number | null> {
+  const response = await fetch(`${config.hyperliquid.apiUrl.replace(/\/+$/, "")}/info`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      type: "spotClearinghouseState",
+      user: address,
+    }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const payload = (await response.json()) as {
+    balances?: Array<{ coin?: string; total?: string | number }>;
+  };
+  const balances = Array.isArray(payload?.balances) ? payload.balances : [];
+  const usdcBalance = balances.find((entry) => (entry.coin || "").trim().toUpperCase() === "USDC");
+  return parseNonNegative(usdcBalance?.total);
 }
 
 function normalizeTicker(value: string): string {
@@ -305,17 +360,93 @@ export function resolveHyperliquidAccountAddress(
   return config.hyperliquid.accountAddress ?? fallbackAddress;
 }
 
+export async function fetchHyperliquidLivePositions(
+  config: TraderExecutionConfig,
+  address: Address
+): Promise<HyperliquidLivePosition[]> {
+  const clients = getHyperliquidClients(config);
+  const [state, markets] = await Promise.all([
+    clients.infoClient.clearinghouseState({ user: address as `0x${string}` }),
+    fetchHyperliquidMarkets(config),
+  ]);
+
+  const rawPositions = Array.isArray(state.assetPositions) ? state.assetPositions : [];
+  const live: HyperliquidLivePosition[] = [];
+
+  for (const rawPosition of rawPositions) {
+    const position = (rawPosition as { position?: Record<string, unknown> } | null)?.position;
+    if (!position || typeof position !== "object") continue;
+
+    const symbol = normalizeHyperliquidSymbol(String(position.coin ?? ""));
+    if (!symbol) continue;
+
+    const szi = parseFinite(position.szi);
+    if (szi === null || szi === 0) continue;
+    const absSize = Math.abs(szi);
+
+    const market = markets.get(symbol) ?? null;
+    const fallbackDecimals = String(position.szi ?? "").split(".")[1]?.length ?? 0;
+    const szDecimals = market?.szDecimals ?? Math.max(0, Math.min(8, fallbackDecimals));
+    const size = normalizeDecimalString(formatDecimal(absSize, szDecimals), szDecimals);
+
+    const entryPriceUsd = parsePositive(position.entryPx);
+    if (entryPriceUsd === null) continue;
+
+    const positionValueUsd = parsePositive(position.positionValue) ?? absSize * entryPriceUsd;
+    const unrealizedPnlUsd = parseFinite(position.unrealizedPnl) ?? 0;
+    const leverageValue =
+      parsePositive(
+        (position.leverage as { value?: string | number } | undefined)?.value
+      ) ?? parsePositive(position.leverage);
+
+    live.push({
+      symbol,
+      marketId: market?.marketId ?? null,
+      szDecimals,
+      size,
+      entryPriceUsd,
+      positionValueUsd,
+      unrealizedPnlUsd,
+      leverage: leverageValue,
+    });
+  }
+
+  return live.sort((a, b) => b.positionValueUsd - a.positionValueUsd);
+}
+
 export async function fetchHyperliquidAccountValueUsd(
   config: TraderExecutionConfig,
   address: Address
 ): Promise<number | null> {
   const clients = getHyperliquidClients(config);
-  const state = await clients.infoClient.clearinghouseState({ user: address as `0x${string}` });
-  return (
-    parsePositive(state.marginSummary?.accountValue) ??
-    parsePositive(state.crossMarginSummary?.accountValue) ??
-    null
-  );
+  let perpAccountValue: number | null = null;
+
+  try {
+    const state = await clients.infoClient.clearinghouseState({ user: address as `0x${string}` });
+    perpAccountValue =
+      parseNonNegative(state.marginSummary?.accountValue) ??
+      parseNonNegative(state.crossMarginSummary?.accountValue);
+  } catch {
+    perpAccountValue = null;
+  }
+
+  // If perp account has non-zero value, use it directly.
+  if (perpAccountValue !== null && perpAccountValue > 0) {
+    return perpAccountValue;
+  }
+
+  // Fallback: some accounts hold funds only in spot before perp transfer.
+  try {
+    const spotValue = await fetchSpotUsdcBalance(config, address);
+
+    if (spotValue !== null) {
+      return Math.max(spotValue, perpAccountValue ?? 0);
+    }
+  } catch {
+    // ignore and fall back to perp value (possibly zero/null)
+  }
+
+  return perpAccountValue;
 }
 
 async function ensureLeverage(
@@ -402,32 +533,71 @@ export async function executeHyperliquidOrderLive(args: {
   if (Number(normalizedSize) <= 0) {
     throw new Error("Order size resolved to zero");
   }
+  const orderSize = formatSize(normalizedSize, args.market.szDecimals);
 
   const priceMultiplier = args.side === "buy" ? 1 + args.slippageBps / 10_000 : 1 - args.slippageBps / 10_000;
   const limitPrice = args.market.priceUsd * priceMultiplier;
   if (!Number.isFinite(limitPrice) || limitPrice <= 0) {
     throw new Error("Invalid limit price for Hyperliquid order");
   }
+  const orderPrice = formatPrice(limitPrice, args.market.szDecimals, "perp");
 
-  const response = await clients.exchangeClient.order({
-    orders: [
-      {
-        a: args.market.marketId,
-        b: args.side === "buy",
-        p: formatDecimal(limitPrice, 8),
-        s: normalizedSize,
-        r: reduceOnly,
-        t: {
-          limit: {
-            tif: "FrontendMarket",
+  const submitOrder = async (): Promise<ParsedStatus> => {
+    const response = await clients.exchangeClient.order({
+      orders: [
+        {
+          a: args.market.marketId,
+          b: args.side === "buy",
+          p: orderPrice,
+          s: orderSize,
+          r: reduceOnly,
+          t: {
+            limit: {
+              tif: "FrontendMarket",
+            },
           },
         },
-      },
-    ],
-    grouping: "na",
-  });
+      ],
+      grouping: "na",
+    });
+    return parseFirstOrderStatus(response);
+  };
 
-  const parsed = parseFirstOrderStatus(response);
+  let parsed: ParsedStatus;
+  try {
+    parsed = await submitOrder();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const canRetryWithMarginTopUp =
+      !reduceOnly &&
+      args.side === "buy" &&
+      /insufficient margin/i.test(message) &&
+      (args.notionalUsd ?? 0) > 0;
+
+    if (!canRetryWithMarginTopUp) {
+      throw error;
+    }
+
+    const walletAddress = privateKeyToAccount(args.config.privateKey).address as Address;
+    const accountAddress = resolveHyperliquidAccountAddress(args.config, walletAddress);
+    const spotUsdcBalance = await fetchSpotUsdcBalance(args.config, accountAddress);
+    if (!spotUsdcBalance || spotUsdcBalance <= 0) {
+      throw error;
+    }
+
+    const desiredTopUpUsd = Math.max((args.notionalUsd ?? 0) * 1.05, 10.5);
+    const transferAmountUsd = Math.min(spotUsdcBalance, desiredTopUpUsd);
+    if (!Number.isFinite(transferAmountUsd) || transferAmountUsd <= 0) {
+      throw error;
+    }
+
+    await clients.exchangeClient.usdClassTransfer({
+      amount: formatDecimal(transferAmountUsd, 6),
+      toPerp: true,
+    });
+    parsed = await submitOrder();
+  }
+
   if (!parsed.filledSize || !parsed.filledPrice) {
     if (parsed.orderId !== undefined) {
       await clients.exchangeClient.cancel({

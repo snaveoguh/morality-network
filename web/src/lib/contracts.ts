@@ -628,6 +628,76 @@ export const LEADERBOARD_ABI = [
   },
 ] as const;
 
+// ============================================================================
+// POOTER EDITIONS — 1/1 Daily Edition ERC-721 NFTs
+// ============================================================================
+
+export const POOTER_EDITIONS_ADDRESS = (process.env.NEXT_PUBLIC_POOTER_EDITIONS_ADDRESS ??
+  ZERO_ADDRESS) as Address;
+
+export const POOTER_EDITIONS_ABI = [
+  {
+    type: "function",
+    name: "mint",
+    inputs: [
+      { name: "editionNumber", type: "uint256" },
+      { name: "contentHash", type: "bytes32" },
+      { name: "dailyTitle", type: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "ownerOf",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getEdition",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [
+      { name: "contentHash", type: "bytes32" },
+      { name: "editionDate", type: "uint256" },
+      { name: "dailyTitle", type: "string" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "currentEditionNumber",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalMinted",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "EPOCH",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "event",
+    name: "EditionMinted",
+    inputs: [
+      { name: "tokenId", type: "uint256", indexed: true },
+      { name: "minter", type: "address", indexed: true },
+      { name: "contentHash", type: "bytes32", indexed: false },
+      { name: "dailyTitle", type: "string", indexed: false },
+    ],
+  },
+] as const;
+
 // Entity type enum matching the Solidity enum
 export enum EntityType {
   URL = 0,

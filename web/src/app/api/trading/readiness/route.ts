@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
-import { getTraderReadiness, redactedConfigSummary } from "@/lib/trading/engine";
+import { getTraderReadinessByRunner, redactedConfigSummary } from "@/lib/trading/engine";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET() {
   try {
-    const readiness = await getTraderReadiness();
+    const readinessByRunner = await getTraderReadinessByRunner();
     return NextResponse.json(
       {
-        readiness,
+        readiness: readinessByRunner.primary,
+        parallel: readinessByRunner.parallel,
         config: redactedConfigSummary(),
       },
       {

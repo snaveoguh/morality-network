@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { computeEntityHash } from "@/lib/entity";
 import { TipButton } from "@/components/entity/TipButton";
 import { StarRating } from "@/components/shared/StarRating";
-import { AddressDisplay } from "@/components/shared/AddressDisplay";
 import {
   type Proposal,
   getTimeRemaining,
@@ -14,22 +13,38 @@ import {
 } from "@/lib/governance";
 import type { FeedItem as FeedItemType } from "@/lib/rss";
 import type { Cast } from "@/lib/farcaster";
+import type { VideoItem } from "@/lib/video";
 import { BiasPill, BiasBar } from "@/components/feed/BiasBar";
 import type { SourceBias } from "@/lib/bias";
+import { LiveCommentColumn } from "@/components/feed/LiveCommentColumn";
+import { openCenteredPopup, shouldKeepDefaultLinkBehavior } from "@/lib/popup";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
+type VisualWeight = "hero" | "major" | "standard" | "minor" | "filler";
+
 type TileItem =
   | { type: "rss"; data: FeedItemType; category: string; sortTime: number }
   | { type: "cast"; data: Cast; category: string; sortTime: number }
-  | { type: "governance"; data: Proposal; category: string; sortTime: number };
+  | { type: "governance"; data: Proposal; category: string; sortTime: number }
+  | { type: "video"; data: VideoItem; category: string; sortTime: number };
+
+interface BiasDigest {
+  insight: string;
+  source: "ai" | "computed";
+  avgFactuality: string;
+  tilt: number;
+  tiltLabel: string;
+}
 
 interface TileFeedProps {
   rssItems: FeedItemType[];
   casts: Cast[];
   proposals: Proposal[];
+  videos?: VideoItem[];
+  biasDigest?: BiasDigest | null;
 }
 
 const FILTER_OPTIONS = [
@@ -37,36 +52,134 @@ const FILTER_OPTIONS = [
   { value: "world", label: "World" },
   { value: "tech", label: "Tech" },
   { value: "crypto", label: "Crypto" },
+  { value: "environment", label: "Environment" },
+  { value: "science", label: "Science" },
   { value: "governance", label: "Governance" },
   { value: "candidates", label: "Candidates" },
-  { value: "parliament", label: "Parliament" },
+  { value: "parliament", label: "UK Parl." },
+  { value: "congress", label: "US Cong." },
+  { value: "eu", label: "EU" },
+  { value: "canada", label: "Canada" },
+  { value: "australia", label: "Australia" },
+  { value: "sec", label: "SEC" },
   { value: "farcaster", label: "Farcaster" },
+  { value: "video", label: "Video" },
 ];
 
 const BIAS_FILTER_OPTIONS = [
   { value: "all", label: "All Bias" },
   { value: "left", label: "Left" },
-  { value: "lean-left", label: "Lean Left" },
+  { value: "lean-left", label: "Lean L" },
   { value: "center", label: "Center" },
-  { value: "lean-right", label: "Lean Right" },
+  { value: "lean-right", label: "Lean R" },
   { value: "right", label: "Right" },
 ];
+
+function getProposalCategory(proposal: Proposal): string {
+  if (proposal.source === "parliament") return "parliament";
+  if (proposal.source === "congress") return "congress";
+  if (proposal.source === "eu") return "eu";
+  if (proposal.source === "canada") return "canada";
+  if (proposal.source === "australia") return "australia";
+  if (proposal.source === "sec") return "sec";
+  if (proposal.status === "candidate") return "candidates";
+  return "governance";
+}
+
+// ============================================================================
+// VISUAL WEIGHT — assigns chaotic column spans
+// ============================================================================
+
+function assignWeight(item: TileItem, index: number): VisualWeight {
+  const ageMs = Date.now() - item.sortTime;
+  const ageHours = ageMs / (1000 * 60 * 60);
+  const isRecent = ageHours < 4;
+  const isVeryRecent = ageHours < 1;
+
+  // First item is always the hero
+  if (index === 0) return "hero";
+
+  if (item.type === "rss") {
+    const rss = item.data;
+    const hasImage = !!rss.imageUrl;
+    // Breaking news with image = hero (max 1 hero)
+    if (isVeryRecent && hasImage && index < 3) return "hero";
+    // Recent with image = major
+    if (isRecent && hasImage) return "major";
+    // Has image but older = standard
+    if (hasImage) return "standard";
+    // No image, recent = standard
+    if (isRecent) return "standard";
+    // Old, no image = minor or filler
+    return ageHours > 24 ? "filler" : "minor";
+  }
+
+  if (item.type === "cast") {
+    const cast = item.data;
+    const engagement = cast.likes + cast.recasts + cast.replies;
+    if (engagement > 100) return "major";
+    if (engagement > 30) return "standard";
+    return "minor";
+  }
+
+  if (item.type === "video") {
+    // Videos always get major weight — they need space for the embed
+    return isRecent ? "major" : "standard";
+  }
+
+  if (item.type === "governance") {
+    const p = item.data;
+    if (p.status === "active" && isRecent) return "major";
+    if (p.status === "active") return "standard";
+    if (p.status === "candidate") return "minor";
+    return "standard";
+  }
+
+  return "standard";
+}
+
+const WEIGHT_CSS: Record<VisualWeight, string> = {
+  hero: "newspaper-cell newspaper-hero",
+  major: "newspaper-cell newspaper-major",
+  standard: "newspaper-cell newspaper-standard",
+  minor: "newspaper-cell newspaper-minor",
+  filler: "newspaper-cell newspaper-filler",
+};
+
+// ============================================================================
+// CHAOTIC LAYOUT — deterministic pseudo-random variety
+// ============================================================================
+
+function hashTitle(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+// ONE triangle float shape — used for a single "feature" item per page
+const FEATURE_SHAPES: [string, string, "left" | "right"][] = [
+  ["polygon(100% 0, 8% 50%, 100% 100%)", "polygon(100% 0, 0% 50%, 100% 100%)", "right"],
+  ["polygon(0 0, 92% 50%, 0 100%)", "polygon(0 0, 100% 50%, 0 100%)", "left"],
+];
+
+const TILT_CLASSES = ["", "", "", "", "tilt-cw-sm", "tilt-ccw-sm", "", "", "tilt-cw-md", "tilt-ccw-md", "", "", ""];
 
 // ============================================================================
 // MAIN FEED
 // ============================================================================
 
-export function TileFeed({ rssItems, casts, proposals }: TileFeedProps) {
+export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }: TileFeedProps) {
   const [filter, setFilter] = useState("all");
   const [biasFilter, setBiasFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState("all");
 
-  // Collect all bias data from RSS items for the distribution bar
   const allBiasSources = useMemo(() => {
     const sources: SourceBias[] = [];
     for (const item of rssItems) {
       if (item.bias) sources.push(item.bias);
     }
-    // Deduplicate by domain
     const seen = new Set<string>();
     return sources.filter((s) => {
       if (seen.has(s.domain)) return false;
@@ -97,9 +210,7 @@ export function TileFeed({ rssItems, casts, proposals }: TileFeedProps) {
     }
 
     for (const proposal of proposals) {
-      let category = "governance";
-      if (proposal.source === "parliament") category = "parliament";
-      else if (proposal.status === "candidate") category = "candidates";
+      const category = getProposalCategory(proposal);
 
       all.push({
         type: "governance",
@@ -109,9 +220,104 @@ export function TileFeed({ rssItems, casts, proposals }: TileFeedProps) {
       });
     }
 
+    for (const video of videos) {
+      all.push({
+        type: "video",
+        data: video,
+        category: "video",
+        sortTime: new Date(video.pubDate).getTime(),
+      });
+    }
+
     all.sort((a, b) => b.sortTime - a.sortTime);
     return all;
+  }, [rssItems, casts, proposals, videos]);
+
+  const wireEntityMetaByHash = useMemo(() => {
+    const map: Record<
+      string,
+      {
+        category: string;
+        bias?: string;
+        tags: string[];
+      }
+    > = {};
+
+    function upsert(
+      entityHash: `0x${string}`,
+      next: { category: string; bias?: string; tags: string[] }
+    ) {
+      const key = entityHash.toLowerCase();
+      const existing = map[key];
+
+      if (!existing) {
+        map[key] = {
+          category: next.category,
+          bias: next.bias,
+          tags: Array.from(new Set(next.tags)),
+        };
+        return;
+      }
+
+      const mergedTags = Array.from(new Set([...existing.tags, ...next.tags]));
+      map[key] = {
+        category: existing.category,
+        bias: existing.bias ?? next.bias,
+        tags: mergedTags,
+      };
+    }
+
+    for (const item of rssItems) {
+      upsert(computeEntityHash(item.link), {
+        category: item.category.toLowerCase(),
+        bias: item.bias?.bias ? item.bias.bias.toLowerCase() : undefined,
+        tags: (item.tags || []).map((tag) => tag.toLowerCase()),
+      });
+    }
+
+    for (const cast of casts) {
+      const tippableAddress = cast.author.verifiedAddresses?.[0] || "";
+      const hash = tippableAddress
+        ? computeEntityHash(tippableAddress)
+        : computeEntityHash(`farcaster://${cast.author.username}`);
+      upsert(hash, {
+        category: "farcaster",
+        tags: ["farcaster"],
+      });
+    }
+
+    for (const proposal of proposals) {
+      upsert(computeEntityHash(proposal.id), {
+        category: getProposalCategory(proposal),
+        tags: (proposal.tags || []).map((tag) => tag.toLowerCase()),
+      });
+    }
+
+    return map;
   }, [rssItems, casts, proposals]);
+
+  const tagOptions = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    for (const item of rssItems) {
+      for (const tag of item.tags || []) {
+        const normalized = tag.toLowerCase();
+        counts.set(normalized, (counts.get(normalized) || 0) + 1);
+      }
+    }
+
+    for (const proposal of proposals) {
+      for (const tag of proposal.tags || []) {
+        const normalized = tag.toLowerCase();
+        counts.set(normalized, (counts.get(normalized) || 0) + 1);
+      }
+    }
+
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 12)
+      .map(([tag]) => tag);
+  }, [rssItems, proposals]);
 
   const filtered = useMemo(() => {
     let result = items;
@@ -120,153 +326,430 @@ export function TileFeed({ rssItems, casts, proposals }: TileFeedProps) {
     }
     if (biasFilter !== "all") {
       result = result.filter((item) => {
-        if (item.type !== "rss") return true; // non-RSS items pass through
+        if (item.type !== "rss") return true;
         const bias = item.data.bias;
         if (!bias) return false;
-        // Group: "left" includes far-left + left, "right" includes right + far-right
         if (biasFilter === "left") return bias.bias === "left" || bias.bias === "far-left";
         if (biasFilter === "right") return bias.bias === "right" || bias.bias === "far-right";
         return bias.bias === biasFilter;
       });
     }
+    if (tagFilter !== "all") {
+      result = result.filter((item) => {
+        if (item.type === "rss") {
+          return (item.data.tags || []).some((tag) => tag.toLowerCase() === tagFilter);
+        }
+        if (item.type === "governance") {
+          return (item.data.tags || []).some((tag) => tag.toLowerCase() === tagFilter);
+        }
+        return false;
+      });
+    }
     return result;
-  }, [items, filter, biasFilter]);
+  }, [items, filter, biasFilter, tagFilter]);
+
+  // Track hero count to prevent multiple heroes
+  let heroCount = 0;
+  // Only one triangle-float "feature" per page
+  let featureUsed = false;
 
   return (
     <div>
-      {/* Bias distribution bar */}
+      {/* ── Filters — monospace text buttons with pipe separators ── */}
+      <div className="mb-4 flex flex-wrap items-center gap-0 border-b border-[var(--rule-light)] pb-3 font-mono text-[10px] uppercase tracking-wider">
+        {FILTER_OPTIONS.map((opt, i) => (
+          <span key={opt.value} className="flex items-center">
+            {i > 0 && <span className="mx-1.5 text-[var(--rule-light)]">|</span>}
+            <button
+              onClick={() => setFilter(opt.value)}
+              className={`transition-colors ${
+                filter === opt.value
+                  ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-[var(--rule)]"
+                  : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+              }`}
+            >
+              {opt.label}
+            </button>
+          </span>
+        ))}
+
+        <span className="mx-3 text-[var(--rule-light)]">·</span>
+
+        {BIAS_FILTER_OPTIONS.map((opt, i) => (
+          <span key={opt.value} className="flex items-center">
+            {i > 0 && <span className="mx-1 text-[var(--rule-light)]">|</span>}
+            <button
+              onClick={() => setBiasFilter(opt.value)}
+              className={`transition-colors ${
+                biasFilter === opt.value
+                  ? "font-bold text-[var(--ink)] underline underline-offset-4"
+                  : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+              }`}
+            >
+              {opt.label}
+            </button>
+          </span>
+        ))}
+
+        {tagOptions.length > 0 && (
+          <>
+            <span className="mx-3 text-[var(--rule-light)]">·</span>
+
+            <span className="mr-1 text-[var(--ink-faint)]">Tags</span>
+
+            <button
+              onClick={() => setTagFilter("all")}
+              className={`transition-colors ${
+                tagFilter === "all"
+                  ? "font-bold text-[var(--ink)] underline underline-offset-4"
+                  : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+              }`}
+            >
+              all
+            </button>
+
+            {tagOptions.map((tag) => (
+              <span key={tag} className="flex items-center">
+                <span className="mx-1 text-[var(--rule-light)]">|</span>
+                <button
+                  onClick={() => setTagFilter(tag)}
+                  className={`transition-colors ${
+                    tagFilter === tag
+                      ? "font-bold text-[var(--ink)] underline underline-offset-4"
+                      : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+                  }`}
+                >
+                  #{tag}
+                </button>
+              </span>
+            ))}
+          </>
+        )}
+
+        <span className="ml-auto text-[var(--ink-faint)]">{filtered.length} items</span>
+      </div>
+
+      {/* Bias distribution — after filters */}
       {allBiasSources.length > 0 && (
         <div className="mb-4">
-          <BiasBar sources={allBiasSources} />
+          <BiasBar sources={allBiasSources} digest={biasDigest ?? undefined} />
         </div>
       )}
 
-      {/* Filters row */}
-      <div className="mb-5 flex items-center gap-2">
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-medium text-white outline-none transition-colors focus:border-[#2F80ED] hover:border-zinc-600"
-        >
-          {FILTER_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={biasFilter}
-          onChange={(e) => setBiasFilter(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-medium text-white outline-none transition-colors focus:border-[#2F80ED] hover:border-zinc-600"
-        >
-          {BIAS_FILTER_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <span className="ml-auto text-xs text-zinc-600">{filtered.length} items</span>
-      </div>
+      <div className="flex w-full gap-0 overflow-x-hidden">
+        <div className="min-w-0 flex-1 border-r-2 border-[var(--rule)] pr-4">
+          {/* ── NEWSPAPER GRID ── */}
+          <div className="newspaper-grid">
+            {filtered.flatMap((item, i) => {
+              const elements: React.ReactNode[] = [];
 
-      {/* Tile grid */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((item, i) => {
-          switch (item.type) {
-            case "rss":
-              return <RssTile key={`rss-${item.data.id}`} item={item.data} />;
-            case "cast":
-              return <CastTile key={`cast-${item.data.hash}`} cast={item.data} />;
-            case "governance": {
-              const p = item.data;
-              if (p.status === "candidate") {
-                return <CandidateTile key={`cand-${p.id}`} proposal={p} />;
+              // ── Pull quote every ~12 items ──
+              if (i > 0 && i % 12 === 0) {
+                const quoteItem = filtered.slice(Math.max(0, i - 8), i).find(
+                  (it) =>
+                    it.type === "rss" &&
+                    it.data.description &&
+                    it.data.description.length > 50
+                );
+                if (quoteItem && quoteItem.type === "rss") {
+                  const desc = quoteItem.data.description || "";
+                  const snippet =
+                    desc.length > 140
+                      ? desc.slice(0, 140).replace(/\s\S*$/, "") + "\u2026"
+                      : desc;
+                  elements.push(
+                    <div key={`pq-${i}`} className="pull-quote-row">
+                      <p className="font-headline text-lg italic leading-relaxed text-[var(--ink-light)] sm:text-xl">
+                        &ldquo;{snippet}&rdquo;
+                      </p>
+                      <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.3em] text-[var(--ink-faint)]">
+                        &mdash; {quoteItem.data.source}
+                      </p>
+                    </div>
+                  );
+                }
               }
-              if (p.source === "parliament") {
-                return <ParliamentTile key={`parl-${p.id}`} proposal={p} />;
-              }
-              return <GovernanceTile key={`gov-${p.id}`} proposal={p} />;
-            }
-          }
-        })}
-      </div>
 
-      {filtered.length === 0 && (
-        <div className="py-16 text-center text-sm text-zinc-500">
-          Nothing here yet.
+              let weight = assignWeight(item, i);
+              if (weight === "hero") {
+                if (heroCount > 0) weight = "major";
+                else heroCount++;
+              }
+
+              // Chaotic properties from title hash
+              const titleStr =
+                item.type === "rss"
+                  ? item.data.title
+                  : item.type === "governance"
+                    ? item.data.title
+                    : item.type === "video"
+                      ? item.data.title
+                      : item.data.text;
+              const seed = hashTitle(titleStr);
+              const tilt = TILT_CLASSES[seed % TILT_CLASSES.length];
+              const isInverted = seed % 19 === 0 && weight !== "hero";
+
+              // One triangle feature per page — only a major rss item with image
+              let isFeature = false;
+              if (
+                !featureUsed &&
+                weight === "major" &&
+                item.type === "rss" &&
+                item.data.imageUrl &&
+                i > 2 &&
+                seed % 5 === 0
+              ) {
+                isFeature = true;
+                featureUsed = true;
+              }
+
+              elements.push(
+                <div
+                  key={`${item.type}-${i}`}
+                  className={`${WEIGHT_CSS[weight]} ${tilt} ${isInverted ? "ink-block" : ""}`}
+                >
+                  {renderTile(item, weight, seed, isFeature)}
+                </div>
+              );
+
+              return elements;
+            })}
+          </div>
+
+          {/* Section rule */}
+          {filtered.length > 0 && <hr className="newspaper-rule mt-0" />}
+
+          {filtered.length === 0 && (
+            <div className="py-16 text-center font-body-serif text-sm italic text-[var(--ink-faint)]">
+              No dispatches match the current edition.
+            </div>
+          )}
         </div>
-      )}
+
+        <div className="hidden w-56 max-w-56 shrink-0 overflow-x-hidden pl-4 lg:block">
+          <LiveCommentColumn
+            categoryFilter={filter}
+            biasFilter={biasFilter}
+            tagFilter={tagFilter}
+            entityMetaByHash={wireEntityMetaByHash}
+          />
+        </div>
+      </div>
     </div>
   );
 }
 
 // ============================================================================
-// RSS TILE — compact news card with rating + tip
+// TILE ROUTER — picks component based on type
 // ============================================================================
 
-function RssTile({ item }: { item: FeedItemType }) {
+function renderTile(item: TileItem, weight: VisualWeight, seed: number = 0, isFeature: boolean = false) {
+  switch (item.type) {
+    case "rss":
+      return <RssTile item={item.data} weight={weight} seed={seed} isFeature={isFeature} />;
+    case "cast":
+      return <CastTile cast={item.data} weight={weight} />;
+    case "video":
+      return <VideoTile video={item.data} weight={weight} />;
+    case "governance": {
+      const p = item.data;
+      if (p.status === "candidate") return <CandidateTile proposal={p} weight={weight} />;
+      if (["parliament", "congress", "eu", "canada", "australia"].includes(p.source)) {
+        return <ParliamentTile proposal={p} weight={weight} />;
+      }
+      if (p.source === "sec") return <SECTile proposal={p} weight={weight} />;
+      return <GovernanceTile proposal={p} weight={weight} />;
+    }
+  }
+}
+
+// ============================================================================
+// RSS TILE — newspaper article with Playfair headlines
+// ============================================================================
+
+const HEADLINE_SIZES: Record<VisualWeight, string> = {
+  hero: "text-3xl sm:text-4xl lg:text-5xl leading-[1.05] font-headline",
+  major: "text-xl sm:text-2xl leading-tight font-headline",
+  standard: "text-base leading-snug font-headline",
+  minor: "text-sm leading-snug font-headline-serif font-bold",
+  filler: "text-xs leading-snug font-headline-serif font-semibold",
+};
+
+function RssTile({ item, weight, seed = 0, isFeature = false }: { item: FeedItemType; weight: VisualWeight; seed?: number; isFeature?: boolean }) {
   const { isConnected } = useAccount();
   const timeSince = getTimeSince(item.pubDate);
   const entityHash = computeEntityHash(item.link);
+  const isHero = weight === "hero";
+  const isBreaking = (Date.now() - new Date(item.pubDate).getTime()) < 3600000;
+  const previewText = item.canonicalClaim || item.description;
 
+  // ─── HERO: full-width stretch banner ───
+  if (isHero) {
+    return (
+      <article className="relative">
+        {isBreaking && <span className="breaking-stamp">Breaking</span>}
+
+        {/* Full-width banner image — no crop, no triangle */}
+        {item.imageUrl && (
+          <Link href={`/article/${entityHash}`} className="block">
+            <div className="newspaper-img-hero overflow-hidden" style={{ height: "clamp(280px, 40vw, 480px)" }}>
+              <img
+                src={item.imageUrl}
+                alt=""
+                className="newspaper-img h-full w-full object-cover"
+                loading="eager"
+              />
+            </div>
+          </Link>
+        )}
+
+        {/* Dateline */}
+        <div className="mt-3 mb-1 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          <span className="font-bold text-[var(--ink-light)]">{item.source}</span>
+          {item.bias && <BiasPill bias={item.bias} />}
+          <span>&middot;</span>
+          <span>{item.category}</span>
+          <span className="ml-auto">{timeSince}</span>
+        </div>
+
+        {/* Giant headline */}
+        <Link href={`/article/${entityHash}`}>
+          <h3 className={`${HEADLINE_SIZES.hero} text-[var(--ink)] transition-colors hover:text-[var(--accent-red)]`}>
+            {item.title}
+          </h3>
+        </Link>
+
+        {/* Body with drop cap */}
+        {previewText && (
+          <p className="mt-3 font-body-serif text-base leading-relaxed text-[var(--ink-light)] drop-cap">
+            {previewText}
+          </p>
+        )}
+
+        {/* Footer */}
+        <div className="flex items-center gap-3 border-t border-[var(--rule-light)] pt-2 mt-4 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          <Link href={`/article/${entityHash}`} className="font-bold text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]">Read</Link>
+          <a href={item.link} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[var(--ink)]">Source&nbsp;&rsaquo;</a>
+          <Link href={`/entity/${entityHash}`} className="transition-colors hover:text-[var(--ink)]">Discuss</Link>
+          {isConnected && <TipButton entityHash={entityHash} />}
+        </div>
+      </article>
+    );
+  }
+
+  // ─── FEATURE: single triangle float (only one per page) ───
+  if (isFeature && item.imageUrl) {
+    const shape = FEATURE_SHAPES[seed % FEATURE_SHAPES.length];
+    return (
+      <article className="relative">
+        {isBreaking && <span className="breaking-stamp">Breaking</span>}
+
+        <div
+          className="newspaper-img-hero overflow-hidden"
+          style={{
+            float: shape[2],
+            width: "42%",
+            height: "260px",
+            clipPath: shape[0],
+            shapeOutside: shape[1],
+            ...(shape[2] === "right"
+              ? { marginLeft: "16px", marginBottom: "8px" }
+              : { marginRight: "16px", marginBottom: "8px" }),
+          }}
+        >
+          <img src={item.imageUrl} alt="" className="newspaper-img h-full w-full object-cover" loading="lazy" />
+        </div>
+
+        <div className="mb-1 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          <span className="font-bold text-[var(--ink-light)]">{item.source}</span>
+          {item.bias && <BiasPill bias={item.bias} />}
+          <span>&middot;</span>
+          <span>{item.category}</span>
+          <span className="ml-auto">{timeSince}</span>
+        </div>
+
+        <Link href={`/article/${entityHash}`}>
+          <h3 className={`${HEADLINE_SIZES[weight]} text-[var(--ink)] transition-colors hover:text-[var(--accent-red)]`}>
+            {item.title}
+          </h3>
+        </Link>
+
+        {previewText && (
+          <p className="mt-2 font-body-serif text-sm leading-relaxed text-[var(--ink-light)] line-clamp-4">
+            {previewText}
+          </p>
+        )}
+
+        <div style={{ clear: "both" }} />
+
+        <div className="flex items-center gap-3 border-t border-[var(--rule-light)] pt-2 mt-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          <Link href={`/article/${entityHash}`} className="font-bold text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]">Read</Link>
+          <a href={item.link} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[var(--ink)]">Source&nbsp;&rsaquo;</a>
+          <Link href={`/entity/${entityHash}`} className="transition-colors hover:text-[var(--ink)]">Discuss</Link>
+          {isConnected && <TipButton entityHash={entityHash} />}
+        </div>
+      </article>
+    );
+  }
+
+  // ─── STANDARD / MAJOR / MINOR / FILLER: clean square images ───
   return (
-    <div className="group flex flex-col rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 transition-colors hover:border-zinc-600">
-      {/* Image */}
+    <article className="relative flex h-full flex-col">
+      {isBreaking && <span className="breaking-stamp">Breaking</span>}
+
+      {/* Square image — no clip-path, clean rectangle */}
       {item.imageUrl && (
-        <a href={item.link} target="_blank" rel="noopener noreferrer">
-          <div className="mb-2 h-28 w-full overflow-hidden rounded-md">
+        <Link href={`/article/${entityHash}`} className="block">
+          <div className={`newspaper-img-hero mb-3 overflow-hidden ${weight === "major" ? "h-44" : "h-28"}`}>
             <img
               src={item.imageUrl}
               alt=""
-              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+              className="newspaper-img h-full w-full object-cover"
               loading="lazy"
             />
           </div>
-        </a>
+        </Link>
       )}
 
-      {/* Meta */}
-      <div className="mb-1 flex items-center gap-1.5 text-[10px]">
-        <span className="font-semibold text-[#31F387]">{item.source}</span>
+      {/* Dateline */}
+      <div className="mb-1 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+        <span className="font-bold text-[var(--ink-light)]">{item.source}</span>
         {item.bias && <BiasPill bias={item.bias} />}
-        <span className="text-zinc-600">&middot;</span>
-        <span className="text-zinc-500">{item.category}</span>
-        <span className="ml-auto text-zinc-600">{timeSince}</span>
+        <span>&middot;</span>
+        <span>{item.category}</span>
+        <span className="ml-auto">{timeSince}</span>
       </div>
 
-      {/* Title */}
-      <a href={item.link} target="_blank" rel="noopener noreferrer">
-        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors group-hover:text-[#2F80ED]">
+      {/* Headline */}
+      <Link href={`/article/${entityHash}`}>
+        <h3 className={`${HEADLINE_SIZES[weight]} text-[var(--ink)] transition-colors hover:text-[var(--accent-red)] line-clamp-3`}>
           {item.title}
         </h3>
-      </a>
+      </Link>
 
-      {/* Snippet */}
-      {item.description && (
-        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500">
-          {item.description}
+      {/* Body — on major and standard */}
+      {previewText && (weight === "standard" || weight === "major") && (
+        <p className={`mt-1 font-body-serif text-xs leading-relaxed text-[var(--ink-light)] ${weight === "major" ? "line-clamp-3" : "line-clamp-2"}`}>
+          {previewText}
         </p>
       )}
 
-      {/* Actions: Star rating + Discuss + Tip */}
-      <div className="mt-auto flex items-center gap-3 border-t border-zinc-800/50 pt-2 mt-2">
-        <StarRating rating={0} size="sm" count={0} />
-        <Link
-          href={`/entity/${entityHash}`}
-          className="text-[10px] text-zinc-500 transition-colors hover:text-[#2F80ED]"
-        >
-          Discuss
-        </Link>
+      {/* Footer */}
+      <div className="mt-auto flex items-center gap-3 border-t border-[var(--rule-light)] pt-2 mt-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+        <Link href={`/article/${entityHash}`} className="font-bold text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]">Read</Link>
+        <a href={item.link} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[var(--ink)]">Source&nbsp;&rsaquo;</a>
+        <Link href={`/entity/${entityHash}`} className="transition-colors hover:text-[var(--ink)]">Discuss</Link>
         {isConnected && <TipButton entityHash={entityHash} />}
       </div>
-    </div>
+    </article>
   );
 }
 
 // ============================================================================
-// CAST TILE — compact Farcaster card with tip
+// CAST TILE — "Social Dispatch" — reader letters style
 // ============================================================================
 
-function CastTile({ cast }: { cast: Cast }) {
+function CastTile({ cast, weight }: { cast: Cast; weight: VisualWeight }) {
   const { isConnected } = useAccount();
   const engagement = cast.likes + cast.recasts + cast.replies;
   const isHot = engagement > 50;
@@ -277,37 +760,31 @@ function CastTile({ cast }: { cast: Cast }) {
     : computeEntityHash(`farcaster://${cast.author.username}`);
 
   return (
-    <div
-      className={`group flex flex-col rounded-lg border p-3 transition-colors ${
-        isHot
-          ? "border-[#8A63D2]/30 bg-[#8A63D2]/5 hover:border-[#8A63D2]/50"
-          : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-600"
-      }`}
-    >
-      {/* Author row */}
-      <div className="mb-1.5 flex items-center gap-2">
+    <article className="flex flex-col h-full">
+      {/* Author — tiny grayscale PFP + name */}
+      <div className="mb-2 flex items-center gap-2">
         <img
           src={cast.author.pfpUrl || "https://picsum.photos/seed/fc/24/24"}
           alt=""
-          className="h-5 w-5 rounded-full"
+          className="newspaper-img h-4 w-4 rounded-full"
           loading="lazy"
         />
-        <span className="truncate text-xs font-semibold text-white">
+        <span className="truncate font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-light)]">
           {cast.author.displayName}
         </span>
-        <span className="shrink-0 rounded bg-[#8A63D2]/20 px-1 py-px text-[9px] font-medium text-[#8A63D2]">
+        <span className="font-mono text-[8px] uppercase tracking-widest text-[var(--ink-faint)]">
           FC
         </span>
         {isHot && (
-          <span className="shrink-0 rounded-full bg-[#D0021B]/10 px-1 py-px text-[9px] font-bold text-[#D0021B]">
+          <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-[var(--accent-red)]">
             HOT
           </span>
         )}
       </div>
 
-      {/* Cast text */}
-      <p className="line-clamp-3 text-xs leading-relaxed text-zinc-300">
-        {cast.text}
+      {/* Cast body — Baskerville italic, like a reader letter */}
+      <p className="line-clamp-4 font-body-serif text-sm italic leading-relaxed text-[var(--ink-light)]">
+        &ldquo;{cast.text}&rdquo;
       </p>
 
       {/* Embed image */}
@@ -318,45 +795,34 @@ function CastTile({ cast }: { cast: Cast }) {
         const imageUrl = imageEmbed?.metadata?.image || imageEmbed?.url;
         if (!imageUrl) return null;
         return (
-          <div className="mt-2 h-24 w-full overflow-hidden rounded-md">
-            <img src={imageUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+          <div className="newspaper-img-hero mt-2 h-24 w-full overflow-hidden">
+            <img src={imageUrl} alt="" className="newspaper-img h-full w-full object-cover" loading="lazy" />
           </div>
         );
       })()}
 
-      {/* Engagement + Actions */}
-      <div className="mt-auto flex items-center gap-3 border-t border-zinc-800/50 pt-2 mt-2 text-[10px] text-zinc-500">
+      {/* Engagement + Actions — monospace stats */}
+      <div className="mt-auto flex items-center gap-3 border-t border-[var(--rule-light)] pt-2 mt-3 font-mono text-[9px] text-[var(--ink-faint)]">
         <span>{cast.likes} ♥</span>
         <span>{cast.recasts} ⟳</span>
-        <span>{cast.replies} 💬</span>
+        <span>{cast.replies} ✎</span>
         <Link
           href={`/entity/${entityHash}`}
-          className="transition-colors hover:text-[#2F80ED]"
+          className="uppercase tracking-wider transition-colors hover:text-[var(--ink)]"
         >
           Discuss
         </Link>
         {isConnected && tippableAddress && <TipButton entityHash={entityHash} />}
       </div>
-    </div>
+    </article>
   );
 }
 
 // ============================================================================
-// GOVERNANCE TILE — compact DAO vote card with tip
+// GOVERNANCE TILE — "Legislative Notice"
 // ============================================================================
 
-const STATUS_DOT: Record<string, string> = {
-  active: "bg-[#31F387]",
-  pending: "bg-yellow-400",
-  succeeded: "bg-[#2F80ED]",
-  queued: "bg-purple-400",
-  executed: "bg-zinc-500",
-  defeated: "bg-[#D0021B]",
-  closed: "bg-zinc-600",
-  candidate: "bg-amber-400",
-};
-
-function GovernanceTile({ proposal }: { proposal: Proposal }) {
+function GovernanceTile({ proposal, weight }: { proposal: Proposal; weight: VisualWeight }) {
   const { isConnected } = useAccount();
   const { forPct, againstPct } = getVotePercentage(
     proposal.votesFor,
@@ -364,73 +830,83 @@ function GovernanceTile({ proposal }: { proposal: Proposal }) {
   );
   const isActive = proposal.status === "active";
   const proposerHash = proposal.proposer ? computeEntityHash(proposal.proposer) : "";
+  const hasVotes = proposal.votesFor + proposal.votesAgainst > 0;
 
   return (
-    <div className="group flex flex-col rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 transition-colors hover:border-zinc-600">
-      {/* DAO row */}
-      <div className="mb-1.5 flex items-center gap-2">
+    <article className="flex flex-col h-full">
+      {/* DAO header — monospace, ruled underline */}
+      <div className="mb-2 flex items-center gap-2 border-b border-[var(--rule-light)] pb-1.5">
         <img
           src={proposal.daoLogo}
           alt={proposal.dao}
-          className="h-5 w-5 rounded-full"
+          className="newspaper-img h-4 w-4 rounded-full"
           loading="lazy"
         />
-        <span className="truncate text-xs font-medium text-zinc-400">
+        <span className="truncate font-mono text-[10px] uppercase tracking-wider text-[var(--ink-light)]">
           {proposal.dao}
         </span>
         {proposal.source === "onchain" && (
-          <span className="rounded bg-zinc-800 px-1 py-px text-[9px] font-medium uppercase text-zinc-500">
+          <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-[var(--ink-faint)]">
             Onchain
           </span>
         )}
-        <span
-          className={`ml-auto h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_DOT[proposal.status] || STATUS_DOT.closed} ${isActive ? "animate-pulse" : ""}`}
-        />
-        <span className="text-[10px] text-zinc-500">
+        <span className={`ml-auto font-mono text-[9px] uppercase tracking-wider ${isActive ? "font-bold text-[var(--ink)]" : "text-[var(--ink-faint)]"}`}>
           {isActive ? getTimeRemaining(proposal.endTime) : proposal.status}
         </span>
       </div>
 
-      {/* Title */}
+      {/* Title — Playfair */}
       <Link href={`/proposals/${encodeURIComponent(proposal.id)}`}>
-        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors group-hover:text-[#2F80ED]">
+        <h3 className={`${weight === "major" ? "text-xl font-headline" : "text-sm font-headline-serif font-bold"} leading-snug text-[var(--ink)] line-clamp-3 transition-colors hover:text-[var(--accent-red)]`}>
           {proposal.title}
         </h3>
       </Link>
 
-      {/* Vote bar */}
-      <div className="pt-2">
-        <div className="flex h-1.5 overflow-hidden rounded-full bg-zinc-800">
-          <div className="bg-[#31F387]" style={{ width: `${forPct}%` }} />
-          <div className="bg-[#D0021B]" style={{ width: `${againstPct}%` }} />
+      {/* Monochrome vote tally — text, not colored bars */}
+      {hasVotes && (
+        <div className="mt-2">
+          {/* Thin monochrome bar */}
+          <div className="flex h-1 overflow-hidden bg-[var(--paper-dark)]">
+            <div className="bg-[var(--ink)]" style={{ width: `${forPct}%` }} />
+          </div>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[var(--ink-light)]">
+            Ayes {forPct}% &mdash; Noes {againstPct}%
+          </p>
         </div>
-        <div className="mt-1 flex justify-between text-[10px]">
-          <span className="text-[#31F387]">{forPct}% For</span>
-          <span className="text-[#D0021B]">{againstPct}% Against</span>
-        </div>
-      </div>
+      )}
 
-      {/* Actions: Discuss + Tip proposer */}
-      <div className="mt-auto flex items-center gap-3 border-t border-zinc-800/50 pt-2 mt-2 text-[10px] text-zinc-500">
+      {/* Tags */}
+      {proposal.tags && proposal.tags.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {proposal.tags.slice(0, 4).map((tag) => (
+            <span key={tag} className="font-mono text-[8px] text-[var(--ink-faint)]">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="mt-auto flex items-center gap-3 border-t border-[var(--rule-light)] pt-2 mt-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
         <a
           href={proposal.link}
           target="_blank"
           rel="noopener noreferrer"
-          className="transition-colors hover:text-[#2F80ED]"
+          className="transition-colors hover:text-[var(--ink)]"
         >
           View Vote
         </a>
         {isConnected && proposerHash && <TipButton entityHash={proposerHash} />}
       </div>
-    </div>
+    </article>
   );
 }
 
 // ============================================================================
-// CANDIDATE TILE — amber-accented Nouns candidate card
+// CANDIDATE TILE — proposal seeking sponsors
 // ============================================================================
 
-function CandidateTile({ proposal }: { proposal: Proposal }) {
+function CandidateTile({ proposal, weight }: { proposal: Proposal; weight: VisualWeight }) {
   const { isConnected } = useAccount();
   const sponsorCount = proposal.candidateSignatures || 0;
   const threshold = proposal.candidateThreshold || 0;
@@ -443,23 +919,23 @@ function CandidateTile({ proposal }: { proposal: Proposal }) {
     : `/proposals/${encodeURIComponent(proposal.id)}`;
 
   return (
-    <div className="group flex flex-col rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 transition-colors hover:border-amber-500/40">
-      {/* Header row */}
-      <div className="mb-1.5 flex items-center gap-2">
+    <article className="flex flex-col h-full">
+      {/* Header */}
+      <div className="mb-2 flex items-center gap-2 border-b border-[var(--rule-light)] pb-1.5">
         <img
           src={proposal.daoLogo}
           alt={proposal.dao}
-          className="h-5 w-5 rounded-full"
+          className="newspaper-img h-4 w-4 rounded-full"
           loading="lazy"
         />
-        <span className="truncate text-xs font-medium text-zinc-400">
+        <span className="truncate font-mono text-[10px] uppercase tracking-wider text-[var(--ink-light)]">
           {proposal.dao}
         </span>
-        <span className="shrink-0 rounded bg-amber-500/20 px-1 py-px text-[9px] font-bold uppercase text-amber-400">
+        <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-[var(--ink)]">
           Candidate
         </span>
         {isPromotable && (
-          <span className="shrink-0 rounded-full bg-[#31F387]/10 px-1 py-px text-[9px] font-bold text-[#31F387]">
+          <span className="font-mono text-[8px] font-bold italic uppercase tracking-widest text-[var(--ink)]">
             Ready
           </span>
         )}
@@ -467,74 +943,80 @@ function CandidateTile({ proposal }: { proposal: Proposal }) {
 
       {/* Title */}
       <Link href={candidateHref}>
-        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors group-hover:text-amber-400">
+        <h3 className="text-sm font-headline-serif font-bold leading-snug text-[var(--ink)] line-clamp-2 transition-colors hover:text-[var(--accent-red)]">
           {proposal.title}
         </h3>
       </Link>
 
-      {/* Sponsor progress bar */}
-      <div className="pt-2">
-        <div className="flex h-1.5 overflow-hidden rounded-full bg-zinc-800">
-          <div
-            className={`transition-all ${isPromotable ? "bg-[#31F387]" : "bg-amber-400"}`}
-            style={{ width: `${sponsorPct}%` }}
-          />
+      {/* Sponsor progress — monochrome bar */}
+      <div className="mt-2">
+        <div className="flex h-1 overflow-hidden bg-[var(--paper-dark)]">
+          <div className="bg-[var(--ink)]" style={{ width: `${sponsorPct}%` }} />
         </div>
-        <div className="mt-1 flex justify-between text-[10px]">
-          <span className="text-amber-400">
-            {sponsorCount} / {threshold} sponsors
-          </span>
-          <span className="text-zinc-500">{sponsorPct}%</span>
-        </div>
+        <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[var(--ink-light)]">
+          {sponsorCount} / {threshold} sponsors &mdash; {sponsorPct}%
+        </p>
       </div>
 
-      {/* Actions */}
-      <div className="mt-auto flex items-center gap-3 border-t border-amber-500/10 pt-2 mt-2 text-[10px] text-zinc-500">
-        <Link href={candidateHref} className="transition-colors hover:text-amber-400">
+      {/* Footer */}
+      <div className="mt-auto flex items-center gap-3 border-t border-[var(--rule-light)] pt-2 mt-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+        <Link href={candidateHref} className="transition-colors hover:text-[var(--ink)]">
           {isPromotable ? "Promote" : "Sponsor"}
         </Link>
         {isConnected && proposerHash && <TipButton entityHash={proposerHash} />}
       </div>
-    </div>
+    </article>
   );
 }
 
 // ============================================================================
-// PARLIAMENT TILE — UK Parliament division vote card
+// PARLIAMENT TILE — Government votes (UK, US, EU, CA, AU)
 // ============================================================================
 
-function ParliamentTile({ proposal }: { proposal: Proposal }) {
+const GOV_FLAGS: Record<string, string> = {
+  parliament: "🇬🇧",
+  congress: "🇺🇸",
+  eu: "🇪🇺",
+  canada: "🇨🇦",
+  australia: "🇦🇺",
+};
+
+const GOV_NAMES: Record<string, string> = {
+  parliament: "UK Parliament",
+  congress: "US Congress",
+  eu: "EU Parliament",
+  canada: "Canada Parliament",
+  australia: "Australia Parliament",
+};
+
+function ParliamentTile({ proposal, weight }: { proposal: Proposal; weight: VisualWeight }) {
   const { forPct, againstPct } = getVotePercentage(
     proposal.votesFor,
     proposal.votesAgainst
   );
-  const chamber = proposal.chamber || "Commons";
-  const isCommons = chamber === "Commons";
+  const chamber = proposal.chamber || "";
+  const hasVotes = proposal.votesFor + proposal.votesAgainst > 0;
+  const flag = GOV_FLAGS[proposal.source] || "🏛️";
+  const govName = proposal.dao || GOV_NAMES[proposal.source] || "Government";
 
   const divisionHref = proposal.divisionId
-    ? `/proposals/division/${proposal.divisionId}?chamber=${chamber.toLowerCase()}`
+    ? `/proposals/division/${proposal.divisionId}?chamber=${(chamber || "commons").toLowerCase()}`
     : `/proposals/${encodeURIComponent(proposal.id)}`;
 
   return (
-    <div className="group flex flex-col rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 transition-colors hover:border-zinc-600">
-      {/* Header row */}
-      <div className="mb-1.5 flex items-center gap-2">
-        <span className="text-sm" role="img" aria-label="UK">
-          🇬🇧
+    <article className="flex flex-col h-full">
+      {/* Header */}
+      <div className="mb-2 flex items-center gap-2 border-b border-[var(--rule-light)] pb-1.5">
+        <span className="text-sm">{flag}</span>
+        <span className="truncate font-mono text-[10px] uppercase tracking-wider text-[var(--ink-light)]">
+          {govName}
         </span>
-        <span className="truncate text-xs font-medium text-zinc-400">
-          UK Parliament
-        </span>
-        <span
-          className={`shrink-0 rounded px-1 py-px text-[9px] font-medium uppercase ${
-            isCommons
-              ? "bg-green-600/20 text-green-400"
-              : "bg-red-600/20 text-red-400"
-          }`}
-        >
-          {chamber}
-        </span>
-        <span className="ml-auto text-[10px] text-zinc-600">
+        {chamber && (
+          <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-[var(--ink-faint)]">
+            {chamber}
+          </span>
+        )}
+        <span className="ml-auto font-mono text-[9px] text-[var(--ink-faint)]">
           {proposal.startTime > 0
             ? new Date(proposal.startTime * 1000).toLocaleDateString("en-GB", {
                 day: "numeric",
@@ -546,38 +1028,224 @@ function ParliamentTile({ proposal }: { proposal: Proposal }) {
 
       {/* Title */}
       <Link href={divisionHref}>
-        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors group-hover:text-[#2F80ED]">
+        <h3 className={`${weight === "major" ? "text-lg font-headline" : "text-sm font-headline-serif font-bold"} leading-snug text-[var(--ink)] line-clamp-2 transition-colors hover:text-[var(--accent-red)]`}>
           {proposal.title}
         </h3>
       </Link>
 
-      {/* Vote bar — Ayes vs Noes */}
-      <div className="pt-2">
-        <div className="flex h-1.5 overflow-hidden rounded-full bg-zinc-800">
-          <div className="bg-[#31F387]" style={{ width: `${forPct}%` }} />
-          <div className="bg-[#D0021B]" style={{ width: `${againstPct}%` }} />
-        </div>
-        <div className="mt-1 flex justify-between text-[10px]">
-          <span className="text-[#31F387]">{proposal.votesFor} Ayes</span>
-          <span className="text-[#D0021B]">{proposal.votesAgainst} Noes</span>
-        </div>
-      </div>
+      {/* Proposer */}
+      {proposal.proposer && (
+        <p className="mt-0.5 font-mono text-[9px] italic text-[var(--ink-faint)] truncate">
+          by {proposal.proposer}
+        </p>
+      )}
 
-      {/* Actions */}
-      <div className="mt-auto flex items-center gap-3 border-t border-zinc-800/50 pt-2 mt-2 text-[10px] text-zinc-500">
-        <Link href={divisionHref} className="transition-colors hover:text-[#2F80ED]">
-          View Details
-        </Link>
+      {/* Vote tally — text style: "AYES 234 — NOES 123" */}
+      {hasVotes && (
+        <div className="mt-2">
+          <div className="flex h-1 overflow-hidden bg-[var(--paper-dark)]">
+            <div className="bg-[var(--ink)]" style={{ width: `${forPct}%` }} />
+          </div>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[var(--ink-light)]">
+            Ayes {proposal.votesFor} &mdash; Noes {proposal.votesAgainst}
+          </p>
+        </div>
+      )}
+
+      {/* Tags */}
+      {proposal.tags && proposal.tags.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {proposal.tags.slice(0, 3).map((tag) => (
+            <span key={tag} className="font-mono text-[8px] text-[var(--ink-faint)]">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="mt-auto flex items-center gap-3 border-t border-[var(--rule-light)] pt-2 mt-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+        {proposal.source === "parliament" && proposal.divisionId && (
+          <Link href={divisionHref} className="transition-colors hover:text-[var(--ink)]">
+            Details
+          </Link>
+        )}
         <a
           href={proposal.link}
           target="_blank"
           rel="noopener noreferrer"
-          className="transition-colors hover:text-[#2F80ED]"
+          className="transition-colors hover:text-[var(--ink)]"
         >
-          Parliament ↗
+          Source ↗
         </a>
       </div>
-    </div>
+    </article>
+  );
+}
+
+// ============================================================================
+// SEC TILE — Corporate filing
+// ============================================================================
+
+function SECTile({ proposal, weight }: { proposal: Proposal; weight: VisualWeight }) {
+  return (
+    <article className="flex flex-col h-full">
+      <div className="mb-2 flex items-center gap-2 border-b border-[var(--rule-light)] pb-1.5">
+        <span className="text-sm">📊</span>
+        <span className="truncate font-mono text-[10px] uppercase tracking-wider text-[var(--ink-light)]">
+          {proposal.dao}
+        </span>
+        <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-[var(--ink-faint)]">
+          SEC
+        </span>
+        <span className="ml-auto font-mono text-[9px] text-[var(--ink-faint)]">
+          {proposal.startTime > 0
+            ? new Date(proposal.startTime * 1000).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })
+            : ""}
+        </span>
+      </div>
+
+      <a href={proposal.link} target="_blank" rel="noopener noreferrer">
+        <h3 className="text-sm font-headline-serif font-bold leading-snug text-[var(--ink)] line-clamp-2 transition-colors hover:text-[var(--accent-red)]">
+          {proposal.title}
+        </h3>
+      </a>
+
+      {proposal.tags && proposal.tags.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {proposal.tags.slice(0, 3).map((tag) => (
+            <span key={tag} className="font-mono text-[8px] text-[var(--ink-faint)]">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-auto flex items-center gap-3 border-t border-[var(--rule-light)] pt-2 mt-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+        <a
+          href={proposal.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition-colors hover:text-[var(--ink)]"
+        >
+          EDGAR ↗
+        </a>
+      </div>
+    </article>
+  );
+}
+
+// ============================================================================
+// VIDEO TILE — embedded YouTube player
+// ============================================================================
+
+function VideoTile({ video, weight }: { video: VideoItem; weight: VisualWeight }) {
+  const [playing, setPlaying] = useState(false);
+  const timeSince = getTimeSince(video.pubDate);
+  const openMiniWindow = useCallback(() => {
+    const popup = openCenteredPopup(video.url, {
+      width: 980,
+      height: 620,
+      name: `yt_${video.id}`,
+    });
+    if (!popup) {
+      window.open(video.url, "_blank", "noopener,noreferrer");
+    }
+  }, [video.id, video.url]);
+
+  const onVideoLinkClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>) => {
+      if (shouldKeepDefaultLinkBehavior(event)) return;
+      event.preventDefault();
+      openMiniWindow();
+    },
+    [openMiniWindow]
+  );
+
+  return (
+    <article className="flex flex-col h-full">
+      {/* Channel header */}
+      <div className="mb-2 flex items-center gap-2 border-b border-[var(--rule-light)] pb-1.5">
+        <span className="text-sm">▶</span>
+        <span className="truncate font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-light)]">
+          {video.channel}
+        </span>
+        <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-[var(--ink-faint)]">
+          {video.category}
+        </span>
+        <span className="ml-auto font-mono text-[9px] text-[var(--ink-faint)]">
+          {timeSince}
+        </span>
+      </div>
+
+      {/* Video embed or thumbnail */}
+      <div className="relative mb-2 w-full overflow-hidden bg-black" style={{ aspectRatio: "16/9" }}>
+        {playing ? (
+          <iframe
+            src={`${video.embedUrl}?autoplay=1&rel=0`}
+            title={video.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full border-0"
+          />
+        ) : (
+          <button
+            onClick={() => setPlaying(true)}
+            className="group absolute inset-0 h-full w-full cursor-pointer"
+          >
+            <img
+              src={video.thumbnail}
+              alt=""
+              className="h-full w-full object-cover transition-all duration-300 group-hover:scale-[1.02]"
+              loading="lazy"
+            />
+            {/* Play button overlay */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--ink)] bg-opacity-80 transition-transform group-hover:scale-110">
+                <svg className="ml-1 h-5 w-5 text-[var(--paper)]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            </div>
+          </button>
+        )}
+      </div>
+
+      {/* Title */}
+      <a href={video.url} target="_blank" rel="noopener noreferrer" onClick={onVideoLinkClick}>
+        <h3 className={`${weight === "major" ? "text-base font-headline" : "text-sm font-headline-serif font-bold"} leading-snug text-[var(--ink)] line-clamp-2 transition-colors hover:text-[var(--accent-red)]`}>
+          {video.title}
+        </h3>
+      </a>
+
+      {/* Footer */}
+      <div className="mt-auto flex items-center gap-3 border-t border-[var(--rule-light)] pt-2 mt-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+        <a
+          href={video.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onVideoLinkClick}
+          className="transition-colors hover:text-[var(--ink)]"
+        >
+          YouTube ↗
+        </a>
+        <button
+          onClick={openMiniWindow}
+          className="font-bold text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]"
+        >
+          Mini Window
+        </button>
+        <button
+          onClick={() => setPlaying(true)}
+          className="font-bold text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]"
+        >
+          {playing ? "Playing" : "Watch"}
+        </button>
+      </div>
+    </article>
   );
 }
 

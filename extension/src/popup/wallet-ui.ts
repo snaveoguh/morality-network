@@ -4,14 +4,14 @@ import type { WalletInfo } from '../shared/types';
 export function renderWalletTab(container: HTMLElement): void {
   container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
-  chrome.runtime.sendMessage({ type: 'GET_WALLET_INFO' }, (response) => {
-    if (!response?.ok) {
-      container.innerHTML = '<div class="empty">Failed to load wallet</div>';
+  void (async () => {
+    const response = await sendMessageSafe<WalletInfo>({ type: 'GET_WALLET_INFO' }, 12000);
+    if (!response.ok || !response.data) {
+      container.innerHTML = `<div class="empty">${escapeHtml(response.error || 'Failed to load wallet')}</div>`;
       return;
     }
 
-    const info = response.data as WalletInfo;
-
+    const info = response.data;
     if (!info.hasWallet) {
       renderSetup(container);
     } else if (info.isLocked) {
@@ -19,7 +19,7 @@ export function renderWalletTab(container: HTMLElement): void {
     } else {
       renderUnlocked(container, info);
     }
-  });
+  })();
 }
 
 function renderSetup(container: HTMLElement): void {
@@ -49,6 +49,7 @@ function renderSetup(container: HTMLElement): void {
   });
 
   container.querySelector('#pw-create')?.addEventListener('click', () => {
+    void (async () => {
     const pass = (container.querySelector('#pw-setup-pass') as HTMLInputElement).value;
     if (!pass || pass.length < 6) {
       showStatus(container, 'Password must be 6+ characters', true);
@@ -59,18 +60,19 @@ function renderSetup(container: HTMLElement): void {
     btn.disabled = true;
     btn.textContent = 'Creating…';
 
-    chrome.runtime.sendMessage({ type: 'CREATE_WALLET', password: pass }, (res) => {
-      if (res?.ok) {
+      const res = await sendMessageSafe<{ address: string }>({ type: 'CREATE_WALLET', password: pass }, 20000);
+      if (res.ok) {
         renderWalletTab(container);
       } else {
-        showStatus(container, res?.error || 'Failed', true);
+        showStatus(container, res.error || 'Failed', true);
         btn.disabled = false;
         btn.textContent = 'Create New Wallet';
       }
-    });
+    })();
   });
 
   container.querySelector('#pw-import')?.addEventListener('click', () => {
+    void (async () => {
     const pass = (container.querySelector('#pw-setup-pass') as HTMLInputElement).value;
     const key = (container.querySelector('#pw-import-key') as HTMLInputElement).value;
     if (!pass || pass.length < 6) {
@@ -86,15 +88,19 @@ function renderSetup(container: HTMLElement): void {
     btn.disabled = true;
     btn.textContent = 'Importing…';
 
-    chrome.runtime.sendMessage({ type: 'IMPORT_WALLET', privateKey: key, password: pass }, (res) => {
-      if (res?.ok) {
+      const res = await sendMessageSafe<{ address: string }>({
+        type: 'IMPORT_WALLET',
+        privateKey: key,
+        password: pass,
+      }, 20000);
+      if (res.ok) {
         renderWalletTab(container);
       } else {
-        showStatus(container, res?.error || 'Failed', true);
+        showStatus(container, res.error || 'Failed', true);
         btn.disabled = false;
         btn.textContent = 'Import';
       }
-    });
+    })();
   });
 }
 
@@ -115,21 +121,22 @@ function renderLocked(container: HTMLElement, info: WalletInfo): void {
   const unlockBtn = container.querySelector('#pw-unlock') as HTMLButtonElement;
 
   const doUnlock = () => {
+    void (async () => {
     const pass = passInput.value;
     if (!pass) return;
 
     unlockBtn.disabled = true;
     unlockBtn.textContent = 'Unlocking…';
 
-    chrome.runtime.sendMessage({ type: 'UNLOCK_WALLET', password: pass }, (res) => {
-      if (res?.ok) {
+      const res = await sendMessageSafe<{ address: string }>({ type: 'UNLOCK_WALLET', password: pass }, 20000);
+      if (res.ok) {
         renderWalletTab(container);
       } else {
-        showStatus(container, res?.error || 'Wrong password', true);
+        showStatus(container, res.error || 'Wrong password', true);
         unlockBtn.disabled = false;
         unlockBtn.textContent = 'Unlock';
       }
-    });
+    })();
   };
 
   unlockBtn.addEventListener('click', doUnlock);
@@ -163,12 +170,14 @@ function renderUnlocked(container: HTMLElement, info: WalletInfo): void {
   `;
 
   container.querySelector('#pw-lock')?.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ type: 'LOCK_WALLET' }, () => {
+    void (async () => {
+      await sendMessageSafe({ type: 'LOCK_WALLET' }, 8000);
       renderWalletTab(container);
-    });
+    })();
   });
 
   container.querySelector('#pw-send')?.addEventListener('click', () => {
+    void (async () => {
     const to = (container.querySelector('#pw-send-to') as HTMLInputElement).value;
     const amt = (container.querySelector('#pw-send-amt') as HTMLInputElement).value;
 
@@ -188,19 +197,19 @@ function renderUnlocked(container: HTMLElement, info: WalletInfo): void {
     btn.disabled = true;
     btn.textContent = 'Sending…';
 
-    chrome.runtime.sendMessage({ type: 'SEND_ETH', to, amountWei: weiStr }, (res) => {
-      if (res?.ok) {
+      const res = await sendMessageSafe<{ txHash: string }>({ type: 'SEND_ETH', to, amountWei: weiStr }, 20000);
+      if (res.ok) {
         showStatus(container, 'Transaction sent!', false);
         btn.textContent = 'Send ETH';
         btn.disabled = false;
         // Refresh balance
         setTimeout(() => renderWalletTab(container), 2000);
       } else {
-        showStatus(container, res?.error || 'Failed to send', true);
+        showStatus(container, res.error || 'Failed to send', true);
         btn.disabled = false;
         btn.textContent = 'Send ETH';
       }
-    });
+    })();
   });
 }
 
@@ -209,4 +218,46 @@ function showStatus(container: HTMLElement, message: string, isError: boolean): 
   if (!el) return;
   el.className = `status ${isError ? 'error' : 'success'}`;
   el.textContent = message;
+}
+
+type BgResponse<T> = { ok: true; data?: T } | { ok: false; error: string };
+
+function sendMessageSafe<T = unknown>(message: unknown, timeoutMs = 10000): Promise<BgResponse<T>> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      resolve({ ok: false, error: 'Request timed out. Try again.' });
+    }, timeoutMs);
+
+    try {
+      chrome.runtime.sendMessage(message, (response) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+
+        if (chrome.runtime.lastError) {
+          resolve({ ok: false, error: chrome.runtime.lastError.message || 'Extension unavailable' });
+          return;
+        }
+
+        if (!response) {
+          resolve({ ok: false, error: 'No response from extension' });
+          return;
+        }
+
+        resolve(response as BgResponse<T>);
+      });
+    } catch (error) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve({ ok: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+}
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

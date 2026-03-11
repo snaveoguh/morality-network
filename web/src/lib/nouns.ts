@@ -300,6 +300,56 @@ export async function fetchLilNounsProposals(count: number = 5): Promise<NounsPr
 }
 
 // ============================================================================
+// SUBGRAPH — Fallback for proposal descriptions
+// ============================================================================
+
+// noun.wtf Ponder API — indexes Nouns onchain data including full descriptions
+const NOUNS_PONDER_API =
+  "https://spirited-flexibility-production-3c30.up.railway.app";
+
+async function fetchDescriptionsFromSubgraph(
+  ids: number[],
+  dao: "nouns" | "lilnouns"
+): Promise<Map<number, string>> {
+  const map = new Map<number, string>();
+  if (ids.length === 0) return map;
+
+  // Only Nouns DAO has a Ponder index; skip for Lil Nouns
+  if (dao !== "nouns") return map;
+
+  try {
+    const idStrings = ids.map((id) => `"${id}"`);
+    const res = await fetch(NOUNS_PONDER_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `{
+          proposals(where: { id_in: [${idStrings.join(",")}] }, limit: ${ids.length}) {
+            items { id description }
+          }
+        }`,
+      }),
+      next: { revalidate: 300 },
+    });
+
+    if (!res.ok) return map;
+    const json = await res.json();
+    const proposals = json?.data?.proposals?.items;
+    if (Array.isArray(proposals)) {
+      for (const p of proposals) {
+        if (p.description) {
+          map.set(Number(p.id), p.description);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn(`[nouns] Ponder description fallback failed:`, e);
+  }
+
+  return map;
+}
+
+// ============================================================================
 // SHARED — Multicall-based proposal fetcher (single RPC round-trip)
 // ============================================================================
 
@@ -320,6 +370,7 @@ async function fetchProposalsFromGovernor(
     const ids = Array.from({ length: Math.min(count, total) }, (_, i) => start + i).reverse();
 
     // Use multicall to batch all reads into one RPC call
+    // Fetch proposals, state, AND descriptions in a single round-trip
     const calls = ids.flatMap((id) => [
       {
         address: governor,
@@ -333,20 +384,39 @@ async function fetchProposalsFromGovernor(
         functionName: "state" as const,
         args: [BigInt(id)],
       },
+      {
+        address: governor,
+        abi: GOVERNOR_ABI,
+        functionName: "proposalDescriptions" as const,
+        args: [BigInt(id)],
+      },
     ]);
 
     const results = await client.multicall({ contracts: calls, allowFailure: true });
 
     const proposals: NounsProposal[] = [];
+    const missingDescIds: number[] = [];
+
     for (let i = 0; i < ids.length; i++) {
-      const proposalResult = results[i * 2];
-      const stateResult = results[i * 2 + 1];
+      const proposalResult = results[i * 3];
+      const stateResult = results[i * 3 + 1];
+      const descResult = results[i * 3 + 2];
 
       if (proposalResult.status !== "success" || stateResult.status !== "success") continue;
 
       const p = proposalResult.result as unknown as any[];
       const id = ids[i];
       const prefix = dao === "nouns" ? "Proposal" : "Lil Proposal";
+
+      // Parse description — title is typically the first markdown heading line
+      const rawDesc = descResult.status === "success" ? String(descResult.result ?? "") : "";
+      const descTitle = rawDesc
+        .split("\n")[0]
+        ?.replace(/^#+\s*/, "")
+        .trim();
+      const title = descTitle || `${prefix} ${id}`;
+
+      if (!rawDesc) missingDescIds.push(id);
 
       proposals.push({
         id,
@@ -363,10 +433,26 @@ async function fetchProposalsFromGovernor(
         executed: Boolean(p[12]),
         totalSupply: Number(p[13]),
         status: mapProposalState(Number(stateResult.result)),
-        description: "",
-        title: `${prefix} ${id}`,
+        description: rawDesc,
+        title,
         dao,
       });
+    }
+
+    // Backfill empty descriptions from subgraph
+    if (missingDescIds.length > 0) {
+      const subgraphDescs = await fetchDescriptionsFromSubgraph(missingDescIds, dao);
+      for (const prop of proposals) {
+        if (!prop.description && subgraphDescs.has(prop.id)) {
+          prop.description = subgraphDescs.get(prop.id)!;
+          // Re-derive title from description
+          const descTitle = prop.description
+            .split("\n")[0]
+            ?.replace(/^#+\s*/, "")
+            .trim();
+          if (descTitle) prop.title = descTitle;
+        }
+      }
     }
 
     return proposals;
@@ -374,4 +460,92 @@ async function fetchProposalsFromGovernor(
     console.error(`Failed to fetch ${dao} proposals:`, e);
     return [];
   }
+}
+
+// ============================================================================
+// DIRECT SINGLE-PROPOSAL FETCH — Fetch one proposal by numeric ID
+// ============================================================================
+
+async function fetchSingleProposalFromGovernor(
+  governor: Address,
+  dao: "nouns" | "lilnouns",
+  proposalId: number
+): Promise<NounsProposal | null> {
+  try {
+    const calls = [
+      {
+        address: governor,
+        abi: GOVERNOR_ABI,
+        functionName: "proposals" as const,
+        args: [BigInt(proposalId)],
+      },
+      {
+        address: governor,
+        abi: GOVERNOR_ABI,
+        functionName: "state" as const,
+        args: [BigInt(proposalId)],
+      },
+      {
+        address: governor,
+        abi: GOVERNOR_ABI,
+        functionName: "proposalDescriptions" as const,
+        args: [BigInt(proposalId)],
+      },
+    ];
+
+    const results = await client.multicall({ contracts: calls, allowFailure: true });
+    const proposalResult = results[0];
+    const stateResult = results[1];
+    const descResult = results[2];
+
+    if (proposalResult.status !== "success" || stateResult.status !== "success") return null;
+
+    const p = proposalResult.result as unknown as any[];
+    const prefix = dao === "nouns" ? "Proposal" : "Lil Proposal";
+
+    let rawDesc = descResult.status === "success" ? String(descResult.result ?? "") : "";
+
+    // Subgraph fallback for empty descriptions
+    if (!rawDesc && dao === "nouns") {
+      const subgraphDescs = await fetchDescriptionsFromSubgraph([proposalId], dao);
+      rawDesc = subgraphDescs.get(proposalId) || "";
+    }
+
+    const descTitle = rawDesc
+      .split("\n")[0]
+      ?.replace(/^#+\s*/, "")
+      .trim();
+    const title = descTitle || `${prefix} ${proposalId}`;
+
+    return {
+      id: proposalId,
+      proposer: p[1] as string,
+      forVotes: Number(p[7]),
+      againstVotes: Number(p[8]),
+      abstainVotes: Number(p[9]),
+      quorumVotes: Number(p[3]),
+      startBlock: Number(p[5]),
+      endBlock: Number(p[6]),
+      eta: Number(p[4]),
+      canceled: Boolean(p[10]),
+      vetoed: Boolean(p[11]),
+      executed: Boolean(p[12]),
+      totalSupply: Number(p[13]),
+      status: mapProposalState(Number(stateResult.result)),
+      description: rawDesc,
+      title,
+      dao,
+    };
+  } catch (e) {
+    console.error(`Failed to fetch ${dao} proposal #${proposalId}:`, e);
+    return null;
+  }
+}
+
+export async function fetchNounsProposalDirect(proposalId: number): Promise<NounsProposal | null> {
+  return fetchSingleProposalFromGovernor(NOUNS_CONTRACTS.governor, "nouns", proposalId);
+}
+
+export async function fetchLilNounsProposalDirect(proposalId: number): Promise<NounsProposal | null> {
+  return fetchSingleProposalFromGovernor(LIL_NOUNS_CONTRACTS.governor, "lilnouns", proposalId);
 }

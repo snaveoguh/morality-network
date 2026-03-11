@@ -3,13 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ChainSwitcher } from "@/components/shared/ChainSwitcher";
+import { BRAND_NAME } from "@/lib/brand";
 
 const NAV_LINKS = [
   { href: "/", label: "Feed" },
   { href: "/stumble", label: "Stumble" },
   { href: "/markets", label: "Markets" },
+  { href: "/signals", label: "Signals" },
+  { href: "/sentiment", label: "Index" },
   { href: "/archive", label: "Archive" },
-  { href: "/proposals", label: "Proposals" },
+  { href: "/proposals", label: "Governance" },
   { href: "/predictions", label: "Predictions" },
   { href: "/discuss", label: "Discuss" },
   { href: "/leaderboard", label: "Leaderboard" },
@@ -26,8 +30,8 @@ export function Header() {
           <Link
             href="/"
             className="flex h-4 w-4 shrink-0 items-center justify-center"
-            aria-label="pooter world home"
-            title="pooter world"
+            aria-label={`${BRAND_NAME} home`}
+            title={BRAND_NAME}
           >
             <img
               src="https://morality.s3.eu-west-2.amazonaws.com/brand/glyph.png"
@@ -36,7 +40,7 @@ export function Header() {
             />
           </Link>
 
-          <nav className="flex min-w-0 items-center gap-0 overflow-x-auto whitespace-nowrap">
+          <nav className="scrollbar-hide flex min-w-0 items-center gap-0 overflow-x-auto whitespace-nowrap">
             {NAV_LINKS.map(({ href, label }, i) => {
               const isActive =
                 href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -58,13 +62,12 @@ export function Header() {
             })}
           </nav>
 
-          <span className="hidden text-[var(--rule-light)] lg:inline">|</span>
-          <p className="hidden max-w-[24rem] truncate font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)] lg:block">
-            A public ledger of world events and their interpretation.
-          </p>
         </div>
 
-        <MiniWalletButton />
+        <div className="flex items-center gap-1.5">
+          <ChainSwitcher />
+          <MiniWalletButton />
+        </div>
       </div>
     </header>
   );

@@ -6,6 +6,7 @@ import { agentRegistry } from "@/lib/agents/core";
 // Force import of agent modules so they self-register
 import "@/lib/agents/scanner";
 import "@/lib/agents/swarm";
+import "@/lib/agents/coordinator";
 
 export const dynamic = "force-dynamic";
 

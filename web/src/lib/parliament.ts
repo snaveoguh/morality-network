@@ -4,6 +4,70 @@
 // Lords: https://lordsvotes-api.parliament.uk
 
 // ============================================================================
+// FETCH WITH RETRY + TIMEOUT — Exponential backoff with AbortController
+// ============================================================================
+
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
+const FETCH_TIMEOUT_MS = 10_000; // 10 seconds
+
+async function fetchWithRetry(
+  url: string,
+  options?: RequestInit & { next?: { revalidate: number } },
+  maxRetries: number = 3
+): Promise<Response> {
+  const backoffMs = [500, 1000, 2000];
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+    try {
+      const res = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok || !RETRYABLE_STATUS_CODES.has(res.status)) {
+        return res;
+      }
+
+      // Retryable HTTP status — fall through to retry logic
+      if (attempt < maxRetries) {
+        const delay = backoffMs[attempt] || 2000;
+        console.warn(
+          `[Parliament fetchWithRetry] ${url} returned ${res.status}, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        return res; // Return the failed response after all retries exhausted
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+
+      if (attempt < maxRetries) {
+        const delay = backoffMs[attempt] || 2000;
+        const reason =
+          error instanceof DOMException && error.name === "AbortError"
+            ? "request timed out"
+            : error instanceof Error
+              ? error.message
+              : String(error);
+        console.warn(
+          `[Parliament fetchWithRetry] ${url} failed (${reason}), retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        throw error; // Re-throw after all retries exhausted
+      }
+    }
+  }
+
+  // Should not reach here, but TypeScript needs a return
+  throw new Error(`[Parliament fetchWithRetry] All ${maxRetries} retries exhausted for ${url}`);
+}
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -38,7 +102,7 @@ export async function fetchCommonsDivisions(
   count: number = 20
 ): Promise<ParliamentDivision[]> {
   try {
-    const res = await fetch(
+    const res = await fetchWithRetry(
       `${COMMONS_API}/divisions.json/search?queryParameters.take=${count}`,
       {
         headers: { Accept: "application/json" },
@@ -59,7 +123,7 @@ export async function fetchCommonsDivisions(
       abstentionCount: 0,
     }));
   } catch (error) {
-    console.error("Failed to fetch Commons divisions:", error);
+    console.error("[UK Parliament] Failed to fetch Commons divisions:", error);
     return [];
   }
 }
@@ -74,7 +138,7 @@ export async function fetchLordsDivisions(
   count: number = 20
 ): Promise<ParliamentDivision[]> {
   try {
-    const res = await fetch(
+    const res = await fetchWithRetry(
       `${LORDS_API}/search?count=${count}&SortBy=DateDesc`,
       {
         headers: { Accept: "application/json" },
@@ -95,7 +159,7 @@ export async function fetchLordsDivisions(
       abstentionCount: 0,
     }));
   } catch (error) {
-    console.error("Failed to fetch Lords divisions:", error);
+    console.error("[UK Parliament] Failed to fetch Lords divisions:", error);
     return [];
   }
 }
@@ -108,7 +172,7 @@ export async function fetchCommonsDivisionById(
   divisionId: number
 ): Promise<ParliamentDivision | null> {
   try {
-    const res = await fetch(`${COMMONS_API}/division/${divisionId}.json`, {
+    const res = await fetchWithRetry(`${COMMONS_API}/division/${divisionId}.json`, {
       headers: { Accept: "application/json" },
       next: { revalidate: 300 },
     });
@@ -142,7 +206,7 @@ export async function fetchCommonsDivisionById(
       noeMembers,
     };
   } catch (error) {
-    console.error("Failed to fetch Commons division detail:", error);
+    console.error("[UK Parliament] Failed to fetch Commons division detail:", error);
     return null;
   }
 }
@@ -151,7 +215,7 @@ export async function fetchLordsDivisionById(
   divisionId: number
 ): Promise<ParliamentDivision | null> {
   try {
-    const res = await fetch(`${LORDS_API}/${divisionId}`, {
+    const res = await fetchWithRetry(`${LORDS_API}/${divisionId}`, {
       headers: { Accept: "application/json" },
       next: { revalidate: 300 },
     });
@@ -188,7 +252,7 @@ export async function fetchLordsDivisionById(
       noeMembers,
     };
   } catch (error) {
-    console.error("Failed to fetch Lords division detail:", error);
+    console.error("[UK Parliament] Failed to fetch Lords division detail:", error);
     return null;
   }
 }

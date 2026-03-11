@@ -1,5 +1,7 @@
 import Parser from "rss-parser";
 import { getSourceBias, type SourceBias } from "./bias";
+import { fetchRedditFeeds, fetchChanFeeds } from "./scrapers";
+import { extractCanonicalClaim } from "./claim-extract";
 
 const parser = new Parser({
   timeout: 10000,
@@ -9,6 +11,7 @@ const parser = new Parser({
 });
 
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
+const FALLBACK_TRIGGER_CODES = new Set([403, 404]);
 const RETRY_BACKOFF_MS = [500, 1000, 2000];
 const FEED_TIMEOUT_MS = 10_000;
 
@@ -16,6 +19,7 @@ export interface FeedSource {
   name: string;
   url: string;
   category: string;
+  fallbackUrl?: string;
 }
 
 export interface FeedItem {
@@ -30,6 +34,7 @@ export interface FeedItem {
   imageUrl?: string;
   bias?: SourceBias | null;
   tags?: string[];
+  canonicalClaim?: string;
 }
 
 // ============================================================================
@@ -50,6 +55,7 @@ export const KEYWORD_PATTERNS: Record<string, RegExp> = {
   energy:    /\b(oil|opec|natural gas|nuclear|solar|wind farm|pipeline|energy crisis|electricity|grid|petroleum)\b/i,
   rights:    /\b(human rights|protest|civil rights|freedom|censorship|asylum|refugee|migrant|discrimination|lgbtq|abortion|privacy)\b/i,
   security:  /\b(cybersecurity|hack|breach|surveillance|espionage|intelligence|nato|terrorism|extremism|radicalis)\b/i,
+  nature:    /\b(biodiversity|species|wildlife|conservation|deforestation|coral reef|rainforest|endangered|ecosystem|habitat|ocean|marine|pollution|plastic)\b/i,
 };
 
 // ============================================================================
@@ -79,6 +85,20 @@ const SOURCE_TIER_MAP: Record<string, SourceTier> = {
   "Bellingcat": "broadsheet",
   "Politico": "broadsheet",
   "The Hill": "broadsheet",
+  // Environment
+  "Mongabay": "broadsheet",
+  "Yale E360": "broadsheet",
+  "Guardian Environment": "broadsheet",
+  "Inside Climate News": "broadsheet",
+  "Grist": "broadsheet",
+  // Government / Institutional
+  "UN News": "wire",
+  "WHO News": "wire",
+  "GAO Reports": "broadsheet",
+  "CBO Publications": "broadsheet",
+  "World Bank Blogs": "broadsheet",
+  "IMF Blog": "broadsheet",
+  "OECD Newsroom": "broadsheet",
 };
 
 const TIER_PRIORITY: Record<SourceTier, number> = {
@@ -99,9 +119,9 @@ function getSourceTier(sourceName: string): SourceTier {
 
 export const DEFAULT_FEEDS: FeedSource[] = [
   // ─── WIRE SERVICES (Center, highest factuality) ───
-  { name: "Reuters",           url: "https://feedx.net/rss/reuters.xml",                           category: "World" },
-  { name: "Associated Press",  url: "https://feedx.net/rss/ap.xml",                               category: "World" },
-  { name: "Associated Press (Top)", url: "https://rsshub.app/apnews/topics/apf-topnews",          category: "World" },
+  { name: "Reuters",           url: "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en", category: "World" },
+  { name: "Associated Press",  url: "https://feedx.net/rss/ap.xml",                               category: "World",  fallbackUrl: "https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en" },
+  { name: "Associated Press (Top)", url: "https://news.google.com/rss/search?q=site:apnews.com+when:1d&hl=en-US&gl=US&ceid=US:en", category: "World" },
   { name: "AFP / France 24",   url: "https://www.france24.com/en/rss",                             category: "World" },
 
   // ─── CENTER / LEAN-LEFT NEWS ───
@@ -127,7 +147,7 @@ export const DEFAULT_FEEDS: FeedSource[] = [
   // ─── LEAN-RIGHT / RIGHT ───
   { name: "Reason",            url: "https://reason.com/feed/",                                    category: "World" },
   { name: "The American Conservative", url: "https://www.theamericanconservative.com/feed/",       category: "World" },
-  { name: "The Spectator",     url: "https://www.spectator.co.uk/feed",                            category: "Politics" },
+  { name: "The Spectator",     url: "https://news.google.com/rss/search?q=site:spectator.co.uk+when:7d&hl=en-GB&gl=GB&ceid=GB:en", category: "Politics" },
   { name: "Free Beacon",       url: "https://freebeacon.com/feed/",                                category: "World" },
   { name: "Guido Fawkes",      url: "https://order-order.com/feed/",                               category: "Politics" },
   { name: "Breitbart",         url: "https://feeds.feedburner.com/breitbart",                      category: "Politics" },
@@ -148,7 +168,7 @@ export const DEFAULT_FEEDS: FeedSource[] = [
   { name: "SCMP",              url: "https://www.scmp.com/rss/91/feed",                            category: "World" },
   { name: "NHK World",         url: "https://www3.nhk.or.jp/rss/news/cat0.xml",                   category: "World" },
   { name: "Times of India",    url: "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",  category: "World" },
-  { name: "Kyiv Independent",  url: "https://kyivindependent.com/feed/",                           category: "World" },
+  { name: "Kyiv Independent",  url: "https://news.google.com/rss/search?q=site:kyivindependent.com+when:1d&hl=en-US&gl=US&ceid=US:en", category: "World" },
   { name: "Middle East Eye",   url: "https://www.middleeasteye.net/rss",                           category: "World" },
 
   // ─── BUSINESS / FINANCE ───
@@ -172,13 +192,30 @@ export const DEFAULT_FEEDS: FeedSource[] = [
   { name: "Decrypt",           url: "https://decrypt.co/feed",                                     category: "Crypto" },
   { name: "Blockworks",        url: "https://blockworks.co/feed",                                  category: "Crypto" },
   { name: "The Defiant",       url: "https://thedefiant.io/feed",                                  category: "Crypto" },
-  { name: "DL News",           url: "https://www.dlnews.com/feed/",                                category: "Crypto" },
+  { name: "DL News",           url: "https://news.google.com/rss/search?q=site:dlnews.com+when:1d&hl=en-US&gl=US&ceid=US:en", category: "Crypto" },
   { name: "Cointelegraph",     url: "https://cointelegraph.com/rss",                               category: "Crypto" },
 
-  // ─── SCIENCE / ENVIRONMENT ───
+  // ─── SCIENCE ───
   { name: "Nature",            url: "https://www.nature.com/nature.rss",                           category: "Science" },
   { name: "New Scientist",     url: "https://www.newscientist.com/feed/home",                      category: "Science" },
-  { name: "Carbon Brief",      url: "https://www.carbonbrief.org/feed",                            category: "Science" },
+
+  // ─── ENVIRONMENT / NATURE ───
+  { name: "Carbon Brief",      url: "https://www.carbonbrief.org/feed",                            category: "Environment" },
+  { name: "Mongabay",          url: "https://news.mongabay.com/feed/",                             category: "Environment" },
+  { name: "Yale E360",         url: "https://news.google.com/rss/search?q=site:e360.yale.edu+when:7d&hl=en-US&gl=US&ceid=US:en", category: "Environment" },
+  { name: "Guardian Environment", url: "https://www.theguardian.com/environment/rss",              category: "Environment" },
+  { name: "Earth.org",         url: "https://earth.org/feed/",                                     category: "Environment" },
+  { name: "Inside Climate News", url: "https://insideclimatenews.org/feed/",                       category: "Environment" },
+  { name: "Grist",             url: "https://grist.org/feed/",                                     category: "Environment" },
+
+  // ─── GOVERNMENT / INSTITUTIONAL ───
+  { name: "UN News",           url: "https://news.un.org/feed/subscribe/en/news/all/rss.xml",      category: "Governance" },
+  { name: "WHO News",          url: "https://www.who.int/rss-feeds/news-english.xml",              category: "Governance" },
+  { name: "World Bank Blogs",  url: "https://news.google.com/rss/search?q=site:blogs.worldbank.org+when:7d&hl=en-US&gl=US&ceid=US:en", category: "Governance" },
+  { name: "IMF Blog",          url: "https://news.google.com/rss/search?q=site:imf.org/en/Blogs+when:7d&hl=en-US&gl=US&ceid=US:en", category: "Governance" },
+  { name: "GAO Reports",       url: "https://www.gao.gov/rss/reports.xml",                         category: "Governance" },
+  { name: "CBO Publications",  url: "https://news.google.com/rss/search?q=site:cbo.gov+when:7d&hl=en-US&gl=US&ceid=US:en", category: "Governance" },
+  { name: "OECD Newsroom",     url: "https://news.google.com/rss/search?q=site:oecd.org+newsroom+when:7d&hl=en-US&gl=US&ceid=US:en", category: "Governance" },
 
   // ─── CONFLICT / INDEPENDENT JOURNALISM ───
   { name: "Popular Front",     url: "https://popularfront.libsyn.com/rss",                         category: "World" },
@@ -224,6 +261,11 @@ export async function fetchFeed(source: FeedSource): Promise<FeedItem[]> {
         category: source.category,
         imageUrl: extractImageUrl(item as Parser.Item & Record<string, unknown>),
         bias: bias ? { ...bias } : null, // ensure plain object for serialization
+        canonicalClaim: extractCanonicalClaim({
+          title: item.title || "",
+          description: stripHtml(item.contentSnippet || item.content || ""),
+          url: item.link || "",
+        }),
       };
       // Auto-assign keyword tags from title + description
       const tags = autoAssignTags(feedItem);
@@ -242,15 +284,38 @@ export async function fetchFeed(source: FeedSource): Promise<FeedItem[]> {
 export async function fetchAllFeeds(
   sources: FeedSource[] = DEFAULT_FEEDS
 ): Promise<FeedItem[]> {
-  const results = await Promise.allSettled(
-    sources.map((source) => fetchFeed(source))
-  );
+  // Fetch RSS, Reddit, and 4chan in parallel
+  const [rssResults, redditItems, chanItems] = await Promise.all([
+    Promise.allSettled(sources.map((source) => fetchFeed(source))),
+    fetchRedditFeeds().catch((err) => {
+      console.error("[Scrapers] Reddit fetch failed:", err);
+      return [] as FeedItem[];
+    }),
+    fetchChanFeeds().catch((err) => {
+      console.error("[Scrapers] 4chan fetch failed:", err);
+      return [] as FeedItem[];
+    }),
+  ]);
 
   const items: FeedItem[] = [];
-  for (const result of results) {
+  for (const result of rssResults) {
     if (result.status === "fulfilled") {
       items.push(...result.value);
     }
+  }
+
+  // Add scraped items — auto-tag them like RSS items
+  for (const item of [...redditItems, ...chanItems]) {
+    const tags = autoAssignTags(item);
+    if (tags.length > 0) item.tags = tags;
+    if (!item.canonicalClaim) {
+      item.canonicalClaim = extractCanonicalClaim({
+        title: item.title,
+        description: item.description,
+        url: item.link,
+      });
+    }
+    items.push(item);
   }
 
   // Deduplicate across sources (prefer wire > broadsheet > tabloid > blog)
@@ -401,8 +466,9 @@ function normalizeLink(link: string): string {
   }
 }
 
-async function fetchFeedXmlWithRetry(
-  source: FeedSource,
+async function fetchXmlFromUrl(
+  url: string,
+  sourceName: string,
   maxRetries = 3
 ): Promise<string> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -410,13 +476,18 @@ async function fetchFeedXmlWithRetry(
     const timeout = setTimeout(() => controller.abort(), FEED_TIMEOUT_MS);
 
     try {
-      const res = await fetch(source.url, {
+      const res = await fetch(url, {
         headers: { "User-Agent": "PooterWorld/1.0" },
         signal: controller.signal,
       });
 
       if (res.ok) {
         return await res.text();
+      }
+
+      // 403/404 are not retryable — surface immediately so fallback logic can kick in
+      if (FALLBACK_TRIGGER_CODES.has(res.status)) {
+        throw new FallbackError(`HTTP ${res.status}`, res.status);
       }
 
       const canRetry = RETRYABLE_STATUS_CODES.has(res.status);
@@ -426,17 +497,22 @@ async function fetchFeedXmlWithRetry(
 
       const delay = RETRY_BACKOFF_MS[attempt] ?? 2000;
       console.warn(
-        `[RSS:${source.name}] ${res.status}, retrying in ${delay}ms (${attempt + 1}/${maxRetries})`
+        `[RSS:${sourceName}] ${res.status}, retrying in ${delay}ms (${attempt + 1}/${maxRetries})`
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
     } catch (error) {
+      // Let FallbackError propagate immediately — no retry
+      if (error instanceof FallbackError) {
+        throw error;
+      }
+
       const isLastAttempt = attempt === maxRetries;
       if (isLastAttempt) {
         throw error;
       }
       const delay = RETRY_BACKOFF_MS[attempt] ?? 2000;
       console.warn(
-        `[RSS:${source.name}] fetch error, retrying in ${delay}ms (${attempt + 1}/${maxRetries})`,
+        `[RSS:${sourceName}] fetch error, retrying in ${delay}ms (${attempt + 1}/${maxRetries})`,
         error instanceof Error ? error.message : error
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
@@ -445,7 +521,47 @@ async function fetchFeedXmlWithRetry(
     }
   }
 
-  throw new Error(`[RSS:${source.name}] retries exhausted`);
+  throw new Error(`[RSS:${sourceName}] retries exhausted`);
+}
+
+/** Sentinel error for 403/404 that should trigger fallback URL */
+class FallbackError extends Error {
+  constructor(message: string, public readonly statusCode: number) {
+    super(message);
+    this.name = "FallbackError";
+  }
+}
+
+async function fetchFeedXmlWithRetry(
+  source: FeedSource,
+  maxRetries = 3
+): Promise<string> {
+  try {
+    const xml = await fetchXmlFromUrl(source.url, source.name, maxRetries);
+    return xml;
+  } catch (error) {
+    // If the primary URL returned 403/404 and we have a fallback, try it
+    if (error instanceof FallbackError && source.fallbackUrl) {
+      console.warn(
+        `[RSS:${source.name}] Primary URL returned ${error.statusCode}, trying fallback: ${source.fallbackUrl}`
+      );
+      try {
+        const xml = await fetchXmlFromUrl(source.fallbackUrl, `${source.name}:fallback`, maxRetries);
+        console.log(
+          `[RSS:${source.name}] Fallback URL succeeded: ${source.fallbackUrl}`
+        );
+        return xml;
+      } catch (fallbackError) {
+        console.error(
+          `[RSS:${source.name}] Fallback URL also failed:`,
+          fallbackError instanceof Error ? fallbackError.message : fallbackError
+        );
+        // Re-throw the original error for clarity
+        throw error;
+      }
+    }
+    throw error;
+  }
 }
 
 function extractImageUrl(

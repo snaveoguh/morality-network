@@ -22,10 +22,14 @@ export interface TokenMarketSnapshot {
   liquidityUsd: number | null;
 }
 
+export type DexScreenerChainId = "base" | "ethereum";
+
 export async function fetchTokenMarketSnapshot(
   tokenAddress: Address,
-  timeoutMs = 8_000
+  options?: { timeoutMs?: number; chainId?: DexScreenerChainId }
 ): Promise<TokenMarketSnapshot> {
+  const timeoutMs = options?.timeoutMs ?? 8_000;
+  const chainId = options?.chainId ?? "base";
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -46,8 +50,8 @@ export async function fetchTokenMarketSnapshot(
     }
 
     const json = (await res.json()) as DexScreenerResponse;
-    const basePairs = (json.pairs ?? []).filter((pair) => pair.chainId === "base");
-    const best = basePairs.sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))[0];
+    const chainPairs = (json.pairs ?? []).filter((pair) => pair.chainId === chainId);
+    const best = chainPairs.sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))[0];
 
     if (!best) {
       return {

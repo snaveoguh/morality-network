@@ -90,6 +90,19 @@ Status legend:
 | H-003 | Secrets management policy | Ops | Not Started | No raw keys in repo, documented secret paths |
 | H-004 | Incident response + rollback runbook | Ops | Not Started | Documented rollback and comms checklist |
 
+## I. Deliberation Graph + Polis Interop
+
+| ID | Deliverable | Owner | Status | Acceptance Criteria |
+|---|---|---|---|---|
+| I-001 | Define canonical mapping: `entity -> claim -> interpretation -> evidence -> outcome` | Core | In Progress | Written schema + TS types used by web/indexer |
+| I-002 | Add claim extraction pipeline for feed items | Data | Not Started | Every article has a canonical claim string with confidence score |
+| I-003 | Add multi-dimensional ratings (`truth`, `importance`, `moralImpact`) | Core | Not Started | Contract + indexer + web support all 3 dimensions |
+| I-004 | Add argument graph primitives (`claim`, `counterclaim`, `evidence`, `source`) | Core | Not Started | Structured post types queryable per entity |
+| I-005 | Build Polis import adapter (read-only) | Data | Not Started | Ingest Polis statements/votes/clusters into normalized tables |
+| I-006 | Add Polis compatibility API (`/api/v1/deliberation/*`) | Platform | Not Started | Endpoints expose consensus, disagreement, and cluster summaries |
+| I-007 | Add periodic onchain archive snapshots for offchain deliberation data | Ops | Not Started | Monthly content-addressed snapshot + hash anchored onchain |
+| I-008 | Ship timeline view: interpretation shifts over time | Web | Not Started | Entity timeline shows state changes and consensus movement |
+
 ## Current Focus Queue (Sequential)
 
 1. `B-001` Stable indexer runtime and reliable sync.
@@ -97,3 +110,5 @@ Status legend:
 3. `E-001` + `E-003` Wire web feed and proposal rail to indexer APIs.
 4. `D-001` + `D-002` Extension interaction reliability.
 5. `F-001` Baseline anti-spam controls.
+6. `I-001` Canonical interpretation schema and type rollout.
+7. `I-005` Polis read-only adapter with normalized import.

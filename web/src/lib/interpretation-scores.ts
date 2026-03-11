@@ -3,6 +3,7 @@ import { baseSepolia } from "viem/chains";
 import { COMMENTS_ABI, CONTRACTS, PREDICTION_MARKET_ADDRESS } from "./contracts";
 import { computeEntityHash } from "./entity";
 import { getProposalEntityIdentifiers } from "./proposal-entity";
+import type { CanonicalInterpretation } from "./types/deliberation";
 
 const DEFAULT_RPC_URL = "https://sepolia.base.org";
 const DEFAULT_LOOKBACK_BLOCKS = BigInt("90000");
@@ -89,6 +90,21 @@ export interface InterpretationOutcomeSnapshot {
   candidateComments: number;
   scoredInterpretations: number;
   interpretations: InterpretationOutcomeScore[];
+}
+
+export function toCanonicalInterpretation(
+  score: InterpretationOutcomeScore,
+): CanonicalInterpretation {
+  return {
+    id: score.id,
+    entityHash: score.entityHash,
+    parentId: score.parentId !== "0" ? score.parentId : undefined,
+    author: score.author,
+    kind: score.argumentType,
+    text: score.interpretation,
+    evidenceIds: score.hasEvidence && score.evidenceHash !== ZERO_HASH ? [score.evidenceHash] : [],
+    createdAt: score.createdAt,
+  };
 }
 
 function getRpcUrl(): string {

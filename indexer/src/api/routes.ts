@@ -1,6 +1,14 @@
 import { and, desc, eq, gte, graphql, inArray, lte, lt } from "@ponder/core";
 import { ponder } from "@/generated";
 import { entity, feedItem, scannerLaunch } from "../../ponder.schema";
+import { fetchCanonicalClaimFromSource } from "../claim-extract";
+import {
+  CLAIM_SOURCE_KINDS,
+  DELIBERATION_SCHEMA_VERSION,
+  INTERPRETATION_KINDS,
+  OUTCOME_STATES,
+  buildCanonicalDeliberationGraph,
+} from "../types/deliberation";
 
 const DEFAULT_LIMIT = 25;
 const MAX_LIMIT = 100;
@@ -213,6 +221,7 @@ ponder.get("/", (c) => {
     endpoints: [
       "/graphql",
       "/api/v1/health",
+      "/api/v1/deliberation/schema",
       "/api/v1/entities/:entityHash",
       "/api/v1/entities/:entityHash/feed",
       "/api/v1/feed/global",
@@ -225,6 +234,21 @@ ponder.get("/", (c) => {
 
 ponder.get("/api/v1/health", (c) => {
   return c.json({ ok: true, timestamp: Date.now() });
+});
+
+ponder.get("/api/v1/deliberation/schema", (c) => {
+  return c.json({
+    data: {
+      schemaVersion: DELIBERATION_SCHEMA_VERSION,
+      model: "entity -> claim -> interpretation -> evidence -> outcome",
+      claimSourceKinds: CLAIM_SOURCE_KINDS,
+      interpretationKinds: INTERPRETATION_KINDS,
+      outcomeStates: OUTCOME_STATES,
+    },
+    meta: {
+      generatedAt: Date.now(),
+    },
+  });
 });
 
 ponder.get("/api/v1/entities/:entityHash", async (c) => {
@@ -251,9 +275,31 @@ ponder.get("/api/v1/entities/:entityHash", async (c) => {
     .orderBy(desc(feedItem.timestamp))
     .limit(10);
 
+  let claimHint: string | null = null;
+  if (row.identifier.startsWith("url:")) {
+    const sourceUrl = row.identifier.slice(4).trim();
+    claimHint = await fetchCanonicalClaimFromSource(sourceUrl);
+  }
+
+  const canonical = buildCanonicalDeliberationGraph({
+    entityHash: row.id,
+    identifier: row.identifier,
+    firstSeen: row.firstSeen.toString(),
+    lastActivity: row.lastActivity.toString(),
+    claimHint,
+    recentActivity: recent.map((item) => ({
+      id: item.id,
+      actor: item.actor,
+      actionType: item.actionType,
+      data: item.data,
+      timestamp: item.timestamp.toString(),
+    })),
+  });
+
   return c.json({
     data: {
       entity: serializeEntityRow(row),
+      canonical,
       recentActivity: recent.map((item) => serializeFeedRow(item)),
     },
     meta: {
@@ -484,7 +530,7 @@ ponder.get("/api/v1/scanner/launches/:address", async (c) => {
   });
 });
 
-ponder.post("/api/v1/scanner/sync", async (c) => {
+const handleScannerSync = async (c: any) => {
   const query = (c.req.query("q") ?? "base").trim() || "base";
   const limit = parseLimit(c.req.query("limit"));
 
@@ -556,9 +602,35 @@ ponder.post("/api/v1/scanner/sync", async (c) => {
     const priceUsd = typeof pair.priceUsd === "string" ? pair.priceUsd : String(safeNumber(pair.priceUsd));
     const pairUrl = typeof pair.url === "string" ? pair.url : null;
 
-    await c.db
-      .insert(scannerLaunch)
-      .values({
+    const existing = await c.db
+      .select()
+      .from(scannerLaunch)
+      .where(eq(scannerLaunch.id, pairAddress))
+      .limit(1);
+
+    if (existing.length > 0) {
+      await c.db
+        .update(scannerLaunch, { id: pairAddress })
+        .set({
+          tokenAddress,
+          poolAddress: pairAddress,
+          pairedAsset,
+          dex,
+          source: "dexscreener-search",
+          score,
+          tokenSymbol,
+          tokenName,
+          priceUsd,
+          liquidityUsd,
+          volume24h,
+          txns24h,
+          pairUrl,
+          pairCreatedAt: pairCreatedSec,
+          updatedAt: nowSec,
+          enriched: true,
+        });
+    } else {
+      await c.db.insert(scannerLaunch).values({
         id: pairAddress,
         tokenAddress,
         poolAddress: pairAddress,
@@ -577,25 +649,8 @@ ponder.post("/api/v1/scanner/sync", async (c) => {
         discoveredAt: pairCreatedSec,
         updatedAt: nowSec,
         enriched: true,
-      })
-      .onConflictDoUpdate({
-        tokenAddress,
-        poolAddress: pairAddress,
-        pairedAsset,
-        dex,
-        source: "dexscreener-search",
-        score,
-        tokenSymbol,
-        tokenName,
-        priceUsd,
-        liquidityUsd,
-        volume24h,
-        txns24h,
-        pairUrl,
-        pairCreatedAt: pairCreatedSec,
-        updatedAt: nowSec,
-        enriched: true,
       });
+    }
 
     upserted += 1;
   }
@@ -615,7 +670,10 @@ ponder.post("/api/v1/scanner/sync", async (c) => {
       generatedAt: Date.now(),
     },
   });
-});
+};
+
+ponder.get("/api/v1/scanner/sync", handleScannerSync);
+ponder.post("/api/v1/scanner/sync", handleScannerSync);
 
 // Keep GraphQL API available when custom API routes are registered.
 ponder.use("/graphql", graphql());

@@ -1,19 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { formatEther, parseEther } from "viem";
+import { formatEther, parseEther, type Address } from "viem";
 import {
   useAccount,
   useChainId,
+  usePublicClient,
   useSendTransaction,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import { AGENT_VAULT_ABI } from "@/lib/contracts";
+import { AGENT_VAULT_ABI, ERC20_ABI, MO_TOKEN } from "@/lib/contracts";
+import { AgentBotTerminal } from "@/components/markets/AgentBotTerminal";
 
 interface Position {
   id: string;
-  venue?: "base-spot" | "hyperliquid-perp";
+  venue?: "base-spot" | "ethereum-spot" | "hyperliquid-perp";
   tokenAddress: `0x${string}`;
   marketSymbol?: string;
   entryPriceUsd: number;
@@ -61,7 +63,7 @@ interface ReadinessBalance {
 }
 
 interface Readiness {
-  executionVenue: "base-spot" | "hyperliquid-perp";
+  executionVenue: "base-spot" | "ethereum-spot" | "hyperliquid-perp";
   dryRun: boolean;
   liveReady: boolean;
   reasons: string[];
@@ -70,7 +72,7 @@ interface Readiness {
 
 interface TraderPerformanceReport {
   timestamp: number;
-  executionVenue: "base-spot" | "hyperliquid-perp";
+  executionVenue: "base-spot" | "ethereum-spot" | "hyperliquid-perp";
   dryRun: boolean;
   account: `0x${string}`;
   fundingAddress: `0x${string}`;
@@ -115,6 +117,34 @@ interface MetricsResponse {
   performance?: TraderPerformanceReport;
   vault?: VaultOverview | null;
   error?: string;
+}
+
+interface SubscriptionSplit {
+  key: "vault" | "lp";
+  recipient: Address;
+  requiredWei: string;
+  requiredMo: string;
+  paidWei: string;
+  paidMo: string;
+  remainingWei: string;
+  remainingMo: string;
+}
+
+interface SubscriptionStatus {
+  enabled: boolean;
+  chainId: number;
+  monthKey: string;
+  monthlyFeeMo: string;
+  monthlyFeeWei: string;
+  splits: SubscriptionSplit[];
+  account?: {
+    address: Address;
+    unlocked: boolean;
+    paidWeiTotal: string;
+    paidMoTotal: string;
+    txHashes: string[];
+  };
+  reason?: string;
 }
 
 function formatUsd(value: number | null | undefined): string {
@@ -208,12 +238,27 @@ function sortFundersByEquity(
   });
 }
 
+function normalizeAmountInput(value: string): string {
+  const trimmed = value.trim().replace(/^\$/, "");
+  if (!/^\d+(\.\d+)?$/.test(trimmed)) {
+    throw new Error("Amount must be a numeric value");
+  }
+  if (Number(trimmed) <= 0) {
+    throw new Error("Amount must be greater than 0");
+  }
+  return trimmed;
+}
+
 export function AgentMarketDashboard() {
   const { address: connectedAddress } = useAccount();
   const connectedChainId = useChainId();
+  const subscriptionPublicClient = usePublicClient();
 
   const [data, setData] = useState<TraderPerformanceReport | null>(null);
   const [vault, setVault] = useState<VaultOverview | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionStatus | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [depositAmount, setDepositAmount] = useState("0.01");
@@ -263,11 +308,35 @@ export function AgentMarketDashboard() {
     }
   }, [connectedAddress]);
 
+  const refreshSubscription = useCallback(async () => {
+    try {
+      const query = connectedAddress ? `?address=${connectedAddress}` : "";
+      const response = await fetch(`/api/terminal/subscription/status${query}`, {
+        cache: "no-store",
+      });
+      const payload = (await response.json()) as SubscriptionStatus & {
+        error?: string;
+      };
+      if (!response.ok || payload.error) {
+        throw new Error(payload.error || `HTTP ${response.status}`);
+      }
+      setSubscription(payload);
+    } catch {
+      // non-blocking for the rest of dashboard
+    }
+  }, [connectedAddress]);
+
   useEffect(() => {
     refresh();
     const interval = setInterval(refresh, 15_000);
     return () => clearInterval(interval);
   }, [refresh]);
+
+  useEffect(() => {
+    refreshSubscription();
+    const interval = setInterval(refreshSubscription, 30_000);
+    return () => clearInterval(interval);
+  }, [refreshSubscription]);
 
   const feePct = useMemo(() => {
     if (vault?.enabled) return vault.performanceFeeBps / 100;
@@ -286,110 +355,205 @@ export function AgentMarketDashboard() {
   const isActionPending =
     isDirectFundingPending || isVaultWritePending || isTxConfirming;
 
+  const submitVaultDeposit = useCallback(
+    async (amountRaw: string): Promise<string> => {
+      try {
+        setActionError(null);
+        if (!vault || !isVaultEnabled) {
+          throw new Error("Vault mode is not enabled");
+        }
+        if (!connectedAddress) {
+          throw new Error("Connect wallet to deposit");
+        }
+        const amount = normalizeAmountInput(amountRaw);
+        setDepositAmount(amount);
+
+        const txHash = await writeContractAsync({
+          address: vault.address,
+          abi: AGENT_VAULT_ABI,
+          functionName: "deposit",
+          value: parseEther(amount),
+          chainId: vault.chainId,
+        });
+
+        setLastTxHash(txHash);
+        setLastTxChainId(vault.chainId);
+        setTimeout(() => {
+          refresh().catch(() => {
+            // ignored, polling fallback covers this
+          });
+        }, 2_000);
+
+        return `Deposit submitted: ${shortHex(txHash)}`;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Deposit failed";
+        setActionError(message);
+        throw new Error(message);
+      }
+    },
+    [connectedAddress, isVaultEnabled, refresh, vault, writeContractAsync]
+  );
+
+  const submitVaultWithdraw = useCallback(
+    async (amountRaw: string): Promise<string> => {
+      try {
+        setActionError(null);
+        if (!vault || !isVaultEnabled) {
+          throw new Error("Vault mode is not enabled");
+        }
+        if (!connectedAddress) {
+          throw new Error("Connect wallet to withdraw");
+        }
+        const amount = normalizeAmountInput(amountRaw);
+        setWithdrawAmount(amount);
+
+        const txHash = await writeContractAsync({
+          address: vault.address,
+          abi: AGENT_VAULT_ABI,
+          functionName: "withdraw",
+          args: [parseEther(amount)],
+          chainId: vault.chainId,
+        });
+
+        setLastTxHash(txHash);
+        setLastTxChainId(vault.chainId);
+        setTimeout(() => {
+          refresh().catch(() => {
+            // ignored, polling fallback covers this
+          });
+        }, 2_000);
+
+        return `Withdrawal submitted: ${shortHex(txHash)}`;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Withdraw failed";
+        setActionError(message);
+        throw new Error(message);
+      }
+    },
+    [connectedAddress, isVaultEnabled, refresh, vault, writeContractAsync]
+  );
+
+  const submitDirectFund = useCallback(
+    async (amountRaw: string): Promise<string> => {
+      try {
+        setActionError(null);
+        if (!data) {
+          throw new Error("Funding destination unavailable");
+        }
+        const amount = normalizeAmountInput(amountRaw);
+        setDepositAmount(amount);
+
+        const txHash = await sendTransactionAsync({
+          to: data.fundingAddress,
+          value: parseEther(amount),
+        });
+
+        setLastTxHash(txHash);
+        setLastTxChainId(connectedChainId || 8453);
+        setTimeout(() => {
+          refresh().catch(() => {
+            // ignored, polling fallback covers this
+          });
+        }, 2_000);
+
+        return `Funding transaction submitted: ${shortHex(txHash)}`;
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Funding transaction failed";
+        setActionError(message);
+        throw new Error(message);
+      }
+    },
+    [connectedChainId, data, refresh, sendTransactionAsync]
+  );
+
   const handleDeposit = useCallback(async () => {
     try {
-      setActionError(null);
-      if (!vault || !isVaultEnabled) return;
-      if (!connectedAddress) {
-        setActionError("Connect wallet to deposit");
+      if (isVaultEnabled) {
+        await submitVaultDeposit(depositAmount);
         return;
       }
-      if (!depositAmount || Number(depositAmount) <= 0) {
-        setActionError("Enter a deposit amount greater than 0");
-        return;
-      }
-
-      const txHash = await writeContractAsync({
-        address: vault.address,
-        abi: AGENT_VAULT_ABI,
-        functionName: "deposit",
-        value: parseEther(depositAmount),
-        chainId: vault.chainId,
-      });
-      setLastTxHash(txHash);
-      setLastTxChainId(vault.chainId);
-      setTimeout(() => {
-        refresh().catch(() => {
-          // ignored, polling fallback covers this
-        });
-      }, 2_000);
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Deposit failed");
+      await submitDirectFund(depositAmount);
+    } catch {
+      // errors are already pushed into actionError by submit helpers
     }
-  }, [
-    connectedAddress,
-    depositAmount,
-    isVaultEnabled,
-    refresh,
-    vault,
-    writeContractAsync,
-  ]);
+  }, [depositAmount, isVaultEnabled, submitDirectFund, submitVaultDeposit]);
 
   const handleWithdraw = useCallback(async () => {
     try {
-      setActionError(null);
-      if (!vault || !isVaultEnabled) return;
-      if (!connectedAddress) {
-        setActionError("Connect wallet to withdraw");
-        return;
-      }
-      if (!withdrawAmount || Number(withdrawAmount) <= 0) {
-        setActionError("Enter a withdrawal amount greater than 0");
-        return;
-      }
-
-      const txHash = await writeContractAsync({
-        address: vault.address,
-        abi: AGENT_VAULT_ABI,
-        functionName: "withdraw",
-        args: [parseEther(withdrawAmount)],
-        chainId: vault.chainId,
-      });
-      setLastTxHash(txHash);
-      setLastTxChainId(vault.chainId);
-      setTimeout(() => {
-        refresh().catch(() => {
-          // ignored, polling fallback covers this
-        });
-      }, 2_000);
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Withdraw failed");
+      await submitVaultWithdraw(withdrawAmount);
+    } catch {
+      // errors are already pushed into actionError by submit helpers
     }
-  }, [
-    connectedAddress,
-    isVaultEnabled,
-    refresh,
-    vault,
-    withdrawAmount,
-    writeContractAsync,
-  ]);
+  }, [submitVaultWithdraw, withdrawAmount]);
 
-  const handleDirectFund = useCallback(async () => {
-    try {
-      setActionError(null);
-      if (!data) return;
-      if (!depositAmount || Number(depositAmount) <= 0) {
-        setActionError("Enter an amount greater than 0");
-        return;
-      }
-
-      const txHash = await sendTransactionAsync({
-        to: data.fundingAddress,
-        value: parseEther(depositAmount),
-      });
-      setLastTxHash(txHash);
-      setLastTxChainId(connectedChainId || 8453);
-      setTimeout(() => {
-        refresh().catch(() => {
-          // ignored, polling fallback covers this
-        });
-      }, 2_000);
-    } catch (err) {
-      setActionError(
-        err instanceof Error ? err.message : "Funding transaction failed"
+  const handleUnlockPlan = useCallback(async (): Promise<string> => {
+    if (!connectedAddress) {
+      throw new Error("Connect wallet to unlock terminal access");
+    }
+    if (!subscription?.enabled) {
+      throw new Error(subscription?.reason || "Subscription plan is not configured");
+    }
+    if (connectedChainId !== subscription.chainId) {
+      throw new Error(
+        `Switch wallet network to chain ${subscription.chainId} to pay in MO`
       );
     }
-  }, [connectedChainId, data, depositAmount, refresh, sendTransactionAsync]);
+    if (subscription.account?.unlocked) {
+      return `Already unlocked for ${subscription.monthKey}`;
+    }
+
+    const pendingSplits = subscription.splits.filter(
+      (split) => BigInt(split.remainingWei) > BigInt(0)
+    );
+    if (pendingSplits.length === 0) {
+      return `No remaining payment due for ${subscription.monthKey}`;
+    }
+
+    const submittedTxs: string[] = [];
+
+    for (const split of pendingSplits) {
+      const txHash = await writeContractAsync({
+        address: MO_TOKEN.address,
+        abi: ERC20_ABI,
+        functionName: "transfer",
+        args: [split.recipient, BigInt(split.remainingWei)],
+        chainId: subscription.chainId,
+      });
+      submittedTxs.push(txHash);
+      setLastTxHash(txHash);
+      setLastTxChainId(subscription.chainId);
+      if (subscriptionPublicClient) {
+        await subscriptionPublicClient.waitForTransactionReceipt({
+          hash: txHash,
+          confirmations: 1,
+        });
+      }
+    }
+
+    const verify = await fetch(
+      `/api/terminal/subscription/status?address=${connectedAddress}&refresh=1`,
+      { cache: "no-store" }
+    );
+    const payload = (await verify.json()) as SubscriptionStatus & { error?: string };
+    if (!verify.ok || payload.error) {
+      throw new Error(payload.error || "Failed to verify subscription payment");
+    }
+
+    setSubscription(payload);
+
+    if (payload.account?.unlocked) {
+      return `Unlocked for ${payload.monthKey}. Paid ${payload.account.paidMoTotal} MO.`;
+    }
+
+    return `Submitted ${submittedTxs.length} tx(s). Payment observed but unlock not fully verified yet.`;
+  }, [
+    connectedAddress,
+    connectedChainId,
+    subscription,
+    subscriptionPublicClient,
+    writeContractAsync,
+  ]);
 
   if (loading && !data) {
     return (
@@ -414,6 +578,16 @@ export function AgentMarketDashboard() {
 
   const balances = data.readiness.balances.slice(0, 6);
   const closedRows = data.closed.slice(0, 20);
+  const subscriptionUnlocked = subscription?.account?.unlocked === true;
+  const unlockSummary = subscription
+    ? subscriptionUnlocked
+      ? `${subscription.account?.paidMoTotal || "0"} MO received for ${
+          subscription.monthKey
+        }`
+      : `${subscription.splits
+          .reduce((acc, split) => acc + Number(split.remainingMo || "0"), 0)
+          .toFixed(2)} MO remaining this month`
+    : null;
 
   return (
     <div className="space-y-6">
@@ -553,7 +727,7 @@ export function AgentMarketDashboard() {
                 className="w-full border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-1 font-mono text-[10px] text-[var(--ink)] outline-none focus:border-[var(--rule)]"
               />
               <button
-                onClick={isVaultEnabled ? handleDeposit : handleDirectFund}
+                onClick={handleDeposit}
                 disabled={isActionPending}
                 className="border border-[var(--ink)] bg-[var(--ink)] px-3 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)] disabled:opacity-50"
               >
@@ -814,6 +988,31 @@ export function AgentMarketDashboard() {
             </table>
           </div>
         )}
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+          Bot Terminal
+        </h2>
+        <AgentBotTerminal
+          feePct={feePct}
+          executionVenue={data.executionVenue}
+          dryRun={data.dryRun}
+          openPositions={data.totals.openPositions}
+          grossPnlUsd={data.totals.grossPnlUsd}
+          netPnlUsd={data.totals.netPnlAfterFeeUsd}
+          fundingAddress={safeVault ? safeVault.address : data.fundingAddress}
+          isUnlocked={subscriptionUnlocked}
+          unlockSummary={unlockSummary}
+          canWithdraw={isVaultEnabled}
+          onFundAmount={async (amount) =>
+            isVaultEnabled
+              ? submitVaultDeposit(amount)
+              : submitDirectFund(amount)
+          }
+          onWithdrawAmount={isVaultEnabled ? submitVaultWithdraw : undefined}
+          onUnlockPlan={handleUnlockPlan}
+        />
       </section>
     </div>
   );

@@ -2,17 +2,145 @@
 // NounsDAODataProxy: 0xf790A5f59678dd733fb3De93493A91f472ca1365
 // NounsDAOLogicV3:   0xdD1492570beb290a2f309541e1fDdcaAA3f00B61
 
-import { createPublicClient, http, type Address } from "viem";
+import {
+  createPublicClient,
+  http,
+  type Address,
+  type PublicClient,
+} from "viem";
 import { mainnet } from "viem/chains";
 
 // ============================================================================
-// PUBLIC CLIENT
+// RPC CONFIGURATION
+// ============================================================================
+
+const PRIMARY_RPC = "https://ethereum-rpc.publicnode.com";
+const FALLBACK_RPC = "https://ethereum.blockpi.network/v1/rpc/public";
+
+/** Max block range per eth_getLogs request (safe under 50k public RPC limit) */
+const CHUNK_SIZE = BigInt(40_000);
+
+/** Number of retry attempts per chunk request */
+const MAX_RETRIES = 3;
+
+/** Base delay in ms for exponential backoff */
+const BASE_DELAY_MS = 1_000;
+
+// ============================================================================
+// PUBLIC CLIENTS (primary + fallback)
 // ============================================================================
 
 const client = createPublicClient({
   chain: mainnet,
-  transport: http("https://ethereum-rpc.publicnode.com"),
+  transport: http(PRIMARY_RPC),
 });
+
+const fallbackClient = createPublicClient({
+  chain: mainnet,
+  transport: http(FALLBACK_RPC),
+});
+
+// ============================================================================
+// CHUNKED LOG FETCHING WITH RETRY + FALLBACK
+// ============================================================================
+
+/**
+ * Sleep helper for exponential backoff.
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Fetch logs for a single chunk with retry logic + RPC fallback.
+ * Tries the primary RPC up to MAX_RETRIES times with exponential backoff,
+ * then falls back to the secondary RPC with the same retry strategy.
+ */
+async function fetchChunkWithRetry(
+  getLogsFn: () => Promise<any[]>,
+  fallbackGetLogsFn: () => Promise<any[]>
+): Promise<any[]> {
+  // Try primary RPC first
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      return await getLogsFn();
+    } catch (err) {
+      const isLast = attempt === MAX_RETRIES - 1;
+      if (!isLast) {
+        await sleep(BASE_DELAY_MS * 2 ** attempt);
+      }
+    }
+  }
+
+  // Primary exhausted — try fallback RPC
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      return await fallbackGetLogsFn();
+    } catch (err) {
+      const isLast = attempt === MAX_RETRIES - 1;
+      if (!isLast) {
+        await sleep(BASE_DELAY_MS * 2 ** attempt);
+      }
+      if (isLast) {
+        throw err; // All retries on both RPCs exhausted
+      }
+    }
+  }
+
+  return []; // Unreachable, but satisfies TypeScript
+}
+
+/**
+ * Fetch event logs in safe chunks of CHUNK_SIZE blocks.
+ * Wraps viem's `getLogs` to split the block range into multiple requests
+ * so public RPCs don't reject for exceeding their block-range limit (50k).
+ *
+ * The `events` ABI array is passed through to each chunk request, so
+ * SignatureAdded, ProposalCandidateCreated, etc. all work correctly.
+ */
+async function getLogsChunked(params: {
+  address: Address;
+  events: readonly any[];
+  fromBlock: bigint;
+  toBlock: bigint;
+}): Promise<any[]> {
+  const { address, events, fromBlock, toBlock } = params;
+  const allLogs: any[] = [];
+
+  let cursor = fromBlock;
+  while (cursor <= toBlock) {
+    const ONE = BigInt(1);
+    const chunkEnd =
+      cursor + CHUNK_SIZE - ONE > toBlock
+        ? toBlock
+        : cursor + CHUNK_SIZE - ONE;
+
+    const chunkFrom = cursor;
+    const chunkTo = chunkEnd;
+
+    const logs = await fetchChunkWithRetry(
+      () =>
+        client.getLogs({
+          address,
+          events: events as any,
+          fromBlock: chunkFrom,
+          toBlock: chunkTo,
+        }),
+      () =>
+        fallbackClient.getLogs({
+          address,
+          events: events as any,
+          fromBlock: chunkFrom,
+          toBlock: chunkTo,
+        })
+    );
+    allLogs.push(...logs);
+
+    cursor = chunkEnd + ONE;
+  }
+
+  return allLogs;
+}
 
 // ============================================================================
 // CONTRACT ADDRESSES
@@ -186,25 +314,27 @@ export async function fetchCandidateProposals(
     });
     const requiredThreshold = Number(threshold);
 
-    // Fetch events in parallel
+    // Fetch events using chunked log fetching (safe for public RPCs).
+    // Each event type is fetched sequentially across its chunk range,
+    // but the three event types run in parallel.
     const [createdLogs, signatureLogs, canceledLogs] = await Promise.all([
-      client.getLogs({
+      getLogsChunked({
         address: NOUNS_DAO_DATA_PROXY,
         events: PROPOSAL_CANDIDATE_CREATED_ABI,
         fromBlock,
-        toBlock: "latest",
+        toBlock: currentBlock,
       }),
-      client.getLogs({
+      getLogsChunked({
         address: NOUNS_DAO_DATA_PROXY,
         events: SIGNATURE_ADDED_ABI,
         fromBlock,
-        toBlock: "latest",
+        toBlock: currentBlock,
       }),
-      client.getLogs({
+      getLogsChunked({
         address: NOUNS_DAO_DATA_PROXY,
         events: CANDIDATE_CANCELED_ABI,
         fromBlock,
-        toBlock: "latest",
+        toBlock: currentBlock,
       }),
     ]);
 

@@ -11,6 +11,7 @@ import { runResearchSwarm } from "@/lib/agent-swarm";
 
 // Ensure swarm agent is registered
 import "@/lib/agents/swarm";
+import "@/lib/agents/coordinator";
 
 export const dynamic = "force-dynamic";
 

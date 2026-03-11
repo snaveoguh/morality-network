@@ -13,6 +13,7 @@ import type { TokenLaunch } from "@/lib/agents/scanner";
 
 // Ensure scanner is registered + initialized
 import "@/lib/agents/scanner";
+import "@/lib/agents/coordinator";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -43,7 +44,7 @@ export async function GET(request: Request) {
           const syncUrl = new URL("/api/v1/scanner/sync", baseUrl);
           syncUrl.searchParams.set("limit", String(Math.max(limit, 25)));
           await fetch(syncUrl.toString(), {
-            method: "POST",
+            method: "GET",
             cache: "no-store",
             signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
           });

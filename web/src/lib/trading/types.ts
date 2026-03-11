@@ -1,7 +1,7 @@
 import type { Address, Hash } from "viem";
 
 export type DexKind = "uniswap-v3" | "aerodrome";
-export type ExecutionVenue = "base-spot" | "hyperliquid-perp";
+export type ExecutionVenue = "base-spot" | "ethereum-spot" | "hyperliquid-perp";
 
 export interface ScoreBreakdown {
   [key: string]: number;

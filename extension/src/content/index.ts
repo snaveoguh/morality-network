@@ -82,3 +82,59 @@ chrome.runtime.sendMessage({
   url: window.location.href,
   domain: window.location.hostname,
 });
+
+// ============================================================================
+// POOTER.WORLD ↔ EXTENSION UNISON BRIDGE
+// When the user is on pooter.world, the extension and site work together:
+// - Site emits POOTER_SITE_CONTEXT with current article/entity data
+// - Extension relays rating events back so the site can live-refresh
+// ============================================================================
+
+const isPooterWorld = ['pooter.world', 'www.pooter.world', 'localhost'].includes(
+  window.location.hostname
+);
+
+if (isPooterWorld) {
+  // Cache the latest site context so popup can query it
+  let siteContext: { entityHash?: string; articleHash?: string; title?: string; identifier?: string } | null = null;
+  let siteAcknowledged = false;
+
+  // Listen for context broadcasts from pooter.world pages
+  window.addEventListener('message', (event) => {
+    if (event.source !== window) return;
+    if (event.data?.type === 'POOTER_SITE_CONTEXT') {
+      siteContext = event.data.payload ?? null;
+    }
+    // Site acknowledged the extension — full unison mode active
+    if (event.data?.type === 'POOTER_SITE_ACKNOWLEDGED') {
+      siteAcknowledged = true;
+      console.log('[pooter] site acknowledged extension — unison mode active');
+      // Notify background so popup can show enhanced features
+      chrome.runtime.sendMessage({ type: 'SITE_UNISON_ACTIVE', version: event.data.version });
+    }
+  });
+
+  // Respond to popup queries for site context
+  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg.type === 'GET_SITE_CONTEXT') {
+      sendResponse({ ok: true, data: siteContext, unisonActive: siteAcknowledged });
+      return true;
+    }
+
+    // Relay rating events from popup → page so pooter.world can refresh
+    if (msg.type === 'POOTER_EXTENSION_RATED') {
+      window.postMessage({
+        type: 'POOTER_EXTENSION_RATED',
+        entityHash: msg.entityHash,
+        score: msg.score,
+      }, '*');
+      sendResponse({ ok: true });
+      return true;
+    }
+
+    return false;
+  });
+
+  // Tell pooter.world that the extension is present
+  window.postMessage({ type: 'POOTER_EXTENSION_PRESENT', version: '0.1.0' }, '*');
+}

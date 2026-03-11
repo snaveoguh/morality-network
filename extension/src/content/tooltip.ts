@@ -2,6 +2,7 @@ import { TOOLTIP_DELAY_MS } from '../shared/constants';
 import { shortenAddress, formatEth } from '../shared/entity';
 import { BIAS_LABELS, BIAS_COLORS, FACTUALITY_COLORS } from '../shared/bias';
 import type { EntityData } from '../shared/types';
+import { showToast } from './toast';
 import CSS from './styles.css';
 
 let shadow: ShadowRoot | null = null;
@@ -9,6 +10,14 @@ let tooltipEl: HTMLElement | null = null;
 let currentTarget: HTMLElement | null = null;
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
+let hoveringTooltip = false;
+let tipInFlight = false;
+
+const ETH_ADDRESS_RE = /\b0x[a-fA-F0-9]{40}\b/;
+const QUICK_TIP_OPTIONS = [
+  { label: '0.001Ξ', amountWei: '1000000000000000' },
+  { label: '0.005Ξ', amountWei: '5000000000000000' },
+];
 
 function getShadow(): ShadowRoot {
   if (shadow) return shadow;
@@ -18,18 +27,35 @@ function getShadow(): ShadowRoot {
   document.body.appendChild(host);
   shadow = host.attachShadow({ mode: 'closed' });
 
+  const fontLink = document.createElement('link');
+  fontLink.rel = 'stylesheet';
+  fontLink.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap';
+  shadow.appendChild(fontLink);
+
   const style = document.createElement('style');
   style.textContent = CSS;
   shadow.appendChild(style);
 
   tooltipEl = document.createElement('div');
   tooltipEl.className = 'pw-tooltip';
+  tooltipEl.addEventListener('mouseenter', () => {
+    hoveringTooltip = true;
+    if (hideTimer) {
+      clearTimeout(hideTimer);
+      hideTimer = null;
+    }
+  });
+  tooltipEl.addEventListener('mouseleave', () => {
+    hoveringTooltip = false;
+    scheduleHide(120);
+  });
+  tooltipEl.addEventListener('click', handleTooltipClick);
   shadow.appendChild(tooltipEl);
 
   return shadow;
 }
 
-function renderTooltip(data: EntityData): string {
+function renderTooltip(data: EntityData, tipRecipient: `0x${string}` | null): string {
   const score = data.compositeScore > 0
     ? (data.compositeScore / 100).toFixed(1)
     : '—';
@@ -66,9 +92,29 @@ function renderTooltip(data: EntityData): string {
           <span class="pw-tooltip-factuality" style="background: ${factColor};"></span>
           ${BIAS_LABELS[data.bias.bias]}
         </span>
-        <span class="pw-tooltip-value" style="font-size: 10px; color: #71717a;">${data.bias.name}</span>
+        <span class="pw-tooltip-value" style="font-size: 10px; color: #8A8A8A; font-family: monospace;">${data.bias.name}</span>
       </div>`;
   }
+
+  const tipHtml = tipRecipient
+    ? `
+      <div class="pw-tooltip-actions">
+        <span class="pw-tooltip-label">Tip</span>
+        <div class="pw-tooltip-tip-actions">
+          ${QUICK_TIP_OPTIONS.map(
+            (option) => `
+              <button
+                class="pw-tooltip-tip-btn"
+                data-pw-tip-to="${tipRecipient}"
+                data-pw-tip-wei="${option.amountWei}"
+                ${tipInFlight ? 'disabled' : ''}
+              >${option.label}</button>
+            `
+          ).join('')}
+        </div>
+      </div>
+    `
+    : '';
 
   return `
     <div class="pw-tooltip-header">
@@ -92,6 +138,7 @@ function renderTooltip(data: EntityData): string {
       <span class="pw-tooltip-value">${tipStr}</span>
     </div>
     ${biasHtml}
+    ${tipHtml}
   `;
 }
 
@@ -129,7 +176,8 @@ function showTooltip(target: HTMLElement, data: EntityData): void {
   getShadow();
   if (!tooltipEl) return;
 
-  tooltipEl.innerHTML = renderTooltip(data);
+  const tipRecipient = resolveTipRecipient(target, data);
+  tooltipEl.innerHTML = renderTooltip(data, tipRecipient);
   positionTooltip(target);
 
   // Force reflow before adding visible class
@@ -143,6 +191,91 @@ function hideTooltip(): void {
     tooltipEl.classList.remove('visible');
   }
   currentTarget = null;
+}
+
+function scheduleHide(delayMs = 100): void {
+  if (hideTimer) {
+    clearTimeout(hideTimer);
+  }
+  hideTimer = setTimeout(() => {
+    if (!hoveringTooltip) {
+      hideTooltip();
+    }
+  }, delayMs);
+}
+
+function extractAddress(input: string | null | undefined): `0x${string}` | null {
+  if (!input) return null;
+  const match = input.match(ETH_ADDRESS_RE);
+  if (!match) return null;
+  return match[0] as `0x${string}`;
+}
+
+function resolveTipRecipient(target: HTMLElement, data: EntityData): `0x${string}` | null {
+  const candidates: Array<string | null | undefined> = [
+    target.dataset.pwId,
+    data.identifier,
+    target.getAttribute('title'),
+    target.getAttribute('data-address'),
+    target.textContent,
+  ];
+
+  const anchor = target.closest('a[href]') as HTMLAnchorElement | null;
+  if (anchor) {
+    candidates.push(anchor.href, anchor.getAttribute('href'), anchor.title, anchor.textContent);
+  }
+
+  for (const candidate of candidates) {
+    const address = extractAddress(candidate);
+    if (address) return address;
+  }
+
+  return null;
+}
+
+function setTipButtonsDisabled(disabled: boolean): void {
+  if (!tooltipEl) return;
+  tooltipEl
+    .querySelectorAll<HTMLButtonElement>('.pw-tooltip-tip-btn')
+    .forEach((btn) => {
+      btn.disabled = disabled;
+    });
+}
+
+function handleTooltipClick(event: MouseEvent): void {
+  const target = event.target as HTMLElement | null;
+  const button = target?.closest('.pw-tooltip-tip-btn') as HTMLButtonElement | null;
+  if (!button) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  const to = button.dataset.pwTipTo;
+  const amountWei = button.dataset.pwTipWei;
+  if (!to || !amountWei || tipInFlight) return;
+
+  tipInFlight = true;
+  setTipButtonsDisabled(true);
+
+  chrome.runtime.sendMessage(
+    { type: 'SEND_ETH', to, amountWei },
+    (response?: { ok?: boolean; error?: string }) => {
+      tipInFlight = false;
+      setTipButtonsDisabled(false);
+
+      if (chrome.runtime.lastError) {
+        showToast(chrome.runtime.lastError.message || 'Tip failed', true);
+        return;
+      }
+
+      if (response?.ok) {
+        showToast(`Tipped ${button.textContent || 'ETH'} to ${shortenAddress(to)}`);
+        return;
+      }
+
+      showToast(response?.error || 'Tip failed', true);
+    }
+  );
 }
 
 export function setupTooltip(): void {
@@ -175,9 +308,6 @@ export function setupTooltip(): void {
     if (!target) return;
 
     if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-
-    hideTimer = setTimeout(() => {
-      hideTooltip();
-    }, 100);
+    scheduleHide(100);
   });
 }

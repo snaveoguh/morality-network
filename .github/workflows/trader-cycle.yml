@@ -1,0 +1,31 @@
+name: Trader Cycle
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  run-cycle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger trading cycle
+        env:
+          TRADER_EXECUTE_URL: https://pooter.world/api/trading/execute
+          TRADER_CRON_SECRET: ${{ secrets.TRADER_CRON_SECRET }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${TRADER_CRON_SECRET}" ]; then
+            RESPONSE="$(curl -sS -X POST \
+              -H "Authorization: Bearer ${TRADER_CRON_SECRET}" \
+              "${TRADER_EXECUTE_URL}")"
+          else
+            RESPONSE="$(curl -sS -X POST "${TRADER_EXECUTE_URL}")"
+          fi
+
+          echo "${RESPONSE}" | head -c 2000

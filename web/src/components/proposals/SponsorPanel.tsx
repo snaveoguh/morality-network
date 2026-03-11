@@ -122,11 +122,11 @@ export function SponsorPanel({ candidate }: SponsorPanelProps) {
 
   if (!isConnected) {
     return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-zinc-500">
+      <div className="border border-[var(--rule)] p-4">
+        <h3 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
           Sponsor
         </h3>
-        <p className="text-sm text-zinc-400">
+        <p className="font-body-serif text-xs text-[var(--ink-faint)]">
           Connect your wallet to sponsor this candidate proposal.
         </p>
       </div>
@@ -134,50 +134,53 @@ export function SponsorPanel({ candidate }: SponsorPanelProps) {
   }
 
   return (
-    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
-      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-amber-400">
+    <div className="border border-[var(--rule)] p-4">
+      <h3 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
         Sponsor This Candidate
       </h3>
 
       {!hasNoun ? (
         <div>
-          <p className="mb-2 text-sm text-zinc-400">
+          <p className="mb-2 font-body-serif text-xs text-[var(--ink-faint)]">
             Only Noun holders can sponsor candidate proposals.
           </p>
-          <div className="rounded-lg bg-zinc-800/50 p-3 text-xs text-zinc-500">
+          <div className="border border-[var(--rule-light)] p-2 font-mono text-[9px] text-[var(--ink-faint)]">
             Your wallet: {address?.slice(0, 6)}...{address?.slice(-4)}
             <br />
             Noun balance: 0
           </div>
         </div>
       ) : status === "done" ? (
-        <div className="rounded-lg bg-[#31F387]/10 p-4 text-center">
-          <p className="text-sm font-medium text-[#31F387]">
-            Sponsorship submitted!
+        <div className="border border-[var(--rule)] p-3 text-center">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink)]">
+            Sponsorship submitted
           </p>
-          <p className="mt-1 text-xs text-zinc-400">
+          <p className="mt-1 font-body-serif text-xs text-[var(--ink-faint)]">
             Your signature has been recorded onchain.
           </p>
         </div>
       ) : (
         <>
-          <div className="mb-3 rounded-lg bg-zinc-800/50 p-3 text-xs text-zinc-400">
+          <div className="mb-3 border border-[var(--rule-light)] p-2 font-mono text-[9px] text-[var(--ink-faint)]">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[#31F387]" />
-              <span className="font-medium text-white">Noun Holder</span>
-              <span className="ml-auto">{Number(nounBalance)} Noun{Number(nounBalance) !== 1 ? "s" : ""}</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--ink)]" />
+              <span className="font-bold text-[var(--ink)]">Noun Holder</span>
+              <span className="ml-auto">
+                {Number(nounBalance)} Noun
+                {Number(nounBalance) !== 1 ? "s" : ""}
+              </span>
             </div>
           </div>
 
           {/* Expiry selector */}
           <div className="mb-3">
-            <label className="mb-1 block text-xs text-zinc-500">
+            <label className="mb-1 block font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
               Signature Expiry
             </label>
             <select
               value={expiryDays}
               onChange={(e) => setExpiryDays(Number(e.target.value))}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
+              className="w-full border border-[var(--rule)] bg-[var(--paper)] px-2 py-1.5 font-mono text-[10px] text-[var(--ink)] outline-none focus:border-[var(--ink)]"
             >
               <option value={7}>7 days</option>
               <option value={14}>14 days</option>
@@ -188,7 +191,7 @@ export function SponsorPanel({ candidate }: SponsorPanelProps) {
 
           {/* Reason (optional) */}
           <div className="mb-3">
-            <label className="mb-1 block text-xs text-zinc-500">
+            <label className="mb-1 block font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
               Reason (optional)
             </label>
             <input
@@ -196,24 +199,26 @@ export function SponsorPanel({ candidate }: SponsorPanelProps) {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Why are you sponsoring?"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:border-amber-400"
+              className="w-full border border-[var(--rule)] bg-[var(--paper)] px-2 py-1.5 font-mono text-[10px] text-[var(--ink)] placeholder-[var(--ink-faint)] outline-none focus:border-[var(--ink)]"
             />
           </div>
 
           <button
             onClick={handleSponsor}
             disabled={status === "signing" || status === "submitting"}
-            className="w-full rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-bold text-black transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full border border-[var(--ink)] bg-[var(--ink)] px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {status === "signing"
               ? "Sign in Wallet..."
               : status === "submitting"
-              ? "Submitting Onchain..."
-              : "Sponsor Candidate"}
+                ? "Submitting Onchain..."
+                : "Sponsor Candidate"}
           </button>
 
           {status === "error" && (
-            <p className="mt-2 text-xs text-[#D0021B]">{errorMsg}</p>
+            <p className="mt-2 font-mono text-[9px] text-[var(--accent-red)]">
+              {errorMsg}
+            </p>
           )}
         </>
       )}

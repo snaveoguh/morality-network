@@ -1,17 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAccount } from "wagmi";
 import Link from "next/link";
 import { AddressDisplay } from "@/components/shared/AddressDisplay";
 import { TipButton } from "@/components/entity/TipButton";
 import { computeEntityHash } from "@/lib/entity";
+import { CommentThread } from "@/components/entity/CommentThread";
 import type { CandidateProposal } from "@/lib/nouns-candidates";
 import { SponsorPanel } from "./SponsorPanel";
 import { PromoteButton } from "./PromoteButton";
 
 interface CandidateDetailProps {
   candidate: CandidateProposal;
+}
+
+// ── Extract first image URL from markdown body ──
+function extractImageFromBody(body: string): string | null {
+  const mdMatch = body.match(/!\[.*?\]\((https?:\/\/[^)]+)\)/);
+  if (mdMatch) return mdMatch[1];
+  const htmlMatch = body.match(/<img[^>]+src=["'](https?:\/\/[^"']+)["']/);
+  if (htmlMatch) return htmlMatch[1];
+  const urlMatch = body.match(
+    /(https?:\/\/[^\s)]+\.(?:png|jpg|jpeg|gif|webp|svg))/i
+  );
+  if (urlMatch) return urlMatch[1];
+  return null;
 }
 
 export function CandidateDetail({ candidate }: CandidateDetailProps) {
@@ -33,242 +47,301 @@ export function CandidateDetail({ candidate }: CandidateDetailProps) {
       : 0;
 
   const description = candidate.description || "";
-  const isLong = description.length > 500;
-  const displayDesc = showFullDesc ? description : description.slice(0, 500);
+  const isLong = description.length > 800;
+  const displayDesc = showFullDesc ? description : description.slice(0, 800);
+
+  const heroImage = useMemo(
+    () => extractImageFromBody(description),
+    [description]
+  );
+
+  // Entity identifier for comment thread
+  const candidateEntityId = `nouns-candidate:${candidate.slug}`;
+  const candidateEntityHash = computeEntityHash(candidateEntityId);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      {/* Main content */}
-      <div className="lg:col-span-2">
-        {/* Header */}
-        <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-6">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <img
-              src="https://noun.pics/1"
-              alt="Nouns DAO"
-              className="h-8 w-8 rounded-full"
-            />
-            <span className="text-sm font-medium text-white">Nouns DAO</span>
-            <span className="rounded-full border border-amber-500/30 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-400">
-              Candidate Proposal
+    <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+      {/* ══ MAIN COLUMN ══ */}
+      <div className="min-w-0">
+        {/* ── Header line ── */}
+        <div className="mb-1 flex flex-wrap items-center gap-2">
+          <img
+            src="https://noun.pics/1"
+            alt=""
+            className="newspaper-img h-5 w-5 rounded-full"
+          />
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
+            Nouns DAO
+          </span>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink-faint)]">
+            &middot; Candidate
+          </span>
+          {candidate.isPromotable && (
+            <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-[var(--ink)]">
+              Ready to Promote
             </span>
-            {candidate.isPromotable && (
-              <span className="rounded-full border border-[#31F387]/30 bg-[#31F387]/10 px-3 py-1 text-xs font-bold text-[#31F387]">
-                Ready to Promote
-              </span>
-            )}
-          </div>
-
-          <h1 className="mb-3 text-2xl font-bold text-white sm:text-3xl">
-            {candidate.title}
-          </h1>
-
-          <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-400">
-            <div className="flex items-center gap-2">
-              <span>Proposed by</span>
-              <Link href={`/entity/${proposerHash}`}>
-                <AddressDisplay
-                  address={candidate.proposer}
-                  className="text-zinc-300 hover:text-[#2F80ED]"
-                />
-              </Link>
-            </div>
-            {isConnected && <TipButton entityHash={proposerHash} />}
-            <a
-              href={`https://nouns.wtf/candidates/${encodeURIComponent(candidate.slug)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-auto text-[#2F80ED] hover:underline"
-            >
-              View on nouns.wtf &rarr;
-            </a>
-          </div>
+          )}
         </div>
 
-        {/* Sponsor progress bar — big version */}
-        <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-zinc-500">
+        {/* ── Headline ── */}
+        <h1 className="font-headline text-3xl leading-tight text-[var(--ink)] sm:text-4xl lg:text-5xl">
+          {candidate.title}
+        </h1>
+
+        {/* ── Byline ── */}
+        <div className="mt-3 flex flex-wrap items-center gap-3 border-b border-[var(--rule-light)] pb-3">
+          <div className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--ink-faint)]">
+            <span>Proposed by</span>
+            <Link href={`/entity/${proposerHash}`}>
+              <AddressDisplay
+                address={candidate.proposer}
+                className="text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]"
+              />
+            </Link>
+          </div>
+          {isConnected && <TipButton entityHash={proposerHash} />}
+          <a
+            href={`https://nouns.wtf/candidates/${encodeURIComponent(candidate.slug)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
+          >
+            View on nouns.wtf &rsaquo;
+          </a>
+        </div>
+
+        {/* ── Hero image (extracted from body) ── */}
+        {heroImage && (
+          <div className="newspaper-img-hero mt-4">
+            <img
+              src={heroImage}
+              alt=""
+              className="newspaper-img w-full"
+              loading="lazy"
+            />
+            <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+              Image from proposal body
+            </p>
+          </div>
+        )}
+
+        {/* ── Sponsor progress ── */}
+        <div className="mt-5 border-b border-t border-[var(--rule)] py-4">
+          <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
             Sponsor Progress
           </h2>
-          <div className="mb-3 grid grid-cols-3 gap-4 text-center">
+
+          {/* Tally text */}
+          <div className="mb-3 flex items-baseline gap-6">
             <div>
-              <p className="text-2xl font-bold text-amber-400">
+              <span className="font-headline text-2xl font-black text-[var(--ink)]">
                 {candidate.signatureCount}
-              </p>
-              <p className="text-xs text-zinc-500">Sponsors</p>
+              </span>
+              <span className="ml-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                Sponsors
+              </span>
             </div>
+            <span className="font-headline text-lg text-[var(--ink-faint)]">
+              &mdash;
+            </span>
             <div>
-              <p className="text-2xl font-bold text-zinc-400">
+              <span className="font-headline text-2xl font-black text-[var(--ink)]">
                 {candidate.requiredThreshold}
-              </p>
-              <p className="text-xs text-zinc-500">Required</p>
+              </span>
+              <span className="ml-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                Required
+              </span>
             </div>
+            <span className="font-headline text-lg text-[var(--ink-faint)]">
+              &mdash;
+            </span>
             <div>
-              <p
-                className={`text-2xl font-bold ${candidate.isPromotable ? "text-[#31F387]" : "text-zinc-400"}`}
-              >
+              <span className="font-headline text-2xl font-black text-[var(--ink)]">
                 {sponsorPct}%
-              </p>
-              <p className="text-xs text-zinc-500">Complete</p>
+              </span>
+              <span className="ml-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                Complete
+              </span>
             </div>
           </div>
 
-          <div className="flex h-4 overflow-hidden rounded-full bg-zinc-800">
+          {/* Monochrome progress bar */}
+          <div className="flex h-1.5 overflow-hidden bg-[var(--paper-dark)]">
             <div
-              className={`transition-all ${candidate.isPromotable ? "bg-[#31F387]" : "bg-amber-400"}`}
+              className="bg-[var(--ink)] transition-all"
               style={{ width: `${sponsorPct}%` }}
             />
           </div>
 
-          {candidate.isPromotable ? (
-            <p className="mt-3 text-center text-sm font-medium text-[#31F387]">
-              This candidate has enough sponsors and can be promoted to an
-              official proposal!
-            </p>
-          ) : (
-            <p className="mt-3 text-center text-xs text-zinc-500">
-              {candidate.requiredThreshold - candidate.signatureCount} more
-              sponsor{candidate.requiredThreshold - candidate.signatureCount !== 1 ? "s" : ""}{" "}
-              needed to promote
-            </p>
-          )}
+          {/* Status text */}
+          <div className="mt-2 font-mono text-[9px] text-[var(--ink-faint)]">
+            {candidate.isPromotable ? (
+              <span className="font-bold text-[var(--ink)]">
+                Threshold reached &mdash; ready to promote
+              </span>
+            ) : (
+              <span>
+                {candidate.requiredThreshold - candidate.signatureCount} more
+                sponsor
+                {candidate.requiredThreshold - candidate.signatureCount !== 1
+                  ? "s"
+                  : ""}{" "}
+                needed to promote
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Tabs: Description / Sponsors */}
-        <div className="mb-4 flex gap-1 border-b border-zinc-800">
-          {(["description", "sponsors"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
-                activeTab === tab
-                  ? "border-amber-400 text-amber-400"
-                  : "border-transparent text-zinc-500 hover:text-white"
-              }`}
-            >
-              {tab === "description"
-                ? "Description"
-                : `Sponsors (${candidate.signatureCount})`}
-            </button>
+        {/* ── Tabs ── */}
+        <div className="mt-4 flex items-center gap-0 font-mono text-[10px] uppercase tracking-wider">
+          {(["description", "sponsors"] as const).map((tab, i) => (
+            <span key={tab} className="flex items-center">
+              {i > 0 && (
+                <span className="mx-2 text-[var(--rule-light)]">|</span>
+              )}
+              <button
+                onClick={() => setActiveTab(tab)}
+                className={`transition-colors ${
+                  activeTab === tab
+                    ? "font-bold text-[var(--ink)] underline underline-offset-4"
+                    : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+                }`}
+              >
+                {tab === "description"
+                  ? "Description"
+                  : `Sponsors (${candidate.signatureCount})`}
+              </button>
+            </span>
           ))}
         </div>
 
-        {activeTab === "description" ? (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-            <div className="prose prose-invert prose-sm max-w-none">
-              <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-zinc-300">
-                {displayDesc}
-              </pre>
+        {/* ── Tab content ── */}
+        <div className="mt-4">
+          {activeTab === "description" ? (
+            <div>
+              <div className="font-body-serif text-sm leading-relaxed text-[var(--ink-light)]">
+                <div className="whitespace-pre-wrap break-words leading-relaxed">
+                  {displayDesc}
+                </div>
+              </div>
               {isLong && (
                 <button
                   onClick={() => setShowFullDesc(!showFullDesc)}
-                  className="mt-3 text-sm text-[#2F80ED] hover:underline"
+                  className="mt-3 font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
                 >
-                  {showFullDesc ? "Show less" : "Read full description..."}
+                  {showFullDesc
+                    ? "Show less \u25B2"
+                    : "Read full description \u25BC"}
                 </button>
               )}
             </div>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {candidate.sponsorSignatures.length === 0 ? (
-              <div className="rounded-xl border border-zinc-800 py-8 text-center text-zinc-500">
-                No sponsors yet. Be the first to sponsor this candidate!
-              </div>
-            ) : (
-              <div className="rounded-xl border border-amber-500/20 bg-zinc-900/50 p-4">
-                <div className="space-y-3">
+          ) : (
+            <div>
+              {candidate.sponsorSignatures.length === 0 ? (
+                <p className="py-8 text-center font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
+                  No sponsors yet. Be the first to sponsor this candidate.
+                </p>
+              ) : (
+                <div className="space-y-1.5">
                   {candidate.sponsorSignatures.map((sig, i) => (
                     <div
                       key={`${sig.signer}-${i}`}
-                      className="flex items-start gap-3 border-b border-zinc-800 pb-3 last:border-0 last:pb-0"
+                      className="flex items-start gap-2 border-b border-[var(--rule-light)] pb-2 text-[11px] last:border-0 last:pb-0"
                     >
-                      <div className="flex-1">
-                        <Link href={`/entity/${computeEntityHash(sig.signer)}`}>
-                          <AddressDisplay
-                            address={sig.signer}
-                            className="font-medium text-zinc-300 hover:text-[#2F80ED]"
-                          />
-                        </Link>
-                        {sig.reason && (
-                          <p className="mt-1 text-xs text-zinc-500">
-                            &ldquo;{sig.reason}&rdquo;
-                          </p>
-                        )}
-                      </div>
-                      <div className="shrink-0 text-right text-[10px] text-zinc-600">
-                        {sig.expirationTimestamp > 0 && (
-                          <span>
-                            Expires{" "}
-                            {new Date(
-                              sig.expirationTimestamp * 1000
-                            ).toLocaleDateString()}
-                          </span>
-                        )}
-                      </div>
+                      <Link
+                        href={`/entity/${computeEntityHash(sig.signer)}`}
+                      >
+                        <AddressDisplay
+                          address={sig.signer}
+                          className="shrink-0 font-mono text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]"
+                        />
+                      </Link>
+                      {sig.reason && (
+                        <span className="line-clamp-2 font-body-serif italic text-[var(--ink-faint)]">
+                          &ldquo;{sig.reason}&rdquo;
+                        </span>
+                      )}
+                      {sig.expirationTimestamp > 0 && (
+                        <span className="ml-auto shrink-0 font-mono text-[8px] text-[var(--ink-faint)]">
+                          Exp.{" "}
+                          {new Date(
+                            sig.expirationTimestamp * 1000
+                          ).toLocaleDateString()}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── Discussion ── */}
+        <div className="mt-8 border-t border-[var(--rule)] pt-4">
+          <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+            Discussion
+          </h2>
+          <CommentThread entityHash={candidateEntityHash} compact />
+        </div>
       </div>
 
-      {/* Sidebar */}
-      <div className="space-y-4">
+      {/* ══ SIDEBAR ══ */}
+      <div className="space-y-5">
         {/* Sponsor panel — sign to back this candidate */}
         <SponsorPanel candidate={candidate} />
 
         {/* Promote button — create the real proposal */}
-        {candidate.isPromotable && (
-          <PromoteButton candidate={candidate} />
-        )}
+        {candidate.isPromotable && <PromoteButton candidate={candidate} />}
 
         {/* Candidate metadata */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500">
+        <div className="border-t border-[var(--rule)] pt-4">
+          <h3 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
             Details
           </h3>
-          <dl className="space-y-3 text-sm">
-            <div>
-              <dt className="text-zinc-500">DAO</dt>
-              <dd className="text-white">Nouns DAO</dd>
-            </div>
-            <div>
-              <dt className="text-zinc-500">Type</dt>
-              <dd className="text-amber-400">Candidate Proposal</dd>
-            </div>
-            <div>
-              <dt className="text-zinc-500">Chain</dt>
-              <dd className="text-white">Ethereum Mainnet</dd>
-            </div>
-            <div>
-              <dt className="text-zinc-500">Slug</dt>
-              <dd className="truncate text-white">{candidate.slug}</dd>
-            </div>
-            {candidate.targets && candidate.targets.length > 0 && (
-              <div>
-                <dt className="text-zinc-500">
-                  Targets ({candidate.targets.length})
+          <dl className="space-y-2">
+            {[
+              ["DAO", "Nouns DAO"],
+              ["Type", "Candidate Proposal"],
+              ["Chain", "Ethereum Mainnet"],
+              ["Slug", candidate.slug],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="flex items-baseline justify-between"
+              >
+                <dt className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                  {label}
                 </dt>
-                <dd className="space-y-1">
-                  {candidate.targets.slice(0, 3).map((t, i) => (
-                    <AddressDisplay
-                      key={i}
-                      address={t}
-                      className="block text-zinc-400"
-                    />
-                  ))}
-                  {candidate.targets.length > 3 && (
-                    <span className="text-xs text-zinc-500">
-                      +{candidate.targets.length - 3} more
-                    </span>
-                  )}
+                <dd className="max-w-[160px] truncate font-body-serif text-xs text-[var(--ink)]">
+                  {value}
                 </dd>
               </div>
-            )}
+            ))}
           </dl>
+
+          {/* Targets */}
+          {candidate.targets && candidate.targets.length > 0 && (
+            <div className="mt-3 border-t border-[var(--rule-light)] pt-2">
+              <p className="mb-1 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                Targets ({candidate.targets.length})
+              </p>
+              <div className="space-y-0.5">
+                {candidate.targets.slice(0, 3).map((t, i) => (
+                  <AddressDisplay
+                    key={i}
+                    address={t}
+                    className="block font-mono text-[10px] text-[var(--ink-light)]"
+                  />
+                ))}
+                {candidate.targets.length > 3 && (
+                  <span className="font-mono text-[8px] text-[var(--ink-faint)]">
+                    +{candidate.targets.length - 3} more
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

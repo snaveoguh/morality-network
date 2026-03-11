@@ -1,9 +1,12 @@
 import { ponder } from "@/generated";
 import { entity, rating, feedItem } from "../ponder.schema";
+import { ensureEntityRow } from "./entity-utils";
 
 ponder.on("MoralityRatings:Rated", async ({ event, context }) => {
   const { db } = context;
   const ratingId = `${event.args.entityHash}-${event.args.rater}`;
+
+  await ensureEntityRow(db, event.args.entityHash, event.block.timestamp);
 
   // Upsert rating
   await db.insert(rating).values({
@@ -41,6 +44,8 @@ ponder.on("MoralityRatings:RatedWithReason", async ({ event, context }) => {
   const { db } = context;
   const ratingId = `${event.args.entityHash}-${event.args.rater}`;
 
+  await ensureEntityRow(db, event.args.entityHash, event.block.timestamp);
+
   await db.insert(rating).values({
     id: ratingId,
     entityId: event.args.entityHash,
@@ -76,7 +81,16 @@ ponder.on("MoralityRatings:RatingUpdated", async ({ event, context }) => {
   const { db } = context;
   const ratingId = `${event.args.entityHash}-${event.args.rater}`;
 
-  await db.update(rating, { id: ratingId }).set({
+  await ensureEntityRow(db, event.args.entityHash, event.block.timestamp);
+
+  await db.insert(rating).values({
+    id: ratingId,
+    entityId: event.args.entityHash,
+    rater: event.args.rater,
+    score: event.args.newScore,
+    timestamp: event.block.timestamp,
+    txHash: event.transaction.hash,
+  }).onConflictDoUpdate({
     score: event.args.newScore,
     timestamp: event.block.timestamp,
     txHash: event.transaction.hash,
@@ -91,7 +105,17 @@ ponder.on("MoralityRatings:RatingWithReasonUpdated", async ({ event, context }) 
   const { db } = context;
   const ratingId = `${event.args.entityHash}-${event.args.rater}`;
 
-  await db.update(rating, { id: ratingId }).set({
+  await ensureEntityRow(db, event.args.entityHash, event.block.timestamp);
+
+  await db.insert(rating).values({
+    id: ratingId,
+    entityId: event.args.entityHash,
+    rater: event.args.rater,
+    score: event.args.newScore,
+    reason: event.args.reason,
+    timestamp: event.block.timestamp,
+    txHash: event.transaction.hash,
+  }).onConflictDoUpdate({
     score: event.args.newScore,
     reason: event.args.reason,
     timestamp: event.block.timestamp,

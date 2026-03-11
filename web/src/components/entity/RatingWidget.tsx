@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useReadContract, useWriteContract, useAccount } from "wagmi";
 import { useWaitForTransactionReceipt } from "wagmi";
-import { CONTRACTS, RATINGS_ABI } from "@/lib/contracts";
+import { CONTRACTS, CONTRACTS_CHAIN_ID, RATINGS_ABI } from "@/lib/contracts";
 import { StarRating } from "@/components/shared/StarRating";
 
 interface RatingWidgetProps {
@@ -43,6 +43,20 @@ export function RatingWidget({ entityHash }: RatingWidgetProps) {
     }
   }, [isConfirmed, address, refetchAverage, refetchUserRating]);
 
+  // Listen for extension rating events — refetch when extension rates this entity
+  useEffect(() => {
+    function onExtensionRated(event: MessageEvent) {
+      if (event.source !== window) return;
+      if (event.data?.type !== 'POOTER_EXTENSION_RATED') return;
+      if (event.data.entityHash !== entityHash) return;
+      // Extension just rated this entity — refetch onchain data
+      void refetchAverage();
+      if (address) void refetchUserRating();
+    }
+    window.addEventListener('message', onExtensionRated);
+    return () => window.removeEventListener('message', onExtensionRated);
+  }, [entityHash, address, refetchAverage, refetchUserRating]);
+
   const avgRating = avgData ? Number(avgData[0]) / 100 : 0;
   const ratingCount = avgData ? Number(avgData[1]) : 0;
   const userScore = userRatingData ? Number(userRatingData[0]) : 0;
@@ -50,6 +64,7 @@ export function RatingWidget({ entityHash }: RatingWidgetProps) {
   function handleRate(score: number) {
     if (!isConnected) return;
     writeContract({
+      chainId: CONTRACTS_CHAIN_ID,
       address: CONTRACTS.ratings,
       abi: RATINGS_ABI,
       functionName: "rate",

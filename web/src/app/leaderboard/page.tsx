@@ -7,6 +7,7 @@ import { buildAnalystReputationFromPredictionMarkets } from "@/lib/analyst-reput
 import { buildInterpretationOutcomeScores } from "@/lib/interpretation-scores";
 
 export const revalidate = 300; // 5 min
+export const dynamic = "force-dynamic";
 
 // Derive leaderboard from real feed + governance data
 async function buildLeaderboard() {

@@ -273,13 +273,13 @@ export const BIAS_LABELS: Record<BiasRating, string> = {
 };
 
 export const BIAS_COLORS: Record<BiasRating, string> = {
-  "far-left": "#3B82F6",     // blue-500
-  "left": "#60A5FA",          // blue-400
-  "lean-left": "#93C5FD",     // blue-300
-  "center": "#A1A1AA",        // zinc-400
-  "lean-right": "#FCA5A5",    // red-300
-  "right": "#F87171",         // red-400
-  "far-right": "#EF4444",     // red-500
+  "far-left": "#3A3A3A",     // darkest
+  "left": "#5A5A5A",
+  "lean-left": "#7A7A7A",
+  "center": "#9A9A9A",        // middle gray
+  "lean-right": "#7A7A7A",
+  "right": "#5A5A5A",
+  "far-right": "#3A3A3A",     // darkest
 };
 
 export const BIAS_SHORT: Record<BiasRating, string> = {
@@ -302,12 +302,12 @@ export const FACTUALITY_LABELS: Record<FactualityRating, string> = {
 };
 
 export const FACTUALITY_COLORS: Record<FactualityRating, string> = {
-  "very-high": "#31F387",
-  "high": "#4ADE80",
-  "mostly-factual": "#FCD34D",
-  "mixed": "#FB923C",
-  "low": "#F87171",
-  "very-low": "#EF4444",
+  "very-high": "#1A1A1A",     // ink — strongest
+  "high": "#4A4A4A",
+  "mostly-factual": "#6A6A6A",
+  "mixed": "#8A8A8A",
+  "low": "#8B0000",           // accent-red
+  "very-low": "#8B0000",
 };
 
 /** Get a numeric position for bias on a 0-6 scale (far-left=0, far-right=6) */

@@ -1,7 +1,8 @@
 import { AgentMarketDashboard } from "@/components/markets/AgentMarketDashboard";
+import { withBrand } from "@/lib/brand";
 
 export const metadata = {
-  title: "Agent Markets | pooter.world",
+  title: withBrand("Agent Markets"),
   description:
     "Live agent trading telemetry, PnL, balances, and public funding flow.",
 };

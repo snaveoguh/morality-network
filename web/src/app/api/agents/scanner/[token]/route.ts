@@ -8,6 +8,7 @@ import { launchStore, scannerAgent } from "@/lib/agents/scanner";
 
 // Ensure scanner is registered + initialized
 import "@/lib/agents/scanner";
+import "@/lib/agents/coordinator";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

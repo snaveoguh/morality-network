@@ -15,9 +15,10 @@ export function FeedItem({ item }: FeedItemProps) {
   const { isConnected } = useAccount();
   const entityHash = computeEntityHash(item.link);
   const timeSince = getTimeSince(item.pubDate);
+  const previewText = item.canonicalClaim || item.description;
 
   return (
-    <article className="group rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 transition-colors hover:border-zinc-700">
+    <article className="group border border-[var(--rule-light)] bg-[var(--paper)] p-5 transition-colors hover:border-[var(--rule)]">
       <div className="flex gap-4">
         {/* Image */}
         {item.imageUrl && (
@@ -35,36 +36,36 @@ export function FeedItem({ item }: FeedItemProps) {
         <div className="flex-1 min-w-0">
           {/* Source + Category */}
           <div className="mb-1.5 flex items-center gap-2 text-xs font-comic">
-            <span className="font-medium text-[#31F387]">{item.source}</span>
-            <span className="text-zinc-600">|</span>
-            <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-400">
+            <span className="font-medium text-[var(--ink)]">{item.source}</span>
+            <span className="text-[var(--rule)]">|</span>
+            <span className="border border-[var(--rule-light)] px-1.5 py-0.5 text-[var(--ink-faint)]">
               {item.category}
             </span>
-            <span className="text-zinc-600">{timeSince}</span>
+            <span className="text-[var(--ink-faint)]">{timeSince}</span>
           </div>
 
-          {/* Title — Cooper Black / newspaper style */}
-          <a
-            href={item.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-headline mb-1.5 block text-lg text-white transition-colors group-hover:text-[#2F80ED]"
+          {/* Title — links to internal article page */}
+          <Link
+            href={`/article/${entityHash}`}
+            className="font-headline mb-1.5 block text-lg text-[var(--ink)] transition-colors group-hover:text-[var(--ink-light)]"
           >
             {item.title}
-          </a>
+          </Link>
 
           {/* Description — Comic Neue */}
-          <p className="font-comic mb-3 line-clamp-2 text-sm text-zinc-400">
-            {item.description}
-          </p>
+          {previewText && (
+            <p className="font-body-serif mb-3 line-clamp-2 text-sm text-[var(--ink-light)]">
+              {previewText}
+            </p>
+          )}
 
           {/* Actions */}
-          <div className="flex items-center gap-4 font-comic">
+          <div className="flex items-center gap-4 font-mono text-[10px]">
             <StarRating rating={0} size="sm" count={0} />
 
             <Link
               href={`/entity/${entityHash}`}
-              className="text-xs text-zinc-500 transition-colors hover:text-[#2F80ED]"
+              className="uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
             >
               Discuss
             </Link>

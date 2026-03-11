@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getTraderPerformance, redactedConfigSummary } from "@/lib/trading/engine";
+import { getTraderPerformanceByRunner, redactedConfigSummary } from "@/lib/trading/engine";
 import { fetchVaultOverview } from "@/lib/vault";
 import { isAddress, type Address } from "viem";
 
@@ -15,14 +15,15 @@ export async function GET(request: Request) {
         ? (accountParam as Address)
         : null;
 
-    const [performance, vault] = await Promise.all([
-      getTraderPerformance(),
+    const [performanceByRunner, vault] = await Promise.all([
+      getTraderPerformanceByRunner(),
       fetchVaultOverview({ limit: 50, account }),
     ]);
 
     return NextResponse.json(
       {
-        performance,
+        performance: performanceByRunner.primary,
+        parallel: performanceByRunner.parallel,
         vault,
         config: redactedConfigSummary(),
       },

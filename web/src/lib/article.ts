@@ -3,6 +3,12 @@ import {
   buildAgentResearchPack,
   type AgentResearchPack,
 } from "./agent-swarm";
+import { extractEntities, enrichEntities } from "./entity-extract";
+import type { EntityMention } from "./types/entities";
+import { extractCanonicalClaim } from "./claim-extract";
+import { getArchivedEditorial } from "./editorial-archive";
+import { generateAIEditorial } from "./claude-editorial";
+import { computeEntityHash } from "./entity";
 
 // ============================================================================
 // ARTICLE CONTENT GENERATION
@@ -13,6 +19,47 @@ export interface SourceContextSnippet {
   source: string;
   link: string;
   summary: string;
+}
+
+// ── Market Impact Types ─────────────────────────────────────────────────────
+
+export type MarketImpactTimeHorizon =
+  | "minutes"   // flash crash, breaking event, algorithmic reaction
+  | "hours"     // trading session, intraday repricing
+  | "days"      // earnings, policy announcements, data releases
+  | "weeks"     // regulatory processes, diplomatic negotiations
+  | "months";   // structural shifts, regime changes, secular trends
+
+export type MarketImpactDirection = "bullish" | "bearish" | "volatile" | "neutral";
+
+export interface AffectedMarket {
+  /** Asset or market name, e.g. "US semiconductor equities" */
+  asset: string;
+  /** Ticker/symbol where applicable, e.g. "BTC", "CL", "DXY" */
+  ticker: string | null;
+  /** Expected directional impact */
+  direction: MarketImpactDirection;
+  /** Confidence in this assessment: 0.0 - 1.0 */
+  confidence: number;
+  /** Which time horizons are relevant, ordered by immediacy */
+  timeHorizons: MarketImpactTimeHorizon[];
+  /** One-sentence reasoning for this market's exposure */
+  rationale: string;
+}
+
+export interface MarketImpactAnalysis {
+  /** Overall market significance: 0 (no relevance) to 100 (market-moving) */
+  significance: number;
+  /** One-sentence headline summary of the market impact angle */
+  headline: string;
+  /** Dominant time horizon for the primary impact */
+  primaryTimeHorizon: MarketImpactTimeHorizon;
+  /** Individual affected markets, ordered by significance */
+  affectedMarkets: AffectedMarket[];
+  /** Which TOPIC_TAXONOMY slugs this article maps to */
+  topicSlugs: string[];
+  /** HOW the news translates to market movement */
+  transmissionMechanism: string | null;
 }
 
 export interface ArticleContent {
@@ -40,6 +87,24 @@ export interface ArticleContent {
   contextSnippets: SourceContextSnippet[];
   /** Structured swarm output: evidence, claims, contradiction flags */
   agentResearch: AgentResearchPack;
+  /** Entities extracted from editorial body text */
+  entities?: EntityMention[];
+  /** Deep context: what the sources DON'T cover */
+  missingContext?: string | null;
+  /** Deep context: historical parallel or precedent */
+  historicalParallel?: string | null;
+  /** Deep context: who is affected and how */
+  stakeholderAnalysis?: string | null;
+  /** Per-article market impact analysis with time horizons */
+  marketImpact?: MarketImpactAnalysis | null;
+  /** Daily edition: YouTube music pick */
+  musicPick?: { videoId: string; title: string; artist: string; commentary: string } | null;
+  /** Daily edition: embedded news videos */
+  newsVideos?: Array<{ videoId: string; title: string; channel: string }>;
+  /** Whether this is a daily edition article */
+  isDailyEdition?: boolean;
+  /** Daily edition: the daily title (e.g. "THE GREAT UNWINDING") */
+  dailyTitle?: string;
 }
 
 interface StoryContext {
@@ -56,7 +121,7 @@ interface LanguageProfile {
 
 const SOURCE_CONTEXT_CACHE = new Map<string, { summary: string; expiresAt: number }>();
 const CONTEXT_CACHE_TTL_MS = 30 * 60 * 1000;
-const CONTEXT_FETCH_TIMEOUT_MS = 8_000;
+const CONTEXT_FETCH_TIMEOUT_MS = 4_000;
 const MAX_RELATED_CONTEXT_FETCH = 3;
 const ENGLISH_TRANSLATION_CACHE = new Map<string, { text: string; expiresAt: number }>();
 const TRANSLATION_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
@@ -75,9 +140,16 @@ export function findRelatedArticles(
   allItems: FeedItem[],
   maxResults = 5,
 ): FeedItem[] {
+  const signalFrequency = buildSignalFrequencyMap(allItems);
+  const targetAnchorKeywords = extractAnchorKeywords(
+    target.title,
+    signalFrequency,
+    Math.max(1, allItems.length),
+  );
   const targetKeywords = extractKeywords(`${target.title} ${target.description}`);
   const targetTitleKeywords = extractKeywords(target.title);
   const targetSignalKeywords = extractSignalKeywords(target.title);
+  const targetSpecificSignals = extractSpecificSignalKeywords(target.title);
   const targetPhrases = extractPhrases(target.title);
   const targetTags = new Set((target.tags || []).map((tag) => tag.toLowerCase()));
 
@@ -95,12 +167,18 @@ export function findRelatedArticles(
     const itemKeywords = extractKeywords(itemText);
     const itemTitleKeywords = extractKeywords(item.title);
     const itemSignalKeywords = extractSignalKeywords(item.title);
+    const itemSpecificSignals = extractSpecificSignalKeywords(item.title);
     const itemTags = new Set((item.tags || []).map((tag) => tag.toLowerCase()));
 
     const keywordOverlap = countOverlap(targetKeywords, itemKeywords);
     const titleKeywordOverlap = countOverlap(targetTitleKeywords, itemTitleKeywords);
     const signalOverlap = countOverlap(targetSignalKeywords, itemSignalKeywords);
+    const specificSignalOverlap = countOverlap(targetSpecificSignals, itemSpecificSignals);
     const sharedTagCount = countOverlap(targetTags, itemTags);
+    const anchorOverlap = countOverlap(
+      targetAnchorKeywords,
+      new Set([...itemSpecificSignals, ...itemSignalKeywords]),
+    );
 
     let phraseOverlap = 0;
     const itemTitleLower = item.title.toLowerCase();
@@ -108,10 +186,38 @@ export function findRelatedArticles(
       if (itemTitleLower.includes(phrase)) phraseOverlap++;
     }
 
-    const hasStrongAnchor = signalOverlap > 0 || phraseOverlap > 0 || titleKeywordOverlap >= 2;
+    const hasStrongAnchor =
+      anchorOverlap > 0 ||
+      specificSignalOverlap > 0 ||
+      signalOverlap >= 2 ||
+      phraseOverlap > 0 ||
+      titleKeywordOverlap >= 2;
     if (!hasStrongAnchor) continue;
 
-    if (targetSignalKeywords.size > 0 && signalOverlap === 0 && phraseOverlap === 0) {
+    if (
+      targetAnchorKeywords.size > 0 &&
+      anchorOverlap === 0 &&
+      specificSignalOverlap === 0 &&
+      phraseOverlap === 0
+    ) {
+      continue;
+    }
+
+    if (
+      targetSignalKeywords.size > 0 &&
+      signalOverlap === 0 &&
+      specificSignalOverlap === 0 &&
+      phraseOverlap === 0
+    ) {
+      continue;
+    }
+
+    if (
+      signalOverlap === 1 &&
+      specificSignalOverlap === 0 &&
+      phraseOverlap === 0 &&
+      titleKeywordOverlap < 2
+    ) {
       continue;
     }
 
@@ -130,10 +236,13 @@ export function findRelatedArticles(
       timeDiffHours <= 72 ? 1 :
       0;
 
-    const categoryScore = item.category === target.category ? 1 : 0;
+    const weakAnchor = specificSignalOverlap === 0 && phraseOverlap === 0 && signalOverlap < 2;
+    const categoryScore = item.category === target.category ? 1 : weakAnchor ? -2 : 0;
 
     const score =
-      (signalOverlap * 6) +
+      (anchorOverlap * 9) +
+      (specificSignalOverlap * 8) +
+      (signalOverlap * 4) +
       (titleKeywordOverlap * 3) +
       (phraseOverlap * 5) +
       (sharedTagCount * 2) +
@@ -142,7 +251,13 @@ export function findRelatedArticles(
       categoryScore +
       timeScore;
 
-    const minScore = signalOverlap > 0 || phraseOverlap > 0 ? 9 : 11;
+    const minScore = anchorOverlap > 0
+      ? 10
+      : targetAnchorKeywords.size > 0
+        ? 16
+        : specificSignalOverlap > 0 || phraseOverlap > 0
+          ? 10
+          : 14;
     if (score >= minScore) {
       scored.push({ item, score });
     }
@@ -206,6 +321,30 @@ const SHORT_SIGNAL_TERMS = new Set([
   "iran",
   "gaza",
   "china",
+  "trump",
+]);
+
+const SPECIFIC_SHORT_SIGNAL_TERMS = new Set([
+  "ai",
+  "uk",
+  "us",
+  "eu",
+  "dao",
+  "nft",
+  "btc",
+  "eth",
+  "zec",
+  "fed",
+  "sec",
+  "ipo",
+  "nato",
+  "opec",
+  "iran",
+  "gaza",
+  "china",
+  "taiwan",
+  "russia",
+  "ukraine",
   "trump",
 ]);
 
@@ -278,6 +417,69 @@ function extractSignalKeywords(text: string): Set<string> {
   return out;
 }
 
+function extractSpecificSignalKeywords(text: string): Set<string> {
+  const base = extractSignalKeywords(text);
+  const out = new Set<string>();
+
+  for (const token of base) {
+    if (
+      token.length >= 5 ||
+      SPECIFIC_SHORT_SIGNAL_TERMS.has(token) ||
+      token.includes("-") ||
+      /\d/.test(token)
+    ) {
+      out.add(token);
+    }
+  }
+
+  return out;
+}
+
+function buildSignalFrequencyMap(items: FeedItem[]): Map<string, number> {
+  const frequency = new Map<string, number>();
+
+  for (const item of items) {
+    const perTitle = extractSignalKeywords(item.title);
+    for (const token of perTitle) {
+      frequency.set(token, (frequency.get(token) ?? 0) + 1);
+    }
+  }
+
+  return frequency;
+}
+
+function extractAnchorKeywords(
+  title: string,
+  signalFrequency: Map<string, number>,
+  poolSize: number,
+): Set<string> {
+  const anchors = new Set<string>();
+  const specific = extractSpecificSignalKeywords(title);
+  const strictMaxDocCount = Math.max(2, Math.floor(poolSize * 0.04));
+
+  for (const token of specific) {
+    const seen = signalFrequency.get(token) ?? 0;
+    if (seen <= strictMaxDocCount) anchors.add(token);
+  }
+
+  if (anchors.size > 0) return anchors;
+
+  const fallback = Array.from(extractSignalKeywords(title))
+    .filter((token) => token.length >= 5 && !LOW_SIGNAL_TERMS.has(token))
+    .sort((a, b) => b.length - a.length);
+  const fallbackMaxDocCount = Math.max(4, Math.floor(poolSize * 0.08));
+
+  for (const token of fallback) {
+    const seen = signalFrequency.get(token) ?? 0;
+    if (seen <= fallbackMaxDocCount) {
+      anchors.add(token);
+    }
+    if (anchors.size >= 2) break;
+  }
+
+  return anchors;
+}
+
 function countOverlap(a: Set<string>, b: Set<string>): number {
   if (a.size === 0 || b.size === 0) return 0;
   let overlap = 0;
@@ -292,17 +494,210 @@ function countOverlap(a: Set<string>, b: Set<string>): number {
 // ============================================================================
 
 /**
- * Generate article commentary grounded in per-story context.
+ * Smart editorial generator: cache → AI → template fallback.
+ *
+ * 1. Check the editorial archive for a previously generated editorial
+ * 2. Try Claude AI synthesis (if ANTHROPIC_API_KEY is set)
+ * 3. Fall back to template-based generation
+ *
+ * Returns ArticleContent with an optional `generatedBy` tag.
+ */
+export async function generateEditorial(
+  primary: FeedItem,
+  related: FeedItem[],
+): Promise<ArticleContent & { generatedBy?: "claude-ai" | "template-fallback" }> {
+  const hash = computeEntityHash(primary.link);
+
+  // 1. Check editorial archive cache
+  try {
+    const cached = await getArchivedEditorial(hash);
+    if (cached && isCachedEditorialCompatible(primary, related, cached)) {
+      console.log(`[editorial] cache hit for ${hash.slice(0, 10)}...`);
+      return cached;
+    }
+    if (cached) {
+      console.log(`[editorial] cache stale for ${hash.slice(0, 10)}..., regenerating`);
+    }
+  } catch (err) {
+    console.warn("[editorial] archive lookup failed:", err);
+  }
+
+  // 2. Try Claude AI editorial
+  try {
+    const aiEditorial = await generateAIEditorial(primary, related);
+    console.log(`[editorial] AI generated for ${hash.slice(0, 10)}...`);
+    return aiEditorial;
+  } catch (err) {
+    console.warn("[editorial] AI generation failed, using template:", err instanceof Error ? err.message : err);
+  }
+
+  // 3. Fall back to template generation
+  const templateResult = await generateEditorialTemplate(primary, related);
+  return { ...templateResult, generatedBy: "template-fallback" as const };
+}
+
+function isCachedEditorialCompatible(
+  primary: FeedItem,
+  currentRelated: FeedItem[],
+  cached: ArticleContent,
+): boolean {
+  const normalize = (link: string): string => {
+    try {
+      const u = new URL(link);
+      u.hash = "";
+      const removable = [
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+        "utm_term",
+        "utm_content",
+        "ref",
+        "ref_src",
+        "fbclid",
+        "gclid",
+      ];
+      for (const key of removable) u.searchParams.delete(key);
+      if (u.pathname !== "/" && u.pathname.endsWith("/")) {
+        u.pathname = u.pathname.replace(/\/+$/, "");
+      }
+      return u.toString();
+    } catch {
+      return link;
+    }
+  };
+
+  if (cached.primary?.link && normalize(cached.primary.link) !== normalize(primary.link)) {
+    return false;
+  }
+
+  const cachedLinks = new Set(
+    (cached.relatedSources || [])
+      .map((item) => normalize(item.link))
+      .filter(Boolean),
+  );
+  const currentLinks = new Set(
+    currentRelated
+      .map((item) => normalize(item.link))
+      .filter(Boolean),
+  );
+
+  if (cachedLinks.size === 0) return true;
+  if (currentLinks.size === 0) return false;
+
+  let overlap = 0;
+  for (const link of cachedLinks) {
+    if (currentLinks.has(link)) overlap++;
+  }
+
+  return overlap / cachedLinks.size >= 0.5;
+}
+
+// ============================================================================
+// MARKET IMPACT FALLBACK — topic-regex heuristic when Claude is unavailable
+// ============================================================================
+
+/** Map topic slugs to market names and tickers for the template fallback. */
+const TOPIC_MARKET_MAP: Record<string, { asset: string; ticker: string | null }> = {
+  btc:        { asset: "Bitcoin",               ticker: "BTC" },
+  eth:        { asset: "Ethereum",              ticker: "ETH" },
+  gold:       { asset: "Gold",                  ticker: "XAU" },
+  oil:        { asset: "Crude Oil",             ticker: "CL" },
+  usd:        { asset: "US Dollar Index",       ticker: "DXY" },
+  trade:      { asset: "Global Trade Flows",    ticker: null },
+  war:        { asset: "Defense & Commodities", ticker: null },
+  climate:    { asset: "Energy Transition",     ticker: null },
+  economy:    { asset: "Global Macro",          ticker: null },
+  crypto:     { asset: "Digital Assets",        ticker: null },
+  election:   { asset: "Political Risk",        ticker: null },
+  ai:         { asset: "AI & Semiconductor Equities", ticker: null },
+  health:     { asset: "Healthcare & Biotech",  ticker: null },
+  scandal:    { asset: "Governance Risk",       ticker: null },
+  rights:     { asset: "ESG & Social Impact",   ticker: null },
+};
+
+/** Simple topic patterns mirroring TOPIC_TAXONOMY from sentiment.ts. */
+const TOPIC_PATTERNS: Array<{ slug: string; pattern: RegExp }> = [
+  { slug: "btc",      pattern: /\b(bitcoin|btc)\b/i },
+  { slug: "eth",      pattern: /\b(ethereum|eth(?:er)?|layer.?2|rollup|l2)\b/i },
+  { slug: "gold",     pattern: /\b(gold|bullion|precious\s*metal)\b/i },
+  { slug: "oil",      pattern: /\b(crude|oil\s*price|opec|brent|petroleum|barrel|wti)\b/i },
+  { slug: "usd",      pattern: /\b(dollar|fed(eral\s*reserve)?|interest\s*rate|treasury|fomc|rate\s*cut|rate\s*hike|cpi|inflation)\b/i },
+  { slug: "trade",    pattern: /\b(tariff|trade\s*war|sanction|export|import|embargo)\b/i },
+  { slug: "war",      pattern: /\b(war|invasion|airstrike|missile|troops|military|ceasefire)\b/i },
+  { slug: "climate",  pattern: /\b(climate|warming|carbon|emission|renewable|fossil\s*fuel)\b/i },
+  { slug: "economy",  pattern: /\b(economy|gdp|recession|growth|unemployment|market)\b/i },
+  { slug: "crypto",   pattern: /\b(crypto|blockchain|defi|nft|web3|token|stablecoin|dao)\b/i },
+  { slug: "election", pattern: /\b(election|ballot|voter|campaign|candidate|referendum)\b/i },
+  { slug: "ai",       pattern: /\b(ai|artificial\s*intelligence|machine\s*learning|llm|openai|chatgpt)\b/i },
+  { slug: "health",   pattern: /\b(health|vaccine|pandemic|disease|hospital|outbreak)\b/i },
+  { slug: "scandal",  pattern: /\b(scandal|corruption|fraud|indictment|bribery)\b/i },
+];
+
+/**
+ * Generate a best-effort market impact analysis using topic regex matching.
+ * Used as a fallback when Claude AI is unavailable.
+ * Returns null if no topics match.
+ */
+function generateFallbackMarketImpact(
+  primary: FeedItem,
+  related: FeedItem[],
+): MarketImpactAnalysis | null {
+  const textPool = [
+    primary.title,
+    primary.description,
+    ...related.map((r) => r.title),
+    ...related.map((r) => r.description),
+  ].filter(Boolean).join(" ");
+
+  const matchedSlugs: string[] = [];
+  for (const { slug, pattern } of TOPIC_PATTERNS) {
+    if (pattern.test(textPool)) {
+      matchedSlugs.push(slug);
+    }
+  }
+
+  if (matchedSlugs.length === 0) return null;
+
+  const affectedMarkets: AffectedMarket[] = matchedSlugs.slice(0, 5).map((slug) => {
+    const m = TOPIC_MARKET_MAP[slug] || { asset: slug, ticker: null };
+    return {
+      asset: m.asset,
+      ticker: m.ticker,
+      direction: "volatile" as const,
+      confidence: 0.3,
+      timeHorizons: ["days" as const],
+      rationale: `Topic "${slug}" detected in article text via keyword matching.`,
+    };
+  });
+
+  return {
+    significance: Math.min(50, 15 + matchedSlugs.length * 10),
+    headline: `Potential exposure across ${matchedSlugs.length} topic${matchedSlugs.length > 1 ? "s" : ""} detected via keyword analysis.`,
+    primaryTimeHorizon: "days",
+    affectedMarkets,
+    topicSlugs: matchedSlugs,
+    transmissionMechanism: null,
+  };
+}
+
+/**
+ * Template-based editorial generation (original implementation).
  * Pulls extra context from source pages (with timeout/fallback), rewrites into
  * concise summaries, and avoids duplicate/recycled paragraph text.
  */
-export async function generateEditorial(
+async function generateEditorialTemplate(
   primary: FeedItem,
   related: FeedItem[],
 ): Promise<ArticleContent> {
   const storyContext = await buildStoryContext(primary, related);
   const lang = detectLanguageProfile(primary, storyContext);
-  const claim = extractClaim(primary, storyContext);
+  const claim = extractCanonicalClaim({
+    seedClaim: primary.canonicalClaim,
+    title: primary.title,
+    description: primary.description,
+    contextSummary: storyContext.primarySummary,
+    url: primary.link,
+  });
 
   const subheadline = generateSubheadline(primary, storyContext, lang);
   const editorialBody = generateEditorialBody(primary, storyContext, lang);
@@ -321,6 +716,13 @@ export async function generateEditorial(
     relatedSummaryByLink,
   });
 
+  // Extract and enrich entities from editorial text
+  const entities = enrichEntities(
+    extractEntities(editorialBody),
+    editorialBody,
+    biasContext,
+  );
+
   let subheadlineEnglish: string | null = null;
   let editorialBodyEnglish: string[] | undefined;
 
@@ -329,6 +731,9 @@ export async function generateEditorial(
     subheadlineEnglish = translated[0] || null;
     editorialBodyEnglish = translated.slice(1);
   }
+
+  // Generate fallback market impact from topic regex matching
+  const marketImpact = generateFallbackMarketImpact(primary, related);
 
   return {
     primary,
@@ -343,6 +748,8 @@ export async function generateEditorial(
     tags,
     contextSnippets: storyContext.relatedSnippets,
     agentResearch,
+    entities,
+    marketImpact,
   };
 }
 
@@ -621,27 +1028,6 @@ function generateSubheadline(
         : ` Cross-checked against ${corroborators[0]} and ${corroborators[1]}.`;
 
   return `${primary.source} focuses on ${termPart}, with context pulled from source reporting instead of recycled feed copy.${corroboration}`;
-}
-
-function extractClaim(primary: FeedItem, context: StoryContext): string {
-  const cleanedTitle = cleanSnippet(primary.title);
-  const cleanedSummary = cleanSnippet(context.primarySummary);
-  let claim = cleanedTitle.length >= 16 ? cleanedTitle : cleanedSummary;
-  if (!claim) claim = cleanedTitle || cleanedSummary || "Claim unavailable";
-
-  // Remove trailing publication suffixes like " - Reuters" that are common in feeds.
-  claim = claim.replace(/\s+-\s+[A-Za-z][A-Za-z0-9 .&-]{2,}$/g, "").trim();
-  claim = claim.replace(/^["'“”]+|["'“”]+$/g, "").trim();
-
-  if (!claim) return "Claim unavailable.";
-
-  if (containsCjk(claim)) {
-    if (!/[。！？]$/.test(claim)) claim += "。";
-  } else if (!/[.!?]$/.test(claim)) {
-    claim += ".";
-  }
-
-  return claim;
 }
 
 function generateEditorialBody(

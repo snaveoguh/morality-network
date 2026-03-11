@@ -37,7 +37,25 @@ type ProtocolWireResponse = {
   activities?: WireActivity[];
 };
 
-export function LiveCommentColumn() {
+interface WireEntityMeta {
+  category: string;
+  bias?: string;
+  tags?: string[];
+}
+
+interface LiveCommentColumnProps {
+  categoryFilter?: string;
+  biasFilter?: string;
+  tagFilter?: string;
+  entityMetaByHash?: Record<string, WireEntityMeta>;
+}
+
+export function LiveCommentColumn({
+  categoryFilter = "all",
+  biasFilter = "all",
+  tagFilter = "all",
+  entityMetaByHash = {},
+}: LiveCommentColumnProps) {
   const [activities, setActivities] = useState<WireActivity[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -87,8 +105,23 @@ export function LiveCommentColumn() {
     };
   }, []);
 
-  const hasActivity = activities.length > 0;
-  const items = useMemo(() => activities, [activities]);
+  const hasActiveFilters =
+    categoryFilter !== "all" || biasFilter !== "all" || tagFilter !== "all";
+
+  const items = useMemo(
+    () =>
+      activities.filter((activity) =>
+        matchesActivityFilters(
+          activity,
+          categoryFilter,
+          biasFilter,
+          tagFilter,
+          entityMetaByHash
+        )
+      ),
+    [activities, categoryFilter, biasFilter, tagFilter, entityMetaByHash]
+  );
+  const hasActivity = items.length > 0;
 
   return (
     <div className="sticky top-16 overflow-hidden">
@@ -115,7 +148,9 @@ export function LiveCommentColumn() {
 
         {!hasActivity && loaded && (
           <p className="py-6 text-center font-body-serif text-sm italic text-[var(--ink-faint)]">
-            No protocol activity yet.
+            {hasActiveFilters
+              ? "No protocol activity for current filters."
+              : "No protocol activity yet."}
           </p>
         )}
 
@@ -227,4 +262,45 @@ function activityIdentity(activity: WireActivity): string {
     return `comment:${activity.id}:${activity.timestamp}:${activity.score}:${activity.tipTotal}`;
   }
   return `tip:${activity.id}:${activity.timestamp}:${activity.amount}`;
+}
+
+function matchesActivityFilters(
+  activity: WireActivity,
+  categoryFilter: string,
+  biasFilter: string,
+  tagFilter: string,
+  entityMetaByHash: Record<string, WireEntityMeta>
+): boolean {
+  if (categoryFilter === "all" && biasFilter === "all" && tagFilter === "all") {
+    return true;
+  }
+
+  const entityHash = activity.entityHash;
+  if (!entityHash) return false;
+
+  const meta = entityMetaByHash[entityHash.toLowerCase()];
+  if (!meta) return false;
+
+  if (categoryFilter !== "all" && meta.category !== categoryFilter) {
+    return false;
+  }
+
+  if (biasFilter !== "all") {
+    const bias = meta.bias;
+    if (!bias) return false;
+    if (biasFilter === "left") {
+      if (bias !== "left" && bias !== "far-left") return false;
+    } else if (biasFilter === "right") {
+      if (bias !== "right" && bias !== "far-right") return false;
+    } else if (bias !== biasFilter) {
+      return false;
+    }
+  }
+
+  if (tagFilter !== "all") {
+    const tags = meta.tags ?? [];
+    if (!tags.includes(tagFilter)) return false;
+  }
+
+  return true;
 }
