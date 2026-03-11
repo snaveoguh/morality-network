@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { computeEntityHash } from "@/lib/entity";
@@ -167,6 +167,55 @@ const FEATURE_SHAPES: [string, string, "left" | "right"][] = [
 const TILT_CLASSES = ["", "", "", "", "tilt-cw-sm", "tilt-ccw-sm", "", "", "tilt-cw-md", "tilt-ccw-md", "", "", ""];
 
 // ============================================================================
+// MOBILE TAB BAR — swipe indicator for Feed ↔ Wire
+// ============================================================================
+
+function MobileTabBar({
+  scrollRef,
+  activeTab,
+  setActiveTab,
+}: {
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  activeTab: number;
+  setActiveTab: (tab: number) => void;
+}) {
+  const scrollTo = (idx: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ left: idx * el.clientWidth, behavior: "smooth" });
+    setActiveTab(idx);
+  };
+
+  return (
+    <div className="mb-2 flex items-center gap-0 lg:hidden">
+      <button
+        onClick={() => scrollTo(0)}
+        className={`border border-[var(--rule-light)] px-3 py-1 font-mono text-[8px] font-bold uppercase tracking-[0.2em] transition-colors ${
+          activeTab === 0
+            ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
+            : "bg-[var(--paper)] text-[var(--ink-faint)] hover:text-[var(--ink)]"
+        }`}
+      >
+        Feed
+      </button>
+      <button
+        onClick={() => scrollTo(1)}
+        className={`border border-[var(--rule-light)] border-l-0 px-3 py-1 font-mono text-[8px] font-bold uppercase tracking-[0.2em] transition-colors ${
+          activeTab === 1
+            ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
+            : "bg-[var(--paper)] text-[var(--ink-faint)] hover:text-[var(--ink)]"
+        }`}
+      >
+        Wire
+      </button>
+      <span className="ml-2 font-mono text-[7px] uppercase tracking-[0.15em] text-[var(--ink-faint)] lg:hidden">
+        swipe &lsaquo;&rsaquo;
+      </span>
+    </div>
+  );
+}
+
+// ============================================================================
 // MAIN FEED
 // ============================================================================
 
@@ -174,6 +223,16 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
   const [filter, setFilter] = useState("all");
   const [biasFilter, setBiasFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
+
+  // Mobile swipe state — Feed ↔ Wire
+  const [mobileTab, setMobileTab] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const handleMobileScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || el.clientWidth === 0) return;
+    const idx = Math.round(el.scrollLeft / el.clientWidth);
+    setMobileTab(idx);
+  }, []);
 
   const allBiasSources = useMemo(() => {
     const sources: SourceBias[] = [];
@@ -436,8 +495,15 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
         </div>
       )}
 
-      <div className="flex w-full gap-0 overflow-x-hidden">
-        <div className="min-w-0 flex-1 border-r-2 border-[var(--rule)] pr-4">
+      {/* ── Mobile tabs: Feed ↔ Wire ── */}
+      <MobileTabBar scrollRef={scrollRef} activeTab={mobileTab} setActiveTab={setMobileTab} />
+
+      <div
+        ref={scrollRef}
+        onScroll={handleMobileScroll}
+        className="flex w-full snap-x snap-mandatory gap-0 overflow-x-auto lg:snap-none lg:overflow-x-hidden scrollbar-hide"
+      >
+        <div className="min-w-0 w-full shrink-0 snap-start border-r-2 border-[var(--rule)] pr-0 lg:w-auto lg:shrink lg:flex-1 lg:pr-4">
           {/* ── NEWSPAPER GRID ── */}
           <div className="newspaper-grid">
             {filtered.flatMap((item, i) => {
@@ -526,7 +592,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
           )}
         </div>
 
-        <div className="hidden w-56 max-w-56 shrink-0 overflow-x-hidden pl-4 lg:block">
+        <div className="w-full shrink-0 snap-start overflow-x-hidden pl-4 lg:block lg:w-56 lg:max-w-56 lg:shrink-0">
           <LiveCommentColumn
             categoryFilter={filter}
             biasFilter={biasFilter}
