@@ -56,6 +56,12 @@ export const CONTRACTS_CHAIN_ID = base.id;
 export const PREDICTION_MARKET_CHAIN_ID = mainnet.id;
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
 
+function readAddressEnv(name: string, fallback: Address): Address {
+  const rawValue = process.env[name];
+  const trimmed = rawValue?.trim();
+  return (trimmed && trimmed.length > 0 ? trimmed : fallback) as Address;
+}
+
 const parsedVaultChainId = Number(
   process.env.NEXT_PUBLIC_AGENT_VAULT_CHAIN_ID ?? `${base.id}`
 );
@@ -64,22 +70,34 @@ export const AGENT_VAULT_CHAIN_ID =
   Number.isFinite(parsedVaultChainId) && parsedVaultChainId > 0
     ? Math.trunc(parsedVaultChainId)
     : base.id;
-export const AGENT_VAULT_ADDRESS = (process.env.NEXT_PUBLIC_AGENT_VAULT_ADDRESS ??
-  ZERO_ADDRESS) as Address;
+export const AGENT_VAULT_ADDRESS = readAddressEnv(
+  "NEXT_PUBLIC_AGENT_VAULT_ADDRESS",
+  ZERO_ADDRESS,
+);
 
 // Contract addresses
 // Defaults point to deployed Base mainnet contracts; override via NEXT_PUBLIC_* env vars.
 export const CONTRACTS = {
-  registry: (process.env.NEXT_PUBLIC_REGISTRY_ADDRESS ??
-    "0x2ea7502C4db5B8cfB329d8a9866EB6705b036608") as Address,
-  ratings: (process.env.NEXT_PUBLIC_RATINGS_ADDRESS ??
-    "0x29F66D8b15326cE7232c0277DBc2CbFDaaf93405") as Address,
-  comments: (process.env.NEXT_PUBLIC_COMMENTS_ADDRESS ??
-    "0x66BA3cE1280bF86DFe957B52e9888A1De7F81d7b") as Address,
-  tipping: (process.env.NEXT_PUBLIC_TIPPING_ADDRESS ??
-    "0x27c79A57BE68EB62c9C6bB19875dB76D33FD099B") as Address,
-  leaderboard: (process.env.NEXT_PUBLIC_LEADERBOARD_ADDRESS ??
-    "0x29f0235d74E09536f0b7dF9C6529De17B8aF5Fc6") as Address,
+  registry: readAddressEnv(
+    "NEXT_PUBLIC_REGISTRY_ADDRESS",
+    "0x2ea7502C4db5B8cfB329d8a9866EB6705b036608" as Address,
+  ),
+  ratings: readAddressEnv(
+    "NEXT_PUBLIC_RATINGS_ADDRESS",
+    "0x29F66D8b15326cE7232c0277DBc2CbFDaaf93405" as Address,
+  ),
+  comments: readAddressEnv(
+    "NEXT_PUBLIC_COMMENTS_ADDRESS",
+    "0x66BA3cE1280bF86DFe957B52e9888A1De7F81d7b" as Address,
+  ),
+  tipping: readAddressEnv(
+    "NEXT_PUBLIC_TIPPING_ADDRESS",
+    "0x27c79A57BE68EB62c9C6bB19875dB76D33FD099B" as Address,
+  ),
+  leaderboard: readAddressEnv(
+    "NEXT_PUBLIC_LEADERBOARD_ADDRESS",
+    "0x29f0235d74E09536f0b7dF9C6529De17B8aF5Fc6" as Address,
+  ),
 } as const;
 
 export const REGISTRY_ABI = [
@@ -633,8 +651,10 @@ export const LEADERBOARD_ABI = [
 // POOTER EDITIONS — 1/1 Daily Edition ERC-721 NFTs
 // ============================================================================
 
-export const POOTER_EDITIONS_ADDRESS = (process.env.NEXT_PUBLIC_POOTER_EDITIONS_ADDRESS ??
-  "0x06d7c7d70c685d58686FF6E0b0DB388209fCCC6e") as Address;
+export const POOTER_EDITIONS_ADDRESS = readAddressEnv(
+  "NEXT_PUBLIC_POOTER_EDITIONS_ADDRESS",
+  "0x06d7c7d70c685d58686FF6E0b0DB388209fCCC6e" as Address,
+);
 
 export const POOTER_EDITIONS_ABI = [
   {
@@ -910,8 +930,8 @@ export const AGENT_VAULT_ABI = [
 // Lives on Ethereum mainnet so Nouns/Lil Nouns resolve trustlessly onchain.
 // ============================================================================
 
-export const PREDICTION_MARKET_ADDRESS = (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS ??
-  "0x2ea7502C4db5B8cfB329d8a9866EB6705b036608") as Address;
+export const PREDICTION_MARKET_ADDRESS =
+  "0x2ea7502C4db5B8cfB329d8a9866EB6705b036608" as Address;
 
 export const PREDICTION_MARKET_ABI = [
   {
