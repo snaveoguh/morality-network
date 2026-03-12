@@ -1,20 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 /// @title MoralityPredictionMarket
 /// @notice Prediction markets on DAO proposal outcomes.
-///         Oracle = Ethereum blockchain (the actual onchain vote result).
+///         Two resolution paths:
+///           1. Owner-managed — owner creates market & resolves via off-chain oracle.
+///              Works for ANY DAO on ANY chain (e.g. Nouns on L1, market on Base).
+///           2. Onchain — reads governor.state() directly. Only works when governor
+///              is deployed on the same chain as this contract.
 ///         Stake ETH on FOR or AGAINST — winners split the pot proportionally.
-///         Market starts at 50/50 implied odds. Real odds shift with stake.
-/// @dev Uses a parimutuel pool model: total pot is split among winners
-///      proportional to their stake. No AMM/orderbook needed.
+/// @dev Parimutuel pool model: total pot split among winners proportional to stake.
 
 /// @notice Governor-like interface (Governor Bravo/DAOs with `state(uint256)`).
 interface IProposalState {
     function state(uint256 proposalId) external view returns (uint8);
 }
 
-contract MoralityPredictionMarket {
+contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     enum Outcome { UNRESOLVED, FOR, AGAINST, VOID }
 
     struct DaoResolverConfig {
@@ -42,8 +48,7 @@ contract MoralityPredictionMarket {
         bool claimed;
     }
 
-    address public owner;
-    uint256 public protocolFeeBps = 200; // 2% fee on winnings
+    uint256 public protocolFeeBps;
     uint256 public totalFeesCollected;
 
     // dao key hash => resolver config
@@ -58,18 +63,22 @@ contract MoralityPredictionMarket {
     event StakePlaced(bytes32 indexed proposalKey, address indexed staker, bool isFor, uint256 amount);
     event MarketResolved(bytes32 indexed proposalKey, Outcome outcome);
     event MarketResolvedFromChain(bytes32 indexed proposalKey, uint8 chainState, Outcome outcome);
+    event MarketResolvedByOwner(bytes32 indexed proposalKey, Outcome outcome);
     event WinningsClaimed(bytes32 indexed proposalKey, address indexed staker, uint256 payout);
     event MarketVoided(bytes32 indexed proposalKey);
     event DaoResolverSet(string dao, address indexed governor, bool enabled);
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
-    constructor() {
-        owner = msg.sender;
+    function initialize() public initializer {
+        __Ownable_init(msg.sender);
+        protocolFeeBps = 200; // 2% fee on winnings
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // Governor state enum compatibility:
     // 0=Pending, 1=Active, 2=Canceled, 3=Defeated, 4=Succeeded, 5=Queued, 6=Expired, 7=Executed, 8=Vetoed
@@ -82,21 +91,22 @@ contract MoralityPredictionMarket {
     // MARKET CREATION
     // ========================================================================
 
-    /// @notice Create a prediction market for a DAO proposal.
-    ///         Anyone can create a market. First stake seeds it.
+    /// @notice Create a prediction market for a DAO proposal (owner only).
+    ///         Works for any DAO regardless of chain — backend manages lifecycle.
+    ///         If the DAO has a same-chain governor configured, it gets locked in
+    ///         for optional onchain resolution. Otherwise governor stays address(0)
+    ///         and the market is resolved via ownerResolve().
     function createMarket(
         string calldata dao,
         string calldata proposalId
-    ) external {
-        DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
-        require(cfg.enabled && cfg.governor != address(0), "DAO not onchain-resolvable");
-
-        uint256 proposalNumericId = _parseUintStrict(proposalId);
-        uint8 chainState = _readGovernorState(cfg.governor, proposalNumericId);
-        require(_isStakeableState(chainState), "Proposal not open");
-
+    ) external onlyOwner {
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
         require(!markets[key].exists, "Market exists");
+
+        // Lock in same-chain governor if configured, otherwise owner-managed.
+        DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
+        address governor = (cfg.enabled && cfg.governor != address(0)) ? cfg.governor : address(0);
+        uint256 proposalNumericId = _parseUintStrict(proposalId);
 
         markets[key] = Market({
             proposalKey: key,
@@ -107,7 +117,7 @@ contract MoralityPredictionMarket {
             createdAt: block.timestamp,
             resolvedAt: 0,
             outcome: Outcome.UNRESOLVED,
-            governor: cfg.governor,
+            governor: governor,
             proposalNumericId: proposalNumericId,
             exists: true
         });
@@ -119,7 +129,8 @@ contract MoralityPredictionMarket {
     // STAKING
     // ========================================================================
 
-    /// @notice Stake ETH on a prediction outcome
+    /// @notice Stake ETH on a prediction outcome.
+    ///         Market must already exist (created by owner) and be unresolved.
     /// @param dao The DAO identifier
     /// @param proposalId The proposal ID
     /// @param isFor true = stake on FOR (proposal passes), false = AGAINST
@@ -131,36 +142,17 @@ contract MoralityPredictionMarket {
         require(msg.value > 0, "Must stake ETH");
 
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
-
-        // Auto-create market if it doesn't exist
-        if (!markets[key].exists) {
-            DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
-            require(cfg.enabled && cfg.governor != address(0), "DAO not onchain-resolvable");
-            uint256 proposalNumericId = _parseUintStrict(proposalId);
-            uint8 chainState = _readGovernorState(cfg.governor, proposalNumericId);
-            require(_isStakeableState(chainState), "Proposal not open");
-
-            markets[key] = Market({
-                proposalKey: key,
-                forPool: 0,
-                againstPool: 0,
-                forStakers: 0,
-                againstStakers: 0,
-                createdAt: block.timestamp,
-                resolvedAt: 0,
-                outcome: Outcome.UNRESOLVED,
-                governor: cfg.governor,
-                proposalNumericId: proposalNumericId,
-                exists: true
-            });
-            emit MarketCreated(key, dao, proposalId);
-        }
-
         Market storage m = markets[key];
+        require(m.exists, "No market");
         require(m.outcome == Outcome.UNRESOLVED, "Market resolved");
-        require(m.governor != address(0), "Market not resolvable");
-        uint8 latestState = _readGovernorState(m.governor, m.proposalNumericId);
-        require(_isStakeableState(latestState), "Proposal not open");
+
+        // If market has a same-chain governor, verify proposal is still open.
+        // If owner-managed (governor == address(0)), staking is open until
+        // owner resolves the market.
+        if (m.governor != address(0)) {
+            uint8 latestState = _readGovernorState(m.governor, m.proposalNumericId);
+            require(_isStakeableState(latestState), "Proposal not open");
+        }
 
         Position storage pos = positions[key][msg.sender];
 
@@ -178,11 +170,39 @@ contract MoralityPredictionMarket {
     }
 
     // ========================================================================
-    // RESOLUTION — Oracle is the actual DAO vote result
+    // RESOLUTION
     // ========================================================================
 
-    /// @notice Resolve a market from DAO governor state (fully onchain query).
+    /// @notice Owner resolves a market with a known outcome.
+    ///         Used when governor is cross-chain (e.g. Nouns on L1, market on Base)
+    ///         or for DAOs without onchain governors (Snapshot, off-chain voting).
+    ///         Backend reads governance APIs and calls this.
+    function ownerResolve(
+        string calldata dao,
+        string calldata proposalId,
+        Outcome outcome
+    ) external onlyOwner {
+        require(outcome != Outcome.UNRESOLVED, "Invalid outcome");
+
+        bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
+        Market storage m = markets[key];
+        require(m.exists, "No market");
+        require(m.outcome == Outcome.UNRESOLVED, "Already resolved");
+
+        m.outcome = outcome;
+        m.resolvedAt = block.timestamp;
+
+        if (outcome == Outcome.VOID) {
+            emit MarketVoided(key);
+        } else {
+            emit MarketResolved(key, outcome);
+        }
+        emit MarketResolvedByOwner(key, outcome);
+    }
+
+    /// @notice Resolve a market from same-chain DAO governor state (onchain query).
     ///         Anyone can trigger once the proposal is in a terminal state.
+    ///         Only works for markets with a same-chain governor locked in.
     function resolve(
         string calldata dao,
         string calldata proposalId
@@ -191,15 +211,7 @@ contract MoralityPredictionMarket {
         Market storage m = markets[key];
         require(m.exists, "No market");
         require(m.outcome == Outcome.UNRESOLVED, "Already resolved");
-
-        // Legacy safety: if a market was created before resolver fields existed,
-        // initialize from current dao resolver config once.
-        if (m.governor == address(0)) {
-            DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
-            require(cfg.enabled && cfg.governor != address(0), "DAO not configured");
-            m.governor = cfg.governor;
-            m.proposalNumericId = _parseUintStrict(proposalId);
-        }
+        require(m.governor != address(0), "Use ownerResolve for this market");
 
         uint8 chainState = _readGovernorState(m.governor, m.proposalNumericId);
         Outcome outcome = _mapOutcome(chainState);
@@ -326,6 +338,7 @@ contract MoralityPredictionMarket {
 
     /// @notice Configure a DAO to resolve from an onchain governor contract.
     /// @dev dao should match the UI key used in stake/create (e.g. "nouns", "lil-nouns").
+    ///      Only useful if governor is on the same chain as this contract.
     function setDaoResolver(string calldata dao, address governor, bool enabled) external onlyOwner {
         require(bytes(dao).length > 0, "DAO key required");
         if (enabled) {
@@ -388,9 +401,11 @@ contract MoralityPredictionMarket {
     function withdrawFees() external onlyOwner {
         uint256 fees = totalFeesCollected;
         totalFeesCollected = 0;
-        (bool ok, ) = payable(owner).call{value: fees}("");
+        (bool ok, ) = payable(owner()).call{value: fees}("");
         require(ok, "Withdraw failed");
     }
 
     receive() external payable {}
+
+    uint256[50] private __gap;
 }
