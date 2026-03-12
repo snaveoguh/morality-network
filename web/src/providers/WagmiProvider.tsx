@@ -29,12 +29,12 @@ const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
 const hasValidWC =
   projectId.length > 0 && projectId !== "demo" && projectId !== "placeholder";
 
-const chains = [baseSepolia, base, mainnet] as const;
+const chains = [base, baseSepolia, mainnet] as const;
 
 const transports = {
   [baseSepolia.id]: http(),
   [base.id]: http(),
-  [mainnet.id]: http("https://ethereum-rpc.publicnode.com"),
+  [mainnet.id]: http("https://mainnet.rpc.buidlguidl.com"),
 };
 
 // Two config paths: with WC (full RainbowKit) or without (raw connectors, no WC relay)

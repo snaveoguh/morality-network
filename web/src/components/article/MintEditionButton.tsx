@@ -90,7 +90,7 @@ export function MintEditionButton({
           Edition #{editionNumber} — Minted
         </span>
         <a
-          href={`https://sepolia.basescan.org/token/${POOTER_EDITIONS_ADDRESS}?a=${editionNumber}`}
+          href={`https://basescan.org/token/${POOTER_EDITIONS_ADDRESS}?a=${editionNumber}`}
           target="_blank"
           rel="noopener noreferrer"
           className="font-mono text-[9px] uppercase tracking-wider text-[var(--accent-red)] underline underline-offset-2 hover:text-[var(--ink)]"
