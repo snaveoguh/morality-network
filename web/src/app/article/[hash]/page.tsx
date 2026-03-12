@@ -28,6 +28,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 55;
 
 /** Race a promise against a timeout — returns fallback on timeout */
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
