@@ -11,7 +11,7 @@ import { parseEther } from "viem";
 import {
   PREDICTION_MARKET_ADDRESS,
   PREDICTION_MARKET_ABI,
-  CONTRACTS_CHAIN_ID,
+  PREDICTION_MARKET_CHAIN_ID,
   ZERO_ADDRESS,
 } from "@/lib/contracts";
 import { parseMarketData, parsePosition, MarketOutcome, type ParsedMarketData } from "@/lib/market-utils";
@@ -33,7 +33,10 @@ const OUTCOME_LABELS: Record<MarketOutcome, { label: string; color: string }> = 
   [MarketOutcome.Unresolved]: { label: "Active", color: "var(--ink-faint)" },
   [MarketOutcome.For]: { label: "Passed", color: "var(--ink)" },
   [MarketOutcome.Against]: { label: "Failed", color: "var(--accent-red)" },
+  [MarketOutcome.Void]: { label: "Voided", color: "var(--ink-light)" },
 };
+
+const NOT_OPEN_LABEL = { label: "Not Open", color: "var(--rule-light)" };
 
 const DEFAULT_MARKET: ParsedMarketData = {
   forPool: BigInt(0),
@@ -67,7 +70,7 @@ export function MarketCard({
     abi: PREDICTION_MARKET_ABI,
     functionName: "getMarket",
     args: [daoKey, proposalId],
-    chainId: CONTRACTS_CHAIN_ID,
+    chainId: PREDICTION_MARKET_CHAIN_ID,
   });
 
   const { data: positionRaw } = useReadContract({
@@ -75,7 +78,7 @@ export function MarketCard({
     abi: PREDICTION_MARKET_ABI,
     functionName: "getPosition",
     args: [daoKey, proposalId, address ?? ZERO_ADDRESS],
-    chainId: CONTRACTS_CHAIN_ID,
+    chainId: PREDICTION_MARKET_CHAIN_ID,
     query: { enabled: !!address },
   });
 
@@ -90,7 +93,7 @@ export function MarketCard({
 
   // Use actual market data if it exists, otherwise show default 50/50
   const displayMarket = market?.exists ? market : DEFAULT_MARKET;
-  const outcomeInfo = OUTCOME_LABELS[displayMarket.outcome];
+  const outcomeInfo = market?.exists ? OUTCOME_LABELS[displayMarket.outcome] : NOT_OPEN_LABEL;
   const isResolved = displayMarket.outcome !== MarketOutcome.Unresolved;
 
   return (
@@ -157,6 +160,11 @@ export function MarketCard({
             )}
           </div>
         )}
+        {!market?.exists && (
+          <div className="text-[8px] uppercase tracking-wider">
+            Awaiting operator market creation on Ethereum mainnet
+          </div>
+        )}
       </div>
 
       {/* User position */}
@@ -182,8 +190,14 @@ export function MarketCard({
       )}
 
       {/* Inline wager UI */}
-      {!isResolved && (
+      {!isResolved && market?.exists && (
         <InlineWager dao={daoKey} proposalId={proposalId} />
+      )}
+
+      {!isResolved && !market?.exists && (
+        <p className="py-2 text-center font-mono text-[9px] text-[var(--ink-faint)]">
+          Market not open yet
+        </p>
       )}
 
       {/* Claim button for resolved markets */}
@@ -204,7 +218,7 @@ function InlineWager({ dao, proposalId }: { dao: string; proposalId: string }) {
   const { writeContract, data: txHash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: txHash,
-    chainId: CONTRACTS_CHAIN_ID,
+    chainId: PREDICTION_MARKET_CHAIN_ID,
     query: { enabled: !!txHash },
   });
 
@@ -227,7 +241,7 @@ function InlineWager({ dao, proposalId }: { dao: string; proposalId: string }) {
   function handleQuickStake(amount: string) {
     if (!side) return;
     writeContract({
-      chainId: CONTRACTS_CHAIN_ID,
+      chainId: PREDICTION_MARKET_CHAIN_ID,
       address: PREDICTION_MARKET_ADDRESS,
       abi: PREDICTION_MARKET_ABI,
       functionName: "stake",
@@ -294,7 +308,7 @@ function ClaimButton({ dao, proposalId }: { dao: string; proposalId: string }) {
   const { writeContract, data: txHash, isPending } = useWriteContract();
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({
     hash: txHash,
-    chainId: CONTRACTS_CHAIN_ID,
+    chainId: PREDICTION_MARKET_CHAIN_ID,
     query: { enabled: !!txHash },
   });
 
@@ -302,7 +316,7 @@ function ClaimButton({ dao, proposalId }: { dao: string; proposalId: string }) {
     <button
       onClick={() =>
         writeContract({
-          chainId: CONTRACTS_CHAIN_ID,
+          chainId: PREDICTION_MARKET_CHAIN_ID,
           address: PREDICTION_MARKET_ADDRESS,
           abi: PREDICTION_MARKET_ABI,
           functionName: "claim",

@@ -22,7 +22,7 @@ export default function DiscussPage() {
           Base.
         </p>
         <div className="mt-2 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-          Base Sepolia Testnet &bull; All messages are public and immutable
+          Base Mainnet &bull; All messages are public and immutable
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import { type Address } from "viem";
+import { base, mainnet } from "viem/chains";
 
 // MO Token on Base
 export const MO_TOKEN = {
@@ -49,10 +50,10 @@ export const ERC20_ABI = [
   },
 ] as const;
 
-// Chain where morality contracts are deployed.
-// All writeContract calls MUST include this chainId or the tx goes to the wrong chain.
-import { base, baseSepolia } from "viem/chains";
+// Base chain for registry/comments/tipping/leaderboard writes.
 export const CONTRACTS_CHAIN_ID = base.id;
+// Ethereum mainnet chain for trustless Nouns/Lil Nouns prediction markets.
+export const PREDICTION_MARKET_CHAIN_ID = mainnet.id;
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
 
 const parsedVaultChainId = Number(
@@ -906,12 +907,11 @@ export const AGENT_VAULT_ABI = [
 
 // ============================================================================
 // PREDICTION MARKET — Parimutuel betting on DAO proposals
-// Oracle = actual onchain vote result. Winners take the pot.
-// Update after deployment
+// Lives on Ethereum mainnet so Nouns/Lil Nouns resolve trustlessly onchain.
 // ============================================================================
 
 export const PREDICTION_MARKET_ADDRESS = (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS ??
-  "0x71b2e273727385C617fe254f4fB14a36a679b12A") as Address;
+  "0x2ea7502C4db5B8cfB329d8a9866EB6705b036608") as Address;
 
 export const PREDICTION_MARKET_ABI = [
   {

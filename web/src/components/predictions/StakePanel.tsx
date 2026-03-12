@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther } from "viem";
-import { PREDICTION_MARKET_ADDRESS, PREDICTION_MARKET_ABI, CONTRACTS_CHAIN_ID } from "@/lib/contracts";
+import {
+  PREDICTION_MARKET_ADDRESS,
+  PREDICTION_MARKET_ABI,
+  PREDICTION_MARKET_CHAIN_ID,
+} from "@/lib/contracts";
 import { calculatePotentialPayout, type ParsedMarketData } from "@/lib/market-utils";
 import { formatEth } from "@/lib/entity";
 
@@ -23,6 +27,7 @@ export function StakePanel({ dao, proposalId, market }: StakePanelProps) {
   const { writeContract, data: txHash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: txHash,
+    chainId: PREDICTION_MARKET_CHAIN_ID,
     query: { enabled: !!txHash },
   });
 
@@ -37,7 +42,7 @@ export function StakePanel({ dao, proposalId, market }: StakePanelProps) {
   function handleStake() {
     if (!amount || !isConnected) return;
     writeContract({
-      chainId: CONTRACTS_CHAIN_ID,
+      chainId: PREDICTION_MARKET_CHAIN_ID,
       address: PREDICTION_MARKET_ADDRESS,
       abi: PREDICTION_MARKET_ABI,
       functionName: "stake",

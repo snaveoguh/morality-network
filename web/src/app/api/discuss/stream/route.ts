@@ -1,12 +1,6 @@
 import { NextRequest } from "next/server";
-import { createPublicClient, http } from "viem";
-import { baseSepolia } from "viem/chains";
 import { CONTRACTS, COMMENTS_ABI } from "@/lib/contracts";
-
-const RPC_URL =
-  process.env.BASE_SEPOLIA_RPC_URL ||
-  process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL ||
-  "https://sepolia.base.org";
+import { baseContractsPublicClient } from "@/lib/server/onchain-clients";
 
 export async function GET(req: NextRequest) {
   const entityHash = req.nextUrl.searchParams.get("entityHash");
@@ -16,10 +10,7 @@ export async function GET(req: NextRequest) {
   let lastKnownId = BigInt(0);
   let closed = false;
 
-  const client = createPublicClient({
-    chain: baseSepolia,
-    transport: http(RPC_URL, { timeout: 10_000 }),
-  });
+  const client = baseContractsPublicClient;
 
   // Get initial nextCommentId
   try {

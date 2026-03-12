@@ -1,19 +1,19 @@
-import { fetchActiveNounsProposals } from "@/lib/governance";
+import { fetchActivePredictionProposals } from "@/lib/governance";
 import { MarketCard } from "@/components/predictions/MarketCard";
 import { withBrand } from "@/lib/brand";
 
 export const revalidate = 60;
 
 export const metadata = {
-  title: withBrand("Nouns Predictions"),
+  title: withBrand("Nouns + Lil Nouns Predictions"),
   description:
-    "Wager ETH on active Nouns DAO proposals. Parimutuel betting — winners take the pot.",
+    "Wager ETH on active Nouns and Lil Nouns proposal outcomes. Winners split the pot.",
 };
 
 export default async function PredictionsPage() {
-  let proposals: Awaited<ReturnType<typeof fetchActiveNounsProposals>> = [];
+  let proposals: Awaited<ReturnType<typeof fetchActivePredictionProposals>> = [];
   try {
-    proposals = await fetchActiveNounsProposals();
+    proposals = await fetchActivePredictionProposals();
   } catch (error) {
     console.error("[Predictions] Failed to fetch proposals:", error);
   }
@@ -23,14 +23,14 @@ export default async function PredictionsPage() {
       {/* Header */}
       <div className="mb-6 border-b-2 border-[var(--rule)] pb-4">
         <h1 className="font-headline text-2xl font-bold text-[var(--ink)]">
-          Nouns Predictions
+          Nouns + Lil Nouns Predictions
         </h1>
         <p className="mt-1 font-body-serif text-sm text-[var(--ink-light)]">
-          Wager ETH on active Nouns DAO proposal outcomes. Parimutuel system
-          &mdash; winners split the pot.
+          Wager ETH on active Nouns and Lil Nouns proposal outcomes. Parimutuel
+          system &mdash; winners split the pot.
         </p>
         <div className="mt-2 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-          Base Sepolia Testnet &bull; Wagers are non-refundable
+          Ethereum Mainnet prediction markets &bull; Base powers comments and registry
         </div>
       </div>
 
@@ -38,17 +38,14 @@ export default async function PredictionsPage() {
       {proposals.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
-            Active Proposals ({proposals.length})
+            Active Markets ({proposals.length})
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {proposals.map((p) => (
               <MarketCard
                 key={`${p.dao}-${p.id}`}
                 dao={p.dao}
-                proposalId={
-                  p.proposalNumber?.toString() ||
-                  p.id.replace("nouns-", "")
-                }
+                proposalId={p.proposalNumber?.toString() ?? p.id}
                 title={p.title}
                 status={p.status}
                 url={p.link}
@@ -65,8 +62,8 @@ export default async function PredictionsPage() {
       {proposals.length === 0 && (
         <div className="py-16 text-center">
           <p className="font-body-serif text-sm italic text-[var(--ink-faint)]">
-            No active Nouns proposals at the moment. Check back when a new
-            proposal goes to vote.
+            No active Nouns or Lil Nouns proposals at the moment. Check back
+            when a new proposal goes to vote.
           </p>
         </div>
       )}
@@ -81,7 +78,7 @@ export default async function PredictionsPage() {
             {
               step: "1",
               title: "Pick a Side",
-              desc: "Choose PASS or FAIL on any active Nouns proposal.",
+              desc: "Choose PASS or FAIL on any active Nouns or Lil Nouns proposal.",
             },
             {
               step: "2",

@@ -4,6 +4,7 @@ export enum MarketOutcome {
   Unresolved = 0,
   For = 1,
   Against = 2,
+  Void = 3,
 }
 
 export interface ParsedMarketData {

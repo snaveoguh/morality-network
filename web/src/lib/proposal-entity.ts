@@ -3,9 +3,14 @@ export function normalizeDaoIdentifier(dao: string): string {
 }
 
 export function getDaoPredictionKey(dao: string): string {
-  if (dao === "Lil Nouns") return "lil-nouns";
-  if (dao === "Nouns DAO") return "nouns";
-  return normalizeDaoIdentifier(dao);
+  const normalized = normalizeDaoIdentifier(dao);
+  if (normalized === "lil-nouns" || normalized === "lilnouns" || normalized === "lil-nouns-dao") {
+    return "lil-nouns";
+  }
+  if (normalized === "nouns" || normalized === "nouns-dao") {
+    return "nouns";
+  }
+  return normalized;
 }
 
 export function getPrimaryProposalEntityIdentifier(dao: string, proposalId: string): string {
@@ -16,6 +21,7 @@ export function getProposalEntityIdentifiers(dao: string, proposalId: string): s
   const normalized = normalizeDaoIdentifier(dao);
   const raw = dao.trim().toLowerCase();
   const pid = proposalId.trim();
+  const predictionKey = getDaoPredictionKey(dao);
 
   const identifiers = new Set<string>([
     `${raw}:${pid}`,
@@ -30,11 +36,22 @@ export function getProposalEntityIdentifiers(dao: string, proposalId: string): s
     `proposals/${normalized}/${pid}`,
   ]);
 
-  if (raw.includes("nouns") || normalized.includes("nouns")) {
+  if (predictionKey === "nouns") {
     identifiers.add(`nouns:${pid}`);
     identifiers.add(`nouns-${pid}`);
     identifiers.add(`proposal:nouns:${pid}`);
     identifiers.add(`proposal:nouns-${pid}`);
+  }
+
+  if (predictionKey === "lil-nouns") {
+    identifiers.add(`lil-nouns:${pid}`);
+    identifiers.add(`lil-nouns-${pid}`);
+    identifiers.add(`proposal:lil-nouns:${pid}`);
+    identifiers.add(`proposal:lil-nouns-${pid}`);
+    identifiers.add(`lilnouns:${pid}`);
+    identifiers.add(`lilnouns-${pid}`);
+    identifiers.add(`proposal:lilnouns:${pid}`);
+    identifiers.add(`proposal:lilnouns-${pid}`);
   }
 
   return [...identifiers];

@@ -11,7 +11,8 @@ import { parseEther, formatEther } from "viem";
 import {
   PREDICTION_MARKET_ADDRESS,
   PREDICTION_MARKET_ABI,
-  CONTRACTS_CHAIN_ID,
+  PREDICTION_MARKET_CHAIN_ID,
+  ZERO_ADDRESS,
 } from "@/lib/contracts";
 import { getDaoPredictionKey } from "@/lib/proposal-entity";
 import type { Proposal } from "@/lib/governance";
@@ -30,9 +31,9 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
   const isCandidate = proposal.status === "candidate";
   const daoKey = getDaoPredictionKey(proposal.dao);
   const proposalId = hasNumericProposalId ? String(proposal.proposalNumber) : proposal.id;
-  const isNounsDao = daoKey === "nouns";
+  const isSupportedDao = daoKey === "nouns" || daoKey === "lil-nouns";
   const isStructurallyEligible =
-    isNounsDao && isOnchainProposal && !isCandidate && hasNumericProposalId;
+    isSupportedDao && isOnchainProposal && !isCandidate && hasNumericProposalId;
 
   // Check whether this DAO is configured for deterministic onchain resolution.
   const { data: daoResolvableData, isLoading: isDaoResolvableLoading } =
@@ -41,7 +42,7 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
       abi: PREDICTION_MARKET_ABI,
       functionName: "isDaoResolvable",
       args: [daoKey],
-      chainId: CONTRACTS_CHAIN_ID,
+      chainId: PREDICTION_MARKET_CHAIN_ID,
       query: { enabled: isStructurallyEligible },
     });
 
@@ -54,7 +55,7 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
     abi: PREDICTION_MARKET_ABI,
     functionName: "getMarket",
     args: [daoKey, proposalId],
-    chainId: CONTRACTS_CHAIN_ID,
+    chainId: PREDICTION_MARKET_CHAIN_ID,
     query: { enabled: isEligible },
   });
 
@@ -63,8 +64,8 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
     address: PREDICTION_MARKET_ADDRESS,
     abi: PREDICTION_MARKET_ABI,
     functionName: "getPosition",
-    args: [daoKey, proposalId, address || "0x0000000000000000000000000000000000000000"],
-    chainId: CONTRACTS_CHAIN_ID,
+    args: [daoKey, proposalId, address ?? ZERO_ADDRESS],
+    chainId: PREDICTION_MARKET_CHAIN_ID,
     query: { enabled: !!address && isEligible },
   });
 
@@ -74,7 +75,7 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
   const { isLoading: isStakeConfirming, isSuccess: stakeSuccess } =
     useWaitForTransactionReceipt({
       hash: stakeTxHash,
-      chainId: CONTRACTS_CHAIN_ID,
+      chainId: PREDICTION_MARKET_CHAIN_ID,
       query: { enabled: !!stakeTxHash },
     });
 
@@ -84,7 +85,7 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
   const { isLoading: isClaimConfirming, isSuccess: claimSuccess } =
     useWaitForTransactionReceipt({
       hash: claimTxHash,
-      chainId: CONTRACTS_CHAIN_ID,
+      chainId: PREDICTION_MARKET_CHAIN_ID,
       query: { enabled: !!claimTxHash },
     });
 
@@ -103,6 +104,7 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
   const forOddsBps = marketData ? Number((marketData as any)[4] || 5000) : 5000;
   const againstOddsBps = marketData ? Number((marketData as any)[5] || 5000) : 5000;
   const outcome = marketData ? Number((marketData as any)[6] || 0) : 0;
+  const marketExists = marketData ? (marketData as any)[7] === true : false;
 
   const totalPool = forPool + againstPool;
   const forPct = forOddsBps / 100;
@@ -122,16 +124,18 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
   const potentialPayoutAgainst = stakeNum > 0 && againstPool + stakeNum > 0
     ? (stakeNum / (againstPool + stakeNum)) * (totalPool + stakeNum)
     : 0;
+  const isBusy = isStaking || isStakeConfirming || isClaiming || isClaimConfirming;
+  const canStake = isEligible && marketExists && !!selectedSide && stakeNum > 0 && !isBusy;
 
   const handleStake = () => {
-    if (!isEligible || !selectedSide || stakeNum <= 0) return;
+    if (!canStake || !selectedSide) return;
     writeStake({
       address: PREDICTION_MARKET_ADDRESS,
       abi: PREDICTION_MARKET_ABI,
       functionName: "stake",
       args: [daoKey, proposalId, selectedSide === "for"],
       value: parseEther(stakeAmount),
-      chainId: CONTRACTS_CHAIN_ID,
+      chainId: PREDICTION_MARKET_CHAIN_ID,
     });
   };
 
@@ -142,12 +146,9 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
       abi: PREDICTION_MARKET_ABI,
       functionName: "claim",
       args: [daoKey, proposalId],
-      chainId: CONTRACTS_CHAIN_ID,
+      chainId: PREDICTION_MARKET_CHAIN_ID,
     });
   };
-
-  const isBusy = isStaking || isStakeConfirming || isClaiming || isClaimConfirming;
-
   return (
     <div className="border-t border-[var(--rule)] pt-4">
       {/* Header */}
@@ -166,15 +167,21 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
         <p className="mb-3 border border-[var(--rule-light)] px-2 py-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
           {!isOnchainProposal
             ? "Only available for onchain proposals."
-            : !isNounsDao
-              ? "Phase 1: Nouns DAO only."
+            : !isSupportedDao
+              ? "Phase 1: Nouns + Lil Nouns only."
             : isCandidate
               ? "Candidates are not final-state resolvable onchain."
               : !hasNumericProposalId
                 ? "Missing numeric onchain proposal ID."
                 : isDaoResolvableLoading
                   ? "Checking onchain resolver..."
-                  : "DAO resolver not configured on this chain."}
+                  : "DAO resolver not configured on Ethereum mainnet."}
+        </p>
+      )}
+
+      {isEligible && !marketExists && (
+        <p className="mb-3 border border-[var(--rule-light)] px-2 py-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          Market not opened yet. An operator must create it on Ethereum mainnet before staking starts.
         </p>
       )}
 
@@ -247,6 +254,10 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
             Market resolved — no position
           </p>
         )
+      ) : !marketExists ? (
+        <p className="py-3 text-center font-mono text-[10px] text-[var(--ink-faint)]">
+          Awaiting market creation
+        </p>
       ) : (
         <>
           {/* Side selection — pipe style */}
@@ -309,9 +320,9 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
           {/* Stake button */}
           <button
             onClick={handleStake}
-            disabled={!isEligible || !selectedSide || stakeNum <= 0 || isBusy}
+            disabled={!canStake}
             className={`w-full border-2 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.15em] transition-all ${
-              !isEligible || !selectedSide || stakeNum <= 0
+              !isEligible || !marketExists || !selectedSide || stakeNum <= 0
                 ? "cursor-not-allowed border-[var(--rule-light)] text-[var(--ink-faint)]"
                 : isBusy
                   ? "cursor-wait border-[var(--rule)] text-[var(--ink-faint)]"
@@ -320,6 +331,8 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
           >
             {isBusy
               ? "Staking..."
+              : !marketExists
+                ? "Awaiting market creation"
               : !selectedSide
                 ? "Choose a side"
                 : !isEligible

@@ -1,11 +1,13 @@
-import { createPublicClient, http, parseAbiItem, type Address } from "viem";
-import { baseSepolia } from "viem/chains";
+import { parseAbiItem, type Address } from "viem";
 import { COMMENTS_ABI, CONTRACTS, PREDICTION_MARKET_ADDRESS } from "./contracts";
 import { computeEntityHash } from "./entity";
 import { getProposalEntityIdentifiers } from "./proposal-entity";
 import type { CanonicalInterpretation } from "./types/deliberation";
+import {
+  baseContractsPublicClient,
+  predictionMarketPublicClient,
+} from "./server/onchain-clients";
 
-const DEFAULT_RPC_URL = "https://sepolia.base.org";
 const DEFAULT_LOOKBACK_BLOCKS = BigInt("90000");
 const LOG_CHUNK_SIZE = BigInt("9000");
 const BIGINT_ZERO = BigInt(0);
@@ -105,14 +107,6 @@ export function toCanonicalInterpretation(
     evidenceIds: score.hasEvidence && score.evidenceHash !== ZERO_HASH ? [score.evidenceHash] : [],
     createdAt: score.createdAt,
   };
-}
-
-function getRpcUrl(): string {
-  return (
-    process.env.BASE_SEPOLIA_RPC_URL ||
-    process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL ||
-    DEFAULT_RPC_URL
-  );
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -241,33 +235,37 @@ export async function buildInterpretationOutcomeScores(options?: {
     return empty;
   }
 
-  const client = createPublicClient({
-    chain: baseSepolia,
-    transport: http(getRpcUrl()),
-  });
+  const marketClient = predictionMarketPublicClient;
+  const commentsClient = baseContractsPublicClient;
 
   try {
-    const latestBlock = await client.getBlockNumber();
-    const fromBlock = latestBlock > lookbackBlocks ? latestBlock - lookbackBlocks : BIGINT_ZERO;
+    const [latestMarketBlock, latestCommentsBlock] = await Promise.all([
+      marketClient.getBlockNumber(),
+      commentsClient.getBlockNumber(),
+    ]);
+    const marketFromBlock =
+      latestMarketBlock > lookbackBlocks ? latestMarketBlock - lookbackBlocks : BIGINT_ZERO;
+    const commentsFromBlock =
+      latestCommentsBlock > lookbackBlocks ? latestCommentsBlock - lookbackBlocks : BIGINT_ZERO;
 
     const [createdLogs, stakeLogs, resolvedLogs] = await Promise.all([
-      getLogsChunked(client, {
+      getLogsChunked(marketClient, {
         address: marketAddress,
         event: MARKET_CREATED_EVENT,
-        fromBlock,
-        toBlock: latestBlock,
+        fromBlock: marketFromBlock,
+        toBlock: latestMarketBlock,
       }),
-      getLogsChunked(client, {
+      getLogsChunked(marketClient, {
         address: marketAddress,
         event: STAKE_PLACED_EVENT,
-        fromBlock,
-        toBlock: latestBlock,
+        fromBlock: marketFromBlock,
+        toBlock: latestMarketBlock,
       }),
-      getLogsChunked(client, {
+      getLogsChunked(marketClient, {
         address: marketAddress,
         event: MARKET_RESOLVED_EVENT,
-        fromBlock,
-        toBlock: latestBlock,
+        fromBlock: marketFromBlock,
+        toBlock: latestMarketBlock,
       }),
     ]);
 
@@ -339,11 +337,11 @@ export async function buildInterpretationOutcomeScores(options?: {
 
     const commentCandidates: CommentCandidate[] = [];
     for (const [entityHash] of entityHashToMarketKeys.entries()) {
-      const logs = await getLogsChunked(client, {
+      const logs = await getLogsChunked(commentsClient, {
         address: commentsAddress,
         event: COMMENT_CREATED_EVENT,
-        fromBlock,
-        toBlock: latestBlock,
+        fromBlock: commentsFromBlock,
+        toBlock: latestCommentsBlock,
         args: { entityHash },
       });
 
@@ -387,7 +385,7 @@ export async function buildInterpretationOutcomeScores(options?: {
         continue;
       }
 
-      const comment = (await client.readContract({
+      const comment = (await commentsClient.readContract({
         address: commentsAddress,
         abi: COMMENTS_ABI,
         functionName: "getComment",
@@ -400,7 +398,7 @@ export async function buildInterpretationOutcomeScores(options?: {
       let evidenceHash = ZERO_HASH as `0x${string}`;
       let hasStructuredMeta = false;
       try {
-        const meta = (await client.readContract({
+        const meta = (await commentsClient.readContract({
           address: commentsAddress,
           abi: COMMENTS_ABI,
           functionName: "getArgumentMeta",
@@ -489,8 +487,8 @@ export async function buildInterpretationOutcomeScores(options?: {
       generatedAt: new Date().toISOString(),
       marketAddress,
       commentsAddress,
-      scannedFromBlock: fromBlock.toString(),
-      scannedToBlock: latestBlock.toString(),
+      scannedFromBlock: marketFromBlock.toString(),
+      scannedToBlock: latestMarketBlock.toString(),
       resolvedMarkets: resolved.length,
       candidateComments: slicedCandidates.length,
       scoredInterpretations: scored.length,

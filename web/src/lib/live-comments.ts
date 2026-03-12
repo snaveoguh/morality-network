@@ -1,16 +1,8 @@
-import { createPublicClient, http, parseAbiItem } from "viem";
-import { baseSepolia } from "viem/chains";
+import { parseAbiItem } from "viem";
 import { COMMENTS_ABI, CONTRACTS } from "./contracts";
+import { baseContractsPublicClient } from "./server/onchain-clients";
 
-const BASE_SEPOLIA_RPC_URL =
-  process.env.BASE_SEPOLIA_RPC_URL ||
-  process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL ||
-  "https://sepolia.base.org";
-
-const commentsClient = createPublicClient({
-  chain: baseSepolia,
-  transport: http(BASE_SEPOLIA_RPC_URL, { timeout: 10_000 }),
-});
+const commentsClient = baseContractsPublicClient;
 
 const TIP_LOG_LOOKBACK_BLOCKS = BigInt(12_000);
 const TIP_LOG_CHUNK_SIZE = BigInt(10_000);

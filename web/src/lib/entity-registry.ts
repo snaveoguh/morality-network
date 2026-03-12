@@ -1,18 +1,7 @@
 import "server-only";
 
-import { createPublicClient, http } from "viem";
-import { baseSepolia } from "viem/chains";
 import { CONTRACTS, REGISTRY_ABI } from "./contracts";
-
-const BASE_SEPOLIA_RPC_URL =
-  process.env.BASE_SEPOLIA_RPC_URL ||
-  process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL ||
-  "https://sepolia.base.org";
-
-const registryClient = createPublicClient({
-  chain: baseSepolia,
-  transport: http(BASE_SEPOLIA_RPC_URL, { timeout: 10_000 }),
-});
+import { baseContractsPublicClient as registryClient } from "./server/onchain-clients";
 
 export interface RegistryEntitySnapshot {
   entityHash: `0x${string}`;

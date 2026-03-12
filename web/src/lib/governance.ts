@@ -1,12 +1,17 @@
 // DAO Governance Fetcher
 // Pulls live proposals from: Snapshot, Nouns, Tally, UK/US/EU/Canada/Australia Parliaments, SEC
 
-import { fetchNounsProposals, type NounsProposal } from "./nouns";
+import {
+  fetchLilNounsProposals,
+  fetchNounsProposals,
+  type NounsProposal,
+} from "./nouns";
 import {
   fetchCandidateProposals,
   type CandidateProposal,
 } from "./nouns-candidates";
 import { fetchAllDivisions, type ParliamentDivision } from "./parliament";
+import { getDaoPredictionKey } from "./proposal-entity";
 
 // ============================================================================
 // FETCH WITH RETRY — Exponential backoff for all external API calls
@@ -446,7 +451,7 @@ async function getBlockAnchor(): Promise<{ block: number; time: number }> {
   try {
     const { createPublicClient, http } = await import("viem");
     const { mainnet } = await import("viem/chains");
-    const c = createPublicClient({ chain: mainnet, transport: http("https://ethereum-rpc.publicnode.com") });
+    const c = createPublicClient({ chain: mainnet, transport: http("https://mainnet.rpc.buidlguidl.com") });
     const block = await c.getBlock({ blockTag: "latest" });
     _blockAnchor = { block: Number(block.number), time: Number(block.timestamp) };
     return _blockAnchor;
@@ -460,6 +465,15 @@ function convertNounsToProposal(p: NounsProposal, anchor: { block: number; time:
   const total = p.forVotes + p.againstVotes;
   const isControversial =
     total > 0 && Math.abs(p.forVotes - p.againstVotes) / total < 0.2;
+  const isLilNouns = p.dao === "lilnouns";
+  const daoName = isLilNouns ? "Lil Nouns" : "Nouns DAO";
+  const daoLogo = isLilNouns ? "https://noun.pics/0" : "https://noun.pics/1";
+  const proposalLink = isLilNouns
+    ? `https://lilnouns.wtf/vote/${p.id}`
+    : `https://nouns.wtf/vote/${p.id}`;
+  const tags = isLilNouns
+    ? ["dao", "governance", "nft", "lil-nouns"]
+    : ["dao", "governance", "nft", "nouns"];
 
   // Approximate timestamps from block numbers (~12.05s avg per block on mainnet)
   const BLOCK_TIME = 12.05;
@@ -467,13 +481,13 @@ function convertNounsToProposal(p: NounsProposal, anchor: { block: number; time:
     block > 0 ? Math.round(anchor.time + (block - anchor.block) * BLOCK_TIME) : 0;
 
   return {
-    id: `nouns-${p.id}`,
+    id: `${p.dao}-${p.id}`,
     title: p.title,
     body: p.description?.slice(0, 300) || "",
     fullBody: p.description || "",
     proposer: p.proposer,
-    dao: "Nouns DAO",
-    daoLogo: "https://noun.pics/1",
+    dao: daoName,
+    daoLogo,
     status: mapNounsStatus(p.status),
     votesFor: p.forVotes,
     votesAgainst: p.againstVotes,
@@ -482,13 +496,13 @@ function convertNounsToProposal(p: NounsProposal, anchor: { block: number; time:
     startTime: approxTime(p.startBlock),
     endTime: approxTime(p.endBlock),
     executionETA: p.eta > 0 ? p.eta : undefined,
-    link: `https://nouns.wtf/vote/${p.id}`,
+    link: proposalLink,
     source: "onchain",
     isControversial,
     chain: "ethereum",
     proposalNumber: p.id,
     totalSupply: p.totalSupply,
-    tags: ['dao', 'governance', 'nft', 'nouns'],
+    tags,
   };
 }
 
@@ -1675,15 +1689,24 @@ export function getVotePercentage(
 // NOUNS-ONLY FETCHER — For prediction markets (only active/pending proposals)
 // ============================================================================
 
-export async function fetchActiveNounsProposals(): Promise<Proposal[]> {
+export async function fetchActivePredictionProposals(): Promise<Proposal[]> {
   const anchor = await getBlockAnchor();
   try {
-    const nounsRaw = await fetchNounsProposals(25);
-    return nounsRaw
+    const [nounsRaw, lilNounsRaw] = await Promise.all([
+      fetchNounsProposals(25),
+      fetchLilNounsProposals(25),
+    ]);
+
+    return [...nounsRaw, ...lilNounsRaw]
       .map((p) => convertNounsToProposal(p, anchor))
       .filter((p) => p.status === "active" || p.status === "pending");
   } catch (error) {
-    console.error("[Predictions] Nouns fetch failed:", error);
+    console.error("[Predictions] Governance fetch failed:", error);
     return [];
   }
+}
+
+export async function fetchActiveNounsProposals(): Promise<Proposal[]> {
+  const proposals = await fetchActivePredictionProposals();
+  return proposals.filter((proposal) => getDaoPredictionKey(proposal.dao) === "nouns");
 }
