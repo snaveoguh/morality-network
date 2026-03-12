@@ -10,6 +10,7 @@ import { CommentThread } from "@/components/entity/CommentThread";
 import type { CandidateProposal } from "@/lib/nouns-candidates";
 import { SponsorPanel } from "./SponsorPanel";
 import { PromoteButton } from "./PromoteButton";
+import { isAddress } from "viem";
 
 interface CandidateDetailProps {
   candidate: CandidateProposal;
@@ -30,7 +31,9 @@ function extractImageFromBody(body: string): string | null {
 
 export function CandidateDetail({ candidate }: CandidateDetailProps) {
   const { isConnected } = useAccount();
-  const proposerHash = computeEntityHash(candidate.proposer);
+  const proposer = candidate.proposer.trim();
+  const hasProposerAddress = isAddress(proposer);
+  const proposerHash = computeEntityHash(proposer);
   const [activeTab, setActiveTab] = useState<"description" | "sponsors">(
     "description"
   );
@@ -94,12 +97,14 @@ export function CandidateDetail({ candidate }: CandidateDetailProps) {
             <span>Proposed by</span>
             <Link href={`/entity/${proposerHash}`}>
               <AddressDisplay
-                address={candidate.proposer}
+                address={proposer}
                 className="text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]"
               />
             </Link>
           </div>
-          {isConnected && <TipButton entityHash={proposerHash} />}
+          {isConnected && hasProposerAddress && (
+            <TipButton recipientAddress={proposer} />
+          )}
           <a
             href={`https://nouns.wtf/candidates/${encodeURIComponent(candidate.slug)}`}
             target="_blank"

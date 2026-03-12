@@ -2,8 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { parseEther } from "viem";
+import {
+  useSendTransaction,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+import { parseEther, type Address } from "viem";
 import { CONTRACTS, CONTRACTS_CHAIN_ID, TIPPING_ABI } from "@/lib/contracts";
 
 const TIP_AMOUNTS = [
@@ -17,20 +21,30 @@ const POPOVER_W = 220;
 const POPOVER_H = 180; // taller now with explainer text
 
 interface TipButtonProps {
-  entityHash: `0x${string}`;
+  entityHash?: `0x${string}`;
   commentId?: bigint;
+  recipientAddress?: Address;
 }
 
-export function TipButton({ entityHash, commentId }: TipButtonProps) {
+export function TipButton({ entityHash, commentId, recipientAddress }: TipButtonProps) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
   const btnRef = useRef<HTMLButtonElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
-  const { writeContract, data: txHash, isPending } = useWriteContract();
+  const {
+    sendTransactionAsync,
+    isPending: isSendPending,
+  } = useSendTransaction();
+  const {
+    writeContractAsync,
+    isPending: isWritePending,
+  } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } =
     useWaitForTransactionReceipt({ hash: txHash });
+  const isPending = isSendPending || isWritePending;
 
   // SSR guard
   useEffect(() => setMounted(true), []);
@@ -101,30 +115,49 @@ export function TipButton({ entityHash, commentId }: TipButtonProps) {
     return () => document.removeEventListener("keydown", handleKey);
   }, [open]);
 
-  function handleTip(amount: string) {
-    if (commentId !== undefined) {
-      writeContract({
-        chainId: CONTRACTS_CHAIN_ID,
-        address: CONTRACTS.tipping,
-        abi: TIPPING_ABI,
-        functionName: "tipComment",
-        args: [commentId],
-        value: parseEther(amount),
-      });
-    } else {
-      writeContract({
-        chainId: CONTRACTS_CHAIN_ID,
-        address: CONTRACTS.tipping,
-        abi: TIPPING_ABI,
-        functionName: "tipEntity",
-        args: [entityHash],
-        value: parseEther(amount),
-      });
+  async function handleTip(amount: string) {
+    const value = parseEther(amount);
+
+    try {
+      if (recipientAddress && commentId === undefined) {
+        const hash = await sendTransactionAsync({
+          chainId: CONTRACTS_CHAIN_ID,
+          to: recipientAddress,
+          value,
+        });
+        setTxHash(hash);
+      } else if (commentId !== undefined) {
+        const hash = await writeContractAsync({
+          chainId: CONTRACTS_CHAIN_ID,
+          address: CONTRACTS.tipping,
+          abi: TIPPING_ABI,
+          functionName: "tipComment",
+          args: [commentId],
+          value,
+        });
+        setTxHash(hash);
+      } else if (entityHash) {
+        const hash = await writeContractAsync({
+          chainId: CONTRACTS_CHAIN_ID,
+          address: CONTRACTS.tipping,
+          abi: TIPPING_ABI,
+          functionName: "tipEntity",
+          args: [entityHash],
+          value,
+        });
+        setTxHash(hash);
+      } else {
+        return;
+      }
+
+      setOpen(false);
+    } catch {
+      // Wallet rejection or simulation failure is surfaced in the wallet UI.
     }
-    setOpen(false);
   }
 
   const isComment = commentId !== undefined;
+  const isDirectRecipient = !!recipientAddress && !isComment;
 
   return (
     <>
@@ -179,9 +212,11 @@ export function TipButton({ entityHash, commentId }: TipButtonProps) {
                 lineHeight: "1.5",
                 color: "#4A4A4A",
               }}>
-                {isComment
-                  ? "Tip this commenter directly. ETH goes straight to their wallet."
-                  : "Tip this content onchain. If the source has verified ownership, ETH goes directly to them. Otherwise it\u2019s held in escrow until they claim it."}
+                {isDirectRecipient
+                  ? "Send ETH directly to this address on Base."
+                  : isComment
+                    ? "Tip this commenter onchain. Funds are credited in the tipping contract until they withdraw."
+                    : "Tip this content onchain. If the source has verified ownership, the funds are credited to them. Otherwise they stay in escrow until claimed."}
               </p>
               <p style={{
                 margin: "4px 0 0 0",
@@ -212,7 +247,7 @@ export function TipButton({ entityHash, commentId }: TipButtonProps) {
               {TIP_AMOUNTS.map((tip) => (
                 <button
                   key={tip.value}
-                  onClick={() => handleTip(tip.value)}
+                  onClick={() => void handleTip(tip.value)}
                   style={{
                     border: "1px solid #C8C0B0",
                     background: "#F5F0E8",

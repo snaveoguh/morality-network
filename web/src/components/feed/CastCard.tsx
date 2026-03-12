@@ -5,6 +5,7 @@ import { TipButton } from "@/components/entity/TipButton";
 import { computeEntityHash } from "@/lib/entity";
 import type { Cast } from "@/lib/farcaster";
 import Link from "next/link";
+import { isAddress } from "viem";
 
 interface CastCardProps {
   cast: Cast;
@@ -14,7 +15,8 @@ export function CastCard({ cast }: CastCardProps) {
   const { isConnected } = useAccount();
 
   // Tip the author's verified ETH address, or their Farcaster identity
-  const tippableAddress = cast.author.verifiedAddresses?.[0] || "";
+  const tippableAddress = cast.author.verifiedAddresses?.[0]?.trim() || "";
+  const directTipAddress = isAddress(tippableAddress) ? tippableAddress : null;
   const entityHash = tippableAddress
     ? computeEntityHash(tippableAddress)
     : computeEntityHash(`farcaster://${cast.author.username}`);
@@ -123,13 +125,13 @@ export function CastCard({ cast }: CastCardProps) {
               Discuss
             </Link>
 
-            {isConnected && tippableAddress && (
-              <TipButton entityHash={entityHash} />
+            {isConnected && directTipAddress && (
+              <TipButton recipientAddress={directTipAddress} />
             )}
 
-            {tippableAddress && (
+            {directTipAddress && (
               <span className="ml-auto font-mono text-[10px] text-zinc-600">
-                {tippableAddress.slice(0, 6)}...{tippableAddress.slice(-4)}
+                {directTipAddress.slice(0, 6)}...{directTipAddress.slice(-4)}
               </span>
             )}
           </div>

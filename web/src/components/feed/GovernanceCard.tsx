@@ -10,6 +10,7 @@ import {
   getVotePercentage,
 } from "@/lib/governance";
 import Link from "next/link";
+import { isAddress } from "viem";
 
 interface GovernanceCardProps {
   proposal: Proposal;
@@ -27,7 +28,9 @@ const STATUS_STYLES: Record<string, string> = {
 
 export function GovernanceCard({ proposal }: GovernanceCardProps) {
   const { isConnected } = useAccount();
-  const proposerHash = computeEntityHash(proposal.proposer);
+  const proposer = proposal.proposer?.trim() || "";
+  const hasProposerAddress = isAddress(proposer);
+  const proposerHash = hasProposerAddress ? computeEntityHash(proposer) : "";
   const { forPct, againstPct } = getVotePercentage(
     proposal.votesFor,
     proposal.votesAgainst
@@ -121,12 +124,16 @@ export function GovernanceCard({ proposal }: GovernanceCardProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-xs text-zinc-500">Proposed by</span>
-          <Link href={`/entity/${proposerHash}`}>
-            <AddressDisplay
-              address={proposal.proposer}
-              className="text-zinc-300 hover:text-[#2F80ED]"
-            />
-          </Link>
+          {hasProposerAddress ? (
+            <Link href={`/entity/${proposerHash}`}>
+              <AddressDisplay
+                address={proposer}
+                className="text-zinc-300 hover:text-[#2F80ED]"
+              />
+            </Link>
+          ) : (
+            <span className="text-xs text-zinc-400">{proposal.proposer}</span>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
@@ -140,7 +147,9 @@ export function GovernanceCard({ proposal }: GovernanceCardProps) {
           </a>
 
           {/* Tip the proposer directly */}
-          {isConnected && <TipButton entityHash={proposerHash} />}
+          {isConnected && hasProposerAddress && (
+            <TipButton recipientAddress={proposer} />
+          )}
         </div>
       </div>
     </article>

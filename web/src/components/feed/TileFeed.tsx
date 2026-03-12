@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
+import { isAddress } from "viem";
 import { computeEntityHash } from "@/lib/entity";
 import { TipButton } from "@/components/entity/TipButton";
 import { StarRating } from "@/components/shared/StarRating";
@@ -820,7 +821,8 @@ function CastTile({ cast, weight }: { cast: Cast; weight: VisualWeight }) {
   const engagement = cast.likes + cast.recasts + cast.replies;
   const isHot = engagement > 50;
 
-  const tippableAddress = cast.author.verifiedAddresses?.[0] || "";
+  const tippableAddress = cast.author.verifiedAddresses?.[0]?.trim() || "";
+  const directTipAddress = isAddress(tippableAddress) ? tippableAddress : null;
   const entityHash = tippableAddress
     ? computeEntityHash(tippableAddress)
     : computeEntityHash(`farcaster://${cast.author.username}`);
@@ -878,7 +880,9 @@ function CastTile({ cast, weight }: { cast: Cast; weight: VisualWeight }) {
         >
           Discuss
         </Link>
-        {isConnected && tippableAddress && <TipButton entityHash={entityHash} />}
+        {isConnected && directTipAddress && (
+          <TipButton recipientAddress={directTipAddress} />
+        )}
       </div>
     </article>
   );
@@ -895,7 +899,8 @@ function GovernanceTile({ proposal, weight }: { proposal: Proposal; weight: Visu
     proposal.votesAgainst
   );
   const isActive = proposal.status === "active";
-  const proposerHash = proposal.proposer ? computeEntityHash(proposal.proposer) : "";
+  const proposer = proposal.proposer?.trim() || "";
+  const hasProposerAddress = isAddress(proposer);
   const hasVotes = proposal.votesFor + proposal.votesAgainst > 0;
 
   return (
@@ -962,7 +967,9 @@ function GovernanceTile({ proposal, weight }: { proposal: Proposal; weight: Visu
         >
           View Vote
         </a>
-        {isConnected && proposerHash && <TipButton entityHash={proposerHash} />}
+        {isConnected && hasProposerAddress && (
+          <TipButton recipientAddress={proposer} />
+        )}
       </div>
     </article>
   );
@@ -978,7 +985,8 @@ function CandidateTile({ proposal, weight }: { proposal: Proposal; weight: Visua
   const threshold = proposal.candidateThreshold || 0;
   const sponsorPct = threshold > 0 ? Math.min(100, Math.round((sponsorCount / threshold) * 100)) : 0;
   const isPromotable = proposal.candidateIsPromotable;
-  const proposerHash = proposal.proposer ? computeEntityHash(proposal.proposer) : "";
+  const proposer = proposal.proposer?.trim() || "";
+  const hasProposerAddress = isAddress(proposer);
 
   const candidateHref = proposal.candidateSlug
     ? `/proposals/candidate/${encodeURIComponent(proposal.candidateSlug)}`
@@ -1029,7 +1037,9 @@ function CandidateTile({ proposal, weight }: { proposal: Proposal; weight: Visua
         <Link href={candidateHref} className="transition-colors hover:text-[var(--ink)]">
           {isPromotable ? "Promote" : "Sponsor"}
         </Link>
-        {isConnected && proposerHash && <TipButton entityHash={proposerHash} />}
+        {isConnected && hasProposerAddress && (
+          <TipButton recipientAddress={proposer} />
+        )}
       </div>
     </article>
   );

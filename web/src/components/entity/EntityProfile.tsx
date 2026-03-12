@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useReadContract } from "wagmi";
+import { isAddress } from "viem";
 import {
   CONTRACTS,
   CONTRACTS_CHAIN_ID,
@@ -88,6 +89,10 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
 
   const resolvedIdentifier = entity?.identifier || stumbleContext?.url || entityHash;
   const resolvedTitle = entity?.identifier || stumbleContext?.title || entityHash;
+  const directTipAddress =
+    typeof entity?.identifier === "string" && isAddress(entity.identifier.trim())
+      ? (entity.identifier.trim() as `0x${string}`)
+      : null;
 
   // Broadcast context to extension
   useEffect(() => {
@@ -135,7 +140,12 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
               </div>
             )}
           </div>
-          {isConnected && <TipButton entityHash={entityHash} />}
+          {isConnected &&
+            (directTipAddress ? (
+              <TipButton recipientAddress={directTipAddress} />
+            ) : (
+              <TipButton entityHash={entityHash} />
+            ))}
         </div>
 
         {/* ── Stats row — compact monospace ── */}

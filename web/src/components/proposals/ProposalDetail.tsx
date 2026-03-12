@@ -18,6 +18,7 @@ import {
 import Link from "next/link";
 import { useState, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
+import { isAddress } from "viem";
 
 interface ProposalDetailProps {
   proposal: Proposal & { onchainVotes?: NounsVote[] };
@@ -105,7 +106,7 @@ function VoterWeightMap({ votes }: { votes: NounsVote[] }) {
 export function ProposalDetail({ proposal }: ProposalDetailProps) {
   const { isConnected } = useAccount();
   const proposer = proposal.proposer?.trim() || "";
-  const hasProposerAddress = /^0x[a-fA-F0-9]{40}$/.test(proposer);
+  const hasProposerAddress = isAddress(proposer);
   const proposerHash = hasProposerAddress
     ? computeEntityHash(proposer)
     : ("0x0000000000000000000000000000000000000000000000000000000000000000" as const);
@@ -204,7 +205,7 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
             </div>
           )}
           {isConnected && hasProposerAddress && (
-            <TipButton entityHash={proposerHash} />
+            <TipButton recipientAddress={proposer} />
           )}
           {sourceHref ? (
             <a
