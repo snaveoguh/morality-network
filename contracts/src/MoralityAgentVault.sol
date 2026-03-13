@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 /// @title MoralityAgentVault
 /// @notice Shared ETH vault for funding autonomous trading agents.
 ///         Depositors receive vault shares and can withdraw against available liquidity.
 ///         Manager can allocate capital to an external strategy wallet and settle returns.
 /// @dev Performance fee is charged only on realized positive strategy PnL when capital is returned.
-contract MoralityAgentVault {
+contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     uint256 public constant BPS_DENOMINATOR = 10_000;
     uint256 public constant MAX_PERFORMANCE_FEE_BPS = 2_000; // 20%
 
-    address public owner;
     address public manager;
     address public feeRecipient;
     uint256 public performanceFeeBps;
@@ -28,9 +31,8 @@ contract MoralityAgentVault {
     mapping(address => bool) private isKnownFunder;
     address[] private funders;
 
-    uint256 private reentrancyLock = 1;
+    uint256 private reentrancyLock;
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event ManagerUpdated(address indexed previousManager, address indexed newManager);
     event FeeRecipientUpdated(address indexed previousFeeRecipient, address indexed newFeeRecipient);
     event PerformanceFeeUpdated(uint256 previousFeeBps, uint256 newFeeBps);
@@ -49,11 +51,6 @@ contract MoralityAgentVault {
     );
     event StrategyLossReported(address indexed manager, uint256 amount, string reason, uint256 deployedCapitalAfter);
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
-    }
-
     modifier onlyManager() {
         require(msg.sender == manager, "Not manager");
         _;
@@ -66,21 +63,29 @@ contract MoralityAgentVault {
         reentrancyLock = 1;
     }
 
-    constructor(address _manager, address _feeRecipient, uint256 _performanceFeeBps) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _manager, address _feeRecipient, uint256 _performanceFeeBps) public initializer {
         require(_manager != address(0), "Zero manager");
         require(_feeRecipient != address(0), "Zero fee recipient");
         require(_performanceFeeBps <= MAX_PERFORMANCE_FEE_BPS, "Fee too high");
 
-        owner = msg.sender;
+        __Ownable_init(msg.sender);
+
         manager = _manager;
         feeRecipient = _feeRecipient;
         performanceFeeBps = _performanceFeeBps;
+        reentrancyLock = 1;
 
-        emit OwnershipTransferred(address(0), msg.sender);
         emit ManagerUpdated(address(0), _manager);
         emit FeeRecipientUpdated(address(0), _feeRecipient);
         emit PerformanceFeeUpdated(0, _performanceFeeBps);
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // =========================================================================
     // VIEW
@@ -357,12 +362,6 @@ contract MoralityAgentVault {
         performanceFeeBps = newFeeBps;
     }
 
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "Zero owner");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
-    }
-
     // =========================================================================
     // INTERNAL
     // =========================================================================
@@ -376,4 +375,6 @@ contract MoralityAgentVault {
         require(value <= uint256(type(int256).max), "Int overflow");
         return int256(value);
     }
+
+    uint256[50] private __gap;
 }

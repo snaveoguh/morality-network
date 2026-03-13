@@ -2,8 +2,11 @@
 pragma solidity ^0.8.24;
 
 import "./MoralityRegistry.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract MoralityRatings {
+contract MoralityRatings is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     struct Rating {
         address rater;
         uint8 score; // 1-5
@@ -83,9 +86,17 @@ contract MoralityRatings {
         string reason
     );
 
-    constructor(address _registry) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _registry) public initializer {
+        __Ownable_init(msg.sender);
         registry = MoralityRegistry(_registry);
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function rate(bytes32 entityHash, uint8 score) external {
         _rate(entityHash, score);
@@ -110,11 +121,7 @@ contract MoralityRatings {
     function _rate(bytes32 entityHash, uint8 score) internal returns (bool updated, uint8 oldScore) {
         require(score >= 1 && score <= 5, "Score must be 1-5");
 
-        // Auto-register entity if needed — caller can register via registry first for metadata
-        // but rating should work regardless
-
         if (hasRated[entityHash][msg.sender]) {
-            // Update existing rating
             oldScore = userRatings[entityHash][msg.sender].score;
             entityStats[entityHash].totalScore = entityStats[entityHash].totalScore - oldScore + score;
             userRatings[entityHash][msg.sender].score = score;
@@ -123,7 +130,6 @@ contract MoralityRatings {
             emit RatingUpdated(entityHash, msg.sender, oldScore, score);
             updated = true;
         } else {
-            // New rating
             userRatings[entityHash][msg.sender] = Rating({
                 rater: msg.sender,
                 score: score,
@@ -211,7 +217,6 @@ contract MoralityRatings {
     function getAverageRating(bytes32 entityHash) external view returns (uint256 avg, uint256 count) {
         EntityRatingStats memory stats = entityStats[entityHash];
         if (stats.ratingCount == 0) return (0, 0);
-        // Returns average * 100 for 2 decimal precision (e.g., 350 = 3.50)
         avg = (stats.totalScore * 100) / stats.ratingCount;
         count = stats.ratingCount;
     }
@@ -256,7 +261,6 @@ contract MoralityRatings {
     {
         InterpretationStats memory stats = interpretationStats[entityHash];
         if (stats.ratingCount == 0) return (0, 0, 0, 0);
-        // average * 100 for 2 decimal precision (e.g., 9234 = 92.34)
         avgTruth = (stats.totalTruth * 100) / stats.ratingCount;
         avgImportance = (stats.totalImportance * 100) / stats.ratingCount;
         avgMoralImpact = (stats.totalMoralImpact * 100) / stats.ratingCount;
@@ -271,4 +275,6 @@ contract MoralityRatings {
         InterpretationRating memory r = interpretationRatings[entityHash][user];
         return (r.truth, r.importance, r.moralImpact, r.timestamp, r.exists);
     }
+
+    uint256[50] private __gap;
 }

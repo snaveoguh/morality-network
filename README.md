@@ -59,6 +59,8 @@ MIT
 - Dedicated style guide page: [`v2/docs/style-guide.html`](docs/style-guide.html)
 - API reference: [`v2/docs/API_REFERENCE.md`](docs/API_REFERENCE.md)
 - Architecture: [`v2/docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- Board-facing architecture report: [`v2/docs/POOTER_WORLD_ARCHITECTURE_REPORT.md`](docs/POOTER_WORLD_ARCHITECTURE_REPORT.md)
+- Launch hardening + production decisions: [`v2/docs/LAUNCH_HARDENING.md`](docs/LAUNCH_HARDENING.md)
 - Deployments: [`v2/docs/DEPLOYMENTS.md`](docs/DEPLOYMENTS.md)
 - Deliverables tracker: [`v2/docs/DELIVERABLES_MASTER.md`](docs/DELIVERABLES_MASTER.md)
 - Execution plan: [`v2/docs/EXECUTION_PLAN.md`](docs/EXECUTION_PLAN.md)

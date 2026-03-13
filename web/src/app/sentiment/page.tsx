@@ -1,9 +1,10 @@
 import { fetchAllFeeds } from "@/lib/rss";
 import {
-  computeSentimentSnapshot,
   fetchMarketData,
   sentimentLabel,
 } from "@/lib/sentiment";
+import { POOTER_SOUL_V1 } from "@/lib/agents/core";
+import { computeEventShapedSentimentSnapshot } from "@/lib/event-corpus";
 import { GlobalIndexCard } from "@/components/sentiment/GlobalIndexCard";
 import { SentimentGrid } from "@/components/sentiment/SentimentGrid";
 
@@ -15,7 +16,7 @@ export default async function SentimentPage() {
     fetchMarketData(),
   ]);
 
-  const snapshot = computeSentimentSnapshot(items, marketData, null);
+  const snapshot = computeEventShapedSentimentSnapshot(items, marketData, null);
   const label = sentimentLabel(snapshot.globalScore);
 
   return (
@@ -26,10 +27,40 @@ export default async function SentimentPage() {
           The Morality Index
         </h1>
         <p className="mt-1 font-body-serif text-sm italic text-[var(--ink-light)]">
-          Multi-signal sentiment scoring across commodities, currencies, and
-          world events — computed from {snapshot.feedItemsScanned} articles and
-          weighted by source credibility
+          A provisional world-state index, not divine truth: it scores how the
+          news graph is interpreting harm, agency, truth clarity, and power
+          asymmetry across markets and events.
         </p>
+        <p className="mt-2 max-w-4xl font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink-faint)]">
+          Current build: canonical event corpus + market tape, computed from{" "}
+          {snapshot.eventCount ?? snapshot.feedItemsScanned} clustered events
+          distilled out of {snapshot.feedItemsScanned} raw articles. It is
+          signal-bearing, but it is not yet a full real-time civilizational
+          firehose.
+        </p>
+      </div>
+
+      {/* Definition */}
+      <div className="mb-6 border border-[var(--rule-light)] p-4">
+        <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
+          <span className="font-bold text-[var(--ink)]">Morality, defined</span>{" "}
+          = {POOTER_SOUL_V1.moralityDefinition.summary}
+        </p>
+        <p className="mt-2 font-body-serif text-sm italic text-[var(--ink-light)]">
+          {POOTER_SOUL_V1.moralityDefinition.longform}
+        </p>
+        <div className="mt-3 grid gap-2 md:grid-cols-2">
+          {POOTER_SOUL_V1.moralityDefinition.axes.map((axis) => (
+            <div key={axis.key} className="border border-[var(--rule-light)] px-3 py-2">
+              <p className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[var(--ink)]">
+                {axis.label}
+              </p>
+              <p className="mt-1 font-body-serif text-xs text-[var(--ink-light)]">
+                {axis.description}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Scoring methodology */}
@@ -51,8 +82,11 @@ export default async function SentimentPage() {
           globalScore={snapshot.globalScore}
           globalTrend={snapshot.globalTrend}
           feedItemsScanned={snapshot.feedItemsScanned}
+          eventCount={snapshot.eventCount}
           topicCount={snapshot.topics.length}
           generatedAt={snapshot.generatedAt}
+          sourceRegistrySize={snapshot.sourceRegistrySize}
+          queuedCrawlTargets={snapshot.queuedCrawlTargets}
         />
       </div>
 
@@ -62,7 +96,8 @@ export default async function SentimentPage() {
           Topic Breakdown
         </h2>
         <p className="mt-0.5 font-body-serif text-xs italic text-[var(--ink-light)]">
-          Current reading: {label}. Click any topic for signal-level detail.
+          Current reading: {label}. Every topic is expanded so the signal
+          breakdown stays visible by default.
         </p>
       </div>
 

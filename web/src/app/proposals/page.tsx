@@ -1,4 +1,5 @@
-import { fetchAllProposals } from "@/lib/governance";
+import { fetchAllProposals, fetchGovernanceSocialSignals } from "@/lib/governance";
+import { GovernanceSocialList } from "@/components/proposals/GovernanceSocialList";
 import { ProposalsList } from "@/components/proposals/ProposalsList";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 }
 
 export default async function ProposalsPage() {
-  const proposals = await withTimeout(fetchAllProposals(), 8000, []);
+  const [proposals, socialSignals] = await Promise.all([
+    withTimeout(fetchAllProposals(), 8000, []),
+    withTimeout(fetchGovernanceSocialSignals(), 6000, []),
+  ]);
 
   return (
     <div>
@@ -25,6 +29,7 @@ export default async function ProposalsPage() {
           Nouns DAO · Parliament · Congress · Hyperliquid · Governance Wire
         </p>
       </div>
+      <GovernanceSocialList signals={socialSignals} />
       <ProposalsList proposals={proposals} />
     </div>
   );

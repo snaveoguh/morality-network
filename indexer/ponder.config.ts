@@ -1,12 +1,42 @@
 import { createConfig } from "@ponder/core";
 import { fallback, http } from "viem";
 
-// Contract addresses — Base Sepolia (deployed March 2026)
-const REGISTRY = (process.env.REGISTRY_ADDRESS ?? "0x2ea7502C4db5B8cfB329d8a9866EB6705b036608") as `0x${string}`;
-const RATINGS = (process.env.RATINGS_ADDRESS ?? "0xb61bE51E8aEd1360EaA03Eb673F74D66eC4898D7") as `0x${string}`;
-const COMMENTS = (process.env.COMMENTS_ADDRESS ?? "0x29F66D8b15326cE7232c0277DBc2CbFDaaf93405") as `0x${string}`;
-const TIPPING = (process.env.TIPPING_ADDRESS ?? "0x622cD30124e24dFFe77c29921bD7622e30d57F8B") as `0x${string}`;
-const LEADERBOARD = (process.env.LEADERBOARD_ADDRESS ?? "0x57dc0C9833A124FE39193dC6a554e0Ff37606202") as `0x${string}`;
+const networkMode = (process.env.PONDER_NETWORK ?? "base").trim().toLowerCase();
+const useBaseSepolia = networkMode === "basesepolia" || networkMode === "base-sepolia";
+const networkName = useBaseSepolia ? "baseSepolia" : "base";
+const defaultRpcUrl = useBaseSepolia ? "https://sepolia.base.org" : "https://mainnet.base.org";
+
+// Contract addresses — default to Base mainnet launch deployments, override via env for staging.
+const REGISTRY = (
+  process.env.REGISTRY_ADDRESS ??
+  (useBaseSepolia
+    ? "0x1c73efffeb89ad8699770921dbd860bb5da5b15a"
+    : "0x2ea7502c4db5b8cfb329d8a9866eb6705b036608")
+) as `0x${string}`;
+const RATINGS = (
+  process.env.RATINGS_ADDRESS ??
+  (useBaseSepolia
+    ? "0x29f0235d74e09536f0b7df9c6529de17b8af5fc6"
+    : "0x29f66d8b15326ce7232c0277dbc2cbfdaaf93405")
+) as `0x${string}`;
+const COMMENTS = (
+  process.env.COMMENTS_ADDRESS ??
+  (useBaseSepolia
+    ? "0x14a361454edcb477644eb82bf540a26e1cead72a"
+    : "0x66ba3ce1280bf86dfe957b52e9888a1de7f81d7b")
+) as `0x${string}`;
+const TIPPING = (
+  process.env.TIPPING_ADDRESS ??
+  (useBaseSepolia
+    ? "0x71b2e273727385c617fe254f4fb14a36a679b12a"
+    : "0x27c79a57be68eb62c9c6bb19875db76d33fd099b")
+) as `0x${string}`;
+const LEADERBOARD = (
+  process.env.LEADERBOARD_ADDRESS ??
+  (useBaseSepolia
+    ? "0x4b48d35e019129bb5a16920adc4cb7f445ec8ca5"
+    : "0x29f0235d74e09536f0b7df9c6529de17b8af5fc6")
+) as `0x${string}`;
 
 const START_BLOCK = Number(process.env.START_BLOCK ?? 0);
 
@@ -36,7 +66,7 @@ const rpcTransport =
           }),
         ),
       )
-    : http(rpcUrls[0] ?? "https://sepolia.base.org", {
+    : http(rpcUrls[0] ?? defaultRpcUrl, {
         timeout: parsePositiveInt(process.env.PONDER_RPC_TIMEOUT_MS, 10_000),
         retryCount: parsePositiveInt(process.env.PONDER_RPC_RETRY_COUNT, 2),
       });
@@ -205,41 +235,50 @@ const LEADERBOARD_ABI = [
 
 export default createConfig({
   database,
-  networks: {
-    baseSepolia: {
-      chainId: 84532,
-      transport: rpcTransport,
-      pollingInterval: parsePositiveInt(process.env.PONDER_POLL_MS, 1_500),
-      maxRequestsPerSecond: parsePositiveInt(process.env.PONDER_RPC_MAX_RPS, 25),
-    },
-  },
+  networks: useBaseSepolia
+    ? {
+        baseSepolia: {
+          chainId: 84532,
+          transport: rpcTransport,
+          pollingInterval: parsePositiveInt(process.env.PONDER_POLL_MS, 1_500),
+          maxRequestsPerSecond: parsePositiveInt(process.env.PONDER_RPC_MAX_RPS, 25),
+        },
+      }
+    : {
+        base: {
+          chainId: 8453,
+          transport: rpcTransport,
+          pollingInterval: parsePositiveInt(process.env.PONDER_POLL_MS, 1_500),
+          maxRequestsPerSecond: parsePositiveInt(process.env.PONDER_RPC_MAX_RPS, 25),
+        },
+      },
   contracts: {
     MoralityRegistry: {
-      network: "baseSepolia",
+      network: networkName,
       abi: REGISTRY_ABI,
       address: REGISTRY,
       startBlock: START_BLOCK,
     },
     MoralityRatings: {
-      network: "baseSepolia",
+      network: networkName,
       abi: RATINGS_ABI,
       address: RATINGS,
       startBlock: START_BLOCK,
     },
     MoralityComments: {
-      network: "baseSepolia",
+      network: networkName,
       abi: COMMENTS_ABI,
       address: COMMENTS,
       startBlock: START_BLOCK,
     },
     MoralityTipping: {
-      network: "baseSepolia",
+      network: networkName,
       abi: TIPPING_ABI,
       address: TIPPING,
       startBlock: START_BLOCK,
     },
     MoralityLeaderboard: {
-      network: "baseSepolia",
+      network: networkName,
       abi: LEADERBOARD_ABI,
       address: LEADERBOARD,
       startBlock: START_BLOCK,

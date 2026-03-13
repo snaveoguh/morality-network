@@ -9,6 +9,8 @@ This folder is the source of truth for architecture, style, deployments, and pub
 - Style guide markdown: `v2/docs/STYLE_GUIDE.md`
 - API reference: `v2/docs/API_REFERENCE.md`
 - Architecture overview: `v2/docs/ARCHITECTURE.md`
+- Board-facing architecture report: `v2/docs/POOTER_WORLD_ARCHITECTURE_REPORT.md`
+- Launch hardening + production decisions: `v2/docs/LAUNCH_HARDENING.md`
 - Deployments: `v2/docs/DEPLOYMENTS.md`
 - Open-source roadmap: `v2/docs/OPEN_SOURCE_ROADMAP.md`
 - Deliverables tracker: `v2/docs/DELIVERABLES_MASTER.md`

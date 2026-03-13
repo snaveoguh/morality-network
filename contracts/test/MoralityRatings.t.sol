@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import "forge-std/Test.sol";
 import "../src/MoralityRegistry.sol";
 import "../src/MoralityRatings.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract MoralityRatingsTest is Test {
     MoralityRegistry internal registry;
@@ -16,8 +17,19 @@ contract MoralityRatingsTest is Test {
     bytes32 internal constant ENTITY_HASH = keccak256("entity:ftx-collapse");
 
     function setUp() public {
-        registry = new MoralityRegistry();
-        ratings = new MoralityRatings(address(registry));
+        MoralityRegistry registryImpl = new MoralityRegistry();
+        ERC1967Proxy registryProxy = new ERC1967Proxy(
+            address(registryImpl),
+            abi.encodeCall(MoralityRegistry.initialize, ())
+        );
+        registry = MoralityRegistry(address(registryProxy));
+
+        MoralityRatings ratingsImpl = new MoralityRatings();
+        ERC1967Proxy ratingsProxy = new ERC1967Proxy(
+            address(ratingsImpl),
+            abi.encodeCall(MoralityRatings.initialize, (address(registry)))
+        );
+        ratings = MoralityRatings(address(ratingsProxy));
     }
 
     function test_rateNewRatingAndAverage() public {
@@ -161,5 +173,10 @@ contract MoralityRatingsTest is Test {
         vm.prank(alice);
         vm.expectRevert("Reason too long");
         ratings.rateInterpretation(ENTITY_HASH, 80, 70, 60, tooLong);
+    }
+
+    function test_cannotReinitialize() public {
+        vm.expectRevert();
+        ratings.initialize(address(registry));
     }
 }

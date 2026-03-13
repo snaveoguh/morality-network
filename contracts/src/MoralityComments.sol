@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-contract MoralityComments {
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
+contract MoralityComments is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     enum ArgumentType {
         DISCUSSION,
         CLAIM,
@@ -29,13 +33,12 @@ contract MoralityComments {
         bool exists;
     }
 
-    uint256 public nextCommentId = 1;
+    uint256 public nextCommentId;
     mapping(uint256 => Comment) public comments;
     mapping(uint256 => ArgumentMeta) public argumentMetaByComment;
     mapping(bytes32 => uint256[]) public entityComments; // entityHash => commentIds
     mapping(uint256 => uint256[]) public childComments; // parentId => childIds
     mapping(uint256 => mapping(address => int8)) public votes; // commentId => voter => vote (+1/-1)
-    address public owner;
     address public tippingContract;
 
     event CommentCreated(uint256 indexed commentId, bytes32 indexed entityHash, address indexed author, uint256 parentId);
@@ -50,32 +53,28 @@ contract MoralityComments {
     );
     event CommentVoted(uint256 indexed commentId, address indexed voter, int8 vote);
     event TippingContractUpdated(address indexed oldTippingContract, address indexed newTippingContract);
-    event OwnershipTransferred(address indexed oldOwner, address indexed newOwner);
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
-    }
 
     modifier onlyTipping() {
         require(msg.sender == tippingContract, "Not tipping contract");
         _;
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        owner = msg.sender;
+        _disableInitializers();
     }
+
+    function initialize() public initializer {
+        __Ownable_init(msg.sender);
+        nextCommentId = 1;
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function setTippingContract(address _tippingContract) external onlyOwner {
         require(_tippingContract != address(0), "Zero address");
         emit TippingContractUpdated(tippingContract, _tippingContract);
         tippingContract = _tippingContract;
-    }
-
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "Zero address");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
     }
 
     function comment(bytes32 entityHash, string calldata content, uint256 parentId) external returns (uint256) {
@@ -206,4 +205,6 @@ contract MoralityComments {
         require(comments[commentId].exists, "Comment does not exist");
         comments[commentId].tipTotal += amount;
     }
+
+    uint256[50] private __gap;
 }

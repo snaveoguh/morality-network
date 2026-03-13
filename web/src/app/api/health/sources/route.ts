@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { DEFAULT_FEEDS } from "@/lib/rss";
+import { getCrawlQueueStats, seedCrawlQueueFromRegistry } from "@/lib/crawl-queue";
+import { getCanonicalSourceRegistry, registryStats } from "@/lib/source-registry";
 
 // Cache for 5 minutes
 export const revalidate = 300;
@@ -102,6 +104,10 @@ interface HealthResponse {
   sources: {
     rss: SourceStatus[];
     governance: SourceStatus[];
+  };
+  ingestion: {
+    registry: ReturnType<typeof registryStats>;
+    crawlQueue: ReturnType<typeof getCrawlQueueStats>;
   };
   summary: {
     total: number;
@@ -227,6 +233,8 @@ async function checkGovernanceEndpoint(endpoint: GovernanceEndpoint): Promise<So
 // ============================================================================
 
 export async function GET() {
+  seedCrawlQueueFromRegistry(getCanonicalSourceRegistry());
+
   // Deduplicate RSS feeds by URL (some sources appear more than once)
   const uniqueFeeds = new Map<string, { name: string; url: string }>();
   for (const feed of DEFAULT_FEEDS) {
@@ -250,6 +258,10 @@ export async function GET() {
     sources: {
       rss: rssResults,
       governance: govResults,
+    },
+    ingestion: {
+      registry: registryStats(),
+      crawlQueue: getCrawlQueueStats(),
     },
     summary: {
       total: allResults.length,

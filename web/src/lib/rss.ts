@@ -4,7 +4,7 @@ import { fetchRedditFeeds, fetchChanFeeds } from "./scrapers";
 import { extractCanonicalClaim } from "./claim-extract";
 
 const parser = new Parser({
-  timeout: 10000,
+  timeout: 5000,
   headers: {
     "User-Agent": "PooterWorld/1.0",
   },
@@ -12,8 +12,8 @@ const parser = new Parser({
 
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
 const FALLBACK_TRIGGER_CODES = new Set([403, 404]);
-const RETRY_BACKOFF_MS = [500, 1000, 2000];
-const FEED_TIMEOUT_MS = 10_000;
+const RETRY_BACKOFF_MS = [500];          // single retry, fast backoff
+const FEED_TIMEOUT_MS = 5_000;           // 5s per source (was 10s)
 
 export interface FeedSource {
   name: string;
@@ -35,6 +35,9 @@ export interface FeedItem {
   bias?: SourceBias | null;
   tags?: string[];
   canonicalClaim?: string;
+  sourceNames?: string[];
+  rawArticleCount?: number;
+  eventHash?: `0x${string}`;
 }
 
 // ============================================================================
@@ -229,7 +232,7 @@ export async function fetchFeed(source: FeedSource): Promise<FeedItem[]> {
   try {
     let feed: Parser.Output<Parser.Item>;
     try {
-      const xml = await fetchFeedXmlWithRetry(source);
+      const xml = await fetchFeedXmlWithRetry(source, 1);
       feed = await parser.parseString(xml);
     } catch {
       // Fallback for sources that only work via parser's internal transport.
@@ -281,9 +284,24 @@ export async function fetchFeed(source: FeedSource): Promise<FeedItem[]> {
   }
 }
 
+// ============================================================================
+// IN-MEMORY CACHE — avoid re-fetching 70+ feeds within the same request cycle
+// TTL is short (5 min) — just prevents duplicate work in a single page render
+// where both AsyncFeed and getDailyEdition call fetchAllFeeds().
+// ============================================================================
+
+let feedCache: { items: FeedItem[]; ts: number } | null = null;
+const FEED_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 export async function fetchAllFeeds(
   sources: FeedSource[] = DEFAULT_FEEDS
 ): Promise<FeedItem[]> {
+  // Return cached if fresh
+  if (feedCache && Date.now() - feedCache.ts < FEED_CACHE_TTL_MS) {
+    console.log(`[RSS] Serving ${feedCache.items.length} items from cache`);
+    return feedCache.items;
+  }
+
   // Fetch RSS, Reddit, and 4chan in parallel
   const [rssResults, redditItems, chanItems] = await Promise.all([
     Promise.allSettled(sources.map((source) => fetchFeed(source))),
@@ -323,6 +341,9 @@ export async function fetchAllFeeds(
 
   // Sort by date, newest first
   deduped.sort((a, b) => parseTimestamp(b.pubDate) - parseTimestamp(a.pubDate));
+
+  // Cache results
+  feedCache = { items: deduped, ts: Date.now() };
 
   return deduped;
 }

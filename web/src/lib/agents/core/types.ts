@@ -33,6 +33,34 @@ export interface AgentSnapshot {
   errors: string[];
 }
 
+export interface AgentMessageSender {
+  address?: string | null;
+  ens?: string | null;
+}
+
+export interface AgentMessageMeta {
+  sender?: AgentMessageSender;
+  humanPrompt?: boolean;
+  promptText?: string | null;
+  promptPreview?: string | null;
+  relayedFrom?: string | null;
+  receivedAt?: number;
+  bridge?: {
+    present?: boolean;
+    verified?: boolean;
+    trusted?: boolean;
+    signer?: string | null;
+    claimedSigner?: string | null;
+    signature?: string | null;
+    origin?: string | null;
+    audience?: string | null;
+    relayTimestampMs?: number | null;
+    relayAgeMs?: number | null;
+    version?: string | null;
+    reason?: string | null;
+  };
+}
+
 /** Inter-agent message */
 export interface AgentMessage<T = unknown> {
   id: string;
@@ -41,6 +69,7 @@ export interface AgentMessage<T = unknown> {
   topic: string;
   payload: T;
   timestamp: number;
+  meta?: AgentMessageMeta;
   /** Set by bridge relay to prevent infinite loops */
   _bridged?: boolean;
 }

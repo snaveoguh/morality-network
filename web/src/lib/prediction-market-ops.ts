@@ -83,7 +83,7 @@ function toDaoLabel(daoKey: PredictionDaoKey): string {
 function toProposalLink(proposal: NounsProposal): string {
   return proposal.dao === "lilnouns"
     ? `https://lilnouns.wtf/vote/${proposal.id}`
-    : `https://nouns.wtf/vote/${proposal.id}`;
+    : `https://noun.wtf/vote/${proposal.id}`;
 }
 
 function toOutcomeLabel(outcome: number): string {

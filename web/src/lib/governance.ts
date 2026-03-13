@@ -2,29 +2,54 @@
 // Pulls live proposals from: Snapshot, Nouns, Tally, UK/US/EU/Canada/Australia Parliaments, SEC
 
 import {
+  fetchLilNounsDelegationEvents,
   fetchLilNounsProposals,
+  fetchNounsDelegationEvents,
   fetchNounsProposals,
+  type NounsDelegationEvent,
   type NounsProposal,
 } from "./nouns";
 import {
   fetchCandidateProposals,
   type CandidateProposal,
 } from "./nouns-candidates";
+import {
+  fetchPopularCasts,
+  fetchTrendingCasts,
+  lookupUser,
+  type Cast,
+} from "./farcaster";
 import { fetchAllDivisions, type ParliamentDivision } from "./parliament";
 import { getDaoPredictionKey } from "./proposal-entity";
+import { loadTtlValue, type TtlCacheEntry } from "./ttl-cache";
 
 // ============================================================================
 // FETCH WITH RETRY — Exponential backoff for all external API calls
 // ============================================================================
 
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
+const PROPOSAL_CACHE_TTL_MS = 60_000;
+const GOVERNANCE_SOCIAL_CACHE_TTL_MS = 120_000;
+const RECENT_GOVERNANCE_ACTIVITY_WINDOW_SECONDS = 72 * 60 * 60;
+const GOVERNANCE_SOCIAL_WINDOW_SECONDS = 7 * 24 * 60 * 60;
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+const DEFAULT_GOVERNANCE_FARCASTER_USERNAMES = [
+  "nouns",
+  "nounsquare",
+  "houseofnouns",
+];
+const proposalCache = new Map<string, TtlCacheEntry<Proposal[]>>();
+const governanceSocialCache = new Map<
+  string,
+  TtlCacheEntry<GovernanceSocialSignal[]>
+>();
 
 async function fetchWithRetry(
   url: string,
   options?: RequestInit & { next?: { revalidate: number } },
-  maxRetries: number = 3
+  maxRetries: number = 1
 ): Promise<Response> {
-  const backoffMs = [500, 1000, 2000];
+  const backoffMs = [500, 1000];
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -118,6 +143,30 @@ export interface Proposal {
   // Parliament-specific fields
   chamber?: string; // "Commons" | "Lords"
   divisionId?: number;
+}
+
+export interface GovernanceSocialSignal {
+  id: string;
+  network: "farcaster";
+  relatedDao: string | null;
+  author: {
+    fid: number;
+    username: string;
+    displayName: string;
+    pfpUrl: string;
+    verifiedAddresses: string[];
+  };
+  text: string;
+  timestamp: number;
+  link: string;
+  channel?: string;
+  tags: string[];
+  engagement: {
+    likes: number;
+    recasts: number;
+    replies: number;
+    score: number;
+  };
 }
 
 // ============================================================================
@@ -461,19 +510,41 @@ async function getBlockAnchor(): Promise<{ block: number; time: number }> {
   }
 }
 
+function shortAddressLabel(address: string): string {
+  if (!address || address.length < 12) return address || "unknown";
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function describeDelegateTarget(address: string): string {
+  if (!address || address.toLowerCase() === ZERO_ADDRESS) {
+    return "self custody";
+  }
+  return shortAddressLabel(address);
+}
+
+function nounsDaoMetadata(dao: "nouns" | "lilnouns") {
+  return dao === "lilnouns"
+    ? {
+        name: "Lil Nouns",
+        logo: "https://noun.pics/0",
+        tags: ["dao", "governance", "nft", "lil-nouns"],
+      }
+    : {
+        name: "Nouns DAO",
+        logo: "https://noun.pics/1",
+        tags: ["dao", "governance", "nft", "nouns"],
+      };
+}
+
 function convertNounsToProposal(p: NounsProposal, anchor: { block: number; time: number }): Proposal {
   const total = p.forVotes + p.againstVotes;
   const isControversial =
     total > 0 && Math.abs(p.forVotes - p.againstVotes) / total < 0.2;
   const isLilNouns = p.dao === "lilnouns";
-  const daoName = isLilNouns ? "Lil Nouns" : "Nouns DAO";
-  const daoLogo = isLilNouns ? "https://noun.pics/0" : "https://noun.pics/1";
+  const daoMeta = nounsDaoMetadata(p.dao);
   const proposalLink = isLilNouns
     ? `https://lilnouns.wtf/vote/${p.id}`
-    : `https://nouns.wtf/vote/${p.id}`;
-  const tags = isLilNouns
-    ? ["dao", "governance", "nft", "lil-nouns"]
-    : ["dao", "governance", "nft", "nouns"];
+    : `https://noun.wtf/vote/${p.id}`;
 
   // Approximate timestamps from block numbers (~12.05s avg per block on mainnet)
   const BLOCK_TIME = 12.05;
@@ -486,8 +557,8 @@ function convertNounsToProposal(p: NounsProposal, anchor: { block: number; time:
     body: p.description?.slice(0, 300) || "",
     fullBody: p.description || "",
     proposer: p.proposer,
-    dao: daoName,
-    daoLogo,
+    dao: daoMeta.name,
+    daoLogo: daoMeta.logo,
     status: mapNounsStatus(p.status),
     votesFor: p.forVotes,
     votesAgainst: p.againstVotes,
@@ -502,8 +573,68 @@ function convertNounsToProposal(p: NounsProposal, anchor: { block: number; time:
     chain: "ethereum",
     proposalNumber: p.id,
     totalSupply: p.totalSupply,
-    tags,
+    tags: daoMeta.tags,
   };
+}
+
+export function isDelegationActivityProposal(
+  proposal: Pick<Proposal, "tags">
+): boolean {
+  return proposal.tags.some((tag) => tag.toLowerCase() === "delegation");
+}
+
+export function convertDelegationToProposal(
+  event: NounsDelegationEvent
+): Proposal {
+  const daoMeta = nounsDaoMetadata(event.dao);
+  const recordedAt = event.timestamp > 0 ? event.timestamp : Math.floor(Date.now() / 1000);
+  const txLink = `https://etherscan.io/tx/${event.txHash}`;
+  const title = `Delegation update: ${shortAddressLabel(event.delegator)} -> ${describeDelegateTarget(event.toDelegate)}`;
+  const body = compactText(
+    `${shortAddressLabel(event.delegator)} redirected ${daoMeta.name} voting power from ${describeDelegateTarget(event.fromDelegate)} to ${describeDelegateTarget(event.toDelegate)} on Ethereum mainnet.`
+  );
+  const fullBody = [
+    "# Delegation update",
+    "",
+    `${shortAddressLabel(event.delegator)} updated their ${daoMeta.name} delegate on Ethereum mainnet.`,
+    "",
+    `- Delegator: ${event.delegator}`,
+    `- Previous delegate: ${event.fromDelegate}`,
+    `- New delegate: ${event.toDelegate}`,
+    `- Block: ${event.blockNumber}`,
+    `- Transaction: [${event.txHash}](${txLink})`,
+    `- Recorded at: ${new Date(recordedAt * 1000).toISOString()}`,
+  ].join("\n");
+
+  return {
+    id: event.id,
+    title,
+    body: body.slice(0, 300),
+    fullBody,
+    proposer: event.delegator,
+    dao: daoMeta.name,
+    daoLogo: daoMeta.logo,
+    status: "closed",
+    votesFor: 0,
+    votesAgainst: 0,
+    votesAbstain: 0,
+    startTime: recordedAt,
+    endTime: recordedAt,
+    link: txLink,
+    source: "onchain",
+    isControversial: false,
+    chain: "ethereum",
+    tags: [...daoMeta.tags, "activity", "delegation"],
+  };
+}
+
+export function isRecentGovernanceActivity(
+  proposal: Proposal,
+  now: number = Math.floor(Date.now() / 1000)
+): boolean {
+  if (!isDelegationActivityProposal(proposal)) return false;
+  const activityTime = proposal.startTime || proposal.endTime;
+  return activityTime > 0 && now - activityTime <= RECENT_GOVERNANCE_ACTIVITY_WINDOW_SECONDS;
 }
 
 // ============================================================================
@@ -526,7 +657,7 @@ function convertCandidateToProposal(c: CandidateProposal): Proposal {
     quorum: c.requiredThreshold,
     startTime: c.createdTimestamp,
     endTime: 0,
-    link: `https://nouns.wtf/candidates/${encodeURIComponent(c.slug)}`,
+    link: `https://noun.wtf/candidate/${encodeURIComponent(c.slug)}`,
     source: "onchain",
     isControversial: false,
     chain: "ethereum",
@@ -1361,6 +1492,153 @@ async function fetchHyperliquidGovernance(): Promise<Proposal[]> {
   return [...votes, ...announcements];
 }
 
+async function fetchNounsGovernanceActivity(): Promise<Proposal[]> {
+  const [nounsEvents, lilNounsEvents] = await Promise.all([
+    fetchNounsDelegationEvents(25),
+    fetchLilNounsDelegationEvents(15),
+  ]);
+
+  return [...nounsEvents, ...lilNounsEvents]
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .map(convertDelegationToProposal);
+}
+
+function governanceFarcasterUsernames(): string[] {
+  const raw = process.env.GOVERNANCE_FARCASTER_USERNAMES;
+  if (!raw) return DEFAULT_GOVERNANCE_FARCASTER_USERNAMES;
+  const parsed = raw
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+  return parsed.length > 0 ? parsed : DEFAULT_GOVERNANCE_FARCASTER_USERNAMES;
+}
+
+function castSearchText(cast: Cast): string {
+  return compactText(
+    [
+      cast.text,
+      cast.channel,
+      cast.author.username,
+      cast.author.displayName,
+      ...cast.embeds.flatMap((embed) => [
+        embed.url || "",
+        embed.metadata?.title || "",
+        embed.metadata?.description || "",
+      ]),
+    ].join(" ")
+  ).toLowerCase();
+}
+
+function governanceTagsFromCast(cast: Cast): string[] {
+  const haystack = castSearchText(cast);
+  const tags = new Set<string>(["farcaster", "social", "governance"]);
+
+  if (/(^|\W)lil nouns?(\W|$)/i.test(haystack)) {
+    tags.add("lil-nouns");
+  } else if (/(^|\W)nouns?(\W|$)|noun\.wtf|nounsquare|houseofnouns|house of nouns/i.test(haystack)) {
+    tags.add("nouns");
+  }
+
+  if (/\bdelegate|delegation|delegatee|delegator\b/i.test(haystack)) tags.add("delegation");
+  if (/\bproposal|candidate|vote|voting|quorum\b/i.test(haystack)) tags.add("proposal");
+
+  return [...tags];
+}
+
+function governanceDaoFromCast(cast: Cast): string | null {
+  const tags = governanceTagsFromCast(cast);
+  if (tags.includes("lil-nouns")) return "Lil Nouns";
+  if (tags.includes("nouns")) return "Nouns DAO";
+  return null;
+}
+
+export function isGovernanceRelevantCast(cast: Cast): boolean {
+  const haystack = castSearchText(cast);
+  const nounsSignal =
+    /(^|\W)nouns?(\W|$)|noun\.wtf|nounsquare|houseofnouns|house of nouns|lil nouns?/i.test(
+      haystack
+    );
+  const governanceSignal =
+    /\bdelegate|delegation|delegatee|proposal|candidate|vote|voting|quorum|governance\b/i.test(
+      haystack
+    );
+  return nounsSignal && governanceSignal;
+}
+
+export function normalizeGovernanceCast(
+  cast: Cast
+): GovernanceSocialSignal {
+  const timestamp = Math.floor(new Date(cast.timestamp).getTime() / 1000);
+  const safeTimestamp =
+    Number.isFinite(timestamp) && timestamp > 0
+      ? timestamp
+      : Math.floor(Date.now() / 1000);
+  const score = cast.likes * 2 + cast.recasts * 3 + cast.replies;
+
+  return {
+    id: `farcaster-${cast.hash}`,
+    network: "farcaster",
+    relatedDao: governanceDaoFromCast(cast),
+    author: {
+      fid: cast.author.fid,
+      username: cast.author.username,
+      displayName: cast.author.displayName,
+      pfpUrl: cast.author.pfpUrl,
+      verifiedAddresses: cast.author.verifiedAddresses,
+    },
+    text: compactText(cast.text || ""),
+    timestamp: safeTimestamp,
+    link: `https://warpcast.com/~/conversations/${cast.hash}`,
+    channel: cast.channel,
+    tags: governanceTagsFromCast(cast),
+    engagement: {
+      likes: cast.likes,
+      recasts: cast.recasts,
+      replies: cast.replies,
+      score,
+    },
+  };
+}
+
+export async function fetchGovernanceSocialSignals(): Promise<
+  GovernanceSocialSignal[]
+> {
+  return loadTtlValue(
+    governanceSocialCache,
+    "farcaster",
+    GOVERNANCE_SOCIAL_CACHE_TTL_MS,
+    async () => {
+      const usernames = governanceFarcasterUsernames();
+      const users = await Promise.all(usernames.map((username) => lookupUser(username)));
+      const fids = users.flatMap((user) => (user ? [user.fid] : []));
+      const [popularLists, trending] = await Promise.all([
+        Promise.all(fids.map((fid) => fetchPopularCasts(fid))),
+        fetchTrendingCasts(),
+      ]);
+
+      const cutoff = Math.floor(Date.now() / 1000) - GOVERNANCE_SOCIAL_WINDOW_SECONDS;
+      const seen = new Set<string>();
+      const normalized: GovernanceSocialSignal[] = [];
+
+      for (const cast of [...popularLists.flat(), ...trending]) {
+        if (seen.has(cast.hash) || !isGovernanceRelevantCast(cast)) continue;
+        seen.add(cast.hash);
+
+        const signal = normalizeGovernanceCast(cast);
+        if (signal.timestamp < cutoff) continue;
+        normalized.push(signal);
+      }
+
+      normalized.sort((a, b) => {
+        if (a.timestamp !== b.timestamp) return b.timestamp - a.timestamp;
+        return b.engagement.score - a.engagement.score;
+      });
+
+      return normalized.slice(0, 12);
+    }
+  );
+}
+
 // ============================================================================
 // TAG DERIVATION
 // ============================================================================
@@ -1515,18 +1793,21 @@ export async function fetchSingleProposal(
 
   // Snapshot proposals (no prefix or hex-like)
   if (!decodedId.match(/^(candidate-|parliament-|tally-|congress-|eu-|canada-|au-|sec-|hyper-)/)) {
-    return fetchProposalById(decodedId);
+    const direct = await fetchProposalById(decodedId);
+    if (direct) return direct;
   }
 
-  // For other types, fall back to full aggregator
-  return null;
+  const all = await fetchAllProposals();
+  const found = all.find((proposal) => proposal.id === decodedId);
+  return found ? { ...found, onchainVotes: [] } : null;
 }
 
 // ============================================================================
 // AGGREGATOR — Fetch all sources, merge, sort, dedupe
 // ============================================================================
 
-const PROPOSAL_SOURCE_TIMEOUT_MS = 12_000;
+// Prefer partial governance coverage over blank pages.
+const PROPOSAL_SOURCE_TIMEOUT_MS = 4_000;
 
 async function withSourceTimeout<T>(
   source: string,
@@ -1557,13 +1838,23 @@ async function withSourceTimeout<T>(
   }
 }
 
-export async function fetchAllProposals(): Promise<Proposal[]> {
+async function fetchAllProposalsUncached(): Promise<Proposal[]> {
   const anchor = await getBlockAnchor();
   const results = await Promise.all([
     withSourceTimeout("snapshot", fetchSnapshotProposals(), [] as Proposal[]),
     withSourceTimeout(
       "nouns",
-      fetchNounsProposals(25).then((ps) => ps.map((p) => convertNounsToProposal(p, anchor))),
+      Promise.all([fetchNounsProposals(25), fetchLilNounsProposals(25)]).then(
+        ([nouns, lilNouns]) =>
+          [...nouns, ...lilNouns].map((proposal) =>
+            convertNounsToProposal(proposal, anchor)
+          )
+      ),
+      [] as Proposal[]
+    ),
+    withSourceTimeout(
+      "nouns-activity",
+      fetchNounsGovernanceActivity(),
       [] as Proposal[]
     ),
     withSourceTimeout(
@@ -1626,10 +1917,24 @@ export async function fetchAllProposals(): Promise<Proposal[]> {
   return all;
 }
 
+export async function fetchAllProposals(): Promise<Proposal[]> {
+  return loadTtlValue(
+    proposalCache,
+    "all",
+    PROPOSAL_CACHE_TTL_MS,
+    fetchAllProposalsUncached,
+  );
+}
+
 // Get only active/pending proposals (for feed highlight)
 export async function fetchLiveProposals(): Promise<Proposal[]> {
   const all = await fetchAllProposals();
-  return all.filter((p) => p.status === "active" || p.status === "pending");
+  return all.filter(
+    (proposal) =>
+      proposal.status === "active" ||
+      proposal.status === "pending" ||
+      isRecentGovernanceActivity(proposal)
+  );
 }
 
 // Get controversial proposals (close votes)

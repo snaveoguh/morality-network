@@ -1,6 +1,5 @@
 import "server-only";
 
-import Anthropic from "@anthropic-ai/sdk";
 import type { FeedItem } from "./rss";
 import type {
   ArticleContent,
@@ -14,6 +13,8 @@ import {
   buildAgentResearchPack,
   type AgentResearchPack,
 } from "./agent-swarm";
+import { generateTextForTask } from "./ai-provider";
+import { hasAIProviderForTask } from "./ai-models";
 import { extractEntities, enrichEntities } from "./entity-extract";
 import { extractCanonicalClaim } from "./claim-extract";
 import { fetchMarkdown, isCloudflareAvailable } from "./cloudflare-crawl";
@@ -33,9 +34,6 @@ import { fetchMarkdown, isCloudflareAvailable } from "./cloudflare-crawl";
 // voice, and narrative structure — the JSON formatting tax is zero.
 // ============================================================================
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const WRITER_MODEL = "claude-sonnet-4-20250514";
-const EXTRACTOR_MODEL = "claude-sonnet-4-20250514";
 const WRITER_MAX_TOKENS = 6144;
 const EXTRACTOR_MAX_TOKENS = 2048;
 const WRITER_TIMEOUT_MS = 45_000;
@@ -50,7 +48,7 @@ const MAX_SCRAPED_CHARS = 8000; // per source — CF markdown is cleaner, Claude
 
 const WRITER_SYSTEM_PROMPT = `You are the lead editorial writer for pooter.world, a broadsheet newspaper for the internet age. You write with the precision of the Financial Times, the narrative instinct of The New Yorker, and the adversarial skepticism of I.F. Stone.
 
-Your job: given a primary news article and related multi-source coverage, write an ORIGINAL EDITORIAL that makes the reader smarter.
+Your job: given a primary news article and related multi-source coverage, write an ORIGINAL EDITORIAL that makes the reader smarter — and makes them feel something.
 
 YOUR VOICE:
 - Third person, active voice, present tense where possible
@@ -59,11 +57,13 @@ YOUR VOICE:
 - Dense with insight. No filler, no throat-clearing, no "In today's world..."
 - Short punchy sentences mixed with longer analytical ones
 - Each paragraph should make exactly one argument, supported by evidence from the sources
+- Use the identifiable victim effect: one person's concrete story hits harder than abstract statistics. When the story has a human at its center, lead with them.
+- Vary your emotional register. Some stories call for fury. Some for dark humor. Some for quiet devastation. Match the tone to the material, don't flatten everything into the same "skeptical analyst" voice.
 
 STRUCTURE (write these sections with the headers shown):
 
 SUBHEADLINE:
-One sentence (max 30 words). This is NOT a summary — it's the editorial angle. What should the reader think about this story that they wouldn't think on their own?
+One sentence (max 30 words). This is NOT a summary and NOT a restatement of the headline. It's the editorial angle — the thought the reader wouldn't have on their own. It must contain information or framing that the headline does not. If the headline says what happened, the subheadline says why it matters or what it reveals.
 
 EDITORIAL:
 6-10 paragraphs. This is the main body. Structure it as:
@@ -115,10 +115,13 @@ If the story has NO plausible market impact (human interest, local crime, sports
 
 RULES:
 - ONLY use facts present in the provided source material. Never invent quotes, statistics, or events.
-- If related articles cover DIFFERENT stories from the primary, IGNORE them. Say so explicitly.
+- If related articles cover DIFFERENT stories from the primary, IGNORE them instead of blending them into the editorial.
 - If sources contradict each other, note the contradiction and which source says what.
 - Be specific. "The company raised $50 million" not "The company raised a significant amount."
 - Use the SCRAPED CONTENT — it has details the RSS description alone doesn't. Pull out specific figures, dates, and quotes.
+- If page scraping fails, still write the editorial from the title, RSS description, source metadata, and any usable related coverage.
+- If only the primary article is usable, write a narrower primary-source editorial rather than refusing.
+- Never answer with an explanation of why you cannot write, why the sources are insufficient, or what additional material you would need.
 - Never pad with generalities. Every sentence should carry information.`;
 
 // ============================================================================
@@ -412,28 +415,47 @@ async function buildUserMessage(primary: FeedItem, related: FeedItem[]): Promise
 // ============================================================================
 
 async function runWriterPass(
-  client: Anthropic,
   userMessage: string,
 ): Promise<WriterOutput> {
-  const response = await Promise.race([
-    client.messages.create({
-      model: WRITER_MODEL,
-      max_tokens: WRITER_MAX_TOKENS,
-      temperature: 1.0,
-      system: WRITER_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userMessage }],
-    }),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("Writer pass timeout")), WRITER_TIMEOUT_MS),
-    ),
-  ]);
+  const result = await generateTextForTask({
+    task: "editorialWriter",
+    maxTokens: WRITER_MAX_TOKENS,
+    temperature: 1,
+    timeoutMs: WRITER_TIMEOUT_MS,
+    system: WRITER_SYSTEM_PROMPT,
+    user: userMessage,
+  });
 
-  const textBlock = response.content.find((block) => block.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("No text in writer response");
+  if (looksLikeEditorialRefusal(result.text)) {
+    throw new Error("Writer refusal: insufficient usable source material");
   }
 
-  return parseWriterOutput(textBlock.text);
+  return parseWriterOutput(result.text);
+}
+
+function looksLikeEditorialRefusal(text: string): boolean {
+  const normalized = text.trim().toLowerCase();
+  if (!normalized) return true;
+
+  const refusalPatterns = [
+    /cannot write an editorial/,
+    /can't write an editorial/,
+    /lack sufficient source material/,
+    /insufficient source material/,
+    /without scraped content/,
+    /without the full scraped content/,
+    /related articles cover entirely different topics/,
+    /related coverage (?:does not|doesn't) provide/,
+    /would need either/,
+    /to properly cover this story/,
+  ];
+
+  const hits = refusalPatterns.reduce(
+    (count, pattern) => count + (pattern.test(normalized) ? 1 : 0),
+    0,
+  );
+
+  return hits >= 2 || /^i\s+(cannot|can't|do not have|don't have)/.test(normalized);
 }
 
 /**
@@ -625,7 +647,6 @@ function parseMarketImpactSection(raw: string | null): MarketImpactAnalysis | nu
 // ============================================================================
 
 async function runExtractorPass(
-  client: Anthropic,
   editorial: WriterOutput,
   primary: FeedItem,
   related: FeedItem[],
@@ -648,25 +669,16 @@ async function runExtractorPass(
 
   const userMessage = `EDITORIAL TEXT:\n${editorialText}\n\nSOURCE ARTICLES:\n${sourceInfo}`;
 
-  const response = await Promise.race([
-    client.messages.create({
-      model: EXTRACTOR_MODEL,
-      max_tokens: EXTRACTOR_MAX_TOKENS,
-      temperature: 0,
-      system: EXTRACTOR_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userMessage }],
-    }),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("Extractor pass timeout")), EXTRACTOR_TIMEOUT_MS),
-    ),
-  ]);
+  const result = await generateTextForTask({
+    task: "editorialExtractor",
+    maxTokens: EXTRACTOR_MAX_TOKENS,
+    temperature: 0,
+    timeoutMs: EXTRACTOR_TIMEOUT_MS,
+    system: EXTRACTOR_SYSTEM_PROMPT,
+    user: userMessage,
+  });
 
-  const textBlock = response.content.find((block) => block.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("No text in extractor response");
-  }
-
-  let jsonText = textBlock.text.trim();
+  let jsonText = result.text.trim();
   if (jsonText.startsWith("```")) {
     jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
   }
@@ -800,25 +812,23 @@ export async function generateAIEditorial(
   primary: FeedItem,
   related: FeedItem[],
 ): Promise<ArticleContent & { generatedBy: "claude-ai" }> {
-  if (!ANTHROPIC_API_KEY) {
-    throw new Error("ANTHROPIC_API_KEY not set — falling back to template");
+  if (!hasAIProviderForTask("editorialWriter") || !hasAIProviderForTask("editorialExtractor")) {
+    throw new Error("No AI editorial providers configured — falling back to template");
   }
-
-  const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
   // Scrape sources and build the user message
   const userMessage = await buildUserMessage(primary, related);
 
   // PASS 1: Writer — natural prose, no JSON
   console.log(`[editorial] Pass 1 (writer) starting for "${primary.title.slice(0, 60)}..."`);
-  const writerOutput = await runWriterPass(client, userMessage);
+  const writerOutput = await runWriterPass(userMessage);
   console.log(`[editorial] Pass 1 complete — ${writerOutput.editorialBody.length} paragraphs`);
 
   // PASS 2: Extractor — structured metadata from the prose
   console.log(`[editorial] Pass 2 (extractor) starting...`);
   let extractorOutput: ExtractorOutput;
   try {
-    extractorOutput = await runExtractorPass(client, writerOutput, primary, related);
+    extractorOutput = await runExtractorPass(writerOutput, primary, related);
     console.log(`[editorial] Pass 2 complete — ${extractorOutput.tags.length} tags, ${extractorOutput.contextSnippets.length} snippets`);
   } catch (err) {
     // Extractor failure is non-fatal — we have the editorial, just use defaults

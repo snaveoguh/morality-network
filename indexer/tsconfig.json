@@ -8,9 +8,9 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
+    "declaration": false,
+    "declarationMap": false,
     "sourceMap": true
   },
-  "include": ["ponder.config.ts", "ponder.schema.ts", "src/**/*.ts"]
+  "include": ["ponder-env.d.ts", "ponder.config.ts", "ponder.schema.ts", "src/**/*.ts", "src/**/*.d.ts"]
 }

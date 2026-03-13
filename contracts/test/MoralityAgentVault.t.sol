@@ -3,6 +3,8 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import "../src/MoralityAgentVault.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract MoralityAgentVaultTest is Test {
     MoralityAgentVault internal vault;
@@ -13,7 +15,12 @@ contract MoralityAgentVaultTest is Test {
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        vault = new MoralityAgentVault(manager, feeRecipient, 500); // 5%
+        MoralityAgentVault impl = new MoralityAgentVault();
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(impl),
+            abi.encodeCall(MoralityAgentVault.initialize, (manager, feeRecipient, 500))
+        );
+        vault = MoralityAgentVault(payable(address(proxy)));
 
         vm.deal(alice, 100 ether);
         vm.deal(bob, 100 ether);
@@ -133,7 +140,7 @@ contract MoralityAgentVaultTest is Test {
 
     function test_onlyOwnerCanUpdateFeeConfig() public {
         vm.prank(alice);
-        vm.expectRevert("Not owner");
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
         vault.setPerformanceFeeBps(600);
 
         vault.setPerformanceFeeBps(600);
@@ -141,5 +148,10 @@ contract MoralityAgentVaultTest is Test {
 
         vm.expectRevert("Fee too high");
         vault.setPerformanceFeeBps(2_001);
+    }
+
+    function test_cannotReinitialize() public {
+        vm.expectRevert();
+        vault.initialize(manager, feeRecipient, 500);
     }
 }

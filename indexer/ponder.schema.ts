@@ -147,6 +147,160 @@ export const scannerLaunch = onchainTable("scanner_launch", (t) => ({
 }));
 
 // ============================================================================
+// ARTICLE ARCHIVE — Durable feed archive formerly stored in web-local JSON
+// ============================================================================
+
+export const articleArchive = onchainTable("article_archive", (t) => ({
+  id: t.hex().primaryKey(),             // entity hash derived from link
+  feedItemId: t.text().notNull(),
+  title: t.text().notNull(),
+  link: t.text().notNull(),
+  description: t.text().notNull(),
+  pubDate: t.text().notNull(),
+  source: t.text().notNull(),
+  sourceUrl: t.text().notNull(),
+  category: t.text().notNull(),
+  imageUrl: t.text(),
+  biasJson: t.text(),
+  tagsJson: t.text(),
+  canonicalClaim: t.text(),
+  preservedLinksJson: t.text(),
+  firstSeenAt: t.text().notNull(),
+  lastSeenAt: t.text().notNull(),
+  seenCount: t.integer().default(1),
+  archivedAt: t.text().notNull(),
+}), (table) => ({
+  sourceIdx: index().on(table.source),
+  categoryIdx: index().on(table.category),
+  pubDateIdx: index().on(table.pubDate),
+  lastSeenIdx: index().on(table.lastSeenAt),
+}));
+
+// ============================================================================
+// EDITORIAL ARCHIVE — Durable editorial payloads and market-impact records
+// ============================================================================
+
+export const editorialArchive = onchainTable("editorial_archive", (t) => ({
+  id: t.hex().primaryKey(),             // entity hash
+  generatedAt: t.text().notNull(),
+  generatedBy: t.text().notNull(),
+  contentHash: t.hex().notNull(),
+  version: t.integer().notNull(),
+  claim: t.text().notNull(),
+  dailyTitle: t.text(),
+  onchainTxHash: t.hex(),
+  onchainTimestamp: t.text(),
+  hasMarketImpact: t.boolean().default(false),
+  marketImpactJson: t.text(),
+  payloadJson: t.text().notNull(),
+}), (table) => ({
+  generatedIdx: index().on(table.generatedAt),
+  versionIdx: index().on(table.version),
+  marketImpactIdx: index().on(table.hasMarketImpact),
+}));
+
+// ============================================================================
+// SWARM STATE — Latest persisted research swarm snapshot from the worker
+// ============================================================================
+
+export const swarmState = onchainTable("swarm_state", (t) => ({
+  id: t.text().primaryKey(),            // "latest"
+  generatedAt: t.text().notNull(),
+  scannedItems: t.integer().default(0),
+  clustersJson: t.text().notNull(),
+  contradictionFlagsJson: t.text().notNull(),
+  updatedAt: t.bigint().notNull(),
+}), (table) => ({
+  updatedIdx: index().on(table.updatedAt),
+}));
+
+// ============================================================================
+// TRADER STATE — Latest persisted trader execution snapshot from the worker
+// ============================================================================
+
+export const traderState = onchainTable("trader_state", (t) => ({
+  id: t.text().primaryKey(),            // "latest"
+  executionMode: t.text().notNull(),
+  configJson: t.text().notNull(),
+  primaryReportJson: t.text(),
+  parallelReportsJson: t.text().notNull(),
+  primaryReadinessJson: t.text(),
+  parallelReadinessJson: t.text().notNull(),
+  primaryPerformanceJson: t.text(),
+  parallelPerformanceJson: t.text().notNull(),
+  primaryPositionsJson: t.text().notNull(),
+  parallelPositionsJson: t.text().notNull(),
+  updatedAt: t.bigint().notNull(),
+}), (table) => ({
+  updatedIdx: index().on(table.updatedAt),
+  modeIdx: index().on(table.executionMode),
+}));
+
+// ============================================================================
+// AGENT EVENTS — Durable cross-runtime swarm event log
+// ============================================================================
+
+export const agentEvent = onchainTable("agent_event", (t) => ({
+  id: t.text().primaryKey(),
+  fromAgent: t.text().notNull(),
+  toAgent: t.text().notNull(),
+  topic: t.text().notNull(),
+  payloadJson: t.text().notNull(),
+  metaJson: t.text(),
+  source: t.text().notNull(),
+  timestampMs: t.bigint().notNull(),
+  persistedAt: t.bigint().notNull(),
+}), (table) => ({
+  topicIdx: index().on(table.topic),
+  fromIdx: index().on(table.fromAgent),
+  toIdx: index().on(table.toAgent),
+  timestampIdx: index().on(table.timestampMs),
+  persistedIdx: index().on(table.persistedAt),
+}));
+
+// ============================================================================
+// AGENT CONSUMER CURSORS — Durable offsets for relays/stream consumers
+// ============================================================================
+
+export const agentConsumerCursor = onchainTable("agent_consumer_cursor", (t) => ({
+  id: t.text().primaryKey(),
+  consumer: t.text().notNull(),
+  lastEventId: t.text(),
+  lastTimestampMs: t.bigint().notNull(),
+  updatedAt: t.bigint().notNull(),
+}), (table) => ({
+  consumerIdx: index().on(table.consumer),
+  timestampIdx: index().on(table.lastTimestampMs),
+  updatedIdx: index().on(table.updatedAt),
+}));
+
+// ============================================================================
+// AI INVOCATIONS — Durable AI provider telemetry
+// ============================================================================
+
+export const aiInvocation = onchainTable("ai_invocation", (t) => ({
+  id: t.text().primaryKey(),
+  task: t.text().notNull(),
+  provider: t.text().notNull(),
+  model: t.text().notNull(),
+  status: t.text().notNull(),
+  inputTokens: t.integer().default(0),
+  outputTokens: t.integer().default(0),
+  totalTokens: t.integer().default(0),
+  latencyMs: t.integer().default(0),
+  estimatedCostMicrousd: t.bigint().default(0n),
+  error: t.text(),
+  metaJson: t.text(),
+  createdAt: t.bigint().notNull(),
+}), (table) => ({
+  taskIdx: index().on(table.task),
+  providerIdx: index().on(table.provider),
+  modelIdx: index().on(table.model),
+  statusIdx: index().on(table.status),
+  createdIdx: index().on(table.createdAt),
+}));
+
+// ============================================================================
 // RELATIONS
 // ============================================================================
 

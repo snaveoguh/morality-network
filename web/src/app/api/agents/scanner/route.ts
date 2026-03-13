@@ -10,6 +10,8 @@ import { NextResponse } from "next/server";
 import { agentRegistry } from "@/lib/agents/core";
 import { scannerAgent, launchStore } from "@/lib/agents/scanner";
 import type { TokenLaunch } from "@/lib/agents/scanner";
+import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
+import { isWorkerAgentRuntime } from "@/lib/runtime-mode";
 
 // Ensure scanner is registered + initialized
 import "@/lib/agents/scanner";
@@ -20,11 +22,80 @@ export const revalidate = 0;
 const API_POLL_TIMEOUT_MS = 7_000;
 const BACKEND_TIMEOUT_MS = 10_000;
 
+interface PersistedScannerResponse {
+  items?: unknown[];
+  count?: number;
+  totalStored?: number;
+  meta?: { generatedAt?: number };
+}
+
+async function triggerBackendScannerSync(baseUrl: string, limit: number): Promise<boolean> {
+  try {
+    const syncUrl = new URL("/api/v1/scanner/sync", `${baseUrl}/`);
+    syncUrl.searchParams.set("limit", String(Math.max(limit, 25)));
+    const response = await fetch(syncUrl.toString(), {
+      method: "GET",
+      cache: "no-store",
+      signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function fetchPersistedScannerLaunches(args: {
+  baseUrl: string;
+  limit: number;
+  minScore: number;
+  dexFilter?: string;
+  enrichedOnly: boolean;
+}): Promise<
+  | {
+      ok: true;
+      launches: TokenLaunch[];
+      totalStored: number;
+    }
+  | {
+      ok: false;
+      status: number;
+    }
+> {
+  const launchesUrl = new URL("/api/v1/scanner/launches", `${args.baseUrl}/`);
+  launchesUrl.searchParams.set("limit", String(args.limit));
+  launchesUrl.searchParams.set("minScore", String(args.minScore));
+  if (args.dexFilter) launchesUrl.searchParams.set("dex", args.dexFilter);
+
+  const backendRes = await fetch(launchesUrl.toString(), {
+    cache: "no-store",
+    signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+  });
+
+  if (!backendRes.ok) {
+    return { ok: false, status: backendRes.status };
+  }
+
+  const payload = (await backendRes.json()) as PersistedScannerResponse;
+  let launches = (Array.isArray(payload.items) ? payload.items : []) as TokenLaunch[];
+
+  if (args.enrichedOnly) {
+    launches = launches.filter((launch) => Boolean(launch.enriched));
+  }
+
+  return {
+    ok: true,
+    launches,
+    totalStored:
+      typeof payload.totalStored === "number"
+        ? payload.totalStored
+        : typeof payload.count === "number"
+          ? payload.count
+          : launches.length,
+  };
+}
+
 export async function GET(request: Request) {
   try {
-    // Ensure agents are running
-    agentRegistry.ensureInitialized();
-
     const { searchParams } = new URL(request.url);
     const limit = Math.min(
       Math.max(Number(searchParams.get("limit") || "50"), 1),
@@ -34,52 +105,49 @@ export async function GET(request: Request) {
     const dexFilter = searchParams.get("dex") || undefined;
     const enrichedOnly = searchParams.get("enriched") === "true";
     const forceRefresh = searchParams.get("refresh") === "1";
-    const scannerBackendUrl = process.env.SCANNER_BACKEND_URL?.trim();
+    const scannerBackendUrl = getIndexerBackendUrl();
 
     if (scannerBackendUrl) {
       const baseUrl = scannerBackendUrl.replace(/\/$/, "");
+      let syncTriggered = false;
 
       if (forceRefresh) {
-        try {
-          const syncUrl = new URL("/api/v1/scanner/sync", baseUrl);
-          syncUrl.searchParams.set("limit", String(Math.max(limit, 25)));
-          await fetch(syncUrl.toString(), {
-            method: "GET",
-            cache: "no-store",
-            signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
-          });
-        } catch {
-          // Non-fatal: if sync fails, still attempt to read existing persisted launches.
-        }
+        syncTriggered = await triggerBackendScannerSync(baseUrl, limit);
       }
 
-      const launchesUrl = new URL("/api/v1/scanner/launches", baseUrl);
-      launchesUrl.searchParams.set("limit", String(limit));
-      launchesUrl.searchParams.set("minScore", String(minScore));
-      if (dexFilter) launchesUrl.searchParams.set("dex", dexFilter);
-
-      const backendRes = await fetch(launchesUrl.toString(), {
-        cache: "no-store",
-        signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+      let persisted = await fetchPersistedScannerLaunches({
+        baseUrl,
+        limit,
+        minScore,
+        dexFilter,
+        enrichedOnly,
       });
 
-      if (backendRes.ok) {
-        const payload = (await backendRes.json()) as {
-          items?: unknown[];
-          count?: number;
-        };
-        let launches = (Array.isArray(payload.items) ? payload.items : []) as unknown as TokenLaunch[];
+      if (persisted.ok && persisted.totalStored === 0 && !syncTriggered) {
+        syncTriggered = await triggerBackendScannerSync(baseUrl, limit);
+        persisted = await fetchPersistedScannerLaunches({
+          baseUrl,
+          limit,
+          minScore,
+          dexFilter,
+          enrichedOnly,
+        });
+      }
 
-        if (enrichedOnly) {
-          launches = launches.filter((launch) => Boolean(launch.enriched));
-        }
-
+      if (persisted.ok) {
         return NextResponse.json(
           {
             agent: {
+              id: "launch-scanner",
+              name: "Token Launch Scanner",
+              description:
+                "Reads persisted Base launch data from the indexer and auto-seeds it from DexScreener search if the backend is empty.",
               status: "running",
+              remote: true,
+              source: baseUrl,
               stats: {
-                totalLaunches: payload.count ?? launches.length,
+                totalLaunches: persisted.totalStored,
+                visibleLaunches: persisted.launches.length,
                 launchesLastHour: 0,
                 avgScore: 0,
                 pollCount: 0,
@@ -87,10 +155,10 @@ export async function GET(request: Request) {
               },
               errors: [],
             },
-            launches,
-            count: launches.length,
-            totalStored: payload.count ?? launches.length,
-            pollTriggered: forceRefresh,
+            launches: persisted.launches,
+            count: persisted.launches.length,
+            totalStored: persisted.totalStored,
+            pollTriggered: syncTriggered,
             backend: "indexer",
             timestamp: Date.now(),
           },
@@ -101,7 +169,24 @@ export async function GET(request: Request) {
           }
         );
       }
+
+      if (isWorkerAgentRuntime()) {
+        return NextResponse.json(
+          { error: "persisted scanner state unavailable from indexer backend" },
+          { status: 503 },
+        );
+      }
     }
+
+    if (isWorkerAgentRuntime()) {
+      return NextResponse.json(
+        { error: "AGENT_RUNTIME_MODE=worker requires INDEXER_BACKEND_URL-backed scanner state" },
+        { status: 503 },
+      );
+    }
+
+    // Ensure agents are running only when no durable backend is configured.
+    agentRegistry.ensureInitialized();
 
     // On serverless, interval timers are not reliable; trigger bounded on-demand polling.
     const pollTriggered = await Promise.race([

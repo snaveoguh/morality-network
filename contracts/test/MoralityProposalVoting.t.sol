@@ -3,6 +3,8 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import "../src/MoralityProposalVoting.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract MockNounsToken {
     mapping(address => uint256) public balances;
@@ -42,21 +44,31 @@ contract MoralityProposalVotingTest is Test {
     function setUp() public {
         nounsToken = new MockNounsToken();
         governor = new MockProposalGovernor();
-        voting = new MoralityProposalVoting(address(nounsToken));
+
+        MoralityProposalVoting impl = new MoralityProposalVoting();
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(impl),
+            abi.encodeCall(MoralityProposalVoting.initialize, (address(nounsToken)))
+        );
+        voting = MoralityProposalVoting(payable(address(proxy)));
 
         vm.deal(alice, 10 ether);
         vm.deal(bob, 10 ether);
         vm.deal(address(voting), 5 ether);
     }
 
-    function test_constructorRequiresNounsToken() public {
+    function test_initializeRequiresNounsToken() public {
+        MoralityProposalVoting impl2 = new MoralityProposalVoting();
         vm.expectRevert("Nouns token required");
-        new MoralityProposalVoting(address(0));
+        new ERC1967Proxy(
+            address(impl2),
+            abi.encodeCall(MoralityProposalVoting.initialize, (address(0)))
+        );
     }
 
     function test_setDaoResolverOnlyOwner() public {
         vm.prank(alice);
-        vm.expectRevert("Not owner");
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
         voting.setDaoResolver("nouns", address(governor), true);
 
         voting.setDaoResolver("nouns", address(governor), true);
@@ -127,5 +139,10 @@ contract MoralityProposalVotingTest is Test {
         vm.prank(alice);
         vm.expectRevert("Already voted");
         voting.castVote("nouns", "77", MoralityProposalVoting.VoteType.AGAINST, "second");
+    }
+
+    function test_cannotReinitialize() public {
+        vm.expectRevert();
+        voting.initialize(address(nounsToken));
     }
 }

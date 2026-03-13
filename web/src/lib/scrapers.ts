@@ -55,7 +55,7 @@ async function fetchSubreddit(
 ): Promise<FeedItem[]> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
+    const timeout = setTimeout(() => controller.abort(), 5_000);
 
     const res = await fetch(
       `https://www.reddit.com/r/${config.sub}/hot.json?limit=${limit}&raw_json=1`,
@@ -207,7 +207,7 @@ async function fetchChanBoard(
 ): Promise<FeedItem[]> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
+    const timeout = setTimeout(() => controller.abort(), 5_000);
 
     const res = await fetch(
       `https://a.4cdn.org/${config.board}/catalog.json`,
@@ -272,21 +272,11 @@ async function fetchChanBoard(
 
 /**
  * Fetch top threads from all configured 4chan boards.
- * Fetched sequentially with 500ms delays to be polite to the API.
+ * All boards fetched in parallel — catalog endpoint is lightweight.
  */
 export async function fetchChanFeeds(): Promise<FeedItem[]> {
-  const items: FeedItem[] = [];
-
-  for (const board of CHAN_BOARDS) {
-    try {
-      const boardItems = await fetchChanBoard(board, 6);
-      items.push(...boardItems);
-    } catch {
-      // Individual board failures don't kill the whole pipeline
-    }
-    // Small delay between boards to be respectful
-    await new Promise((r) => setTimeout(r, 300));
-  }
-
-  return items;
+  const results = await Promise.allSettled(
+    CHAN_BOARDS.map((board) => fetchChanBoard(board, 6)),
+  );
+  return results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
 }

@@ -1,12 +1,12 @@
 import { type Address } from 'viem';
 
-// Contract addresses — update after deployment to ETH mainnet
+// Contract addresses — latest Base Sepolia deployment
 export const CONTRACTS = {
-  registry:    '0x2ea7502C4db5B8cfB329d8a9866EB6705b036608' as Address,
-  ratings:     '0xb61bE51E8aEd1360EaA03Eb673F74D66eC4898D7' as Address,
-  comments:    '0x29F66D8b15326cE7232c0277DBc2CbFDaaf93405' as Address,
-  tipping:     '0x622cD30124e24dFFe77c29921bD7622e30d57F8B' as Address,
-  leaderboard: '0x57dc0C9833A124FE39193dC6a554e0Ff37606202' as Address,
+  registry:    '0x1c73efffeb89ad8699770921dbd860bb5da5b15a' as Address,
+  ratings:     '0x29f0235d74e09536f0b7df9c6529de17b8af5fc6' as Address,
+  comments:    '0x14a361454edcb477644eb82bf540a26e1cead72a' as Address,
+  tipping:     '0x71b2e273727385c617fe254f4fb14a36a679b12a' as Address,
+  leaderboard: '0x4b48d35e019129bb5a16920adc4cb7f445ec8ca5' as Address,
 } as const;
 
 export const REGISTRY_ABI = [

@@ -7,16 +7,22 @@ interface GlobalIndexCardProps {
   globalScore: number;
   globalTrend: number;
   feedItemsScanned: number;
+  eventCount?: number;
   topicCount: number;
   generatedAt: string;
+  sourceRegistrySize?: number;
+  queuedCrawlTargets?: number;
 }
 
 export function GlobalIndexCard({
   globalScore,
   globalTrend,
   feedItemsScanned,
+  eventCount,
   topicCount,
   generatedAt,
+  sourceRegistrySize,
+  queuedCrawlTargets,
 }: GlobalIndexCardProps) {
   const label = sentimentLabel(globalScore);
   const arrow = trendArrow(globalTrend);
@@ -64,9 +70,27 @@ export function GlobalIndexCard({
       />
 
       <div className="mt-3 flex flex-wrap gap-3 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-        <span>{feedItemsScanned} articles scanned</span>
+        <span>{eventCount ?? feedItemsScanned} {eventCount ? "events" : "articles"} scanned</span>
+        {eventCount ? (
+          <>
+            <span>&middot;</span>
+            <span>{feedItemsScanned} raw articles</span>
+          </>
+        ) : null}
         <span>&middot;</span>
         <span>{topicCount} topics tracked</span>
+        {sourceRegistrySize ? (
+          <>
+            <span>&middot;</span>
+            <span>{sourceRegistrySize} sources in registry</span>
+          </>
+        ) : null}
+        {queuedCrawlTargets !== undefined ? (
+          <>
+            <span>&middot;</span>
+            <span>{queuedCrawlTargets} crawl targets queued</span>
+          </>
+        ) : null}
         <span>&middot;</span>
         <span>Updated {formattedTime}</span>
       </div>

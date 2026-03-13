@@ -3,6 +3,7 @@
 // In-memory pub/sub with optional HTTP bridges for cross-site relay.
 
 import type { AgentMessage, MessageHandler } from "./types";
+import { signBridgeMessage } from "./bridge-signature";
 
 interface BridgeConfig {
   url: string;
@@ -99,12 +100,29 @@ class MessageBus {
   private async relay(bridge: BridgeConfig, message: AgentMessage): Promise<void> {
     const relayUrl = `${bridge.url.replace(/\/$/, "")}/api/agents/bus/relay`;
     try {
+      const signature = await signBridgeMessage({
+        message,
+        origin:
+          process.env.NEXT_PUBLIC_SITE_URL?.trim()?.replace(/\/$/, "") ||
+          "http://localhost:3000",
+        audience: new URL(relayUrl).origin,
+      });
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${bridge.secret}`,
+      };
+      if (signature) {
+        headers["x-agent-bridge-version"] = signature.version;
+        headers["x-agent-bridge-signer"] = signature.signer;
+        headers["x-agent-bridge-signature"] = signature.signature;
+        headers["x-agent-bridge-origin"] = signature.origin;
+        headers["x-agent-bridge-audience"] = signature.audience;
+        headers["x-agent-bridge-timestamp"] = String(signature.relayTimestampMs);
+      }
+
       const res = await fetch(relayUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${bridge.secret}`,
-        },
+        headers,
         body: JSON.stringify(message),
         signal: AbortSignal.timeout(5_000),
       });

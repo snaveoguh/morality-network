@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { TerminalTradingContext } from "@/lib/terminal-types";
 
 type TerminalRole = "assistant" | "user" | "system";
 
@@ -24,7 +25,7 @@ interface UsageState {
   used: number;
 }
 
-interface AgentBotTerminalProps {
+export interface AgentBotTerminalProps {
   feePct: number;
   executionVenue: string;
   dryRun: boolean;
@@ -38,6 +39,8 @@ interface AgentBotTerminalProps {
   onFundAmount: (amount: string) => Promise<string>;
   onWithdrawAmount?: (amount: string) => Promise<string>;
   onUnlockPlan?: () => Promise<string>;
+  // Extended trading context for LLM
+  tradingContext?: TerminalTradingContext;
 }
 
 const STORAGE_KEY = "pooter-markets-terminal-v1";
@@ -61,16 +64,30 @@ function makeAssistantMessage(text: string): TerminalMessage {
   };
 }
 
-function makeUserMessage(text: string): TerminalMessage {
-  return {
-    id: makeId("msg"),
-    role: "user",
-    text,
-    createdAt: Date.now(),
-  };
+function getFundingSummary(
+  canWithdraw: boolean,
+  executionVenue: string,
+  fundingAddress: string
+): string {
+  if (canWithdraw) {
+    return [
+      "Vault mode: `fund` deposits ETH into the vault and mints shares to your wallet.",
+      executionVenue === "hyperliquid-perp"
+        ? "That still does not automatically top up Hyperliquid margin."
+        : "Your address is remembered because the vault tracks shares onchain.",
+    ].join("\n");
+  }
+
+  return [
+    "Direct mode: `fund` sends ETH to the agent wallet only.",
+    "It does not create a personal balance or shares for you.",
+    executionVenue === "hyperliquid-perp"
+      ? "It also does not automatically top up Hyperliquid collateral."
+      : `Funds go to ${fundingAddress}.`,
+  ].join("\n");
 }
 
-function makeSession(title: string): TerminalSession {
+function makeSession(title: string, intro?: string): TerminalSession {
   return {
     id: makeId("chat"),
     title,
@@ -79,8 +96,9 @@ function makeSession(title: string): TerminalSession {
     messages: [
       makeAssistantMessage(
         [
-          "gm, how can I help?",
-          "Try: `fund 0.01`, `withdraw 0.01`, `status`, `fees`.",
+          "gm. desk is live — ask me anything about positions, risk, pnl, or strategy.",
+          "Quick commands: `fund 0.01`, `withdraw 0.01`, `status`, `fees`.",
+          intro ?? "",
         ].join("\n")
       ),
     ],
@@ -97,8 +115,12 @@ function parseAmount(command: string, patterns: RegExp[]): string | null {
   return null;
 }
 
-function loadState(): { sessions: TerminalSession[]; activeId: string; usage: UsageState } {
-  const fallbackSession = makeSession("New Chat");
+function loadState(intro?: string): {
+  sessions: TerminalSession[];
+  activeId: string;
+  usage: UsageState;
+} {
+  const fallbackSession = makeSession("New Chat", intro);
   const fallback = {
     sessions: [fallbackSession],
     activeId: fallbackSession.id,
@@ -130,6 +152,29 @@ function loadState(): { sessions: TerminalSession[]; activeId: string; usage: Us
   }
 }
 
+// ============================================================================
+// ACTION TAG PARSER — extract [FUND 0.05] etc from LLM responses
+// ============================================================================
+
+const ACTION_TAG_RE = /\[(FUND|WITHDRAW|STATUS)\s*([0-9]*\.?[0-9]*)\]/gi;
+
+function parseActionTags(text: string): Array<{ action: string; amount?: string }> {
+  const actions: Array<{ action: string; amount?: string }> = [];
+  let match: RegExpExecArray | null;
+  while ((match = ACTION_TAG_RE.exec(text)) !== null) {
+    actions.push({
+      action: match[1].toUpperCase(),
+      amount: match[2] || undefined,
+    });
+  }
+  ACTION_TAG_RE.lastIndex = 0; // Reset for next call
+  return actions;
+}
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
 export function AgentBotTerminal({
   feePct,
   executionVenue,
@@ -144,22 +189,29 @@ export function AgentBotTerminal({
   onFundAmount,
   onWithdrawAmount,
   onUnlockPlan,
+  tradingContext,
 }: AgentBotTerminalProps) {
-  const [sessions, setSessions] = useState<TerminalSession[]>(() => [makeSession("New Chat")]);
+  const fundingSummary = getFundingSummary(canWithdraw, executionVenue, fundingAddress);
+  const [sessions, setSessions] = useState<TerminalSession[]>(() => [
+    makeSession("New Chat", fundingSummary),
+  ]);
   const [activeId, setActiveId] = useState<string>("");
   const [usage, setUsage] = useState<UsageState>({ monthKey: monthKeyNow(), used: 0 });
   const [input, setInput] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    const loaded = loadState();
+    const loaded = loadState(fundingSummary);
     setSessions(loaded.sessions);
     setActiveId(loaded.activeId);
     setUsage((prev) => {
       if (loaded.usage.monthKey === monthKeyNow()) return loaded.usage;
       return { monthKey: monthKeyNow(), used: 0 };
     });
-  }, []);
+  }, [fundingSummary]);
 
   useEffect(() => {
     if (!activeId && sessions[0]) {
@@ -171,13 +223,14 @@ export function AgentBotTerminal({
     if (!activeId || sessions.length === 0) return;
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({
-        sessions,
-        activeId,
-        usage,
-      })
+      JSON.stringify({ sessions, activeId, usage })
     );
   }, [sessions, activeId, usage]);
+
+  // Auto-scroll on new messages / streaming updates
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [sessions, streamingMsgId]);
 
   const activeSession = useMemo(
     () => sessions.find((session) => session.id === activeId) ?? sessions[0],
@@ -194,21 +247,27 @@ export function AgentBotTerminal({
     );
   }
 
-  function appendMessage(role: TerminalRole, text: string) {
+  function appendMessage(role: TerminalRole, text: string): string {
+    const id = makeId("msg");
     updateActiveSession((session) => ({
       ...session,
       updatedAt: Date.now(),
-      messages: [
-        ...session.messages,
-        {
-          id: makeId("msg"),
-          role,
-          text,
-          createdAt: Date.now(),
-        },
-      ],
+      messages: [...session.messages, { id, role, text, createdAt: Date.now() }],
     }));
+    return id;
   }
+
+  /** Update text of a specific message (for streaming) */
+  const updateMessageText = useCallback((msgId: string, text: string) => {
+    setSessions((prev) =>
+      prev.map((session) => ({
+        ...session,
+        messages: session.messages.map((msg) =>
+          msg.id === msgId ? { ...msg, text } : msg
+        ),
+      }))
+    );
+  }, []);
 
   function incrementUsage() {
     setUsage((prev) => {
@@ -221,20 +280,159 @@ export function AgentBotTerminal({
   }
 
   function createChat() {
-    const next = makeSession(`Chat ${sessions.length + 1}`);
+    const next = makeSession(`Chat ${sessions.length + 1}`, fundingSummary);
     setSessions((prev) => [next, ...prev]);
     setActiveId(next.id);
   }
+
+  // Build default trading context from props if not provided
+  const resolvedContext: TerminalTradingContext = tradingContext ?? {
+    executionVenue,
+    dryRun,
+    feePct,
+    fundingAddress,
+    canWithdraw,
+    openPositions,
+    closedPositions: 0,
+    grossPnlUsd,
+    netPnlUsd,
+    unrealizedPnlUsd: 0,
+    realizedPnlUsd: 0,
+    deployedUsd: 0,
+    positions: [],
+  };
+
+  // ========================================================================
+  // STREAM LLM RESPONSE
+  // ========================================================================
+
+  async function streamLLMResponse(userText: string) {
+    // Build message history for the LLM (last 20 messages)
+    const history = (activeSession?.messages ?? [])
+      .filter((m) => m.role === "user" || m.role === "assistant")
+      .slice(-18)
+      .map((m) => ({ role: m.role as "user" | "assistant", content: m.text }));
+
+    // Add the new user message
+    history.push({ role: "user" as const, content: userText });
+
+    // Create a placeholder assistant message for streaming
+    const assistantMsgId = makeId("msg");
+    updateActiveSession((session) => ({
+      ...session,
+      updatedAt: Date.now(),
+      messages: [
+        ...session.messages,
+        { id: assistantMsgId, role: "assistant", text: "", createdAt: Date.now() },
+      ],
+    }));
+    setStreamingMsgId(assistantMsgId);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    let fullText = "";
+
+    try {
+      const res = await fetch("/api/terminal/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: history,
+          context: resolvedContext,
+        }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => "");
+        throw new Error(errBody || `HTTP ${res.status}`);
+      }
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No response body");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith("data: ")) continue;
+
+          const data = trimmed.slice(6);
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.done) break;
+            if (parsed.error) throw new Error(parsed.error);
+            if (parsed.token) {
+              fullText += parsed.token;
+              updateMessageText(assistantMsgId, fullText);
+            }
+          } catch (e) {
+            if (e instanceof Error && e.message !== "Unexpected end of JSON input") {
+              // Real error from the stream
+              if (data !== "[DONE]") {
+                throw e;
+              }
+            }
+          }
+        }
+      }
+
+      // After streaming completes, check for action tags
+      const actions = parseActionTags(fullText);
+      for (const action of actions) {
+        if (action.action === "FUND" && action.amount) {
+          try {
+            const outcome = await onFundAmount(action.amount);
+            appendMessage("assistant", outcome);
+          } catch (err) {
+            appendMessage("system", err instanceof Error ? err.message : "Fund action failed");
+          }
+        } else if (action.action === "WITHDRAW" && action.amount) {
+          if (canWithdraw && onWithdrawAmount) {
+            try {
+              const outcome = await onWithdrawAmount(action.amount);
+              appendMessage("assistant", outcome);
+            } catch (err) {
+              appendMessage("system", err instanceof Error ? err.message : "Withdraw action failed");
+            }
+          }
+        }
+      }
+    } catch (err) {
+      if ((err as Error).name === "AbortError") return;
+      const msg = err instanceof Error ? err.message : "LLM request failed";
+      if (!fullText) {
+        // No tokens received — update the placeholder with error
+        updateMessageText(assistantMsgId, `[error] ${msg}`);
+      } else {
+        appendMessage("system", msg);
+      }
+    } finally {
+      setStreamingMsgId(null);
+      abortRef.current = null;
+    }
+  }
+
+  // ========================================================================
+  // HANDLE SEND — fast-path commands or LLM streaming
+  // ========================================================================
 
   async function handleSend() {
     const command = input.trim();
     if (!command || !activeSession || isBusy) return;
 
     if (locked) {
-      appendMessage(
-        "system",
-        "Free monthly usage reached. Deposit 50 MO to unlock unlimited terminal access."
-      );
+      appendMessage("system", "Free monthly usage reached. Deposit 50 MO to unlock unlimited terminal access.");
       setInput("");
       return;
     }
@@ -246,6 +444,8 @@ export function AgentBotTerminal({
 
     try {
       const lower = command.toLowerCase();
+
+      // Fast-path: direct commands (no LLM call)
       const fundAmount = parseAmount(lower, [
         /^(?:\/)?(?:fund|deposit|send)\s+\$?([0-9]+(?:\.[0-9]+)?)\b/,
         /^(?:\/)?buy\s+\$?([0-9]+(?:\.[0-9]+)?)\b/,
@@ -271,50 +471,41 @@ export function AgentBotTerminal({
       }
 
       if (lower === "fees" || lower === "/fees") {
-        appendMessage(
-          "assistant",
-          `Performance fee is ${feePct.toFixed(2)}% on realized strategy profits.`
-        );
+        appendMessage("assistant", `Performance fee is ${feePct.toFixed(2)}% on realized strategy profits.`);
         return;
       }
 
       if (lower === "status" || lower === "/status") {
-        appendMessage(
-          "assistant",
-          [
-            `Venue: ${executionVenue}${dryRun ? " (dry-run)" : " (live)"}`,
-            `Open positions: ${openPositions}`,
-            `Gross PnL: $${grossPnlUsd.toFixed(2)}`,
-            `Net PnL: $${netPnlUsd.toFixed(2)}`,
-            `Funding: ${fundingAddress}`,
-          ].join("\n")
-        );
+        appendMessage("assistant", [
+          `Venue: ${executionVenue}${dryRun ? " (dry-run)" : " (live)"}`,
+          `Open positions: ${openPositions}`,
+          `Gross PnL: $${grossPnlUsd.toFixed(2)}`,
+          `Net PnL: $${netPnlUsd.toFixed(2)}`,
+          `Funding: ${fundingAddress}`,
+          `Funding mode: ${canWithdraw ? "vault shares tracked to your wallet" : "direct wallet transfer, not credited per-user"}`,
+        ].join("\n"));
         return;
       }
 
       if (lower === "help" || lower === "/help") {
-        appendMessage(
-          "assistant",
-          [
-            "Commands:",
-            "- fund 0.01",
-            canWithdraw ? "- withdraw 0.01" : "- withdraw (vault-only)",
-            "- status",
-            "- fees",
-          ].join("\n")
-        );
+        appendMessage("assistant", [
+          "Commands:",
+          "- fund 0.01",
+          canWithdraw ? "- withdraw 0.01" : "- withdraw (vault-only)",
+          "- status",
+          "- fees",
+          "",
+          "Or ask me anything about your positions, risk, strategy, or market conditions.",
+          "",
+          fundingSummary,
+        ].join("\n"));
         return;
       }
 
-      appendMessage(
-        "assistant",
-        "I can run: `fund <amount>`, `withdraw <amount>`, `status`, or `fees`."
-      );
+      // Not a built-in command — route to LLM
+      await streamLLMResponse(command);
     } catch (error) {
-      appendMessage(
-        "system",
-        error instanceof Error ? error.message : "Command failed. Try again."
-      );
+      appendMessage("system", error instanceof Error ? error.message : "Command failed. Try again.");
     } finally {
       setIsBusy(false);
     }
@@ -322,10 +513,7 @@ export function AgentBotTerminal({
 
   async function handleUnlockClick() {
     if (!onUnlockPlan) {
-      appendMessage(
-        "assistant",
-        "Unlock flow is not wired yet. We can route 50 MO monthly into vault + LP next."
-      );
+      appendMessage("assistant", "Unlock flow is not wired yet. We can route 50 MO monthly into vault + LP next.");
       return;
     }
     setIsBusy(true);
@@ -333,10 +521,7 @@ export function AgentBotTerminal({
       const outcome = await onUnlockPlan();
       appendMessage("assistant", outcome);
     } catch (error) {
-      appendMessage(
-        "system",
-        error instanceof Error ? error.message : "Unlock flow failed"
-      );
+      appendMessage("system", error instanceof Error ? error.message : "Unlock flow failed");
     } finally {
       setIsBusy(false);
     }
@@ -366,9 +551,15 @@ export function AgentBotTerminal({
             </button>
           ))}
         </div>
+        <span className="shrink-0 font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">
+          bankr
+        </span>
       </div>
 
-      <div className="max-h-[260px] min-h-[220px] space-y-2 overflow-y-auto bg-[var(--paper-dark)] p-3">
+      <div
+        ref={scrollRef}
+        className="max-h-[260px] min-h-[220px] space-y-2 overflow-y-auto bg-[var(--paper-dark)] p-3"
+      >
         {activeSession?.messages.map((message) => (
           <div
             key={message.id}
@@ -382,6 +573,9 @@ export function AgentBotTerminal({
           >
             <p className="whitespace-pre-wrap font-mono text-[12px] leading-relaxed text-[var(--ink)]">
               {message.text}
+              {streamingMsgId === message.id && (
+                <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-[var(--ink)]" />
+              )}
             </p>
           </div>
         ))}
@@ -419,7 +613,7 @@ export function AgentBotTerminal({
                 void handleSend();
               }
             }}
-            placeholder={locked ? "Unlock to continue..." : "// what's up?"}
+            placeholder={locked ? "Unlock to continue..." : "ask about positions, risk, strategy..."}
             className="w-full border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-2 font-mono text-[12px] text-[var(--ink)] outline-none focus:border-[var(--rule)]"
           />
           <button

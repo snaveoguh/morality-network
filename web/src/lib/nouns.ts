@@ -14,7 +14,7 @@ import { mainnet } from "viem/chains";
 
 const client = createPublicClient({
   chain: mainnet,
-  transport: http("https://ethereum-rpc.publicnode.com"),
+  transport: http("https://mainnet.rpc.buidlguidl.com"),
 });
 
 // ============================================================================
@@ -183,6 +183,12 @@ export const GOVERNOR_ABI = [
   },
 ] as const;
 
+const DELEGATE_CHANGED_EVENT = parseAbiItem(
+  "event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate)"
+);
+
+const DELEGATION_LOOKBACK_BLOCKS = BigInt(7_200);
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -215,6 +221,18 @@ export interface NounsProposal {
   status: string;
   description: string;
   title: string;
+  dao: "nouns" | "lilnouns";
+}
+
+export interface NounsDelegationEvent {
+  id: string;
+  delegator: string;
+  fromDelegate: string;
+  toDelegate: string;
+  blockNumber: number;
+  txHash: string;
+  logIndex: number;
+  timestamp: number;
   dao: "nouns" | "lilnouns";
 }
 
@@ -297,6 +315,18 @@ export async function fetchNounsProposals(count: number = 5): Promise<NounsPropo
 
 export async function fetchLilNounsProposals(count: number = 5): Promise<NounsProposal[]> {
   return fetchProposalsFromGovernor(LIL_NOUNS_CONTRACTS.governor, "lilnouns", count);
+}
+
+export async function fetchNounsDelegationEvents(
+  count: number = 15
+): Promise<NounsDelegationEvent[]> {
+  return fetchDelegationEventsFromToken(NOUNS_CONTRACTS.token, "nouns", count);
+}
+
+export async function fetchLilNounsDelegationEvents(
+  count: number = 10
+): Promise<NounsDelegationEvent[]> {
+  return fetchDelegationEventsFromToken(LIL_NOUNS_CONTRACTS.token, "lilnouns", count);
 }
 
 // ============================================================================
@@ -458,6 +488,75 @@ async function fetchProposalsFromGovernor(
     return proposals;
   } catch (e) {
     console.error(`Failed to fetch ${dao} proposals:`, e);
+    return [];
+  }
+}
+
+async function fetchDelegationEventsFromToken(
+  token: Address,
+  dao: "nouns" | "lilnouns",
+  count: number
+): Promise<NounsDelegationEvent[]> {
+  try {
+    const currentBlock = await client.getBlockNumber();
+    const fromBlock =
+      currentBlock > DELEGATION_LOOKBACK_BLOCKS
+        ? currentBlock - DELEGATION_LOOKBACK_BLOCKS
+        : BigInt(0);
+
+    const logs = await client.getLogs({
+      address: token,
+      event: DELEGATE_CHANGED_EVENT,
+      fromBlock,
+      toBlock: currentBlock,
+    });
+
+    if (logs.length === 0) return [];
+
+    const recent = logs.slice(-count).reverse();
+    const blockNumbers = Array.from(
+      new Set(recent.map((log) => Number(log.blockNumber ?? 0)).filter((value) => value > 0))
+    );
+    const timestampEntries = await Promise.all(
+      blockNumbers.map(async (blockNumber) => {
+        const block = await client.getBlock({ blockNumber: BigInt(blockNumber) });
+        return [blockNumber, Number(block.timestamp)] as const;
+      })
+    );
+    const timestampsByBlock = new Map(timestampEntries);
+
+    const normalized: Array<NounsDelegationEvent | null> = recent.map((log) => {
+        const args = (log.args ?? {}) as {
+          delegator?: Address;
+          fromDelegate?: Address;
+          toDelegate?: Address;
+        };
+        const txHash = log.transactionHash;
+        const logIndex = Number(log.logIndex ?? 0);
+        const blockNumber = Number(log.blockNumber ?? 0);
+
+        if (!args.delegator || !txHash || blockNumber <= 0) {
+          return null;
+        }
+
+        return {
+          id: `${dao}-delegation-${txHash}-${logIndex}`,
+          delegator: args.delegator,
+          fromDelegate: args.fromDelegate ?? "0x0000000000000000000000000000000000000000",
+          toDelegate: args.toDelegate ?? "0x0000000000000000000000000000000000000000",
+          blockNumber,
+          txHash,
+          logIndex,
+          timestamp: timestampsByBlock.get(blockNumber) ?? 0,
+          dao,
+        } satisfies NounsDelegationEvent;
+      });
+
+    return normalized.filter(
+      (event): event is NounsDelegationEvent => event !== null
+    );
+  } catch (error) {
+    console.error(`Failed to fetch ${dao} delegation events:`, error);
     return [];
   }
 }

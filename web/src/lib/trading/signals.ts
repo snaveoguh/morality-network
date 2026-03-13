@@ -1,7 +1,10 @@
 import "server-only";
 
-import type { MarketImpactDirection, MarketImpactTimeHorizon } from "@/lib/article";
-import { listRecentMarketImpactRecords } from "@/lib/editorial-archive";
+import type { MarketImpactDirection, MarketImpactTimeHorizon } from "../article";
+import { listRecentMarketImpactRecords } from "../editorial-archive";
+import { computeEventShapedSentimentSnapshotFromFeeds } from "../event-corpus";
+import { DEFAULT_FEEDS, fetchAllFeeds } from "../rss";
+import { TOPIC_TAXONOMY, matchesTopicDefinition } from "../sentiment";
 
 // ============================================================================
 // AGGREGATED MARKET SIGNALS
@@ -210,6 +213,60 @@ function safeFinite(value: number, fallback: number): number {
   return Number.isFinite(value) ? value : fallback;
 }
 
+const FALLBACK_TOPIC_TO_SYMBOL: Record<string, string> = {
+  btc: "BTC",
+  eth: "ETH",
+  gold: "GOLD",
+  oil: "OIL",
+  usd: "DXY",
+};
+
+async function getFallbackFeedSignals(): Promise<AggregatedMarketSignal[]> {
+  try {
+    const items = await fetchAllFeeds(DEFAULT_FEEDS);
+    if (items.length === 0) return [];
+
+    const snapshot = await computeEventShapedSentimentSnapshotFromFeeds(items, null);
+    const signals = snapshot.topics
+      .filter((topic) => topic.category === "asset")
+      .map((topic) => {
+        const symbol = FALLBACK_TOPIC_TO_SYMBOL[topic.slug] || topic.slug.toUpperCase();
+        const signedScore = safeFinite((topic.score - 50) / 10, 0);
+        const definition = TOPIC_TAXONOMY.find((candidate) => candidate.slug === topic.slug);
+        const supportingClaims = definition
+          ? items
+              .filter((item) => matchesTopicDefinition(item, definition))
+              .map((item) => item.canonicalClaim || item.title)
+              .filter(Boolean)
+              .slice(0, 3)
+          : [];
+
+        return {
+          symbol,
+          direction: signedScore >= 0 ? "bullish" : "bearish",
+          score: Math.abs(signedScore),
+          observations: topic.articleCount,
+          latestGeneratedAt: snapshot.generatedAt,
+          supportingClaims,
+          contradictionPenalty: Math.max(
+            0,
+            Math.min(1, safeFinite(topic.signals.contradictionRatio, 0)),
+          ),
+          bullishWeight: Math.max(signedScore, 0),
+          bearishWeight: Math.max(-signedScore, 0),
+          rawScore: signedScore,
+        } satisfies AggregatedMarketSignal;
+      })
+      .filter((signal) => signal.observations > 0 && signal.score > 0);
+
+    signals.sort((a, b) => b.score - a.score);
+    return signals;
+  } catch (error) {
+    console.warn("[signals] live feed fallback failed:", error);
+    return [];
+  }
+}
+
 // ── Main Aggregator ────────────────────────────────────────────────────────
 
 export async function getAggregatedMarketSignals(options?: {
@@ -221,7 +278,7 @@ export async function getAggregatedMarketSignals(options?: {
 
   const records = await listRecentMarketImpactRecords(limit);
   if (records.length === 0) {
-    return [];
+    return getFallbackFeedSignals();
   }
 
   const now = Date.now();

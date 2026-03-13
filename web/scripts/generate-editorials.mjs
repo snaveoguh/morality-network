@@ -49,6 +49,8 @@ Rules:
 4. When sources contradict each other, note the contradiction explicitly.
 5. Write in third person, active voice. No clichés, no clickbait.
 6. Every claim must be attributable to at least one named source.
+7. If only the primary article is usable, still write a narrower editorial from that primary source.
+8. Never answer with an explanation of missing materials, insufficient sources, or what you would need in order to write.
 
 Return a JSON object with exactly these fields:
 {
@@ -67,6 +69,66 @@ Guidelines:
 - claim: The single most important factual claim, stated neutrally
 
 Return ONLY valid JSON. No markdown, no explanation, no preamble.`;
+
+const STOP_WORDS = new Set([
+  "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
+  "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
+  "this", "that", "these", "those", "after", "before", "into", "over",
+  "under", "about", "amid", "from", "new", "latest", "live", "update",
+  "story", "stories", "report", "reports", "says", "said", "say",
+]);
+
+const LOW_SIGNAL_TERMS = new Set([
+  "judge",
+  "judges",
+  "justice",
+  "justices",
+  "court",
+  "courts",
+  "supreme",
+  "appeal",
+  "appeals",
+  "petition",
+  "petitions",
+  "case",
+  "cases",
+  "lawsuit",
+  "lawsuits",
+  "administration",
+  "department",
+  "departments",
+  "agency",
+  "agencies",
+  "committee",
+  "committees",
+  "official",
+  "officials",
+  "world",
+  "global",
+]);
+
+const ENTITY_STOP_WORDS = new Set([
+  "judge",
+  "judges",
+  "justice",
+  "justices",
+  "court",
+  "courts",
+  "supreme",
+  "federal",
+  "state",
+  "appeal",
+  "appeals",
+  "petition",
+  "petitions",
+  "administration",
+  "department",
+  "departments",
+  "agency",
+  "agencies",
+  "official",
+  "officials",
+]);
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -95,14 +157,100 @@ function computeContentHash(editorial) {
   return keccak256(toBytes(payload));
 }
 
-function findRelatedItems(primaryItem, allItems) {
-  // Simple category + keyword matching for batch context
-  const primaryWords = new Set(
-    (primaryItem.title || "")
+function extractKeywords(text) {
+  return new Set(
+    (text || "")
       .toLowerCase()
-      .split(/\W+/)
-      .filter((w) => w.length > 3),
+      .replace(/[^a-z0-9\s'-]/g, " ")
+      .split(/\s+/)
+      .filter((word) => word.length > 2 && !STOP_WORDS.has(word)),
   );
+}
+
+function extractSpecificSignalKeywords(text) {
+  const out = new Set();
+  for (const token of extractKeywords(text)) {
+    if (LOW_SIGNAL_TERMS.has(token)) continue;
+    if (token.length >= 5 || token.includes("-") || /\d/.test(token)) {
+      out.add(token);
+    }
+  }
+  return out;
+}
+
+function extractPhrases(text) {
+  const words = Array.from(extractSpecificSignalKeywords(text));
+  const phrases = new Set();
+
+  for (let i = 0; i < words.length - 1; i++) {
+    const bigram = `${words[i]} ${words[i + 1]}`;
+    if (bigram.length >= 9) phrases.add(bigram);
+  }
+
+  return phrases;
+}
+
+function extractEntityAnchors(text) {
+  const matches = (text || "").match(/\b[A-Z][A-Za-z0-9.'’-]{2,}\b|\b[A-Z]{2,}\b/g) || [];
+  const anchors = new Set();
+
+  for (const match of matches) {
+    const normalized = match
+      .toLowerCase()
+      .replace(/['’]s$/i, "")
+      .replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, "");
+
+    if (normalized.length < 3) continue;
+    if (/^\d+$/.test(normalized)) continue;
+    if (STOP_WORDS.has(normalized) || LOW_SIGNAL_TERMS.has(normalized) || ENTITY_STOP_WORDS.has(normalized)) {
+      continue;
+    }
+
+    anchors.add(normalized);
+  }
+
+  return anchors;
+}
+
+function countOverlap(a, b) {
+  if (!a.size || !b.size) return 0;
+  let overlap = 0;
+  for (const value of a) {
+    if (b.has(value)) overlap++;
+  }
+  return overlap;
+}
+
+function looksLikeEditorialRefusal(text) {
+  const normalized = (text || "").trim().toLowerCase();
+  if (!normalized) return true;
+
+  const refusalPatterns = [
+    /cannot write an editorial/,
+    /can't write an editorial/,
+    /lack sufficient source material/,
+    /insufficient source material/,
+    /without scraped content/,
+    /related articles cover entirely different topics/,
+    /would need either/,
+    /to properly cover this story/,
+  ];
+
+  const hits = refusalPatterns.reduce(
+    (count, pattern) => count + (pattern.test(normalized) ? 1 : 0),
+    0,
+  );
+
+  return hits >= 2 || /^i\s+(cannot|can't|do not have|don't have)/.test(normalized);
+}
+
+function findRelatedItems(primaryItem, allItems) {
+  const primaryText = `${primaryItem.title || ""} ${primaryItem.description || ""}`;
+  const primaryWords = extractKeywords(primaryText);
+  const primarySpecificSignals = extractSpecificSignalKeywords(primaryItem.title || "");
+  const primaryPhrases = extractPhrases(primaryItem.title || "");
+  const primaryEntityAnchors = extractEntityAnchors(primaryText);
+  const requiresMultipleEntityMatches = primaryEntityAnchors.size > 1;
 
   const scored = [];
 
@@ -110,25 +258,53 @@ function findRelatedItems(primaryItem, allItems) {
     if (item.link === primaryItem.link) continue;
     if (item.source === primaryItem.source) continue;
 
-    const itemWords = new Set(
-      (item.title || "")
-        .toLowerCase()
-        .split(/\W+/)
-        .filter((w) => w.length > 3),
-    );
+    const itemText = `${item.title || ""} ${item.description || ""}`;
+    const itemWords = extractKeywords(itemText);
+    const itemSpecificSignals = extractSpecificSignalKeywords(item.title || "");
+    const itemEntityAnchors = extractEntityAnchors(itemText);
 
-    let overlap = 0;
-    for (const w of primaryWords) {
-      if (itemWords.has(w)) overlap++;
+    const keywordOverlap = countOverlap(primaryWords, itemWords);
+    const specificSignalOverlap = countOverlap(primarySpecificSignals, itemSpecificSignals);
+    const entityOverlap = countOverlap(primaryEntityAnchors, itemEntityAnchors);
+
+    let phraseOverlap = 0;
+    const itemTitleLower = (item.title || "").toLowerCase();
+    for (const phrase of primaryPhrases) {
+      if (itemTitleLower.includes(phrase)) phraseOverlap++;
     }
 
-    // Require at least 3 shared meaningful words
-    if (overlap >= 3) {
-      scored.push({ item, overlap });
+    if (
+      requiresMultipleEntityMatches &&
+      entityOverlap === 1 &&
+      specificSignalOverlap === 0 &&
+      phraseOverlap === 0
+    ) {
+      continue;
+    }
+
+    if (
+      primaryEntityAnchors.size > 0 &&
+      entityOverlap === 0 &&
+      specificSignalOverlap < 2 &&
+      phraseOverlap === 0 &&
+      keywordOverlap < 3
+    ) {
+      continue;
+    }
+
+    const score =
+      (entityOverlap * 10) +
+      (specificSignalOverlap * 6) +
+      (phraseOverlap * 4) +
+      keywordOverlap;
+
+    const minScore = primaryEntityAnchors.size > 0 ? 10 : 6;
+    if (score >= minScore) {
+      scored.push({ item, score });
     }
   }
 
-  scored.sort((a, b) => b.overlap - a.overlap);
+  scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, 3).map((s) => s.item);
 }
 
@@ -173,6 +349,10 @@ async function generateEditorialForItem(primaryItem, relatedItems) {
   let jsonText = textBlock.text.trim();
   if (jsonText.startsWith("```")) {
     jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+  }
+
+  if (looksLikeEditorialRefusal(jsonText)) {
+    throw new Error("Writer refusal: insufficient usable source material");
   }
 
   return JSON.parse(jsonText);

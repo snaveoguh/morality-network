@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-contract MoralityRegistry {
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
+contract MoralityRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     enum EntityType { URL, DOMAIN, ADDRESS, CONTRACT }
 
     struct Entity {
@@ -37,7 +41,6 @@ contract MoralityRegistry {
     mapping(bytes32 => address) public approvedClaimants;
     mapping(bytes32 => CanonicalClaim) public canonicalClaims;
     mapping(bytes32 => ClaimRevision[]) private claimRevisions;
-    address public owner;
 
     uint256 public constant MAX_CLAIM_LENGTH = 500;
 
@@ -55,16 +58,17 @@ contract MoralityRegistry {
         address updatedBy,
         uint64 version
     );
-    event OwnershipTransferred(address indexed oldOwner, address indexed newOwner);
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
-    }
-
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        owner = msg.sender;
+        _disableInitializers();
     }
+
+    function initialize() public initializer {
+        __Ownable_init(msg.sender);
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function registerEntity(string calldata identifier, EntityType entityType) external returns (bytes32) {
         bytes32 entityHash = keccak256(abi.encodePacked(identifier));
@@ -101,12 +105,6 @@ contract MoralityRegistry {
         delete approvedClaimants[entityHash];
         entities[entityHash].claimedOwner = msg.sender;
         emit OwnershipClaimed(entityHash, msg.sender);
-    }
-
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "Zero address");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
     }
 
     function getEntity(bytes32 entityHash) external view returns (Entity memory) {
@@ -199,10 +197,12 @@ contract MoralityRegistry {
     }
 
     function _canEditEntity(Entity storage entity) internal view returns (bool) {
-        if (msg.sender == owner) return true;
+        if (msg.sender == owner()) return true;
         if (entity.claimedOwner != address(0)) {
             return entity.claimedOwner == msg.sender;
         }
         return entity.registeredBy == msg.sender;
     }
+
+    uint256[50] private __gap;
 }

@@ -15,7 +15,11 @@ export function FeedItem({ item }: FeedItemProps) {
   const { isConnected } = useAccount();
   const entityHash = computeEntityHash(item.link);
   const timeSince = getTimeSince(item.pubDate);
-  const previewText = item.canonicalClaim || item.description;
+  const rawPreview = item.canonicalClaim || item.description;
+  // Suppress preview if it's just parroting the headline
+  const previewText = rawPreview && !isDuplicateOfTitle(rawPreview, item.title)
+    ? rawPreview
+    : undefined;
 
   return (
     <article className="group border border-[var(--rule-light)] bg-[var(--paper)] p-5 transition-colors hover:border-[var(--rule)]">
@@ -76,6 +80,21 @@ export function FeedItem({ item }: FeedItemProps) {
       </div>
     </article>
   );
+}
+
+/** Returns true when the preview text is just a restatement of the headline. */
+function isDuplicateOfTitle(preview: string, title: string): boolean {
+  const normalize = (s: string) =>
+    s.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+  const p = normalize(preview);
+  const t = normalize(title);
+  if (!p || !t) return false;
+  // Exact match, one contains the other, or >80% overlap
+  if (p === t || t.startsWith(p) || p.startsWith(t)) return true;
+  const pWords = new Set(p.split(" "));
+  const tWords = new Set(t.split(" "));
+  const overlap = [...pWords].filter((w) => tWords.has(w)).length;
+  return overlap / Math.max(pWords.size, tWords.size) > 0.8;
 }
 
 function getTimeSince(dateStr: string): string {

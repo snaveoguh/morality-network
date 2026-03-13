@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 // ─── Types (mirroring API responses) ────────────────────────────────────────
 
@@ -65,7 +65,120 @@ interface BusMessage {
   topic: string;
   payload: unknown;
   timestamp: number;
+  meta?: {
+    sender?: {
+      address?: string | null;
+      ens?: string | null;
+    };
+    humanPrompt?: boolean;
+    promptText?: string | null;
+    promptPreview?: string | null;
+    relayedFrom?: string | null;
+    receivedAt?: number;
+    bridge?: {
+      verified?: boolean;
+      trusted?: boolean;
+      signer?: string | null;
+      origin?: string | null;
+      reason?: string | null;
+      relayAgeMs?: number | null;
+    };
+  };
   _bridged?: boolean;
+}
+
+interface ThroughputTopic {
+  topic: string;
+  count: number;
+  throughputPerMinute: number;
+  lastSeenAt: number;
+  lastFrom: string;
+  lastTo: string;
+}
+
+interface SwarmConsoleState {
+  generatedAt: number;
+  mode: "worker" | "request";
+  throughput: {
+    window: {
+      since: number;
+      until: number;
+      windowMs: number;
+      minutes: number;
+    };
+    totals: {
+      events: number;
+      throughputPerMinute: number;
+      latestEventAt: number | null;
+    };
+    topics: ThroughputTopic[];
+  };
+  bridge: {
+    configured: boolean;
+    consumer: string;
+    topics: string[];
+    cursor: {
+      lastTimestampMs: number;
+      updatedAt: number;
+      lastEventId: string | null;
+    } | null;
+    latestTopicEventAt: number | null;
+    lagMs: number | null;
+    pendingEvents: number;
+    verifiedRelayCount: number;
+    trustedRelayCount: number;
+    uniqueSigners: string[];
+    signature: {
+      required: boolean;
+      allowlistedSigners: number;
+    };
+  };
+  trader: {
+    decisions: Array<{
+      id: string;
+      topic: string;
+      timestamp: number;
+      market: string;
+      side: string | null;
+      sizeUsd: number | null;
+      pnlUsd: number | null;
+      executionVenue: string | null;
+      reason: string | null;
+      dryRun: boolean | null;
+      payload: Record<string, unknown>;
+    }>;
+  };
+  ai: {
+    windowHours: number;
+    summary: {
+      totals?: {
+        invocations: number;
+        estimatedCostUsd: number;
+        avgLatencyMs: number;
+      };
+      providers?: Array<{
+        provider?: string;
+        invocations: number;
+        estimatedCostUsd: number;
+        avgLatencyMs: number;
+        success: number;
+        error: number;
+      }>;
+    } | null;
+    budgets: Array<{
+      provider: string;
+      allowed: boolean;
+      windowHours: number;
+      totalUsd: number | null;
+      providerUsd: number | null;
+      totalSpentUsd: number;
+      providerSpentUsd: number;
+      totalRemainingUsd: number | null;
+      providerRemainingUsd: number | null;
+      totalExceeded: boolean;
+      providerExceeded: boolean;
+    }>;
+  };
 }
 
 // ─── Page ───────────────────────────────────────────────────────────────────
@@ -75,23 +188,32 @@ export default function BotsPage() {
   const [launches, setLaunches] = useState<TokenLaunch[]>([]);
   const [scannerStats, setScannerStats] = useState<Record<string, number>>({});
   const [busMessages, setBusMessages] = useState<BusMessage[]>([]);
+  const [consoleState, setConsoleState] = useState<SwarmConsoleState | null>(null);
+  const [streamStatus, setStreamStatus] = useState<"connecting" | "live" | "degraded">("connecting");
   const [lastRefresh, setLastRefresh] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"agents" | "scanner" | "bus">("agents");
+  const [activeTab, setActiveTab] = useState<"console" | "agents" | "scanner" | "bus">("console");
+  const lastConsoleRefreshRef = useRef(0);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (forceScannerRefresh = false) => {
     setLoading(true);
     try {
-      const [agentsRes, scannerRes, busRes] = await Promise.all([
+      const scannerUrl = forceScannerRefresh
+        ? "/api/agents/scanner?limit=100&refresh=1"
+        : "/api/agents/scanner?limit=100";
+      const [agentsRes, scannerRes, busRes, consoleRes] = await Promise.all([
         fetch("/api/agents").then((r) => r.json()),
-        fetch("/api/agents/scanner?limit=100").then((r) => r.json()),
+        fetch(scannerUrl).then((r) => r.json()),
         fetch("/api/agents/bus?limit=100").then((r) => r.json()),
+        fetch("/api/agents/console?windowMs=900000").then((r) => r.json()),
       ]);
       setAgents(agentsRes.agents ?? []);
       setLaunches(scannerRes.launches ?? []);
       setScannerStats(scannerRes.agent?.stats ?? {});
       setBusMessages(busRes.messages ?? []);
+      setConsoleState(consoleRes?.error ? null : (consoleRes as SwarmConsoleState));
       setLastRefresh(Date.now());
+      lastConsoleRefreshRef.current = Date.now();
     } catch (err) {
       console.error("[Bots] Refresh failed:", err);
     } finally {
@@ -100,10 +222,60 @@ export default function BotsPage() {
   }, []);
 
   useEffect(() => {
-    refresh();
-    const interval = setInterval(refresh, 15_000);
+    refresh(false);
+    const interval = setInterval(() => refresh(false), 15_000);
     return () => clearInterval(interval);
   }, [refresh]);
+
+  useEffect(() => {
+    const es = new EventSource("/api/agents/events/stream?limit=100&historyMs=300000");
+    setStreamStatus("connecting");
+
+    es.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data) as
+          | { type: "connected" | "heartbeat" }
+          | { type: "event"; event: BusMessage }
+          | { type: "error"; message?: string };
+
+        if (payload.type === "connected" || payload.type === "heartbeat") {
+          setStreamStatus("live");
+          return;
+        }
+
+        if (payload.type === "error") {
+          setStreamStatus("degraded");
+          return;
+        }
+
+        if (payload.type === "event") {
+          setStreamStatus("live");
+          setLastRefresh(Date.now());
+          setBusMessages((current) => {
+            const existing = new Set(current.map((message) => message.id));
+            if (existing.has(payload.event.id)) {
+              return current;
+            }
+            return [payload.event, ...current].slice(0, 100);
+          });
+          if (Date.now() - lastConsoleRefreshRef.current > 5_000) {
+            lastConsoleRefreshRef.current = Date.now();
+            void refresh(false);
+          }
+        }
+      } catch {
+        setStreamStatus("degraded");
+      }
+    };
+
+    es.onerror = () => {
+      setStreamStatus("degraded");
+    };
+
+    return () => {
+      es.close();
+    };
+  }, []);
 
   return (
     <div>
@@ -113,15 +285,20 @@ export default function BotsPage() {
           Bot Telemetry
         </h1>
         <p className="mt-1 font-body-serif text-sm italic text-[var(--ink-light)]">
-          Raw agent state, token scanner output, and inter-agent message bus.
+          Live swarm console, token scanner output, and inter-agent message telemetry.
         </p>
         <div className="mt-2 flex items-center gap-3">
           <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
             Last refresh:{" "}
             {lastRefresh ? new Date(lastRefresh).toLocaleTimeString() : "..."}
           </span>
+          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+            Stream: {streamStatus}
+          </span>
           <button
-            onClick={refresh}
+            onClick={() => {
+              void refresh(true);
+            }}
             disabled={loading}
             className="font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--ink-faint)] underline hover:text-[var(--ink)] disabled:opacity-40"
           >
@@ -132,7 +309,7 @@ export default function BotsPage() {
 
       {/* ── Tab Switcher ────────────────────────────────── */}
       <div className="mb-4 flex gap-0 border-b border-[var(--rule-light)]">
-        {(["agents", "scanner", "bus"] as const).map((tab) => (
+        {(["console", "agents", "scanner", "bus"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -142,12 +319,17 @@ export default function BotsPage() {
                 : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
             }`}
           >
+            {tab === "console" && "Console"}
             {tab === "agents" && `Agents (${agents.length})`}
             {tab === "scanner" && `Scanner (${launches.length})`}
             {tab === "bus" && `Bus (${busMessages.length})`}
           </button>
         ))}
       </div>
+
+      {activeTab === "console" && (
+        <SwarmConsolePanel state={consoleState} />
+      )}
 
       {/* ── Agents Tab ──────────────────────────────────── */}
       {activeTab === "agents" && (
@@ -170,7 +352,9 @@ export default function BotsPage() {
           <div className="mt-4 space-y-0">
             {launches.length === 0 ? (
               <p className="font-mono text-[10px] text-[var(--ink-faint)]">
-                No launches detected yet. Scanner polls Base L2 every 4 seconds.
+                No launches visible yet. In worker mode this page reads persisted Base launch data
+                from the indexer. Refresh Now will trigger a DexScreener-backed backend sync if
+                the store is empty.
               </p>
             ) : (
               launches.map((launch) => (
@@ -197,6 +381,228 @@ export default function BotsPage() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function SwarmConsolePanel({ state }: { state: SwarmConsoleState | null }) {
+  if (!state) {
+    return (
+      <div className="border border-[var(--rule-light)] p-4">
+        <p className="font-mono text-[10px] text-[var(--ink-faint)]">
+          Console metrics are not available yet. The live bus still works, but the aggregate view
+          needs the indexer-backed runtime.
+        </p>
+      </div>
+    );
+  }
+
+  const totalCost = state.ai.summary?.totals?.estimatedCostUsd ?? 0;
+  const totalLatency = state.ai.summary?.totals?.avgLatencyMs ?? 0;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <ConsoleMetricCard
+          label="Event Throughput"
+          value={`${state.throughput.totals.throughputPerMinute.toFixed(2)}/min`}
+          detail={`${state.throughput.totals.events} events in ${state.throughput.window.minutes}m`}
+        />
+        <ConsoleMetricCard
+          label="Bridge Lag"
+          value={state.bridge.lagMs == null ? "n/a" : formatDurationMs(state.bridge.lagMs)}
+          detail={
+            state.bridge.configured
+              ? `${state.bridge.pendingEvents} pending for ${state.bridge.consumer}`
+              : "Bridge not configured"
+          }
+        />
+        <ConsoleMetricCard
+          label="Trader Decisions"
+          value={String(state.trader.decisions.length)}
+          detail={
+            state.trader.decisions[0]
+              ? `${state.trader.decisions[0].topic} ${timeSince(state.trader.decisions[0].timestamp)} ago`
+              : "No trader events yet"
+          }
+        />
+        <ConsoleMetricCard
+          label="AI Spend"
+          value={`$${totalCost.toFixed(2)}`}
+          detail={
+            state.ai.summary
+              ? `${state.ai.summary.totals?.invocations ?? 0} calls, ${totalLatency}ms avg latency`
+              : "No AI telemetry yet"
+          }
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+        <ConsolePanel title="Topic Throughput" eyebrow={`Window ${state.throughput.window.minutes}m`}>
+          <div className="space-y-0">
+            {state.throughput.topics.length === 0 ? (
+              <p className="font-mono text-[10px] text-[var(--ink-faint)]">
+                No durable events in the current window.
+              </p>
+            ) : (
+              state.throughput.topics.slice(0, 10).map((topic) => (
+                <div
+                  key={topic.topic}
+                  className="flex items-center gap-3 border-b border-[var(--rule-light)] py-2"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--ink)]">
+                      {topic.topic}
+                    </p>
+                    <p className="font-mono text-[8px] text-[var(--ink-faint)]">
+                      {topic.lastFrom} → {topic.lastTo} • last {timeSince(topic.lastSeenAt)} ago
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-headline text-lg text-[var(--ink)]">{topic.count}</p>
+                    <p className="font-mono text-[8px] text-[var(--ink-faint)]">
+                      {topic.throughputPerMinute.toFixed(2)}/min
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </ConsolePanel>
+
+        <ConsolePanel title="Bridge Health" eyebrow={state.bridge.consumer}>
+          <div className="space-y-3">
+            <ConsoleKeyValue
+              label="Signature Policy"
+              value={
+                state.bridge.signature.required
+                  ? `required (${state.bridge.signature.allowlistedSigners} allowlisted)`
+                  : "optional"
+              }
+            />
+            <ConsoleKeyValue
+              label="Cursor"
+              value={
+                state.bridge.cursor
+                  ? `${timeSince(state.bridge.cursor.updatedAt)} ago`
+                  : "no persisted cursor"
+              }
+            />
+            <ConsoleKeyValue
+              label="Verified Relays"
+              value={`${state.bridge.verifiedRelayCount} verified / ${state.bridge.trustedRelayCount} trusted`}
+            />
+            <ConsoleKeyValue
+              label="Signers"
+              value={
+                state.bridge.uniqueSigners.length > 0
+                  ? state.bridge.uniqueSigners.map((signer) => shortenAddress(signer) ?? signer).join(", ")
+                  : "none seen in window"
+              }
+            />
+            <ConsoleKeyValue
+              label="Lag"
+              value={state.bridge.lagMs == null ? "n/a" : formatDurationMs(state.bridge.lagMs)}
+            />
+          </div>
+        </ConsolePanel>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <ConsolePanel title="Trader Decisions" eyebrow="Recent execution events">
+          <div className="space-y-0">
+            {state.trader.decisions.length === 0 ? (
+              <p className="font-mono text-[10px] text-[var(--ink-faint)]">
+                No recent trader decisions recorded.
+              </p>
+            ) : (
+              state.trader.decisions.slice(0, 8).map((decision) => (
+                <div
+                  key={decision.id}
+                  className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-b border-[var(--rule-light)] py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--ink)]">
+                      {decision.topic} • {decision.market}
+                    </p>
+                    <p className="font-mono text-[8px] text-[var(--ink-faint)]">
+                      {(decision.side ?? "n/a").toUpperCase()} • {decision.reason ?? "no reason"} •{" "}
+                      {decision.executionVenue ?? "unknown venue"} • {timeSince(decision.timestamp)} ago
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono text-[9px] text-[var(--ink)]">
+                      {decision.sizeUsd == null ? "--" : `$${formatCompact(decision.sizeUsd)}`}
+                    </p>
+                    <p
+                      className={`font-mono text-[8px] ${
+                        decision.pnlUsd == null
+                          ? "text-[var(--ink-faint)]"
+                          : decision.pnlUsd >= 0
+                            ? "text-[#2d6a2e]"
+                            : "text-[var(--accent-red)]"
+                      }`}
+                    >
+                      {decision.pnlUsd == null
+                        ? decision.dryRun
+                          ? "dry run"
+                          : "--"
+                        : `${decision.pnlUsd >= 0 ? "+" : ""}$${formatCompact(Math.abs(decision.pnlUsd))}`}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </ConsolePanel>
+
+        <ConsolePanel title="AI Providers" eyebrow={`${state.ai.windowHours}h budget window`}>
+          <div className="space-y-2">
+            {state.ai.budgets.map((budget) => {
+              const spend = budget.providerSpentUsd ?? 0;
+              const cap = budget.providerUsd;
+              const ratio = cap && cap > 0 ? Math.min(1, spend / cap) : 0;
+              return (
+                <div key={budget.provider} className="border-b border-[var(--rule-light)] pb-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--ink)]">
+                      {budget.provider}
+                    </p>
+                    <p
+                      className={`font-mono text-[8px] uppercase tracking-[0.15em] ${
+                        budget.allowed ? "text-[#2d6a2e]" : "text-[var(--accent-red)]"
+                      }`}
+                    >
+                      {budget.allowed ? "allowed" : "blocked"}
+                    </p>
+                  </div>
+                  <p className="mt-0.5 font-mono text-[8px] text-[var(--ink-faint)]">
+                    Spend ${spend.toFixed(2)}
+                    {cap != null ? ` / $${cap.toFixed(2)}` : " / no provider cap"}
+                  </p>
+                  <div className="mt-1 h-1.5 bg-[var(--rule-light)]">
+                    <div
+                      className={`h-full ${budget.allowed ? "bg-[var(--ink)]" : "bg-[var(--accent-red)]"}`}
+                      style={{ width: `${Math.max(4, ratio * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            {state.ai.summary?.providers && state.ai.summary.providers.length > 0 && (
+              <div className="pt-1">
+                {state.ai.summary.providers.slice(0, 4).map((provider) => (
+                  <ConsoleKeyValue
+                    key={provider.provider ?? "unknown"}
+                    label={`${provider.provider ?? "unknown"} latency`}
+                    value={`${provider.avgLatencyMs}ms avg • ${provider.invocations} calls`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </ConsolePanel>
+      </div>
     </div>
   );
 }
@@ -494,6 +900,12 @@ function LaunchRow({ launch }: { launch: TokenLaunch }) {
 function BusMessageRow({ message }: { message: BusMessage }) {
   const [expanded, setExpanded] = useState(false);
   const age = timeSince(message.timestamp);
+  const senderLabel =
+    message.meta?.sender?.ens ??
+    shortenAddress(message.meta?.sender?.address ?? null);
+  const bridgeSigner = shortenAddress(message.meta?.bridge?.signer ?? null);
+  const bridgeVerified = Boolean(message.meta?.bridge?.verified);
+  const bridgeTrusted = Boolean(message.meta?.bridge?.trusted);
 
   return (
     <div className="border-b border-[var(--rule-light)]">
@@ -507,8 +919,22 @@ function BusMessageRow({ message }: { message: BusMessage }) {
         <span className="font-mono text-[9px] text-[var(--ink-faint)]">
           {message.from} &rarr; {message.to}
         </span>
+        {message.meta?.humanPrompt && (
+          <span className="font-mono text-[8px] text-[#2d6a2e]">
+            sender {senderLabel ?? "unknown"}
+          </span>
+        )}
         {message._bridged && (
           <span className="font-mono text-[8px] text-[#6E9EF5]">bridged</span>
+        )}
+        {bridgeVerified && (
+          <span
+            className={`font-mono text-[8px] ${
+              bridgeTrusted ? "text-[#2d6a2e]" : "text-[#b8860b]"
+            }`}
+          >
+            {bridgeTrusted ? "trusted signer" : "verified signer"} {bridgeSigner ?? ""}
+          </span>
         )}
         <span className="ml-auto flex-shrink-0 font-mono text-[8px] text-[var(--ink-faint)]">
           {age} ago
@@ -522,6 +948,61 @@ function BusMessageRow({ message }: { message: BusMessage }) {
         <div className="border-t border-dashed border-[var(--rule-light)] bg-[var(--paper)] px-4 py-3">
           <DetailLabel>Message ID</DetailLabel>
           <DetailMono>{message.id}</DetailMono>
+          {message.meta?.humanPrompt && (
+            <>
+              <DetailLabel>Human Sender</DetailLabel>
+              <DetailMono>
+                {message.meta.sender?.ens ?? "Unknown ENS"}
+                {message.meta.sender?.address
+                  ? ` (${message.meta.sender.address})`
+                  : ""}
+              </DetailMono>
+              {message.meta.promptText && (
+                <>
+                  <DetailLabel>Prompt</DetailLabel>
+                  <pre className="mt-1 whitespace-pre-wrap break-all font-mono text-[9px] text-[var(--ink-light)]">
+                    {message.meta.promptText}
+                  </pre>
+                </>
+              )}
+            </>
+          )}
+          {message.meta?.relayedFrom && (
+            <>
+              <DetailLabel>Relay Source</DetailLabel>
+              <DetailMono>{message.meta.relayedFrom}</DetailMono>
+            </>
+          )}
+          {message.meta?.receivedAt && (
+            <>
+              <DetailLabel>Received</DetailLabel>
+              <DetailMono>
+                {new Date(message.meta.receivedAt).toLocaleString()}
+              </DetailMono>
+            </>
+          )}
+          {message.meta?.bridge && (
+            <>
+              <DetailLabel>Bridge Signature</DetailLabel>
+              <DetailMono>
+                {message.meta.bridge.verified ? "verified" : "unverified"}
+                {message.meta.bridge.trusted ? " • trusted" : ""}
+                {message.meta.bridge.signer ? ` • ${message.meta.bridge.signer}` : ""}
+              </DetailMono>
+              {message.meta.bridge.origin && (
+                <>
+                  <DetailLabel>Bridge Origin</DetailLabel>
+                  <DetailMono>{message.meta.bridge.origin}</DetailMono>
+                </>
+              )}
+              {message.meta.bridge.reason && (
+                <>
+                  <DetailLabel>Bridge Note</DetailLabel>
+                  <DetailMono>{message.meta.bridge.reason}</DetailMono>
+                </>
+              )}
+            </>
+          )}
           <DetailLabel>Payload</DetailLabel>
           <pre className="mt-1 max-h-60 overflow-auto whitespace-pre-wrap break-all font-mono text-[9px] text-[var(--ink-light)]">
             {JSON.stringify(message.payload, null, 2)}
@@ -551,6 +1032,59 @@ function StatusPill({ status }: { status: string }) {
     >
       {status}
     </span>
+  );
+}
+
+function ConsoleMetricCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="border border-[var(--rule-light)] p-3">
+      <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+        {label}
+      </p>
+      <p className="mt-1 font-headline text-2xl text-[var(--ink)]">{value}</p>
+      <p className="mt-1 font-mono text-[8px] text-[var(--ink-faint)]">{detail}</p>
+    </div>
+  );
+}
+
+function ConsolePanel({
+  title,
+  eyebrow,
+  children,
+}: {
+  title: string;
+  eyebrow: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="border border-[var(--rule-light)] p-4">
+      <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+        {eyebrow}
+      </p>
+      <h2 className="mt-1 font-headline text-2xl text-[var(--ink)]">{title}</h2>
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
+function ConsoleKeyValue({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <span className="font-mono text-[8px] uppercase tracking-[0.15em] text-[var(--ink-faint)]">
+        {label}
+      </span>
+      <span className="text-right font-mono text-[9px] text-[var(--ink-light)]">
+        {value}
+      </span>
+    </div>
   );
 }
 
@@ -601,6 +1135,12 @@ function formatCompact(n: number): string {
   return n.toFixed(6);
 }
 
+function shortenAddress(address: string | null): string | null {
+  if (!address) return null;
+  if (address.length <= 14) return address;
+  return `${address.slice(0, 6)}…${address.slice(-4)}`;
+}
+
 function timeSince(ms: number): string {
   const seconds = Math.floor((Date.now() - ms) / 1000);
   if (seconds < 5) return "just now";
@@ -608,4 +1148,11 @@ function timeSince(ms: number): string {
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
   return `${Math.floor(seconds / 86400)}d`;
+}
+
+function formatDurationMs(ms: number): string {
+  if (ms < 1_000) return `${ms}ms`;
+  if (ms < 60_000) return `${(ms / 1_000).toFixed(1)}s`;
+  if (ms < 3_600_000) return `${(ms / 60_000).toFixed(1)}m`;
+  return `${(ms / 3_600_000).toFixed(1)}h`;
 }

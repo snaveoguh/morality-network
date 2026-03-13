@@ -5,14 +5,16 @@ import "./MoralityRegistry.sol";
 import "./MoralityRatings.sol";
 import "./MoralityTipping.sol";
 import "./MoralityComments.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract MoralityLeaderboard {
+contract MoralityLeaderboard is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     MoralityRegistry public registry;
     MoralityRatings public ratings;
     MoralityTipping public tipping;
     MoralityComments public comments;
 
-    address public owner;
     address public aiOracle;
 
     // entityHash => AI score (0-10000, representing 0.00-100.00)
@@ -23,23 +25,30 @@ contract MoralityLeaderboard {
     event AIScoreUpdated(bytes32 indexed entityHash, uint256 score, uint256 timestamp);
     event OracleUpdated(address indexed oldOracle, address indexed newOracle);
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
-    }
-
     modifier onlyOracle() {
-        require(msg.sender == aiOracle || msg.sender == owner, "Not oracle");
+        require(msg.sender == aiOracle || msg.sender == owner(), "Not oracle");
         _;
     }
 
-    constructor(address _registry, address _ratings, address _tipping, address _comments) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
+        address _registry,
+        address _ratings,
+        address _tipping,
+        address _comments
+    ) public initializer {
+        __Ownable_init(msg.sender);
         registry = MoralityRegistry(_registry);
         ratings = MoralityRatings(_ratings);
         tipping = MoralityTipping(payable(_tipping));
         comments = MoralityComments(_comments);
-        owner = msg.sender;
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function setAIOracle(address _oracle) external onlyOwner {
         emit OracleUpdated(aiOracle, _oracle);
@@ -73,7 +82,6 @@ contract MoralityLeaderboard {
         (uint256 avgRating, uint256 ratingCount) = ratings.getAverageRating(entityHash);
         uint256 ratingComponent = 0;
         if (ratingCount > 0) {
-            // avgRating is 100-500 (1.00-5.00 * 100), normalize to 0-10000
             ratingComponent = ((avgRating - 100) * 10000) / 400;
         }
 
@@ -84,7 +92,6 @@ contract MoralityLeaderboard {
         uint256 tipTotal = tipping.entityTipTotals(entityHash);
         uint256 tipComponent = 0;
         if (tipTotal > 0) {
-            // Simple tier: 0.001 ETH = 2500, 0.01 ETH = 5000, 0.1 ETH = 7500, 1+ ETH = 10000
             if (tipTotal >= 1 ether) tipComponent = 10000;
             else if (tipTotal >= 0.1 ether) tipComponent = 7500;
             else if (tipTotal >= 0.01 ether) tipComponent = 5000;
@@ -105,8 +112,5 @@ contract MoralityLeaderboard {
         return (ratingComponent * 40 + aiComponent * 30 + tipComponent * 20 + engagementComponent * 10) / 100;
     }
 
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "Zero address");
-        owner = newOwner;
-    }
+    uint256[50] private __gap;
 }

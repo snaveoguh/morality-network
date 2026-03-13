@@ -10,6 +10,7 @@ import {
   detectContradictions,
   type AgentClaimVariant,
 } from "./agent-swarm";
+import { loadTtlValue, type TtlCacheEntry } from "./ttl-cache";
 
 // ============================================================================
 // MORALITY INDEX — Multi-signal sentiment scoring per topic
@@ -25,6 +26,9 @@ import {
 // ============================================================================
 
 // ── Topic Taxonomy ──────────────────────────────────────────────────────────
+
+const MARKET_DATA_CACHE_TTL_MS = 60_000;
+const marketDataCache = new Map<string, TtlCacheEntry<MarketData>>();
 
 export interface TopicDefinition {
   slug: string;
@@ -118,6 +122,7 @@ export interface TopicSentimentResult {
   trend: number;           // delta from previous
   signals: TopicSignals;
   articleCount: number;
+  eventCount?: number;
   sourceCount: number;
   topSources: string[];
   lastUpdated: string;     // ISO
@@ -129,6 +134,11 @@ export interface SentimentSnapshot {
   globalScore: number;
   globalTrend: number;
   feedItemsScanned: number;
+  corpusMode?: "feed" | "event";
+  eventCount?: number;
+  rawArticleCount?: number;
+  sourceRegistrySize?: number;
+  queuedCrawlTargets?: number;
 }
 
 export interface MarketData {
@@ -150,6 +160,30 @@ const FACTUALITY_WEIGHTS: Record<FactualityRating, number> = {
 function factualityWeight(rating: FactualityRating | undefined): number {
   if (!rating) return 0.5; // unknown source gets middle weight
   return FACTUALITY_WEIGHTS[rating] ?? 0.5;
+}
+
+function itemSourceNames(item: FeedItem): string[] {
+  const names = item.sourceNames?.filter(Boolean) ?? [];
+  if (names.length > 0) return Array.from(new Set(names));
+  return item.source ? [item.source] : [];
+}
+
+function itemFactualityWeight(item: FeedItem): number {
+  const names = itemSourceNames(item);
+  if (names.length === 0) {
+    return factualityWeight(item.bias?.factuality);
+  }
+
+  const weights = names
+    .map((name) => getSourceBias(name)?.factuality)
+    .map((rating) => factualityWeight(rating))
+    .filter((value) => Number.isFinite(value));
+
+  if (weights.length === 0) {
+    return factualityWeight(item.bias?.factuality);
+  }
+
+  return weights.reduce((sum, value) => sum + value, 0) / weights.length;
 }
 
 // ── Signal Computation ──────────────────────────────────────────────────────
@@ -185,8 +219,7 @@ function computeSentimentSignal(items: FeedItem[]): number {
   for (const item of items) {
     const text = `${item.title} ${item.description || ""}`;
     const rawSentiment = scoreSentiment(text); // -1 to +1
-    const bias = getSourceBias(item.source);
-    const weight = factualityWeight(bias?.factuality);
+    const weight = itemFactualityWeight(item);
 
     weightedSum += rawSentiment * weight;
     totalWeight += weight;
@@ -271,10 +304,12 @@ function computeBiasSpreadSignal(items: FeedItem[]): number {
   const seenSources = new Set<string>();
 
   for (const item of items) {
-    if (seenSources.has(item.source)) continue;
-    seenSources.add(item.source);
-    const bias = getSourceBias(item.source);
-    if (bias) biases.push(bias);
+    for (const sourceName of itemSourceNames(item)) {
+      if (seenSources.has(sourceName)) continue;
+      seenSources.add(sourceName);
+      const bias = getSourceBias(sourceName);
+      if (bias) biases.push(bias);
+    }
   }
 
   if (biases.length < 2) return 50;
@@ -314,7 +349,10 @@ function computeCompositeScore(signals: TopicSignals): number {
 
 // ── Topic Sentiment Computation ─────────────────────────────────────────────
 
-function matchesPattern(item: FeedItem, topic: TopicDefinition): boolean {
+export function matchesTopicDefinition(
+  item: Pick<FeedItem, "title" | "description">,
+  topic: TopicDefinition,
+): boolean {
   const text = `${item.title} ${item.description || ""}`;
   return topic.pattern.test(text);
 }
@@ -325,11 +363,15 @@ function computeTopicSentiment(
   marketData: MarketData | null,
   previousScore: number | null,
 ): TopicSentimentResult {
-  const items = allItems.filter((item) => matchesPattern(item, topic));
+  const items = allItems.filter((item) => matchesTopicDefinition(item, topic));
 
   // Unique sources
-  const sources = new Set(items.map((i) => i.source));
+  const sources = new Set(items.flatMap((item) => itemSourceNames(item)));
   const topSources = Array.from(sources).slice(0, 5);
+  const rawArticleCount = items.reduce(
+    (sum, item) => sum + (item.rawArticleCount ?? 1),
+    0
+  );
 
   // Compute all signals
   const sentimentScore = computeSentimentSignal(items);
@@ -362,7 +404,8 @@ function computeTopicSentiment(
     previousScore,
     trend,
     signals,
-    articleCount: items.length,
+    articleCount: rawArticleCount,
+    eventCount: items.length,
     sourceCount: sources.size,
     topSources,
     lastUpdated: new Date().toISOString(),
@@ -415,6 +458,7 @@ export function computeSentimentSnapshot(
     globalScore,
     globalTrend,
     feedItemsScanned: allItems.length,
+    corpusMode: "feed",
   };
 }
 
@@ -428,7 +472,7 @@ const COINGECKO_IDS = TOPIC_TAXONOMY
 /**
  * Fetch 24h price changes from CoinGecko.
  */
-export async function fetchMarketData(): Promise<MarketData> {
+async function fetchMarketDataUncached(): Promise<MarketData> {
   if (!COINGECKO_IDS) return { priceChanges: {} };
 
   try {
@@ -453,6 +497,15 @@ export async function fetchMarketData(): Promise<MarketData> {
   } catch {
     return { priceChanges: {} };
   }
+}
+
+export async function fetchMarketData(): Promise<MarketData> {
+  return loadTtlValue(
+    marketDataCache,
+    "market-data",
+    MARKET_DATA_CACHE_TTL_MS,
+    fetchMarketDataUncached,
+  );
 }
 
 // ── Sentiment Label ─────────────────────────────────────────────────────────

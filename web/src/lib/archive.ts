@@ -2,12 +2,13 @@ import "server-only";
 
 import path from "node:path";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import type { FeedItem } from "./rss";
+import { DEFAULT_FEEDS, fetchAllFeeds, type FeedItem } from "./rss";
 import { computeEntityHash } from "./entity";
 import { extractCanonicalClaim } from "./claim-extract";
 import { normalizeUrl, verifyEvidence } from "./evidence-verify";
+import { fetchIndexerJson, getIndexerBackendUrl } from "./server/indexer-backend";
 
-interface ArchivedFeedItem {
+export interface ArchivedFeedItem {
   hash: `0x${string}`;
   id: string;
   title: string;
@@ -54,6 +55,36 @@ const EMPTY_ARCHIVE: ArticleArchiveFile = {
 let cache: ArticleArchiveFile | null = null;
 let cacheLoadedAtMs = 0;
 const CACHE_TTL_MS = 30_000;
+const REMOTE_ARCHIVE_LIMIT = 100_000;
+
+async function fetchRemoteArchivedItem(
+  hash: `0x${string}`,
+): Promise<ArchivedFeedItem | null> {
+  const payload = await fetchIndexerJson<{ item?: ArchivedFeedItem }>(
+    `/api/v1/archive/articles/${hash}`,
+  );
+  return payload.item ?? null;
+}
+
+async function fetchRemoteArchivedItems(): Promise<ArchivedFeedItem[]> {
+  const payload = await fetchIndexerJson<{ items?: ArchivedFeedItem[] }>(
+    `/api/v1/archive/articles?limit=${REMOTE_ARCHIVE_LIMIT}`,
+    { timeoutMs: 20_000 },
+  );
+  return Array.isArray(payload.items) ? payload.items : [];
+}
+
+async function upsertRemoteArchivedItems(items: FeedItem[]): Promise<void> {
+  await fetchIndexerJson(
+    "/api/v1/archive/articles/upsert",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ items }),
+      timeoutMs: 20_000,
+    },
+  );
+}
 
 async function loadArchive(): Promise<ArticleArchiveFile> {
   const now = Date.now();
@@ -107,9 +138,93 @@ function toFeedItem(record: ArchivedFeedItem): FeedItem {
   };
 }
 
+function toArchivedRecord(item: FeedItem): ArchivedFeedItem | null {
+  if (!item.link) return null;
+
+  const hash = computeEntityHash(item.link) as `0x${string}`;
+  const now = new Date().toISOString();
+  const canonicalClaim =
+    item.canonicalClaim ||
+    extractCanonicalClaim({
+      title: item.title,
+      description: item.description,
+      url: item.link,
+    });
+
+  return {
+    hash,
+    id: item.id || hash,
+    title: item.title,
+    link: item.link,
+    description: item.description || "",
+    pubDate: item.pubDate,
+    source: item.source,
+    sourceUrl: item.sourceUrl || "",
+    category: item.category,
+    imageUrl: item.imageUrl ?? undefined,
+    bias: item.bias ?? undefined,
+    tags: item.tags ?? [],
+    canonicalClaim,
+    firstSeenAt: now,
+    lastSeenAt: now,
+    seenCount: 1,
+    archivedAt: now,
+  };
+}
+
+async function mergeCurrentFeedIntoArchive(
+  records: ArchivedFeedItem[],
+): Promise<ArchivedFeedItem[]> {
+  try {
+    const liveItems = await fetchAllFeeds(DEFAULT_FEEDS);
+    if (liveItems.length === 0) return records;
+
+    const merged = new Map<string, ArchivedFeedItem>(
+      records.map((record) => [record.hash, record]),
+    );
+
+    for (const item of liveItems) {
+      const liveRecord = toArchivedRecord(item);
+      if (!liveRecord) continue;
+
+      const existing = merged.get(liveRecord.hash);
+      if (!existing) {
+        merged.set(liveRecord.hash, liveRecord);
+        continue;
+      }
+
+      merged.set(liveRecord.hash, {
+        ...existing,
+        description: existing.description || liveRecord.description,
+        imageUrl: existing.imageUrl ?? liveRecord.imageUrl,
+        tags: existing.tags?.length ? existing.tags : liveRecord.tags,
+        canonicalClaim:
+          existing.canonicalClaim && existing.canonicalClaim !== "Claim unavailable."
+            ? existing.canonicalClaim
+            : liveRecord.canonicalClaim,
+        lastSeenAt: liveRecord.lastSeenAt,
+      });
+    }
+
+    return Array.from(merged.values());
+  } catch (err) {
+    console.warn("[archive] live feed merge failed:", err);
+    return records;
+  }
+}
+
 export async function getArchivedFeedItemByHash(
   hash: `0x${string}`
 ): Promise<FeedItem | null> {
+  if (getIndexerBackendUrl()) {
+    try {
+      const record = await fetchRemoteArchivedItem(hash);
+      return record ? toFeedItem(record) : null;
+    } catch (err) {
+      console.warn("[archive] remote hash lookup failed, falling back to local:", err);
+    }
+  }
+
   const archive = await loadArchive();
   const record = archive.items[hash];
   if (!record) return null;
@@ -121,6 +236,15 @@ export async function getArchivedFeedItemByHash(
  * Used to expand the related-article search pool beyond live RSS.
  */
 export async function getAllArchivedFeedItems(): Promise<FeedItem[]> {
+  if (getIndexerBackendUrl()) {
+    try {
+      const records = await fetchRemoteArchivedItems();
+      return records.map(toFeedItem);
+    } catch (err) {
+      console.warn("[archive] remote archive list failed, falling back to local:", err);
+    }
+  }
+
   const archive = await loadArchive();
   return Object.values(archive.items).map(toFeedItem);
 }
@@ -131,10 +255,25 @@ export async function getAllArchivedFeedItems(): Promise<FeedItem[]> {
 export async function getAllArchivedItemsWithHashes(): Promise<
   Array<FeedItem & { hash: string }>
 > {
-  const archive = await loadArchive();
-  return Object.entries(archive.items).map(([hash, record]) => ({
+  let records: ArchivedFeedItem[];
+
+  if (getIndexerBackendUrl()) {
+    try {
+      records = await fetchRemoteArchivedItems();
+    } catch (err) {
+      console.warn("[archive] remote archive+hash list failed, falling back to local:", err);
+      const archive = await loadArchive();
+      records = Object.values(archive.items);
+    }
+  } else {
+    const archive = await loadArchive();
+    records = Object.values(archive.items);
+  }
+
+  const merged = await mergeCurrentFeedIntoArchive(records);
+  return merged.map((record) => ({
     ...toFeedItem(record),
-    hash,
+    hash: record.hash,
   }));
 }
 
@@ -160,6 +299,11 @@ export async function autoArchiveItem(item: FeedItem): Promise<void> {
 export async function autoArchiveBatch(items: FeedItem[]): Promise<void> {
   if (saveInFlight || items.length === 0) return;
   try {
+    if (getIndexerBackendUrl()) {
+      await upsertRemoteArchivedItems(items);
+      return;
+    }
+
     const archive = await loadArchive();
     const now = new Date().toISOString();
     let newCount = 0;

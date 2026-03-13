@@ -43,3 +43,6 @@ prisma/*.db
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+.vercel
+web/dist-worker/
+web/.claude/

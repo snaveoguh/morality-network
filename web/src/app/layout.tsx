@@ -5,9 +5,9 @@ import { Providers } from "@/providers/WagmiProvider";
 import { Header } from "@/components/layout/Header";
 import { MarqueeBanner } from "@/components/layout/MarqueeBanner";
 import { ExtensionBanner } from "@/components/layout/ExtensionBanner";
-import { IntroSplash } from "@/components/layout/IntroSplash";
 import { SITE_URL, withBrand } from "@/lib/brand";
 import { InstallPrompt } from "@/components/layout/InstallPrompt";
+import { BetaToast } from "@/components/layout/BetaToast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -85,12 +85,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${baskerville.variable} ${fraktur.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
       >
         <Providers>
-          <IntroSplash />
           <MarqueeBanner />
           <ExtensionBanner />
           <Header />
           <main className="mx-auto max-w-7xl px-4 py-2">{children}</main>
           <InstallPrompt />
+          <BetaToast />
         </Providers>
       </body>
     </html>

@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { redactedConfigSummary, runTraderCycles } from "@/lib/trading/engine";
+import { isWorkerTraderRuntime } from "@/lib/runtime-mode";
+import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
+import { fetchPersistedTraderState } from "@/lib/server/runtime-backend";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -35,6 +38,41 @@ export async function GET(request: Request) {
   }
 
   try {
+    if (isWorkerTraderRuntime()) {
+      const backendUrl = getIndexerBackendUrl();
+      if (!backendUrl) {
+        return NextResponse.json(
+          { error: "TRADER_EXECUTION_MODE=worker requires INDEXER_BACKEND_URL" },
+          { status: 503 },
+        );
+      }
+
+      try {
+        const state = await fetchPersistedTraderState();
+        return NextResponse.json(
+          {
+            error: "trader execution is delegated to the always-on worker",
+            executionMode: "worker",
+            report: state.report,
+            parallel: state.parallel,
+            updatedAt: state.updatedAt,
+            config: state.config,
+          },
+          { status: 409 },
+        );
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error:
+              error instanceof Error
+                ? error.message
+                : "persisted trader state unavailable",
+          },
+          { status: 503 },
+        );
+      }
+    }
+
     return await execute();
   } catch (error) {
     return NextResponse.json(

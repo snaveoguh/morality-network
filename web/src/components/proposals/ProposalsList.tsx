@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Proposal } from "@/lib/governance";
+import { isDelegationActivityProposal, type Proposal } from "@/lib/governance";
 import { ProposalRow } from "./ProposalRow";
 
 interface ProposalsListProps {
@@ -11,6 +11,7 @@ interface ProposalsListProps {
 type StatusFilter =
   | "all"
   | "active"
+  | "activity"
   | "candidates"
   | "pending"
   | "parliament"
@@ -23,6 +24,7 @@ export function ProposalsList({ proposals }: ProposalsListProps) {
 
   const filtered = proposals.filter((p) => {
     if (statusFilter === "active" && p.status !== "active") return false;
+    if (statusFilter === "activity" && !isDelegationActivityProposal(p)) return false;
     if (statusFilter === "candidates" && p.status !== "candidate") return false;
     if (statusFilter === "pending" && p.status !== "pending") return false;
     if (statusFilter === "parliament" && p.source !== "parliament") return false;
@@ -47,6 +49,7 @@ export function ProposalsList({ proposals }: ProposalsListProps) {
   });
 
   const activeCount = proposals.filter((p) => p.status === "active").length;
+  const activityCount = proposals.filter((p) => isDelegationActivityProposal(p)).length;
   const candidateCount = proposals.filter((p) => p.status === "candidate").length;
   const parliamentCount = proposals.filter((p) => p.source === "parliament").length;
   const hyperliquidCount = proposals.filter((p) => p.source === "hyperliquid").length;
@@ -62,6 +65,11 @@ export function ProposalsList({ proposals }: ProposalsListProps) {
         {candidateCount > 0 && (
           <span className="border border-[var(--rule-light)] px-3 py-1.5 text-[var(--ink-light)]">
             {candidateCount} Candidates
+          </span>
+        )}
+        {activityCount > 0 && (
+          <span className="border border-[var(--rule-light)] px-3 py-1.5 text-[var(--ink-light)]">
+            {activityCount} Activity
           </span>
         )}
         {parliamentCount > 0 && (
@@ -85,6 +93,7 @@ export function ProposalsList({ proposals }: ProposalsListProps) {
           [
             ["all", "All"],
             ["active", "Active"],
+            ["activity", "Activity"],
             ["candidates", "Candidates"],
             ["parliament", "Parliament"],
             ["hyperliquid", "Hyperliquid"],

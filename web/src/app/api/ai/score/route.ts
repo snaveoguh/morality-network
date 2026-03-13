@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { getSourceBias } from "@/lib/bias";
+import { generateTextForTask } from "@/lib/ai-provider";
+import { hasAIProviderForTask } from "@/lib/ai-models";
 
 // ============================================================================
 // AI ENTITY SCORING — Claude-powered credibility & quality analysis
@@ -15,7 +16,6 @@ import { getSourceBias } from "@/lib/bias";
 // database + heuristics when API key is unavailable.
 // ============================================================================
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const SCORE_TIMEOUT_MS = 10_000;
 
 interface ScoreRequest {
@@ -45,8 +45,6 @@ function getCacheKey(req: ScoreRequest): string {
  * Score an entity using Claude AI.
  */
 async function scoreWithClaude(req: ScoreRequest): Promise<ScoreResult> {
-  const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
-
   // Build context-aware prompt based on entity type
   let prompt: string;
 
@@ -106,25 +104,17 @@ Return a JSON object with:
 Return ONLY valid JSON.`;
   }
 
-  const response = await Promise.race([
-    client.messages.create({
-      model: "claude-haiku-4-20250414",
-      max_tokens: 300,
-      temperature: 0,
-      system: "You are a media credibility and blockchain security analyst. Return ONLY valid JSON. No markdown fences, no explanation.",
-      messages: [{ role: "user", content: prompt }],
-    }),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("AI scoring timeout")), SCORE_TIMEOUT_MS),
-    ),
-  ]);
+  const result = await generateTextForTask({
+    task: "entityScoring",
+    maxTokens: 300,
+    temperature: 0,
+    timeoutMs: SCORE_TIMEOUT_MS,
+    system:
+      "You are a media credibility and blockchain security analyst. Return ONLY valid JSON. No markdown fences, no explanation.",
+    user: prompt,
+  });
 
-  const textBlock = response.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("No text in AI response");
-  }
-
-  let jsonText = textBlock.text.trim();
+  let jsonText = result.text.trim();
   if (jsonText.startsWith("```")) {
     jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
   }
@@ -252,13 +242,13 @@ export async function POST(request: Request) {
     let score: ScoreResult;
     let source: "ai" | "heuristic";
 
-    if (ANTHROPIC_API_KEY) {
+    if (hasAIProviderForTask("entityScoring")) {
       try {
         score = await scoreWithClaude(body);
         source = "ai";
       } catch (err) {
         console.warn(
-          "[ai/score] Claude scoring failed, using heuristics:",
+          "[ai/score] AI scoring failed, using heuristics:",
           err instanceof Error ? err.message : err,
         );
         score = scoreWithHeuristics(body);

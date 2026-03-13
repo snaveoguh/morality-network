@@ -1,18 +1,33 @@
 # Deployments
 
+## Launch Runtime Topology
+
+- Web: `v2/web` on Vercel or equivalent
+- Indexer API + Postgres: `v2/indexer`
+- Always-on worker: `v2/web` via `npm run worker:start`
+- Extension: deferred from the first-wave launch path
+
+Runtime mode flags:
+
+- `AGENT_RUNTIME_MODE=worker`
+- `TRADER_EXECUTION_MODE=worker`
+- `INDEXER_BACKEND_URL=<indexer-url>`
+- `INDEXER_WORKER_SECRET=<shared-write-secret>`
+
 ## Base Sepolia (Chain ID: 84532)
 
-Deployment date: 2026-03-06/07
+Latest deploy artifact: `v2/contracts/broadcast/DeployAll.s.sol/84532/run-latest.json`
 Deployment script: `v2/contracts/script/DeployAll.s.sol`
 
 | Contract | Address |
 |---|---|
-| MoralityRegistry | `0x2ea7502C4db5B8cfB329d8a9866EB6705b036608` |
-| MoralityRatings | `0xb61bE51E8aEd1360EaA03Eb673F74D66eC4898D7` |
-| MoralityComments | `0x29F66D8b15326cE7232c0277DBc2CbFDaaf93405` |
-| MoralityTipping | `0x622cD30124e24dFFe77c29921bD7622e30d57F8B` |
-| MoralityLeaderboard | `0x57dc0C9833A124FE39193dC6a554e0Ff37606202` |
-| MoralityPredictionMarket | `0x27c79A57BE68EB62c9C6bB19875dB76D33FD099B` |
+| MoralityRegistry | `0x1c73efffeb89ad8699770921dbd860bb5da5b15a` |
+| MoralityRatings | `0x29f0235d74e09536f0b7df9c6529de17b8af5fc6` |
+| MoralityComments | `0x14a361454edcb477644eb82bf540a26e1cead72a` |
+| MoralityTipping | `0x71b2e273727385c617fe254f4fb14a36a679b12a` |
+| MoralityLeaderboard | `0x4b48d35e019129bb5a16920adc4cb7f445ec8ca5` |
+| MoralityPredictionMarket | `0x98855cc7c85d563194d8e42b57d9cf35d5446286` |
+| PooterEditions | `0x45b375c82b4f1662d27a0b75b078b81f0e7b2bf4` |
 | MoralityProposalVoting | Not deployed (requires `NOUNS_TOKEN`) |
 
 ## Where Config Is Read
@@ -30,7 +45,7 @@ Use Base Sepolia explorer format:
 
 Example:
 
-`https://sepolia.basescan.org/address/0x29F66D8b15326cE7232c0277DBc2CbFDaaf93405`
+`https://sepolia.basescan.org/address/0x14a361454edcb477644eb82bf540a26e1cead72a`
 
 ## Notes
 

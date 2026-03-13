@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchAllFeeds } from "@/lib/rss";
 import {
-  computeSentimentSnapshot,
-  fetchMarketData,
   type SentimentSnapshot,
 } from "@/lib/sentiment";
+import { computeEventShapedSentimentSnapshot } from "@/lib/event-corpus";
+import { fetchMarketData } from "@/lib/sentiment";
 
 export const revalidate = 300; // 5 minutes ISR
 
@@ -30,7 +30,11 @@ export async function GET(req: NextRequest) {
     ]);
 
     const previousSnapshot = cachedSnapshot;
-    const snapshot = computeSentimentSnapshot(allItems, marketData, previousSnapshot);
+    const snapshot = computeEventShapedSentimentSnapshot(
+      allItems,
+      marketData,
+      previousSnapshot
+    );
 
     // Cache the result
     cachedSnapshot = snapshot;

@@ -74,4 +74,68 @@ describe("findRelatedArticles", () => {
     expect(relatedIds.has("unrelated-tony")).toBe(false);
     expect(relatedIds.has("unrelated-other")).toBe(false);
   });
+
+  it("prefers same-story named-entity coverage over generic legal overlap", () => {
+    const target = makeItem({
+      id: "target-pauline",
+      source: "The Hill",
+      category: "Politics",
+      title: "Judge Pauline Newman asks Supreme Court to hear appeal over suspension",
+      description: "The 98-year-old federal appeals judge is challenging her suspension over mental fitness concerns.",
+      link: "https://thehill.com/regulation/court-battles/pauline-newman-supreme-court-appeal",
+      tags: ["politics", "legal"],
+    });
+
+    const realRelated = makeItem({
+      id: "real-related-pauline",
+      source: "Reuters",
+      category: "Politics",
+      title: "Pauline Newman petitions Supreme Court in challenge to judicial suspension",
+      description: "The Federal Circuit judge asked the justices to review her suspension after a mental fitness dispute.",
+      link: "https://reuters.com/world/us/pauline-newman-supreme-court-petition",
+      tags: ["politics", "legal"],
+    });
+
+    const unrelatedBinance = makeItem({
+      id: "binance-lawsuit",
+      source: "CoinDesk",
+      category: "Business",
+      title: "Binance wins dismissal in terrorism financing lawsuit",
+      description: "A federal court dismissed claims tied to terrorism financing allegations.",
+      link: "https://coindesk.com/policy/binance-terrorism-lawsuit-dismissed",
+      tags: ["crypto", "legal"],
+    });
+
+    const unrelatedTrivia = makeItem({
+      id: "supreme-court-trivia",
+      source: "NPR",
+      category: "Politics",
+      title: "Supreme Court trivia reveals how justices once avoided air conditioning",
+      description: "A look back at unusual historical details from the court's chambers.",
+      link: "https://npr.org/2026/03/09/supreme-court-trivia",
+      tags: ["politics", "history"],
+    });
+
+    const unrelatedTariffs = makeItem({
+      id: "tariff-replacement",
+      source: "Financial Times",
+      category: "Business",
+      title: "Trump team weighs tariff replacement plan for importers",
+      description: "Officials discuss replacing existing tariffs with a new rebate mechanism.",
+      link: "https://ft.com/content/tariff-replacement-plan",
+      tags: ["trade", "policy"],
+    });
+
+    const related = findRelatedArticles(
+      target,
+      [target, realRelated, unrelatedBinance, unrelatedTrivia, unrelatedTariffs],
+      5,
+    );
+    const relatedIds = related.map((item) => item.id);
+
+    expect(relatedIds).toContain("real-related-pauline");
+    expect(relatedIds).not.toContain("binance-lawsuit");
+    expect(relatedIds).not.toContain("supreme-court-trivia");
+    expect(relatedIds).not.toContain("tariff-replacement");
+  });
 });

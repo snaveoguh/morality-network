@@ -73,8 +73,6 @@ export function SentimentGrid({ topics }: SentimentGridProps) {
 }
 
 function TopicCard({ topic }: { topic: TopicSentimentResult }) {
-  const [expanded, setExpanded] = useState(false);
-
   const arrow = trendArrow(topic.trend);
   const label = sentimentLabel(topic.score);
   const trendColor =
@@ -85,10 +83,7 @@ function TopicCard({ topic }: { topic: TopicSentimentResult }) {
         : "text-[var(--ink-faint)]";
 
   return (
-    <div
-      className="cursor-pointer border border-[var(--rule-light)] p-4 transition-colors hover:border-[var(--rule)]"
-      onClick={() => setExpanded(!expanded)}
-    >
+    <div className="border border-[var(--rule-light)] p-4">
       {/* Header */}
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -126,52 +121,53 @@ function TopicCard({ topic }: { topic: TopicSentimentResult }) {
 
       {/* Meta */}
       <div className="flex items-center gap-2 font-mono text-[7px] uppercase tracking-wider text-[var(--ink-faint)]">
-        <span>{topic.articleCount} articles</span>
+        <span>{topic.eventCount ?? topic.articleCount} {topic.eventCount ? "events" : "articles"}</span>
+        {topic.eventCount ? (
+          <>
+            <span>&middot;</span>
+            <span>{topic.articleCount} articles</span>
+          </>
+        ) : null}
         <span>&middot;</span>
         <span>{topic.sourceCount} sources</span>
-        {expanded && <span className="ml-auto">Click to collapse</span>}
       </div>
 
-      {/* Expanded: signal breakdown */}
-      {expanded && (
-        <div className="mt-3 border-t border-[var(--rule-light)] pt-3 space-y-2">
-          <p className="font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--ink-faint)]">
-            Signal Breakdown
-          </p>
-          {Object.entries(SIGNAL_LABELS).map(([key, label]) => {
-            const value = topic.signals[key as keyof typeof topic.signals];
-            if (value === null || value === undefined) return null;
-            const numValue = typeof value === "number" ? value : 0;
-            return (
-              <div key={key} className="flex items-center gap-2">
-                <span className="w-20 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-                  {label}
-                </span>
-                <div className="flex-1">
-                  <div className="relative h-[4px] w-full bg-[var(--paper-dark)]">
-                    <div
-                      className="absolute inset-y-0 left-0 bg-[var(--ink)]"
-                      style={{ width: `${numValue}%` }}
-                    />
-                  </div>
+      <div className="mt-3 space-y-2 border-t border-[var(--rule-light)] pt-3">
+        <p className="font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--ink-faint)]">
+          Signal Breakdown
+        </p>
+        {Object.entries(SIGNAL_LABELS).map(([key, signalLabel]) => {
+          const value = topic.signals[key as keyof typeof topic.signals];
+          if (value === null || value === undefined) return null;
+          const numValue = typeof value === "number" ? value : 0;
+          return (
+            <div key={key} className="flex items-center gap-2">
+              <span className="w-20 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+                {signalLabel}
+              </span>
+              <div className="flex-1">
+                <div className="relative h-[4px] w-full bg-[var(--paper-dark)]">
+                  <div
+                    className="absolute inset-y-0 left-0 bg-[var(--ink)]"
+                    style={{ width: `${numValue}%` }}
+                  />
                 </div>
-                <span className="w-6 text-right font-mono text-[8px] font-bold text-[var(--ink-light)]">
-                  {Math.round(numValue)}
-                </span>
               </div>
-            );
-          })}
-
-          {/* Top sources */}
-          {topic.topSources.length > 0 && (
-            <div className="mt-2">
-              <p className="font-mono text-[7px] uppercase tracking-wider text-[var(--ink-faint)]">
-                Top sources: {topic.topSources.join(" / ")}
-              </p>
+              <span className="w-6 text-right font-mono text-[8px] font-bold text-[var(--ink-light)]">
+                {Math.round(numValue)}
+              </span>
             </div>
-          )}
-        </div>
-      )}
+          );
+        })}
+
+        {topic.topSources.length > 0 && (
+          <div className="mt-2">
+            <p className="font-mono text-[7px] uppercase tracking-wider text-[var(--ink-faint)]">
+              Top sources: {topic.topSources.join(" / ")}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-11T13:55:21.547Z",
+  "updatedAt": "2026-03-12T22:25:21.004Z",
   "items": {
     "0xe533669faba4e7a07384e8534ec208f259895e6bd9661a89cb2b5da571c6867a": {
       "primary": {
@@ -770,6 +770,491 @@
       "generatedBy": "claude-ai",
       "contentHash": "0x651b44562696aeb1f7c563a2aa2302188be17377ced1a1e291426c8fef481ea7",
       "version": 1
+    },
+    "0xf3d6609070a9066919ab56af29fe22da4380ef89a4ca4e7e8d8776ee136e7cb0": {
+      "primary": {
+        "id": "pooter-daily-2026-03-12",
+        "title": "Iran's blockade forces $100 oil while parallel infrastructure quietly routes around damage.",
+        "link": "https://pooter.world/article/0xf3d6609070a9066919ab56af29fe22da4380ef89a4ca4e7e8d8776ee136e7cb0",
+        "source": "pooter world",
+        "sourceUrl": "https://pooter.world",
+        "pubDate": "2026-03-12T19:18:09.815Z",
+        "description": "The old world chokes its own supply chains; the new world builds unstoppable coordination protocols.",
+        "category": "Daily Edition",
+        "bias": null,
+        "tags": [
+          "iran",
+          "oil",
+          "strait of hormuz",
+          "bitcoin",
+          "ethereum",
+          "crypto",
+          "geopolitics",
+          "infrastructure",
+          "supply chains",
+          "energy"
+        ]
+      },
+      "claim": "Iran's blockade forces $100 oil while parallel infrastructure quietly routes around damage.",
+      "relatedSources": [],
+      "subheadline": "The old world chokes its own supply chains; the new world builds unstoppable coordination protocols.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "Brent crude closed above $100 for the first time since August 2022 as Iran's new supreme leader declared the Strait of Hormuz \"must remain closed.\" The US Navy scrambles escort missions while Treasury Secretary Bessent promises military protection \"as soon as militarily possible.\" Six days of conflict have already cost $11.3 billion, per Middle East Eye reporting. Trump, who bragged about low gas prices, now executes an about-face as his tariff policies collide with energy reality.",
+        "The pattern emerges when you read across domains. Physical chokepoints create cascading failures. The Strait of Hormuz. The Jones Act. Housing investor bans creating \"headaches\" in Senate bills. Mark Zuckerberg facing grieving parents in court over platform failures. Every centralized system reveals its brittleness under pressure. Every gatekeeper becomes a single point of failure.",
+        "Market sentiment tells a different story than the headlines. Bitcoin sentiment sits at 62 while its market signal drops to 49—a classic divergence suggesting accumulation during fear. Ethereum sentiment climbs to 69 with a 48 market signal. The money sees opportunity where the news sees chaos. Polychain backing VeryAI's $10M raise for palm-scan identity on Solana while Bitcoin funding rates flip negative. Bears getting confident just as infrastructure gets interesting.",
+        "Base L2 ecosystem continues building through the noise. IonRouter launches from YC W26 promising high-throughput, low-cost inference. While legacy systems fail under geopolitical stress, permissionless protocols route around damage. SpaceX IPO rumors create \"murky private deals\" as centralized space infrastructure mirrors centralized energy infrastructure—fragile, expensive, gatekept.",
+        "Today sounds like Radiohead's \"Paranoid Android\"—the slow build, the explosive middle, the haunting aftermath. \"Rain down, rain down, come on rain down on me.\" The old world's paranoia about control creates the very chaos it fears. DW News streams live coverage of shootings at Old Dominion, Michigan synagogues. CNN grills commanders about Iranian school strikes. The surveillance state watches itself dissolve in real-time violence.",
+        "What happens next? Oil at $100 accelerates energy transition timelines. Housing affordability bills pass as investor bans create new market dynamics. Somalia warns against Israeli bases while ICC opens Belarus probes. The multipolar world fragments further. China asks who builds the first Moon base while Trump declares \"all foreign exports unfair.\" The old order's death throes grow more violent.",
+        "Meanwhile, Coinbase executives deny lobbying against Bitcoin de minimis tax exemptions. The parallel world doesn't lobby—it builds. Every sanctions regime creates new demand for permissionless money. Every supply chain disruption proves the value of unstoppable coordination. The old world chokes itself; the new world breathes freely."
+      ],
+      "wireSummary": null,
+      "biasContext": null,
+      "tags": [
+        "iran",
+        "oil",
+        "strait of hormuz",
+        "bitcoin",
+        "ethereum",
+        "crypto",
+        "geopolitics",
+        "infrastructure",
+        "supply chains",
+        "energy"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "Iran's blockade forces $100 oil while parallel infrastructure quietly routes around damage.",
+        "claimVariants": [
+          {
+            "source": "pooter world",
+            "link": "https://pooter.world/article/0xf3d6609070a9066919ab56af29fe22da4380ef89a4ca4e7e8d8776ee136e7cb0",
+            "claim": "Iran's blockade forces $100 oil while parallel infrastructure quietly routes around damage.",
+            "confidence": 0.74
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "pooter world",
+            "title": "Iran's blockade forces $100 oil while parallel infrastructure quietly routes around damage.",
+            "link": "https://pooter.world/article/0xf3d6609070a9066919ab56af29fe22da4380ef89a4ca4e7e8d8776ee136e7cb0",
+            "summary": "Brent crude closed above $100 for the first time since August 2022 as Iran's new supreme leader declared the Strait of Hormuz \"must remain closed.\" The US Navy scrambles escort missions while Treasury Secretary Bessent promises military protection \"as soon as militarily possible.\" Six days of conflict have already cost $11.3 billion, per Middle East Eye reporting. Trump, who bragged about low gas prices, now executes an about-face as his tariff policies collide with energy reality.",
+            "pubDate": "2026-03-12T19:18:09.815Z"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 1
+      },
+      "musicPick": {
+        "videoId": "jbfP0nxIVUA",
+        "title": "Paranoid Android",
+        "artist": "Radiohead",
+        "commentary": "\"Paranoid Android\" captures today's fractured timeline perfectly—the quiet desperation building toward inevitable explosion, then the strange calm after chaos. Like watching oil markets spike while crypto builders keep coding, the song moves between worlds that barely recognize each other's existence."
+      },
+      "newsVideos": [
+        {
+          "videoId": "slwhRnYQp5U",
+          "title": "LIVE | Shooting at Old Dominion University: Police & ATF Respond to Norfolk Campus | N18G",
+          "channel": "DW News"
+        },
+        {
+          "videoId": "_6PgDMNfjBY",
+          "title": "PM Modi Calls Iran President After U.S. Strikes; India Urges De-Escalation, Peace | 4K",
+          "channel": "DW News"
+        },
+        {
+          "videoId": "1sZQ-CJJ-p8",
+          "title": "Michelin star chef resigns from restaurant after abuse allegations",
+          "channel": "CNN"
+        }
+      ],
+      "isDailyEdition": true,
+      "dailyTitle": "STRAIT OF CONVERGENCE",
+      "entityHash": "0xf3d6609070a9066919ab56af29fe22da4380ef89a4ca4e7e8d8776ee136e7cb0",
+      "generatedAt": "2026-03-12T19:18:09.830Z",
+      "generatedBy": "claude-ai",
+      "contentHash": "0x932fa7ea31155bb0eb1586062ece126283772b05f538b741b00a7ca9e2254a3f",
+      "version": 1
+    },
+    "0x5dada9339144756dd16445e205ccd95b7f07c9fbe342936e3bb3c344997a039f": {
+      "primary": {
+        "id": "69b1aaf9a225b84c1169f179",
+        "title": "‘Uncanny Valley’: Anthropic’s DOD Lawsuit, War Memes, and AI Coming for VC Jobs",
+        "link": "https://www.wired.com/story/uncanny-valley-podcast-anthropic-department-defense-lawsuit-iran-war-memes-artificial-intelligence-venture-capital/",
+        "description": "In today’s episode, we discuss how the saga between Anthropic and the Department of Defense is far from over.",
+        "pubDate": "Thu, 12 Mar 2026 19:48:21 +0000",
+        "source": "Wired",
+        "sourceUrl": "https://www.wired.com/feed/rss",
+        "category": "Tech",
+        "bias": {
+          "name": "Wired",
+          "domain": "wired.com",
+          "bias": "lean-left",
+          "factuality": "high",
+          "ownership": "Condé Nast",
+          "country": "US",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "‘Uncanny Valley’: Anthropic’s DOD Lawsuit, War Memes, and AI Coming for VC Jobs.",
+        "tags": [
+          "war",
+          "ai"
+        ]
+      },
+      "claim": "‘Uncanny Valley’: Anthropic’s DOD Lawsuit, War Memes, and AI Coming for VC Jobs.",
+      "relatedSources": [
+        {
+          "id": "https://timesofindia.indiatimes.com/technology/tech-news/a-day-after-anthropic-sued-the-trump-administration-google-makes-an-announcement-for-pentagon-website/articleshow/129457568.cms",
+          "title": "Day after Anthropic sued the Trump admin, Google makes an announcement for Pentagon website",
+          "link": "https://timesofindia.indiatimes.com/technology/tech-news/a-day-after-anthropic-sued-the-trump-administration-google-makes-an-announcement-for-pentagon-website/articleshow/129457568.cms",
+          "description": "Google is equipping the US Department of War with new AI tools, including Agent Designer on GenAI.mil, allowing personnel to create custom digital assistants for administrative tasks. This move expands Google's role in the Pentagon's AI infrastructure. Meanwhile, AI firm Anthropic is suing the Trump",
+          "pubDate": "Wed, 11 Mar 2026 16:39:42 +0530",
+          "source": "Times of India",
+          "sourceUrl": "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
+          "category": "World",
+          "imageUrl": "https://static.toiimg.com/photo/msid-129457478,imgsize-21234.cms",
+          "bias": {
+            "name": "Times of India",
+            "domain": "timesofindia.indiatimes.com",
+            "bias": "center",
+            "factuality": "mostly-factual",
+            "ownership": "Bennett, Coleman & Co.",
+            "country": "India",
+            "fundingModel": "corporate"
+          },
+          "tags": [
+            "war",
+            "ai"
+          ],
+          "canonicalClaim": "Day after Anthropic sued the Trump admin, Google makes an announcement for Pentagon website."
+        },
+        {
+          "id": "https://www.theverge.com/ai-artificial-intelligence/893625/anthropic-claude-ai-charts-diagrams",
+          "title": "Anthropic&#8217;s Claude AI can respond with charts, diagrams, and other visuals now",
+          "link": "https://www.theverge.com/ai-artificial-intelligence/893625/anthropic-claude-ai-charts-diagrams",
+          "description": "Anthropic's latest update to Claude will allow the AI chatbot to generate custom charts, diagrams, and other visualizations during your conversation. If Claude determines a visual is useful based on the context of your chat, it will insert the image in-line, rather than in its side panel.\nAs an exam",
+          "pubDate": "2026-03-12T16:00:00.000Z",
+          "source": "The Verge",
+          "sourceUrl": "https://www.theverge.com/rss/index.xml",
+          "category": "Tech",
+          "imageUrl": "https://platform.theverge.com/wp-content/uploads/sites/2/2025/08/STKB364_CLAUDE_D.jpg?quality=90&#038;strip=all&#038;crop=0,0,100,100",
+          "bias": {
+            "name": "The Verge",
+            "domain": "theverge.com",
+            "bias": "lean-left",
+            "factuality": "high",
+            "ownership": "Vox Media",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "Anthropic&#8217;s Claude AI can respond with charts, diagrams, and other visuals now.",
+          "tags": [
+            "ai"
+          ]
+        },
+        {
+          "id": "https://arstechnica.com/gaming/2026/03/valve-compares-its-loot-boxes-to-labubus-in-lawsuit-defense/",
+          "title": "Valve compares its loot boxes to Labubus in lawsuit defense",
+          "link": "https://arstechnica.com/gaming/2026/03/valve-compares-its-loot-boxes-to-labubus-in-lawsuit-defense/",
+          "description": "Steam maker says settling the case would be easier but would set a bad precedent.",
+          "pubDate": "Thu, 12 Mar 2026 15:15:47 +0000",
+          "source": "Ars Technica",
+          "sourceUrl": "https://feeds.arstechnica.com/arstechnica/index",
+          "category": "Tech",
+          "bias": {
+            "name": "Ars Technica",
+            "domain": "arstechnica.com",
+            "bias": "lean-left",
+            "factuality": "high",
+            "ownership": "Condé Nast",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "Valve compares its loot boxes to Labubus in lawsuit defense."
+        },
+        {
+          "id": "https://www.theatlantic.com/technology/2026/03/ai-bubble-defenders-silicon-valley/686340/?utm_source=feed",
+          "title": "Even Silicon Valley Admits that AI Is a Bubble",
+          "link": "https://www.theatlantic.com/technology/2026/03/ai-bubble-defenders-silicon-valley/686340/?utm_source=feed",
+          "description": "The tech billionaire Hemant Taneja admits that AI is a bubble. In fact, he welcomes it: “Bubbles are good,” Taneja, the CEO of General Catalyst, a venture-capital firm, told me in an email. If AI comes crashing down, it will lead to “some spectacular failures,” he said—companies will go under and pe",
+          "pubDate": "2026-03-12T14:34:00.000Z",
+          "source": "The Atlantic",
+          "sourceUrl": "https://www.theatlantic.com/feed/all/",
+          "category": "World",
+          "bias": {
+            "name": "The Atlantic",
+            "domain": "theatlantic.com",
+            "bias": "lean-left",
+            "factuality": "high",
+            "ownership": "Emerson Collective",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "Even Silicon Valley Admits that AI Is a Bubble.",
+          "tags": [
+            "ai"
+          ]
+        },
+        {
+          "id": "https://www.dw.com/en/could-germany-adopt-ai-giant-anthropic/a-76331249?maca=en-rss-en-all-1573-rdf",
+          "title": "Could Germany adopt AI giant Anthropic?",
+          "link": "https://www.dw.com/en/could-germany-adopt-ai-giant-anthropic/a-76331249?maca=en-rss-en-all-1573-rdf",
+          "description": "After Donald Trump ordered the US government to cancel all contracts with Anthropic, a German politician has said Germany should offer to bring the AI firm to Europe. Is that viable?",
+          "pubDate": "2026-03-12T13:41:00.000Z",
+          "source": "DW News",
+          "sourceUrl": "https://rss.dw.com/rdf/rss-en-all",
+          "category": "World",
+          "bias": {
+            "name": "DW News",
+            "domain": "dw.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Deutsche Welle (State)",
+            "country": "Germany",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "Could Germany adopt AI giant Anthropic?",
+          "tags": [
+            "ai"
+          ]
+        }
+      ],
+      "subheadline": "Wired focuses on anthropic and uncanny, with context pulled from source reporting instead of recycled feed copy. Cross-checked against Times of India and The Verge.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: ‘Uncanny Valley’: Anthropic’s DOD Lawsuit, War Memes, and AI Coming for VC Jobs",
+        "Cross-source context: Times of India highlights google has recently announced new artificial intelligence (AI) tools for the US Department of War. This comes just a day after AI company Anthropic filed a lawsuit against the Trump administration, since it... The Verge highlights anthropic’s latest update to Claude will allow the AI chatbot to generate custom charts, diagrams, and other visualizations during your conversation. If Claude determines a visual is useful based on the context of your chat, it will insert the...",
+        "What to watch next: movement around anthropic, uncanny."
+      ],
+      "wireSummary": "Times of India: Google has recently announced new artificial intelligence (AI) tools for the US Department of War. This comes just... | The Verge: Anthropic’s latest update to Claude will allow the AI chatbot to generate custom charts, diagrams, and other visualizations...",
+      "biasContext": "Wired reports with a slight leftward lean, with a strong factual track record. For counterpoint, Times of India covers this from from a centrist position.",
+      "tags": [
+        "tech",
+        "war",
+        "anthropic"
+      ],
+      "contextSnippets": [
+        {
+          "source": "Times of India",
+          "link": "https://timesofindia.indiatimes.com/technology/tech-news/a-day-after-anthropic-sued-the-trump-administration-google-makes-an-announcement-for-pentagon-website/articleshow/129457568.cms",
+          "summary": "Google has recently announced new artificial intelligence (AI) tools for the US Department of War. This comes just a day after AI company Anthropic filed a lawsuit against the Trump administration, since it..."
+        },
+        {
+          "source": "The Verge",
+          "link": "https://www.theverge.com/ai-artificial-intelligence/893625/anthropic-claude-ai-charts-diagrams",
+          "summary": "Anthropic’s latest update to Claude will allow the AI chatbot to generate custom charts, diagrams, and other visualizations during your conversation. If Claude determines a visual is useful based on the context of your chat, it will insert the..."
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "Anthropic&#8217;s Claude AI can respond with charts, diagrams, and other visuals now.",
+        "claimVariants": [
+          {
+            "source": "Wired",
+            "link": "https://www.wired.com/story/uncanny-valley-podcast-anthropic-department-defense-lawsuit-iran-war-memes-artificial-intelligence-venture-capital/",
+            "claim": "‘Uncanny Valley’: Anthropic’s DOD Lawsuit, War Memes, and AI Coming for VC Jobs.",
+            "confidence": 0.7133333333333333
+          },
+          {
+            "source": "Times of India",
+            "link": "https://timesofindia.indiatimes.com/technology/tech-news/a-day-after-anthropic-sued-the-trump-administration-google-makes-an-announcement-for-pentagon-website/articleshow/129457568.cms",
+            "claim": "Day after Anthropic sued the Trump admin, Google makes an announcement for Pentagon website.",
+            "confidence": 0.6966666666666667
+          },
+          {
+            "source": "The Verge",
+            "link": "https://www.theverge.com/ai-artificial-intelligence/893625/anthropic-claude-ai-charts-diagrams",
+            "claim": "Anthropic&#8217;s Claude AI can respond with charts, diagrams, and other visuals now.",
+            "confidence": 0.73
+          },
+          {
+            "source": "Ars Technica",
+            "link": "https://arstechnica.com/gaming/2026/03/valve-compares-its-loot-boxes-to-labubus-in-lawsuit-defense/",
+            "claim": "Valve compares its loot boxes to Labubus in lawsuit defense.",
+            "confidence": 0.6466666666666666
+          },
+          {
+            "source": "The Atlantic",
+            "link": "https://www.theatlantic.com/technology/2026/03/ai-bubble-defenders-silicon-valley/686340/?utm_source=feed",
+            "claim": "Even Silicon Valley Admits that AI Is a Bubble.",
+            "confidence": 0.63
+          },
+          {
+            "source": "DW News",
+            "link": "https://www.dw.com/en/could-germany-adopt-ai-giant-anthropic/a-76331249?maca=en-rss-en-all-1573-rdf",
+            "claim": "Could Germany adopt AI giant Anthropic?",
+            "confidence": 0.4133333333333333
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Wired",
+            "title": "‘Uncanny Valley’: Anthropic’s DOD Lawsuit, War Memes, and AI Coming for VC Jobs",
+            "link": "https://www.wired.com/story/uncanny-valley-podcast-anthropic-department-defense-lawsuit-iran-war-memes-artificial-intelligence-venture-capital/",
+            "summary": "‘Uncanny Valley’: Anthropic’s DOD Lawsuit, War Memes, and AI Coming for VC Jobs",
+            "pubDate": "Thu, 12 Mar 2026 19:48:21 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Times of India",
+            "title": "Day after Anthropic sued the Trump admin, Google makes an announcement for Pentagon website",
+            "link": "https://timesofindia.indiatimes.com/technology/tech-news/a-day-after-anthropic-sued-the-trump-administration-google-makes-an-announcement-for-pentagon-website/articleshow/129457568.cms",
+            "summary": "Google has recently announced new artificial intelligence (AI) tools for the US Department of War. This comes just a day after AI company Anthropic filed a lawsuit against the Trump administration, since it...",
+            "pubDate": "Wed, 11 Mar 2026 16:39:42 +0530"
+          },
+          {
+            "kind": "link",
+            "source": "The Verge",
+            "title": "Anthropic&#8217;s Claude AI can respond with charts, diagrams, and other visuals now",
+            "link": "https://www.theverge.com/ai-artificial-intelligence/893625/anthropic-claude-ai-charts-diagrams",
+            "summary": "Anthropic’s latest update to Claude will allow the AI chatbot to generate custom charts, diagrams, and other visualizations during your conversation. If Claude determines a visual is useful based on the context of your chat, it will insert the...",
+            "pubDate": "2026-03-12T16:00:00.000Z"
+          },
+          {
+            "kind": "link",
+            "source": "Ars Technica",
+            "title": "Valve compares its loot boxes to Labubus in lawsuit defense",
+            "link": "https://arstechnica.com/gaming/2026/03/valve-compares-its-loot-boxes-to-labubus-in-lawsuit-defense/",
+            "summary": "Steam maker says settling the case would be easier but would set a bad precedent.",
+            "pubDate": "Thu, 12 Mar 2026 15:15:47 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "The Atlantic",
+            "title": "Even Silicon Valley Admits that AI Is a Bubble",
+            "link": "https://www.theatlantic.com/technology/2026/03/ai-bubble-defenders-silicon-valley/686340/?utm_source=feed",
+            "summary": "The tech billionaire Hemant Taneja admits that AI is a bubble. In fact, he welcomes it: “Bubbles are good,” Taneja, the CEO of General Catalyst, a venture-capital firm, told me in an email. If AI comes crashing down, it will lead to “some spectacular failures,” he said—companies will go under and pe",
+            "pubDate": "2026-03-12T14:34:00.000Z"
+          },
+          {
+            "kind": "link",
+            "source": "DW News",
+            "title": "Could Germany adopt AI giant Anthropic?",
+            "link": "https://www.dw.com/en/could-germany-adopt-ai-giant-anthropic/a-76331249?maca=en-rss-en-all-1573-rdf",
+            "summary": "After Donald Trump ordered the US government to cancel all contracts with Anthropic, a German politician has said Germany should offer to bring the AI firm to Europe. Is that viable?",
+            "pubDate": "2026-03-12T13:41:00.000Z"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 6
+      },
+      "entities": [
+        {
+          "name": "Anthropic",
+          "canonicalName": "anthropic",
+          "type": "organization",
+          "context": "What happened: ‘Uncanny Valley’: Anthropic’s DOD Lawsuit, War Memes, and AI Coming for VC Jobs",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 33,
+              "endChar": 42
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 186,
+              "endChar": 195
+            }
+          ]
+        },
+        {
+          "name": "Times of India",
+          "canonicalName": "times of india",
+          "type": "person",
+          "context": "Cross-source context: Times of India highlights google has recently announced new artificial intelligence (AI) tools ...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 22,
+              "endChar": 36
+            }
+          ],
+          "biasContext": "Wired reports with a slight leftward lean, with a strong factual track record. For counterpoint, Times of India covers this from from a centrist position."
+        },
+        {
+          "name": "Department of War",
+          "canonicalName": "department of war",
+          "type": "organization",
+          "context": "Cross-source context: Times of India highlights google has recently announced new artificial intelligence (AI) tools ...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 128,
+              "endChar": 145
+            }
+          ]
+        },
+        {
+          "name": "India",
+          "canonicalName": "india",
+          "type": "country",
+          "context": "Cross-source context: Times of India highlights google has recently announced new artificial intelligence (AI) tools ...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 31,
+              "endChar": 36
+            }
+          ],
+          "biasContext": "Wired reports with a slight leftward lean, with a strong factual track record. For counterpoint, Times of India covers this from from a centrist position."
+        }
+      ],
+      "marketImpact": {
+        "significance": 35,
+        "headline": "Potential exposure across 2 topics detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "AI & Semiconductor Equities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"ai\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "war",
+          "ai"
+        ],
+        "transmissionMechanism": null
+      },
+      "podcastEpisode": {
+        "title": "‘Uncanny Valley’: Anthropic’s DOD Lawsuit, War Memes, and AI Coming for VC Jobs",
+        "summary": "In today’s episode, we discuss how the saga between Anthropic and the Department of Defense is far from over.",
+        "audioUrl": null,
+        "imageUrl": "https://media.wired.com/photos/69b1c94d9fd417e67bc5b52b/191:100/w_1280,c_limit/Uncanny-Valley-Anthropic-vs-DoD-Business-2256654494.jpg",
+        "platformLinks": [
+          {
+            "name": "Apple Podcasts",
+            "url": "https://podcasts.apple.com/us/podcast/uncanny-valley-wired/id266391367"
+          },
+          {
+            "name": "Spotify",
+            "url": "https://open.spotify.com/show/11hUjoJv4FxFnw9r0mHIsC"
+          }
+        ],
+        "provider": "cne-audio",
+        "embedScriptUrl": "https://embed-audio.cnevids.com/script/episode/6a48d2c8-3550-4eb9-b730-c52fa4687b12"
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0x5dada9339144756dd16445e205ccd95b7f07c9fbe342936e3bb3c344997a039f",
+      "generatedAt": "2026-03-12T22:25:21.004Z",
+      "contentHash": "0xa02b3767fdaf0f6646a83d2104d30b8c67c5009d23393690616e793b2b1274d0",
+      "version": 3
     }
   }
 }

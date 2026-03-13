@@ -14,8 +14,8 @@ import { mainnet } from "viem/chains";
 // RPC CONFIGURATION
 // ============================================================================
 
-const PRIMARY_RPC = "https://ethereum-rpc.publicnode.com";
-const FALLBACK_RPC = "https://ethereum.blockpi.network/v1/rpc/public";
+const PRIMARY_RPC = "https://mainnet.rpc.buidlguidl.com";
+const FALLBACK_RPC = "https://ethereum-rpc.publicnode.com";
 
 /** Max block range per eth_getLogs request (safe under 50k public RPC limit) */
 const CHUNK_SIZE = BigInt(40_000);

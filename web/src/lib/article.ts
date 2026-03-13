@@ -9,6 +9,7 @@ import { extractCanonicalClaim } from "./claim-extract";
 import { getArchivedEditorial } from "./editorial-archive";
 import { generateAIEditorial } from "./claude-editorial";
 import { computeEntityHash } from "./entity";
+import { extractPodcastEpisode } from "./podcast";
 
 // ============================================================================
 // ARTICLE CONTENT GENERATION
@@ -62,6 +63,24 @@ export interface MarketImpactAnalysis {
   transmissionMechanism: string | null;
 }
 
+export interface PodcastPlatformLink {
+  name: string;
+  url: string;
+}
+
+export interface PodcastEpisode {
+  title: string;
+  showTitle?: string | null;
+  summary?: string | null;
+  audioUrl?: string | null;
+  imageUrl?: string | null;
+  durationSeconds?: number | null;
+  publishedAt?: string | null;
+  provider?: string | null;
+  embedScriptUrl?: string | null;
+  platformLinks?: PodcastPlatformLink[];
+}
+
 export interface ArticleContent {
   /** The primary RSS item this article is about */
   primary: FeedItem;
@@ -97,8 +116,10 @@ export interface ArticleContent {
   stakeholderAnalysis?: string | null;
   /** Per-article market impact analysis with time horizons */
   marketImpact?: MarketImpactAnalysis | null;
-  /** Daily edition: YouTube music pick */
-  musicPick?: { videoId: string; title: string; artist: string; commentary: string } | null;
+  /** Source-side podcast episode metadata when article is audio-first */
+  podcastEpisode?: PodcastEpisode | null;
+  /** Daily edition: music pick (Spotify preferred, YouTube legacy) */
+  musicPick?: { spotifyId?: string; videoId?: string; title: string; artist: string; commentary: string } | null;
   /** Daily edition: embedded news videos */
   newsVideos?: Array<{ videoId: string; title: string; channel: string }>;
   /** Whether this is a daily edition article */
@@ -141,11 +162,15 @@ export function findRelatedArticles(
   maxResults = 5,
 ): FeedItem[] {
   const signalFrequency = buildSignalFrequencyMap(allItems);
-  const targetAnchorKeywords = extractAnchorKeywords(
-    target.title,
-    signalFrequency,
-    Math.max(1, allItems.length),
-  );
+  const targetEntityAnchors = extractEntityAnchors(`${target.title} ${target.description ?? ""}`);
+  const targetAnchorKeywords = new Set([
+    ...targetEntityAnchors,
+    ...extractAnchorKeywords(
+      target.title,
+      signalFrequency,
+      Math.max(1, allItems.length),
+    ),
+  ]);
   const targetKeywords = extractKeywords(`${target.title} ${target.description}`);
   const targetTitleKeywords = extractKeywords(target.title);
   const targetSignalKeywords = extractSignalKeywords(target.title);
@@ -166,10 +191,12 @@ export function findRelatedArticles(
     const itemText = `${item.title} ${item.description}`;
     const itemKeywords = extractKeywords(itemText);
     const itemTitleKeywords = extractKeywords(item.title);
+    const itemEntityAnchors = extractEntityAnchors(itemText);
     const itemSignalKeywords = extractSignalKeywords(item.title);
     const itemSpecificSignals = extractSpecificSignalKeywords(item.title);
     const itemTags = new Set((item.tags || []).map((tag) => tag.toLowerCase()));
 
+    const entityOverlap = countOverlap(targetEntityAnchors, itemEntityAnchors);
     const keywordOverlap = countOverlap(targetKeywords, itemKeywords);
     const titleKeywordOverlap = countOverlap(targetTitleKeywords, itemTitleKeywords);
     const signalOverlap = countOverlap(targetSignalKeywords, itemSignalKeywords);
@@ -177,7 +204,7 @@ export function findRelatedArticles(
     const sharedTagCount = countOverlap(targetTags, itemTags);
     const anchorOverlap = countOverlap(
       targetAnchorKeywords,
-      new Set([...itemSpecificSignals, ...itemSignalKeywords]),
+      new Set([...itemSpecificSignals, ...itemSignalKeywords, ...itemEntityAnchors]),
     );
 
     let phraseOverlap = 0;
@@ -186,7 +213,12 @@ export function findRelatedArticles(
       if (itemTitleLower.includes(phrase)) phraseOverlap++;
     }
 
+    const requiresMultipleEntityMatches = targetEntityAnchors.size > 1;
+    const hasStrongEntityAnchor = requiresMultipleEntityMatches
+      ? entityOverlap >= 2
+      : entityOverlap >= 1;
     const hasStrongAnchor =
+      hasStrongEntityAnchor ||
       anchorOverlap > 0 ||
       specificSignalOverlap > 0 ||
       signalOverlap >= 2 ||
@@ -195,10 +227,30 @@ export function findRelatedArticles(
     if (!hasStrongAnchor) continue;
 
     if (
+      requiresMultipleEntityMatches &&
+      entityOverlap === 1 &&
+      specificSignalOverlap === 0 &&
+      phraseOverlap === 0
+    ) {
+      continue;
+    }
+
+    if (
+      targetEntityAnchors.size > 0 &&
+      entityOverlap === 0 &&
+      specificSignalOverlap < 2 &&
+      phraseOverlap === 0 &&
+      titleKeywordOverlap < 3
+    ) {
+      continue;
+    }
+
+    if (
       targetAnchorKeywords.size > 0 &&
       anchorOverlap === 0 &&
       specificSignalOverlap === 0 &&
-      phraseOverlap === 0
+      phraseOverlap === 0 &&
+      !hasStrongEntityAnchor
     ) {
       continue;
     }
@@ -240,6 +292,7 @@ export function findRelatedArticles(
     const categoryScore = item.category === target.category ? 1 : weakAnchor ? -2 : 0;
 
     const score =
+      (entityOverlap * 12) +
       (anchorOverlap * 9) +
       (specificSignalOverlap * 8) +
       (signalOverlap * 4) +
@@ -251,13 +304,13 @@ export function findRelatedArticles(
       categoryScore +
       timeScore;
 
-    const minScore = anchorOverlap > 0
-      ? 10
-      : targetAnchorKeywords.size > 0
-        ? 16
-        : specificSignalOverlap > 0 || phraseOverlap > 0
-          ? 10
-          : 14;
+    const minScore =
+      hasStrongEntityAnchor ? 10 :
+      targetEntityAnchors.size > 0 ? 18 :
+      anchorOverlap > 0 ? 10 :
+      targetAnchorKeywords.size > 0 ? 16 :
+      specificSignalOverlap > 0 || phraseOverlap > 0 ? 10 :
+      14;
     if (score >= minScore) {
       scored.push({ item, score });
     }
@@ -353,6 +406,28 @@ const LOW_SIGNAL_TERMS = new Set([
   "person",
   "official",
   "officials",
+  "judge",
+  "judges",
+  "justice",
+  "justices",
+  "court",
+  "courts",
+  "supreme",
+  "appeal",
+  "appeals",
+  "petition",
+  "petitions",
+  "case",
+  "cases",
+  "lawsuit",
+  "lawsuits",
+  "administration",
+  "department",
+  "departments",
+  "agency",
+  "agencies",
+  "committee",
+  "committees",
   "workers",
   "work",
   "global",
@@ -373,6 +448,34 @@ const LOW_SIGNAL_TERMS = new Set([
   "matters",
 ]);
 
+const ENTITY_STOP_WORDS = new Set([
+  "judge",
+  "judges",
+  "justice",
+  "justices",
+  "court",
+  "courts",
+  "supreme",
+  "federal",
+  "state",
+  "appeal",
+  "appeals",
+  "petition",
+  "petitions",
+  "suspension",
+  "mental",
+  "fitness",
+  "administration",
+  "department",
+  "departments",
+  "agency",
+  "agencies",
+  "committee",
+  "committees",
+  "official",
+  "officials",
+]);
+
 function extractKeywords(text: string): Set<string> {
   const words = text
     .toLowerCase()
@@ -382,8 +485,30 @@ function extractKeywords(text: string): Set<string> {
   return new Set(words);
 }
 
+function extractEntityAnchors(text: string): Set<string> {
+  const matches = text.match(/\b[A-Z][A-Za-z0-9.'’-]{2,}\b|\b[A-Z]{2,}\b/g) || [];
+  const anchors = new Set<string>();
+
+  for (const match of matches) {
+    const normalized = match
+      .toLowerCase()
+      .replace(/['’]s$/i, "")
+      .replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, "");
+
+    if (normalized.length < 3) continue;
+    if (/^\d+$/.test(normalized)) continue;
+    if (STOP_WORDS.has(normalized) || LOW_SIGNAL_TERMS.has(normalized) || ENTITY_STOP_WORDS.has(normalized)) {
+      continue;
+    }
+
+    anchors.add(normalized);
+  }
+
+  return anchors;
+}
+
 function extractPhrases(text: string): Set<string> {
-  const words = Array.from(extractKeywords(text));
+  const words = Array.from(extractSignalKeywords(text));
   const phrases = new Set<string>();
 
   for (let i = 0; i < words.length - 1; i++) {
@@ -513,7 +638,7 @@ export async function generateEditorial(
     const cached = await getArchivedEditorial(hash);
     if (cached && isCachedEditorialCompatible(primary, related, cached)) {
       console.log(`[editorial] cache hit for ${hash.slice(0, 10)}...`);
-      return cached;
+      return await enrichArticleEmbeds(primary, cached);
     }
     if (cached) {
       console.log(`[editorial] cache stale for ${hash.slice(0, 10)}..., regenerating`);
@@ -526,14 +651,40 @@ export async function generateEditorial(
   try {
     const aiEditorial = await generateAIEditorial(primary, related);
     console.log(`[editorial] AI generated for ${hash.slice(0, 10)}...`);
-    return aiEditorial;
+    return await enrichArticleEmbeds(primary, aiEditorial);
   } catch (err) {
     console.warn("[editorial] AI generation failed, using template:", err instanceof Error ? err.message : err);
   }
 
   // 3. Fall back to template generation
   const templateResult = await generateEditorialTemplate(primary, related);
-  return { ...templateResult, generatedBy: "template-fallback" as const };
+  return {
+    ...(await enrichArticleEmbeds(primary, templateResult)),
+    generatedBy: "template-fallback" as const,
+  };
+}
+
+export async function enrichArticleEmbeds<T extends ArticleContent>(
+  primary: FeedItem,
+  article: T,
+): Promise<T> {
+  if (article.podcastEpisode && !shouldRefreshPodcastEpisode(article.podcastEpisode)) {
+    return article;
+  }
+
+  const podcastEpisode = await extractPodcastEpisode(primary);
+  if (!podcastEpisode) return article;
+
+  return {
+    ...article,
+    podcastEpisode,
+  };
+}
+
+function shouldRefreshPodcastEpisode(
+  episode: NonNullable<ArticleContent["podcastEpisode"]>,
+): boolean {
+  return !episode.audioUrl && !episode.embedScriptUrl;
 }
 
 function isCachedEditorialCompatible(

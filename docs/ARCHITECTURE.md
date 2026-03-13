@@ -18,6 +18,7 @@ Browser (web or extension UI)
   -> Solidity contracts (registry, ratings, comments, tipping, leaderboard, prediction market)
   -> Events emitted onchain
   -> Ponder indexer ingests events into query tables
+  -> Always-on worker persists scanner/swarm/trader runtime state into indexer APIs
   -> Public API endpoints expose feed/governance/indexed activity
 ```
 
@@ -41,6 +42,7 @@ Deploy script: `v2/contracts/script/DeployAll.s.sol`
   - Proposals (`/proposals`): DAO/government/corporate governance stream.
   - Leaderboard (`/leaderboard`): entity ranking + scoring.
 - API routes under `v2/web/src/app/api` provide feed, governance, auth, and AI-score handlers.
+- `src/worker/index.ts` runs the always-on scanner/swarm/trader loops outside the Vercel request lifecycle.
 
 ## Extension Layer (`v2/extension`)
 
@@ -48,6 +50,7 @@ Deploy script: `v2/contracts/script/DeployAll.s.sol`
 - `src/background`: wallet and contract action handlers.
 - `src/popup`: extension popup UI.
 - `src/shared`: contracts ABIs, hashing, typing, known entities, RPC helpers.
+- Operational status: deferred from the first-wave launch path.
 
 ## Indexer Layer (`v2/indexer`)
 
@@ -60,6 +63,7 @@ Deploy script: `v2/contracts/script/DeployAll.s.sol`
 - Onchain is source of truth for ratings/comments/tips state.
 - Indexer is query acceleration and analytics layer.
 - Web API routes currently combine indexed data, governance APIs, RSS aggregation, and wallet-auth workflows.
+- Worker snapshots persisted in the indexer are the durable off-request runtime layer for scanner, swarm, and trader state.
 
 ## Deliberation Graph Direction
 
@@ -82,5 +86,6 @@ Polis interoperability maps to this model as:
 ## Runtime Config Hotspots
 
 - Web contract config: `v2/web/src/lib/contracts.ts`
+- Worker runtime config: `v2/web/.env.example` and `v2/docs/LAUNCH_HARDENING.md`
 - Extension contract config: `v2/extension/src/shared/contracts.ts`
 - Foundry deploy env: `v2/contracts/.env` (`PRIVATE_KEY`, `BASE_SEPOLIA_RPC_URL`, optional oracle/token addresses)

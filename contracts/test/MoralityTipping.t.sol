@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../src/MoralityRegistry.sol";
 import "../src/MoralityComments.sol";
 import "../src/MoralityTipping.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract MoralityTippingTest is Test {
     MoralityRegistry internal registry;
@@ -19,9 +20,26 @@ contract MoralityTippingTest is Test {
     bytes32 internal constant UNREGISTERED_ENTITY = keccak256("entity:unregistered");
 
     function setUp() public {
-        registry = new MoralityRegistry();
-        comments = new MoralityComments();
-        tipping = new MoralityTipping(address(registry), address(comments));
+        MoralityRegistry registryImpl = new MoralityRegistry();
+        ERC1967Proxy registryProxy = new ERC1967Proxy(
+            address(registryImpl),
+            abi.encodeCall(MoralityRegistry.initialize, ())
+        );
+        registry = MoralityRegistry(address(registryProxy));
+
+        MoralityComments commentsImpl = new MoralityComments();
+        ERC1967Proxy commentsProxy = new ERC1967Proxy(
+            address(commentsImpl),
+            abi.encodeCall(MoralityComments.initialize, ())
+        );
+        comments = MoralityComments(address(commentsProxy));
+
+        MoralityTipping tippingImpl = new MoralityTipping();
+        ERC1967Proxy tippingProxy = new ERC1967Proxy(
+            address(tippingImpl),
+            abi.encodeCall(MoralityTipping.initialize, (address(registry), address(comments)))
+        );
+        tipping = MoralityTipping(payable(address(tippingProxy)));
         comments.setTippingContract(address(tipping));
 
         vm.deal(alice, 20 ether);
@@ -183,5 +201,10 @@ contract MoralityTippingTest is Test {
     function _registerEntityAs(address registrant) internal returns (bytes32 entityHash) {
         vm.prank(registrant);
         entityHash = registry.registerEntity(IDENTIFIER, MoralityRegistry.EntityType.URL);
+    }
+
+    function test_cannotReinitialize() public {
+        vm.expectRevert();
+        tipping.initialize(address(registry), address(comments));
     }
 }

@@ -3,6 +3,8 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import "../src/PooterEditions.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract PooterEditionsTest is Test {
     PooterEditions public editions;
@@ -10,7 +12,12 @@ contract PooterEditionsTest is Test {
     address public alice = address(0xA11CE);
 
     function setUp() public {
-        editions = new PooterEditions("https://pooter.world/api/edition/");
+        PooterEditions impl = new PooterEditions();
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(impl),
+            abi.encodeCall(PooterEditions.initialize, ("https://pooter.world/api/edition/"))
+        );
+        editions = PooterEditions(address(proxy));
     }
 
     // ── Mint ──────────────────────────────────────────────────────────────
@@ -67,7 +74,7 @@ contract PooterEditionsTest is Test {
 
     function test_onlyOwnerCanMint() public {
         vm.prank(alice);
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
         editions.mint(1, keccak256("hack"), "HACKED");
     }
 
@@ -98,7 +105,7 @@ contract PooterEditionsTest is Test {
 
     function test_onlyOwnerCanSetBaseTokenURI() public {
         vm.prank(alice);
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
         editions.setBaseTokenURI("https://evil.com/");
     }
 
@@ -152,5 +159,10 @@ contract PooterEditionsTest is Test {
     function test_epochConstant() public view {
         // March 11 2026 00:00 UTC
         assertEq(editions.EPOCH(), 1741651200);
+    }
+
+    function test_cannotReinitialize() public {
+        vm.expectRevert();
+        editions.initialize("https://pooter.world/api/edition/");
     }
 }

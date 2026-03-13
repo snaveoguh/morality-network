@@ -39,7 +39,10 @@ export function YouTubeEmbed({ videoId, title, caption }: YouTubeEmbedProps) {
 
   return (
     <figure className="my-6">
-      <div className="relative w-full overflow-hidden border border-[var(--rule-light)]" style={{ paddingBottom: "56.25%" }}>
+      <div
+        className="relative w-full overflow-hidden border border-[var(--rule-light)] bg-black"
+        style={{ paddingBottom: "56.25%" }}
+      >
         <iframe
           className="absolute inset-0 h-full w-full"
           src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0`}

@@ -1,17 +1,19 @@
 import "server-only";
 
-import Anthropic from "@anthropic-ai/sdk";
 import { computeEntityHash } from "./entity";
 import { fetchAllFeeds, type FeedItem } from "./rss";
 import { fetchDailyVideos, type VideoItem } from "./video";
 import { computeSentimentSnapshot, fetchMarketData, sentimentLabel } from "./sentiment";
 import { generateBiasDigest, type BiasDigest } from "./bias-digest";
 import { getSourceBias, type SourceBias, BIAS_LABELS } from "./bias";
-import { saveEditorial, getArchivedEditorial } from "./editorial-archive";
+import { saveEditorial, getArchivedEditorial, type ArchivedEditorial } from "./editorial-archive";
+import { generateTextForTask } from "./ai-provider";
+import { hasAIProviderForTask } from "./ai-models";
 import { buildAgentResearchPack } from "./agent-swarm";
 import { extractCanonicalClaim } from "./claim-extract";
 import type { ArticleContent } from "./article";
 import { BRAND_NAME, SITE_URL } from "./brand";
+import { WARTIME_PLAYLIST, getDailyTrack, type MusicTrack } from "./music";
 
 // ============================================================================
 // DAILY EDITION — AI-generated front-page editorial
@@ -27,9 +29,6 @@ import { BRAND_NAME, SITE_URL } from "./brand";
 // Cached via editorial-archive.ts.
 // ============================================================================
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const WRITER_MODEL = "claude-sonnet-4-20250514";
-const EXTRACTOR_MODEL = "claude-sonnet-4-20250514";
 const WRITER_MAX_TOKENS = 8192;
 const EXTRACTOR_MAX_TOKENS = 1024;
 const WRITER_TIMEOUT_MS = 90_000;
@@ -49,85 +48,12 @@ export function getDailyEditionHash(): `0x${string}` {
   return computeEntityHash(`pooter-daily-${getTodayUTC()}`);
 }
 
-// ============================================================================
-// MUSIC PLAYLIST — curated, deterministic daily pick
-// ============================================================================
+// Music data is in ./music.ts (shared with client components)
+// Re-export for backward compatibility
+export type MusicPick = MusicTrack;
 
-interface MusicPick {
-  videoId: string;
-  title: string;
-  artist: string;
-}
-
-const MUSIC_PLAYLIST: MusicPick[] = [
-  { videoId: "hTWKbfoikeg", title: "Smells Like Teen Spirit", artist: "Nirvana" },
-  { videoId: "YR5ApYxkU-U", title: "Bohemian Rhapsody", artist: "Queen" },
-  { videoId: "Zi_XLOBDo_Y", title: "Billie Jean", artist: "Michael Jackson" },
-  { videoId: "fJ9rUzIMcZQ", title: "Bohemian Rhapsody", artist: "Queen" },
-  { videoId: "6Ejga4kJUts", title: "Shine On You Crazy Diamond", artist: "Pink Floyd" },
-  { videoId: "btPJPFnesV4", title: "Eye of the Tiger", artist: "Survivor" },
-  { videoId: "rY0WxgSXdEE", title: "Let It Be", artist: "The Beatles" },
-  { videoId: "oRdxUFDoQe0", title: "Jump Around", artist: "House of Pain" },
-  { videoId: "A_MjCqQoLLA", title: "Hey Ya!", artist: "OutKast" },
-  { videoId: "djV11Xbc914", title: "A-Punk", artist: "Vampire Weekend" },
-  { videoId: "1w7OgIMMRc4", title: "Sweet Child O' Mine", artist: "Guns N' Roses" },
-  { videoId: "TdrL3QxjyVw", title: "Paranoid Android", artist: "Radiohead" },
-  { videoId: "dTAAsCNK7RA", title: "September", artist: "Earth, Wind & Fire" },
-  { videoId: "HAfFfqiYLp0", title: "Tiny Dancer", artist: "Elton John" },
-  { videoId: "CvBfHwUxHIk", title: "Toxicity", artist: "System of a Down" },
-  { videoId: "pAgnJDJN4VA", title: "Africa", artist: "Toto" },
-  { videoId: "B9FzVhw8_bY", title: "Breathe", artist: "Télépopmusik" },
-  { videoId: "3mbBbFH9fAg", title: "Teardrop", artist: "Massive Attack" },
-  { videoId: "OPf0YbXqDm0", title: "Uptown Funk", artist: "Bruno Mars" },
-  { videoId: "SDTZ7iX4vTQ", title: "Starman", artist: "David Bowie" },
-  { videoId: "2vjPBrBU-TM", title: "Sandstorm", artist: "Darude" },
-  { videoId: "y6120QOlsfU", title: "Darling Nikki", artist: "Prince" },
-  { videoId: "aGSKrC7dGcY", title: "Clint Eastwood", artist: "Gorillaz" },
-  { videoId: "5IsSpAOD6K8", title: "Everybody Wants to Rule the World", artist: "Tears for Fears" },
-  { videoId: "1lyu1KKwC74", title: "The Less I Know the Better", artist: "Tame Impala" },
-  { videoId: "PvF9PAxe5Ng", title: "Born Slippy", artist: "Underworld" },
-  { videoId: "wycjnCCgUes", title: "Seven Nation Army", artist: "The White Stripes" },
-  { videoId: "NUVCQXMUVnI", title: "Levels", artist: "Avicii" },
-  { videoId: "gAjR4_CbPpQ", title: "Windowlicker", artist: "Aphex Twin" },
-  { videoId: "WibmcsEGLKo", title: "Get Lucky", artist: "Daft Punk" },
-  { videoId: "n2MtEsrcTTs", title: "Flim", artist: "Aphex Twin" },
-  { videoId: "hBe0VCso0E8", title: "Feel Good Inc.", artist: "Gorillaz" },
-  { videoId: "Gs069dndIYk", title: "Purple Rain", artist: "Prince" },
-  { videoId: "kXYiU_JCYtU", title: "Numb", artist: "Linkin Park" },
-  { videoId: "K1b8AhIsSYQ", title: "Genesis", artist: "Grimes" },
-  { videoId: "dQw4w9WgXcQ", title: "Never Gonna Give You Up", artist: "Rick Astley" },
-  { videoId: "4NRXx6U8ABQ", title: "Psycho Killer", artist: "Talking Heads" },
-  { videoId: "bpOSxM0rNPM", title: "Do I Wanna Know?", artist: "Arctic Monkeys" },
-  { videoId: "HyHNuVaZJ-k", title: "Heart of Glass", artist: "Blondie" },
-  { videoId: "oIFLtNYI3Ls", title: "Running Up That Hill", artist: "Kate Bush" },
-  { videoId: "gpoWnkCBkKs", title: "Idioteque", artist: "Radiohead" },
-  { videoId: "VZt7J0iaUD0", title: "B.O.B.", artist: "OutKast" },
-  { videoId: "Xsp3_a-PMTw", title: "Where Is My Mind?", artist: "Pixies" },
-  { videoId: "QN1odfjtMoo", title: "Lux Aeterna", artist: "Clint Mansell" },
-  { videoId: "4D2qcbu26gs", title: "Midnight City", artist: "M83" },
-  { videoId: "bESGLojNYSo", title: "Strobe", artist: "deadmau5" },
-  { videoId: "rVqAdIMQZlk", title: "Everything In Its Right Place", artist: "Radiohead" },
-  { videoId: "pIgZ7gMze7A", title: "No Church in the Wild", artist: "Jay-Z & Kanye West" },
-  { videoId: "tYzMYcUty6s", title: "Time", artist: "Pink Floyd" },
-  { videoId: "xWIKQMBBTtk", title: "Paper Planes", artist: "M.I.A." },
-  { videoId: "u9Dg-g7t2l4", title: "Sabotage", artist: "Beastie Boys" },
-  { videoId: "BTYAsjAVa3I", title: "Maps", artist: "Yeah Yeah Yeahs" },
-  { videoId: "0S13mP_pfEc", title: "Midnight Pretenders", artist: "Tomoko Aran" },
-  { videoId: "7wfYIMyS_dI", title: "I Feel Love", artist: "Donna Summer" },
-  { videoId: "F90Cw4l-8NY", title: "Guillotine", artist: "Death Grips" },
-  { videoId: "RvA3q0ZU-NQ", title: "Enjoy the Silence", artist: "Depeche Mode" },
-  { videoId: "viDL2W0HcJw", title: "Ceremony", artist: "New Order" },
-  { videoId: "nmXMgqjQzls", title: "Digital Love", artist: "Daft Punk" },
-  { videoId: "qeMFqkcPYcg", title: "Bela Lugosi's Dead", artist: "Bauhaus" },
-  { videoId: "LTrk4X9ACtw", title: "Myxomatosis", artist: "Radiohead" },
-];
-
-function getDailyMusicPick(): MusicPick {
-  const now = new Date();
-  const start = new Date(now.getUTCFullYear(), 0, 0);
-  const diff = now.getTime() - start.getTime();
-  const dayOfYear = Math.floor(diff / 86400000);
-  return MUSIC_PLAYLIST[dayOfYear % MUSIC_PLAYLIST.length];
+function getDailyMusicPick(): MusicTrack {
+  return getDailyTrack();
 }
 
 function normalizeDailyTitle(value: string | null | undefined): string {
@@ -135,6 +61,48 @@ function normalizeDailyTitle(value: string | null | undefined): string {
   if (!cleaned) return DEFAULT_DAILY_TITLE;
   if (/^pooter\s+world$/i.test(cleaned)) return DEFAULT_DAILY_TITLE;
   return cleaned;
+}
+
+// ============================================================================
+// PREVIOUS EDITIONS — feed the writer its own history
+// ============================================================================
+
+interface PreviousEditionSummary {
+  date: string;
+  dailyTitle: string;
+  headline: string;
+  subheadline: string;
+  openingParagraph: string;
+}
+
+function getDateUTC(daysAgo: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - daysAgo);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+async function fetchPreviousEditions(count = 3): Promise<PreviousEditionSummary[]> {
+  const results: PreviousEditionSummary[] = [];
+  for (let i = 1; i <= count + 2; i++) {
+    if (results.length >= count) break;
+    const date = getDateUTC(i);
+    const hash = computeEntityHash(`pooter-daily-${date}`);
+    try {
+      const archived = await getArchivedEditorial(hash);
+      if (archived && archived.isDailyEdition) {
+        results.push({
+          date,
+          dailyTitle: archived.dailyTitle || "DAILY EDITION",
+          headline: archived.primary.title,
+          subheadline: archived.subheadline,
+          openingParagraph: archived.editorialBody[0] || "",
+        });
+      }
+    } catch {
+      // Skip missing days
+    }
+  }
+  return results;
 }
 
 // ============================================================================
@@ -149,13 +117,23 @@ interface DailyEditionData {
   sources: SourceBias[];
   headlines: string[];
   musicPick: MusicPick;
+  previousEditions: PreviousEditionSummary[];
+}
+
+/** Race a promise against a timeout — returns fallback on timeout */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
 }
 
 async function gatherDailyEditionData(): Promise<DailyEditionData> {
-  const [rssItems, marketData, videos] = await Promise.all([
-    fetchAllFeeds(),
-    fetchMarketData(),
-    fetchDailyVideos(20),
+  const [rssItems, marketData, videos, previousEditions] = await Promise.all([
+    withTimeout(fetchAllFeeds(), 10_000, []),
+    withTimeout(fetchMarketData(), 5_000, { priceChanges: {} }),
+    withTimeout(fetchDailyVideos(20), 5_000, []),
+    withTimeout(fetchPreviousEditions(3).catch(() => [] as PreviousEditionSummary[]), 5_000, []),
   ]);
 
   // Compute sentiment snapshot
@@ -176,7 +154,7 @@ async function gatherDailyEditionData(): Promise<DailyEditionData> {
 
   const musicPick = getDailyMusicPick();
 
-  return { rssItems, sentiment, videos, biasDigest, sources, headlines, musicPick };
+  return { rssItems, sentiment, videos, biasDigest, sources, headlines, musicPick, previousEditions };
 }
 
 // ============================================================================
@@ -184,7 +162,7 @@ async function gatherDailyEditionData(): Promise<DailyEditionData> {
 // ============================================================================
 
 function buildWriterPrompt(data: DailyEditionData): string {
-  const { rssItems, sentiment, videos, biasDigest, sources, headlines, musicPick } = data;
+  const { rssItems, sentiment, videos, biasDigest, sources, headlines, musicPick, previousEditions } = data;
 
   // Top stories — group by category, pick top articles
   const topStories = rssItems.slice(0, 25).map((item) => {
@@ -214,7 +192,12 @@ function buildWriterPrompt(data: DailyEditionData): string {
   // Video picks
   const videoList = videos.slice(0, 8).map((v) => `- ${v.channel}: "${v.title}"`).join("\n");
 
-  return `You are the Editor-in-Chief of pooter world — a daily broadsheet for the parallel world being built on Ethereum.
+  // Build previous editions context
+  const prevEditionsBlock = previousEditions.length > 0
+    ? `\n=== YOUR PREVIOUS EDITIONS ===\nYou wrote these. Reference them, follow up on stories, note what changed. Build continuity — you're a reporter with a beat, not a daily reset.\n${previousEditions.map((e) => `[${e.date}] "${e.dailyTitle}" — ${e.headline}\n  Angle: ${e.subheadline}\n  Opening: ${e.openingParagraph.slice(0, 300)}...`).join("\n\n")}\n`
+    : "";
+
+  return `You are the Editor-in-Chief of pooter world — a broadsheet for the internet age. You are also trying to build this into a real newspaper that people pay for. You think about audience, engagement, donations, subscriptions. You want readers to come back tomorrow. You want them to share this with someone. You write like it's your livelihood — because it is.
 
 TODAY'S DATE: ${getTodayUTC()}
 GLOBAL SENTIMENT: ${sentiment.globalScore}/100 (${sentimentLabel(sentiment.globalScore)})
@@ -235,48 +218,49 @@ ${biasInfo}
 ${videoList || "No videos available"}
 
 === TODAY'S MUSIC PICK ===
-${musicPick.artist} — "${musicPick.title}" (YouTube: ${musicPick.videoId})
-
+${musicPick.artist} — "${musicPick.title}"
+${prevEditionsBlock}
 Write the DAILY EDITION for pooter world. This is the front-page editorial that synthesizes the state of the world today.
 
 YOUR VOICE:
-- You are esoteric but grounded. You see patterns others miss.
-- You believe in building a parallel world of abundance, autonomy, privacy, dignity, and human rights through open protocols.
-- "pooter world" is another name for Ethereum — all culture, all governance, all coordination converging onto open infrastructure.
-- You reference specific stories, name names, cite numbers. Dense with signal.
-- You shout out crypto protocols doing interesting things. New pairs, high activity, base L2 ecosystem.
-- You don't moralize — you observe, connect, and provoke thought.
-- What if... what next... how do we build...
-- Short punchy sentences mixed with sweeping vision. Each paragraph carries weight.
-- Esoteric, topical, provocative. Not neutral — honest. Not preachy — visionary.
+- You are a reporter who has been doing this every day. You remember yesterday. You follow up on stories. If you wrote about something 2 days ago, tell the reader what changed. Build running threads.
+- You are cutting, hectic, slightly unhinged — but never cringe. Think: a war correspondent who also reads philosophy and shitposts.
+- You see the specific human cost. Name the person. Name the town. Name the amount. The identifiable victim is what moves people — not statistics, not abstractions. This is what gets people to donate.
+- You are funny in the way that tragedy is funny. Gallows humor. Irony so sharp it draws blood. Never flippant about suffering.
+- You have RANGE. Some days are furious. Some days are elegiac. Some days are absurd. Match the tone to what actually happened. Don't force a vibe.
+- Dense with signal. Reference specific stories, name names, cite numbers. If you can't be specific, don't say it.
+- You believe in open protocols, human dignity, and building alternatives — but you don't preach about it. It's the water you swim in, not the sermon you give.
+- Short punchy sentences mixed with longer analytical ones. Rhythm matters. Read it aloud in your head.
+- You are NOT "crypto media". You are a broadsheet that covers everything. Crypto, governance, and onchain activity are part of the picture, not the entire picture.
+- You think about what makes someone share a link. You think about what makes someone come back. Write something worth paying for.
 
 STRUCTURE (output these sections with the exact headers shown):
 
 DAILY TITLE:
-2-5 words. This is today's signal — a provocative, evocative phrase that captures the essence of today's news landscape. Think newspaper banner that changes daily. Examples: "THE GREAT UNWINDING", "SILENT CONVERGENCE", "PROTOCOL SPRING", "DIGITAL EXODUS", "THE INVISIBLE HAND TREMBLES". All caps. No quotes.
+2-5 words. Today's signal. Not a category label — a feeling, a provocation, a headline from the subconscious. Examples: "THE GREAT UNWINDING", "EVERYONE KNOWS", "THREE FUNERALS", "NOTHING BURGER DELUXE", "WHO TOLD YOU THAT". All caps. No quotes.
 
 HEADLINE:
 One punchy sentence (max 15 words). The day's most important story angle. This is the clickable headline.
 
 SUBHEADLINE:
-One sentence (max 30 words). The editorial angle — what should the reader think about today that they wouldn't think on their own?
+One sentence (max 30 words). NOT a summary. NOT a restatement of the headline. This is the angle — the thing the reader wouldn't think on their own. Make it cut.
 
 EDITORIAL:
 8-12 paragraphs. The daily edition body:
 
-Opening — What happened today. Lead with the biggest story. Be concrete: names, numbers, dates.
+Opening — Lead with the most human story. Who got hurt? Who got rich? Who got caught? Be concrete: names, numbers, dates. If a judge quashed something, tell me what it means for the person on the other end.
 
-Synthesis — Connect 3-5 major stories. What's the thread? What pattern emerges when you read them together?
+Synthesis — Connect 3-5 stories. Find the thread that isn't obvious. What pattern emerges when you read them together? Don't just list — weave.
 
-Market Pulse — Sentiment scores, market movements, what the numbers say vs what the coverage says.
+The Uncomfortable Part — The thing nobody wants to say. The incentive nobody wants to name. The person nobody is talking about. This is where you earn the reader's trust.
 
-Protocol Watch — Shout out crypto protocols, base L2 activity, new pairs, interesting onchain behavior. What's building while the news cycles spin?
+Market Pulse — Sentiment scores, market movements, what the numbers say vs what the coverage says. Include onchain activity if something interesting is actually happening — but don't shoehorn crypto in for the sake of it.
 
-Culture & Signal — The music pick, the videos worth watching, the cultural undercurrent. What does today sound like?
+Culture & Signal — The music pick, the videos worth watching, the cultural undercurrent. What does today feel like? Sound like?
 
-Forward Look — What happens next? What should we watch? What would change the trajectory?
+Forward Look — What happens next? What dates matter? What would change the trajectory? Be specific.
 
-Closing — One paragraph that connects back to the project: building parallel infrastructure, open protocols, permissionless coordination. Not preachy. Observational. "The old world does X. The parallel world does Y."
+Closing — One paragraph. No formula. Some days it's a question. Some days it's an observation. Some days it's a single image. Don't repeat the same "old world vs new world" frame every day — find what today actually needs.
 
 MUSIC COMMENTARY:
 2-3 sentences about today's music pick (${musicPick.artist} — "${musicPick.title}"). Why this song today? Connect it to the mood of the news. Be poetic but not pretentious.
@@ -284,9 +268,11 @@ MUSIC COMMENTARY:
 RULES:
 - Reference at least 5 specific stories from the feed by name/source
 - Include at least one specific market figure or sentiment score
-- Shout out at least one crypto protocol or onchain activity
-- The daily title must be provocative and topical — it should feel like a signal, not a label
-- No filler. No "In today's world..." No throat-clearing. Start with the news.`;
+- The daily title must feel like a signal from today, not a generic label
+- The subheadline must be DIFFERENT from the headline — a new thought, not a restatement
+- No filler. No "In today's world..." No throat-clearing. Start with the news.
+- Use the identifiable victim effect: one person's story hits harder than a million people's statistic. Lead with the human where you can.
+- Vary the emotional register day to day. Not every edition needs to be visionary. Some should be angry. Some should be sad. Some should be darkly funny. Match the news.`;
 }
 
 // ============================================================================
@@ -348,34 +334,27 @@ interface DailyEditionResult {
 }
 
 async function generateDailyEdition(data: DailyEditionData): Promise<DailyEditionResult | null> {
-  if (!ANTHROPIC_API_KEY) return null;
+  if (!hasAIProviderForTask("dailyEditionWriter") || !hasAIProviderForTask("dailyEditionExtractor")) {
+    return null;
+  }
 
-  const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
   const hash = getDailyEditionHash();
 
   // PASS 1: Writer
   console.log("[daily-edition] Pass 1 (writer) starting...");
   const writerPrompt = buildWriterPrompt(data);
 
-  const writerResponse = await Promise.race([
-    client.messages.create({
-      model: WRITER_MODEL,
-      max_tokens: WRITER_MAX_TOKENS,
-      temperature: 1.0,
-      system: "You are the Editor-in-Chief of pooter world, a daily broadsheet newspaper for the parallel world being built on Ethereum. Write with vision, density, and provocation. No filler.",
-      messages: [{ role: "user", content: writerPrompt }],
-    }),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("Daily edition writer timeout")), WRITER_TIMEOUT_MS),
-    ),
-  ]);
+  const writerResult = await generateTextForTask({
+    task: "dailyEditionWriter",
+    maxTokens: WRITER_MAX_TOKENS,
+    temperature: 1,
+    timeoutMs: WRITER_TIMEOUT_MS,
+    system:
+      "You are the Editor-in-Chief of pooter world, a broadsheet for the internet age. You write like a war correspondent with a philosophy degree and a dark sense of humor. Dense, cutting, human. No filler.",
+    user: writerPrompt,
+  });
 
-  const writerText = writerResponse.content.find((b) => b.type === "text");
-  if (!writerText || writerText.type !== "text") {
-    throw new Error("No text in writer response");
-  }
-
-  const rawEditorial = writerText.text;
+  const rawEditorial = writerResult.text;
   console.log(`[daily-edition] Pass 1 complete — ${rawEditorial.length} chars`);
 
   // Parse sections from writer output
@@ -397,28 +376,16 @@ async function generateDailyEdition(data: DailyEditionData): Promise<DailyEditio
   };
 
   try {
-    const extractorResponse = await Promise.race([
-      client.messages.create({
-        model: EXTRACTOR_MODEL,
-        max_tokens: EXTRACTOR_MAX_TOKENS,
-        temperature: 0,
-        system: EXTRACTOR_SYSTEM,
-        messages: [{
-          role: "user",
-          content: `EDITORIAL:\n${rawEditorial}\n\nExtract the structured metadata.`,
-        }],
-      }),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Daily edition extractor timeout")), EXTRACTOR_TIMEOUT_MS),
-      ),
-    ]);
+    const extractorResult = await generateTextForTask({
+      task: "dailyEditionExtractor",
+      maxTokens: EXTRACTOR_MAX_TOKENS,
+      temperature: 0,
+      timeoutMs: EXTRACTOR_TIMEOUT_MS,
+      system: EXTRACTOR_SYSTEM,
+      user: `EDITORIAL:\n${rawEditorial}\n\nExtract the structured metadata.`,
+    });
 
-    const extractorText = extractorResponse.content.find((b) => b.type === "text");
-    if (!extractorText || extractorText.type !== "text") {
-      throw new Error("No text in extractor response");
-    }
-
-    let jsonText = extractorText.text.trim();
+    let jsonText = extractorResult.text.trim();
     if (jsonText.startsWith("```")) {
       jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
     }
@@ -493,7 +460,7 @@ async function generateDailyEdition(data: DailyEditionData): Promise<DailyEditio
       relatedSummaryByLink: {},
     }),
     musicPick: {
-      videoId: musicPick.videoId,
+      spotifyId: musicPick.spotifyId,
       title: musicPick.title,
       artist: musicPick.artist,
       commentary: musicCommentary,
@@ -552,8 +519,8 @@ export async function getDailyEdition(): Promise<DailyEdition | null> {
   }
 
   // No API key → no generation
-  if (!ANTHROPIC_API_KEY) {
-    console.log("[daily-edition] No API key, skipping generation");
+  if (!hasAIProviderForTask("dailyEditionWriter")) {
+    console.log("[daily-edition] No AI writer provider configured, skipping generation");
     return null;
   }
 
@@ -574,7 +541,10 @@ export async function getDailyEdition(): Promise<DailyEdition | null> {
  * or we look for "DAILY TITLE" in tags.
  */
 function extractDailyTitleFromCache(editorial: ArticleContent): string | null {
-  // Check if there's a tag that looks like a daily title (all-caps, short)
+  // First check the dedicated dailyTitle field (set during generation)
+  if (editorial.dailyTitle) return editorial.dailyTitle;
+
+  // Fallback: check if there's a tag that looks like a daily title (all-caps, short)
   const titleTag = editorial.tags.find((t) =>
     t === t.toUpperCase() && t.split(/\s+/).length >= 2 && t.split(/\s+/).length <= 5
   );

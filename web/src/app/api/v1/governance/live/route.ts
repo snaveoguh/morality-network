@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { fetchAllProposals, fetchLiveProposals, type Proposal } from "@/lib/governance";
+import {
+  fetchAllProposals,
+  fetchGovernanceSocialSignals,
+  fetchLiveProposals,
+  type GovernanceSocialSignal,
+  type Proposal,
+} from "@/lib/governance";
 
 const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 500;
@@ -9,9 +15,11 @@ type SourceKind = "dao" | "government" | "corporate";
 
 interface GovernanceLivePayload {
   data: ReturnType<typeof normalizeProposal>[];
+  social: NormalizedGovernanceSocialSignal[];
   meta: {
     scope: string;
     totalFiltered: number;
+    socialCount: number;
     limit: number;
     nextCursor: number | null;
     generatedAt: number;
@@ -24,6 +32,30 @@ interface GovernanceLiveCacheEntry {
 }
 
 const governanceLiveCache = new Map<string, GovernanceLiveCacheEntry>();
+
+interface NormalizedGovernanceSocialSignal {
+  id: string;
+  network: "farcaster";
+  relatedDao: string | null;
+  text: string;
+  timestamp: number;
+  link: string;
+  channel: string | null;
+  tags: string[];
+  author: {
+    fid: number;
+    username: string;
+    displayName: string;
+    pfpUrl: string;
+    verifiedAddresses: string[];
+  };
+  engagement: {
+    likes: number;
+    recasts: number;
+    replies: number;
+    score: number;
+  };
+}
 
 function parseLimit(value: string | null): number {
   const parsed = Number(value ?? DEFAULT_LIMIT);
@@ -94,6 +126,23 @@ function normalizeProposal(proposal: Proposal) {
   };
 }
 
+function normalizeSocialSignal(
+  signal: GovernanceSocialSignal
+): NormalizedGovernanceSocialSignal {
+  return {
+    id: signal.id,
+    network: signal.network,
+    relatedDao: signal.relatedDao,
+    text: signal.text,
+    timestamp: signal.timestamp,
+    link: signal.link,
+    channel: signal.channel ?? null,
+    tags: signal.tags,
+    author: signal.author,
+    engagement: signal.engagement,
+  };
+}
+
 function cacheControlHeader(ttlMs: number): string {
   const sMaxAge = Math.max(1, Math.floor(ttlMs / 1000));
   const staleWhileRevalidate = sMaxAge * 2;
@@ -138,7 +187,10 @@ export async function GET(request: Request) {
       });
     }
 
-    const proposals = scope === "all" ? await fetchAllProposals() : await fetchLiveProposals();
+    const [proposals, socialSignals] = await Promise.all([
+      scope === "all" ? fetchAllProposals() : fetchLiveProposals(),
+      fetchGovernanceSocialSignals(),
+    ]);
 
     const filtered = proposals.filter((proposal) => {
       if (sourceFilter.length > 0 && !sourceFilter.includes(proposal.source.toLowerCase())) {
@@ -172,14 +224,32 @@ export async function GET(request: Request) {
     const slice = sorted.slice(0, limit + 1);
     const hasMore = slice.length > limit;
     const page = hasMore ? slice.slice(0, limit) : slice;
+    const filteredSocial = socialSignals
+      .filter((signal) => {
+        if (tagFilter.length > 0) {
+          const tags = signal.tags.map((tag) => tag.toLowerCase());
+          if (!tagFilter.some((tag) => tags.includes(tag))) {
+            return false;
+          }
+        }
+
+        if (normalizedCursor !== null && signal.timestamp >= normalizedCursor) {
+          return false;
+        }
+
+        return true;
+      });
+    const social = filteredSocial.slice(0, Math.min(limit, 12));
 
     const nextCursor = hasMore ? page[page.length - 1]?.startTime ?? null : null;
 
     const payload: GovernanceLivePayload = {
       data: page.map(normalizeProposal),
+      social: social.map(normalizeSocialSignal),
       meta: {
         scope,
         totalFiltered: filtered.length,
+        socialCount: filteredSocial.length,
         limit,
         nextCursor,
         generatedAt: now,

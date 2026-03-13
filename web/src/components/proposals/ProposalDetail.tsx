@@ -14,6 +14,7 @@ import {
   type NounsVote,
   getTimeRemaining,
   getVotePercentage,
+  isDelegationActivityProposal,
 } from "@/lib/governance";
 import Link from "next/link";
 import { useState, useMemo } from "react";
@@ -141,6 +142,7 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
   const heroImage = useMemo(() => extractImageFromBody(description), [description]);
 
   const isActive = proposal.status === "active";
+  const isDelegationActivity = isDelegationActivityProposal(proposal);
   const flag = SOURCE_FLAGS[proposal.source] || "";
   const sourceLabel = SOURCE_LABELS[proposal.source] || proposal.source;
 
@@ -175,6 +177,11 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
           >
             &middot; {isActive ? getTimeRemaining(proposal.endTime) : proposal.status}
           </span>
+          {isDelegationActivity && (
+            <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-[var(--ink)]">
+              Delegation activity
+            </span>
+          )}
           {proposal.isControversial && (
             <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-[var(--accent-red)]">
               Controversial
@@ -238,83 +245,92 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
           </div>
         )}
 
-        {/* ── Vote tally ── */}
+        {/* ── Vote tally / activity ── */}
         <div className="mt-5 border-b border-t border-[var(--rule)] py-4">
           <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-            Current Vote
+            {isDelegationActivity ? "Delegation Activity" : "Current Vote"}
           </h2>
 
-          {/* Tally text */}
-          <div className="mb-3 flex items-baseline gap-6">
-            <div>
-              <span className="font-headline text-2xl font-black text-[var(--ink)]">
-                {proposal.votesFor.toLocaleString()}
-              </span>
-              <span className="ml-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
-                {isParliamentary ? "Ayes" : "For"} ({forPct}%)
-              </span>
-            </div>
-            <span className="font-headline text-lg text-[var(--ink-faint)]">&mdash;</span>
-            <div>
-              <span className="font-headline text-2xl font-black text-[var(--ink)]">
-                {proposal.votesAgainst.toLocaleString()}
-              </span>
-              <span className="ml-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
-                {isParliamentary ? "Noes" : "Against"} ({againstPct}%)
-              </span>
-            </div>
-            {proposal.votesAbstain > 0 && (
-              <>
-                <span className="font-headline text-lg text-[var(--ink-faint)]">&mdash;</span>
+          {isDelegationActivity ? (
+            <p className="font-body-serif text-sm leading-relaxed text-[var(--ink-light)]">
+              This record is an onchain delegate change, not a proposal vote. It
+              shows who moved their voting power and links to the transaction that
+              recorded the change.
+            </p>
+          ) : (
+            <>
+              <div className="mb-3 flex items-baseline gap-6">
                 <div>
-                  <span className="font-headline text-2xl font-black text-[var(--ink-faint)]">
-                    {proposal.votesAbstain.toLocaleString()}
+                  <span className="font-headline text-2xl font-black text-[var(--ink)]">
+                    {proposal.votesFor.toLocaleString()}
                   </span>
                   <span className="ml-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
-                    Abstain
+                    {isParliamentary ? "Ayes" : "For"} ({forPct}%)
                   </span>
                 </div>
-              </>
-            )}
-          </div>
-
-          {/* Monochrome vote bar */}
-          <div className="flex h-1.5 overflow-hidden bg-[var(--paper-dark)]">
-            <div
-              className="bg-[var(--ink)] transition-all"
-              style={{ width: `${forPct}%` }}
-            />
-            <div
-              className="bg-[var(--rule-light)] transition-all"
-              style={{ width: `${againstPct}%` }}
-            />
-          </div>
-
-          {/* Quorum */}
-          {proposal.quorum != null && proposal.quorum > 0 && (
-            <div className="mt-2 flex items-center justify-between font-mono text-[9px] text-[var(--ink-faint)]">
-              <span>
-                Quorum: {proposal.quorum.toLocaleString()}
-                {proposal.totalSupply
-                  ? ` / ${proposal.totalSupply.toLocaleString()} total supply`
-                  : ""}
-              </span>
-              <span>
-                {proposal.votesFor >= proposal.quorum ? (
-                  <span className="font-bold text-[var(--ink)]">Quorum reached</span>
-                ) : (
-                  <span>
-                    {(proposal.quorum - proposal.votesFor).toLocaleString()} more needed
+                <span className="font-headline text-lg text-[var(--ink-faint)]">&mdash;</span>
+                <div>
+                  <span className="font-headline text-2xl font-black text-[var(--ink)]">
+                    {proposal.votesAgainst.toLocaleString()}
                   </span>
+                  <span className="ml-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                    {isParliamentary ? "Noes" : "Against"} ({againstPct}%)
+                  </span>
+                </div>
+                {proposal.votesAbstain > 0 && (
+                  <>
+                    <span className="font-headline text-lg text-[var(--ink-faint)]">&mdash;</span>
+                    <div>
+                      <span className="font-headline text-2xl font-black text-[var(--ink-faint)]">
+                        {proposal.votesAbstain.toLocaleString()}
+                      </span>
+                      <span className="ml-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                        Abstain
+                      </span>
+                    </div>
+                  </>
                 )}
-              </span>
-            </div>
+              </div>
+
+              <div className="flex h-1.5 overflow-hidden bg-[var(--paper-dark)]">
+                <div
+                  className="bg-[var(--ink)] transition-all"
+                  style={{ width: `${forPct}%` }}
+                />
+                <div
+                  className="bg-[var(--rule-light)] transition-all"
+                  style={{ width: `${againstPct}%` }}
+                />
+              </div>
+
+              {proposal.quorum != null && proposal.quorum > 0 && (
+                <div className="mt-2 flex items-center justify-between font-mono text-[9px] text-[var(--ink-faint)]">
+                  <span>
+                    Quorum: {proposal.quorum.toLocaleString()}
+                    {proposal.totalSupply
+                      ? ` / ${proposal.totalSupply.toLocaleString()} total supply`
+                      : ""}
+                  </span>
+                  <span>
+                    {proposal.votesFor >= proposal.quorum ? (
+                      <span className="font-bold text-[var(--ink)]">Quorum reached</span>
+                    ) : (
+                      <span>
+                        {(proposal.quorum - proposal.votesFor).toLocaleString()} more needed
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* ── Tabs ── */}
         <div className="mt-4 flex items-center gap-0 font-mono text-[10px] uppercase tracking-wider">
-          {(["description", "votes"] as const).map((tab, i) => (
+          {(["description", "votes"] as const)
+            .filter((tab) => !isDelegationActivity || tab === "description")
+            .map((tab, i) => (
             <span key={tab} className="flex items-center">
               {i > 0 && <span className="mx-2 text-[var(--rule-light)]">|</span>}
               <button
@@ -486,12 +502,13 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
         {/* Prediction market */}
         {proposal.dao === "Nouns DAO" &&
           proposal.source === "onchain" &&
-          proposal.status !== "candidate" && (
+          proposal.status !== "candidate" &&
+          !isDelegationActivity && (
           <PredictionMarket proposal={proposal} />
         )}
 
         {/* Signal vote panel */}
-        <VotePanel proposal={proposal} />
+        {!isDelegationActivity && <VotePanel proposal={proposal} />}
 
         {/* Proposal metadata */}
         <div className="border-t border-[var(--rule)] pt-4">

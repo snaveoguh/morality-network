@@ -202,7 +202,7 @@ export function StumbleView({ initialItems }: StumbleViewProps) {
         </div>
 
         {panelOpen && (
-          <aside className="pointer-events-auto absolute bottom-3 right-3 max-h-[15vh] w-[min(20rem,72vw)] overflow-y-auto border border-[var(--rule)] bg-[var(--paper)]/30 p-2 shadow-sm backdrop-blur-[1px] transition-all duration-200 hover:bg-[var(--paper)]/80 hover:shadow-xl">
+          <aside className="pointer-events-auto absolute bottom-20 right-3 max-h-[15vh] w-[min(20rem,72vw)] overflow-y-auto border border-[var(--rule)] bg-[var(--paper)]/30 p-2 shadow-sm backdrop-blur-[1px] transition-all duration-200 hover:bg-[var(--paper)]/80 hover:shadow-xl">
             <div className="mb-1.5 flex items-center justify-between">
               <h2 className="font-mono text-[7px] uppercase tracking-[0.22em] text-[var(--ink)]">
                 Onchain Layer

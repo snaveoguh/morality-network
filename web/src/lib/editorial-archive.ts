@@ -4,6 +4,7 @@ import path from "node:path";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { keccak256, toBytes } from "viem";
 import type { ArticleContent } from "./article";
+import { fetchIndexerJson, getIndexerBackendUrl } from "./server/indexer-backend";
 
 // ============================================================================
 // EDITORIAL ARCHIVE — Deep persistence for AI-generated editorials
@@ -49,6 +50,65 @@ const EMPTY_ARCHIVE: EditorialArchiveFile = {
 let cache: EditorialArchiveFile | null = null;
 let cacheLoadedAtMs = 0;
 const CACHE_TTL_MS = 30_000;
+
+async function fetchRemoteArchivedEditorial(
+  hash: string,
+): Promise<ArchivedEditorial | null> {
+  const payload = await fetchIndexerJson<{ editorial?: ArchivedEditorial }>(
+    `/api/v1/archive/editorials/${hash}`,
+    { timeoutMs: 20_000 },
+  );
+  return payload.editorial ?? null;
+}
+
+async function saveRemoteEditorial(
+  hash: string,
+  editorial: ArticleContent,
+  generatedBy: "claude-ai" | "template-fallback",
+): Promise<void> {
+  await fetchIndexerJson(
+    "/api/v1/archive/editorials/upsert",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ hash, editorial, generatedBy }),
+      timeoutMs: 30_000,
+    },
+  );
+}
+
+async function markRemoteEditorialOnchain(
+  hash: string,
+  txHash: string,
+): Promise<void> {
+  await fetchIndexerJson(
+    `/api/v1/archive/editorials/${hash}/mark-onchain`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ txHash }),
+      timeoutMs: 20_000,
+    },
+  );
+}
+
+async function fetchRemoteEditorialHashes(limit = 100_000): Promise<Set<string>> {
+  const payload = await fetchIndexerJson<{ hashes?: string[] }>(
+    `/api/v1/archive/editorials/hashes?limit=${Math.max(1, limit)}`,
+    { timeoutMs: 20_000 },
+  );
+  return new Set(Array.isArray(payload.hashes) ? payload.hashes : []);
+}
+
+async function fetchRemoteMarketImpactRecords(
+  limit = 200,
+): Promise<ArchivedMarketImpactRecord[]> {
+  const payload = await fetchIndexerJson<{ records?: ArchivedMarketImpactRecord[] }>(
+    `/api/v1/archive/editorials/market-impact?limit=${Math.max(1, limit)}`,
+    { timeoutMs: 20_000 },
+  );
+  return Array.isArray(payload.records) ? payload.records : [];
+}
 
 async function loadArchive(): Promise<EditorialArchiveFile> {
   const now = Date.now();
@@ -110,6 +170,7 @@ function computeContentHash(editorial: ArticleContent): string {
     primaryTitle: editorial.primary.title,
     primaryLink: editorial.primary.link,
     marketImpact: editorial.marketImpact || null,
+    podcastEpisode: editorial.podcastEpisode || null,
   });
   return keccak256(toBytes(payload));
 }
@@ -124,6 +185,14 @@ function computeContentHash(editorial: ArticleContent): string {
 export async function getArchivedEditorial(
   hash: string,
 ): Promise<ArchivedEditorial | null> {
+  if (getIndexerBackendUrl()) {
+    try {
+      return await fetchRemoteArchivedEditorial(hash);
+    } catch (err) {
+      console.warn("[editorial-archive] remote lookup failed, falling back to local:", err);
+    }
+  }
+
   const archive = await loadArchive();
   return archive.items[hash] ?? null;
 }
@@ -137,6 +206,15 @@ export async function saveEditorial(
   editorial: ArticleContent,
   generatedBy: "claude-ai" | "template-fallback",
 ): Promise<void> {
+  if (getIndexerBackendUrl()) {
+    try {
+      await saveRemoteEditorial(hash, editorial, generatedBy);
+      return;
+    } catch (err) {
+      console.warn("[editorial-archive] remote save failed, falling back to local:", err);
+    }
+  }
+
   const archive = await loadArchive();
   const now = new Date().toISOString();
   const existing = archive.items[hash];
@@ -172,6 +250,15 @@ export async function markOnchain(
   hash: string,
   txHash: string,
 ): Promise<void> {
+  if (getIndexerBackendUrl()) {
+    try {
+      await markRemoteEditorialOnchain(hash, txHash);
+      return;
+    } catch (err) {
+      console.warn("[editorial-archive] remote mark-onchain failed, falling back to local:", err);
+    }
+  }
+
   const archive = await loadArchive();
   const record = archive.items[hash];
   if (!record) return;
@@ -193,6 +280,14 @@ export async function markOnchain(
  * Used by the batch generation script to skip already-generated items.
  */
 export async function getAllEditorialHashes(): Promise<Set<string>> {
+  if (getIndexerBackendUrl()) {
+    try {
+      return await fetchRemoteEditorialHashes();
+    } catch (err) {
+      console.warn("[editorial-archive] remote hash list failed, falling back to local:", err);
+    }
+  }
+
   const archive = await loadArchive();
   return new Set(Object.keys(archive.items));
 }
@@ -203,6 +298,14 @@ export async function getAllEditorialHashes(): Promise<Set<string>> {
 export async function listRecentMarketImpactRecords(
   limit = 200,
 ): Promise<ArchivedMarketImpactRecord[]> {
+  if (getIndexerBackendUrl()) {
+    try {
+      return await fetchRemoteMarketImpactRecords(limit);
+    } catch (err) {
+      console.warn("[editorial-archive] remote market-impact list failed, falling back to local:", err);
+    }
+  }
+
   const archive = await loadArchive();
   const records = Object.values(archive.items)
     .filter(

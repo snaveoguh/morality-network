@@ -7,6 +7,8 @@ import "../src/MoralityRatings.sol";
 import "../src/MoralityComments.sol";
 import "../src/MoralityTipping.sol";
 import "../src/MoralityLeaderboard.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract MoralityLeaderboardTest is Test {
     MoralityRegistry internal registry;
@@ -21,12 +23,41 @@ contract MoralityLeaderboardTest is Test {
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        registry = new MoralityRegistry();
-        ratings = new MoralityRatings(address(registry));
-        comments = new MoralityComments();
-        tipping = new MoralityTipping(address(registry), address(comments));
+        MoralityRegistry registryImpl = new MoralityRegistry();
+        ERC1967Proxy registryProxy = new ERC1967Proxy(
+            address(registryImpl),
+            abi.encodeCall(MoralityRegistry.initialize, ())
+        );
+        registry = MoralityRegistry(address(registryProxy));
+
+        MoralityRatings ratingsImpl = new MoralityRatings();
+        ERC1967Proxy ratingsProxy = new ERC1967Proxy(
+            address(ratingsImpl),
+            abi.encodeCall(MoralityRatings.initialize, (address(registry)))
+        );
+        ratings = MoralityRatings(address(ratingsProxy));
+
+        MoralityComments commentsImpl = new MoralityComments();
+        ERC1967Proxy commentsProxy = new ERC1967Proxy(
+            address(commentsImpl),
+            abi.encodeCall(MoralityComments.initialize, ())
+        );
+        comments = MoralityComments(address(commentsProxy));
+
+        MoralityTipping tippingImpl = new MoralityTipping();
+        ERC1967Proxy tippingProxy = new ERC1967Proxy(
+            address(tippingImpl),
+            abi.encodeCall(MoralityTipping.initialize, (address(registry), address(comments)))
+        );
+        tipping = MoralityTipping(payable(address(tippingProxy)));
         comments.setTippingContract(address(tipping));
-        leaderboard = new MoralityLeaderboard(address(registry), address(ratings), address(tipping), address(comments));
+
+        MoralityLeaderboard leaderboardImpl = new MoralityLeaderboard();
+        ERC1967Proxy leaderboardProxy = new ERC1967Proxy(
+            address(leaderboardImpl),
+            abi.encodeCall(MoralityLeaderboard.initialize, (address(registry), address(ratings), address(tipping), address(comments)))
+        );
+        leaderboard = MoralityLeaderboard(address(leaderboardProxy));
 
         vm.deal(alice, 100 ether);
         vm.deal(bob, 100 ether);
@@ -34,7 +65,7 @@ contract MoralityLeaderboardTest is Test {
 
     function test_setAIOracleOnlyOwner() public {
         vm.prank(alice);
-        vm.expectRevert("Not owner");
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
         leaderboard.setAIOracle(oracle);
 
         vm.expectEmit(true, true, false, false, address(leaderboard));
@@ -88,16 +119,16 @@ contract MoralityLeaderboardTest is Test {
 
     function test_transferOwnershipValidation() public {
         vm.prank(alice);
-        vm.expectRevert("Not owner");
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
         leaderboard.transferOwnership(alice);
 
-        vm.expectRevert("Zero address");
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableInvalidOwner.selector, address(0)));
         leaderboard.transferOwnership(address(0));
 
         leaderboard.transferOwnership(alice);
 
         vm.prank(owner);
-        vm.expectRevert("Not owner");
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, owner));
         leaderboard.setAIOracle(oracle);
 
         vm.prank(alice);
@@ -196,5 +227,10 @@ contract MoralityLeaderboardTest is Test {
             vm.prank(alice);
             comments.comment(entityHash, string.concat("comment-", vm.toString(i)), 0);
         }
+    }
+
+    function test_cannotReinitialize() public {
+        vm.expectRevert();
+        leaderboard.initialize(address(registry), address(ratings), address(tipping), address(comments));
     }
 }

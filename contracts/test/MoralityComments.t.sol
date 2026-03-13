@@ -3,6 +3,8 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import "../src/MoralityComments.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract MoralityCommentsTest is Test {
     MoralityComments internal comments;
@@ -17,7 +19,12 @@ contract MoralityCommentsTest is Test {
     bytes32 internal constant ENTITY_B = keccak256("entity:b");
 
     function setUp() public {
-        comments = new MoralityComments();
+        MoralityComments impl = new MoralityComments();
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(impl),
+            abi.encodeCall(MoralityComments.initialize, ())
+        );
+        comments = MoralityComments(address(proxy));
     }
 
     function test_commentCreatesAndEmits() public {
@@ -188,7 +195,7 @@ contract MoralityCommentsTest is Test {
 
     function test_setTippingContractAndAddTipAccessControl() public {
         vm.prank(alice);
-        vm.expectRevert("Not owner");
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
         comments.setTippingContract(tipping);
 
         vm.expectRevert("Zero address");
@@ -216,16 +223,16 @@ contract MoralityCommentsTest is Test {
 
     function test_transferOwnershipOnlyOwner() public {
         vm.prank(alice);
-        vm.expectRevert("Not owner");
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
         comments.transferOwnership(alice);
 
-        vm.expectRevert("Zero address");
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableInvalidOwner.selector, address(0)));
         comments.transferOwnership(address(0));
 
         comments.transferOwnership(alice);
 
         vm.prank(owner);
-        vm.expectRevert("Not owner");
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, owner));
         comments.setTippingContract(tipping);
 
         vm.prank(alice);
@@ -235,5 +242,10 @@ contract MoralityCommentsTest is Test {
     function test_getCommentRevertsWhenMissing() public {
         vm.expectRevert("Comment does not exist");
         comments.getComment(777);
+    }
+
+    function test_cannotReinitialize() public {
+        vm.expectRevert();
+        comments.initialize();
     }
 }

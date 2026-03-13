@@ -12,6 +12,7 @@ import {
 } from "wagmi";
 import { AGENT_VAULT_ABI, ERC20_ABI, MO_TOKEN } from "@/lib/contracts";
 import { AgentBotTerminal } from "@/components/markets/AgentBotTerminal";
+import type { TerminalTradingContext } from "@/lib/terminal-types";
 
 interface Position {
   id: string;
@@ -190,6 +191,25 @@ function formatEthFromWei(value: string | null | undefined): string {
 function shortHex(value: string): string {
   if (!value || value.length < 12) return value;
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+function fundingChainIdForVenue(
+  venue: "base-spot" | "ethereum-spot" | "hyperliquid-perp"
+): number {
+  return venue === "ethereum-spot" ? 1 : 8453;
+}
+
+function chainLabel(chainId: number): string {
+  switch (chainId) {
+    case 1:
+      return "Ethereum mainnet";
+    case 8453:
+      return "Base mainnet";
+    case 84532:
+      return "Base Sepolia";
+    default:
+      return `chain ${chainId}`;
+  }
 }
 
 function symbolForPosition(position: Position): string {
@@ -440,16 +460,23 @@ export function AgentMarketDashboard() {
         if (!data) {
           throw new Error("Funding destination unavailable");
         }
+        const expectedChainId = fundingChainIdForVenue(data.executionVenue);
+        if (connectedChainId !== expectedChainId) {
+          throw new Error(
+            `Switch wallet network to ${chainLabel(expectedChainId)} before sending funds`
+          );
+        }
         const amount = normalizeAmountInput(amountRaw);
         setDepositAmount(amount);
 
         const txHash = await sendTransactionAsync({
           to: data.fundingAddress,
           value: parseEther(amount),
+          chainId: expectedChainId,
         });
 
         setLastTxHash(txHash);
-        setLastTxChainId(connectedChainId || 8453);
+        setLastTxChainId(expectedChainId);
         setTimeout(() => {
           refresh().catch(() => {
             // ignored, polling fallback covers this
@@ -579,6 +606,22 @@ export function AgentMarketDashboard() {
   const balances = data.readiness.balances.slice(0, 6);
   const closedRows = data.closed.slice(0, 20);
   const subscriptionUnlocked = subscription?.account?.unlocked === true;
+  const expectedFundingChainId = fundingChainIdForVenue(data.executionVenue);
+  const fundingFacts = isVaultEnabled
+    ? [
+        "Deposit mints vault shares to your wallet, so your position is tracked by address.",
+        "The ETH stays in the vault until the manager allocates capital out to a strategy wallet.",
+        data.executionVenue === "hyperliquid-perp"
+          ? "Vault deposits do not automatically become Hyperliquid margin. Hyperliquid only sees funds after a separate allocation and transfer flow."
+          : `Vault deposits fund the pooled strategy on ${chainLabel(expectedFundingChainId)}, not a personal trading account.`,
+      ]
+    : [
+        `This sends native ETH directly to the agent funding wallet on ${chainLabel(expectedFundingChainId)}.`,
+        "Direct-fund mode does not create shares, a per-user balance, or an onchain refund ledger for you.",
+        data.executionVenue === "hyperliquid-perp"
+          ? "Sending ETH here does not automatically top up Hyperliquid collateral. It only funds the bot wallet."
+          : "This is a strategy wallet top-up, not a deposit into a personal account.",
+      ];
   const unlockSummary = subscription
     ? subscriptionUnlocked
       ? `${subscription.account?.paidMoTotal || "0"} MO received for ${
@@ -699,6 +742,14 @@ export function AgentMarketDashboard() {
               </p>
             </div>
           ) : null}
+
+          {data.executionVenue === "hyperliquid-perp" ? (
+            <p className="mt-3 border-t border-[var(--rule-light)] pt-2 font-body-serif text-xs text-[var(--ink-light)]">
+              Hyperliquid readiness is based on the Hyperliquid account value, not just ETH
+              sitting in the Base wallet. Funding this page does not by itself guarantee live
+              Hyperliquid buying power.
+            </p>
+          ) : null}
         </div>
 
         <div className="border border-[var(--rule-light)] p-4">
@@ -717,6 +768,19 @@ export function AgentMarketDashboard() {
                   2
                 )}% on realized profits.`}
           </p>
+          <div className="mt-3 border border-[var(--rule-light)] bg-[var(--paper-dark)] p-3">
+            <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+              What This Actually Does
+            </p>
+            <ul className="mt-2 space-y-1 font-body-serif text-xs text-[var(--ink-light)]">
+              {fundingFacts.map((fact) => (
+                <li key={fact}>• {fact}</li>
+              ))}
+            </ul>
+            <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--accent-red)]">
+              Use {chainLabel(expectedFundingChainId)} for this flow.
+            </p>
+          </div>
 
           <div className="mt-3 space-y-2">
             <div className="flex gap-2">
@@ -1012,6 +1076,34 @@ export function AgentMarketDashboard() {
           }
           onWithdrawAmount={isVaultEnabled ? submitVaultWithdraw : undefined}
           onUnlockPlan={handleUnlockPlan}
+          tradingContext={{
+            executionVenue: data.executionVenue,
+            dryRun: data.dryRun,
+            feePct,
+            fundingAddress: safeVault ? safeVault.address : data.fundingAddress,
+            canWithdraw: isVaultEnabled,
+            openPositions: data.totals.openPositions,
+            closedPositions: data.totals.closedPositions,
+            grossPnlUsd: data.totals.grossPnlUsd,
+            netPnlUsd: data.totals.netPnlAfterFeeUsd,
+            unrealizedPnlUsd: data.totals.unrealizedPnlUsd,
+            realizedPnlUsd: data.totals.realizedPnlUsd,
+            deployedUsd: data.totals.deployedUsd,
+            positions: data.open.map((o) => ({
+              symbol: o.position.marketSymbol ?? o.position.tokenAddress.slice(0, 10),
+              entryPrice: o.position.entryPriceUsd,
+              currentPrice: o.currentPriceUsd,
+              unrealizedPnl: o.unrealizedPnlUsd,
+              size: o.position.entryNotionalUsd,
+            })),
+            vault: safeVault ? {
+              aumUsd: Number(formatEther(BigInt(safeVault.totalManagedAssetsWei))) * (data.open[0]?.currentPriceUsd ?? 0) || 0,
+              liquidUsd: Number(formatEther(BigInt(safeVault.liquidAssetsWei))) * (data.open[0]?.currentPriceUsd ?? 0) || 0,
+              deployedUsd: Number(formatEther(BigInt(safeVault.deployedCapitalWei))) * (data.open[0]?.currentPriceUsd ?? 0) || 0,
+              totalFunders: safeVault.funderCount,
+              feePct: safeVault.performanceFeeBps / 100,
+            } : undefined,
+          } satisfies TerminalTradingContext}
         />
       </section>
     </div>

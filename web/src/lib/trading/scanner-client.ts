@@ -6,6 +6,7 @@ interface ScannerEnvelope {
   data?: unknown[];
   items?: unknown[];
   tokens?: unknown[];
+  messages?: Array<{ payload?: unknown }>;
 }
 
 function isAddress(value: unknown): value is Address {
@@ -63,7 +64,64 @@ function extractItems(payload: unknown): unknown[] {
   if (Array.isArray(payload)) return payload;
   if (!payload || typeof payload !== "object") return [];
   const envelope = payload as ScannerEnvelope;
+  if (Array.isArray(envelope.messages)) {
+    return envelope.messages.map((message) => message?.payload);
+  }
   return envelope.launches ?? envelope.data ?? envelope.items ?? envelope.tokens ?? [];
+}
+
+function getIndexerEventApiUrl(): string | null {
+  const base =
+    process.env.INDEXER_BACKEND_URL?.trim() ||
+    process.env.ARCHIVE_BACKEND_URL?.trim() ||
+    process.env.SCANNER_BACKEND_URL?.trim() ||
+    "";
+  if (!base) return null;
+  return `${base.replace(/\/$/, "")}/api/v1/agents/events`;
+}
+
+async function fetchEventCandidates(
+  config: TraderExecutionConfig,
+  signal: AbortSignal,
+): Promise<ScannerLaunch[]> {
+  const eventApiUrl = getIndexerEventApiUrl();
+  if (!eventApiUrl) return [];
+
+  const requestUrl = new URL(eventApiUrl);
+  requestUrl.searchParams.set(
+    "limit",
+    String(Math.max(10, config.risk.maxNewEntriesPerCycle * 4)),
+  );
+  requestUrl.searchParams.set("topic", "trade-candidate");
+  requestUrl.searchParams.set("since", String(Date.now() - 6 * 60 * 60 * 1000));
+
+  const res = await fetch(requestUrl.toString(), {
+    method: "GET",
+    cache: "no-store",
+    signal,
+  });
+
+  if (!res.ok) {
+    throw new Error(`event API ${res.status}`);
+  }
+
+  const payload = await res.json();
+  const items = extractItems(payload);
+  return items.map(normalizeLaunch).filter((launch): launch is ScannerLaunch => launch !== null);
+}
+
+function dedupeLaunches(launches: ScannerLaunch[]): ScannerLaunch[] {
+  const byToken = new Map<string, ScannerLaunch>();
+
+  for (const launch of launches) {
+    const key = launch.tokenAddress.toLowerCase();
+    const existing = byToken.get(key);
+    if (!existing || launch.score > existing.score) {
+      byToken.set(key, launch);
+    }
+  }
+
+  return Array.from(byToken.values()).sort((a, b) => b.score - a.score);
 }
 
 export async function fetchScannerCandidates(
@@ -81,23 +139,26 @@ export async function fetchScannerCandidates(
       requestUrl.searchParams.set("limit", String(Math.max(5, config.risk.maxNewEntriesPerCycle * 3)));
     }
 
-    const res = await fetch(requestUrl.toString(), {
-      method: "GET",
-      cache: "no-store",
-      signal: controller.signal,
-    });
+    const [scannerRes, eventCandidates] = await Promise.all([
+      fetch(requestUrl.toString(), {
+        method: "GET",
+        cache: "no-store",
+        signal: controller.signal,
+      }),
+      fetchEventCandidates(config, controller.signal).catch(() => []),
+    ]);
 
-    if (!res.ok) {
-      throw new Error(`scanner API ${res.status}`);
+    if (!scannerRes.ok) {
+      throw new Error(`scanner API ${scannerRes.status}`);
     }
 
-    const payload = await res.json();
+    const payload = await scannerRes.json();
     const items = extractItems(payload);
     const normalized = items.map(normalizeLaunch).filter((launch): launch is ScannerLaunch => launch !== null);
 
-    return normalized
-      .filter((launch) => launch.score >= config.risk.minScore)
-      .sort((a, b) => b.score - a.score);
+    return dedupeLaunches([...normalized, ...eventCandidates]).filter(
+      (launch) => launch.score >= config.risk.minScore,
+    );
   } finally {
     clearTimeout(timer);
   }

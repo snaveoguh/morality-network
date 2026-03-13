@@ -138,19 +138,22 @@ export async function fetchPopularCasts(fid: number): Promise<Cast[]> {
 
 const MIN_ENGAGEMENT = 3; // min likes+recasts+replies to show in feed
 
+// Known FIDs — skip the sequential lookupUser() API call
+const KNOWN_FIDS: Record<string, number> = { pip: 7924 };
+
 export async function fetchFarcasterContent(
   username: string = "pip"
 ): Promise<Cast[]> {
-  // Look up user
-  const user = await lookupUser(username);
-  if (!user) {
+  // Use cached FID if known, otherwise do the API lookup
+  const fid = KNOWN_FIDS[username] ?? (await lookupUser(username))?.fid;
+  if (!fid) {
     // Fallback to just trending if user not found
     return filterByEngagement(await fetchTrendingCasts());
   }
 
   // Fetch social feed + trending in parallel
   const [socialCasts, trendingCasts] = await Promise.all([
-    fetchSocialFeed(user.fid),
+    fetchSocialFeed(fid),
     fetchTrendingCasts(),
   ]);
 

@@ -16,6 +16,8 @@ import { EntityPopover } from "./EntityPopover";
 import { ArchiveStatus } from "./ArchiveStatus";
 import { MarketImpactSection } from "./MarketImpactSection";
 import { YouTubeEmbed } from "./YouTubeEmbed";
+import { SpotifyEmbed } from "./SpotifyEmbed";
+import { PodcastEmbed } from "./PodcastEmbed";
 import { ParallelWorldFooter } from "./ParallelWorldFooter";
 import { MintEditionButton } from "./MintEditionButton";
 import { buildFundingGraph } from "@/lib/funding-tree";
@@ -144,6 +146,7 @@ export function ArticleTemplate({
     historicalParallel,
     stakeholderAnalysis,
     marketImpact,
+    podcastEpisode,
     musicPick,
     newsVideos,
     isDailyEdition,
@@ -249,6 +252,8 @@ export function ArticleTemplate({
         </figure>
       )}
 
+      {podcastEpisode && <PodcastEmbed episode={podcastEpisode} sourceName={primary.source} />}
+
       {/* ══════════════ AGENT SWARM ATTRIBUTION ══════════════ */}
       <div className="mb-4 flex items-center gap-2 border-b border-[var(--rule-light)] pb-3">
         <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--ink-faint)]">
@@ -290,14 +295,23 @@ export function ArticleTemplate({
           <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
             Today&rsquo;s Pick
           </h2>
-          <p className="mb-1 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
-            {musicPick.artist} &mdash; {musicPick.title}
-          </p>
-          <YouTubeEmbed
-            videoId={musicPick.videoId}
-            title={`${musicPick.artist} — ${musicPick.title}`}
-            caption={musicPick.commentary || undefined}
-          />
+          {musicPick.spotifyId ? (
+            <SpotifyEmbed
+              trackId={musicPick.spotifyId}
+              title={`${musicPick.artist} — ${musicPick.title}`}
+              caption={musicPick.commentary || undefined}
+            />
+          ) : musicPick.videoId ? (
+            <YouTubeEmbed
+              videoId={musicPick.videoId}
+              title={`${musicPick.artist} — ${musicPick.title}`}
+              caption={musicPick.commentary || undefined}
+            />
+          ) : (
+            <p className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+              {musicPick.artist} &mdash; {musicPick.title}
+            </p>
+          )}
         </section>
       )}
 

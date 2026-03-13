@@ -7,6 +7,13 @@
 import { NextResponse } from "next/server";
 import { messageBus } from "@/lib/agents/core";
 import type { AgentMessage } from "@/lib/agents/core";
+import {
+  bridgeSignatureIsRequired,
+  verifyBridgeMessage,
+} from "@/lib/agents/core/bridge-signature";
+import { buildHumanPromptMeta } from "@/lib/agents/core/human-prompt-meta";
+import { hasIndexerBackend } from "@/lib/server/indexer-backend";
+import { publishPersistedAgentEvent } from "@/lib/server/runtime-backend";
 
 export const dynamic = "force-dynamic";
 
@@ -42,8 +49,67 @@ export async function POST(request: Request) {
       );
     }
 
+    const verification = await verifyBridgeMessage({
+      message,
+      headers: request.headers,
+      expectedAudience: new URL(request.url).origin,
+    });
+    const signatureRequired = bridgeSignatureIsRequired();
+    if (signatureRequired && (!verification.present || !verification.verified || !verification.trusted)) {
+      return NextResponse.json(
+        {
+          error: verification.reason || "Bridge signature verification failed",
+          verification,
+        },
+        { status: 401 },
+      );
+    }
+
+    const relayedFrom =
+      verification.origin ||
+      request.headers.get("x-agent-origin") ||
+      request.headers.get("origin") ||
+      request.headers.get("referer") ||
+      request.headers.get("x-forwarded-host") ||
+      null;
+    const receivedAt = Date.now();
+
+    const humanPromptMeta = await buildHumanPromptMeta(message, {
+      headers: request.headers,
+      relayedFrom,
+      receivedAt,
+    });
+
+    message.meta = {
+      ...(message.meta ?? {}),
+      relayedFrom,
+      receivedAt,
+      bridge: verification,
+      ...(humanPromptMeta ?? {}),
+    };
+
+    if (message.meta.humanPrompt) {
+      console.info("[BusRelay] Human prompt received", {
+        messageId: message.id,
+        topic: message.topic,
+        from: message.from,
+        to: message.to,
+        senderEns: message.meta.sender?.ens ?? null,
+        senderAddress: message.meta.sender?.address ?? null,
+        promptPreview: message.meta.promptPreview ?? null,
+      });
+    }
+
     // Mark as bridged to prevent relay loops
     message._bridged = true;
+
+    if (hasIndexerBackend()) {
+      try {
+        await publishPersistedAgentEvent(message, "bridge-relay");
+      } catch (error) {
+        console.error("[BusRelay] Failed to persist relayed message:", error);
+      }
+    }
 
     // Re-publish locally
     await messageBus.publish(message);

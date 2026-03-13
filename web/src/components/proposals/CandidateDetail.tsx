@@ -106,12 +106,12 @@ export function CandidateDetail({ candidate }: CandidateDetailProps) {
             <TipButton recipientAddress={proposer} />
           )}
           <a
-            href={`https://nouns.wtf/candidates/${encodeURIComponent(candidate.slug)}`}
+            href={`https://noun.wtf/candidate/${encodeURIComponent(candidate.slug)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="ml-auto font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
           >
-            View on nouns.wtf &rsaquo;
+            View on noun.wtf &rsaquo;
           </a>
         </div>
 

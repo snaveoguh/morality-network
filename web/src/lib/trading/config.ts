@@ -16,7 +16,7 @@ function defaultRpcForVenue(venue: ExecutionVenue): string {
   if (venue === "ethereum-spot") {
     return stringFromEnv(
       "TRADER_ETHEREUM_RPC_URL",
-      stringFromEnv("ETHEREUM_RPC_URL", "https://ethereum-rpc.publicnode.com")
+      stringFromEnv("ETHEREUM_RPC_URL", "https://mainnet.rpc.buidlguidl.com")
     );
   }
   return stringFromEnv("BASE_MAINNET_RPC_URL", "https://mainnet.base.org");

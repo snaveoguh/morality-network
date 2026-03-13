@@ -6,6 +6,7 @@ import {
   type Proposal,
   getTimeRemaining,
   getVotePercentage,
+  isDelegationActivityProposal,
 } from "@/lib/governance";
 
 interface ProposalRowProps {
@@ -29,11 +30,12 @@ export function ProposalRow({ proposal }: ProposalRowProps) {
   );
   const isActive = proposal.status === "active";
   const isCandidate = proposal.status === "candidate";
+  const isDelegationActivity = isDelegationActivityProposal(proposal);
   const isParliament = proposal.source === "parliament";
   const isGov = ["parliament", "congress", "eu", "canada", "australia", "hyperliquid"].includes(proposal.source);
   const flag = GOV_FLAGS[proposal.source] || "";
   const hasDaoLogo = typeof proposal.daoLogo === "string" && proposal.daoLogo.trim().length > 0;
-  const hasVotes = proposal.votesFor + proposal.votesAgainst > 0;
+  const hasVotes = !isDelegationActivity && proposal.votesFor + proposal.votesAgainst > 0;
 
   let href = `/proposals/${encodeURIComponent(proposal.id)}`;
   if (isCandidate && proposal.candidateSlug) {
@@ -86,6 +88,14 @@ export function ProposalRow({ proposal }: ProposalRowProps) {
               <>
                 <span>&middot;</span>
                 <AddressDisplay address={proposal.proposer} />
+              </>
+            )}
+            {isDelegationActivity && (
+              <>
+                <span>&middot;</span>
+                <span className="font-bold text-[var(--ink-light)]">
+                  Delegation activity
+                </span>
               </>
             )}
             {isCandidate && (
@@ -142,8 +152,10 @@ export function ProposalRow({ proposal }: ProposalRowProps) {
             {isActive
               ? getTimeRemaining(proposal.endTime)
               : isCandidate
-              ? "Candidate"
-              : proposal.status}
+                ? "Candidate"
+                : isDelegationActivity
+                  ? "Delegation"
+                  : proposal.status}
           </span>
         </div>
       </div>

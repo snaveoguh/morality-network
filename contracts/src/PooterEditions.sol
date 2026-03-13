@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 /// @title PooterEditions — 1/1 Daily Edition NFTs
 /// @notice Each token represents a daily edition of pooter world.
 ///         One token per day, minted by the owner (oracle/deployer).
 ///         tokenId = edition number (days since epoch).
-contract PooterEditions is ERC721, Ownable {
+contract PooterEditions is Initializable, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
     using Strings for uint256;
 
     // ── Constants ──────────────────────────────────────────────────────────
@@ -37,10 +39,18 @@ contract PooterEditions is ERC721, Ownable {
     error EditionAlreadyMinted(uint256 editionNumber);
     error InvalidEditionNumber(uint256 editionNumber);
 
-    // ── Constructor ───────────────────────────────────────────────────────
-    constructor(string memory _baseTokenURI) ERC721("Pooter Editions", "POOTER") Ownable(msg.sender) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(string memory _baseTokenURI) public initializer {
+        __ERC721_init("Pooter Editions", "POOTER");
+        __Ownable_init(msg.sender);
         baseTokenURI = _baseTokenURI;
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ── Mint ──────────────────────────────────────────────────────────────
     /// @notice Mint a daily edition. Only owner (oracle/deployer).
@@ -89,4 +99,6 @@ contract PooterEditions is ERC721, Ownable {
         baseTokenURI = _baseTokenURI;
         emit BaseTokenURIUpdated(_baseTokenURI);
     }
+
+    uint256[50] private __gap;
 }

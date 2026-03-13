@@ -90,10 +90,13 @@ export async function fetchDailyVideos(limit = 8): Promise<VideoItem[]> {
   const results = await Promise.allSettled(
     VIDEO_CHANNELS.map(async (ch) => {
       try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 4000);
         const res = await fetch(
           `https://www.youtube.com/feeds/videos.xml?channel_id=${ch.channelId}`,
-          { next: { revalidate: 600 } } // 10 min cache
+          { next: { revalidate: 600 }, signal: controller.signal } // 10 min cache
         );
+        clearTimeout(timer);
         if (!res.ok) return [];
         const xml = await res.text();
         return parseYouTubeRSS(xml, ch.name, ch.channelId, ch.category);

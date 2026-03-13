@@ -4,8 +4,8 @@ import { baseContractsPublicClient } from "./server/onchain-clients";
 
 const commentsClient = baseContractsPublicClient;
 
-const TIP_LOG_LOOKBACK_BLOCKS = BigInt(12_000);
-const TIP_LOG_CHUNK_SIZE = BigInt(10_000);
+const TIP_LOG_LOOKBACK_BLOCKS = BigInt(2_500);
+const TIP_LOG_CHUNK_SIZE = BigInt(2_500);
 
 const TIP_SENT_EVENT = parseAbiItem(
   "event TipSent(bytes32 indexed entityHash, address indexed tipper, address indexed recipient, uint256 amount)"
@@ -132,10 +132,12 @@ export async function fetchProtocolWireActivity(limit = 24): Promise<ProtocolAct
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
   const expandedLimit = Math.min(safeLimit * 2, 100);
 
-  const [comments, tips] = await Promise.all([
+  const [commentsResult, tipsResult] = await Promise.allSettled([
     fetchProtocolWideComments(expandedLimit),
     fetchRecentTips(expandedLimit),
   ]);
+  const comments = commentsResult.status === "fulfilled" ? commentsResult.value : [];
+  const tips = tipsResult.status === "fulfilled" ? tipsResult.value : [];
 
   const commentActivities: ProtocolCommentActivity[] = comments.map((comment) => ({
     ...comment,

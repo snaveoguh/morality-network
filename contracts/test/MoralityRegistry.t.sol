@@ -3,6 +3,8 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import "../src/MoralityRegistry.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract MoralityRegistryTest is Test {
     MoralityRegistry internal registry;
@@ -15,7 +17,12 @@ contract MoralityRegistryTest is Test {
     string internal constant IDENTIFIER = "https://example.com/story";
 
     function setUp() public {
-        registry = new MoralityRegistry();
+        MoralityRegistry impl = new MoralityRegistry();
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(impl),
+            abi.encodeCall(MoralityRegistry.initialize, ())
+        );
+        registry = MoralityRegistry(address(proxy));
     }
 
     function test_registerEntityStoresAndEmits() public {
@@ -96,14 +103,12 @@ contract MoralityRegistryTest is Test {
 
     function test_transferOwnershipOnlyOwner() public {
         vm.prank(alice);
-        vm.expectRevert("Not owner");
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
         registry.transferOwnership(alice);
 
-        vm.expectRevert("Zero address");
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableInvalidOwner.selector, address(0)));
         registry.transferOwnership(address(0));
 
-        vm.expectEmit(true, true, false, false, address(registry));
-        emit MoralityRegistry.OwnershipTransferred(owner, alice);
         registry.transferOwnership(alice);
 
         vm.prank(alice);
@@ -208,5 +213,10 @@ contract MoralityRegistryTest is Test {
 
         assertEq(registry.computeHash(IDENTIFIER), expectedEntityHash);
         assertEq(registry.computeClaimHash("claim text"), expectedClaimHash);
+    }
+
+    function test_cannotReinitialize() public {
+        vm.expectRevert();
+        registry.initialize();
     }
 }

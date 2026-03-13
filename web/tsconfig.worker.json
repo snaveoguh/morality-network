@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "incremental": false,
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "noEmit": false,
+    "outDir": "./dist-worker",
+    "plugins": [],
+    "rootDir": "./src",
+    "target": "ES2022"
+  },
+  "include": [
+    "src/worker/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

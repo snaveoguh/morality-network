@@ -3,8 +3,11 @@ pragma solidity ^0.8.24;
 
 import "./MoralityComments.sol";
 import "./MoralityRegistry.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract MoralityTipping {
+contract MoralityTipping is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     MoralityRegistry public registry;
     MoralityComments public commentsContract;
 
@@ -33,10 +36,18 @@ contract MoralityTipping {
     event Withdrawn(address indexed recipient, uint256 amount);
     event EscrowClaimed(bytes32 indexed entityHash, address indexed owner, uint256 amount);
 
-    constructor(address _registry, address _comments) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _registry, address _comments) public initializer {
+        __Ownable_init(msg.sender);
         registry = MoralityRegistry(_registry);
         commentsContract = MoralityComments(_comments);
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /// @notice Tip an entity (URL, domain, address, contract)
     function tipEntity(bytes32 entityHash) external payable {
@@ -133,4 +144,6 @@ contract MoralityTipping {
     }
 
     receive() external payable {}
+
+    uint256[50] private __gap;
 }

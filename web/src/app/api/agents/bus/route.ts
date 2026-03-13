@@ -2,6 +2,9 @@
 
 import { NextResponse } from "next/server";
 import { messageBus } from "@/lib/agents/core";
+import { isWorkerAgentRuntime } from "@/lib/runtime-mode";
+import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
+import { fetchPersistedAgentEvents } from "@/lib/server/runtime-backend";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +15,34 @@ export async function GET(request: Request) {
     200
   );
   const topic = searchParams.get("topic") || undefined;
+
+  if (isWorkerAgentRuntime()) {
+    try {
+      const payload = await fetchPersistedAgentEvents({
+        limit,
+        topic,
+      });
+      return NextResponse.json({
+        messages: payload.messages,
+        count: payload.count,
+        backend: "worker",
+        source: getIndexerBackendUrl(),
+        timestamp: Date.now(),
+      });
+    } catch (error) {
+      return NextResponse.json(
+        {
+          messages: [],
+          count: 0,
+          backend: "worker",
+          source: getIndexerBackendUrl(),
+          error: error instanceof Error ? error.message : "failed to load persisted bus",
+          timestamp: Date.now(),
+        },
+        { status: 503 },
+      );
+    }
+  }
 
   let messages = messageBus.recentMessages(limit);
 

@@ -29,7 +29,7 @@ const DAO_HOST_HINTS = [
   "tally.xyz",
   "basescan.org",
   "etherscan.io",
-  "nouns.wtf",
+  "noun.wtf",
   "compound.finance",
   "arbiscan.io",
   "optimistic.etherscan.io",

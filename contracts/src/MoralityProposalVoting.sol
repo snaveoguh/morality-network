@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 /// @title MoralityProposalVoting
 /// @notice Signal voting on DAO proposals. Noun holders get gas refund, everyone else pays.
 /// @dev Votes are signal-only (off-chain aggregation). Not binding on the target DAO.
@@ -13,7 +17,7 @@ interface IProposalState {
     function state(uint256 proposalId) external view returns (uint8);
 }
 
-contract MoralityProposalVoting {
+contract MoralityProposalVoting is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     enum VoteType { AGAINST, FOR, ABSTAIN }
 
     struct DaoResolverConfig {
@@ -36,10 +40,9 @@ contract MoralityProposalVoting {
 
     // Nouns Token on Ethereum mainnet
     INounsToken public nounsToken;
-    address public owner;
 
     // Max gas refund per vote (prevents abuse)
-    uint256 public maxRefund = 0.01 ether;
+    uint256 public maxRefund;
     uint256 public constant MAX_REASON_LENGTH = 500;
 
     // proposalKey (keccak256 of dao+proposalId) => voter => Vote
@@ -61,16 +64,19 @@ contract MoralityProposalVoting {
     event RefundIssued(address indexed voter, uint256 amount);
     event DaoResolverSet(string dao, address indexed governor, bool enabled);
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
-    constructor(address _nounsToken) {
+    function initialize(address _nounsToken) public initializer {
         require(_nounsToken != address(0), "Nouns token required");
+        __Ownable_init(msg.sender);
         nounsToken = INounsToken(_nounsToken);
-        owner = msg.sender;
+        maxRefund = 0.01 ether;
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /// @notice Cast a signal vote on a DAO proposal
     /// @param dao The DAO identifier (e.g., "nouns", "ens", "uniswap")
@@ -211,7 +217,9 @@ contract MoralityProposalVoting {
 
     /// @notice Withdraw excess funds
     function withdraw() external onlyOwner {
-        (bool ok, ) = payable(owner).call{value: address(this).balance}("");
+        (bool ok, ) = payable(owner()).call{value: address(this).balance}("");
         require(ok, "Withdraw failed");
     }
+
+    uint256[50] private __gap;
 }

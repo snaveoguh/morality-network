@@ -5,6 +5,8 @@
 import { NextResponse } from "next/server";
 import { agentRegistry } from "@/lib/agents/core";
 import { launchStore, scannerAgent } from "@/lib/agents/scanner";
+import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
+import { isWorkerAgentRuntime } from "@/lib/runtime-mode";
 
 // Ensure scanner is registered + initialized
 import "@/lib/agents/scanner";
@@ -14,14 +16,47 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 const BACKEND_TIMEOUT_MS = 10_000;
 
+async function triggerBackendScannerSync(baseUrl: string): Promise<boolean> {
+  try {
+    const syncUrl = new URL("/api/v1/scanner/sync", `${baseUrl}/`);
+    syncUrl.searchParams.set("limit", "25");
+    const response = await fetch(syncUrl.toString(), {
+      method: "GET",
+      cache: "no-store",
+      signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function fetchBackendLaunch(baseUrl: string, address: string): Promise<{
+  status: number;
+  launch: unknown | null;
+}> {
+  const url = new URL(`/api/v1/scanner/launches/${address}`, `${baseUrl}/`);
+  const response = await fetch(url.toString(), {
+    cache: "no-store",
+    signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    return { status: response.status, launch: null };
+  }
+
+  const payload = (await response.json()) as { launch?: unknown };
+  return {
+    status: response.status,
+    launch: payload.launch ?? null,
+  };
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    agentRegistry.ensureInitialized();
-    void scannerAgent.pollNow({ reason: "api:scanner-token" });
-
     const { token } = await params;
     const address = token.toLowerCase();
 
@@ -32,33 +67,55 @@ export async function GET(
       );
     }
 
-    const scannerBackendUrl = process.env.SCANNER_BACKEND_URL?.trim();
+    const scannerBackendUrl = getIndexerBackendUrl();
     if (scannerBackendUrl) {
       const baseUrl = scannerBackendUrl.replace(/\/$/, "");
-      const url = new URL(`/api/v1/scanner/launches/${address}`, baseUrl);
-      const backendRes = await fetch(url.toString(), {
-        cache: "no-store",
-        signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
-      });
+      let lookup = await fetchBackendLaunch(baseUrl, address);
 
-      if (backendRes.ok) {
-        const payload = (await backendRes.json()) as { launch?: unknown };
-        if (payload.launch) {
-          return NextResponse.json(
-            {
-              launch: payload.launch,
-              timestamp: Date.now(),
-              backend: "indexer",
+      if (!lookup.launch && lookup.status === 404) {
+        await triggerBackendScannerSync(baseUrl);
+        lookup = await fetchBackendLaunch(baseUrl, address);
+      }
+
+      if (lookup.launch) {
+        return NextResponse.json(
+          {
+            launch: lookup.launch,
+            timestamp: Date.now(),
+            backend: "indexer",
+          },
+          {
+            headers: {
+              "cache-control": "no-store, max-age=0",
             },
-            {
-              headers: {
-                "cache-control": "no-store, max-age=0",
-              },
-            }
-          );
-        }
+          }
+        );
+      }
+
+      if (lookup.status === 404) {
+        return NextResponse.json(
+          { error: "Token not found in persisted scanner history" },
+          { status: 404 }
+        );
+      }
+
+      if (isWorkerAgentRuntime()) {
+        return NextResponse.json(
+          { error: "persisted scanner state unavailable from indexer backend" },
+          { status: 503 }
+        );
       }
     }
+
+    if (isWorkerAgentRuntime()) {
+      return NextResponse.json(
+        { error: "AGENT_RUNTIME_MODE=worker requires INDEXER_BACKEND_URL-backed scanner state" },
+        { status: 503 }
+      );
+    }
+
+    agentRegistry.ensureInitialized();
+    void scannerAgent.pollNow({ reason: "api:scanner-token" });
 
     // Try pool address first (that's the store key)
     let launch = launchStore.get(address);

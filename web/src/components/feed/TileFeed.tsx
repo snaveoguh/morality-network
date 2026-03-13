@@ -11,6 +11,7 @@ import {
   type Proposal,
   getTimeRemaining,
   getVotePercentage,
+  isDelegationActivityProposal,
 } from "@/lib/governance";
 import type { FeedItem as FeedItemType } from "@/lib/rss";
 import type { Cast } from "@/lib/farcaster";
@@ -166,6 +167,20 @@ const FEATURE_SHAPES: [string, string, "left" | "right"][] = [
 ];
 
 const TILT_CLASSES = ["", "", "", "", "tilt-cw-sm", "tilt-ccw-sm", "", "", "tilt-cw-md", "tilt-ccw-md", "", "", ""];
+
+/** Returns true when the preview text is just a restatement of the headline. */
+function isDuplicateOfTitle(preview: string, title: string): boolean {
+  const normalize = (s: string) =>
+    s.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+  const p = normalize(preview);
+  const t = normalize(title);
+  if (!p || !t) return false;
+  if (p === t || t.startsWith(p) || p.startsWith(t)) return true;
+  const pWords = new Set(p.split(" "));
+  const tWords = new Set(t.split(" "));
+  const overlap = [...pWords].filter((w) => tWords.has(w)).length;
+  return overlap / Math.max(pWords.size, tWords.size) > 0.8;
+}
 
 // ============================================================================
 // MOBILE TAB BAR — swipe indicator for Feed ↔ Wire
@@ -416,9 +431,9 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
   return (
     <div>
       {/* ── Filters — monospace text buttons with pipe separators ── */}
-      <div className="mb-4 flex flex-wrap items-center gap-0 border-b border-[var(--rule-light)] pb-3 font-mono text-[10px] uppercase tracking-wider">
+      <div className="mb-4 flex items-center gap-0 overflow-x-auto border-b border-[var(--rule-light)] pb-3 font-mono text-[10px] uppercase tracking-wider scrollbar-hide sm:flex-wrap sm:overflow-x-visible">
         {FILTER_OPTIONS.map((opt, i) => (
-          <span key={opt.value} className="flex items-center">
+          <span key={opt.value} className="flex shrink-0 items-center whitespace-nowrap">
             {i > 0 && <span className="mx-1.5 text-[var(--rule-light)]">|</span>}
             <button
               onClick={() => setFilter(opt.value)}
@@ -433,10 +448,10 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
           </span>
         ))}
 
-        <span className="mx-3 text-[var(--rule-light)]">·</span>
+        <span className="mx-3 shrink-0 text-[var(--rule-light)]">·</span>
 
         {BIAS_FILTER_OPTIONS.map((opt, i) => (
-          <span key={opt.value} className="flex items-center">
+          <span key={opt.value} className="flex shrink-0 items-center whitespace-nowrap">
             {i > 0 && <span className="mx-1 text-[var(--rule-light)]">|</span>}
             <button
               onClick={() => setBiasFilter(opt.value)}
@@ -453,13 +468,13 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
 
         {tagOptions.length > 0 && (
           <>
-            <span className="mx-3 text-[var(--rule-light)]">·</span>
+            <span className="mx-3 shrink-0 text-[var(--rule-light)]">·</span>
 
-            <span className="mr-1 text-[var(--ink-faint)]">Tags</span>
+            <span className="mr-1 shrink-0 text-[var(--ink-faint)]">Tags</span>
 
             <button
               onClick={() => setTagFilter("all")}
-              className={`transition-colors ${
+              className={`shrink-0 whitespace-nowrap transition-colors ${
                 tagFilter === "all"
                   ? "font-bold text-[var(--ink)] underline underline-offset-4"
                   : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
@@ -469,7 +484,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
             </button>
 
             {tagOptions.map((tag) => (
-              <span key={tag} className="flex items-center">
+              <span key={tag} className="flex shrink-0 items-center whitespace-nowrap">
                 <span className="mx-1 text-[var(--rule-light)]">|</span>
                 <button
                   onClick={() => setTagFilter(tag)}
@@ -486,7 +501,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
           </>
         )}
 
-        <span className="ml-auto text-[var(--ink-faint)]">{filtered.length} items</span>
+        <span className="ml-auto shrink-0 text-[var(--ink-faint)]">{filtered.length} items</span>
       </div>
 
       {/* Bias distribution — after filters */}
@@ -502,9 +517,9 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
       <div
         ref={scrollRef}
         onScroll={handleMobileScroll}
-        className="flex w-full snap-x snap-mandatory gap-0 overflow-x-auto lg:snap-none lg:overflow-x-hidden scrollbar-hide"
+        className="flex w-full snap-x snap-mandatory gap-0 overflow-x-auto overflow-y-hidden lg:snap-none lg:overflow-x-hidden scrollbar-hide"
       >
-        <div className="min-w-0 w-full shrink-0 snap-start border-r-2 border-[var(--rule)] pr-0 lg:w-auto lg:shrink lg:flex-1 lg:pr-4">
+        <div className="min-w-0 w-full shrink-0 snap-start overflow-hidden border-r-2 border-[var(--rule)] pr-0 lg:w-auto lg:shrink lg:flex-1 lg:overflow-visible lg:pr-4">
           {/* ── NEWSPAPER GRID ── */}
           <div className="newspaper-grid">
             {filtered.flatMap((item, i) => {
@@ -593,7 +608,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
           )}
         </div>
 
-        <div className="w-full shrink-0 snap-start overflow-x-hidden pl-4 lg:block lg:w-56 lg:max-w-56 lg:shrink-0">
+        <div className="w-full shrink-0 snap-start overflow-hidden pl-4 lg:block lg:w-56 lg:max-w-56 lg:shrink-0 lg:overflow-visible">
           <LiveCommentColumn
             categoryFilter={filter}
             biasFilter={biasFilter}
@@ -648,7 +663,10 @@ function RssTile({ item, weight, seed = 0, isFeature = false }: { item: FeedItem
   const entityHash = computeEntityHash(item.link);
   const isHero = weight === "hero";
   const isBreaking = (Date.now() - new Date(item.pubDate).getTime()) < 3600000;
-  const previewText = item.canonicalClaim || item.description;
+  const rawPreview = item.canonicalClaim || item.description;
+  const previewText = rawPreview && !isDuplicateOfTitle(rawPreview, item.title)
+    ? rawPreview
+    : undefined;
 
   // ─── HERO: full-width stretch banner ───
   if (isHero) {
@@ -899,9 +917,10 @@ function GovernanceTile({ proposal, weight }: { proposal: Proposal; weight: Visu
     proposal.votesAgainst
   );
   const isActive = proposal.status === "active";
+  const isDelegationActivity = isDelegationActivityProposal(proposal);
   const proposer = proposal.proposer?.trim() || "";
   const hasProposerAddress = isAddress(proposer);
-  const hasVotes = proposal.votesFor + proposal.votesAgainst > 0;
+  const hasVotes = !isDelegationActivity && proposal.votesFor + proposal.votesAgainst > 0;
 
   return (
     <article className="flex flex-col h-full">
@@ -922,7 +941,11 @@ function GovernanceTile({ proposal, weight }: { proposal: Proposal; weight: Visu
           </span>
         )}
         <span className={`ml-auto font-mono text-[9px] uppercase tracking-wider ${isActive ? "font-bold text-[var(--ink)]" : "text-[var(--ink-faint)]"}`}>
-          {isActive ? getTimeRemaining(proposal.endTime) : proposal.status}
+          {isActive
+            ? getTimeRemaining(proposal.endTime)
+            : isDelegationActivity
+              ? "delegation"
+              : proposal.status}
         </span>
       </div>
 
@@ -945,6 +968,11 @@ function GovernanceTile({ proposal, weight }: { proposal: Proposal; weight: Visu
           </p>
         </div>
       )}
+      {isDelegationActivity && (
+        <p className="mt-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          Onchain delegate change
+        </p>
+      )}
 
       {/* Tags */}
       {proposal.tags && proposal.tags.length > 0 && (
@@ -965,7 +993,7 @@ function GovernanceTile({ proposal, weight }: { proposal: Proposal; weight: Visu
           rel="noopener noreferrer"
           className="transition-colors hover:text-[var(--ink)]"
         >
-          View Vote
+          {isDelegationActivity ? "View Activity" : "View Vote"}
         </a>
         {isConnected && hasProposerAddress && (
           <TipButton recipientAddress={proposer} />
@@ -1260,13 +1288,15 @@ function VideoTile({ video, weight }: { video: VideoItem; weight: VisualWeight }
       {/* Video embed or thumbnail */}
       <div className="relative mb-2 w-full overflow-hidden bg-black" style={{ aspectRatio: "16/9" }}>
         {playing ? (
-          <iframe
-            src={`${video.embedUrl}?autoplay=1&rel=0`}
-            title={video.title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="absolute inset-0 h-full w-full border-0"
-          />
+          <>
+            <iframe
+              src={`${video.embedUrl}?autoplay=1&rel=0`}
+              title={video.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 h-full w-full border-0"
+            />
+          </>
         ) : (
           <button
             onClick={() => setPlaying(true)}
@@ -1275,9 +1305,10 @@ function VideoTile({ video, weight }: { video: VideoItem; weight: VisualWeight }
             <img
               src={video.thumbnail}
               alt=""
-              className="h-full w-full object-cover transition-all duration-300 group-hover:scale-[1.02]"
+              className="h-full w-full object-cover grayscale contrast-105 saturate-50 brightness-95 transition-all duration-300 group-hover:scale-[1.02]"
               loading="lazy"
             />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(0,0,0,0.08))] mix-blend-luminosity" />
             {/* Play button overlay */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--ink)] bg-opacity-80 transition-transform group-hover:scale-110">

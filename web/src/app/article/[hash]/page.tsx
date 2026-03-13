@@ -3,6 +3,7 @@ import { computeEntityHash } from "@/lib/entity";
 import {
   findRelatedArticles,
   generateEditorial,
+  enrichArticleEmbeds,
   formatDateline,
   estimateReadingTime,
 } from "@/lib/article";
@@ -72,18 +73,32 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     // Check if we have a previously generated editorial in the deep archive
     const cachedEditorial = await getArchivedEditorial(hash).catch(() => null);
     if (cachedEditorial) {
+      const hydratedEditorial = await enrichArticleEmbeds(
+        cachedEditorial.primary,
+        cachedEditorial,
+      );
+      if (hydratedEditorial !== cachedEditorial) {
+        saveEditorial(
+          hash,
+          hydratedEditorial,
+          cachedEditorial.generatedBy,
+        ).catch((err) => {
+          console.warn("[article] cached editorial refresh failed:", err);
+        });
+      }
+
       // We have the full editorial — render it even without a live/archived feed item
-      const dateline = formatDateline(cachedEditorial.primary.pubDate);
+      const dateline = formatDateline(hydratedEditorial.primary.pubDate);
       const readTime = estimateReadingTime([
-        ...cachedEditorial.editorialBody,
-        cachedEditorial.wireSummary || "",
+        ...hydratedEditorial.editorialBody,
+        hydratedEditorial.wireSummary || "",
       ]);
 
       // Compute edition number for daily editions
       const CACHED_EPOCH_MS = 1741651200 * 1000;
       let cachedEditionNumber: number | undefined;
-      if (cachedEditorial.isDailyEdition) {
-        const cachedDate = new Date(cachedEditorial.generatedAt).getTime();
+      if (hydratedEditorial.isDailyEdition) {
+        const cachedDate = new Date(hydratedEditorial.generatedAt).getTime();
         const daysSinceEpoch = Math.floor((cachedDate - CACHED_EPOCH_MS) / 86400000);
         if (daysSinceEpoch >= 0) {
           cachedEditionNumber = daysSinceEpoch + 1;
@@ -92,17 +107,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
       return (
         <ArticleTemplate
-          article={cachedEditorial}
+          article={hydratedEditorial}
           dateline={dateline}
           readTime={readTime}
           entityHash={hash}
           archivedRelated={[]}
           editionNumber={cachedEditionNumber}
           archiveStatus={{
-            generatedBy: cachedEditorial.generatedBy,
-            generatedAt: cachedEditorial.generatedAt,
-            contentHash: cachedEditorial.contentHash,
-            onchainTxHash: cachedEditorial.onchainTxHash,
+            generatedBy: hydratedEditorial.generatedBy,
+            generatedAt: hydratedEditorial.generatedAt,
+            contentHash: hydratedEditorial.contentHash,
+            onchainTxHash: hydratedEditorial.onchainTxHash,
           }}
         />
       );

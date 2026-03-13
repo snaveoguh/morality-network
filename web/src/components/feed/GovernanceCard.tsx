@@ -8,6 +8,7 @@ import {
   type Proposal,
   getTimeRemaining,
   getVotePercentage,
+  isDelegationActivityProposal,
 } from "@/lib/governance";
 import Link from "next/link";
 import { isAddress } from "viem";
@@ -30,11 +31,13 @@ export function GovernanceCard({ proposal }: GovernanceCardProps) {
   const { isConnected } = useAccount();
   const proposer = proposal.proposer?.trim() || "";
   const hasProposerAddress = isAddress(proposer);
+  const isDelegationActivity = isDelegationActivityProposal(proposal);
   const proposerHash = hasProposerAddress ? computeEntityHash(proposer) : "";
   const { forPct, againstPct } = getVotePercentage(
     proposal.votesFor,
     proposal.votesAgainst
   );
+  const hasVotes = !isDelegationActivity && proposal.votesFor + proposal.votesAgainst > 0;
 
   return (
     <article className="group rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 transition-colors hover:border-zinc-700">
@@ -73,7 +76,9 @@ export function GovernanceCard({ proposal }: GovernanceCardProps) {
           >
             {proposal.status === "active"
               ? getTimeRemaining(proposal.endTime)
-              : proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
+              : isDelegationActivity
+                ? "Delegation"
+                : proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
           </span>
         </div>
       </div>
@@ -94,31 +99,37 @@ export function GovernanceCard({ proposal }: GovernanceCardProps) {
       )}
 
       {/* Vote bar */}
-      <div className="mb-3">
-        <div className="mb-1.5 flex items-center justify-between text-xs">
-          <span className="text-[#31F387]">
-            For {forPct}%
-          </span>
-          <span className="text-[#D0021B]">
-            Against {againstPct}%
-          </span>
+      {hasVotes ? (
+        <div className="mb-3">
+          <div className="mb-1.5 flex items-center justify-between text-xs">
+            <span className="text-[#31F387]">
+              For {forPct}%
+            </span>
+            <span className="text-[#D0021B]">
+              Against {againstPct}%
+            </span>
+          </div>
+          <div className="flex h-2 overflow-hidden rounded-full bg-zinc-800">
+            <div
+              className="bg-[#31F387] transition-all"
+              style={{ width: `${forPct}%` }}
+            />
+            <div
+              className="bg-[#D0021B] transition-all"
+              style={{ width: `${againstPct}%` }}
+            />
+          </div>
+          {proposal.votesAbstain > 0 && (
+            <p className="mt-1 text-xs text-zinc-500">
+              {proposal.votesAbstain.toLocaleString()} abstained
+            </p>
+          )}
         </div>
-        <div className="flex h-2 overflow-hidden rounded-full bg-zinc-800">
-          <div
-            className="bg-[#31F387] transition-all"
-            style={{ width: `${forPct}%` }}
-          />
-          <div
-            className="bg-[#D0021B] transition-all"
-            style={{ width: `${againstPct}%` }}
-          />
-        </div>
-        {proposal.votesAbstain > 0 && (
-          <p className="mt-1 text-xs text-zinc-500">
-            {proposal.votesAbstain.toLocaleString()} abstained
-          </p>
-        )}
-      </div>
+      ) : isDelegationActivity ? (
+        <p className="mb-3 text-xs text-zinc-500">
+          Onchain delegation event. No vote tally applies.
+        </p>
+      ) : null}
 
       {/* Footer: Proposer + Actions */}
       <div className="flex items-center justify-between">
@@ -143,7 +154,7 @@ export function GovernanceCard({ proposal }: GovernanceCardProps) {
             rel="noopener noreferrer"
             className="text-xs text-zinc-500 transition-colors hover:text-[#2F80ED]"
           >
-            View Vote
+            {isDelegationActivity ? "View Activity" : "View Vote"}
           </a>
 
           {/* Tip the proposer directly */}

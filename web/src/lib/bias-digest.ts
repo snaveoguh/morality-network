@@ -1,6 +1,7 @@
 import "server-only";
 
-import Anthropic from "@anthropic-ai/sdk";
+import { generateTextForTask } from "./ai-provider";
+import { hasAIProviderForTask } from "./ai-models";
 import type { SourceBias, BiasRating } from "./bias";
 import { BIAS_LABELS, biasToPosition } from "./bias";
 import type { FeedItem } from "./rss";
@@ -12,8 +13,6 @@ import type { FeedItem } from "./rss";
 // generates a 1-2 sentence editorial bias insight. Falls back to a
 // statistical summary when no API key is available.
 // ============================================================================
-
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 export interface BiasDigest {
   /** AI-generated or computed bias insight (1-2 sentences) */
@@ -120,7 +119,7 @@ export async function generateBiasDigest(
   const avgFactuality = computeAvgFactuality(sources);
 
   // If no API key, return statistical fallback
-  if (!ANTHROPIC_API_KEY) {
+  if (!hasAIProviderForTask("biasDigest")) {
     return computeLocalDigest(sources);
   }
 
@@ -144,25 +143,17 @@ export async function generateBiasDigest(
     : "";
 
   try {
-    const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
-    const response = await Promise.race([
-      client.messages.create({
-        model: "claude-haiku-4-20250414",
-        max_tokens: 150,
-        temperature: 0.3,
-        system: "You are a media analyst. Given a news feed's source distribution and headlines, write exactly ONE sentence (max 30 words) analyzing the editorial bias landscape. Be specific about blind spots or overrepresentation. No preamble.",
-        messages: [{
-          role: "user",
-          content: `Source distribution:\n${distSummary}\n\nTilt: ${tiltLabel} (${tilt.toFixed(2)})\nAvg factuality: ${avgFactuality}${headlineBlock}\n\nOne-sentence bias analysis:`,
-        }],
-      }),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Bias digest timeout")), 8_000),
-      ),
-    ]);
+    const result = await generateTextForTask({
+      task: "biasDigest",
+      maxTokens: 150,
+      temperature: 0.3,
+      timeoutMs: 8_000,
+      system:
+        "You are a media analyst. Given a news feed's source distribution and headlines, write exactly ONE sentence (max 30 words) analyzing the editorial bias landscape. Be specific about blind spots or overrepresentation. No preamble.",
+      user: `Source distribution:\n${distSummary}\n\nTilt: ${tiltLabel} (${tilt.toFixed(2)})\nAvg factuality: ${avgFactuality}${headlineBlock}\n\nOne-sentence bias analysis:`,
+    });
 
-    const text = response.content.find((b) => b.type === "text");
-    const insight = text && text.type === "text" ? text.text.trim() : null;
+    const insight = result.text.trim();
 
     if (insight && insight.length > 10 && insight.length < 300) {
       return { insight, source: "ai", avgFactuality, tilt, tiltLabel };

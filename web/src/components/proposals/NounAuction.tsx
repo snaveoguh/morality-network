@@ -114,12 +114,12 @@ export function NounAuction({ auction }: NounAuctionProps) {
             Noun {auction.nounId}
           </h3>
           <a
-            href={`https://nouns.wtf/noun/${auction.nounId}`}
+            href={`https://noun.wtf/noun/${auction.nounId}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-[#2F80ED] hover:underline"
           >
-            nouns.wtf &rarr;
+            noun.wtf &rarr;
           </a>
         </div>
 
