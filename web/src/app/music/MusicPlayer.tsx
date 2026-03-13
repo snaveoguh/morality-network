@@ -47,9 +47,19 @@ export function MusicPlayer() {
             sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
           />
         </div>
-        <p className="mt-2 font-mono text-[9px] text-[var(--ink-faint)]">
-          Today&rsquo;s pick: <span className="font-bold text-[var(--ink-light)]">{dailyTrack.artist} &mdash; {dailyTrack.title}</span>
-        </p>
+        <div className="mt-2 flex items-center justify-between">
+          <p className="font-mono text-[9px] text-[var(--ink-faint)]">
+            Today&rsquo;s pick: <span className="font-bold text-[var(--ink-light)]">{dailyTrack.artist} &mdash; {dailyTrack.title}</span>
+          </p>
+          <a
+            href={`https://open.spotify.com/track/${activeTrack.spotifyId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink-faint)] underline decoration-dotted underline-offset-2 hover:text-[var(--ink)]"
+          >
+            Open in Spotify
+          </a>
+        </div>
       </section>
 
       {/* Full Playlist */}
