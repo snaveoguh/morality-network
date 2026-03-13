@@ -4,11 +4,18 @@ import type { TerminalTradingContext, ChatMessage } from "./terminal-types";
 export type { TerminalTradingContext, ChatMessage };
 
 // ============================================================================
-// TERMINAL LLM — Bankr Gateway (primary) + Venice (fallback) for market chat
+// TERMINAL LLM — Dual-engine architecture for market chat
 //
-// Powers the AgentBotTerminal with real LLM inference.
-// Bankr LLM Gateway: OpenAI-compatible, 20+ models, onchain economics
-// Venice: No-data-retention inference for private portfolio cognition
+// Bankr LLM Gateway: Primary conversational desk — 20+ models, onchain economics
+// Venice AI: Private Risk Oracle — no-data-retention portfolio cognition
+//
+// Both providers fire in parallel on every message:
+//   Bankr → conversational response (strategy, context, actions)
+//   Venice → private risk analysis (concentration, drawdown, sizing)
+//
+// Venice's zero-retention guarantee means portfolio data (positions, PnL,
+// wallet balances) is analyzed privately — producing trustworthy risk
+// assessments for onchain workflows without data exposure.
 // ============================================================================
 
 const BANKR_BASE_URL = "https://llm.bankr.bot";
@@ -70,6 +77,61 @@ RULES:
 - Keep responses under 150 words unless the user asks for detail.
 - When suggesting an action, include the action tag so it auto-executes.
 - You can discuss strategy, market context, risk management — but always grounded in the actual data.`;
+}
+
+// ============================================================================
+// VENICE RISK ANALYSIS PROMPT — private cognition for portfolio risk
+// ============================================================================
+
+export function buildVeniceRiskPrompt(ctx: TerminalTradingContext): string {
+  const positionLines = ctx.positions.length > 0
+    ? ctx.positions.map((p) =>
+        `  ${p.symbol}: entry $${p.entryPrice.toFixed(4)}, current ${p.currentPrice !== null ? `$${p.currentPrice.toFixed(4)}` : "n/a"}, unrealized ${p.unrealizedPnl !== null ? `$${p.unrealizedPnl.toFixed(2)}` : "n/a"}, size $${p.size.toFixed(2)}`
+      ).join("\n")
+    : "  (no open positions)";
+
+  const totalDeployed = ctx.deployedUsd;
+  const largestPosition = ctx.positions.length > 0
+    ? Math.max(...ctx.positions.map((p) => p.size))
+    : 0;
+  const concentrationPct = totalDeployed > 0
+    ? ((largestPosition / totalDeployed) * 100).toFixed(1)
+    : "0.0";
+
+  const vaultBlock = ctx.vault
+    ? `\nVAULT:\n  AUM: $${ctx.vault.aumUsd.toFixed(2)}\n  Liquid: $${ctx.vault.liquidUsd.toFixed(2)}\n  Deployed: $${ctx.vault.deployedUsd.toFixed(2)}\n  Utilization: ${ctx.vault.aumUsd > 0 ? ((ctx.vault.deployedUsd / ctx.vault.aumUsd) * 100).toFixed(1) : "0.0"}%\n  Funders: ${ctx.vault.totalFunders}`
+    : "";
+
+  return `You are a private risk analysis engine. Your inference runs on Venice AI with ZERO DATA RETENTION — the portfolio data you analyze is never stored, logged, or used for training. This is private cognition producing trustworthy outputs.
+
+MANDATE: Analyze the portfolio below for risk. Be direct, quantitative, and actionable. No pleasantries. No hedging. Just the risk picture.
+
+PORTFOLIO STATE:
+  Venue: ${ctx.executionVenue}${ctx.dryRun ? " (DRY RUN)" : " (LIVE)"}
+  Open: ${ctx.openPositions} | Closed: ${ctx.closedPositions}
+  Unrealized: $${ctx.unrealizedPnlUsd.toFixed(2)} | Realized: $${ctx.realizedPnlUsd.toFixed(2)}
+  Net P&L: $${ctx.netPnlUsd.toFixed(2)}
+  Deployed: $${totalDeployed.toFixed(2)}
+  Largest position concentration: ${concentrationPct}%
+
+POSITIONS:
+${positionLines}
+${vaultBlock}
+
+ANALYSIS FRAMEWORK:
+1. CONCENTRATION — Is any single position >30% of deployed capital? Flag it.
+2. DRAWDOWN — If unrealized PnL is negative, how deep vs deployed? >10% is warning, >25% is critical.
+3. CORRELATION — Are positions in the same sector/narrative? Hidden correlation = hidden risk.
+4. SIZING — Is total deployed appropriate relative to vault AUM (if applicable)?
+5. LIQUIDITY — Can positions be exited cleanly? Flag any microcap or low-liquidity tokens.
+
+RULES:
+- Maximum 80 words. Telegram-style brevity.
+- Lead with the most critical risk factor.
+- If portfolio is clean, say so in one line.
+- Use concrete numbers, not vague warnings.
+- End with a single actionable recommendation if warranted.
+- Never fabricate data. Only reference what's in PORTFOLIO STATE.`;
 }
 
 // ============================================================================
@@ -202,10 +264,68 @@ export async function* streamChat(opts: StreamOptions): AsyncGenerator<string> {
 }
 
 /**
+ * Stream Venice risk analysis — always Venice, never fallback.
+ * Dedicated private risk oracle with shorter context and tighter output.
+ */
+export async function* streamVeniceRisk(opts: {
+  userMessage: string;
+  context: TerminalTradingContext;
+  signal?: AbortSignal;
+}): AsyncGenerator<string> {
+  if (!VENICE_API_KEY) throw new Error("VENICE_API_KEY not configured");
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
+
+  if (opts.signal) {
+    opts.signal.addEventListener("abort", () => controller.abort());
+  }
+
+  try {
+    const riskPrompt = buildVeniceRiskPrompt(opts.context);
+
+    const res = await fetch(`${VENICE_BASE_URL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${VENICE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: VENICE_MODEL,
+        stream: true,
+        max_tokens: 512,
+        temperature: 0.3, // Lower temp for risk analysis — precision over creativity
+        messages: [
+          { role: "system", content: riskPrompt },
+          { role: "user", content: opts.userMessage },
+        ],
+      }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`Venice Risk ${res.status}: ${body.slice(0, 200)}`);
+    }
+
+    yield* parseSSEStream(res);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
  * Check if any LLM provider is configured.
  */
 export function hasTerminalLLM(): boolean {
   return !!(BANKR_API_KEY || VENICE_API_KEY);
+}
+
+/**
+ * Check if Venice is available for private risk analysis.
+ */
+export function hasVeniceLLM(): boolean {
+  return !!VENICE_API_KEY;
 }
 
 // ============================================================================

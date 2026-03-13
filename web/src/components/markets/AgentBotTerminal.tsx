@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TerminalTradingContext } from "@/lib/terminal-types";
 
-type TerminalRole = "assistant" | "user" | "system";
+type TerminalRole = "assistant" | "user" | "system" | "risk";
 
 interface TerminalMessage {
   id: string;
@@ -96,7 +96,7 @@ function makeSession(title: string, intro?: string): TerminalSession {
     messages: [
       makeAssistantMessage(
         [
-          "gm. desk is live — ask me anything about positions, risk, pnl, or strategy.",
+          "gm. desk is live — dual-engine: bankr (strategy) + venice (private risk).",
           "Quick commands: `fund 0.01`, `withdraw 0.01`, `status`, `fees`.",
           intro ?? "",
         ].join("\n")
@@ -200,6 +200,7 @@ export function AgentBotTerminal({
   const [input, setInput] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
+  const [streamingRiskId, setStreamingRiskId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -230,7 +231,7 @@ export function AgentBotTerminal({
   // Auto-scroll on new messages / streaming updates
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [sessions, streamingMsgId]);
+  }, [sessions, streamingMsgId, streamingRiskId]);
 
   const activeSession = useMemo(
     () => sessions.find((session) => session.id === activeId) ?? sessions[0],
@@ -255,6 +256,16 @@ export function AgentBotTerminal({
       messages: [...session.messages, { id, role, text, createdAt: Date.now() }],
     }));
     return id;
+  }
+
+  /** Remove a message by id (used to clean up empty Venice placeholders) */
+  function removeMessage(msgId: string) {
+    setSessions((prev) =>
+      prev.map((session) => ({
+        ...session,
+        messages: session.messages.filter((msg) => msg.id !== msgId),
+      }))
+    );
   }
 
   /** Update text of a specific message (for streaming) */
@@ -303,7 +314,54 @@ export function AgentBotTerminal({
   };
 
   // ========================================================================
-  // STREAM LLM RESPONSE
+  // SSE STREAM READER — shared between Bankr and Venice streams
+  // ========================================================================
+
+  async function consumeSSEStream(
+    res: Response,
+    msgId: string,
+  ): Promise<string> {
+    const reader = res.body?.getReader();
+    if (!reader) throw new Error("No response body");
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let fullText = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith("data: ")) continue;
+
+        const data = trimmed.slice(6);
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.done) break;
+          if (parsed.error) throw new Error(parsed.error);
+          if (parsed.token) {
+            fullText += parsed.token;
+            updateMessageText(msgId, fullText);
+          }
+        } catch (e) {
+          if (e instanceof Error && e.message !== "Unexpected end of JSON input") {
+            if (data !== "[DONE]") throw e;
+          }
+        }
+      }
+    }
+
+    return fullText;
+  }
+
+  // ========================================================================
+  // STREAM LLM RESPONSE — dual-engine: Bankr (desk) + Venice (risk oracle)
   // ========================================================================
 
   async function streamLLMResponse(userText: string) {
@@ -316,79 +374,85 @@ export function AgentBotTerminal({
     // Add the new user message
     history.push({ role: "user" as const, content: userText });
 
-    // Create a placeholder assistant message for streaming
+    // Create placeholder messages — Bankr response + Venice risk analysis
     const assistantMsgId = makeId("msg");
+    const riskMsgId = makeId("risk");
+
     updateActiveSession((session) => ({
       ...session,
       updatedAt: Date.now(),
       messages: [
         ...session.messages,
-        { id: assistantMsgId, role: "assistant", text: "", createdAt: Date.now() },
+        { id: assistantMsgId, role: "assistant" as TerminalRole, text: "", createdAt: Date.now() },
+        { id: riskMsgId, role: "risk" as TerminalRole, text: "", createdAt: Date.now() },
       ],
     }));
     setStreamingMsgId(assistantMsgId);
+    setStreamingRiskId(riskMsgId);
 
     const controller = new AbortController();
     abortRef.current = controller;
 
-    let fullText = "";
+    let bankrText = "";
 
     try {
-      const res = await fetch("/api/terminal/chat", {
+      // Fire BOTH providers in parallel
+      const bankrPromise = fetch("/api/terminal/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: history,
-          context: resolvedContext,
-        }),
+        body: JSON.stringify({ messages: history, context: resolvedContext }),
         signal: controller.signal,
       });
 
-      if (!res.ok) {
-        const errBody = await res.text().catch(() => "");
-        throw new Error(errBody || `HTTP ${res.status}`);
+      const venicePromise = fetch("/api/terminal/risk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userMessage: userText, context: resolvedContext }),
+        signal: controller.signal,
+      }).catch(() => null); // Venice failure is non-fatal
+
+      // Start consuming Bankr stream immediately
+      const bankrRes = await bankrPromise;
+      if (!bankrRes.ok) {
+        const errBody = await bankrRes.text().catch(() => "");
+        throw new Error(errBody || `HTTP ${bankrRes.status}`);
       }
 
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No response body");
+      // Consume both streams concurrently
+      const bankrStreamPromise = consumeSSEStream(bankrRes, assistantMsgId);
 
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || !trimmed.startsWith("data: ")) continue;
-
-          const data = trimmed.slice(6);
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.done) break;
-            if (parsed.error) throw new Error(parsed.error);
-            if (parsed.token) {
-              fullText += parsed.token;
-              updateMessageText(assistantMsgId, fullText);
-            }
-          } catch (e) {
-            if (e instanceof Error && e.message !== "Unexpected end of JSON input") {
-              // Real error from the stream
-              if (data !== "[DONE]") {
-                throw e;
-              }
-            }
+      // Venice stream — consume independently, failures are silent
+      const veniceStreamPromise = (async () => {
+        try {
+          const veniceRes = await venicePromise;
+          if (!veniceRes || !veniceRes.ok) {
+            removeMessage(riskMsgId);
+            setStreamingRiskId(null);
+            return "";
           }
+          return await consumeSSEStream(veniceRes, riskMsgId);
+        } catch {
+          removeMessage(riskMsgId);
+          setStreamingRiskId(null);
+          return "";
         }
+      })();
+
+      // Await both
+      const [bankrResult, veniceResult] = await Promise.all([
+        bankrStreamPromise,
+        veniceStreamPromise,
+      ]);
+
+      bankrText = bankrResult;
+
+      // If Venice returned empty, remove the placeholder
+      if (!veniceResult) {
+        removeMessage(riskMsgId);
       }
 
-      // After streaming completes, check for action tags
-      const actions = parseActionTags(fullText);
+      // After streaming completes, check for action tags in Bankr response
+      const actions = parseActionTags(bankrText);
       for (const action of actions) {
         if (action.action === "FUND" && action.amount) {
           try {
@@ -411,14 +475,16 @@ export function AgentBotTerminal({
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       const msg = err instanceof Error ? err.message : "LLM request failed";
-      if (!fullText) {
-        // No tokens received — update the placeholder with error
+      if (!bankrText) {
         updateMessageText(assistantMsgId, `[error] ${msg}`);
       } else {
         appendMessage("system", msg);
       }
+      // Clean up Venice placeholder on error
+      removeMessage(riskMsgId);
     } finally {
       setStreamingMsgId(null);
+      setStreamingRiskId(null);
       abortRef.current = null;
     }
   }
@@ -496,13 +562,14 @@ export function AgentBotTerminal({
           "- fees",
           "",
           "Or ask me anything about your positions, risk, strategy, or market conditions.",
+          "Dual-engine: Bankr handles strategy, Venice provides private risk analysis.",
           "",
           fundingSummary,
         ].join("\n"));
         return;
       }
 
-      // Not a built-in command — route to LLM
+      // Not a built-in command — route to dual-engine LLM
       await streamLLMResponse(command);
     } catch (error) {
       appendMessage("system", error instanceof Error ? error.message : "Command failed. Try again.");
@@ -527,8 +594,28 @@ export function AgentBotTerminal({
     }
   }
 
+  // ========================================================================
+  // MESSAGE STYLING — distinct rendering for each provider
+  // ========================================================================
+
+  function getMessageClasses(message: TerminalMessage): string {
+    switch (message.role) {
+      case "user":
+        return "ml-auto border-[var(--rule)] bg-[var(--paper)]";
+      case "risk":
+        // Venice risk analysis — dashed border, subtle distinct background
+        return "border-dashed border-[var(--ink-faint)] bg-[var(--paper)]";
+      case "system":
+        return "border-[var(--accent-red)] bg-[var(--paper)] text-[var(--accent-red)]";
+      default:
+        // Bankr assistant
+        return "border-[var(--rule-light)] bg-[var(--paper)]";
+    }
+  }
+
   return (
     <section className="border border-[var(--rule-light)]">
+      {/* Header bar — shows both providers */}
       <div className="flex items-center gap-1 border-b border-[var(--rule-light)] px-2 py-1">
         <button
           onClick={createChat}
@@ -551,36 +638,52 @@ export function AgentBotTerminal({
             </button>
           ))}
         </div>
-        <span className="shrink-0 font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">
-          bankr
-        </span>
+        <div className="flex shrink-0 gap-1.5">
+          <span className="font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">
+            bankr
+          </span>
+          <span className="font-mono text-[7px] text-[var(--ink-faint)]">·</span>
+          <span className="font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">
+            venice
+          </span>
+        </div>
       </div>
 
+      {/* Message area */}
       <div
         ref={scrollRef}
-        className="max-h-[260px] min-h-[220px] space-y-2 overflow-y-auto bg-[var(--paper-dark)] p-3"
+        className="max-h-[320px] min-h-[220px] space-y-2 overflow-y-auto bg-[var(--paper-dark)] p-3"
       >
         {activeSession?.messages.map((message) => (
           <div
             key={message.id}
-            className={`max-w-[95%] rounded-sm border p-2 ${
-              message.role === "user"
-                ? "ml-auto border-[var(--rule)] bg-[var(--paper)]"
-                : message.role === "system"
-                ? "border-[var(--accent-red)] bg-[var(--paper)] text-[var(--accent-red)]"
-                : "border-[var(--rule-light)] bg-[var(--paper)]"
-            }`}
+            className={`max-w-[95%] rounded-sm border p-2 ${getMessageClasses(message)}`}
           >
+            {/* Venice risk label */}
+            {message.role === "risk" && (
+              <div className="mb-1 flex items-center gap-1.5">
+                <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+                  venice · private risk analysis
+                </span>
+              </div>
+            )}
+
             <p className="whitespace-pre-wrap font-mono text-[12px] leading-relaxed text-[var(--ink)]">
               {message.text}
+              {/* Bankr streaming cursor */}
               {streamingMsgId === message.id && (
                 <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-[var(--ink)]" />
+              )}
+              {/* Venice streaming cursor */}
+              {streamingRiskId === message.id && (
+                <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-[var(--ink-faint)]" />
               )}
             </p>
           </div>
         ))}
       </div>
 
+      {/* Input area */}
       <div className="border-t border-[var(--rule-light)] p-3">
         <div className="mb-2 flex items-center justify-between gap-2">
           <p
