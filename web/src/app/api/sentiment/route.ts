@@ -5,6 +5,7 @@ import {
 } from "@/lib/sentiment";
 import { computeEventShapedSentimentSnapshot } from "@/lib/event-corpus";
 import { fetchMarketData } from "@/lib/sentiment";
+import { recordSnapshot } from "@/lib/score-history";
 
 export const revalidate = 300; // 5 minutes ISR
 
@@ -39,6 +40,7 @@ export async function GET(req: NextRequest) {
     // Cache the result
     cachedSnapshot = snapshot;
     cacheTimestamp = now;
+    recordSnapshot(snapshot).catch(() => {});
 
     return respond(snapshot, topicFilter);
   } catch (err) {

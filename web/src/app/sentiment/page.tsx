@@ -2,13 +2,17 @@ import { fetchAllFeeds } from "@/lib/rss";
 import {
   fetchMarketData,
   sentimentLabel,
+  type SentimentSnapshot,
 } from "@/lib/sentiment";
 import { POOTER_SOUL_V1 } from "@/lib/agents/core";
 import { computeEventShapedSentimentSnapshot } from "@/lib/event-corpus";
 import { GlobalIndexCard } from "@/components/sentiment/GlobalIndexCard";
 import { SentimentGrid } from "@/components/sentiment/SentimentGrid";
+import { recordSnapshot } from "@/lib/score-history";
 
 export const revalidate = 300; // 5 min ISR
+
+let previousSnapshot: SentimentSnapshot | null = null;
 
 export default async function SentimentPage() {
   const [items, marketData] = await Promise.all([
@@ -16,7 +20,9 @@ export default async function SentimentPage() {
     fetchMarketData(),
   ]);
 
-  const snapshot = computeEventShapedSentimentSnapshot(items, marketData, null);
+  const snapshot = computeEventShapedSentimentSnapshot(items, marketData, previousSnapshot);
+  previousSnapshot = snapshot;
+  recordSnapshot(snapshot).catch(() => {});
   const label = sentimentLabel(snapshot.globalScore);
 
   return (

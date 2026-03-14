@@ -525,3 +525,16 @@ export function trendArrow(trend: number): string {
   if (trend < -3) return "▼";
   return "—";
 }
+
+export function trendArrowPercent(pctChange: number | null): string {
+  if (pctChange === null) return "\u2014";
+  if (pctChange > 1) return "\u25B2";
+  if (pctChange < -1) return "\u25BC";
+  return "\u2014";
+}
+
+export function formatPercentTrend(pctChange: number | null): string {
+  if (pctChange === null) return "\u2014";
+  const sign = pctChange > 0 ? "+" : "";
+  return `${sign}${pctChange.toFixed(1)}%`;
+}
