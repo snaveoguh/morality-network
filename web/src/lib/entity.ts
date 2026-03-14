@@ -54,6 +54,15 @@ export function formatEth(wei: bigint): string {
   return `${eth.toFixed(3)} ETH`;
 }
 
+/** Client-safe daily edition hash — mirrors server-side getDailyEditionHash(). */
+export function getDailyEditionHashClient(): `0x${string}` {
+  const d = new Date();
+  const yyyy = d.getUTCFullYear();
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(d.getUTCDate()).padStart(2, "0");
+  return computeEntityHash(`pooter-daily-${yyyy}-${mm}-${dd}`);
+}
+
 export function timeAgo(timestamp: number): string {
   const now = Math.floor(Date.now() / 1000);
   const diff = now - timestamp;

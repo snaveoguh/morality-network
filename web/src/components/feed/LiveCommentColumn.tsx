@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { formatEth, shortenAddress, timeAgo } from "@/lib/entity";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { formatEth, getDailyEditionHashClient, shortenAddress, timeAgo } from "@/lib/entity";
+import { StructuredCommentForm } from "@/components/entity/StructuredCommentForm";
 
 const POLL_MS = 25_000;
 const FEED_LIMIT = 40;
@@ -58,6 +59,9 @@ export function LiveCommentColumn({
 }: LiveCommentColumnProps) {
   const [activities, setActivities] = useState<WireActivity[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const dailyHash = useMemo(() => getDailyEditionHashClient(), []);
+  const refreshRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     let cancelled = false;
@@ -87,6 +91,8 @@ export function LiveCommentColumn({
       }
     }
 
+    refreshRef.current = refresh;
+
     void refresh();
     const timer = window.setInterval(() => {
       void refresh();
@@ -103,6 +109,11 @@ export function LiveCommentColumn({
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
+  }, []);
+
+  const handleCommentSuccess = useCallback(() => {
+    // Refresh wire after posting to pick up the new comment
+    setTimeout(() => refreshRef.current(), 3000);
   }, []);
 
   const hasActiveFilters =
@@ -126,13 +137,36 @@ export function LiveCommentColumn({
   return (
     <div className="sticky top-16 overflow-hidden">
       <div className="mb-3 border-b-2 border-[var(--rule)] pb-2">
-        <h2 className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-          Protocol Wire
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+            Protocol Wire
+          </h2>
+          <button
+            type="button"
+            onClick={() => setShowForm((v) => !v)}
+            className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
+          >
+            {showForm ? "Close" : "+ Comment"}
+          </button>
+        </div>
         <p className="mt-0.5 font-mono text-[9px] text-[var(--ink-faint)]">
           Live onchain comments + tips
         </p>
       </div>
+
+      {/* Inline comment form — posts to today's daily edition */}
+      {showForm && (
+        <div className="mb-3 border-b border-[var(--rule-light)] pb-3">
+          <p className="mb-1.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+            Commenting on today&apos;s edition
+          </p>
+          <StructuredCommentForm
+            entityHash={dailyHash}
+            onSuccess={handleCommentSuccess}
+            compact
+          />
+        </div>
+      )}
 
       <div className="max-h-[calc(100vh-170px)] space-y-0 overflow-y-auto pr-1">
         {items.map((activity) =>
