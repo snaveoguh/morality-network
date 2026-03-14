@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "editions": {
+    "2026-03-14": {
+      "date": "2026-03-14",
+      "generatedAt": "2026-03-14T16:55:45.811Z",
+      "updatedAt": "2026-03-14T16:57:37.057Z",
+      "stories": [
+        {
+          "entityHash": "0x95cb3c031261a15c7066420a54109839445ddd305972ad7bfa81a3a3ed7ca4b6",
+          "title": "Why did the US military bomb the strategic Iranian island of Kharg?",
+          "category": "World",
+          "source": "AFP / France 24",
+          "score": 64,
+          "isBreaking": true,
+          "clusterSize": 5,
+          "generatedAt": "2026-03-14T16:55:45.804Z"
+        },
+        {
+          "entityHash": "0xc648099236b9165bba37b922656d7da34cf9084069531d995dabc15d94b380a7",
+          "title": "India seeks passage for more vessels stranded around Strait of Hormuz after a few sail through - Reuters",
+          "category": "World",
+          "source": "Reuters",
+          "score": 56,
+          "isBreaking": true,
+          "clusterSize": 5,
+          "generatedAt": "2026-03-14T16:57:32.357Z"
+        },
+        {
+          "entityHash": "0x868dd3d6f7b9fddeb97a890a1bf744b8b3e7f3f67de74229456c2ceabd8d020f",
+          "title": "Israel bombs Basij checkpoints in Tehran as US, Iran trade fire and jabs",
+          "category": "World",
+          "source": "Al Jazeera",
+          "score": 53,
+          "isBreaking": true,
+          "clusterSize": 6,
+          "generatedAt": "2026-03-14T16:41:23.062Z"
+        }
+      ]
+    }
+  }
+}

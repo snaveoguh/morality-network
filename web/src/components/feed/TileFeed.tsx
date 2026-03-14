@@ -47,6 +47,7 @@ interface TileFeedProps {
   proposals: Proposal[];
   videos?: VideoItem[];
   biasDigest?: BiasDigest | null;
+  publishedHashList?: string[];
 }
 
 const FILTER_OPTIONS = [
@@ -92,7 +93,15 @@ function getProposalCategory(proposal: Proposal): string {
 // VISUAL WEIGHT — assigns chaotic column spans
 // ============================================================================
 
-function assignWeight(item: TileItem, index: number): VisualWeight {
+function assignWeight(item: TileItem, index: number, publishedHashes?: Set<string>): VisualWeight {
+  // Published articles always get hero (first) or major weight
+  if (item.type === "rss" && publishedHashes?.size) {
+    const hash = computeEntityHash(item.data.link);
+    if (publishedHashes.has(hash)) {
+      return index === 0 ? "hero" : "major";
+    }
+  }
+
   const ageMs = Date.now() - item.sortTime;
   const ageHours = ageMs / (1000 * 60 * 60);
   const isRecent = ageHours < 4;
@@ -235,7 +244,8 @@ function MobileTabBar({
 // MAIN FEED
 // ============================================================================
 
-export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }: TileFeedProps) {
+export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, publishedHashList }: TileFeedProps) {
+  const publishedHashes = useMemo(() => new Set(publishedHashList ?? []), [publishedHashList]);
   const [filter, setFilter] = useState("all");
   const [biasFilter, setBiasFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
@@ -325,8 +335,26 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
     }
 
     all.sort((a, b) => b.sortTime - a.sortTime);
+
+    // Published articles float to top while maintaining their relative order
+    if (publishedHashes && publishedHashes.size > 0) {
+      const published: TileItem[] = [];
+      const rest: TileItem[] = [];
+      for (const item of all) {
+        if (
+          item.type === "rss" &&
+          publishedHashes.has(computeEntityHash(item.data.link))
+        ) {
+          published.push(item);
+        } else {
+          rest.push(item);
+        }
+      }
+      return [...published, ...rest];
+    }
+
     return all;
-  }, [rssItems, casts, proposals, videos]);
+  }, [rssItems, casts, proposals, videos, publishedHashList]);
 
   const wireEntityMetaByHash = useMemo(() => {
     const map: Record<
@@ -572,7 +600,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
                 }
               }
 
-              let weight = assignWeight(item, i);
+              let weight = assignWeight(item, i, publishedHashes);
               if (weight === "hero") {
                 if (heroCount > 0) weight = "major";
                 else heroCount++;
@@ -605,12 +633,14 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
                 featureUsed = true;
               }
 
+              const isPublished = item.type === "rss" && !!publishedHashes?.has(computeEntityHash(item.data.link));
+
               elements.push(
                 <div
                   key={`${item.type}-${i}`}
                   className={`${WEIGHT_CSS[weight]} ${tilt} ${isInverted ? "ink-block" : ""}`}
                 >
-                  {renderTile(item, weight, seed, isFeature)}
+                  {renderTile(item, weight, seed, isFeature, isPublished)}
                 </div>
               );
 
@@ -645,10 +675,10 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
 // TILE ROUTER — picks component based on type
 // ============================================================================
 
-function renderTile(item: TileItem, weight: VisualWeight, seed: number = 0, isFeature: boolean = false) {
+function renderTile(item: TileItem, weight: VisualWeight, seed: number = 0, isFeature: boolean = false, isPublished: boolean = false) {
   switch (item.type) {
     case "rss":
-      return <RssTile item={item.data} weight={weight} seed={seed} isFeature={isFeature} />;
+      return <RssTile item={item.data} weight={weight} seed={seed} isFeature={isFeature} isPublished={isPublished} />;
     case "cast":
       return <CastTile cast={item.data} weight={weight} />;
     case "video":
@@ -677,7 +707,7 @@ const HEADLINE_SIZES: Record<VisualWeight, string> = {
   filler: "text-xs leading-snug font-headline-serif font-semibold",
 };
 
-function RssTile({ item, weight, seed = 0, isFeature = false }: { item: FeedItemType; weight: VisualWeight; seed?: number; isFeature?: boolean }) {
+function RssTile({ item, weight, seed = 0, isFeature = false, isPublished = false }: { item: FeedItemType; weight: VisualWeight; seed?: number; isFeature?: boolean; isPublished?: boolean }) {
   const { isConnected } = useAccount();
   const timeSince = getTimeSince(item.pubDate);
   const entityHash = computeEntityHash(item.link);
@@ -710,6 +740,8 @@ function RssTile({ item, weight, seed = 0, isFeature = false }: { item: FeedItem
 
         {/* Dateline */}
         <div className="mt-3 mb-1 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          {isPublished && <span className="font-bold text-[var(--accent-red)]">Editorial</span>}
+          {isPublished && <span>&middot;</span>}
           <span className="font-bold text-[var(--ink-light)]">{item.source}</span>
           {item.bias && <BiasPill bias={item.bias} />}
           <span>&middot;</span>
@@ -766,6 +798,8 @@ function RssTile({ item, weight, seed = 0, isFeature = false }: { item: FeedItem
         </div>
 
         <div className="mb-1 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          {isPublished && <span className="font-bold text-[var(--accent-red)]">Editorial</span>}
+          {isPublished && <span>&middot;</span>}
           <span className="font-bold text-[var(--ink-light)]">{item.source}</span>
           {item.bias && <BiasPill bias={item.bias} />}
           <span>&middot;</span>
@@ -818,6 +852,8 @@ function RssTile({ item, weight, seed = 0, isFeature = false }: { item: FeedItem
 
       {/* Dateline */}
       <div className="mb-1 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+        {isPublished && <span className="font-bold text-[var(--accent-red)]">Editorial</span>}
+        {isPublished && <span>&middot;</span>}
         <span className="font-bold text-[var(--ink-light)]">{item.source}</span>
         {item.bias && <BiasPill bias={item.bias} />}
         <span>&middot;</span>

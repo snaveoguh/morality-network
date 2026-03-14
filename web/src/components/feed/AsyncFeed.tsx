@@ -10,9 +10,11 @@ import { fetchAllFeeds } from "@/lib/rss";
 import { fetchAllProposals, fetchGovernanceSocialSignals } from "@/lib/governance";
 import { fetchFarcasterContent } from "@/lib/farcaster";
 import { fetchDailyVideos } from "@/lib/video";
-import { autoArchiveBatch } from "@/lib/archive";
+import { autoArchiveBatch, getArchivedFeedItemByHash } from "@/lib/archive";
+import { computeEntityHash } from "@/lib/entity";
 import { generateBiasDigest } from "@/lib/bias-digest";
 import { getSourceBias } from "@/lib/bias";
+import { getTodayPublishedHashes } from "@/lib/newsroom-edition";
 import { GovernanceSocialList } from "@/components/proposals/GovernanceSocialList";
 
 /** Race a promise against a timeout — returns fallback on timeout */
@@ -24,13 +26,30 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 }
 
 export async function AsyncFeed() {
-  const [rssItems, proposals, governanceSignals, casts, videos] = await Promise.all([
+  const [rssItems, proposals, governanceSignals, casts, videos, publishedHashes] = await Promise.all([
     withTimeout(fetchAllFeeds(), 8000, []),
     withTimeout(fetchAllProposals(), 8000, []),
     withTimeout(fetchGovernanceSocialSignals(), 5000, []),
     withTimeout(fetchFarcasterContent("pip"), 5000, []),
     withTimeout(fetchDailyVideos(12), 5000, []),
+    withTimeout(getTodayPublishedHashes(), 3000, new Set<string>()),
   ]);
+
+  // Inject published stories that rotated out of the live RSS feed
+  if (publishedHashes.size > 0) {
+    const liveHashes = new Set(rssItems.map((i) => computeEntityHash(i.link)));
+    const missing = [...publishedHashes].filter((h) => !liveHashes.has(h));
+    if (missing.length > 0) {
+      const recovered = await Promise.all(
+        missing.map((h) =>
+          getArchivedFeedItemByHash(h as `0x${string}`).catch(() => null),
+        ),
+      );
+      for (const item of recovered) {
+        if (item) rssItems.push(item);
+      }
+    }
+  }
 
   // Fire-and-forget: archive + bias digest (don't block render)
   autoArchiveBatch(rssItems).catch(() => {});
@@ -63,6 +82,7 @@ export async function AsyncFeed() {
         proposals={proposals}
         videos={videos}
         biasDigest={biasDigest}
+        publishedHashList={[...publishedHashes]}
       />
     </>
   );
