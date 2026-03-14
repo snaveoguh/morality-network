@@ -18,7 +18,7 @@ const NAV_LINKS = [
   { href: "/music", label: "Music" },
   { href: "/discuss", label: "Discuss" },
   { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/bots", label: "Bots" },
+  { href: "/bots", label: "Agents" },
 ];
 
 export function Header() {

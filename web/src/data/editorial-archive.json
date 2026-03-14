@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-12T22:25:21.004Z",
+  "updatedAt": "2026-03-14T13:32:25.095Z",
   "items": {
     "0xe533669faba4e7a07384e8534ec208f259895e6bd9661a89cb2b5da571c6867a": {
       "primary": {
@@ -1255,6 +1255,3254 @@
       "generatedAt": "2026-03-12T22:25:21.004Z",
       "contentHash": "0xa02b3767fdaf0f6646a83d2104d30b8c67c5009d23393690616e793b2b1274d0",
       "version": 3
+    },
+    "0x6f2abb5a70f9912bb5a16ebb942933991d82210d0444dba71ad6366d11134f7b": {
+      "primary": {
+        "id": "pooter-daily-2026-03-14",
+        "title": "Missile hits US embassy compound in Baghdad.",
+        "link": "https://pooter.world/article/0x6f2abb5a70f9912bb5a16ebb942933991d82210d0444dba71ad6366d11134f7b",
+        "source": "pooter world",
+        "sourceUrl": "https://pooter.world",
+        "pubDate": "2026-03-14T05:19:20.013Z",
+        "description": "As Trump threatens Iran's oil infrastructure, the real war is over who controls the narrative.",
+        "category": "Daily Edition",
+        "bias": null,
+        "tags": [
+          "daily-edition",
+          "editorial"
+        ]
+      },
+      "claim": "Missile hits US embassy compound in Baghdad.",
+      "relatedSources": [],
+      "subheadline": "As Trump threatens Iran's oil infrastructure, the real war is over who controls the narrative.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "In the midst of escalating tensions, a missile struck the helipad at the US embassy compound in Baghdad, leaving an unspecified number of casualties. This incident, reported by Middle East Eye, marks a significant escalation in the conflict between the US and Iran. Just yesterday, Israel issued a warning to civilians near the Iranian city of Tabriz before a strike, as reported by Middle East Eye. The UAE has also arrested 10 individuals for posting conflict videos on social media, highlighting the growing importance of information control in this war.",
+        "The conflict has already begun to affect global markets, with Bitcoin sentiment at 67 and market signal at 49, according to the market signals. The global economy sentiment score is at 58, indicating a neutral outlook. However, the $100 oil price, as reported in our previous edition, \"STRAIT OF CONVERGENCE,\" continues to put pressure on energy-dependent economies. In response, India has granted a 30-day visa extension to stranded foreigners, as reported by Times of India.",
+        "As the US bombs military sites on Iranian island Kharg, Trump threatens Iran's oil infrastructure, raising concerns about the potential consequences of such an action. The Associated Press reports that the US has bombed military sites on the island, while Al Jazeera shows smoke rising from the US embassy in Baghdad. Meanwhile, the Times of India notes that Tata and Parle canteens are feeling the squeeze of the LPG price hike, redesigning their menus to reduce costs.",
+        "In other news, Meta is planning its biggest-ever layoffs, with 15,000 jobs at risk, as reported by Times of India. BlackRock says 'exotic' crypto ETFs are not part of its strategy, according to Cointelegraph. The US has moved 2,000 Marines from Japan to the Middle East, as reported by SCMP, further escalating the conflict.",
+        "The uncomfortable part of this story is that the real war is not just about military might, but about who controls the narrative. As the UAE arrests individuals for posting conflict videos, it becomes clear that information control is a crucial aspect of this conflict. The US and Iran are engaged in a propaganda war, with each side trying to shape the narrative to its advantage.",
+        "The market pulse indicates a sense of caution, with the global sentiment score at 60 and the conflict and security sentiment score at 54. The crypto and web3 sentiment score is at 70, indicating a more optimistic outlook. However, the onchain activity does not show any significant changes, suggesting that the market is waiting for further developments.",
+        "In terms of culture and signal, the music pick for today is The Beatles' \"Let It Be,\" a song that captures the sense of uncertainty and longing that defines this moment. The video picks for today include ABC News' \"Fundraiser launched to help elderly delivery driver retire\" and Al Jazeera's \"US attacks strategically important Kharg Island in Iran | DW News,\" which provide a glimpse into the human cost of this conflict.",
+        "Looking forward, the next few days will be crucial in determining the trajectory of this conflict. The US and Iran are engaged in a high-stakes game of chicken, with the global economy hanging in the balance. The question is, what will happen next? Will the US and Iran find a way to de-escalate, or will the conflict continue to escalate?",
+        "In closing, as the missile hits the US embassy compound in Baghdad, it becomes clear that the stakes are higher than ever. The real war is not just about military might, but about who controls the narrative. As we move forward, it is essential to remember the human cost of this conflict and to seek a way out of this quagmire."
+      ],
+      "wireSummary": null,
+      "biasContext": null,
+      "tags": [
+        "daily-edition",
+        "editorial"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "Missile hits US embassy compound in Baghdad.",
+        "claimVariants": [
+          {
+            "source": "pooter world",
+            "link": "https://pooter.world/article/0x6f2abb5a70f9912bb5a16ebb942933991d82210d0444dba71ad6366d11134f7b",
+            "claim": "Missile hits US embassy compound in Baghdad.",
+            "confidence": 0.63
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "pooter world",
+            "title": "Missile hits US embassy compound in Baghdad.",
+            "link": "https://pooter.world/article/0x6f2abb5a70f9912bb5a16ebb942933991d82210d0444dba71ad6366d11134f7b",
+            "summary": "In the midst of escalating tensions, a missile struck the helipad at the US embassy compound in Baghdad, leaving an unspecified number of casualties. This incident, reported by Middle East Eye, marks a significant escalation in the conflict between the US and Iran. Just yesterday, Israel issued a warning to civilians near the Iranian city of Tabriz before a strike, as reported by Middle East Eye. The UAE has also arrested 10 individuals for posting conflict videos on social media, highlighting the growing importance of information control in this war.",
+            "pubDate": "2026-03-14T05:19:20.013Z"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 1
+      },
+      "musicPick": {
+        "spotifyId": "7iN1s7xHE4ifF5povM6A48",
+        "title": "Let It Be",
+        "artist": "The Beatles",
+        "commentary": "The Beatles' \"Let It Be\" is a song that captures the sense of uncertainty and longing that defines this moment. As the world teeters on the brink of chaos, this song reminds us to let go of our fears and to find peace in the midst of turmoil. The melody is haunting, the lyrics are poignant, and the message is timeless. Today, as we navigate the complexities of this conflict, \"Let It Be\" is a reminder that even in the darkest of times, there is always hope."
+      },
+      "newsVideos": [
+        {
+          "videoId": "Mxu9IUQXIew",
+          "title": "Fundraiser launched to help elderly delivery driver retire",
+          "channel": "ABC News"
+        },
+        {
+          "videoId": "oIqCzHnPIcU",
+          "title": "Merz calls on US to uphold Russian oil sanctions | DW News",
+          "channel": "Al Jazeera"
+        },
+        {
+          "videoId": "2pk49Q04x3U",
+          "title": "US attacks strategically important Kharg Island in Iran | DW News",
+          "channel": "Al Jazeera"
+        }
+      ],
+      "isDailyEdition": true,
+      "dailyTitle": "IRANIAN RECKONING",
+      "entityHash": "0x6f2abb5a70f9912bb5a16ebb942933991d82210d0444dba71ad6366d11134f7b",
+      "generatedAt": "2026-03-14T05:19:20.022Z",
+      "generatedBy": "claude-ai",
+      "contentHash": "0xcfb7310742a38ac163c6b6a15fc0b0ffe83c9ac3328450cf34ff32c04e09163e",
+      "version": 3
+    },
+    "0x0fb5637eba7100f9561d57b59d04a9caec4d26b64b4d65c09f1c40409823bd0e": {
+      "primary": {
+        "id": "435725 at https://www.middleeasteye.net/",
+        "title": "Missile hits helipad at US embassy compound in Baghdad, officials say",
+        "link": "https://www.middleeasteye.net/live-blog/live-blog-update/missile-hits-helipad-us-embassy-compound-baghdad-officials-say",
+        "description": "Missile hits helipad at US embassy compound in Baghdad, officials say\n\n    \nA missile struck a helipad inside the US Embassy compound in Baghdad, Iraqi officials told The Associated Press.\nSmoke was seen rising from the sprawling embassy complex located in the heavily fortified Green Zone. The embas",
+        "pubDate": "Sat, 14 Mar 2026 05:10:42 +0000",
+        "source": "Middle East Eye",
+        "sourceUrl": "https://www.middleeasteye.net/rss",
+        "category": "World",
+        "bias": {
+          "name": "Middle East Eye",
+          "domain": "middleeasteye.net",
+          "bias": "lean-left",
+          "factuality": "mostly-factual",
+          "ownership": "Independent",
+          "country": "UK",
+          "fundingModel": "independent"
+        },
+        "canonicalClaim": "Missile hits helipad at US embassy compound in Baghdad, officials say.",
+        "tags": [
+          "war"
+        ]
+      },
+      "claim": "Missile hits helipad at US embassy compound in Baghdad, officials say.",
+      "relatedSources": [
+        {
+          "id": "https://www.aljazeera.com/?t=1773462831",
+          "title": "Smoke seen rising from US embassy in Baghdad",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/3/14/smoke-seen-rising-from-us-embassy-in-baghdad?traffic_source=rss",
+          "description": "Videos posted by social media users showed smoke rising from the US embassy in Baghdad after a reported attack.",
+          "pubDate": "Sat, 14 Mar 2026 04:38:03 +0000",
+          "source": "Al Jazeera",
+          "sourceUrl": "https://www.aljazeera.com/xml/rss/all.xml",
+          "category": "World",
+          "bias": {
+            "name": "Al Jazeera",
+            "domain": "aljazeera.com",
+            "bias": "center",
+            "factuality": "mostly-factual",
+            "ownership": "Qatar (State)",
+            "country": "Qatar",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "Smoke seen rising from US embassy in Baghdad."
+        },
+        {
+          "id": "https://www.aljazeera.com/?t=1773431988",
+          "title": "Iranian missile strike in central Israel sets building ablaze",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/3/13/iranian-missile-strike-in-central-israel-sets-building-ablaze?traffic_source=rss",
+          "description": "Smoke and flames rising beside a road in central Israel after an Iranian missile attack, the Israeli army said.",
+          "pubDate": "Fri, 13 Mar 2026 20:04:14 +0000",
+          "source": "Al Jazeera",
+          "sourceUrl": "https://www.aljazeera.com/xml/rss/all.xml",
+          "category": "World",
+          "bias": {
+            "name": "Al Jazeera",
+            "domain": "aljazeera.com",
+            "bias": "center",
+            "factuality": "mostly-factual",
+            "ownership": "Qatar (State)",
+            "country": "Qatar",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "Iranian missile strike in central Israel sets building ablaze.",
+          "tags": [
+            "war"
+          ]
+        },
+        {
+          "id": "https://freebeacon.com/?p=2122765",
+          "title": "Iran’s ‘Entire Ballistic Missile Production Capacity’ Destroyed in Operation Epic Fury, Hegseth Says",
+          "link": "https://freebeacon.com/national-security/irans-entire-ballistic-missile-production-capacity-destroyed-in-operation-epic-fury-hegseth-says/",
+          "description": "The U.S. military has eliminated Iran’s \"entire ballistic missile production capacity\" in just under two weeks of intensive operations, Secretary of War Pete Hegseth told reporters on Friday, adding that \"every company that builds every component of those missiles has been functionally defeated.\" \"W",
+          "pubDate": "Fri, 13 Mar 2026 21:01:03 +0000",
+          "source": "Free Beacon",
+          "sourceUrl": "https://freebeacon.com/feed/",
+          "category": "World",
+          "imageUrl": "https://freebeacon.com/wp-content/uploads/2026/03/Hegseth-1.mp4",
+          "bias": {
+            "name": "Washington Free Beacon",
+            "domain": "freebeacon.com",
+            "bias": "right",
+            "factuality": "mostly-factual",
+            "ownership": "Center for American Freedom",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Iran’s ‘Entire Ballistic Missile Production Capacity’ Destroyed in Operation Epic Fury, Hegseth Says.",
+          "tags": [
+            "war"
+          ]
+        },
+        {
+          "id": "https://www.bellingcat.com/?p=51566",
+          "title": "Video Shows US Tomahawk Missile Strike Next to Girls’ School in Iran",
+          "link": "https://www.bellingcat.com/news/2026/03/08/video-shows-us-tomahawk-missile-strike-next-to-girls-school-in-iran/",
+          "description": "New video footage shows a US Tomahawk missile hitting an Islamic Revolutionary Guard Corps (IRGC) facility in Minab, Iran, on Feb 28, showing for the first time that the US struck the area. The footage, released by Mehr News and geolocated by Bellingcat, also shows smoke already rising from the vici",
+          "pubDate": "Sun, 08 Mar 2026 19:08:48 +0000",
+          "source": "Bellingcat",
+          "sourceUrl": "https://www.bellingcat.com/feed/",
+          "category": "World",
+          "bias": {
+            "name": "Bellingcat",
+            "domain": "bellingcat.com",
+            "bias": "lean-left",
+            "factuality": "very-high",
+            "ownership": "Stichting Bellingcat",
+            "country": "Netherlands",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Video Shows US Tomahawk Missile Strike Next to Girls’ School in Iran.",
+          "tags": [
+            "war"
+          ]
+        },
+        {
+          "id": "https://theintercept.com/2026/03/11/iran-school-missile-investigation/",
+          "title": "Pentagon Report: U.S. Military Fired Missile at Elementary School in Iran",
+          "link": "https://theintercept.com/2026/03/11/iran-school-missile-investigation/",
+          "description": "Despite attempts by Trump to claim otherwise, the U.S. military was responsible for killing at least 175 in a strike on a school in Iran.\nThe post Pentagon Report: U.S. Military Fired Missile at Elementary School in Iran appeared first on The Intercept.",
+          "pubDate": "Wed, 11 Mar 2026 17:07:17 +0000",
+          "source": "The Intercept",
+          "sourceUrl": "https://theintercept.com/feed/?rss",
+          "category": "World",
+          "bias": {
+            "name": "The Intercept",
+            "domain": "theintercept.com",
+            "bias": "left",
+            "factuality": "high",
+            "ownership": "First Look Media",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Pentagon Report: U.S. Military Fired Missile at Elementary School in Iran.",
+          "tags": [
+            "war"
+          ]
+        }
+      ],
+      "subheadline": "Escalating tensions in the Middle East expose the US embassy in Baghdad to increased attacks, testing the diplomatic mission's security.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "A missile strike on the US embassy compound in Baghdad, hitting a helipad, has heightened concerns about the safety of American diplomats and citizens in Iraq. According to Iraqi officials, the attack occurred on March 14, 2026, with smoke seen rising from the embassy complex in the heavily fortified Green Zone. The US Embassy had previously renewed a Level 4 alert, warning of potential targeting by militia groups.",
+        "The attack on the US embassy is part of a larger pattern of increased violence and tensions in the Middle East. Iranian militia groups have repeatedly targeted the embassy compound with rockets and drones, despite the Green Zone's robust security measures. This latest incident underscores the ongoing risks faced by US diplomatic personnel and citizens in the region.",
+        "A review of cross-source coverage reveals that while Middle East Eye and Al Jazeera report on the missile strike, they differ in their emphasis. Middle East Eye focuses on the attack's specifics, while Al Jazeera provides more general information about the incident. In contrast, the Washington Free Beacon reports on the US military's claims of eliminating Iran's ballistic missile production capacity, which may be seen as a contributing factor to the increased tensions.",
+        "Analyzing the situation, it becomes clear that the US embassy attack is not an isolated incident. Rather, it is part of a broader escalation of violence in the Middle East, fueled by ongoing conflicts between the US, Iran, and their respective allies. The US military's actions, including the reported destruction of Iran's ballistic missile production capacity, may have contributed to the increased hostility.",
+        "However, several questions remain unanswered. What is the current state of US-Iran relations, and how will this attack affect future diplomatic efforts? What measures will the US take to enhance the security of its embassy and personnel in Baghdad? The lack of information on these critical issues highlights the need for more comprehensive reporting and analysis.",
+        "Looking ahead, the situation in the Middle East is likely to remain volatile, with the potential for further escalation. The US and its allies must be prepared to respond to emerging threats, while also pursuing diplomatic efforts to reduce tensions and promote stability in the region. Key dates to watch include upcoming meetings between US and Iranian officials, as well as potential developments in the US military's campaign against Iranian militia groups."
+      ],
+      "wireSummary": "A missile struck the US embassy compound in Baghdad, hitting a helipad, amid increased tensions in the Middle East. The attack occurred on March 14, 2026, with smoke seen rising from the embassy complex. The US Embassy had previously renewed a Level 4 alert, warning of potential targeting by militia groups.",
+      "biasContext": "The sources exhibit varying biases, with Middle East Eye leaning left, Al Jazeera center, and the Washington Free Beacon leaning right. The Intercept and Bellingcat have a left and lean-left bias, respectively. These biases may influence the framing and emphasis of the reported information.",
+      "tags": [
+        "world"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "Iran’s ‘Entire Ballistic Missile Production Capacity’ Destroyed in Operation Epic Fury, Hegseth Says.",
+        "claimVariants": [
+          {
+            "source": "Middle East Eye",
+            "link": "https://www.middleeasteye.net/live-blog/live-blog-update/missile-hits-helipad-us-embassy-compound-baghdad-officials-say",
+            "claim": "Missile hits helipad at US embassy compound in Baghdad, officials say.",
+            "confidence": 0.6633333333333333
+          },
+          {
+            "source": "Al Jazeera",
+            "link": "https://www.aljazeera.com/video/newsfeed/2026/3/14/smoke-seen-rising-from-us-embassy-in-baghdad?traffic_source=rss",
+            "claim": "Smoke seen rising from US embassy in Baghdad.",
+            "confidence": 0.63
+          },
+          {
+            "source": "Al Jazeera",
+            "link": "https://www.aljazeera.com/video/newsfeed/2026/3/13/iranian-missile-strike-in-central-israel-sets-building-ablaze?traffic_source=rss",
+            "claim": "Iranian missile strike in central Israel sets building ablaze.",
+            "confidence": 0.6633333333333333
+          },
+          {
+            "source": "Free Beacon",
+            "link": "https://freebeacon.com/national-security/irans-entire-ballistic-missile-production-capacity-destroyed-in-operation-epic-fury-hegseth-says/",
+            "claim": "Iran’s ‘Entire Ballistic Missile Production Capacity’ Destroyed in Operation Epic Fury, Hegseth Says.",
+            "confidence": 0.7133333333333333
+          },
+          {
+            "source": "Bellingcat",
+            "link": "https://www.bellingcat.com/news/2026/03/08/video-shows-us-tomahawk-missile-strike-next-to-girls-school-in-iran/",
+            "claim": "Video Shows US Tomahawk Missile Strike Next to Girls’ School in Iran.",
+            "confidence": 0.6966666666666667
+          },
+          {
+            "source": "The Intercept",
+            "link": "https://theintercept.com/2026/03/11/iran-school-missile-investigation/",
+            "claim": "Pentagon Report: U.S. Military Fired Missile at Elementary School in Iran.",
+            "confidence": 0.6466666666666666
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Middle East Eye",
+            "title": "Missile hits helipad at US embassy compound in Baghdad, officials say",
+            "link": "https://www.middleeasteye.net/live-blog/live-blog-update/missile-hits-helipad-us-embassy-compound-baghdad-officials-say",
+            "summary": "A missile strike on the US embassy compound in Baghdad, hitting a helipad, has heightened concerns about the safety of American diplomats and citizens in Iraq. According to Iraqi officials, the attack occurred on March 14, 2026, with smoke seen rising from the embassy complex in the heavily fortified Green Zone. The US Embassy had previously renewed a Level 4 alert, warning of potential targeting by militia groups.",
+            "pubDate": "Sat, 14 Mar 2026 05:10:42 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Al Jazeera",
+            "title": "Smoke seen rising from US embassy in Baghdad",
+            "link": "https://www.aljazeera.com/video/newsfeed/2026/3/14/smoke-seen-rising-from-us-embassy-in-baghdad?traffic_source=rss",
+            "summary": "Videos posted by social media users showed smoke rising from the US embassy in Baghdad after a reported attack.",
+            "pubDate": "Sat, 14 Mar 2026 04:38:03 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Al Jazeera",
+            "title": "Iranian missile strike in central Israel sets building ablaze",
+            "link": "https://www.aljazeera.com/video/newsfeed/2026/3/13/iranian-missile-strike-in-central-israel-sets-building-ablaze?traffic_source=rss",
+            "summary": "Smoke and flames rising beside a road in central Israel after an Iranian missile attack, the Israeli army said.",
+            "pubDate": "Fri, 13 Mar 2026 20:04:14 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Free Beacon",
+            "title": "Iran’s ‘Entire Ballistic Missile Production Capacity’ Destroyed in Operation Epic Fury, Hegseth Says",
+            "link": "https://freebeacon.com/national-security/irans-entire-ballistic-missile-production-capacity-destroyed-in-operation-epic-fury-hegseth-says/",
+            "summary": "The U.S. military has eliminated Iran’s \"entire ballistic missile production capacity\" in just under two weeks of intensive operations, Secretary of War Pete Hegseth told reporters on Friday, adding that \"every company that builds every component of those missiles has been functionally defeated.\" \"W",
+            "pubDate": "Fri, 13 Mar 2026 21:01:03 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Bellingcat",
+            "title": "Video Shows US Tomahawk Missile Strike Next to Girls’ School in Iran",
+            "link": "https://www.bellingcat.com/news/2026/03/08/video-shows-us-tomahawk-missile-strike-next-to-girls-school-in-iran/",
+            "summary": "New video footage shows a US Tomahawk missile hitting an Islamic Revolutionary Guard Corps (IRGC) facility in Minab, Iran, on Feb 28, showing for the first time that the US struck the area. The footage, released by Mehr News and geolocated by Bellingcat, also shows smoke already rising from the vici",
+            "pubDate": "Sun, 08 Mar 2026 19:08:48 +0000"
+          },
+          {
+            "kind": "report",
+            "source": "The Intercept",
+            "title": "Pentagon Report: U.S. Military Fired Missile at Elementary School in Iran",
+            "link": "https://theintercept.com/2026/03/11/iran-school-missile-investigation/",
+            "summary": "Despite attempts by Trump to claim otherwise, the U.S. military was responsible for killing at least 175 in a strike on a school in Iran. The post Pentagon Report: U.S. Military Fired Missile at Elementary School in Iran appeared first on The Intercept.",
+            "pubDate": "Wed, 11 Mar 2026 17:07:17 +0000"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 5
+      },
+      "entities": [
+        {
+          "name": "Iran",
+          "canonicalName": "iran",
+          "type": "country",
+          "context": "In contrast, the Washington Free Beacon reports on the US military's claims of eliminating Iran's ballistic missile p...",
+          "occurrences": [
+            {
+              "paragraphIndex": 2,
+              "startChar": 358,
+              "endChar": 362
+            },
+            {
+              "paragraphIndex": 3,
+              "startChar": 217,
+              "endChar": 221
+            },
+            {
+              "paragraphIndex": 3,
+              "startChar": 317,
+              "endChar": 321
+            },
+            {
+              "paragraphIndex": 4,
+              "startChar": 78,
+              "endChar": 82
+            }
+          ]
+        },
+        {
+          "name": "Iraq",
+          "canonicalName": "iraq",
+          "type": "country",
+          "context": "A missile strike on the US embassy compound in Baghdad, hitting a helipad, has heightened concerns about the safety o...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 154,
+              "endChar": 158
+            }
+          ]
+        }
+      ],
+      "missingContext": "A significant gap in coverage is the lack of information on the US military's strategic objectives in the region and how they plan to address the escalating violence. Additionally, the perspectives of Iraqi citizens and the impact of the conflict on the local population are largely absent from the reporting.",
+      "historicalParallel": "The current situation in the Middle East bears similarities to the 1990-1991 Gulf War, where the US-led coalition faced challenges in maintaining stability and security in the region. The ongoing conflicts and power struggles in the Middle East may lead to a similar scenario, with the US and its allies attempting to balance their interests with the need to promote regional stability.",
+      "stakeholderAnalysis": "The stakeholders affected by the US embassy attack include US diplomats and citizens, Iraqi civilians, and the Iranian government. The US military, Iranian militia groups, and other regional actors also have a vested interest in the outcome of the conflict.",
+      "marketImpact": {
+        "significance": 80,
+        "headline": "US Embassy attack in Baghdad fuels Middle East tensions, impacting defense and oil markets.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "US Defense Equities",
+            "ticker": "BULLISH, HORIZONS: DAYS, WEEKS, MECHANISM: Increased tensions in the Middle East may lead to higher demand for US defense products and services.",
+            "direction": "volatile",
+            "confidence": 0.6,
+            "timeHorizons": [
+              "days",
+              "weeks"
+            ],
+            "rationale": "Increased tensions in the Middle East may lead to higher demand for US defense products and services.)"
+          },
+          {
+            "asset": "Crude Oil Futures",
+            "ticker": "VOLATILE, HORIZONS: HOURS, DAYS, MECHANISM: Geopolitical uncertainty in the Middle East may impact oil prices and volatility.",
+            "direction": "volatile",
+            "confidence": 0.6,
+            "timeHorizons": [
+              "hours",
+              "days"
+            ],
+            "rationale": "Geopolitical uncertainty in the Middle East may impact oil prices and volatility.)"
+          },
+          {
+            "asset": "Iraqi Dinars",
+            "ticker": "BEARISH, HORIZONS: WEEKS, MONTHS, MECHANISM: Escalating conflict may lead to decreased investor confidence and a weakening of the Iraqi currency.",
+            "direction": "volatile",
+            "confidence": 0.6,
+            "timeHorizons": [
+              "weeks",
+              "months"
+            ],
+            "rationale": "Escalating conflict may lead to decreased investor confidence and a weakening of the Iraqi currency.)"
+          }
+        ],
+        "topicSlugs": [],
+        "transmissionMechanism": "The attack on the US embassy in Baghdad transmits to the market through increased geopolitical uncertainty, influencing investor sentiment and asset prices."
+      },
+      "generatedBy": "claude-ai",
+      "entityHash": "0x0fb5637eba7100f9561d57b59d04a9caec4d26b64b4d65c09f1c40409823bd0e",
+      "generatedAt": "2026-03-14T05:19:08.425Z",
+      "contentHash": "0x1700ccd61a29a9e6888d9714c1bc5f31a1df4562384e7dd4aa805afd29e241f6",
+      "version": 1
+    },
+    "0x4af4e9711e4d6b2c7ff55b1f35fe3ff9857d279bcabfe71aead34437a7ef1e24": {
+      "primary": {
+        "id": "http://www3.nhk.or.jp/news/html/20260314/k10015075721000.html",
+        "title": "北朝鮮から弾道ミサイル可能性あるもの日本のEEZ外側に落下か",
+        "link": "http://www3.nhk.or.jp/news/html/20260314/k10015075721000.html",
+        "description": "防衛省は、北朝鮮から発射された弾道ミサイルの可能性があるものについて、すでに落下したと推定されると先ほど発表しました。防衛省関係者によりますと、北朝鮮から発射された弾道ミサイルの可能性があるものは日本のEEZ＝排他的経済水域の外側に落下したとみられるということです。",
+        "pubDate": "Sat, 14 Mar 2026 14:06:33 +0900",
+        "source": "NHK World",
+        "sourceUrl": "https://www3.nhk.or.jp/rss/news/cat0.xml",
+        "category": "World",
+        "bias": {
+          "name": "NHK World",
+          "domain": "nhk.or.jp",
+          "bias": "center",
+          "factuality": "high",
+          "ownership": "NHK (Public)",
+          "country": "Japan",
+          "fundingModel": "public"
+        },
+        "canonicalClaim": "北朝鮮から弾道ミサイル可能性あるもの日本のEEZ外側に落下か."
+      },
+      "claim": "北朝鮮から弾道ミサイル可能性あるもの日本のEEZ外側に落下か.",
+      "relatedSources": [],
+      "subheadline": "防衛省は、北朝鮮から発射された弾道ミサイルの可能性が...",
+      "subheadlineEnglish": "The Ministry of Defense has confirmed that there is a possibility that the ballistic missile was launched from North Korea...",
+      "editorialBody": [
+        "防衛省は、北朝鮮から発射された弾道ミサイルの可能性が..."
+      ],
+      "editorialBodyEnglish": [
+        "The Ministry of Defense has confirmed that there is a possibility that the ballistic missile was launched from North Korea..."
+      ],
+      "wireSummary": null,
+      "biasContext": "NHK World reports from a centrist position, with a strong factual track record.",
+      "tags": [
+        "world"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "北朝鮮から弾道ミサイル可能性あるもの日本のEEZ外側に落下か.",
+        "claimVariants": [
+          {
+            "source": "NHK World",
+            "link": "http://www3.nhk.or.jp/news/html/20260314/k10015075721000.html",
+            "claim": "北朝鮮から弾道ミサイル可能性あるもの日本のEEZ外側に落下か.",
+            "confidence": 0.43666666666666665
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "NHK World",
+            "title": "北朝鮮から弾道ミサイル可能性あるもの日本のEEZ外側に落下か",
+            "link": "http://www3.nhk.or.jp/news/html/20260314/k10015075721000.html",
+            "summary": "防衛省は、北朝鮮から発射された弾道ミサイルの可能性が...",
+            "pubDate": "Sat, 14 Mar 2026 14:06:33 +0900"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 1
+      },
+      "entities": [],
+      "marketImpact": null,
+      "generatedBy": "template-fallback",
+      "entityHash": "0x4af4e9711e4d6b2c7ff55b1f35fe3ff9857d279bcabfe71aead34437a7ef1e24",
+      "generatedAt": "2026-03-14T05:20:04.560Z",
+      "contentHash": "0x6eec7db716c58d7b4dfc71e2a2441caf1414c7787731bb1706923d5a5fbaad63",
+      "version": 1
+    },
+    "0x99205c8e3c460224e4a6d3d50170f3063d72e4c3e49305d6b617aba30127d789": {
+      "primary": {
+        "id": "https://timesofindia.indiatimes.com/business/india-business/tata-parle-mm-canteens-feel-lpg-squeeze-india-inc-redesigns-menu-less-tea-no-samosas-or-dosas/articleshow/129568595.cms",
+        "title": "Tata, Parle canteens feel LPG squeeze; India Inc redesigns menu — less tea, no samosas",
+        "link": "https://timesofindia.indiatimes.com/business/india-business/tata-parle-mm-canteens-feel-lpg-squeeze-india-inc-redesigns-menu-less-tea-no-samosas-or-dosas/articleshow/129568595.cms",
+        "description": "India's industrial sector faces disruption as commercial LPG shortages impact factory operations. Manufacturers report production hurdles, particularly in brazing and paint shops, while canteens are paring back menus. Companies are turning to electric alternatives and even firewood to cope with the ",
+        "pubDate": "Sat, 14 Mar 2026 10:36:09 +0530",
+        "source": "Times of India",
+        "sourceUrl": "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
+        "category": "World",
+        "imageUrl": "https://static.toiimg.com/photo/msid-129569001,imgsize-2773114.cms",
+        "bias": {
+          "name": "Times of India",
+          "domain": "timesofindia.indiatimes.com",
+          "bias": "center",
+          "factuality": "mostly-factual",
+          "ownership": "Bennett, Coleman & Co.",
+          "country": "India",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "Tata, Parle canteens feel LPG squeeze; India Inc redesigns menu — less tea, no samosas."
+      },
+      "claim": "Tata, Parle canteens feel LPG squeeze; India Inc redesigns menu — less tea, no samosas.",
+      "relatedSources": [
+        {
+          "id": "8e1aa824-1eba-11f1-8956-3b9ef482090c",
+          "title": "‘We cut down the menu’: Cooking gas crisis hits restaurants in India amid war in Iran",
+          "link": "https://www.france24.com/en/asia-pacific/20260313-cooking-gas-crisis-india-restaurants-war-iran",
+          "description": "Restaurants in India are suffering the consequences of disruptions to supplies of cooking gas caused by the war in the Middle East. Two restaurant owners describe the mounting challenges of operating under the crisis and the measures they’re taking to adapt.",
+          "pubDate": "Fri, 13 Mar 2026 16:33:00 GMT",
+          "source": "AFP / France 24",
+          "sourceUrl": "https://www.france24.com/en/rss",
+          "category": "World",
+          "imageUrl": "https://s.france24.com/media/display/54b99746-1eee-11f1-bf10-005056a97e36/w:1024/p:16x9/WhatsApp-Image-2026-03-13-at-13-24-40.jpeg",
+          "bias": {
+            "name": "France 24",
+            "domain": "france24.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "France Médias Monde (State)",
+            "country": "France",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "‘We cut down the menu’: Cooking gas crisis hits restaurants in India amid war in Iran.",
+          "tags": [
+            "war"
+          ]
+        }
+      ],
+      "subheadline": "Times of India focuses on redesigns and canteens, with context pulled from source reporting instead of recycled feed copy. Cross-checked against AFP / France 24.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: Craving that dosa cooked to a perfect crisp? Ongoing tensions in the Middle East have begun to ripple into everyday industrial activity in India, as shortages...",
+        "Cross-source context: AFP / France 24 highlights restaurants in India are suffering the consequences of disruptions to supplies of cooking gas caused by the war in the Middle East. Two restaurant owners describe the mounting challenges of operating…",
+        "What to watch next: movement around redesigns, canteens."
+      ],
+      "wireSummary": "AFP / France 24: Restaurants in India are suffering the consequences of disruptions to supplies of cooking gas caused by the war...",
+      "biasContext": "Times of India reports from a centrist position, with a generally reliable factual record.",
+      "tags": [
+        "world",
+        "war",
+        "energy",
+        "india"
+      ],
+      "contextSnippets": [
+        {
+          "source": "AFP / France 24",
+          "link": "https://www.france24.com/en/asia-pacific/20260313-cooking-gas-crisis-india-restaurants-war-iran",
+          "summary": "Restaurants in India are suffering the consequences of disruptions to supplies of cooking gas caused by the war in the Middle East. Two restaurant owners describe the mounting challenges of operating…"
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "‘We cut down the menu’: Cooking gas crisis hits restaurants in India amid war in Iran.",
+        "claimVariants": [
+          {
+            "source": "Times of India",
+            "link": "https://timesofindia.indiatimes.com/business/india-business/tata-parle-mm-canteens-feel-lpg-squeeze-india-inc-redesigns-menu-less-tea-no-samosas-or-dosas/articleshow/129568595.cms",
+            "claim": "Tata, Parle canteens feel LPG squeeze; India Inc redesigns menu — less tea, no samosas.",
+            "confidence": 0.73
+          },
+          {
+            "source": "AFP / France 24",
+            "link": "https://www.france24.com/en/asia-pacific/20260313-cooking-gas-crisis-india-restaurants-war-iran",
+            "claim": "‘We cut down the menu’: Cooking gas crisis hits restaurants in India amid war in Iran.",
+            "confidence": 0.73
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "report",
+            "source": "Times of India",
+            "title": "Tata, Parle canteens feel LPG squeeze; India Inc redesigns menu — less tea, no samosas",
+            "link": "https://timesofindia.indiatimes.com/business/india-business/tata-parle-mm-canteens-feel-lpg-squeeze-india-inc-redesigns-menu-less-tea-no-samosas-or-dosas/articleshow/129568595.cms",
+            "summary": "Craving that dosa cooked to a perfect crisp? Ongoing tensions in the Middle East have begun to ripple into everyday industrial activity in India, as shortages...",
+            "pubDate": "Sat, 14 Mar 2026 10:36:09 +0530"
+          },
+          {
+            "kind": "link",
+            "source": "AFP / France 24",
+            "title": "‘We cut down the menu’: Cooking gas crisis hits restaurants in India amid war in Iran",
+            "link": "https://www.france24.com/en/asia-pacific/20260313-cooking-gas-crisis-india-restaurants-war-iran",
+            "summary": "Restaurants in India are suffering the consequences of disruptions to supplies of cooking gas caused by the war in the Middle East. Two restaurant owners describe the mounting challenges of operating…",
+            "pubDate": "Fri, 13 Mar 2026 16:33:00 GMT"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 2
+      },
+      "entities": [
+        {
+          "name": "India",
+          "canonicalName": "india",
+          "type": "country",
+          "context": "What happened: Craving that dosa cooked to a perfect crisp? Ongoing tensions in the Middle East have begun to ripple ...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 154,
+              "endChar": 159
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 64,
+              "endChar": 69
+            }
+          ],
+          "biasContext": "Times of India reports from a centrist position, with a generally reliable factual record."
+        },
+        {
+          "name": "France",
+          "canonicalName": "france",
+          "type": "country",
+          "context": "Cross-source context: AFP / France 24 highlights restaurants in India are suffering the consequences of disruptions t...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 28,
+              "endChar": 34
+            }
+          ]
+        }
+      ],
+      "marketImpact": {
+        "significance": 25,
+        "headline": "Potential exposure across 1 topic detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "war"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0x99205c8e3c460224e4a6d3d50170f3063d72e4c3e49305d6b617aba30127d789",
+      "generatedAt": "2026-03-14T05:20:51.376Z",
+      "contentHash": "0x7cce294405a05c5cfdfe2bae36a6a565be9f5470e74ff96e26295f50bd050b25",
+      "version": 1
+    },
+    "0xb8957df387e0ba12f63a9366a69f878322a25d9ab0fde8bbfe0bc14ac6c1df61": {
+      "primary": {
+        "id": "435724 at https://www.middleeasteye.net/",
+        "title": "Israel issues warning to civilians near Iranian city of Tabriz before strike",
+        "link": "https://www.middleeasteye.net/live-blog/live-blog-update/israel-issues-warning-civilians-near-iranian-city-tabriz-strike",
+        "description": "Israel issues warning to civilians near Iranian city of Tabriz before strike\n\n    \nThe Israeli military on Saturday warned people to evacuate an industrial area west of the northwestern Iranian city of Tabriz ahead of planned strikes.\nPosting on its Persian-language X account, the military said peop",
+        "pubDate": "Sat, 14 Mar 2026 05:05:42 +0000",
+        "source": "Middle East Eye",
+        "sourceUrl": "https://www.middleeasteye.net/rss",
+        "category": "World",
+        "bias": {
+          "name": "Middle East Eye",
+          "domain": "middleeasteye.net",
+          "bias": "lean-left",
+          "factuality": "mostly-factual",
+          "ownership": "Independent",
+          "country": "UK",
+          "fundingModel": "independent"
+        },
+        "canonicalClaim": "Israel issues warning to civilians near Iranian city of Tabriz before strike.",
+        "tags": [
+          "war"
+        ]
+      },
+      "claim": "Israel issues warning to civilians near Iranian city of Tabriz before strike.",
+      "relatedSources": [
+        {
+          "id": "https://www.aljazeera.com/?t=1773431988",
+          "title": "Iranian missile strike in central Israel sets building ablaze",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/3/13/iranian-missile-strike-in-central-israel-sets-building-ablaze?traffic_source=rss",
+          "description": "Smoke and flames rising beside a road in central Israel after an Iranian missile attack, the Israeli army said.",
+          "pubDate": "Fri, 13 Mar 2026 20:04:14 +0000",
+          "source": "Al Jazeera",
+          "sourceUrl": "https://www.aljazeera.com/xml/rss/all.xml",
+          "category": "World",
+          "bias": {
+            "name": "Al Jazeera",
+            "domain": "aljazeera.com",
+            "bias": "center",
+            "factuality": "mostly-factual",
+            "ownership": "Qatar (State)",
+            "country": "Qatar",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "Iranian missile strike in central Israel sets building ablaze.",
+          "tags": [
+            "war"
+          ]
+        },
+        {
+          "id": "https://www.bellingcat.com/?p=51374",
+          "title": "“Bombs will fall Everywhere”: The American, Israeli and Iranian Weapons Being Deployed in Middle East",
+          "link": "https://www.bellingcat.com/news/2026/03/03/bombs-will-fall-everywhere-the-american-israeli-and-iranian-weapons-being-deployed-in-middle-east/",
+          "description": "The United States and Israel launched an attack on Iran on Saturday morning, killing Supreme Leader Ayatollah Ali Khamenei as well as several senior regime figures and striking multiple sites across the country. Iran retaliated by firing at targets across the region, including Israel, Bahrain, Qatar",
+          "pubDate": "Tue, 03 Mar 2026 12:26:06 +0000",
+          "source": "Bellingcat",
+          "sourceUrl": "https://www.bellingcat.com/feed/",
+          "category": "World",
+          "bias": {
+            "name": "Bellingcat",
+            "domain": "bellingcat.com",
+            "bias": "lean-left",
+            "factuality": "very-high",
+            "ownership": "Stichting Bellingcat",
+            "country": "Netherlands",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Bombs will fall Everywhere”: The American, Israeli and Iranian Weapons Being Deployed in Middle East."
+        },
+        {
+          "id": "228e9682-1f24-11f1-bf5d-ad2be8cb7fcc",
+          "title": "Explosion shakes Tehran amid state-organised rally after Israeli warning",
+          "link": "https://www.france24.com/en/middle-east/20260313-explosion-shakes-tehran-amid-state-organised-rally-after-israeli-warning",
+          "description": "A blast rocked a major pro-Palestinian rally in Tehran on Friday after Israel warned it could target the area, as the nearly two-week war between Israel and Iran escalated across the Middle East. Washington ordered roughly 2,500 additional Marines to the region, bolstering its military presence.",
+          "pubDate": "Fri, 13 Mar 2026 21:49:38 GMT",
+          "source": "AFP / France 24",
+          "sourceUrl": "https://www.france24.com/en/rss",
+          "category": "World",
+          "imageUrl": "https://s.france24.com/media/display/021502ec-1f24-11f1-ba27-005056a90284/w:1024/p:16x9/2026-03-13T122257Z-1513762429-RC2K3KAG87U4-RTRMADP-3-ISRAEL-PALESTINIANS-ALQUDSDAY-IRAN.jpg",
+          "bias": {
+            "name": "France 24",
+            "domain": "france24.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "France Médias Monde (State)",
+            "country": "France",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "Explosion shakes Tehran amid state-organised rally after Israeli warning.",
+          "tags": [
+            "war"
+          ]
+        },
+        {
+          "id": "https://www.thecanary.co/?p=1762280",
+          "title": "Media in Israel are manufacturing consent for ‘pre-emptive strike’ on Egypt",
+          "link": "https://www.thecanary.co/global/world-analysis/2026/03/13/israel-egypt/",
+          "description": "The Times of Israel has reported that Benjamin Netanyahu has warned that the Egyptian military is “getting stronger” and Israel needs to “keep an eye on it” to make sure it “doesn’t go too far”. Of course, this is the Zionist media attempting to manufacture consent for presumable ‘pre-emptive strike",
+          "pubDate": "Fri, 13 Mar 2026 15:51:28 +0000",
+          "source": "The Canary",
+          "sourceUrl": "https://www.thecanary.co/feed/",
+          "category": "Politics",
+          "imageUrl": "https://www.thecanary.co/wp-content/uploads/2026/03/Screenshot-2026-03-13-at-13.49.5-720x540.jpg",
+          "bias": {
+            "name": "The Canary",
+            "domain": "thecanary.co",
+            "bias": "left",
+            "factuality": "mixed",
+            "ownership": "Independent",
+            "country": "UK",
+            "fundingModel": "independent"
+          },
+          "canonicalClaim": "Media in Israel are manufacturing consent for ‘pre-emptive strike’ on Egypt.",
+          "tags": [
+            "war"
+          ]
+        },
+        {
+          "id": "tag:democracynow.org,2026-03-13:en/story/62898b",
+          "title": "Report from Beirut: Israel Expands Bombing Campaign & Mass Displacement in Lebanon",
+          "link": "http://www.democracynow.org/2026/3/13/lebanon_lylla_younes",
+          "description": "We speak with journalist Lylla Younes in Lebanon, where she says Israel’s “massacres are multiplying” amid the broader U.S.-Israeli war on Iran. Israeli strikes have killed nearly 700 people in Lebanon over the past two weeks, while attacks have expanded to include areas of central Beirut, which Isr",
+          "pubDate": "Fri, 13 Mar 2026 08:15:06 -0400",
+          "source": "Democracy Now!",
+          "sourceUrl": "https://www.democracynow.org/democracynow.rss",
+          "category": "World",
+          "bias": {
+            "name": "Democracy Now!",
+            "domain": "democracynow.org",
+            "bias": "far-left",
+            "factuality": "high",
+            "ownership": "Independent",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Report from Beirut: Israel Expands Bombing Campaign & Mass Displacement in Lebanon.",
+          "tags": [
+            "war",
+            "election"
+          ]
+        }
+      ],
+      "subheadline": "Middle East Eye focuses on civilians and warning, with context pulled from source reporting instead of recycled feed copy. Cross-checked against Al Jazeera and Bellingcat.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: The Israeli military on Saturday warned people to evacuate an industrial area west of the northwestern Iranian city of Tabriz ahead of planned strikes.",
+        "Cross-source context: Al Jazeera highlights smoke and flames rising beside a road in central Israel after an Iranian missile attack, the Israeli army said. Bellingcat highlights iran has retaliated by firing one-way attack drones, including Shahed variants, and missiles at Israel, and US-bases in various countries across the region, including UAE, Qatar,... Iranian Shahed drones have hit civilian buildings in the Gulf, as well as US military bases . AFP / France 24 highlights a blast rocked a major pro-Palestinian rally in Tehran on Friday after Israel warned it could target the area, as the nearly two-week war between Israel...",
+        "What to watch next: movement around civilians, warning."
+      ],
+      "wireSummary": "Al Jazeera: Smoke and flames rising beside a road in central Israel after an Iranian missile attack, the Israeli army... | Bellingcat: Iran has retaliated by firing one-way attack drones, including Shahed variants, and missiles at Israel, and US-bases in... | AFP / France 24: A blast rocked a major pro-Palestinian rally in Tehran on Friday after Israel warned it could target the...",
+      "biasContext": "Middle East Eye reports with a slight leftward lean, with a generally reliable factual record. For counterpoint, Al Jazeera covers this from from a centrist position.",
+      "tags": [
+        "world",
+        "war",
+        "finance",
+        "israel",
+        "iranian"
+      ],
+      "contextSnippets": [
+        {
+          "source": "Al Jazeera",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/3/13/iranian-missile-strike-in-central-israel-sets-building-ablaze?traffic_source=rss",
+          "summary": "Smoke and flames rising beside a road in central Israel after an Iranian missile attack, the Israeli army said."
+        },
+        {
+          "source": "Bellingcat",
+          "link": "https://www.bellingcat.com/news/2026/03/03/bombs-will-fall-everywhere-the-american-israeli-and-iranian-weapons-being-deployed-in-middle-east/",
+          "summary": "Iran has retaliated by firing one-way attack drones, including Shahed variants, and missiles at Israel, and US-bases in various countries across the region, including UAE, Qatar,... Iranian Shahed drones have hit civilian buildings in the Gulf, as well as US military bases ."
+        },
+        {
+          "source": "AFP / France 24",
+          "link": "https://www.france24.com/en/middle-east/20260313-explosion-shakes-tehran-amid-state-organised-rally-after-israeli-warning",
+          "summary": "A blast rocked a major pro-Palestinian rally in Tehran on Friday after Israel warned it could target the area, as the nearly two-week war between Israel..."
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "Explosion shakes Tehran amid state-organised rally after Israeli warning.",
+        "claimVariants": [
+          {
+            "source": "Middle East Eye",
+            "link": "https://www.middleeasteye.net/live-blog/live-blog-update/israel-issues-warning-civilians-near-iranian-city-tabriz-strike",
+            "claim": "Israel issues warning to civilians near Iranian city of Tabriz before strike.",
+            "confidence": 0.6799999999999999
+          },
+          {
+            "source": "Al Jazeera",
+            "link": "https://www.aljazeera.com/video/newsfeed/2026/3/13/iranian-missile-strike-in-central-israel-sets-building-ablaze?traffic_source=rss",
+            "claim": "Iranian missile strike in central Israel sets building ablaze.",
+            "confidence": 0.6633333333333333
+          },
+          {
+            "source": "Bellingcat",
+            "link": "https://www.bellingcat.com/news/2026/03/03/bombs-will-fall-everywhere-the-american-israeli-and-iranian-weapons-being-deployed-in-middle-east/",
+            "claim": "Bombs will fall Everywhere”: The American, Israeli and Iranian Weapons Being Deployed in Middle East.",
+            "confidence": 0.6566666666666666
+          },
+          {
+            "source": "AFP / France 24",
+            "link": "https://www.france24.com/en/middle-east/20260313-explosion-shakes-tehran-amid-state-organised-rally-after-israeli-warning",
+            "claim": "Explosion shakes Tehran amid state-organised rally after Israeli warning.",
+            "confidence": 0.6633333333333333
+          },
+          {
+            "source": "The Canary",
+            "link": "https://www.thecanary.co/global/world-analysis/2026/03/13/israel-egypt/",
+            "claim": "Media in Israel are manufacturing consent for ‘pre-emptive strike’ on Egypt.",
+            "confidence": 0.6466666666666666
+          },
+          {
+            "source": "Democracy Now!",
+            "link": "http://www.democracynow.org/2026/3/13/lebanon_lylla_younes",
+            "claim": "Report from Beirut: Israel Expands Bombing Campaign & Mass Displacement in Lebanon.",
+            "confidence": 0.6633333333333333
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Middle East Eye",
+            "title": "Israel issues warning to civilians near Iranian city of Tabriz before strike",
+            "link": "https://www.middleeasteye.net/live-blog/live-blog-update/israel-issues-warning-civilians-near-iranian-city-tabriz-strike",
+            "summary": "The Israeli military on Saturday warned people to evacuate an industrial area west of the northwestern Iranian city of Tabriz ahead of planned strikes.",
+            "pubDate": "Sat, 14 Mar 2026 05:05:42 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Al Jazeera",
+            "title": "Iranian missile strike in central Israel sets building ablaze",
+            "link": "https://www.aljazeera.com/video/newsfeed/2026/3/13/iranian-missile-strike-in-central-israel-sets-building-ablaze?traffic_source=rss",
+            "summary": "Smoke and flames rising beside a road in central Israel after an Iranian missile attack, the Israeli army said.",
+            "pubDate": "Fri, 13 Mar 2026 20:04:14 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Bellingcat",
+            "title": "“Bombs will fall Everywhere”: The American, Israeli and Iranian Weapons Being Deployed in Middle East",
+            "link": "https://www.bellingcat.com/news/2026/03/03/bombs-will-fall-everywhere-the-american-israeli-and-iranian-weapons-being-deployed-in-middle-east/",
+            "summary": "Iran has retaliated by firing one-way attack drones, including Shahed variants, and missiles at Israel, and US-bases in various countries across the region, including UAE, Qatar,... Iranian Shahed drones have hit civilian buildings in the Gulf, as well as US military bases .",
+            "pubDate": "Tue, 03 Mar 2026 12:26:06 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "AFP / France 24",
+            "title": "Explosion shakes Tehran amid state-organised rally after Israeli warning",
+            "link": "https://www.france24.com/en/middle-east/20260313-explosion-shakes-tehran-amid-state-organised-rally-after-israeli-warning",
+            "summary": "A blast rocked a major pro-Palestinian rally in Tehran on Friday after Israel warned it could target the area, as the nearly two-week war between Israel...",
+            "pubDate": "Fri, 13 Mar 2026 21:49:38 GMT"
+          },
+          {
+            "kind": "link",
+            "source": "The Canary",
+            "title": "Media in Israel are manufacturing consent for ‘pre-emptive strike’ on Egypt",
+            "link": "https://www.thecanary.co/global/world-analysis/2026/03/13/israel-egypt/",
+            "summary": "The Times of Israel has reported that Benjamin Netanyahu has warned that the Egyptian military is “getting stronger” and Israel needs to “keep an eye on it” to make sure it “doesn’t go too far”. Of course, this is the Zionist media attempting to manufacture consent for presumable ‘pre-emptive strike",
+            "pubDate": "Fri, 13 Mar 2026 15:51:28 +0000"
+          },
+          {
+            "kind": "report",
+            "source": "Democracy Now!",
+            "title": "Report from Beirut: Israel Expands Bombing Campaign & Mass Displacement in Lebanon",
+            "link": "http://www.democracynow.org/2026/3/13/lebanon_lylla_younes",
+            "summary": "We speak with journalist Lylla Younes in Lebanon, where she says Israel’s “massacres are multiplying” amid the broader U.S.-Israeli war on Iran. Israeli strikes have killed nearly 700 people in Lebanon over the past two weeks, while attacks have expanded to include areas of central Beirut, which Isr",
+            "pubDate": "Fri, 13 Mar 2026 08:15:06 -0400"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 6
+      },
+      "entities": [
+        {
+          "name": "Israel",
+          "canonicalName": "israel",
+          "type": "country",
+          "context": "Cross-source context: Al Jazeera highlights smoke and flames rising beside a road in central Israel after an Iranian ...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 93,
+              "endChar": 99
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 274,
+              "endChar": 280
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 552,
+              "endChar": 558
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 627,
+              "endChar": 633
+            }
+          ]
+        },
+        {
+          "name": "France",
+          "canonicalName": "france",
+          "type": "country",
+          "context": "AFP / France 24 highlights a blast rocked a major pro-Palestinian rally in Tehran on Friday after Israel warned it co...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 460,
+              "endChar": 466
+            }
+          ]
+        }
+      ],
+      "marketImpact": {
+        "significance": 35,
+        "headline": "Potential exposure across 2 topics detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Political Risk",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"election\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "war",
+          "election"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0xb8957df387e0ba12f63a9366a69f878322a25d9ab0fde8bbfe0bc14ac6c1df61",
+      "generatedAt": "2026-03-14T05:21:38.785Z",
+      "contentHash": "0x719a4aadcfaf715808accec7344aa1e44ec5fedafcd911a9224bde6a075a601c",
+      "version": 1
+    },
+    "0x36d972fbbddf79f3efc7fb7d7340e7b9322d0bf03dbcba94e488350239780dcf": {
+      "primary": {
+        "id": "69b444fe7d7e005837a78105",
+        "title": "Vivid Seats Promo Codes and Deals: Save 10% This March",
+        "link": "https://www.wired.com/story/vivid-seats-promo-code/",
+        "description": "Whether you are heading to a sold-out concert or a championship game, use a Vivid Seats discount code to secure your seats for less this month.",
+        "pubDate": "Sat, 14 Mar 2026 05:01:00 +0000",
+        "source": "Wired",
+        "sourceUrl": "https://www.wired.com/feed/rss",
+        "category": "Tech",
+        "bias": {
+          "name": "Wired",
+          "domain": "wired.com",
+          "bias": "lean-left",
+          "factuality": "high",
+          "ownership": "Condé Nast",
+          "country": "US",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "Vivid Seats Promo Codes and Deals: Save 10% This March."
+      },
+      "claim": "Vivid Seats Promo Codes and Deals: Save 10% This March.",
+      "relatedSources": [
+        {
+          "id": "https://insideclimatenews.org/?p=106822",
+          "title": "Summer in March? Unusual Heat Wave Descends on Already Parched Western U.S.",
+          "link": "https://insideclimatenews.org/news/13032026/march-heat-wave-western-united-states/",
+          "description": "An early-season heat wave is descending across the Western United States, likely to bring record-shattering temperatures to much of the region.  Temperatures already climbed into the 90s on Thursday in states such as Arizona and California and are expected to peak on Friday before the dome expands t",
+          "pubDate": "Fri, 13 Mar 2026 22:30:30 +0000",
+          "source": "Inside Climate News",
+          "sourceUrl": "https://insideclimatenews.org/feed/",
+          "category": "Environment",
+          "bias": {
+            "name": "Inside Climate News",
+            "domain": "insideclimatenews.org",
+            "bias": "lean-left",
+            "factuality": "very-high",
+            "ownership": "Independent",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Summer in March? Unusual Heat Wave Descends on Already Parched Western U.S."
+        },
+        {
+          "id": "https://www.carbonbrief.org/?p=61603",
+          "title": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis",
+          "link": "https://www.carbonbrief.org/debriefed-13-march-2026-war-and-oil-why-gas-drives-electricity-prices-japans-vulnerability-to-iran-crisis/",
+          "description": "Welcome to Carbon Brief’s DeBriefed. An essential guide to the week’s key developments relating to climate...\nThe post DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis appeared first on Carbon Brief.",
+          "pubDate": "Fri, 13 Mar 2026 16:53:04 +0000",
+          "source": "Carbon Brief",
+          "sourceUrl": "https://www.carbonbrief.org/feed",
+          "category": "Environment",
+          "bias": {
+            "name": "Carbon Brief",
+            "domain": "carbonbrief.org",
+            "bias": "center",
+            "factuality": "very-high",
+            "ownership": "Independent",
+            "country": "UK",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis.",
+          "tags": [
+            "war",
+            "climate",
+            "energy"
+          ]
+        },
+        {
+          "id": "tag:democracynow.org,2026-03-13:en/headline/8d26f3",
+          "title": "Headlines for March 13, 2026",
+          "link": "http://www.democracynow.org/2026/3/13/headlines",
+          "description": "U.S.-Israeli Attacks Have Forced 3.2 Million Iranians to Flee Their Homes, In First Public Statement, Iran’s New Supreme Leader Vows to Keep Blocking Strait of Hormuz, 250+ Groups Call on Congress to Reject Request for $50 Billion in Funding for Iran War, Iranian Strike on Oman Kills Immigrant Worke",
+          "pubDate": "Fri, 13 Mar 2026 08:00:00 -0400",
+          "source": "Democracy Now!",
+          "sourceUrl": "https://www.democracynow.org/democracynow.rss",
+          "category": "World",
+          "bias": {
+            "name": "Democracy Now!",
+            "domain": "democracynow.org",
+            "bias": "far-left",
+            "factuality": "high",
+            "ownership": "Independent",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Headlines for March 13, 2026.",
+          "tags": [
+            "war"
+          ]
+        },
+        {
+          "id": "https://news.un.org/en/story/2026/03/1167127",
+          "title": "MIDDLE EAST LIVE 13 March: Displacement and civilian casualties mount across region",
+          "link": "https://news.un.org/feed/view/en/story/2026/03/1167127",
+          "description": "Escalating hostilities across the Middle East continue to drive civilian casualties, mass displacement and mounting humanitarian needs. Fighting along the Israel-Lebanon border has intensified, while millions across the region face growing risks from disrupted health services, overcrowded shelters a",
+          "pubDate": "Fri, 13 Mar 2026 12:00:00 +0000",
+          "source": "UN News",
+          "sourceUrl": "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
+          "category": "Governance",
+          "imageUrl": "https://global.unitednations.entermediadb.net/assets/mediadb/services/module/asset/downloads/preset/Collections/Production%20Library/13-03-2026-UNICEF-Lebanon-01.jpeg/image560x340cropped.jpg",
+          "bias": {
+            "name": "UN News",
+            "domain": "news.un.org",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "United Nations",
+            "country": "International",
+            "fundingModel": "intergovernmental"
+          },
+          "canonicalClaim": "MIDDLE EAST LIVE 13 March: Displacement and civilian casualties mount across region."
+        },
+        {
+          "id": "CBMiswFBVV95cUxQOWZGVnlOTTktd1lkSnFhb3NMZmZoaVZ3eTRYNnN1c3dQV1JDVkNzWEpjU29sM0VreXBld2V2SzVJYXF0YnFrQUZBdWtwX2JaMGdCZHRnUFpDMEFuMWZ3cDVGekIzTDA4UnBWQ0xfZzVQQk9ReU9vT3pPbVNnWHJ2c3kxa25wNWFQdk9weFZMUEVlLVZ5WlAzUTdfdWFsODUtRjVXV21xazJ1SUpvVF95dkNRcw",
+          "title": "Weekly links March 12: LLMs for papers and lessons from using them for DiD, uncovering economic trends in places without much data, UBIs vs job guarantees, and more… - World Bank Blogs",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxQOWZGVnlOTTktd1lkSnFhb3NMZmZoaVZ3eTRYNnN1c3dQV1JDVkNzWEpjU29sM0VreXBld2V2SzVJYXF0YnFrQUZBdWtwX2JaMGdCZHRnUFpDMEFuMWZ3cDVGekIzTDA4UnBWQ0xfZzVQQk9ReU9vT3pPbVNnWHJ2c3kxa25wNWFQdk9weFZMUEVlLVZ5WlAzUTdfdWFsODUtRjVXV21xazJ1SUpvVF95dkNRcw?oc=5",
+          "description": "Weekly links March 12: LLMs for papers and lessons from using them for DiD, uncovering economic trends in places without much data, UBIs vs job guarantees, and more…  World Bank Blogs",
+          "pubDate": "Fri, 13 Mar 2026 03:41:57 GMT",
+          "source": "World Bank Blogs",
+          "sourceUrl": "https://news.google.com/rss/search?q=site:blogs.worldbank.org+when:7d&hl=en-US&gl=US&ceid=US:en",
+          "category": "Governance",
+          "bias": null,
+          "canonicalClaim": "Weekly links March 12: LLMs for papers and lessons from using them for DiD, uncovering economic trends in places without much data, UBIs vs job guarantees, and more….",
+          "tags": [
+            "economy"
+          ]
+        }
+      ],
+      "subheadline": "Wired focuses on vivid and seats, with context pulled from source reporting instead of recycled feed copy. Cross-checked against Carbon Brief.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: Whether you are heading to a sold-out concert or a championship game, use a Vivid Seats discount code to secure your seats for less this month.",
+        "Cross-source context: Carbon Brief highlights deBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis - Carbon Brief",
+        "What to watch next: movement around vivid, seats."
+      ],
+      "wireSummary": "Carbon Brief: DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran...",
+      "biasContext": "Wired reports with a slight leftward lean, with a strong factual track record. For counterpoint, Carbon Brief covers this from from a centrist position.",
+      "tags": [
+        "tech",
+        "climate",
+        "war",
+        "energy",
+        "march",
+        "seats"
+      ],
+      "contextSnippets": [
+        {
+          "source": "Carbon Brief",
+          "link": "https://www.carbonbrief.org/debriefed-13-march-2026-war-and-oil-why-gas-drives-electricity-prices-japans-vulnerability-to-iran-crisis/",
+          "summary": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis - Carbon Brief"
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis.",
+        "claimVariants": [
+          {
+            "source": "Wired",
+            "link": "https://www.wired.com/story/vivid-seats-promo-code/",
+            "claim": "Vivid Seats Promo Codes and Deals: Save 10% This March.",
+            "confidence": 0.7133333333333334
+          },
+          {
+            "source": "Inside Climate News",
+            "link": "https://insideclimatenews.org/news/13032026/march-heat-wave-western-united-states/",
+            "claim": "Summer in March? Unusual Heat Wave Descends on Already Parched Western U.S.",
+            "confidence": 0.6799999999999999
+          },
+          {
+            "source": "Carbon Brief",
+            "link": "https://www.carbonbrief.org/debriefed-13-march-2026-war-and-oil-why-gas-drives-electricity-prices-japans-vulnerability-to-iran-crisis/",
+            "claim": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis.",
+            "confidence": 0.78
+          },
+          {
+            "source": "Democracy Now!",
+            "link": "http://www.democracynow.org/2026/3/13/headlines",
+            "claim": "Headlines for March 13, 2026.",
+            "confidence": 0.6466666666666667
+          },
+          {
+            "source": "UN News",
+            "link": "https://news.un.org/feed/view/en/story/2026/03/1167127",
+            "claim": "MIDDLE EAST LIVE 13 March: Displacement and civilian casualties mount across region.",
+            "confidence": 0.7466666666666667
+          },
+          {
+            "source": "World Bank Blogs",
+            "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxQOWZGVnlOTTktd1lkSnFhb3NMZmZoaVZ3eTRYNnN1c3dQV1JDVkNzWEpjU29sM0VreXBld2V2SzVJYXF0YnFrQUZBdWtwX2JaMGdCZHRnUFpDMEFuMWZ3cDVGekIzTDA4UnBWQ0xfZzVQQk9ReU9vT3pPbVNnWHJ2c3kxa25wNWFQdk9weFZMUEVlLVZ5WlAzUTdfdWFsODUtRjVXV21xazJ1SUpvVF95dkNRcw?oc=5",
+            "claim": "Weekly links March 12: LLMs for papers and lessons from using them for DiD, uncovering economic trends in places without much data, UBIs vs job guarantees, and more….",
+            "confidence": 0.78
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Wired",
+            "title": "Vivid Seats Promo Codes and Deals: Save 10% This March",
+            "link": "https://www.wired.com/story/vivid-seats-promo-code/",
+            "summary": "Whether you are heading to a sold-out concert or a championship game, use a Vivid Seats discount code to secure your seats for less this month.",
+            "pubDate": "Sat, 14 Mar 2026 05:01:00 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Inside Climate News",
+            "title": "Summer in March? Unusual Heat Wave Descends on Already Parched Western U.S.",
+            "link": "https://insideclimatenews.org/news/13032026/march-heat-wave-western-united-states/",
+            "summary": "An early-season heat wave is descending across the Western United States, likely to bring record-shattering temperatures to much of the region. Temperatures already climbed into the 90s on Thursday in states such as Arizona and California and are expected to peak on Friday before the dome expands t",
+            "pubDate": "Fri, 13 Mar 2026 22:30:30 +0000"
+          },
+          {
+            "kind": "report",
+            "source": "Carbon Brief",
+            "title": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis",
+            "link": "https://www.carbonbrief.org/debriefed-13-march-2026-war-and-oil-why-gas-drives-electricity-prices-japans-vulnerability-to-iran-crisis/",
+            "summary": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis - Carbon Brief",
+            "pubDate": "Fri, 13 Mar 2026 16:53:04 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Democracy Now!",
+            "title": "Headlines for March 13, 2026",
+            "link": "http://www.democracynow.org/2026/3/13/headlines",
+            "summary": "U.S.-Israeli Attacks Have Forced 3.2 Million Iranians to Flee Their Homes, In First Public Statement, Iran’s New Supreme Leader Vows to Keep Blocking Strait of Hormuz, 250+ Groups Call on Congress to Reject Request for $50 Billion in Funding for Iran War, Iranian Strike on Oman Kills Immigrant Worke",
+            "pubDate": "Fri, 13 Mar 2026 08:00:00 -0400"
+          },
+          {
+            "kind": "link",
+            "source": "UN News",
+            "title": "MIDDLE EAST LIVE 13 March: Displacement and civilian casualties mount across region",
+            "link": "https://news.un.org/feed/view/en/story/2026/03/1167127",
+            "summary": "Escalating hostilities across the Middle East continue to drive civilian casualties, mass displacement and mounting humanitarian needs. Fighting along the Israel-Lebanon border has intensified, while millions across the region face growing risks from disrupted health services, overcrowded shelters a",
+            "pubDate": "Fri, 13 Mar 2026 12:00:00 +0000"
+          },
+          {
+            "kind": "data",
+            "source": "World Bank Blogs",
+            "title": "Weekly links March 12: LLMs for papers and lessons from using them for DiD, uncovering economic trends in places without much data, UBIs vs job guarantees, and more… - World Bank Blogs",
+            "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxQOWZGVnlOTTktd1lkSnFhb3NMZmZoaVZ3eTRYNnN1c3dQV1JDVkNzWEpjU29sM0VreXBld2V2SzVJYXF0YnFrQUZBdWtwX2JaMGdCZHRnUFpDMEFuMWZ3cDVGekIzTDA4UnBWQ0xfZzVQQk9ReU9vT3pPbVNnWHJ2c3kxa25wNWFQdk9weFZMUEVlLVZ5WlAzUTdfdWFsODUtRjVXV21xazJ1SUpvVF95dkNRcw?oc=5",
+            "summary": "Weekly links March 12: LLMs for papers and lessons from using them for DiD, uncovering economic trends in places without much data, UBIs vs job guarantees, and more… World Bank Blogs",
+            "pubDate": "Fri, 13 Mar 2026 03:41:57 GMT"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 6
+      },
+      "entities": [
+        {
+          "name": "Japan",
+          "canonicalName": "japan",
+          "type": "country",
+          "context": "Cross-source context: Carbon Brief highlights deBriefed 13 March 2026: War and oil | Why gas drives electricity price...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 121,
+              "endChar": 126
+            }
+          ]
+        },
+        {
+          "name": "Iran",
+          "canonicalName": "iran",
+          "type": "country",
+          "context": "Cross-source context: Carbon Brief highlights deBriefed 13 March 2026: War and oil | Why gas drives electricity price...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 148,
+              "endChar": 152
+            }
+          ]
+        }
+      ],
+      "marketImpact": {
+        "significance": 45,
+        "headline": "Potential exposure across 3 topics detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Energy Transition",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"climate\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Healthcare & Biotech",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"health\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "war",
+          "climate",
+          "health"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0x36d972fbbddf79f3efc7fb7d7340e7b9322d0bf03dbcba94e488350239780dcf",
+      "generatedAt": "2026-03-14T05:22:26.332Z",
+      "contentHash": "0xdb152b2025c38b6e742d1e644f42a1ad8715b1a114a40e76210d7d379b028286",
+      "version": 1
+    },
+    "0x865c441ad49191d39a2b461e43e9cabd7e31250b7c1940e823993ad4059c36d5": {
+      "primary": {
+        "id": "http://www3.nhk.or.jp/news/html/20260314/k10015075651000.html",
+        "title": "東京台東区 4億円余奪われた事件 強盗容疑で暴力団員ら7人逮捕",
+        "link": "http://www3.nhk.or.jp/news/html/20260314/k10015075651000.html",
+        "description": "ことし1月、東京 台東区と羽田空港、それに香港で、相次いで多額の現金が狙われた一連の事件のうち台東区の路上で、中国籍や日本人のグループが4億円余りを奪われた事件で、警視庁が現場から逃走していた3人組を含む暴力団員ら7人を強盗の疑いで逮捕したことがわかりました。",
+        "pubDate": "Sat, 14 Mar 2026 14:00:08 +0900",
+        "source": "NHK World",
+        "sourceUrl": "https://www3.nhk.or.jp/rss/news/cat0.xml",
+        "category": "World",
+        "bias": {
+          "name": "NHK World",
+          "domain": "nhk.or.jp",
+          "bias": "center",
+          "factuality": "high",
+          "ownership": "NHK (Public)",
+          "country": "Japan",
+          "fundingModel": "public"
+        },
+        "canonicalClaim": "東京台東区 4億円余奪われた事件 強盗容疑で暴力団員ら7人逮捕."
+      },
+      "claim": "東京台東区 4億円余奪われた事件 強盗容疑で暴力団員ら7人逮捕.",
+      "relatedSources": [],
+      "subheadline": "Brazen heists in Tokyo and Hong Kong expose vulnerable cash transport systems.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "Tokyo's authorities have made a significant breakthrough in a string of daring heists that shook the city's financial underworld. The Metropolitan Police Department arrested seven individuals, including members of a violent crime syndicate, in connection with the theft of over ¥400 million from a group of Chinese and Japanese nationals in Tokyo's Taito district. This incident is part of a larger series of events that saw substantial amounts of cash targeted in Tokyo, at Haneda Airport, and in Hong Kong. The fact that these crimes were carried out with such audacity and precision raises serious concerns about the security of cash transport systems in these regions.",
+        "The investigation into the Taito district incident has led to the apprehension of three individuals who were fleeing the scene, along with four other suspects. This development suggests that the police are making progress in dismantling the organized crime networks responsible for these brazen heists. However, the sheer scale of the thefts and the apparent ease with which they were carried out underscore the need for enhanced security measures to protect high-value cash transfers.",
+        "The involvement of violent crime syndicates in these heists is particularly troubling, as it indicates a level of sophistication and ruthlessness that poses a significant threat to public safety. The fact that these groups are targeting cash transports in major cities like Tokyo and Hong Kong suggests that they are seeking to exploit vulnerabilities in the financial systems of these regions.",
+        "As the investigation continues, it is essential to examine the broader implications of these heists. What do they reveal about the weaknesses in cash transport security? How can law enforcement agencies and financial institutions work together to prevent such crimes in the future? The answers to these questions will be crucial in restoring public confidence in the security of financial transactions.",
+        "The international dimension of these heists, with incidents occurring in both Japan and Hong Kong, highlights the need for cross-border cooperation in combating organized crime. It is likely that the perpetrators of these crimes have exploited the complexities of international financial transactions to carry out their nefarious activities.",
+        "The Metropolitan Police Department's success in apprehending the suspects is a welcome development, but it is only the first step in addressing the underlying issues that facilitated these heists. A thorough review of cash transport security protocols and the implementation of more robust measures to prevent such crimes are essential to preventing similar incidents in the future.",
+        "As the people of Tokyo and Hong Kong look to their authorities for reassurance, it is crucial that the police and financial institutions demonstrate a commitment to enhancing security and cooperation. The victims of these heists, including the group of Chinese and Japanese nationals who lost over ¥400 million, deserve justice and assurance that their financial transactions are secure.",
+        "The road to recovery and prevention will require sustained efforts from law enforcement, financial institutions, and governments. It is a complex challenge, but one that must be met with determination and cooperation to restore the integrity of financial systems in these regions.",
+        "In the coming days and weeks, the public will be watching closely to see how the authorities respond to these heists. The police must continue to investigate and apprehend those responsible, while financial institutions must review and strengthen their security protocols. Only through such concerted efforts can the people of Tokyo and Hong Kong be assured that their financial transactions are secure and that the perpetrators of these crimes are brought to justice.",
+        "Looking ahead, the key dates to watch will be the upcoming trials of the suspects and the implementation of new security measures by financial institutions. The public will be eager to see tangible results from the authorities' efforts to combat organized crime and enhance financial security."
+      ],
+      "wireSummary": "Tokyo police arrested seven individuals, including violent crime syndicate members, for stealing over ¥400 million from a group in Taito district. The incident is part of a series of high-value cash heists in Tokyo, Haneda Airport, and Hong Kong. The arrests mark a significant breakthrough in the investigation, but concerns about cash transport security remain.",
+      "biasContext": "NHK World, the source of this report, is a Japanese public broadcasting organization with a center-leaning bias and high factuality. As such, the reporting is likely to be balanced and accurate, but may reflect a Japanese perspective on the events.",
+      "tags": [
+        "world"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "東京台東区 4億円余奪われた事件 強盗容疑で暴力団員ら7人逮捕.",
+        "claimVariants": [
+          {
+            "source": "NHK World",
+            "link": "http://www3.nhk.or.jp/news/html/20260314/k10015075651000.html",
+            "claim": "東京台東区 4億円余奪われた事件 強盗容疑で暴力団員ら7人逮捕.",
+            "confidence": 0.47
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "NHK World",
+            "title": "東京台東区 4億円余奪われた事件 強盗容疑で暴力団員ら7人逮捕",
+            "link": "http://www3.nhk.or.jp/news/html/20260314/k10015075651000.html",
+            "summary": "Tokyo's authorities have made a significant breakthrough in a string of daring heists that shook the city's financial underworld. The Metropolitan Police Department arrested seven individuals, including members of a violent crime syndicate, in connection with the theft of over ¥400 million from a group of Chinese and Japanese nationals in Tokyo's Taito district. This incident is part of a larger series of events that saw substantial amounts of cash targeted in Tokyo, at Haneda Airport, and in Hong Kong. The fact that these crimes were carried out with such audacity and precision raises serious concerns about the security of cash transport systems in these regions.",
+            "pubDate": "Sat, 14 Mar 2026 14:00:08 +0900"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 1
+      },
+      "entities": [
+        {
+          "name": "Japan",
+          "canonicalName": "japan",
+          "type": "country",
+          "context": "The international dimension of these heists, with incidents occurring in both Japan and Hong Kong, highlights the nee...",
+          "occurrences": [
+            {
+              "paragraphIndex": 4,
+              "startChar": 78,
+              "endChar": 83
+            }
+          ],
+          "biasContext": "NHK World, the source of this report, is a Japanese public broadcasting organization with a center-leaning bias and high factuality. As such, the reporting is likely to be balanced and accurate, but may reflect a Japanese perspective on the events."
+        }
+      ],
+      "missingContext": "One crucial aspect of this story that remains unclear is the precise mechanism by which the perpetrators carried out the heists. Understanding the methods used by the thieves will be essential in developing effective countermeasures to prevent similar crimes in the future.",
+      "historicalParallel": "The recent spate of high-value cash heists in Tokyo and Hong Kong bears some resemblance to the infamous Northern Bank robbery in Belfast, which occurred in 2004. In that incident, thieves stole an estimated £26.5 million from the bank's headquarters, allegedly using sophisticated methods and inside help. The similarities between these events highlight the need for constant vigilance and adaptability in combating organized crime.",
+      "stakeholderAnalysis": "The primary stakeholders affected by these heists include the victims who lost substantial amounts of cash, the financial institutions that facilitated the transactions, and the broader public who rely on the security of financial systems. The perpetrators of the crimes, including members of violent crime syndicates, are also key stakeholders, albeit with opposing interests.",
+      "marketImpact": {
+        "significance": 40,
+        "headline": "Heists in Tokyo and Hong Kong spark concern over cash transport security, potentially impacting Japanese Yen and Hong Kong Dollar volatility.",
+        "primaryTimeHorizon": "hours",
+        "affectedMarkets": [
+          {
+            "asset": "Japanese Yen",
+            "ticker": "JPY",
+            "direction": "volatile",
+            "confidence": 0.6,
+            "timeHorizons": [
+              "hours",
+              "days"
+            ],
+            "rationale": "The news of the heists and subsequent arrests may lead to increased volatility in the Japanese Yen, as investors react to the potential impact on Japan's financial stability and security."
+          },
+          {
+            "asset": "Hong Kong Dollar",
+            "ticker": "HKD",
+            "direction": "volatile",
+            "confidence": 0.6,
+            "timeHorizons": [
+              "hours",
+              "days"
+            ],
+            "rationale": "The news may also affect the Hong Kong Dollar, given the city's involvement in the heists and the potential consequences for its financial sector."
+          }
+        ],
+        "topicSlugs": [],
+        "transmissionMechanism": "The dominant causal pathway from this news to market movement is the perceived impact on financial stability and security in Japan and Hong Kong, influencing investor confidence and consequently, currency volatility."
+      },
+      "generatedBy": "claude-ai",
+      "entityHash": "0x865c441ad49191d39a2b461e43e9cabd7e31250b7c1940e823993ad4059c36d5",
+      "generatedAt": "2026-03-14T05:23:24.840Z",
+      "contentHash": "0x504748f5a1a9260351286b4460efabe2c6113c81340b012612e2a250effaef6e",
+      "version": 2
+    },
+    "0xd411c67780312cad2186deaa895cbdc4e59042bfc838412efbb36b7b35e29f8e": {
+      "primary": {
+        "id": "69b4491c0ec2d46639a5cd12",
+        "title": "Coleman Promo Codes and Deals: Up to 30% Off in March",
+        "link": "https://www.wired.com/story/coleman-promo-code/",
+        "description": "Gear up for your next adventure with these Coleman coupons and discount codes to save on camping essentials and outdoor gear.",
+        "pubDate": "Sat, 14 Mar 2026 05:00:00 +0000",
+        "source": "Wired",
+        "sourceUrl": "https://www.wired.com/feed/rss",
+        "category": "Tech",
+        "bias": {
+          "name": "Wired",
+          "domain": "wired.com",
+          "bias": "lean-left",
+          "factuality": "high",
+          "ownership": "Condé Nast",
+          "country": "US",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "Coleman Promo Codes and Deals: Up to 30% Off in March."
+      },
+      "claim": "Coleman Promo Codes and Deals: Up to 30% Off in March.",
+      "relatedSources": [
+        {
+          "id": "https://insideclimatenews.org/?p=106822",
+          "title": "Summer in March? Unusual Heat Wave Descends on Already Parched Western U.S.",
+          "link": "https://insideclimatenews.org/news/13032026/march-heat-wave-western-united-states/",
+          "description": "An early-season heat wave is descending across the Western United States, likely to bring record-shattering temperatures to much of the region.  Temperatures already climbed into the 90s on Thursday in states such as Arizona and California and are expected to peak on Friday before the dome expands t",
+          "pubDate": "Fri, 13 Mar 2026 22:30:30 +0000",
+          "source": "Inside Climate News",
+          "sourceUrl": "https://insideclimatenews.org/feed/",
+          "category": "Environment",
+          "bias": {
+            "name": "Inside Climate News",
+            "domain": "insideclimatenews.org",
+            "bias": "lean-left",
+            "factuality": "very-high",
+            "ownership": "Independent",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Summer in March? Unusual Heat Wave Descends on Already Parched Western U.S."
+        },
+        {
+          "id": "https://www.carbonbrief.org/?p=61603",
+          "title": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis",
+          "link": "https://www.carbonbrief.org/debriefed-13-march-2026-war-and-oil-why-gas-drives-electricity-prices-japans-vulnerability-to-iran-crisis/",
+          "description": "Welcome to Carbon Brief’s DeBriefed. An essential guide to the week’s key developments relating to climate...\nThe post DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis appeared first on Carbon Brief.",
+          "pubDate": "Fri, 13 Mar 2026 16:53:04 +0000",
+          "source": "Carbon Brief",
+          "sourceUrl": "https://www.carbonbrief.org/feed",
+          "category": "Environment",
+          "bias": {
+            "name": "Carbon Brief",
+            "domain": "carbonbrief.org",
+            "bias": "center",
+            "factuality": "very-high",
+            "ownership": "Independent",
+            "country": "UK",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis.",
+          "tags": [
+            "war",
+            "climate",
+            "energy"
+          ]
+        },
+        {
+          "id": "tag:democracynow.org,2026-03-13:en/headline/8d26f3",
+          "title": "Headlines for March 13, 2026",
+          "link": "http://www.democracynow.org/2026/3/13/headlines",
+          "description": "U.S.-Israeli Attacks Have Forced 3.2 Million Iranians to Flee Their Homes, In First Public Statement, Iran’s New Supreme Leader Vows to Keep Blocking Strait of Hormuz, 250+ Groups Call on Congress to Reject Request for $50 Billion in Funding for Iran War, Iranian Strike on Oman Kills Immigrant Worke",
+          "pubDate": "Fri, 13 Mar 2026 08:00:00 -0400",
+          "source": "Democracy Now!",
+          "sourceUrl": "https://www.democracynow.org/democracynow.rss",
+          "category": "World",
+          "bias": {
+            "name": "Democracy Now!",
+            "domain": "democracynow.org",
+            "bias": "far-left",
+            "factuality": "high",
+            "ownership": "Independent",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Headlines for March 13, 2026.",
+          "tags": [
+            "war"
+          ]
+        },
+        {
+          "id": "https://news.un.org/en/story/2026/03/1167127",
+          "title": "MIDDLE EAST LIVE 13 March: Displacement and civilian casualties mount across region",
+          "link": "https://news.un.org/feed/view/en/story/2026/03/1167127",
+          "description": "Escalating hostilities across the Middle East continue to drive civilian casualties, mass displacement and mounting humanitarian needs. Fighting along the Israel-Lebanon border has intensified, while millions across the region face growing risks from disrupted health services, overcrowded shelters a",
+          "pubDate": "Fri, 13 Mar 2026 12:00:00 +0000",
+          "source": "UN News",
+          "sourceUrl": "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
+          "category": "Governance",
+          "imageUrl": "https://global.unitednations.entermediadb.net/assets/mediadb/services/module/asset/downloads/preset/Collections/Production%20Library/13-03-2026-UNICEF-Lebanon-01.jpeg/image560x340cropped.jpg",
+          "bias": {
+            "name": "UN News",
+            "domain": "news.un.org",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "United Nations",
+            "country": "International",
+            "fundingModel": "intergovernmental"
+          },
+          "canonicalClaim": "MIDDLE EAST LIVE 13 March: Displacement and civilian casualties mount across region."
+        },
+        {
+          "id": "CBMiswFBVV95cUxQOWZGVnlOTTktd1lkSnFhb3NMZmZoaVZ3eTRYNnN1c3dQV1JDVkNzWEpjU29sM0VreXBld2V2SzVJYXF0YnFrQUZBdWtwX2JaMGdCZHRnUFpDMEFuMWZ3cDVGekIzTDA4UnBWQ0xfZzVQQk9ReU9vT3pPbVNnWHJ2c3kxa25wNWFQdk9weFZMUEVlLVZ5WlAzUTdfdWFsODUtRjVXV21xazJ1SUpvVF95dkNRcw",
+          "title": "Weekly links March 12: LLMs for papers and lessons from using them for DiD, uncovering economic trends in places without much data, UBIs vs job guarantees, and more… - World Bank Blogs",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxQOWZGVnlOTTktd1lkSnFhb3NMZmZoaVZ3eTRYNnN1c3dQV1JDVkNzWEpjU29sM0VreXBld2V2SzVJYXF0YnFrQUZBdWtwX2JaMGdCZHRnUFpDMEFuMWZ3cDVGekIzTDA4UnBWQ0xfZzVQQk9ReU9vT3pPbVNnWHJ2c3kxa25wNWFQdk9weFZMUEVlLVZ5WlAzUTdfdWFsODUtRjVXV21xazJ1SUpvVF95dkNRcw?oc=5",
+          "description": "Weekly links March 12: LLMs for papers and lessons from using them for DiD, uncovering economic trends in places without much data, UBIs vs job guarantees, and more…  World Bank Blogs",
+          "pubDate": "Fri, 13 Mar 2026 03:41:57 GMT",
+          "source": "World Bank Blogs",
+          "sourceUrl": "https://news.google.com/rss/search?q=site:blogs.worldbank.org+when:7d&hl=en-US&gl=US&ceid=US:en",
+          "category": "Governance",
+          "bias": null,
+          "canonicalClaim": "Weekly links March 12: LLMs for papers and lessons from using them for DiD, uncovering economic trends in places without much data, UBIs vs job guarantees, and more….",
+          "tags": [
+            "economy"
+          ]
+        }
+      ],
+      "subheadline": "Wired focuses on coleman and promo, with context pulled from source reporting instead of recycled feed copy. Cross-checked against Carbon Brief.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: Gear up for your next adventure with these Coleman coupons and discount codes to save on camping essentials and outdoor gear.",
+        "Cross-source context: Carbon Brief highlights deBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis - Carbon Brief",
+        "What to watch next: movement around coleman, promo."
+      ],
+      "wireSummary": "Carbon Brief: DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran...",
+      "biasContext": "Wired reports with a slight leftward lean, with a strong factual track record. For counterpoint, Carbon Brief covers this from from a centrist position.",
+      "tags": [
+        "tech",
+        "climate",
+        "war",
+        "energy",
+        "march"
+      ],
+      "contextSnippets": [
+        {
+          "source": "Carbon Brief",
+          "link": "https://www.carbonbrief.org/debriefed-13-march-2026-war-and-oil-why-gas-drives-electricity-prices-japans-vulnerability-to-iran-crisis/",
+          "summary": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis - Carbon Brief"
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis.",
+        "claimVariants": [
+          {
+            "source": "Wired",
+            "link": "https://www.wired.com/story/coleman-promo-code/",
+            "claim": "Coleman Promo Codes and Deals: Up to 30% Off in March.",
+            "confidence": 0.7133333333333334
+          },
+          {
+            "source": "Inside Climate News",
+            "link": "https://insideclimatenews.org/news/13032026/march-heat-wave-western-united-states/",
+            "claim": "Summer in March? Unusual Heat Wave Descends on Already Parched Western U.S.",
+            "confidence": 0.6799999999999999
+          },
+          {
+            "source": "Carbon Brief",
+            "link": "https://www.carbonbrief.org/debriefed-13-march-2026-war-and-oil-why-gas-drives-electricity-prices-japans-vulnerability-to-iran-crisis/",
+            "claim": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis.",
+            "confidence": 0.78
+          },
+          {
+            "source": "Democracy Now!",
+            "link": "http://www.democracynow.org/2026/3/13/headlines",
+            "claim": "Headlines for March 13, 2026.",
+            "confidence": 0.6466666666666667
+          },
+          {
+            "source": "UN News",
+            "link": "https://news.un.org/feed/view/en/story/2026/03/1167127",
+            "claim": "MIDDLE EAST LIVE 13 March: Displacement and civilian casualties mount across region.",
+            "confidence": 0.7466666666666667
+          },
+          {
+            "source": "World Bank Blogs",
+            "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxQOWZGVnlOTTktd1lkSnFhb3NMZmZoaVZ3eTRYNnN1c3dQV1JDVkNzWEpjU29sM0VreXBld2V2SzVJYXF0YnFrQUZBdWtwX2JaMGdCZHRnUFpDMEFuMWZ3cDVGekIzTDA4UnBWQ0xfZzVQQk9ReU9vT3pPbVNnWHJ2c3kxa25wNWFQdk9weFZMUEVlLVZ5WlAzUTdfdWFsODUtRjVXV21xazJ1SUpvVF95dkNRcw?oc=5",
+            "claim": "Weekly links March 12: LLMs for papers and lessons from using them for DiD, uncovering economic trends in places without much data, UBIs vs job guarantees, and more….",
+            "confidence": 0.78
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Wired",
+            "title": "Coleman Promo Codes and Deals: Up to 30% Off in March",
+            "link": "https://www.wired.com/story/coleman-promo-code/",
+            "summary": "Gear up for your next adventure with these Coleman coupons and discount codes to save on camping essentials and outdoor gear.",
+            "pubDate": "Sat, 14 Mar 2026 05:00:00 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Inside Climate News",
+            "title": "Summer in March? Unusual Heat Wave Descends on Already Parched Western U.S.",
+            "link": "https://insideclimatenews.org/news/13032026/march-heat-wave-western-united-states/",
+            "summary": "An early-season heat wave is descending across the Western United States, likely to bring record-shattering temperatures to much of the region. Temperatures already climbed into the 90s on Thursday in states such as Arizona and California and are expected to peak on Friday before the dome expands t",
+            "pubDate": "Fri, 13 Mar 2026 22:30:30 +0000"
+          },
+          {
+            "kind": "report",
+            "source": "Carbon Brief",
+            "title": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis",
+            "link": "https://www.carbonbrief.org/debriefed-13-march-2026-war-and-oil-why-gas-drives-electricity-prices-japans-vulnerability-to-iran-crisis/",
+            "summary": "DeBriefed 13 March 2026: War and oil | Why gas drives electricity prices | Japan’s ‘vulnerability’ to Iran crisis - Carbon Brief",
+            "pubDate": "Fri, 13 Mar 2026 16:53:04 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Democracy Now!",
+            "title": "Headlines for March 13, 2026",
+            "link": "http://www.democracynow.org/2026/3/13/headlines",
+            "summary": "U.S.-Israeli Attacks Have Forced 3.2 Million Iranians to Flee Their Homes, In First Public Statement, Iran’s New Supreme Leader Vows to Keep Blocking Strait of Hormuz, 250+ Groups Call on Congress to Reject Request for $50 Billion in Funding for Iran War, Iranian Strike on Oman Kills Immigrant Worke",
+            "pubDate": "Fri, 13 Mar 2026 08:00:00 -0400"
+          },
+          {
+            "kind": "link",
+            "source": "UN News",
+            "title": "MIDDLE EAST LIVE 13 March: Displacement and civilian casualties mount across region",
+            "link": "https://news.un.org/feed/view/en/story/2026/03/1167127",
+            "summary": "Escalating hostilities across the Middle East continue to drive civilian casualties, mass displacement and mounting humanitarian needs. Fighting along the Israel-Lebanon border has intensified, while millions across the region face growing risks from disrupted health services, overcrowded shelters a",
+            "pubDate": "Fri, 13 Mar 2026 12:00:00 +0000"
+          },
+          {
+            "kind": "data",
+            "source": "World Bank Blogs",
+            "title": "Weekly links March 12: LLMs for papers and lessons from using them for DiD, uncovering economic trends in places without much data, UBIs vs job guarantees, and more… - World Bank Blogs",
+            "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxQOWZGVnlOTTktd1lkSnFhb3NMZmZoaVZ3eTRYNnN1c3dQV1JDVkNzWEpjU29sM0VreXBld2V2SzVJYXF0YnFrQUZBdWtwX2JaMGdCZHRnUFpDMEFuMWZ3cDVGekIzTDA4UnBWQ0xfZzVQQk9ReU9vT3pPbVNnWHJ2c3kxa25wNWFQdk9weFZMUEVlLVZ5WlAzUTdfdWFsODUtRjVXV21xazJ1SUpvVF95dkNRcw?oc=5",
+            "summary": "Weekly links March 12: LLMs for papers and lessons from using them for DiD, uncovering economic trends in places without much data, UBIs vs job guarantees, and more… World Bank Blogs",
+            "pubDate": "Fri, 13 Mar 2026 03:41:57 GMT"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 6
+      },
+      "entities": [
+        {
+          "name": "Japan",
+          "canonicalName": "japan",
+          "type": "country",
+          "context": "Cross-source context: Carbon Brief highlights deBriefed 13 March 2026: War and oil | Why gas drives electricity price...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 121,
+              "endChar": 126
+            }
+          ]
+        },
+        {
+          "name": "Iran",
+          "canonicalName": "iran",
+          "type": "country",
+          "context": "Cross-source context: Carbon Brief highlights deBriefed 13 March 2026: War and oil | Why gas drives electricity price...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 148,
+              "endChar": 152
+            }
+          ]
+        }
+      ],
+      "marketImpact": {
+        "significance": 45,
+        "headline": "Potential exposure across 3 topics detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Energy Transition",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"climate\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Healthcare & Biotech",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"health\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "war",
+          "climate",
+          "health"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0xd411c67780312cad2186deaa895cbdc4e59042bfc838412efbb36b7b35e29f8e",
+      "generatedAt": "2026-03-14T05:24:12.298Z",
+      "contentHash": "0x8a4d195ac4ba468662683ddad160713cfb32b26c0a604cc759e5fd832258bd8a",
+      "version": 1
+    },
+    "0x1d48c6afb1cadea2f0e32c965b7f78ec543d39fa8d4a8f412e6ca03785e9587f": {
+      "primary": {
+        "id": "69b421887c62fea374a4a3b4",
+        "title": "Chirp Discount Codes and Deals: Save Up to 67%",
+        "link": "https://www.wired.com/story/chirp-discount-code/",
+        "description": "Use these verified Chirp coupon codes and shopping tips to score up to 67% off wheels, up to 50% off refurbished products, and more.",
+        "pubDate": "Sat, 14 Mar 2026 05:00:00 +0000",
+        "source": "Wired",
+        "sourceUrl": "https://www.wired.com/feed/rss",
+        "category": "Tech",
+        "bias": {
+          "name": "Wired",
+          "domain": "wired.com",
+          "bias": "lean-left",
+          "factuality": "high",
+          "ownership": "Condé Nast",
+          "country": "US",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "Chirp Discount Codes and Deals: Save Up to 67%."
+      },
+      "claim": "Chirp Discount Codes and Deals: Save Up to 67%.",
+      "relatedSources": [],
+      "subheadline": "Chirp's strategic discounts reveal a calculated approach to expanding its customer base beyond yoga enthusiasts.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "Chirp, the wellness brand behind the innovative yoga wheel, is offering discounts of up to 67% on its products, including wheels, refurbished items, and recovery gear. The company's Daily Deals page features exclusive offers that rotate frequently, allowing customers to save significantly on items like the Chirp Wheel XR 3-Pack. This move indicates that Chirp is focused on making its products more accessible to a broader audience.",
+        "The discounts are not limited to new products; Chirp also offers up to 50% off refurbished items, which may show minor cosmetic wear but are fully functional. This approach not only helps reduce electronic waste but also provides an entry point for budget-conscious customers. However, it's worth noting that refurbished items cannot be returned, unlike other orders, which are covered by a 30-day return policy.",
+        "By offering a free Chirp Wheel+ Deep Tissue 2-Pack with purchases over $99, Chirp is incentivizing customers to spend more while introducing them to its higher-end products. This strategy could help increase average order value and build customer loyalty. Additionally, the brand's decision to provide free shipping on orders over $75, which can be combined with other discounts, demonstrates a commitment to making its products more affordable.",
+        "Chirp's discount code for select customers, including active-duty military personnel, veterans, and teachers, further highlights the company's efforts to expand its customer base. By offering a 15% discount to these groups, Chirp is not only showing appreciation for their service but also tapping into a potentially loyal customer base.",
+        "The absence of information on the company's profit margins and the potential impact of these discounts on its bottom line raises questions about the long-term sustainability of this strategy. As Chirp continues to grow and expand its product lineup, it will be essential to monitor how these discounts affect its financial performance.",
+        "Looking ahead, customers can expect to see more frequent discounts and promotions on Chirp's website, particularly on its Daily Deals page. The company's focus on simplicity and value will likely continue to drive its product development and marketing strategies. As the wellness industry evolves, Chirp's ability to balance affordability with quality will be crucial in maintaining its competitive edge.",
+        "The lack of data on customer retention and the effectiveness of Chirp's discount strategy in driving repeat business is a significant gap in the current coverage. Understanding how customers respond to these discounts and whether they lead to long-term loyalty would provide valuable insights into the company's growth potential.",
+        "As Chirp navigates the competitive wellness market, its discount strategy will be closely watched by industry analysts and customers alike. The company's commitment to making its products more accessible and affordable will be a key factor in its success.",
+        "In the coming months, Chirp's ability to balance its discount strategy with its financial goals will be crucial. The company's decision to offer frequent discounts and promotions will likely continue to drive sales, but it remains to be seen how this approach will affect its bottom line."
+      ],
+      "wireSummary": "Chirp offers discounts of up to 67% on its products, including wheels and refurbished items. The company provides free shipping on orders over $75 and offers a 15% discount to select customers, including military personnel and teachers. Chirp's discount strategy aims to make its products more accessible and affordable.",
+      "biasContext": "Wired, the source of the primary article, has a lean-left bias. However, the article's focus on Chirp's discount strategy and product offerings appears to be factual and unbiased, providing a neutral assessment of the company's approach to making its products more affordable.",
+      "tags": [
+        "tech"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "Chirp Discount Codes and Deals: Save Up to 67%.",
+        "claimVariants": [
+          {
+            "source": "Wired",
+            "link": "https://www.wired.com/story/chirp-discount-code/",
+            "claim": "Chirp Discount Codes and Deals: Save Up to 67%.",
+            "confidence": 0.6966666666666667
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Wired",
+            "title": "Chirp Discount Codes and Deals: Save Up to 67%",
+            "link": "https://www.wired.com/story/chirp-discount-code/",
+            "summary": "Chirp, the wellness brand behind the innovative yoga wheel, is offering discounts of up to 67% on its products, including wheels, refurbished items, and recovery gear. The company's Daily Deals page features exclusive offers that rotate frequently, allowing customers to save significantly on items like the Chirp Wheel XR 3-Pack. This move indicates that Chirp is focused on making its products more accessible to a broader audience.",
+            "pubDate": "Sat, 14 Mar 2026 05:00:00 +0000"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 1
+      },
+      "entities": [],
+      "missingContext": "The lack of information on Chirp's profit margins and the potential impact of its discount strategy on its financial performance is a significant gap in the current coverage. Additionally, data on customer retention and the effectiveness of the discount strategy in driving repeat business would provide valuable insights into the company's growth potential.",
+      "historicalParallel": "Chirp's discount strategy is reminiscent of the approach taken by companies like Warby Parker, which offers affordable and stylish eyewear by cutting out intermediaries and providing frequent discounts. Like Chirp, Warby Parker has been successful in making its products more accessible and affordable, leading to significant growth and customer loyalty.",
+      "stakeholderAnalysis": "The stakeholders affected by Chirp's discount strategy include customers, who benefit from more affordable products; the company itself, which aims to drive sales and growth; and competitors, who may need to respond to Chirp's aggressive pricing. Additionally, the discount strategy may also impact Chirp's employees, who may see increased demand for the company's products, and its suppliers, who may need to adapt to changes in production volumes.",
+      "marketImpact": {
+        "significance": 60,
+        "headline": "Chirp's aggressive discounting may disrupt the US health and wellness market, affecting sales and profitability of established brands.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "US Health and Wellness Products",
+            "ticker": "[NIKE, Under Armour, etc.]",
+            "direction": "bearish",
+            "confidence": 0.6,
+            "timeHorizons": [
+              "days",
+              "weeks"
+            ],
+            "rationale": "Chirp's discount strategy may lead to increased competition in the health and wellness market, potentially affecting the sales and profitability of established brands."
+          }
+        ],
+        "topicSlugs": [],
+        "transmissionMechanism": "The impact of Chirp's discount strategy on the US health and wellness market will be transmitted through changes in consumer behavior, as customers become more price-sensitive and seek out affordable alternatives."
+      },
+      "generatedBy": "claude-ai",
+      "entityHash": "0x1d48c6afb1cadea2f0e32c965b7f78ec543d39fa8d4a8f412e6ca03785e9587f",
+      "generatedAt": "2026-03-14T05:24:55.235Z",
+      "contentHash": "0x20dfadb381380be74f7d7a5f35c0db2078197b859b24121add56d9a203a7d47a",
+      "version": 1
+    },
+    "0xca5cd41fac5629dd44eb2f42e678a2fab1e0a46de4eeeb3c5ac6183b2727ccee": {
+      "primary": {
+        "id": "435742 at https://www.middleeasteye.net/",
+        "title": "Trump shares video of US strike on Kharg Island ",
+        "link": "https://www.middleeasteye.net/live-blog/live-blog-update/trump-shares-video-us-strike-kharg-island",
+        "description": "Trump shares video of US strike on Kharg Island \n\n    \nUS President Donald Trump shared a video late on Friday showing strikes on Iran's Kharg Island. \nKharg Island handles more than 90 percent of Iran’s oil exports and is considered the country’s most critical energy hub. \n \n \n \n \n\n\nView this post ",
+        "pubDate": "Sat, 14 Mar 2026 13:24:44 +0000",
+        "source": "Middle East Eye",
+        "sourceUrl": "https://www.middleeasteye.net/rss",
+        "category": "World",
+        "bias": {
+          "name": "Middle East Eye",
+          "domain": "middleeasteye.net",
+          "bias": "lean-left",
+          "factuality": "mostly-factual",
+          "ownership": "Independent",
+          "country": "UK",
+          "fundingModel": "independent"
+        },
+        "canonicalClaim": "Trump shares video of US strike on Kharg Island.",
+        "tags": [
+          "energy"
+        ]
+      },
+      "claim": "Trump shares video of US strike on Kharg Island.",
+      "relatedSources": [
+        {
+          "id": "https://timesofindia.indiatimes.com/world/middle-east/us-shares-video-of-precision-strikes-on-90-iranian-military-targets-on-kharg-island-watch/articleshow/129573519.cms",
+          "title": "US shares video of strikes on 90 Iranian military targets on Kharg Island - watch",
+          "link": "https://timesofindia.indiatimes.com/world/middle-east/us-shares-video-of-precision-strikes-on-90-iranian-military-targets-on-kharg-island-watch/articleshow/129573519.cms",
+          "description": "United States President Donald Trump said American forces carried out “the most powerful bombing raid” on Iran’s Kharg Island, claiming that American forces “totally obliterated” military targets there while choosing not to destroy the island’s oil infrastructure. ​​Any disruption at Kharg Island ca",
+          "pubDate": "Sat, 14 Mar 2026 17:29:50 +0530",
+          "source": "Times of India",
+          "sourceUrl": "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
+          "category": "World",
+          "imageUrl": "https://static.toiimg.com/photo/msid-129573972,imgsize-47922.cms",
+          "bias": {
+            "name": "Times of India",
+            "domain": "timesofindia.indiatimes.com",
+            "bias": "center",
+            "factuality": "mostly-factual",
+            "ownership": "Bennett, Coleman & Co.",
+            "country": "India",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "US shares video of strikes on 90 Iranian military targets on Kharg Island.",
+          "tags": [
+            "war",
+            "energy"
+          ]
+        },
+        {
+          "id": "https://www.npr.org/2026/03/14/nx-s1-5747838/trump-kharg-island-iran-war",
+          "title": "U.S. military bombs Kharg Island, Iran's main oil export hub, Trump says",
+          "link": "https://www.npr.org/2026/03/14/nx-s1-5747838/trump-kharg-island-iran-war",
+          "description": "President Trump said on Friday the U.S. military had \"totally obliterated\" military targets in Kharg Island, home to the primary terminal that handles Iran's oil exports. This as all six crew members on a refueling plane that went down in western Iraq were confirmed dead.",
+          "pubDate": "Sat, 14 Mar 2026 05:30:21 -0400",
+          "source": "NPR",
+          "sourceUrl": "https://feeds.npr.org/1001/rss.xml",
+          "category": "World",
+          "bias": {
+            "name": "NPR",
+            "domain": "npr.org",
+            "bias": "lean-left",
+            "factuality": "very-high",
+            "ownership": "NPR (Public)",
+            "country": "US",
+            "fundingModel": "public"
+          },
+          "canonicalClaim": "U.S. military bombs Kharg Island, Iran's main oil export hub, Trump says.",
+          "tags": [
+            "war",
+            "election",
+            "trade",
+            "energy"
+          ]
+        },
+        {
+          "id": "https://thehill.com/?p=5783850",
+          "title": "Trump says US obliterated every military target on Iran’s Kharg Island",
+          "link": "https://thehill.com/homenews/administration/5783850-trump-bombs-iran-kharg-island/",
+          "description": "President Trump said on Friday that the U.S. military conducted one of the most “powerful” bombing raids and totally “obliterated” every military target on Iran’s Kharg Island, one of the country’s most vital economic outposts.  The president said that for “reasons of decency,” the U.S. military did",
+          "pubDate": "Fri, 13 Mar 2026 23:41:54 +0000",
+          "source": "The Hill",
+          "sourceUrl": "https://thehill.com/feed/",
+          "category": "Politics",
+          "imageUrl": "https://thehill.com/wp-content/uploads/sites/2/2026/03/AP26072828399482-e1773444652387.jpg?w=900",
+          "bias": {
+            "name": "The Hill",
+            "domain": "thehill.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Nexstar Media",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "Trump says US obliterated every military target on Iran’s Kharg Island.",
+          "tags": [
+            "war",
+            "economy"
+          ]
+        },
+        {
+          "id": "2c8ad234-1f8a-11f1-b6a7-fdb17aed9392",
+          "title": "US military bombs military sites on Kharg island, Iranian media reports no damage",
+          "link": "https://www.france24.com/en/us-military-bombs-military-sites-on-kharg-island-iranian-media-reports-no-damage",
+          "description": "President Donald Trump said the US destroyed military sites on an island vital to Iran’s oil network and warned that its oil infrastructure could be next if Iran continues to interfere with the passage of ships through the Strait of Hormuz. Iran's Fars news agency, citing sources on Kharg Island, sa",
+          "pubDate": "Sat, 14 Mar 2026 09:57:28 GMT",
+          "source": "AFP / France 24",
+          "sourceUrl": "https://www.france24.com/en/rss",
+          "category": "World",
+          "imageUrl": "https://s.france24.com/media/display/25dc4288-1f8a-11f1-a63f-005056bf30b7/w:1024/p:16x9/EN-20260314-100145-100317-CS.jpg",
+          "bias": {
+            "name": "France 24",
+            "domain": "france24.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "France Médias Monde (State)",
+            "country": "France",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "US military bombs military sites on Kharg island, Iranian media reports no damage.",
+          "tags": [
+            "war",
+            "energy"
+          ]
+        },
+        {
+          "id": "https://www.dw.com/en/iran-war-us-strikes-key-kharg-island-oil-export-hub-trump-says/live-76356584?maca=en-rss-en-all-1573-rdf",
+          "title": "Iran war: US strikes key Kharg Island oil export hub, Trump says",
+          "link": "https://www.dw.com/en/iran-war-us-strikes-key-kharg-island-oil-export-hub-trump-says/live-76356584?maca=en-rss-en-all-1573-rdf",
+          "description": "President Trump said US forces \"obliterated\" military targets on Iran's Kharg Island, the hub of its crude exports. He also said the navy will be escorting tankers through the Strait of Hormuz \"very soon.\" DW has more.",
+          "pubDate": "2026-03-14T02:41:00.000Z",
+          "source": "DW News",
+          "sourceUrl": "https://rss.dw.com/rdf/rss-en-all",
+          "category": "World",
+          "bias": {
+            "name": "DW News",
+            "domain": "dw.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Deutsche Welle (State)",
+            "country": "Germany",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "Iran war: US strikes key Kharg Island oil export hub, Trump says.",
+          "tags": [
+            "war",
+            "trade",
+            "energy"
+          ]
+        }
+      ],
+      "subheadline": "Middle East Eye focuses on shares and strike, with context pulled from source reporting instead of recycled feed copy. Cross-checked against Times of India and NPR.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: Kharg Island handles more than 90 percent of Iran’s oil exports and is considered the country’s most critical energy hub.",
+        "Cross-source context: Times of India highlights the United States on Saturday shared footage of real-time precision strikes at Iran's Kharg Island, which is Tehran's largest oil export terminal in the Persian Gulf,... \"The strike destroyed naval mine storage facilities, missile storage bunkers, and multiple other military sites,\" the US claimed... NPR highlights military had \"totally obliterated\" military targets in Kharg Island, home to the primary terminal that handles Iran's oil exports. This as all six crew members on a refueling plane that went down in western Iraq were confirmed... The Hill highlights president Trump said on Friday that the U.S. military conducted one of the most “powerful” bombing raids and totally “obliterated” every military target on Iran’s Kharg...",
+        "What to watch next: movement around shares, strike."
+      ],
+      "wireSummary": "Times of India: The United States on Saturday shared footage of real-time precision strikes at Iran's Kharg Island, which is Tehran's... | NPR: military had \"totally obliterated\" military targets in Kharg Island, home to the primary terminal that handles Iran's oil... | The Hill: President Trump said on Friday that the U.S. military conducted one of the most “powerful” bombing raids and...",
+      "biasContext": "Middle East Eye reports with a slight leftward lean, with a generally reliable factual record. For counterpoint, Times of India covers this from from a centrist position.",
+      "tags": [
+        "world",
+        "war",
+        "energy",
+        "kharg",
+        "island"
+      ],
+      "contextSnippets": [
+        {
+          "source": "Times of India",
+          "link": "https://timesofindia.indiatimes.com/world/middle-east/us-shares-video-of-precision-strikes-on-90-iranian-military-targets-on-kharg-island-watch/articleshow/129573519.cms",
+          "summary": "The United States on Saturday shared footage of real-time precision strikes at Iran's Kharg Island, which is Tehran's largest oil export terminal in the Persian Gulf,... \"The strike destroyed naval mine storage facilities, missile storage bunkers, and multiple other military sites,\" the US claimed..."
+        },
+        {
+          "source": "NPR",
+          "link": "https://www.npr.org/2026/03/14/nx-s1-5747838/trump-kharg-island-iran-war",
+          "summary": "military had \"totally obliterated\" military targets in Kharg Island, home to the primary terminal that handles Iran's oil exports. This as all six crew members on a refueling plane that went down in western Iraq were confirmed..."
+        },
+        {
+          "source": "The Hill",
+          "link": "https://thehill.com/homenews/administration/5783850-trump-bombs-iran-kharg-island/",
+          "summary": "President Trump said on Friday that the U.S. military conducted one of the most “powerful” bombing raids and totally “obliterated” every military target on Iran’s Kharg..."
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "US military bombs military sites on Kharg island, Iranian media reports no damage.",
+        "claimVariants": [
+          {
+            "source": "Middle East Eye",
+            "link": "https://www.middleeasteye.net/live-blog/live-blog-update/trump-shares-video-us-strike-kharg-island",
+            "claim": "Trump shares video of US strike on Kharg Island.",
+            "confidence": 0.6466666666666666
+          },
+          {
+            "source": "Times of India",
+            "link": "https://timesofindia.indiatimes.com/world/middle-east/us-shares-video-of-precision-strikes-on-90-iranian-military-targets-on-kharg-island-watch/articleshow/129573519.cms",
+            "claim": "US shares video of strikes on 90 Iranian military targets on Kharg Island.",
+            "confidence": 0.7466666666666667
+          },
+          {
+            "source": "NPR",
+            "link": "https://www.npr.org/2026/03/14/nx-s1-5747838/trump-kharg-island-iran-war",
+            "claim": "U.S. military bombs Kharg Island, Iran's main oil export hub, Trump says.",
+            "confidence": 0.6566666666666666
+          },
+          {
+            "source": "The Hill",
+            "link": "https://thehill.com/homenews/administration/5783850-trump-bombs-iran-kharg-island/",
+            "claim": "Trump says US obliterated every military target on Iran’s Kharg Island.",
+            "confidence": 0.6799999999999999
+          },
+          {
+            "source": "AFP / France 24",
+            "link": "https://www.france24.com/en/us-military-bombs-military-sites-on-kharg-island-iranian-media-reports-no-damage",
+            "claim": "US military bombs military sites on Kharg island, Iranian media reports no damage.",
+            "confidence": 0.6966666666666667
+          },
+          {
+            "source": "DW News",
+            "link": "https://www.dw.com/en/iran-war-us-strikes-key-kharg-island-oil-export-hub-trump-says/live-76356584?maca=en-rss-en-all-1573-rdf",
+            "claim": "Iran war: US strikes key Kharg Island oil export hub, Trump says.",
+            "confidence": 0.7133333333333333
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Middle East Eye",
+            "title": "Trump shares video of US strike on Kharg Island ",
+            "link": "https://www.middleeasteye.net/live-blog/live-blog-update/trump-shares-video-us-strike-kharg-island",
+            "summary": "Kharg Island handles more than 90 percent of Iran’s oil exports and is considered the country’s most critical energy hub.",
+            "pubDate": "Sat, 14 Mar 2026 13:24:44 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Times of India",
+            "title": "US shares video of strikes on 90 Iranian military targets on Kharg Island - watch",
+            "link": "https://timesofindia.indiatimes.com/world/middle-east/us-shares-video-of-precision-strikes-on-90-iranian-military-targets-on-kharg-island-watch/articleshow/129573519.cms",
+            "summary": "The United States on Saturday shared footage of real-time precision strikes at Iran's Kharg Island, which is Tehran's largest oil export terminal in the Persian Gulf,... \"The strike destroyed naval mine storage facilities, missile storage bunkers, and multiple other military sites,\" the US claimed...",
+            "pubDate": "Sat, 14 Mar 2026 17:29:50 +0530"
+          },
+          {
+            "kind": "link",
+            "source": "NPR",
+            "title": "U.S. military bombs Kharg Island, Iran's main oil export hub, Trump says",
+            "link": "https://www.npr.org/2026/03/14/nx-s1-5747838/trump-kharg-island-iran-war",
+            "summary": "military had \"totally obliterated\" military targets in Kharg Island, home to the primary terminal that handles Iran's oil exports. This as all six crew members on a refueling plane that went down in western Iraq were confirmed...",
+            "pubDate": "Sat, 14 Mar 2026 05:30:21 -0400"
+          },
+          {
+            "kind": "link",
+            "source": "The Hill",
+            "title": "Trump says US obliterated every military target on Iran’s Kharg Island",
+            "link": "https://thehill.com/homenews/administration/5783850-trump-bombs-iran-kharg-island/",
+            "summary": "President Trump said on Friday that the U.S. military conducted one of the most “powerful” bombing raids and totally “obliterated” every military target on Iran’s Kharg...",
+            "pubDate": "Fri, 13 Mar 2026 23:41:54 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "AFP / France 24",
+            "title": "US military bombs military sites on Kharg island, Iranian media reports no damage",
+            "link": "https://www.france24.com/en/us-military-bombs-military-sites-on-kharg-island-iranian-media-reports-no-damage",
+            "summary": "President Donald Trump said the US destroyed military sites on an island vital to Iran’s oil network and warned that its oil infrastructure could be next if Iran continues to interfere with the passage of ships through the Strait of Hormuz. Iran's Fars news agency, citing sources on Kharg Island, sa",
+            "pubDate": "Sat, 14 Mar 2026 09:57:28 GMT"
+          },
+          {
+            "kind": "link",
+            "source": "DW News",
+            "title": "Iran war: US strikes key Kharg Island oil export hub, Trump says",
+            "link": "https://www.dw.com/en/iran-war-us-strikes-key-kharg-island-oil-export-hub-trump-says/live-76356584?maca=en-rss-en-all-1573-rdf",
+            "summary": "President Trump said US forces \"obliterated\" military targets on Iran's Kharg Island, the hub of its crude exports. He also said the navy will be escorting tankers through the Strait of Hormuz \"very soon.\" DW has more.",
+            "pubDate": "2026-03-14T02:41:00.000Z"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 6
+      },
+      "entities": [
+        {
+          "name": "Iran",
+          "canonicalName": "iran",
+          "type": "country",
+          "context": "What happened: Kharg Island handles more than 90 percent of Iran’s oil exports and is considered the country’s most c...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 60,
+              "endChar": 64
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 127,
+              "endChar": 131
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 476,
+              "endChar": 480
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 771,
+              "endChar": 775
+            }
+          ]
+        },
+        {
+          "name": "Times of India",
+          "canonicalName": "times of india",
+          "type": "person",
+          "context": "Cross-source context: Times of India highlights the United States on Saturday shared footage of real-time precision s...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 22,
+              "endChar": 36
+            }
+          ],
+          "biasContext": "Middle East Eye reports with a slight leftward lean, with a generally reliable factual record. For counterpoint, Times of India covers this from from a centrist position."
+        },
+        {
+          "name": "India",
+          "canonicalName": "india",
+          "type": "country",
+          "context": "Cross-source context: Times of India highlights the United States on Saturday shared footage of real-time precision s...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 31,
+              "endChar": 36
+            }
+          ],
+          "biasContext": "Middle East Eye reports with a slight leftward lean, with a generally reliable factual record. For counterpoint, Times of India covers this from from a centrist position."
+        },
+        {
+          "name": "Iraq",
+          "canonicalName": "iraq",
+          "type": "country",
+          "context": "This as all six crew members on a refueling plane that went down in western Iraq were confirmed.",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 572,
+              "endChar": 576
+            }
+          ]
+        }
+      ],
+      "marketImpact": {
+        "significance": 45,
+        "headline": "Potential exposure across 3 topics detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Crude Oil",
+            "ticker": "CL",
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"oil\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Global Trade Flows",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"trade\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "oil",
+          "trade",
+          "war"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0xca5cd41fac5629dd44eb2f42e678a2fab1e0a46de4eeeb3c5ac6183b2727ccee",
+      "generatedAt": "2026-03-14T13:27:30.328Z",
+      "contentHash": "0x23c05a37fa253009f045f25a39de75042ced8d9025ee8ee6d3e1e19059200270",
+      "version": 1
+    },
+    "0xd4e033c53ee2f8d2700fdafd49ce6fd06f430aae16d413a8f8e90e46f2f295e8": {
+      "primary": {
+        "id": "https://reason.com/?post_type=volokh-post&p=8373594",
+        "title": "\"If the Defendants Continue the Practice, It Will Not End Well for Them\"",
+        "link": "https://reason.com/volokh/2026/03/14/if-the-defendants-continue-the-practice-it-will-not-end-well-for-them/",
+        "description": "From Judge Robert Hinkle's Injunction Not to File Emails yesterday in Elephant Shoe, LLC v. Cook (N.D. Fla.): Some of…\nThe post \"If the Defendants Continue the Practice, It Will Not End Well for Them\" appeared first on Reason.com.",
+        "pubDate": "Sat, 14 Mar 2026 13:21:08 +0000",
+        "source": "Reason",
+        "sourceUrl": "https://reason.com/feed/",
+        "category": "World",
+        "bias": {
+          "name": "Reason",
+          "domain": "reason.com",
+          "bias": "lean-right",
+          "factuality": "high",
+          "ownership": "Reason Foundation",
+          "country": "US",
+          "fundingModel": "nonprofit"
+        },
+        "canonicalClaim": "If the Defendants Continue the Practice, It Will Not End Well for Them."
+      },
+      "claim": "If the Defendants Continue the Practice, It Will Not End Well for Them.",
+      "relatedSources": [
+        {
+          "id": "/products/gao-26-107551",
+          "title": "Federal Programs: OMB Needs to Continue Developing a Complete and Useful Inventory",
+          "link": "https://www.gao.gov/products/gao-26-107551",
+          "description": "What GAO Found\n\nEach year, the federal government spends trillions of dollars on federal programs that support the American people and address policy goals. Statutory provisions first enacted in 2011 require the Office of Management and Budget (OMB) to develop and annually update an inventory of all",
+          "pubDate": "Thu, 05 Mar 2026 07:11:41 -0500",
+          "source": "GAO Reports",
+          "sourceUrl": "https://www.gao.gov/rss/reports.xml",
+          "category": "Governance",
+          "bias": {
+            "name": "GAO",
+            "domain": "gao.gov",
+            "bias": "center",
+            "factuality": "very-high",
+            "ownership": "US Government",
+            "country": "US",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "Federal Programs: OMB Needs to Continue Developing a Complete and Useful Inventory."
+        }
+      ],
+      "subheadline": "Reason focuses on defendants and continue, with context pulled from source reporting instead of recycled feed copy.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: From Judge Robert Hinkle's Injunction Not to File Emails yesterday in Elephant Shoe, LLC v.",
+        "What to watch next: movement around defendants, continue."
+      ],
+      "wireSummary": null,
+      "biasContext": "Reason reports with a slight rightward lean, with a strong factual track record. For counterpoint, GAO Reports covers this from from a centrist position.",
+      "tags": [
+        "world",
+        "continue",
+        "defendants"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "Federal Programs: OMB Needs to Continue Developing a Complete and Useful Inventory.",
+        "claimVariants": [
+          {
+            "source": "Reason",
+            "link": "https://reason.com/volokh/2026/03/14/if-the-defendants-continue-the-practice-it-will-not-end-well-for-them/",
+            "claim": "If the Defendants Continue the Practice, It Will Not End Well for Them.",
+            "confidence": 0.6066666666666666
+          },
+          {
+            "source": "GAO Reports",
+            "link": "https://www.gao.gov/products/gao-26-107551",
+            "claim": "Federal Programs: OMB Needs to Continue Developing a Complete and Useful Inventory.",
+            "confidence": 0.6799999999999999
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Reason",
+            "title": "\"If the Defendants Continue the Practice, It Will Not End Well for Them\"",
+            "link": "https://reason.com/volokh/2026/03/14/if-the-defendants-continue-the-practice-it-will-not-end-well-for-them/",
+            "summary": "From Judge Robert Hinkle's Injunction Not to File Emails yesterday in Elephant Shoe, LLC v.",
+            "pubDate": "Sat, 14 Mar 2026 13:21:08 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "GAO Reports",
+            "title": "Federal Programs: OMB Needs to Continue Developing a Complete and Useful Inventory",
+            "link": "https://www.gao.gov/products/gao-26-107551",
+            "summary": "What GAO Found Each year, the federal government spends trillions of dollars on federal programs that support the American people and address policy goals. Statutory provisions first enacted in 2011 require the Office of Management and Budget (OMB) to develop and annually update an inventory of all",
+            "pubDate": "Thu, 05 Mar 2026 07:11:41 -0500"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 2
+      },
+      "entities": [],
+      "marketImpact": null,
+      "generatedBy": "template-fallback",
+      "entityHash": "0xd4e033c53ee2f8d2700fdafd49ce6fd06f430aae16d413a8f8e90e46f2f295e8",
+      "generatedAt": "2026-03-14T13:28:17.599Z",
+      "contentHash": "0xba27a6a95a7ef8c9b00ddd37868b31f8691b5b2d86447849313e732453664c8a",
+      "version": 1
+    },
+    "0x801481709e96483cf43405ecbac5cb63f2220767dab7eb7add4ae5ee2fb04b82": {
+      "primary": {
+        "id": "435741 at https://www.middleeasteye.net/",
+        "title": "Fear grips Iranians as missiles fall and loyalist forces roam the streets",
+        "link": "https://www.middleeasteye.net/live-blog/live-blog-update/fear-grips-iranians-missiles-fall-and-loyalist-forces-roam-streets",
+        "description": "Fear grips Iranians as missiles fall and loyalist forces roam the streets\n\n    \nAs the US-Israeli war rages overhead, a different kind of tension is taking hold across Iranian cities.\nIn the two weeks since Supreme Leader Ali Khamenei was killed, pro-government paramilitary and security forces have ",
+        "pubDate": "Sat, 14 Mar 2026 13:17:30 +0000",
+        "source": "Middle East Eye",
+        "sourceUrl": "https://www.middleeasteye.net/rss",
+        "category": "World",
+        "imageUrl": "https://www.middleeasteye.net/sites/default/files/images-story/iran-tehran-security-forces-9-march-2026-afp.jpg",
+        "bias": {
+          "name": "Middle East Eye",
+          "domain": "middleeasteye.net",
+          "bias": "lean-left",
+          "factuality": "mostly-factual",
+          "ownership": "Independent",
+          "country": "UK",
+          "fundingModel": "independent"
+        },
+        "canonicalClaim": "Fear grips Iranians as missiles fall and loyalist forces roam the streets.",
+        "tags": [
+          "war"
+        ]
+      },
+      "claim": "Fear grips Iranians as missiles fall and loyalist forces roam the streets.",
+      "relatedSources": [],
+      "subheadline": "Middle East Eye focuses on iranians and missiles, with context pulled from source reporting instead of recycled feed copy.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: In the two weeks since Supreme Leader Ali Khamenei was killed , pro-government paramilitary and security forces have become an ever-present force, staging rallies, manning checkpoints...",
+        "What to watch next: movement around iranians, missiles."
+      ],
+      "wireSummary": null,
+      "biasContext": "Middle East Eye reports with a slight leftward lean, with a generally reliable factual record.",
+      "tags": [
+        "world",
+        "war",
+        "forces"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "Fear grips Iranians as missiles fall and loyalist forces roam the streets.",
+        "claimVariants": [
+          {
+            "source": "Middle East Eye",
+            "link": "https://www.middleeasteye.net/live-blog/live-blog-update/fear-grips-iranians-missiles-fall-and-loyalist-forces-roam-streets",
+            "claim": "Fear grips Iranians as missiles fall and loyalist forces roam the streets.",
+            "confidence": 0.6799999999999999
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Middle East Eye",
+            "title": "Fear grips Iranians as missiles fall and loyalist forces roam the streets",
+            "link": "https://www.middleeasteye.net/live-blog/live-blog-update/fear-grips-iranians-missiles-fall-and-loyalist-forces-roam-streets",
+            "summary": "In the two weeks since Supreme Leader Ali Khamenei was killed , pro-government paramilitary and security forces have become an ever-present force, staging rallies, manning checkpoints...",
+            "pubDate": "Sat, 14 Mar 2026 13:17:30 +0000"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 1
+      },
+      "entities": [],
+      "marketImpact": {
+        "significance": 25,
+        "headline": "Potential exposure across 1 topic detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "war"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0x801481709e96483cf43405ecbac5cb63f2220767dab7eb7add4ae5ee2fb04b82",
+      "generatedAt": "2026-03-14T13:29:04.363Z",
+      "contentHash": "0x90f006371b766c82fe4dbeae2f7ccdd4ccf1c12298bc358b4d0aa9ae792e03eb",
+      "version": 1
+    },
+    "0x3298364d3c6840fc05ac134343cd452925c4f2a5e4f808943b62dd856fd65da0": {
+      "primary": {
+        "id": "reddit-1rtj439",
+        "title": "The Orion Nebula",
+        "link": "https://i.redd.it/9fdh5am6g0pg1.jpeg",
+        "description": "50 images, 15 second exposures and stacked to bring out detail. \nMade a lot of progress recently. Still a lot of room for improvement, but how beautiful is this Nebula? Such a privilege to be able to see things like this from your back yard!",
+        "pubDate": "2026-03-14T13:13:17.000Z",
+        "source": "r/space",
+        "sourceUrl": "https://www.reddit.com/r/space",
+        "category": "Science",
+        "imageUrl": "https://preview.redd.it/9fdh5am6g0pg1.jpeg?auto=webp&s=b0a638c2b0c5756fe209e09cb4a6f2b0bb973121",
+        "bias": {
+          "name": "Reddit",
+          "domain": "reddit.com",
+          "bias": "lean-left",
+          "factuality": "mixed",
+          "ownership": "Reddit Inc / Advance Publications",
+          "country": "US",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "50 images, 15 second exposures and stacked to bring out detail."
+      },
+      "claim": "50 images, 15 second exposures and stacked to bring out detail.",
+      "relatedSources": [],
+      "subheadline": "r/space focuses on nebula and orion, with context pulled from source reporting instead of recycled feed copy.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: 50 images, 15 second exposures and stacked to bring out detail. Still a lot of room for improvement, but how beautiful is this Nebula?",
+        "What to watch next: movement around nebula, orion."
+      ],
+      "wireSummary": null,
+      "biasContext": "Reddit reports with a slight leftward lean, with a mixed factual record — read with appropriate scepticism.",
+      "tags": [
+        "science",
+        "nebula"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "The Orion Nebula.",
+        "claimVariants": [
+          {
+            "source": "r/space",
+            "link": "https://i.redd.it/9fdh5am6g0pg1.jpeg",
+            "claim": "The Orion Nebula.",
+            "confidence": 0.5633333333333334
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "r/space",
+            "title": "The Orion Nebula",
+            "link": "https://i.redd.it/9fdh5am6g0pg1.jpeg",
+            "summary": "50 images, 15 second exposures and stacked to bring out detail. Still a lot of room for improvement, but how beautiful is this Nebula?",
+            "pubDate": "2026-03-14T13:13:17.000Z"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 1
+      },
+      "entities": [],
+      "marketImpact": null,
+      "generatedBy": "template-fallback",
+      "entityHash": "0x3298364d3c6840fc05ac134343cd452925c4f2a5e4f808943b62dd856fd65da0",
+      "generatedAt": "2026-03-14T13:29:51.037Z",
+      "contentHash": "0xc09387049e68989e5c5787270068463c20677a08d4c41f536349c8bafe42ba3f",
+      "version": 1
+    },
+    "0x2fb6a9249cb4c222edd39b9ee1436cccf414e3ca0d605180bfe789d29d7dfad3": {
+      "primary": {
+        "id": "https://cointelegraph.com/news/what-happened-in-crypto-today",
+        "title": "Here’s what happened in crypto today",
+        "link": "https://cointelegraph.com/news/what-happened-in-crypto-today?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+        "description": "Need to know what happened in crypto today? Here is the latest news on daily trends and events impacting Bitcoin price, blockchain, DeFi, NFTs, Web3 and crypto regulation.",
+        "pubDate": "Sat, 14 Mar 2026 13:13:01 +0000",
+        "source": "Cointelegraph",
+        "sourceUrl": "https://cointelegraph.com/rss",
+        "category": "Crypto",
+        "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy5jb2ludGVsZWdyYXBoLmNvbS91cGxvYWRzLzIwMjYtMDIvMDE5YzY2NjktN2UxNi03ZmI0LTlmNjItOTIxNWU3YTcwZmIwLmpwZw==.jpg",
+        "bias": {
+          "name": "Cointelegraph",
+          "domain": "cointelegraph.com",
+          "bias": "center",
+          "factuality": "mostly-factual",
+          "ownership": "Independent",
+          "country": "US",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "Here’s what happened in crypto today.",
+        "tags": [
+          "crypto"
+        ]
+      },
+      "claim": "Here’s what happened in crypto today.",
+      "relatedSources": [
+        {
+          "id": "https://www.theblock.co/post/393574",
+          "title": "IRS crypto reporting rules set stage for confusing tax season: Here’s what you need to know",
+          "link": "https://www.theblock.co/post/393574/irs-crypto-reporting-rules-set-stage-for-confusing-tax-season-heres-what-you-need-to-know?utm_source=rss&utm_medium=rss",
+          "description": "Traders involved in DeFi and have transactions and transfers between multiple wallets and exchanges will face more challenges.",
+          "pubDate": "Sat, 14 Mar 2026 08:31:01 -0400",
+          "source": "The Block",
+          "sourceUrl": "https://www.theblock.co/rss.xml",
+          "category": "Crypto",
+          "bias": {
+            "name": "The Block",
+            "domain": "theblock.co",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Foresight Ventures",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "IRS crypto reporting rules set stage for confusing tax season: Here’s what you need to know.",
+          "tags": [
+            "crypto"
+          ]
+        },
+        {
+          "id": "https://www.theblock.co/post/393565",
+          "title": "The Daily: Crypto whale loses almost $50M in DeFi swap, BlackRock’s staked Ethereum ETF sees ‘very solid’ debut, and more",
+          "link": "https://www.theblock.co/post/393565/the-daily-crypto-whale-loses-almost-50m-in-defi-swap-blackrocks-staked-ethereum-etf-sees-very-solid-debut-and-more?utm_source=rss&utm_medium=rss",
+          "description": "The following article is adapted from The Block’s newsletter, The Daily, which comes out on weekday afternoons.",
+          "pubDate": "Fri, 13 Mar 2026 12:55:43 -0400",
+          "source": "The Block",
+          "sourceUrl": "https://www.theblock.co/rss.xml",
+          "category": "Crypto",
+          "bias": {
+            "name": "The Block",
+            "domain": "theblock.co",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Foresight Ventures",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "The Daily: Crypto whale loses almost $50M in DeFi swap, BlackRock’s staked Ethereum ETF sees ‘very solid’ debut, and more.",
+          "tags": [
+            "crypto"
+          ]
+        },
+        {
+          "id": "855d85e9-035d-4c91-b922-36a17f90cfbf",
+          "title": "Bitcoin quickly drops 3.5% as fresh Iran escalation short-circuits crypto rally",
+          "link": "https://www.coindesk.com/markets/2026/03/13/bitcoin-quickly-drops-3-5-as-fresh-iran-escalation-short-circuits-crypto-rally",
+          "description": "Surging to a near one-month high of $74,000, bitcoin reversed back to just above $71,000 as news of U.S. military movements in the Middle East rattled risk assets.",
+          "pubDate": "Fri, 13 Mar 2026 16:30:53 +0000",
+          "source": "CoinDesk",
+          "sourceUrl": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+          "category": "Crypto",
+          "bias": {
+            "name": "CoinDesk",
+            "domain": "coindesk.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Bullish (crypto)",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "Bitcoin quickly drops 3.5% as fresh Iran escalation short-circuits crypto rally.",
+          "tags": [
+            "war",
+            "crypto"
+          ]
+        },
+        {
+          "id": "https://thedefiant.io/news/markets/crypto-rally-fizzles-on-iran-escalation-fears",
+          "title": "Crypto Rally Fizzles on Iran Escalation Fears",
+          "link": "https://thedefiant.io/news/markets/crypto-rally-fizzles-on-iran-escalation-fears",
+          "description": "Bitcoin is trading around $71,000 after reaching $74,000 earlier today.",
+          "pubDate": "Fri, 13 Mar 2026 19:31:40 GMT",
+          "source": "The Defiant",
+          "sourceUrl": "https://thedefiant.io/feed",
+          "category": "Crypto",
+          "imageUrl": "https://cdn.thedefiant.io/pasted-1773430688556-png-a0f2eb96-b6ff-4008-abb1-7f24233bf9f9.png",
+          "bias": {
+            "name": "The Defiant",
+            "domain": "thedefiant.io",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Independent",
+            "country": "US",
+            "fundingModel": "independent"
+          },
+          "canonicalClaim": "Crypto Rally Fizzles on Iran Escalation Fears.",
+          "tags": [
+            "crypto"
+          ]
+        }
+      ],
+      "subheadline": "Cointelegraph focuses on happened and crypto, with context pulled from source reporting instead of recycled feed copy.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: Need to know what happened in crypto today? Here is the latest news on daily trends and events impacting Bitcoin price, blockchain, DeFi, NFTs, Web3 and...",
+        "What to watch next: movement around happened, crypto."
+      ],
+      "wireSummary": null,
+      "biasContext": "Cointelegraph reports from a centrist position, with a generally reliable factual record.",
+      "tags": [
+        "crypto",
+        "happened"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "The Daily: Crypto whale loses almost $50M in DeFi swap, BlackRock’s staked Ethereum ETF sees ‘very solid’ debut, and more.",
+        "claimVariants": [
+          {
+            "source": "Cointelegraph",
+            "link": "https://cointelegraph.com/news/what-happened-in-crypto-today?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+            "claim": "Here’s what happened in crypto today.",
+            "confidence": 0.58
+          },
+          {
+            "source": "The Block",
+            "link": "https://www.theblock.co/post/393574/irs-crypto-reporting-rules-set-stage-for-confusing-tax-season-heres-what-you-need-to-know?utm_source=rss&utm_medium=rss",
+            "claim": "IRS crypto reporting rules set stage for confusing tax season: Here’s what you need to know.",
+            "confidence": 0.73
+          },
+          {
+            "source": "The Block",
+            "link": "https://www.theblock.co/post/393565/the-daily-crypto-whale-loses-almost-50m-in-defi-swap-blackrocks-staked-ethereum-etf-sees-very-solid-debut-and-more?utm_source=rss&utm_medium=rss",
+            "claim": "The Daily: Crypto whale loses almost $50M in DeFi swap, BlackRock’s staked Ethereum ETF sees ‘very solid’ debut, and more.",
+            "confidence": 0.78
+          },
+          {
+            "source": "CoinDesk",
+            "link": "https://www.coindesk.com/markets/2026/03/13/bitcoin-quickly-drops-3-5-as-fresh-iran-escalation-short-circuits-crypto-rally",
+            "claim": "Bitcoin quickly drops 3.5% as fresh Iran escalation short-circuits crypto rally.",
+            "confidence": 0.73
+          },
+          {
+            "source": "The Defiant",
+            "link": "https://thedefiant.io/news/markets/crypto-rally-fizzles-on-iran-escalation-fears",
+            "claim": "Crypto Rally Fizzles on Iran Escalation Fears.",
+            "confidence": 0.63
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Cointelegraph",
+            "title": "Here’s what happened in crypto today",
+            "link": "https://cointelegraph.com/news/what-happened-in-crypto-today?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+            "summary": "Need to know what happened in crypto today? Here is the latest news on daily trends and events impacting Bitcoin price, blockchain, DeFi, NFTs, Web3 and...",
+            "pubDate": "Sat, 14 Mar 2026 13:13:01 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "The Block",
+            "title": "IRS crypto reporting rules set stage for confusing tax season: Here’s what you need to know",
+            "link": "https://www.theblock.co/post/393574/irs-crypto-reporting-rules-set-stage-for-confusing-tax-season-heres-what-you-need-to-know?utm_source=rss&utm_medium=rss",
+            "summary": "Traders involved in DeFi and have transactions and transfers between multiple wallets and exchanges will face more challenges.",
+            "pubDate": "Sat, 14 Mar 2026 08:31:01 -0400"
+          },
+          {
+            "kind": "link",
+            "source": "The Block",
+            "title": "The Daily: Crypto whale loses almost $50M in DeFi swap, BlackRock’s staked Ethereum ETF sees ‘very solid’ debut, and more",
+            "link": "https://www.theblock.co/post/393565/the-daily-crypto-whale-loses-almost-50m-in-defi-swap-blackrocks-staked-ethereum-etf-sees-very-solid-debut-and-more?utm_source=rss&utm_medium=rss",
+            "summary": "The following article is adapted from The Block’s newsletter, The Daily, which comes out on weekday afternoons.",
+            "pubDate": "Fri, 13 Mar 2026 12:55:43 -0400"
+          },
+          {
+            "kind": "link",
+            "source": "CoinDesk",
+            "title": "Bitcoin quickly drops 3.5% as fresh Iran escalation short-circuits crypto rally",
+            "link": "https://www.coindesk.com/markets/2026/03/13/bitcoin-quickly-drops-3-5-as-fresh-iran-escalation-short-circuits-crypto-rally",
+            "summary": "Surging to a near one-month high of $74,000, bitcoin reversed back to just above $71,000 as news of U.S. military movements in the Middle East rattled risk assets.",
+            "pubDate": "Fri, 13 Mar 2026 16:30:53 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "The Defiant",
+            "title": "Crypto Rally Fizzles on Iran Escalation Fears",
+            "link": "https://thedefiant.io/news/markets/crypto-rally-fizzles-on-iran-escalation-fears",
+            "summary": "Bitcoin is trading around $71,000 after reaching $74,000 earlier today.",
+            "pubDate": "Fri, 13 Mar 2026 19:31:40 GMT"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 4
+      },
+      "entities": [
+        {
+          "name": "DeFi",
+          "canonicalName": "defi",
+          "type": "person",
+          "context": "What happened: Need to know what happened in crypto today? Here is the latest news on daily trends and events impacti...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 147,
+              "endChar": 151
+            }
+          ]
+        }
+      ],
+      "marketImpact": {
+        "significance": 50,
+        "headline": "Potential exposure across 4 topics detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Bitcoin",
+            "ticker": "BTC",
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"btc\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Ethereum",
+            "ticker": "ETH",
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"eth\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Digital Assets",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"crypto\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "btc",
+          "eth",
+          "war",
+          "crypto"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0x2fb6a9249cb4c222edd39b9ee1436cccf414e3ca0d605180bfe789d29d7dfad3",
+      "generatedAt": "2026-03-14T13:30:38.367Z",
+      "contentHash": "0x25bd2c4e66d00fc235db6898722f5bc426cfc6e65667b04a4f13ef39b4eb1624",
+      "version": 1
+    },
+    "0x543e0708a47c419f372cbfa2f55a48c27c5ecaaeb728b5c9c8c1bb08ca4bfc3d": {
+      "primary": {
+        "id": "108277320",
+        "title": "As New York Mayor Zohran Mamdani faces $7 billion budget hole, free parking may be history",
+        "link": "https://www.cnbc.com/2026/03/14/mayor-zohran-mamdani-new-york-budget-deficit-parking-tax.html",
+        "description": "New York City Mayor Zohran Mamdani is facing a $7 billion budget hole, and the free parking NYC residents have taken for granted may be a revenue opportunity.",
+        "pubDate": "Sat, 14 Mar 2026 13:07:49 GMT",
+        "source": "CNBC",
+        "sourceUrl": "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+        "category": "Business",
+        "bias": {
+          "name": "CNBC",
+          "domain": "cnbc.com",
+          "bias": "center",
+          "factuality": "high",
+          "ownership": "NBCUniversal (Comcast)",
+          "country": "US",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "As New York Mayor Zohran Mamdani faces $7 billion budget hole, free parking may be history."
+      },
+      "claim": "As New York Mayor Zohran Mamdani faces $7 billion budget hole, free parking may be history.",
+      "relatedSources": [
+        {
+          "id": "https://freebeacon.com/?p=2122498",
+          "title": "Zohran Mamdani’s Wife Provided Illustration for Essay by Author Who Called Oct 7 ‘Spectacular’ and Attacked ‘Jewish Supremacist Vampires'",
+          "link": "https://freebeacon.com/democrats/zohran-mamdanis-wife-provided-illustration-for-essay-by-author-who-called-oct-7-spectacular-and-attacked-jewish-supremacist-vampires/",
+          "description": "Rama Duwaji, the first lady of New York City, provided a featured illustration for an essay by an author who called Hamas's Oct. 7, 2023, attack \"spectacular,\" has frequently decried what she describes as \"Jewish supremacist vampires,\" and said Jewish Israelis are \"rootless soulless ghouls.\"\nThe pos",
+          "pubDate": "Thu, 12 Mar 2026 22:30:12 +0000",
+          "source": "Free Beacon",
+          "sourceUrl": "https://freebeacon.com/feed/",
+          "category": "World",
+          "bias": {
+            "name": "Washington Free Beacon",
+            "domain": "freebeacon.com",
+            "bias": "right",
+            "factuality": "mostly-factual",
+            "ownership": "Center for American Freedom",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Zohran Mamdani’s Wife Provided Illustration for Essay by Author Who Called Oct 7 ‘Spectacular’ and Attacked ‘Jewish Supremacist Vampires.",
+          "tags": [
+            "health"
+          ]
+        },
+        {
+          "id": "https://apnews.com/article/fbi-iran-terrorism-firings-18d59b0c72ca52db09c8ff03215efe14",
+          "title": "US faces elevated terrorism threats against backdrop of Iran war and cuts at FBI, Justice Department",
+          "link": "https://apnews.com/article/fbi-iran-terrorism-firings-18d59b0c72ca52db09c8ff03215efe14",
+          "description": "Police tape hangs outside the Temple Israel synagogue Friday, March 13, 2026, in West Bloomfield Township, Mich. (AP Photo/Paul Sancya)\n2026-03-13T21:18:16Z\nWASHINGTON (AP) — In New York City, two men who federal authorities say were inspired by the Islamic State brought powerful homemade bombs to a",
+          "pubDate": "Sat, 14 Mar 2026 11:23:01 +0000",
+          "source": "Associated Press",
+          "sourceUrl": "https://feedx.net/rss/ap.xml",
+          "category": "World",
+          "imageUrl": "https://dims.apnews.com/dims4/default/96baeb5/2147483647/strip/true/crop/6000x3998+0+1/resize/980x653!/quality/90/?url=https%3A%2F%2Fassets.apnews.com%2F86%2Fe8%2Faf1d903e1df2f2de3896c9b931ec%2F7036a3e2acb245e2910c922282155b24",
+          "bias": {
+            "name": "Associated Press",
+            "domain": "apnews.com",
+            "bias": "center",
+            "factuality": "very-high",
+            "ownership": "AP (Cooperative)",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "US faces elevated terrorism threats against backdrop of Iran war and cuts at FBI, Justice Department.",
+          "tags": [
+            "war",
+            "health",
+            "security"
+          ]
+        },
+        {
+          "id": "https://freebeacon.com/?p=2122897",
+          "title": "Bond Market May Be a Last Guardrail on Far-Left Mayors as Moody’s Goes 'Negative' on Mamdani’s New York",
+          "link": "https://freebeacon.com/democrats/bond-market-may-be-a-last-guardrail-on-far-left-mayors-as-moodys-goes-negative-on-mamdanis-new-york/",
+          "description": "A mostly obscure and widely derided sector of the financial industry—bond rating agencies—may be one of the few remaining things with the power to save some of America’s largest cities from destruction by the policies of the far-left mayors who run them.\nThe post Bond Market May Be a Last Guardrail ",
+          "pubDate": "Fri, 13 Mar 2026 21:02:52 +0000",
+          "source": "Free Beacon",
+          "sourceUrl": "https://freebeacon.com/feed/",
+          "category": "World",
+          "bias": {
+            "name": "Washington Free Beacon",
+            "domain": "freebeacon.com",
+            "bias": "right",
+            "factuality": "mostly-factual",
+            "ownership": "Center for American Freedom",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Bond Market May Be a Last Guardrail on Far-Left Mayors as Moody’s Goes 'Negative' on Mamdani’s New York.",
+          "tags": [
+            "health"
+          ]
+        }
+      ],
+      "subheadline": "CNBC focuses on mamdani and billion, with context pulled from source reporting instead of recycled feed copy. Cross-checked against Free Beacon.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: New York City Mayor Zohran Mamdani is facing a $7 billion budget hole, and the free parking NYC residents have taken for granted may be a...",
+        "Cross-source context: Free Beacon highlights rama Duwaji, the first lady of New York City, provided a featured illustration for an essay by an author who called Hamas's Oct. 7, 2023, attack \"spectacular,\" has frequently decried what she describes as \"Jewish supremacist vampires,\" and said Jewish Israelis...",
+        "What to watch next: movement around mamdani, billion."
+      ],
+      "wireSummary": "Free Beacon: Rama Duwaji, the first lady of New York City, provided a featured illustration for an essay by an...",
+      "biasContext": "CNBC reports from a centrist position, with a strong factual track record. For counterpoint, Free Beacon covers this from from a right-leaning editorial position.",
+      "tags": [
+        "business",
+        "mamdani",
+        "york"
+      ],
+      "contextSnippets": [
+        {
+          "source": "Free Beacon",
+          "link": "https://freebeacon.com/democrats/zohran-mamdanis-wife-provided-illustration-for-essay-by-author-who-called-oct-7-spectacular-and-attacked-jewish-supremacist-vampires/",
+          "summary": "Rama Duwaji, the first lady of New York City, provided a featured illustration for an essay by an author who called Hamas's Oct. 7, 2023, attack \"spectacular,\" has frequently decried what she describes as \"Jewish supremacist vampires,\" and said Jewish Israelis..."
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "Zohran Mamdani’s Wife Provided Illustration for Essay by Author Who Called Oct 7 ‘Spectacular’ and Attacked ‘Jewish Supremacist Vampires.",
+        "claimVariants": [
+          {
+            "source": "CNBC",
+            "link": "https://www.cnbc.com/2026/03/14/mayor-zohran-mamdani-new-york-budget-deficit-parking-tax.html",
+            "claim": "As New York Mayor Zohran Mamdani faces $7 billion budget hole, free parking may be history.",
+            "confidence": 0.7633333333333333
+          },
+          {
+            "source": "Free Beacon",
+            "link": "https://freebeacon.com/democrats/zohran-mamdanis-wife-provided-illustration-for-essay-by-author-who-called-oct-7-spectacular-and-attacked-jewish-supremacist-vampires/",
+            "claim": "Zohran Mamdani’s Wife Provided Illustration for Essay by Author Who Called Oct 7 ‘Spectacular’ and Attacked ‘Jewish Supremacist Vampires.",
+            "confidence": 0.91
+          },
+          {
+            "source": "Associated Press",
+            "link": "https://apnews.com/article/fbi-iran-terrorism-firings-18d59b0c72ca52db09c8ff03215efe14",
+            "claim": "US faces elevated terrorism threats against backdrop of Iran war and cuts at FBI, Justice Department.",
+            "confidence": 0.73
+          },
+          {
+            "source": "Free Beacon",
+            "link": "https://freebeacon.com/democrats/bond-market-may-be-a-last-guardrail-on-far-left-mayors-as-moodys-goes-negative-on-mamdanis-new-york/",
+            "claim": "Bond Market May Be a Last Guardrail on Far-Left Mayors as Moody’s Goes 'Negative' on Mamdani’s New York.",
+            "confidence": 0.6733333333333332
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "CNBC",
+            "title": "As New York Mayor Zohran Mamdani faces $7 billion budget hole, free parking may be history",
+            "link": "https://www.cnbc.com/2026/03/14/mayor-zohran-mamdani-new-york-budget-deficit-parking-tax.html",
+            "summary": "New York City Mayor Zohran Mamdani is facing a $7 billion budget hole, and the free parking NYC residents have taken for granted may be a...",
+            "pubDate": "Sat, 14 Mar 2026 13:07:49 GMT"
+          },
+          {
+            "kind": "link",
+            "source": "Free Beacon",
+            "title": "Zohran Mamdani’s Wife Provided Illustration for Essay by Author Who Called Oct 7 ‘Spectacular’ and Attacked ‘Jewish Supremacist Vampires'",
+            "link": "https://freebeacon.com/democrats/zohran-mamdanis-wife-provided-illustration-for-essay-by-author-who-called-oct-7-spectacular-and-attacked-jewish-supremacist-vampires/",
+            "summary": "Rama Duwaji, the first lady of New York City, provided a featured illustration for an essay by an author who called Hamas's Oct. 7, 2023, attack \"spectacular,\" has frequently decried what she describes as \"Jewish supremacist vampires,\" and said Jewish Israelis...",
+            "pubDate": "Thu, 12 Mar 2026 22:30:12 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Associated Press",
+            "title": "US faces elevated terrorism threats against backdrop of Iran war and cuts at FBI, Justice Department",
+            "link": "https://apnews.com/article/fbi-iran-terrorism-firings-18d59b0c72ca52db09c8ff03215efe14",
+            "summary": "Police tape hangs outside the Temple Israel synagogue Friday, March 13, 2026, in West Bloomfield Township, Mich. (AP Photo/Paul Sancya) 2026-03-13T21:18:16Z WASHINGTON (AP) — In New York City, two men who federal authorities say were inspired by the Islamic State brought powerful homemade bombs to a",
+            "pubDate": "Sat, 14 Mar 2026 11:23:01 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Free Beacon",
+            "title": "Bond Market May Be a Last Guardrail on Far-Left Mayors as Moody’s Goes 'Negative' on Mamdani’s New York",
+            "link": "https://freebeacon.com/democrats/bond-market-may-be-a-last-guardrail-on-far-left-mayors-as-moodys-goes-negative-on-mamdanis-new-york/",
+            "summary": "A mostly obscure and widely derided sector of the financial industry—bond rating agencies—may be one of the few remaining things with the power to save some of America’s largest cities from destruction by the policies of the far-left mayors who run them. The post Bond Market May Be a Last Guardrail",
+            "pubDate": "Fri, 13 Mar 2026 21:02:52 +0000"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 3
+      },
+      "entities": [
+        {
+          "name": "Hamas",
+          "canonicalName": "hamas",
+          "type": "organization",
+          "context": "Cross-source context: Free Beacon highlights rama Duwaji, the first lady of New York City, provided a featured illust...",
+          "occurrences": [
+            {
+              "paragraphIndex": 1,
+              "startChar": 161,
+              "endChar": 166
+            }
+          ]
+        }
+      ],
+      "marketImpact": {
+        "significance": 35,
+        "headline": "Potential exposure across 2 topics detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Global Macro",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"economy\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "war",
+          "economy"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0x543e0708a47c419f372cbfa2f55a48c27c5ecaaeb728b5c9c8c1bb08ca4bfc3d",
+      "generatedAt": "2026-03-14T13:31:25.917Z",
+      "contentHash": "0x6b3d6739a37c03a64f9c23690e4647ad8238aad1fe485f838f478e083ea53c6a",
+      "version": 1
+    },
+    "0xb4d5e2b1c9484faf592fa5b43dceae3a1500c06f2c6c4570f41105a0a9f3c204": {
+      "primary": {
+        "id": "108277800",
+        "title": "The biggest release of emergency oil stockpiles in history was announced. Why crude may keep rising",
+        "link": "https://www.cnbc.com/2026/03/14/iran-war-iea-oil-stockpile-spr-strait-hormuz.html",
+        "description": "Oil prices have surged more than 17% since the International Energy Agency announced the largest release of crude stockpiles in its 50-year history.",
+        "pubDate": "Sat, 14 Mar 2026 13:07:11 GMT",
+        "source": "CNBC",
+        "sourceUrl": "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+        "category": "Business",
+        "bias": {
+          "name": "CNBC",
+          "domain": "cnbc.com",
+          "bias": "center",
+          "factuality": "high",
+          "ownership": "NBCUniversal (Comcast)",
+          "country": "US",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "The biggest release of emergency oil stockpiles in history was announced. Why crude may keep rising.",
+        "tags": [
+          "energy"
+        ]
+      },
+      "claim": "The biggest release of emergency oil stockpiles in history was announced. Why crude may keep rising.",
+      "relatedSources": [
+        {
+          "id": "https://news.un.org/en/story/2026/03/1167118",
+          "title": "MIDDLE EAST LIVE 12 March: Shipping attacks, rising oil prices and widening humanitarian crisis",
+          "link": "https://news.un.org/feed/view/en/story/2026/03/1167118",
+          "description": "War continues across the Middle East, with impacts growing far beyond the region. Oil prices are hovering around $100 a barrel as attacks on shipping and energy infrastructure disrupt key supply routes. Strikes and counterstrikes between Israel, Hezbollah and Iran continue, while ships have reported",
+          "pubDate": "Thu, 12 Mar 2026 12:00:00 +0000",
+          "source": "UN News",
+          "sourceUrl": "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
+          "category": "Governance",
+          "imageUrl": "https://global.unitednations.entermediadb.net/assets/mediadb/services/module/asset/downloads/preset/Collections/Embargoed/11-03-2026-WFP-Lebanon-05.jpg/image560x340cropped.jpg",
+          "bias": {
+            "name": "UN News",
+            "domain": "news.un.org",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "United Nations",
+            "country": "International",
+            "fundingModel": "intergovernmental"
+          },
+          "canonicalClaim": "MIDDLE EAST LIVE 12 March: Shipping attacks, rising oil prices and widening humanitarian crisis.",
+          "tags": [
+            "war",
+            "energy"
+          ]
+        },
+        {
+          "id": "WP-WSJ-0002354021",
+          "title": "Russia's Crude Exports Fairly Stable Despite U.S. Sanctions, Goldman Says",
+          "link": "https://www.wsj.com/articles/oil-futures-fall-after-trump-calls-for-tariffs-on-colombia-5b2a178c?mod=rss_markets_main",
+          "description": "Oil edged lower in early trade as Goldman Sachs said the latest round of U.S. sanctions against Russia haven’t had a significant impact on the country’s oil exports.",
+          "pubDate": "Mon, 27 Jan 2025 04:46:00 -0500",
+          "source": "Wall Street Journal",
+          "sourceUrl": "https://feeds.a.dj.com/rss/RSSMarketsMain.xml",
+          "category": "Business",
+          "bias": {
+            "name": "Wall Street Journal",
+            "domain": "wsj.com",
+            "bias": "lean-right",
+            "factuality": "high",
+            "ownership": "Dow Jones (News Corp)",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "Russia's Crude Exports Fairly Stable Despite U.S. Sanctions, Goldman Says.",
+          "tags": [
+            "trade",
+            "energy"
+          ]
+        }
+      ],
+      "subheadline": "CNBC focuses on stockpiles and emergency, with context pulled from source reporting instead of recycled feed copy.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: Oil prices have surged more than 17% since the International Energy Agency announced the largest release of crude stockpiles in its 50-year history.",
+        "What to watch next: movement around stockpiles, emergency."
+      ],
+      "wireSummary": null,
+      "biasContext": "CNBC reports from a centrist position, with a strong factual track record. For counterpoint, Wall Street Journal covers this from with a slight rightward lean.",
+      "tags": [
+        "business",
+        "energy",
+        "crude",
+        "stockpiles"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "The biggest release of emergency oil stockpiles in history was announced. Why crude may keep rising.",
+        "claimVariants": [
+          {
+            "source": "CNBC",
+            "link": "https://www.cnbc.com/2026/03/14/iran-war-iea-oil-stockpile-spr-strait-hormuz.html",
+            "claim": "The biggest release of emergency oil stockpiles in history was announced. Why crude may keep rising.",
+            "confidence": 0.8666666666666667
+          },
+          {
+            "source": "UN News",
+            "link": "https://news.un.org/feed/view/en/story/2026/03/1167118",
+            "claim": "MIDDLE EAST LIVE 12 March: Shipping attacks, rising oil prices and widening humanitarian crisis.",
+            "confidence": 0.78
+          },
+          {
+            "source": "Wall Street Journal",
+            "link": "https://www.wsj.com/articles/oil-futures-fall-after-trump-calls-for-tariffs-on-colombia-5b2a178c?mod=rss_markets_main",
+            "claim": "Russia's Crude Exports Fairly Stable Despite U.S. Sanctions, Goldman Says.",
+            "confidence": 0.6233333333333333
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "CNBC",
+            "title": "The biggest release of emergency oil stockpiles in history was announced. Why crude may keep rising",
+            "link": "https://www.cnbc.com/2026/03/14/iran-war-iea-oil-stockpile-spr-strait-hormuz.html",
+            "summary": "Oil prices have surged more than 17% since the International Energy Agency announced the largest release of crude stockpiles in its 50-year history.",
+            "pubDate": "Sat, 14 Mar 2026 13:07:11 GMT"
+          },
+          {
+            "kind": "link",
+            "source": "UN News",
+            "title": "MIDDLE EAST LIVE 12 March: Shipping attacks, rising oil prices and widening humanitarian crisis",
+            "link": "https://news.un.org/feed/view/en/story/2026/03/1167118",
+            "summary": "War continues across the Middle East, with impacts growing far beyond the region. Oil prices are hovering around $100 a barrel as attacks on shipping and energy infrastructure disrupt key supply routes. Strikes and counterstrikes between Israel, Hezbollah and Iran continue, while ships have reported",
+            "pubDate": "Thu, 12 Mar 2026 12:00:00 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Wall Street Journal",
+            "title": "Russia's Crude Exports Fairly Stable Despite U.S. Sanctions, Goldman Says",
+            "link": "https://www.wsj.com/articles/oil-futures-fall-after-trump-calls-for-tariffs-on-colombia-5b2a178c?mod=rss_markets_main",
+            "summary": "Oil edged lower in early trade as Goldman Sachs said the latest round of U.S. sanctions against Russia haven’t had a significant impact on the country’s oil exports.",
+            "pubDate": "Mon, 27 Jan 2025 04:46:00 -0500"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 3
+      },
+      "entities": [],
+      "marketImpact": {
+        "significance": 35,
+        "headline": "Potential exposure across 2 topics detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Crude Oil",
+            "ticker": "CL",
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"oil\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "oil",
+          "war"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0xb4d5e2b1c9484faf592fa5b43dceae3a1500c06f2c6c4570f41105a0a9f3c204",
+      "generatedAt": "2026-03-14T13:32:25.095Z",
+      "contentHash": "0x227eed81a800aea7788e2ba7801ef765befa111147534a71a0ca0d4e2b984e07",
+      "version": 1
     }
   }
 }

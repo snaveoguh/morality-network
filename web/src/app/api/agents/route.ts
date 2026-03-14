@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { agentRegistry, getAgentSoulSummary } from "@/lib/agents/core";
+import { buildNounIrlAgentSnapshot } from "@/lib/agents/nounirl";
 import { isWorkerAgentRuntime } from "@/lib/runtime-mode";
 import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
 import { fetchPersistedSwarmState } from "@/lib/server/runtime-backend";
@@ -116,41 +117,24 @@ export async function GET() {
       .map((topic) => topic.trim())
       .filter((topic) => topic.length > 0);
     if (bridgeUrl) {
-      try {
-        const res = await fetch(
-          `${bridgeUrl.replace(/\/$/, "")}/api/agent/status`,
-          {
-            signal: AbortSignal.timeout(3_000),
-            headers: { Accept: "application/json" },
-          }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          // noun.wtf returns agent status directly — wrap it
-          remoteAgents = [
-            {
-              id: "nounirl",
-              name: "NounIRL",
-              description: "Autonomous Noun trait sniper and settler",
-              status: data.status ?? "unknown",
-              startedAt: null,
-              lastActivityAt: null,
-              stats: {
-                currentBlock: data.currentBlock ?? 0,
-                reservations: data.reservationCount ?? 0,
-                settlements: data.settlementCount ?? 0,
-                subscribedTopics: bridgeTopics.length,
-              },
-              errors: [],
-              remote: true,
-              source: bridgeUrl,
-              subscriptions: bridgeTopics,
-              stream: `${process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || ""}/api/agents/events/stream?topic=${encodeURIComponent(bridgeTopics.join(","))}`,
-            },
-          ];
-        }
-      } catch {
-        // Remote unavailable — that's fine
+      const bridgeBaseUrl = bridgeUrl.replace(/\/$/, "");
+      const [statusPayload, predictPayload, reservationsPayload] = await Promise.all([
+        fetchBridgeJson(`${bridgeBaseUrl}/api/agent/status`),
+        fetchBridgeJson(`${bridgeBaseUrl}/api/agent/predict`),
+        fetchBridgeJson(`${bridgeBaseUrl}/api/agent/reservations`),
+      ]);
+
+      if (statusPayload || predictPayload || reservationsPayload) {
+        remoteAgents = [
+          buildNounIrlAgentSnapshot({
+            bridgeTopics,
+            bridgeUrl,
+            siteUrl: process.env.NEXT_PUBLIC_SITE_URL,
+            statusPayload,
+            predictPayload,
+            reservationsPayload,
+          }),
+        ];
       }
     }
 
@@ -165,5 +149,21 @@ export async function GET() {
       { error: "Failed to list agents" },
       { status: 500 }
     );
+  }
+}
+
+async function fetchBridgeJson(url: string): Promise<unknown | null> {
+  try {
+    const response = await fetch(url, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(3_000),
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return await response.json();
+  } catch {
+    return null;
   }
 }

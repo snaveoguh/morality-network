@@ -619,21 +619,30 @@ function countOverlap(a: Set<string>, b: Set<string>): number {
 // ============================================================================
 
 /**
- * Smart editorial generator: cache → AI → template fallback.
+ * Singleflight map — deduplicates concurrent AI generation for the same hash.
+ * If 3 tabs hit the same article simultaneously, only ONE Claude call fires
+ * and all 3 await the same promise, receiving the same editorial.
+ */
+type EditorialResult = ArticleContent & { generatedBy?: "claude-ai" | "template-fallback" };
+const inflight = new Map<string, Promise<EditorialResult>>();
+
+/**
+ * Smart editorial generator: cache → singleflight AI → template fallback.
  *
  * 1. Check the editorial archive for a previously generated editorial
- * 2. Try Claude AI synthesis (if ANTHROPIC_API_KEY is set)
- * 3. Fall back to template-based generation
+ * 2. If a generation is already in-flight for this hash, await it (singleflight)
+ * 3. Try Claude AI synthesis (if ANTHROPIC_API_KEY is set)
+ * 4. Fall back to template-based generation
  *
  * Returns ArticleContent with an optional `generatedBy` tag.
  */
 export async function generateEditorial(
   primary: FeedItem,
   related: FeedItem[],
-): Promise<ArticleContent & { generatedBy?: "claude-ai" | "template-fallback" }> {
+): Promise<EditorialResult> {
   const hash = computeEntityHash(primary.link);
 
-  // 1. Check editorial archive cache
+  // 1. Check editorial archive cache — already generated, serve immediately
   try {
     const cached = await getArchivedEditorial(hash);
     if (cached && isCachedEditorialCompatible(primary, related, cached)) {
@@ -647,7 +656,33 @@ export async function generateEditorial(
     console.warn("[editorial] archive lookup failed:", err);
   }
 
-  // 2. Try Claude AI editorial
+  // 2. Singleflight — if generation is already in-flight, wait for that result
+  const existing = inflight.get(hash);
+  if (existing) {
+    console.log(`[editorial] singleflight: joining in-flight generation for ${hash.slice(0, 10)}...`);
+    return existing;
+  }
+
+  // 3. Start new generation and register in singleflight map
+  const generation = generateEditorialInner(primary, related, hash);
+  inflight.set(hash, generation);
+
+  try {
+    return await generation;
+  } finally {
+    inflight.delete(hash);
+  }
+}
+
+/**
+ * Inner generation logic — only called once per hash thanks to singleflight.
+ */
+async function generateEditorialInner(
+  primary: FeedItem,
+  related: FeedItem[],
+  hash: string,
+): Promise<EditorialResult> {
+  // Try Claude AI editorial
   try {
     const aiEditorial = await generateAIEditorial(primary, related);
     console.log(`[editorial] AI generated for ${hash.slice(0, 10)}...`);
@@ -656,7 +691,7 @@ export async function generateEditorial(
     console.warn("[editorial] AI generation failed, using template:", err instanceof Error ? err.message : err);
   }
 
-  // 3. Fall back to template generation
+  // Fall back to template generation
   const templateResult = await generateEditorialTemplate(primary, related);
   return {
     ...(await enrichArticleEmbeds(primary, templateResult)),
@@ -689,9 +724,18 @@ function shouldRefreshPodcastEpisode(
 
 function isCachedEditorialCompatible(
   primary: FeedItem,
-  currentRelated: FeedItem[],
+  _currentRelated: FeedItem[],
   cached: ArticleContent,
 ): boolean {
+  // Once an editorial is generated and archived, always serve it.
+  // The editorial body is already written — related article rotation in the RSS
+  // feed should NOT invalidate it. This prevents regeneration (and the race
+  // condition where multiple tabs get different AI outputs).
+  //
+  // Only reject if the primary article URL somehow changed (shouldn't happen
+  // since the hash is derived from it).
+  if (!cached.primary?.link) return true;
+
   const normalize = (link: string): string => {
     try {
       const u = new URL(link);
@@ -717,30 +761,7 @@ function isCachedEditorialCompatible(
     }
   };
 
-  if (cached.primary?.link && normalize(cached.primary.link) !== normalize(primary.link)) {
-    return false;
-  }
-
-  const cachedLinks = new Set(
-    (cached.relatedSources || [])
-      .map((item) => normalize(item.link))
-      .filter(Boolean),
-  );
-  const currentLinks = new Set(
-    currentRelated
-      .map((item) => normalize(item.link))
-      .filter(Boolean),
-  );
-
-  if (cachedLinks.size === 0) return true;
-  if (currentLinks.size === 0) return false;
-
-  let overlap = 0;
-  for (const link of cachedLinks) {
-    if (currentLinks.has(link)) overlap++;
-  }
-
-  return overlap / cachedLinks.size >= 0.5;
+  return normalize(cached.primary.link) === normalize(primary.link);
 }
 
 // ============================================================================

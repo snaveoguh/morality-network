@@ -12,8 +12,6 @@ import {
   verifyBridgeMessage,
 } from "@/lib/agents/core/bridge-signature";
 import { buildHumanPromptMeta } from "@/lib/agents/core/human-prompt-meta";
-import { hasIndexerBackend } from "@/lib/server/indexer-backend";
-import { publishPersistedAgentEvent } from "@/lib/server/runtime-backend";
 
 export const dynamic = "force-dynamic";
 
@@ -102,14 +100,6 @@ export async function POST(request: Request) {
 
     // Mark as bridged to prevent relay loops
     message._bridged = true;
-
-    if (hasIndexerBackend()) {
-      try {
-        await publishPersistedAgentEvent(message, "bridge-relay");
-      } catch (error) {
-        console.error("[BusRelay] Failed to persist relayed message:", error);
-      }
-    }
 
     // Re-publish locally
     await messageBus.publish(message);

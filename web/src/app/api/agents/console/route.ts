@@ -166,6 +166,22 @@ function summarizeTraderDecision(event: PersistedAgentEvent) {
   };
 }
 
+function defaultBudgetState(provider: AIProviderId, windowHours: number) {
+  return {
+    provider,
+    windowHours,
+    totalUsd: null,
+    providerUsd: null,
+    totalSpentUsd: 0,
+    providerSpentUsd: 0,
+    totalRemainingUsd: null,
+    providerRemainingUsd: null,
+    totalExceeded: false,
+    providerExceeded: false,
+    allowed: true,
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const windowMs = parseWindowMs(request);
@@ -193,28 +209,49 @@ export async function GET(request: Request) {
     let recentDecisions: PersistedAgentEvent[] = [];
 
     if (hasIndexerBackend()) {
-      summary = await fetchIndexerJson<AgentEventSummaryResponse>(
-        `/api/v1/agents/events/summary?windowMs=${windowMs}`,
-      );
+      try {
+        summary = await fetchIndexerJson<AgentEventSummaryResponse>(
+          `/api/v1/agents/events/summary?windowMs=${windowMs}`,
+        );
+      } catch (error) {
+        console.warn("[API /agents/console] Event summary unavailable, using local fallback:", error);
+      }
 
-      recentDecisions = (
-        await fetchPersistedAgentEvents({
-          limit: 20,
-          topic: decisionTopics,
-          since: now - windowMs,
-        })
-      ).messages;
-
-      if (workerMode && process.env.AGENT_BRIDGE_URL?.trim()) {
-        bridgeCursor = await fetchPersistedAgentCursor(getBridgeConsumerId());
-        bridgePendingSummary = await fetchIndexerJson<AgentEventSummaryResponse>(
-          `/api/v1/agents/events/summary?since=${Math.max(
-            0,
-            bridgeCursor.lastTimestampMs,
-          )}&topic=${encodeURIComponent(bridgeTopics.join(","))}`,
+      try {
+        recentDecisions = (
+          await fetchPersistedAgentEvents({
+            limit: 20,
+            topic: decisionTopics,
+            since: now - windowMs,
+          })
+        ).messages;
+      } catch (error) {
+        console.warn(
+          "[API /agents/console] Persisted trader decisions unavailable, using local fallback:",
+          error,
         );
       }
+
+      if (workerMode && process.env.AGENT_BRIDGE_URL?.trim()) {
+        try {
+          bridgeCursor = await fetchPersistedAgentCursor(getBridgeConsumerId());
+          bridgePendingSummary = await fetchIndexerJson<AgentEventSummaryResponse>(
+            `/api/v1/agents/events/summary?since=${Math.max(
+              0,
+              bridgeCursor.lastTimestampMs,
+            )}&topic=${encodeURIComponent(bridgeTopics.join(","))}`,
+          );
+        } catch (error) {
+          bridgeCursor = null;
+          bridgePendingSummary = null;
+          console.warn("[API /agents/console] Bridge backlog unavailable:", error);
+        }
+      }
     } else {
+      recentDecisions = [];
+    }
+
+    if (recentDecisions.length === 0) {
       recentDecisions = messageBus
         .recentMessages(100)
         .filter((message) => decisionTopics.includes(message.topic))
@@ -233,12 +270,26 @@ export async function GET(request: Request) {
     }
 
     const aiWindowHours = getAIBudgetWindowHours();
-    const aiSummary = await fetchAIUsageSummary({ hours: aiWindowHours });
+    let aiSummary = null as Awaited<ReturnType<typeof fetchAIUsageSummary>>;
+    try {
+      aiSummary = await fetchAIUsageSummary({ hours: aiWindowHours });
+    } catch (error) {
+      console.warn("[API /agents/console] AI telemetry unavailable:", error);
+      aiSummary = null;
+    }
     const providerIds: AIProviderId[] = ["anthropic", "openai", "venice", "ollama"];
     const providerBudgets = await Promise.all(
       providerIds.map(async (provider) => ({
         provider,
-        budget: await getAIProviderBudgetState(provider),
+        budget: aiSummary
+          ? await getAIProviderBudgetState(provider).catch((error) => {
+              console.warn(
+                `[API /agents/console] AI budget unavailable for ${provider}:`,
+                error,
+              );
+              return null;
+            })
+          : null,
       })),
     );
 
@@ -290,19 +341,7 @@ export async function GET(request: Request) {
         windowHours: aiWindowHours,
         summary: aiSummary,
         budgets: providerBudgets.map((entry) => ({
-          provider: entry.provider,
-          ...(entry.budget ?? {
-            windowHours: aiWindowHours,
-            totalUsd: null,
-            providerUsd: null,
-            totalSpentUsd: 0,
-            providerSpentUsd: 0,
-            totalRemainingUsd: null,
-            providerRemainingUsd: null,
-            totalExceeded: false,
-            providerExceeded: false,
-            allowed: true,
-          }),
+          ...(entry.budget ?? defaultBudgetState(entry.provider, aiWindowHours)),
         })),
       },
     });

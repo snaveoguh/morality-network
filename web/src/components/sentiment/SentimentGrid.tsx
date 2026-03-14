@@ -104,14 +104,16 @@ function TopicCard({ topic }: { topic: TopicSentimentResult }) {
       </div>
 
       {/* Score + trend */}
-      <div className="mb-2 flex items-end gap-3">
-        <span className="font-headline text-2xl leading-none text-[var(--ink)]">
+      <div className="mb-2 flex items-end gap-2 sm:gap-3">
+        <span className="font-headline text-xl leading-none text-[var(--ink)] sm:text-2xl">
           {topic.score}
         </span>
-        <span className={`font-mono text-xs font-bold ${trendColor}`}>
-          {arrow} {topic.trend > 0 ? "+" : ""}{topic.trend}
-        </span>
-        <span className="ml-auto font-body-serif text-xs italic text-[var(--ink-faint)]">
+        {topic.trend !== 0 && (
+          <span className={`font-mono text-[10px] font-bold sm:text-xs ${trendColor}`}>
+            {arrow} {topic.trend > 0 ? "+" : ""}{topic.trend}
+          </span>
+        )}
+        <span className="ml-auto font-body-serif text-[10px] italic text-[var(--ink-faint)] sm:text-xs">
           {label}
         </span>
       </div>

@@ -17,9 +17,11 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 }
 
 export async function AsyncMasthead() {
+  // Daily edition is the hero content — give it enough time for AI generation.
+  // On cache hit this returns in <100ms; on first generation it needs ~30s.
   const dailyEdition = await withTimeout(
     getDailyEdition().catch(() => null),
-    10000,
+    40000,
     null,
   );
 

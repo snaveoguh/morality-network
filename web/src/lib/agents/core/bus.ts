@@ -4,17 +4,30 @@
 
 import type { AgentMessage, MessageHandler } from "./types";
 import { signBridgeMessage } from "./bridge-signature";
+import { hasIndexerBackend } from "../../server/indexer-backend";
+import {
+  publishPersistedAgentEvents,
+  type PersistedAgentEvent,
+} from "../../server/runtime-backend";
 
 interface BridgeConfig {
   url: string;
   secret: string;
 }
 
+const PERSIST_BATCH_SIZE = 25;
+const PERSIST_FLUSH_DELAY_MS = 250;
+const PERSIST_RETRY_DELAY_MS = 2_000;
+const MAX_PENDING_PERSISTED_MESSAGES = 500;
+
 class MessageBus {
   private subscribers = new Map<string, Set<MessageHandler<unknown>>>();
   private directSubscribers = new Map<string, Set<MessageHandler<unknown>>>();
   private messageLog: AgentMessage[] = [];
   private bridges: BridgeConfig[] = [];
+  private persistQueue = new Map<string, PersistedAgentEvent>();
+  private persistTimer: ReturnType<typeof setTimeout> | null = null;
+  private persistInFlight = false;
   private readonly MAX_LOG_SIZE = 200;
 
   /** Subscribe to a topic ("*" receives all) */
@@ -54,6 +67,7 @@ class MessageBus {
     if (this.messageLog.length > this.MAX_LOG_SIZE) {
       this.messageLog = this.messageLog.slice(-this.MAX_LOG_SIZE);
     }
+    this.queuePersistence(message as AgentMessage);
 
     // Collect all matching handlers
     const topicHandlers = this.subscribers.get(message.topic) ?? new Set();
@@ -93,9 +107,110 @@ class MessageBus {
   clear(): void {
     this.subscribers.clear();
     this.directSubscribers.clear();
+    this.persistQueue.clear();
+    if (this.persistTimer) {
+      clearTimeout(this.persistTimer);
+      this.persistTimer = null;
+    }
+    this.persistInFlight = false;
   }
 
   // ─── Private ─────────────────────────────────────────────────────────────
+
+  private queuePersistence(message: AgentMessage): void {
+    if (!hasIndexerBackend()) return;
+
+    this.persistQueue.set(message.id, {
+      id: message.id,
+      from: message.from,
+      to: message.to,
+      topic: message.topic,
+      payload: message.payload,
+      meta: message.meta,
+      source: message._bridged ? "bridge-relay" : "request-runtime",
+      timestamp: message.timestamp,
+      persistedAt: Date.now(),
+    });
+
+    while (this.persistQueue.size > MAX_PENDING_PERSISTED_MESSAGES) {
+      const oldestQueuedId = this.persistQueue.keys().next().value;
+      if (!oldestQueuedId) break;
+      this.persistQueue.delete(oldestQueuedId);
+    }
+
+    if (this.persistQueue.size >= PERSIST_BATCH_SIZE) {
+      this.schedulePersistenceFlush(0);
+      return;
+    }
+
+    this.schedulePersistenceFlush(PERSIST_FLUSH_DELAY_MS);
+  }
+
+  private schedulePersistenceFlush(delayMs: number): void {
+    if (this.persistTimer) {
+      clearTimeout(this.persistTimer);
+      this.persistTimer = null;
+    }
+
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null;
+      void this.flushPersistenceQueue();
+    }, delayMs);
+  }
+
+  private async flushPersistenceQueue(): Promise<void> {
+    if (this.persistInFlight || this.persistQueue.size === 0 || !hasIndexerBackend()) {
+      return;
+    }
+
+    this.persistInFlight = true;
+    let shouldRetry = false;
+
+    try {
+      while (this.persistQueue.size > 0) {
+        const batchEntries = Array.from(this.persistQueue.entries()).slice(0, PERSIST_BATCH_SIZE);
+        if (batchEntries.length === 0) break;
+
+        const groupedBySource = new Map<string, Array<[string, PersistedAgentEvent]>>();
+        for (const entry of batchEntries) {
+          const source = entry[1].source ?? "request-runtime";
+          const group = groupedBySource.get(source) ?? [];
+          group.push(entry);
+          groupedBySource.set(source, group);
+        }
+
+        let batchFailed = false;
+
+        for (const [source, entries] of groupedBySource.entries()) {
+          try {
+            await publishPersistedAgentEvents(
+              entries.map(([, event]) => event),
+              source,
+            );
+            for (const [id] of entries) {
+              this.persistQueue.delete(id);
+            }
+          } catch (error) {
+            batchFailed = true;
+            shouldRetry = true;
+            console.error("[AgentBus] Failed to persist message history:", error);
+            break;
+          }
+        }
+
+        if (batchFailed) {
+          break;
+        }
+      }
+    } finally {
+      this.persistInFlight = false;
+      if (this.persistQueue.size > 0) {
+        this.schedulePersistenceFlush(
+          shouldRetry ? PERSIST_RETRY_DELAY_MS : PERSIST_FLUSH_DELAY_MS,
+        );
+      }
+    }
+  }
 
   private async relay(bridge: BridgeConfig, message: AgentMessage): Promise<void> {
     const relayUrl = `${bridge.url.replace(/\/$/, "")}/api/agents/bus/relay`;

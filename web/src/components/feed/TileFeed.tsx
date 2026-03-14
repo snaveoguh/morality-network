@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, useRef } from "react";
+import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { isAddress } from "viem";
@@ -249,6 +249,26 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest }
     const idx = Math.round(el.scrollLeft / el.clientWidth);
     setMobileTab(idx);
   }, []);
+
+  // Pre-generate editorials for top RSS items so they're ready before users click.
+  // Fires once after mount — picks the first 8 RSS items (the ones most likely clicked).
+  const pregenerateTriggered = useRef(false);
+  useEffect(() => {
+    if (pregenerateTriggered.current || rssItems.length === 0) return;
+    pregenerateTriggered.current = true;
+
+    const hashes = rssItems
+      .slice(0, 8)
+      .map((item) => computeEntityHash(item.link));
+
+    fetch("/api/editorial/pregenerate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hashes }),
+    }).catch(() => {
+      // Silent — pre-generation is best-effort
+    });
+  }, [rssItems]);
 
   const allBiasSources = useMemo(() => {
     const sources: SourceBias[] = [];
