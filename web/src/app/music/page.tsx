@@ -4,7 +4,7 @@ import { MusicPlayer } from "./MusicPlayer";
 
 export const metadata: Metadata = {
   title: withBrand("Music"),
-  description: "The wartime playlist. Songs for the end of the world as we know it.",
+  description: "Underground sessions. Deep cuts. No ads. Press play.",
 };
 
 export default function MusicPage() {
@@ -13,14 +13,14 @@ export default function MusicPage() {
       {/* Header */}
       <header className="mb-8 border-b border-[var(--rule)] pb-6">
         <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.24em] text-[var(--ink-faint)]">
-          Music &middot; Discovery
+          Music &middot; Underground
         </p>
         <h1 className="font-headline text-4xl text-[var(--ink)] sm:text-5xl">
-          The Wartime Playlist
+          The Underground
         </h1>
         <p className="mt-3 max-w-xl font-body-serif text-base leading-relaxed text-[var(--ink-light)]">
-          Songs for reading the news. Curated daily. One track per edition, drawn
-          from the rotation below. Press play, then go read something that matters.
+          Live sessions, deep cuts, full albums. Curated from the edges.
+          Press play, then go read something that matters.
         </p>
       </header>
 

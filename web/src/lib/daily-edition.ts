@@ -13,7 +13,7 @@ import { buildAgentResearchPack } from "./agent-swarm";
 import { extractCanonicalClaim } from "./claim-extract";
 import type { ArticleContent } from "./article";
 import { BRAND_NAME, SITE_URL } from "./brand";
-import { WARTIME_PLAYLIST, getDailyTrack, type MusicTrack } from "./music";
+import { UNDERGROUND_PLAYLIST, getDailyTrack, type YouTubeTrack } from "./music";
 
 // ============================================================================
 // DAILY EDITION — AI-generated front-page editorial
@@ -50,9 +50,9 @@ export function getDailyEditionHash(): `0x${string}` {
 
 // Music data is in ./music.ts (shared with client components)
 // Re-export for backward compatibility
-export type MusicPick = MusicTrack;
+export type MusicPick = YouTubeTrack;
 
-function getDailyMusicPick(): MusicTrack {
+function getDailyMusicPick(): YouTubeTrack {
   return getDailyTrack();
 }
 
@@ -460,7 +460,7 @@ async function generateDailyEdition(data: DailyEditionData): Promise<DailyEditio
       relatedSummaryByLink: {},
     }),
     musicPick: {
-      spotifyId: musicPick.spotifyId,
+      videoId: musicPick.videoId,
       title: musicPick.title,
       artist: musicPick.artist,
       commentary: musicCommentary,
@@ -496,6 +496,13 @@ export interface DailyEdition {
   generatedAt: string;
 }
 
+/**
+ * Singleflight — deduplicates concurrent daily edition generation.
+ * Without this, two page loads within the same second both trigger
+ * independent AI generation, wasting tokens and producing different outputs.
+ */
+let dailyInflight: Promise<DailyEdition | null> | null = null;
+
 export async function getDailyEdition(): Promise<DailyEdition | null> {
   const hash = getDailyEditionHash();
 
@@ -524,14 +531,29 @@ export async function getDailyEdition(): Promise<DailyEdition | null> {
     return null;
   }
 
+  // Singleflight — if generation is already in-flight, join it
+  if (dailyInflight) {
+    console.log("[daily-edition] singleflight: joining in-flight generation");
+    return dailyInflight;
+  }
+
   // Gather data and generate
+  const generation = (async (): Promise<DailyEdition | null> => {
+    try {
+      console.log(`[daily-edition] Generating new edition for ${getTodayUTC()}...`);
+      const data = await gatherDailyEditionData();
+      return await generateDailyEdition(data);
+    } catch (err) {
+      console.error("[daily-edition] Generation failed:", err instanceof Error ? err.message : err);
+      return null;
+    }
+  })();
+
+  dailyInflight = generation;
   try {
-    console.log(`[daily-edition] Generating new edition for ${getTodayUTC()}...`);
-    const data = await gatherDailyEditionData();
-    return await generateDailyEdition(data);
-  } catch (err) {
-    console.error("[daily-edition] Generation failed:", err instanceof Error ? err.message : err);
-    return null;
+    return await generation;
+  } finally {
+    dailyInflight = null;
   }
 }
 
