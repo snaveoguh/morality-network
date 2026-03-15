@@ -4,7 +4,7 @@ import { MusicPlayer } from "./MusicPlayer";
 
 export const metadata: Metadata = {
   title: withBrand("Music"),
-  description: "Underground sessions. Deep cuts. No ads. Press play.",
+  description: "Underground sessions. Deep cuts. Taste-aware discovery. Press play.",
 };
 
 export default function MusicPage() {
@@ -20,7 +20,7 @@ export default function MusicPage() {
         </h1>
         <p className="mt-3 max-w-xl font-body-serif text-base leading-relaxed text-[var(--ink-light)]">
           Live sessions, deep cuts, full albums. Curated from the edges.
-          Press play, then go read something that matters.
+          Hit Dig Deeper to let the taste engine find you something new.
         </p>
       </header>
 

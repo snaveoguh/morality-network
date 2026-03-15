@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import {
   UNDERGROUND_PLAYLIST,
   getDailyTrack,
@@ -8,19 +8,62 @@ import {
   type YouTubeTrack,
   type Category,
 } from "@/lib/music";
+import type { DiscoveryTrack } from "@/lib/music-types";
+import {
+  recordSignal,
+  getSignalForTrack,
+} from "@/lib/music-taste";
+import { DiscoveryFeed } from "./DiscoveryFeed";
 
 // ============================================================================
-// MusicPlayer — YouTube underground playlist with mini video player
+// MusicPlayer — YouTube underground playlist with taste engine
 // ============================================================================
+
+type ActiveTrack = {
+  videoId: string;
+  title: string;
+  artist: string;
+  duration: string;
+  genres: string[];
+  trackId: string;
+};
+
+function curatedToActive(t: YouTubeTrack): ActiveTrack {
+  return {
+    videoId: t.videoId,
+    title: t.title,
+    artist: t.artist,
+    duration: t.duration,
+    genres: t.genres || [],
+    trackId: t.videoId,
+  };
+}
+
+function discoveredToActive(t: DiscoveryTrack): ActiveTrack {
+  return {
+    videoId: t.videoId,
+    title: t.title,
+    artist: t.artist,
+    duration: t.duration,
+    genres: t.genres,
+    trackId: t.id,
+  };
+}
 
 export function MusicPlayer() {
   const dailyTrack = useMemo(() => getDailyTrack(), []);
-  const [activeTrack, setActiveTrack] = useState<YouTubeTrack>(dailyTrack);
+  const [activeTrack, setActiveTrack] = useState<ActiveTrack>(
+    curatedToActive(dailyTrack),
+  );
   const [category, setCategory] = useState<Category>("all");
   const [showAll, setShowAll] = useState(false);
   const playerRef = useRef<HTMLDivElement>(null);
+  const [likeState, setLikeState] = useState<"like" | "dislike" | null>(null);
 
-  // Shuffle playlist deterministically by day so it feels fresh
+  useEffect(() => {
+    setLikeState(getSignalForTrack(activeTrack.trackId));
+  }, [activeTrack.trackId]);
+
   const shuffled = useMemo(() => {
     const now = new Date();
     const seed =
@@ -44,26 +87,69 @@ export function MusicPlayer() {
 
   const displayList = showAll ? filtered : filtered.slice(0, 20);
 
-  const handleTrackClick = useCallback(
-    (track: YouTubeTrack) => {
-      setActiveTrack(track);
-      // Scroll player into view on mobile
-      playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    },
-    [],
-  );
+  const handleTrackClick = useCallback((track: YouTubeTrack) => {
+    const active = curatedToActive(track);
+    setActiveTrack(active);
+    recordSignal({
+      trackId: active.trackId,
+      artist: active.artist,
+      genres: active.genres,
+      action: "play",
+    });
+    playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const handleDiscoveryPlay = useCallback((track: DiscoveryTrack) => {
+    const active = discoveredToActive(track);
+    setActiveTrack(active);
+    recordSignal({
+      trackId: active.trackId,
+      artist: active.artist,
+      genres: active.genres,
+      action: "play",
+    });
+    playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   const playNext = useCallback(() => {
     const idx = filtered.findIndex((t) => t.videoId === activeTrack.videoId);
+    if (idx === -1) {
+      setActiveTrack(curatedToActive(filtered[0]));
+      return;
+    }
     const next = filtered[(idx + 1) % filtered.length];
-    setActiveTrack(next);
+    setActiveTrack(curatedToActive(next));
   }, [filtered, activeTrack]);
 
   const playPrev = useCallback(() => {
     const idx = filtered.findIndex((t) => t.videoId === activeTrack.videoId);
+    if (idx === -1) {
+      setActiveTrack(curatedToActive(filtered[0]));
+      return;
+    }
     const prev = filtered[(idx - 1 + filtered.length) % filtered.length];
-    setActiveTrack(prev);
+    setActiveTrack(curatedToActive(prev));
   }, [filtered, activeTrack]);
+
+  const handleLike = useCallback(() => {
+    recordSignal({
+      trackId: activeTrack.trackId,
+      artist: activeTrack.artist,
+      genres: activeTrack.genres,
+      action: "like",
+    });
+    setLikeState("like");
+  }, [activeTrack]);
+
+  const handleDislike = useCallback(() => {
+    recordSignal({
+      trackId: activeTrack.trackId,
+      artist: activeTrack.artist,
+      genres: activeTrack.genres,
+      action: "dislike",
+    });
+    setLikeState("dislike");
+  }, [activeTrack]);
 
   return (
     <div>
@@ -72,7 +158,8 @@ export function MusicPlayer() {
         <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
           Now Playing
         </h2>
-        <div className="relative w-full overflow-hidden border border-[var(--rule-light)] bg-black"
+        <div
+          className="relative w-full overflow-hidden border border-[var(--rule-light)] bg-black"
           style={{ paddingBottom: "56.25%" /* 16:9 */ }}
         >
           <iframe
@@ -100,7 +187,33 @@ export function MusicPlayer() {
               )}
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+
+          <div className="flex shrink-0 items-center gap-0.5">
+            <button
+              type="button"
+              onClick={handleLike}
+              className={`px-2 py-1 font-mono text-[10px] transition-colors ${
+                likeState === "like"
+                  ? "font-bold text-[var(--ink)]"
+                  : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+              }`}
+              aria-label="Like this track"
+            >
+              +1
+            </button>
+            <button
+              type="button"
+              onClick={handleDislike}
+              className={`px-2 py-1 font-mono text-[10px] transition-colors ${
+                likeState === "dislike"
+                  ? "font-bold text-[var(--accent-red)]"
+                  : "text-[var(--ink-faint)] hover:text-[var(--accent-red)]"
+              }`}
+              aria-label="Dislike this track"
+            >
+              -1
+            </button>
+            <span className="mx-1 text-[var(--rule)]">|</span>
             <button
               type="button"
               onClick={playPrev}
@@ -119,6 +232,20 @@ export function MusicPlayer() {
             </button>
           </div>
         </div>
+
+        {/* Genre pills */}
+        {activeTrack.genres.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {activeTrack.genres.map((g) => (
+              <span
+                key={g}
+                className="border border-[var(--rule-light)] px-1.5 py-0.5 font-mono text-[7px] uppercase tracking-wider text-[var(--ink-faint)]"
+              >
+                {g}
+              </span>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ── Category Tabs ────────────────────────────────────────────── */}
@@ -150,7 +277,7 @@ export function MusicPlayer() {
         })}
       </nav>
 
-      {/* ── Track List ───────────────────────────────────────────────── */}
+      {/* ── Curated Track List ───────────────────────────────────────── */}
       <section>
         <div className="divide-y divide-[var(--rule-light)] border border-[var(--rule-light)]">
           {displayList.map((track, i) => {
@@ -216,6 +343,12 @@ export function MusicPlayer() {
           </p>
         )}
       </section>
+
+      {/* ── Discovery Feed ───────────────────────────────────────────── */}
+      <DiscoveryFeed
+        onPlayTrack={handleDiscoveryPlay}
+        activeVideoId={activeTrack.videoId}
+      />
     </div>
   );
 }
