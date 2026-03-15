@@ -3,7 +3,7 @@ import "server-only";
 import type { MarketImpactDirection, MarketImpactTimeHorizon } from "../article";
 import { listRecentMarketImpactRecords } from "../editorial-archive";
 import { computeEventShapedSentimentSnapshotFromFeeds } from "../event-corpus";
-import { DEFAULT_FEEDS, fetchAllFeeds } from "../rss";
+import { DEFAULT_FEEDS, fetchAllFeeds, type FeedItem } from "../rss";
 import { TOPIC_TAXONOMY, matchesTopicDefinition } from "../sentiment";
 
 // ============================================================================
@@ -221,12 +221,41 @@ const FALLBACK_TOPIC_TO_SYMBOL: Record<string, string> = {
   usd: "DXY",
 };
 
+/** Race a promise against a timeout — returns fallback on expiry. */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
+/** Only fetch market-relevant feeds for the signals fallback (fast subset ~12 feeds, not 70+). */
+const SIGNAL_FEED_CATEGORIES = new Set(["Business", "Crypto"]);
+
 async function getFallbackFeedSignals(): Promise<AggregatedMarketSignal[]> {
   try {
-    const items = await fetchAllFeeds(DEFAULT_FEEDS);
+    // Only fetch market-relevant feeds — skip world news / science / reddit / 4chan
+    const marketFeeds = DEFAULT_FEEDS.filter(
+      (feed) => SIGNAL_FEED_CATEGORIES.has(feed.category),
+    );
+    // If no market feeds matched (categories changed), fall back to full list but with tight timeout
+    const feedsToFetch = marketFeeds.length > 0 ? marketFeeds : DEFAULT_FEEDS;
+
+    // Race the entire fallback against a 20s timeout (Vercel serverless limit is typically 30s)
+    const items = await withTimeout(
+      fetchAllFeeds(feedsToFetch),
+      20_000,
+      [] as FeedItem[],
+    );
     if (items.length === 0) return [];
 
-    const snapshot = await computeEventShapedSentimentSnapshotFromFeeds(items, null);
+    const snapshot = await withTimeout(
+      computeEventShapedSentimentSnapshotFromFeeds(items, null),
+      15_000,
+      null,
+    );
+    if (!snapshot) return [];
+
     const signals = snapshot.topics
       .filter((topic) => topic.category === "asset")
       .map((topic) => {
@@ -276,7 +305,12 @@ export async function getAggregatedMarketSignals(options?: {
   const limit = options?.limit ?? 250;
   const minAbsScore = options?.minAbsScore ?? 0.2;
 
-  const records = await listRecentMarketImpactRecords(limit);
+  // Race the indexer call against a 10s timeout — if the backend is down, fail fast to fallback
+  const records = await withTimeout(
+    listRecentMarketImpactRecords(limit),
+    10_000,
+    [],
+  );
   if (records.length === 0) {
     return getFallbackFeedSignals();
   }

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { TerminalTradingContext, ChatMessage } from "./terminal-types";
+import { buildMemoryContext } from "./agents/core/memory";
 export type { TerminalTradingContext, ChatMessage };
 
 // ============================================================================
@@ -77,6 +78,35 @@ RULES:
 - Keep responses under 150 words unless the user asks for detail.
 - When suggesting an action, include the action tag so it auto-executes.
 - You can discuss strategy, market context, risk management — but always grounded in the actual data.`;
+}
+
+// ============================================================================
+// MEMORY-ENRICHED SYSTEM PROMPT — adds persistent memory context
+// ============================================================================
+
+/**
+ * Build the terminal system prompt enriched with persistent memory context.
+ * Appends any learned knowledge, global facts, and per-user memories.
+ */
+export async function buildTerminalSystemPromptWithMemory(
+  ctx: TerminalTradingContext,
+  wallet?: string,
+): Promise<string> {
+  let prompt = buildTerminalSystemPrompt(ctx);
+
+  try {
+    const memoryContext = await buildMemoryContext(wallet);
+    if (memoryContext) {
+      prompt += memoryContext;
+    }
+  } catch (err) {
+    console.warn(
+      "[terminal-llm] memory context injection failed:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
+  return prompt;
 }
 
 // ============================================================================

@@ -670,6 +670,18 @@ export const POOTER_EDITIONS_ABI = [
   },
   {
     type: "function",
+    name: "mintFor",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "editionNumber", type: "uint256" },
+      { name: "contentHash", type: "bytes32" },
+      { name: "dailyTitle", type: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "ownerOf",
     inputs: [{ name: "tokenId", type: "uint256" }],
     outputs: [{ name: "", type: "address" }],
@@ -715,6 +727,136 @@ export const POOTER_EDITIONS_ABI = [
       { name: "minter", type: "address", indexed: true },
       { name: "contentHash", type: "bytes32", indexed: false },
       { name: "dailyTitle", type: "string", indexed: false },
+    ],
+  },
+] as const;
+
+// ============================================================================
+// POOTER AUCTIONS — On-demand 24hr edition auctions
+// ============================================================================
+
+export const POOTER_AUCTIONS_ADDRESS = readAddressEnv(
+  "NEXT_PUBLIC_POOTER_AUCTIONS_ADDRESS",
+  "0x527e2D6Ae259E3531e4d38A5f634Fd1F788Fc71f" as Address, // Deployed 2026-03-14
+);
+
+export const POOTER_AUCTIONS_ABI = [
+  {
+    type: "function",
+    name: "createAuction",
+    inputs: [
+      { name: "editionNumber", type: "uint256" },
+      { name: "contentHash", type: "bytes32" },
+      { name: "dailyTitle", type: "string" },
+    ],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "bid",
+    inputs: [{ name: "editionNumber", type: "uint256" }],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "settle",
+    inputs: [{ name: "editionNumber", type: "uint256" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "withdrawPendingReturn",
+    inputs: [],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "auctions",
+    inputs: [{ name: "editionNumber", type: "uint256" }],
+    outputs: [
+      { name: "startTime", type: "uint256" },
+      { name: "endTime", type: "uint256" },
+      { name: "highestBidder", type: "address" },
+      { name: "highestBid", type: "uint256" },
+      { name: "contentHash", type: "bytes32" },
+      { name: "dailyTitle", type: "string" },
+      { name: "settled", type: "bool" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "pendingReturns",
+    inputs: [{ name: "", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "DURATION",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "MIN_BID",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "MIN_BID_INCREMENT_BPS",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "treasury",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "event",
+    name: "AuctionCreated",
+    inputs: [
+      { name: "editionNumber", type: "uint256", indexed: true },
+      { name: "creator", type: "address", indexed: true },
+      { name: "firstBid", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "AuctionBid",
+    inputs: [
+      { name: "editionNumber", type: "uint256", indexed: true },
+      { name: "bidder", type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+      { name: "extended", type: "bool", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "AuctionSettled",
+    inputs: [
+      { name: "editionNumber", type: "uint256", indexed: true },
+      { name: "winner", type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "AuctionExtended",
+    inputs: [
+      { name: "editionNumber", type: "uint256", indexed: true },
+      { name: "newEndTime", type: "uint256", indexed: false },
     ],
   },
 ] as const;

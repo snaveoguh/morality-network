@@ -4,6 +4,7 @@ import { ponder } from "@/generated";
 import {
   agentConsumerCursor,
   agentEvent,
+  agentMemory,
   aiInvocation,
   articleArchive,
   editorialArchive,
@@ -2395,6 +2396,166 @@ ponder.post("/api/v1/archive/editorials/:hash/mark-onchain", async (c) => {
     ok: true,
     editorial: updatedPayload,
     meta: { generatedAt: Date.now() },
+  });
+});
+
+// ----------------------------------------------------------------------------
+// Agent Memory — persistent key/value store for agent learning + recall
+// ----------------------------------------------------------------------------
+
+ponder.post("/api/v1/memory/remember", async (c) => {
+  if (!hasWorkerWriteAccess(c.req.header("authorization"))) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+
+  const body = await c.req.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return c.json({ error: "invalid body" }, 400);
+  }
+
+  const input = body as Record<string, unknown>;
+  const scope = typeof input.scope === "string" ? input.scope.trim() : "";
+  const key = typeof input.key === "string" ? input.key.trim() : "";
+  const content = typeof input.content === "string" ? input.content.trim() : "";
+
+  if (!scope || !key || !content) {
+    return c.json({ error: "scope, key, and content are required" }, 400);
+  }
+
+  const compositeKey = `${scope}:${key}`;
+  const nowMs = BigInt(Date.now());
+
+  const existing = await c.db
+    .select()
+    .from(agentMemory)
+    .where(eq(agentMemory.key, compositeKey))
+    .limit(1);
+
+  if (existing[0]) {
+    await c.db
+      .update(agentMemory)
+      .set({ content, updatedAt: nowMs })
+      .where(eq(agentMemory.key, compositeKey));
+  } else {
+    await c.db.insert(agentMemory).values({
+      key: compositeKey,
+      scope,
+      content,
+      createdAt: nowMs,
+      updatedAt: nowMs,
+    });
+  }
+
+  return c.json({ ok: true, key: compositeKey });
+});
+
+ponder.get("/api/v1/memory/recall", async (c) => {
+  const scope = c.req.query("scope")?.trim();
+  const key = c.req.query("key")?.trim();
+  const limitParam = c.req.query("limit");
+  const limit = Math.min(Math.max(1, Math.floor(Number(limitParam ?? 50))), 200);
+
+  if (!scope) {
+    return c.json({ error: "scope is required" }, 400);
+  }
+
+  if (key) {
+    const compositeKey = `${scope}:${key}`;
+    const rows = await c.db
+      .select()
+      .from(agentMemory)
+      .where(eq(agentMemory.key, compositeKey))
+      .limit(1);
+
+    return c.json({
+      memories: rows.map((r) => ({
+        key: r.key,
+        scope: r.scope,
+        content: r.content,
+        createdAt: Number(r.createdAt),
+        updatedAt: Number(r.updatedAt),
+      })),
+    });
+  }
+
+  const rows = await c.db
+    .select()
+    .from(agentMemory)
+    .where(eq(agentMemory.scope, scope))
+    .orderBy(desc(agentMemory.updatedAt))
+    .limit(limit);
+
+  return c.json({
+    memories: rows.map((r) => ({
+      key: r.key,
+      scope: r.scope,
+      content: r.content,
+      createdAt: Number(r.createdAt),
+      updatedAt: Number(r.updatedAt),
+    })),
+  });
+});
+
+ponder.post("/api/v1/memory/forget", async (c) => {
+  if (!hasWorkerWriteAccess(c.req.header("authorization"))) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+
+  const body = await c.req.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return c.json({ error: "invalid body" }, 400);
+  }
+
+  const input = body as Record<string, unknown>;
+  const scope = typeof input.scope === "string" ? input.scope.trim() : "";
+  const key = typeof input.key === "string" ? input.key.trim() : "";
+
+  if (!scope || !key) {
+    return c.json({ error: "scope and key are required" }, 400);
+  }
+
+  const compositeKey = `${scope}:${key}`;
+  await c.db
+    .delete(agentMemory)
+    .where(eq(agentMemory.key, compositeKey));
+
+  return c.json({ ok: true, deleted: compositeKey });
+});
+
+ponder.get("/api/v1/memory/count", async (c) => {
+  const scope = c.req.query("scope")?.trim();
+
+  if (!scope) {
+    return c.json({ error: "scope is required" }, 400);
+  }
+
+  const rows = await c.db
+    .select()
+    .from(agentMemory)
+    .where(eq(agentMemory.scope, scope));
+
+  return c.json({ scope, count: rows.length });
+});
+
+ponder.get("/api/v1/memory/all", async (c) => {
+  const limitParam = c.req.query("limit");
+  const limit = Math.min(Math.max(1, Math.floor(Number(limitParam ?? 100))), 500);
+
+  const rows = await c.db
+    .select()
+    .from(agentMemory)
+    .orderBy(desc(agentMemory.updatedAt))
+    .limit(limit);
+
+  return c.json({
+    memories: rows.map((r) => ({
+      key: r.key,
+      scope: r.scope,
+      content: r.content,
+      createdAt: Number(r.createdAt),
+      updatedAt: Number(r.updatedAt),
+    })),
+    count: rows.length,
   });
 });
 

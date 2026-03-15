@@ -37,7 +37,7 @@ export async function AsyncFeed() {
 
   // Inject published stories that rotated out of the live RSS feed
   if (publishedHashes.size > 0) {
-    const liveHashes = new Set(rssItems.map((i) => computeEntityHash(i.link)));
+    const liveHashes = new Set<string>(rssItems.map((i) => computeEntityHash(i.link)));
     const missing = [...publishedHashes].filter((h) => !liveHashes.has(h));
     if (missing.length > 0) {
       const recovered = await Promise.all(

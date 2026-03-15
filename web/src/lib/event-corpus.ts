@@ -14,6 +14,7 @@ import {
   getCanonicalSourceRegistry,
   resolveCanonicalSource,
 } from "./source-registry";
+import { computeAISentimentScores } from "./ai-sentiment";
 
 export interface EventRecord {
   id: `0x${string}`;
@@ -254,16 +255,24 @@ function enrichTopicCounts(
   });
 }
 
-export function computeEventShapedSentimentSnapshot(
+export async function computeEventShapedSentimentSnapshot(
   items: FeedItem[],
   marketData: MarketData | null,
   previousSnapshot: SentimentSnapshot | null,
-): EventShapedSentimentSnapshot {
+): Promise<EventShapedSentimentSnapshot> {
   const corpus = buildEventCorpus(items);
+
+  // Fetch Claude AI scores (batched, cached 30 min, falls back to null)
+  const aiScores = await computeAISentimentScores(
+    corpus.sentimentItems,
+    TOPIC_TAXONOMY,
+  );
+
   const baseSnapshot = computeSentimentSnapshot(
     corpus.sentimentItems,
     marketData,
-    previousSnapshot
+    previousSnapshot,
+    aiScores,
   );
 
   return {
@@ -280,7 +289,7 @@ export function computeEventShapedSentimentSnapshot(
 export async function computeEventShapedSentimentSnapshotFromFeeds(
   items: FeedItem[],
   previousSnapshot: SentimentSnapshot | null,
-) {
+): Promise<EventShapedSentimentSnapshot> {
   const marketData = await fetchMarketData();
-  return computeEventShapedSentimentSnapshot(items, marketData, previousSnapshot);
+  return await computeEventShapedSentimentSnapshot(items, marketData, previousSnapshot);
 }

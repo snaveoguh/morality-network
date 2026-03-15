@@ -20,7 +20,7 @@ export default async function SentimentPage() {
     fetchMarketData(),
   ]);
 
-  const snapshot = computeEventShapedSentimentSnapshot(items, marketData, previousSnapshot);
+  const snapshot = await computeEventShapedSentimentSnapshot(items, marketData, previousSnapshot);
   previousSnapshot = snapshot;
   recordSnapshot(snapshot).catch(() => {});
   const label = sentimentLabel(snapshot.globalScore);
@@ -73,12 +73,13 @@ export default async function SentimentPage() {
       <div className="mb-6 border border-[var(--rule-light)] p-4">
         <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
           <span className="font-bold text-[var(--ink)]">Composite Score</span> ={" "}
-          Editorial Sentiment (35%) + Coverage Velocity (20%) + Contradiction
-          Density (15%) + Market Movement (20%) + Bias Spread (10%)
+          Editorial Sentiment (30%) + Human Impact Severity (15%) + Coverage Velocity (15%) + Contradiction
+          Density (10%) + Market Movement (20%) + Bias Spread (10%)
         </p>
         <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+          Sentiment and severity are scored by Claude AI (keyword fallback when unavailable).
           Thematic topics redistribute market weight across editorial signals.
-          High contradiction density dampens scores toward neutral.
+          High severity events pull the index toward fear. High contradiction density dampens scores toward neutral.
         </p>
       </div>
 

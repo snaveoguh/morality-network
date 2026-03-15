@@ -12,6 +12,7 @@ interface SentimentGridProps {
 
 const SIGNAL_LABELS: Record<string, string> = {
   sentimentScore: "Sentiment",
+  severityScore: "Severity",
   volumeScore: "Velocity",
   contradictionScore: "Consensus",
   marketScore: "Market",
@@ -142,6 +143,10 @@ function TopicCard({ topic }: { topic: TopicSentimentResult }) {
           const value = topic.signals[key as keyof typeof topic.signals];
           if (value === null || value === undefined) return null;
           const numValue = typeof value === "number" ? value : 0;
+          const isSeverity = key === "severityScore";
+          const barColor = isSeverity && numValue > 50
+            ? "bg-[var(--accent-red)]"
+            : "bg-[var(--ink)]";
           return (
             <div key={key} className="flex items-center gap-2">
               <span className="w-20 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
@@ -150,7 +155,7 @@ function TopicCard({ topic }: { topic: TopicSentimentResult }) {
               <div className="flex-1">
                 <div className="relative h-[4px] w-full bg-[var(--paper-dark)]">
                   <div
-                    className="absolute inset-y-0 left-0 bg-[var(--ink)]"
+                    className={`absolute inset-y-0 left-0 ${barColor}`}
                     style={{ width: `${numValue}%` }}
                   />
                 </div>

@@ -301,6 +301,21 @@ export const aiInvocation = onchainTable("ai_invocation", (t) => ({
 }));
 
 // ============================================================================
+// AGENT MEMORY — Persistent key/value memory for agent learning + recall
+// ============================================================================
+
+export const agentMemory = onchainTable("agent_memory", (t) => ({
+  key: t.text().primaryKey(),
+  scope: t.text().notNull(),
+  content: t.text().notNull(),
+  createdAt: t.bigint().notNull(),
+  updatedAt: t.bigint().notNull(),
+}), (table) => ({
+  scopeIdx: index().on(table.scope),
+  updatedIdx: index().on(table.updatedAt),
+}));
+
+// ============================================================================
 // RELATIONS
 // ============================================================================
 

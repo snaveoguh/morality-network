@@ -160,7 +160,7 @@ export function ArticleTemplate({
   );
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl px-4 sm:px-6">
       {/* ══════════════ BACK NAV ══════════════ */}
       <div className="mb-6 flex items-center gap-3 border-b border-[var(--rule-light)] pb-3 font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
         <Link

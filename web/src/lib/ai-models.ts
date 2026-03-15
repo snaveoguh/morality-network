@@ -7,7 +7,10 @@ export type AIModelTask =
   | "dailyEditionWriter"
   | "dailyEditionExtractor"
   | "biasDigest"
-  | "entityScoring";
+  | "entityScoring"
+  | "sentimentScoring"
+  | "factExtraction"
+  | "selfLearn";
 
 export interface AIProviderTaskPolicy {
   providers: AIProviderId[];
@@ -54,9 +57,11 @@ const FAST_PROVIDER_ORDER = parseProviderOrder(
   ["ollama", "venice", "openai", "anthropic"],
 );
 
+// Default: try cheap providers first, fall back to Anthropic.
+// Override with AI_PREMIUM_PROVIDER_ORDER=anthropic,venice,ollama to prioritise quality.
 const PREMIUM_PROVIDER_ORDER = parseProviderOrder(
   readEnv("AI_PREMIUM_PROVIDER_ORDER"),
-  ["anthropic", "openai", "venice", "ollama"],
+  ["venice", "ollama", "openai", "anthropic"],
 );
 
 const FAST_MODELS: Record<AIProviderId, string> = {
@@ -95,6 +100,18 @@ export const AI_MODEL_POLICY: Record<AIModelTask, AIProviderTaskPolicy> = {
     models: FAST_MODELS,
   },
   entityScoring: {
+    providers: FAST_PROVIDER_ORDER,
+    models: FAST_MODELS,
+  },
+  sentimentScoring: {
+    providers: FAST_PROVIDER_ORDER,
+    models: FAST_MODELS,
+  },
+  factExtraction: {
+    providers: FAST_PROVIDER_ORDER,
+    models: FAST_MODELS,
+  },
+  selfLearn: {
     providers: FAST_PROVIDER_ORDER,
     models: FAST_MODELS,
   },

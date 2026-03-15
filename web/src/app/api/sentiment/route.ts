@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     const previousSnapshot = cachedSnapshot;
-    const snapshot = computeEventShapedSentimentSnapshot(
+    const snapshot = await computeEventShapedSentimentSnapshot(
       allItems,
       marketData,
       previousSnapshot

@@ -3,7 +3,7 @@ import { runNewsroom } from "@/lib/newsroom";
 import { getNewsroomEdition } from "@/lib/newsroom-edition";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // 5 minutes for sequential editorial generation
+export const maxDuration = 55; // Vercel hobby plan limit
 
 // ============================================================================
 // GET /api/newsroom — returns today's edition (public, read-only)

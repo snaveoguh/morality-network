@@ -15,12 +15,13 @@ import { loadTtlValue, type TtlCacheEntry } from "./ttl-cache";
 // ============================================================================
 // MORALITY INDEX — Multi-signal sentiment scoring per topic
 //
-// Five signals per topic:
-//   1. Editorial Sentiment (35%) — lexicon scoring weighted by source factuality
-//   2. Coverage Velocity   (20%) — article count ratio (24h vs 72h baseline)
-//   3. Contradiction Density(15%) — inverse of inter-source contradictions
-//   4. Market Movement      (20%) — 24h price change (assets only)
-//   5. Bias Polarity Spread (10%) — std dev of covering sources' bias positions
+// Six signals per topic:
+//   1. Editorial Sentiment (30%) — Claude AI semantic scoring (keyword fallback)
+//   2. Human Impact Severity(15/20%) — Claude AI severity scoring (inverted)
+//   3. Coverage Velocity   (15/18%) — article count ratio (24h vs 72h baseline)
+//   4. Contradiction Density(10%) — inverse of inter-source contradictions
+//   5. Market Movement      (20%) — 24h price change (assets only)
+//   6. Bias Polarity Spread (10/12%) — std dev of covering sources' bias positions
 //
 // Score range: 0 (extreme fear) → 50 (neutral) → 100 (extreme optimism)
 // ============================================================================
@@ -103,8 +104,14 @@ const NEGATIVE_TERMS = new Set([
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
+export interface AITopicScore {
+  sentiment: number; // 0-100
+  severity: number;  // 0-100
+}
+
 export interface TopicSignals {
-  sentimentScore: number;    // 0-100
+  sentimentScore: number;    // 0-100 (Claude AI or keyword fallback)
+  severityScore: number;     // 0-100 human impact severity (higher = more severe)
   volumeScore: number;       // 0-100
   contradictionScore: number;// 0-100
   contradictionRatio: number;// raw ratio for dampening
@@ -324,24 +331,74 @@ function computeBiasSpreadSignal(items: FeedItem[]): number {
   return Math.round(Math.min(95, 30 + stdDev * 22));
 }
 
+// ── Severity Fallback (keyword-based) ────────────────────────────────────────
+
+const HIGH_SEVERITY_TERMS = new Set([
+  "kill", "killed", "killing", "death", "deaths", "dead", "massacre", "casualties",
+  "wounded", "bombing", "bomb", "airstrike", "missile", "invasion", "genocide",
+  "famine", "starvation", "refugee", "displaced", "humanitarian", "catastrophe",
+  "disaster", "earthquake", "tsunami", "flood", "wildfire", "pandemic", "epidemic",
+  "nuclear", "radiation", "chemical", "bioweapon", "terrorism", "hostage",
+  "trafficking", "slavery", "torture", "persecution", "ethnic", "cleansing",
+]);
+
+const MED_SEVERITY_TERMS = new Set([
+  "war", "conflict", "crisis", "recession", "depression", "sanctions", "embargo",
+  "protest", "riot", "unrest", "collapse", "default", "bankruptcy", "layoffs",
+  "inflation", "pollution", "drought", "corruption", "fraud", "indictment",
+  "violation", "abuse", "crackdown", "surveillance", "censorship",
+]);
+
+/**
+ * Rough keyword-based severity estimate when Claude API is unavailable.
+ */
+function estimateKeywordSeverity(items: FeedItem[]): number {
+  if (items.length === 0) return 20;
+
+  let highHits = 0;
+  let medHits = 0;
+  let totalWords = 0;
+
+  for (const item of items.slice(0, 50)) {
+    const text = `${item.title} ${item.description || ""}`.toLowerCase();
+    const words = text.split(/\W+/).filter(Boolean);
+    totalWords += words.length;
+
+    for (const word of words) {
+      if (HIGH_SEVERITY_TERMS.has(word)) highHits++;
+      if (MED_SEVERITY_TERMS.has(word)) medHits++;
+    }
+  }
+
+  if (totalWords === 0) return 20;
+
+  const density = (highHits * 2 + medHits) / totalWords;
+  // Map density to 0-100: typical density ranges 0-0.05
+  return Math.round(Math.min(95, Math.max(5, density * 1500)));
+}
+
 // ── Composite Score ─────────────────────────────────────────────────────────
 
 function computeCompositeScore(signals: TopicSignals): number {
   const hasMarket = signals.marketScore !== null;
 
+  // Severity is inverted: high severity (war, crisis) pulls score DOWN
+  const invertedSeverity = 100 - signals.severityScore;
+
   const weights = hasMarket
-    ? { sentiment: 0.35, volume: 0.20, contradiction: 0.15, market: 0.20, bias: 0.10 }
-    : { sentiment: 0.44, volume: 0.25, contradiction: 0.19, market: 0.00, bias: 0.12 };
+    ? { sentiment: 0.30, severity: 0.15, volume: 0.15, contradiction: 0.10, market: 0.20, bias: 0.10 }
+    : { sentiment: 0.30, severity: 0.20, volume: 0.18, contradiction: 0.10, market: 0.00, bias: 0.12 };
 
   const raw =
     signals.sentimentScore * weights.sentiment +
+    invertedSeverity * weights.severity +
     signals.volumeScore * weights.volume +
     signals.contradictionScore * weights.contradiction +
     (signals.marketScore ?? 0) * weights.market +
     signals.biasSpreadScore * weights.bias;
 
-  // Contradiction dampening: high contradictions pull toward 50
-  const dampFactor = 1 - signals.contradictionRatio * 0.3;
+  // Contradiction dampening: halved (Claude handles ambiguity better than keywords)
+  const dampFactor = 1 - signals.contradictionRatio * 0.15;
   const dampened = 50 + (raw - 50) * Math.max(0.3, dampFactor);
 
   return Math.round(Math.max(0, Math.min(100, dampened)));
@@ -362,6 +419,7 @@ function computeTopicSentiment(
   allItems: FeedItem[],
   marketData: MarketData | null,
   previousScore: number | null,
+  aiScores: Record<string, AITopicScore> | null,
 ): TopicSentimentResult {
   const items = allItems.filter((item) => matchesTopicDefinition(item, topic));
 
@@ -373,8 +431,11 @@ function computeTopicSentiment(
     0
   );
 
-  // Compute all signals
-  const sentimentScore = computeSentimentSignal(items);
+  // Use Claude AI scores if available, otherwise fall back to keyword lexicon
+  const aiScore = aiScores?.[topic.slug];
+  const sentimentScore = aiScore?.sentiment ?? computeSentimentSignal(items);
+  const severityScore = aiScore?.severity ?? estimateKeywordSeverity(items);
+
   const volumeScore = computeVolumeSignal(items);
   const { score: contradictionScore, ratio: contradictionRatio } = computeContradictionSignal(items);
   const marketChange = topic.marketId && marketData
@@ -385,6 +446,7 @@ function computeTopicSentiment(
 
   const signals: TopicSignals = {
     sentimentScore,
+    severityScore,
     volumeScore,
     contradictionScore,
     contradictionRatio,
@@ -416,11 +478,13 @@ function computeTopicSentiment(
 
 /**
  * Compute a complete sentiment snapshot across all topics.
+ * Accepts optional AI scores (Claude-powered sentiment + severity per topic).
  */
 export function computeSentimentSnapshot(
   allItems: FeedItem[],
   marketData: MarketData | null,
   previousSnapshot: SentimentSnapshot | null,
+  aiScores?: Record<string, AITopicScore> | null,
 ): SentimentSnapshot {
   const previousScores = new Map<string, number>();
   if (previousSnapshot) {
@@ -435,6 +499,7 @@ export function computeSentimentSnapshot(
       allItems,
       marketData,
       previousScores.get(topic.slug) ?? null,
+      aiScores ?? null,
     ),
   );
 

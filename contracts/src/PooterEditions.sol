@@ -30,14 +30,17 @@ contract PooterEditions is Initializable, ERC721Upgradeable, OwnableUpgradeable,
     mapping(uint256 => Edition) public editions;
     string public baseTokenURI;
     uint256 public totalMinted;
+    address public minter; // V2: auction house or other authorized minter
 
     // ── Events ────────────────────────────────────────────────────────────
     event EditionMinted(uint256 indexed tokenId, address indexed minter, bytes32 contentHash, string dailyTitle);
     event BaseTokenURIUpdated(string newBaseTokenURI);
+    event MinterUpdated(address indexed newMinter);
 
     // ── Errors ────────────────────────────────────────────────────────────
     error EditionAlreadyMinted(uint256 editionNumber);
     error InvalidEditionNumber(uint256 editionNumber);
+    error NotMinterOrOwner();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -58,6 +61,20 @@ contract PooterEditions is Initializable, ERC721Upgradeable, OwnableUpgradeable,
     /// @param contentHash keccak256 of the editorial content for onchain verification
     /// @param dailyTitle The daily title (e.g. "THE GREAT UNWINDING")
     function mint(uint256 editionNumber, bytes32 contentHash, string calldata dailyTitle) external onlyOwner {
+        _mintEdition(msg.sender, editionNumber, contentHash, dailyTitle);
+    }
+
+    /// @notice Mint a daily edition to a specific address. Callable by owner or minter.
+    /// @param to The recipient of the minted token
+    /// @param editionNumber The edition number (days since epoch, starting at 1)
+    /// @param contentHash keccak256 of the editorial content for onchain verification
+    /// @param dailyTitle The daily title (e.g. "THE GREAT UNWINDING")
+    function mintFor(address to, uint256 editionNumber, bytes32 contentHash, string calldata dailyTitle) external {
+        if (msg.sender != owner() && msg.sender != minter) revert NotMinterOrOwner();
+        _mintEdition(to, editionNumber, contentHash, dailyTitle);
+    }
+
+    function _mintEdition(address to, uint256 editionNumber, bytes32 contentHash, string calldata dailyTitle) internal {
         if (editionNumber == 0) revert InvalidEditionNumber(editionNumber);
         if (_ownerOf(editionNumber) != address(0)) revert EditionAlreadyMinted(editionNumber);
 
@@ -69,10 +86,16 @@ contract PooterEditions is Initializable, ERC721Upgradeable, OwnableUpgradeable,
             dailyTitle: dailyTitle
         });
 
-        _mint(msg.sender, editionNumber);
+        _mint(to, editionNumber);
         totalMinted++;
 
-        emit EditionMinted(editionNumber, msg.sender, contentHash, dailyTitle);
+        emit EditionMinted(editionNumber, to, contentHash, dailyTitle);
+    }
+
+    /// @notice Set the authorized minter address (e.g. auction contract)
+    function setMinter(address _minter) external onlyOwner {
+        minter = _minter;
+        emit MinterUpdated(_minter);
     }
 
     // ── Views ─────────────────────────────────────────────────────────────
@@ -100,5 +123,5 @@ contract PooterEditions is Initializable, ERC721Upgradeable, OwnableUpgradeable,
         emit BaseTokenURIUpdated(_baseTokenURI);
     }
 
-    uint256[50] private __gap;
+    uint256[49] private __gap;
 }

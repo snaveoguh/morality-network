@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import {
-  buildTerminalSystemPrompt,
+  buildTerminalSystemPromptWithMemory,
   streamChat,
   hasTerminalLLM,
   type ChatMessage,
@@ -20,6 +20,7 @@ export const maxDuration = 30;
 interface ChatRequestBody {
   messages: ChatMessage[];
   context: TerminalTradingContext;
+  wallet?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { messages, context } = body;
+  const { messages, context, wallet } = body;
   if (!Array.isArray(messages) || messages.length === 0) {
     return Response.json({ error: "messages array required" }, { status: 400 });
   }
@@ -46,8 +47,8 @@ export async function POST(request: NextRequest) {
   // Trim to last 20 messages to keep context window reasonable
   const recentMessages = messages.slice(-20);
 
-  // Build system prompt with live trading context
-  const systemPrompt = buildTerminalSystemPrompt(context);
+  // Build system prompt with live trading context + persistent memory
+  const systemPrompt = await buildTerminalSystemPromptWithMemory(context, wallet);
 
   // Stream response
   const encoder = new TextEncoder();
