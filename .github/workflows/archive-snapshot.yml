@@ -3,7 +3,7 @@ name: Archive Snapshot
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 * * * *"
+    - cron: "17 8,20 * * *"
 
 permissions:
   contents: write
@@ -39,7 +39,7 @@ jobs:
         run: npm run editorial:generate
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          EDITORIAL_BATCH_SIZE: "20"
+          EDITORIAL_BATCH_SIZE: "5"
 
       - name: Commit if changed
         run: |
