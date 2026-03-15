@@ -1,7 +1,6 @@
 // ============================================================================
-// MUSIC CHANNELS — YouTube channel registry for discovery crawling
-// Uses free YouTube RSS feeds: youtube.com/feeds/videos.xml?channel_id=XXX
-// Follows the VIDEO_CHANNELS pattern from video.ts
+// MUSIC CHANNELS — YouTube channel registry (supplementary source)
+// Primary discovery now comes from YouTube search; channels add depth
 // ============================================================================
 
 export interface MusicChannel {
@@ -17,7 +16,7 @@ export const MUSIC_CHANNELS: MusicChannel[] = [
   {
     channelId: "UC3I2GFN_F8WudD_2jUZbojA", name: "KEXP",
     genres: ["indie-rock", "dream-pop", "shoegaze", "psych", "lo-fi", "post-punk"],
-    energy: 0.5, weight: 1.0,
+    energy: 0.5, weight: 0.9,
   },
   {
     channelId: "UC4eYXhJI4-7wSWc8UNRwD4A", name: "NPR Tiny Desk",
@@ -35,39 +34,122 @@ export const MUSIC_CHANNELS: MusicChannel[] = [
     energy: 0.5, weight: 0.9,
   },
   {
-    channelId: "UCkfVkC6V5Bt6cl2MhWIbJYA", name: "Sofar Sounds",
-    genres: ["singer-songwriter", "indie-folk", "acoustic", "lo-fi"],
-    energy: 0.3, weight: 0.8,
-  },
-  {
-    channelId: "UCN0HnzbZzSMJrtLZyWFT1Cg", name: "Mahogany Sessions",
-    genres: ["indie-folk", "dream-pop", "singer-songwriter", "acoustic"],
-    energy: 0.3, weight: 0.8,
-  },
-  {
     channelId: "UCg2eLTpmlyQd5Jgg8NXSXUQ", name: "La Blogotheque",
     genres: ["indie-folk", "anti-folk", "singer-songwriter", "indie-rock"],
     energy: 0.4, weight: 0.9,
   },
+  {
+    channelId: "UCmopeXHb16dHZHI6qRWWkXg", name: "hate5six",
+    genres: ["hardcore", "punk", "post-hardcore", "noise", "metal"],
+    energy: 0.9, weight: 0.9,
+  },
+  {
+    channelId: "UCPKT_csvP72boVX0XrMtagQ", name: "Cercle",
+    genres: ["electronic", "house", "techno", "ambient", "melodic-techno"],
+    energy: 0.6, weight: 0.9,
+  },
 
-  // ── Underground Hip-Hop / Rap ─────────────────────────────────────
+  // ── Labels — Underground Hip-Hop ───────────────────────────────────
   {
     channelId: "UCIcZaLBXZqONLCF-KP14wMQ", name: "Stones Throw",
     genres: ["hip-hop", "boom-bap", "beat-music", "lo-fi-hip-hop", "abstract-hip-hop"],
     energy: 0.5, weight: 1.0,
   },
   {
-    channelId: "UCQdSuoNJmm4WJwBN8vGijIg", name: "Mass Appeal",
-    genres: ["hip-hop", "underground-rap", "east-coast"],
-    energy: 0.6, weight: 0.8,
+    channelId: "UCHVbuwA78fcrsESJtKGz7dg", name: "Rhymesayers",
+    genres: ["hip-hop", "underground-rap", "boom-bap", "abstract-hip-hop"],
+    energy: 0.6, weight: 0.9,
   },
   {
     channelId: "UCX9_zt1SmHRqYs8aYUsME0Q", name: "Griselda",
     genres: ["hip-hop", "boom-bap", "underground-rap", "street-rap"],
     energy: 0.6, weight: 0.8,
   },
+  {
+    channelId: "UC8-eGFkqfIPGuiZJkckcmWA", name: "Daupe Media",
+    genres: ["hip-hop", "boom-bap", "underground-rap"],
+    energy: 0.6, weight: 0.8,
+  },
 
-  // ── Electronic / Trip-Hop / Ambient ───────────────────────────────
+  // ── Labels — Electronic / Trip-Hop / Bass ──────────────────────────
+  {
+    channelId: "UCEXRv_qihRwjsV91ftx23-A", name: "Ninja Tune",
+    genres: ["electronic", "trip-hop", "downtempo", "beats", "ambient"],
+    energy: 0.5, weight: 1.0,
+  },
+  {
+    channelId: "UC4hfA78X-lqiRERBZLTnLBw", name: "Warp Records",
+    genres: ["electronic", "idm", "experimental", "ambient", "glitch"],
+    energy: 0.5, weight: 1.0,
+  },
+  {
+    channelId: "UCNvfjGiZOuh78KYMojvugeQ", name: "Hyperdub",
+    genres: ["dubstep", "bass", "grime", "electronic", "experimental"],
+    energy: 0.6, weight: 0.9,
+  },
+  {
+    channelId: "UCbsFurRq_C5wlCFnVRYuYNQ", name: "Ghostly International",
+    genres: ["electronic", "ambient", "synth", "indie-electronic"],
+    energy: 0.4, weight: 0.8,
+  },
+
+  // ── Labels — Dream Pop / Indie / Shoegaze ──────────────────────────
+  {
+    channelId: "UC-T3JrzHtDeHAmspt1Zn40A", name: "4AD",
+    genres: ["dream-pop", "shoegaze", "indie-rock", "post-punk", "ethereal"],
+    energy: 0.4, weight: 1.0,
+  },
+  {
+    channelId: "UCsgEkEWaXKQwrhlLHFbcQFw", name: "Sub Pop",
+    genres: ["indie-rock", "grunge", "lo-fi", "garage", "post-punk"],
+    energy: 0.6, weight: 0.9,
+  },
+  {
+    channelId: "UCHMhI80M9RqcGSCy2kDpjUg", name: "Mexican Summer",
+    genres: ["psych", "dream-pop", "lo-fi", "experimental", "indie"],
+    energy: 0.4, weight: 0.8,
+  },
+  {
+    channelId: "UC6Rl1uJ-KEC8VJ94l1QYvBg", name: "Matador",
+    genres: ["indie-rock", "post-punk", "noise-pop", "experimental"],
+    energy: 0.5, weight: 0.9,
+  },
+  {
+    channelId: "UCe67UQodvQ57t2FWUHiI7Dw", name: "Jagjaguwar",
+    genres: ["indie-rock", "folk", "experimental", "dream-pop"],
+    energy: 0.4, weight: 0.8,
+  },
+
+  // ── Labels — Beats / Future / Jazz ─────────────────────────────────
+  {
+    channelId: "UCkA1oWaPYqdakWDDIvQDzZA", name: "Brainfeeder",
+    genres: ["beat-music", "jazz", "electronic", "experimental", "hip-hop"],
+    energy: 0.5, weight: 1.0,
+  },
+  {
+    channelId: "UCQmEioliO9mSfg3VpcMjPoQ", name: "Soulection",
+    genres: ["future-beats", "r-and-b", "hip-hop", "electronic"],
+    energy: 0.5, weight: 0.9,
+  },
+  {
+    channelId: "UC-dbAMT_ZkZlByJge49qlfA", name: "Brownswood",
+    genres: ["jazz", "soul", "world", "beats", "broken-beat"],
+    energy: 0.4, weight: 0.9,
+  },
+  {
+    channelId: "UCRgpJtOZHJwxfDxsde1f-ag", name: "Numero Group",
+    genres: ["reissue", "funk", "soul", "psych", "obscure"],
+    energy: 0.4, weight: 0.9,
+  },
+
+  // ── Cloud Rap / Drain / Hyperpop ──────────────────────────────────
+  {
+    channelId: "UCmPC09McQVZBpbPDa-vRiZg", name: "YEAR0001",
+    genres: ["cloud-rap", "drain-gang", "hyperpop", "experimental-rap"],
+    energy: 0.5, weight: 0.9,
+  },
+
+  // ── Radio / DJ ────────────────────────────────────────────────────
   {
     channelId: "UCGBpxWJr9FNOcFYA5GkKrMg", name: "Boiler Room",
     genres: ["electronic", "techno", "house", "ambient", "dj-set"],
@@ -83,55 +165,22 @@ export const MUSIC_CHANNELS: MusicChannel[] = [
     genres: ["electronic", "ambient", "dj-set", "experimental"],
     energy: 0.5, weight: 0.8,
   },
-  {
-    channelId: "UCOxqgCwgOqC2lMqC5PYz_Dg", name: "Majestic Casual",
-    genres: ["electronic", "chillwave", "trip-hop", "lo-fi-house"],
-    energy: 0.4, weight: 0.7,
-  },
 
-  // ── Cloud Rap / Drain / Hyperpop ──────────────────────────────────
+  // ── Misc Labels ───────────────────────────────────────────────────
   {
-    channelId: "UCmPC09McQVZBpbPDa-vRiZg", name: "YEAR0001",
-    genres: ["cloud-rap", "drain-gang", "hyperpop", "experimental-rap"],
-    energy: 0.5, weight: 0.9,
+    channelId: "UC24F0SkDGYkmJ1RJvodicXQ", name: "DFA Records",
+    genres: ["dance-punk", "electronic", "post-punk", "disco"],
+    energy: 0.7, weight: 0.8,
   },
   {
-    channelId: "UC9Oe3tiNr7q8F39VDa9oWSQ", name: "Lyrical Lemonade",
-    genres: ["hip-hop", "cloud-rap", "trap", "drill"],
-    energy: 0.7, weight: 0.7,
-  },
-
-  // ── Indie / Dream Pop / Shoegaze ──────────────────────────────────
-  {
-    channelId: "UCXQ4BUGS07TQDOg_DmEG93w", name: "Pitchfork",
-    genres: ["indie-rock", "dream-pop", "shoegaze", "experimental", "hip-hop"],
-    energy: 0.5, weight: 0.7,
-  },
-
-  // ── Production / Beat-Making ──────────────────────────────────────
-  {
-    channelId: "UCJ0-OtVpF0wOKEqT2Z1HEtA", name: "Fact Magazine",
-    genres: ["electronic", "beat-music", "production", "experimental"],
-    energy: 0.6, weight: 0.8,
-  },
-
-  // ── Jazz / Soul / Funk ────────────────────────────────────────────
-  {
-    channelId: "UCCzhl768IcEn7VCx4ECJAyA", name: "Jazz Cafe",
-    genres: ["jazz", "neo-soul", "funk", "r-and-b"],
-    energy: 0.4, weight: 0.7,
-  },
-
-  // ── Misc / Eclectic ───────────────────────────────────────────────
-  {
-    channelId: "UCKmfHa0SgkbHO3UB41O2Mug", name: "Genius",
-    genres: ["hip-hop", "pop", "r-and-b", "production"],
-    energy: 0.6, weight: 0.5,
+    channelId: "UCr7iv49zibCciRCzlFauotQ", name: "Rough Trade",
+    genres: ["indie-rock", "post-punk", "alternative"],
+    energy: 0.5, weight: 0.8,
   },
   {
-    channelId: "UCdI8evszfZvyAi2YJFrx8cA", name: "Song Exploder",
-    genres: ["indie", "production", "songwriting"],
-    energy: 0.3, weight: 0.6,
+    channelId: "UC7ySGm6ZrkBJkUlXnOZOakQ", name: "On The Corner",
+    genres: ["jazz", "world", "experimental", "afrobeat"],
+    energy: 0.5, weight: 0.8,
   },
 ];
 

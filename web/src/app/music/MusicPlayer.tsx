@@ -1,139 +1,109 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import type { DiscoveryTrack, DiscoveryResponse } from "@/lib/music-types";
 import {
-  UNDERGROUND_PLAYLIST,
-  getDailyTrack,
-  CATEGORY_LABELS,
-  type YouTubeTrack,
-  type Category,
-} from "@/lib/music";
-import type { DiscoveryTrack } from "@/lib/music-types";
-import {
+  getTasteProfile,
   recordSignal,
   getSignalForTrack,
 } from "@/lib/music-taste";
-import { DiscoveryFeed } from "./DiscoveryFeed";
 
 // ============================================================================
-// MusicPlayer — YouTube underground playlist with taste engine
+// MusicPlayer — Discovery-first. Auto-loads. No static playlist.
+// YouTube search + channel RSS + taste engine. Shuffle for more.
 // ============================================================================
-
-type ActiveTrack = {
-  videoId: string;
-  title: string;
-  artist: string;
-  duration: string;
-  genres: string[];
-  trackId: string;
-};
-
-function curatedToActive(t: YouTubeTrack): ActiveTrack {
-  return {
-    videoId: t.videoId,
-    title: t.title,
-    artist: t.artist,
-    duration: t.duration,
-    genres: t.genres || [],
-    trackId: t.videoId,
-  };
-}
-
-function discoveredToActive(t: DiscoveryTrack): ActiveTrack {
-  return {
-    videoId: t.videoId,
-    title: t.title,
-    artist: t.artist,
-    duration: t.duration,
-    genres: t.genres,
-    trackId: t.id,
-  };
-}
 
 export function MusicPlayer() {
-  const dailyTrack = useMemo(() => getDailyTrack(), []);
-  const [activeTrack, setActiveTrack] = useState<ActiveTrack>(
-    curatedToActive(dailyTrack),
-  );
-  const [category, setCategory] = useState<Category>("all");
-  const [showAll, setShowAll] = useState(false);
-  const playerRef = useRef<HTMLDivElement>(null);
+  const [tracks, setTracks] = useState<DiscoveryTrack[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTrack, setActiveTrack] = useState<DiscoveryTrack | null>(null);
+  const [seenIds, setSeenIds] = useState<string[]>([]);
   const [likeState, setLikeState] = useState<"like" | "dislike" | null>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
 
+  // Auto-fetch on mount
   useEffect(() => {
-    setLikeState(getSignalForTrack(activeTrack.trackId));
-  }, [activeTrack.trackId]);
+    dig();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const shuffled = useMemo(() => {
-    const now = new Date();
-    const seed =
-      now.getUTCFullYear() * 1000 +
-      now.getUTCMonth() * 31 +
-      now.getUTCDate();
-    const arr = [...UNDERGROUND_PLAYLIST];
-    let s = seed;
-    for (let i = arr.length - 1; i > 0; i--) {
-      s = (s * 1103515245 + 12345) & 0x7fffffff;
-      const j = s % (i + 1);
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+  // Track like state per active track
+  useEffect(() => {
+    if (activeTrack) {
+      setLikeState(getSignalForTrack(activeTrack.id));
     }
-    return arr;
-  }, []);
+  }, [activeTrack?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filtered = useMemo(() => {
-    if (category === "all") return shuffled;
-    return shuffled.filter((t) => t.category === category);
-  }, [shuffled, category]);
+  const dig = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const profile = getTasteProfile();
+      const res = await fetch("/api/music/discover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vectors: profile.vectors,
+          seedGenres: profile.seedGenres,
+          seedArtists: profile.seedArtists,
+          excludeIds: seenIds,
+          limit: 20,
+          mode: "explore",
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-  const displayList = showAll ? filtered : filtered.slice(0, 20);
+      const data = (await res.json()) as DiscoveryResponse;
+      const playable = data.tracks.filter((t) => t.videoId);
+      setTracks(playable);
 
-  const handleTrackClick = useCallback((track: YouTubeTrack) => {
-    const active = curatedToActive(track);
-    setActiveTrack(active);
+      if (playable.length > 0) {
+        setActiveTrack(playable[0]);
+        recordSignal({
+          trackId: playable[0].id,
+          artist: playable[0].artist,
+          genres: playable[0].genres,
+          action: "play",
+        });
+      }
+
+      setSeenIds((prev) => [...prev, ...playable.map((t) => t.id)]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Discovery failed");
+    } finally {
+      setLoading(false);
+    }
+  }, [seenIds]);
+
+  const handlePlay = useCallback((track: DiscoveryTrack) => {
+    setActiveTrack(track);
     recordSignal({
-      trackId: active.trackId,
-      artist: active.artist,
-      genres: active.genres,
-      action: "play",
-    });
-    playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
-  const handleDiscoveryPlay = useCallback((track: DiscoveryTrack) => {
-    const active = discoveredToActive(track);
-    setActiveTrack(active);
-    recordSignal({
-      trackId: active.trackId,
-      artist: active.artist,
-      genres: active.genres,
+      trackId: track.id,
+      artist: track.artist,
+      genres: track.genres,
       action: "play",
     });
     playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
   const playNext = useCallback(() => {
-    const idx = filtered.findIndex((t) => t.videoId === activeTrack.videoId);
-    if (idx === -1) {
-      setActiveTrack(curatedToActive(filtered[0]));
-      return;
-    }
-    const next = filtered[(idx + 1) % filtered.length];
-    setActiveTrack(curatedToActive(next));
-  }, [filtered, activeTrack]);
+    if (!activeTrack || tracks.length === 0) return;
+    const idx = tracks.findIndex((t) => t.id === activeTrack.id);
+    const next = tracks[(idx + 1) % tracks.length];
+    handlePlay(next);
+  }, [tracks, activeTrack, handlePlay]);
 
   const playPrev = useCallback(() => {
-    const idx = filtered.findIndex((t) => t.videoId === activeTrack.videoId);
-    if (idx === -1) {
-      setActiveTrack(curatedToActive(filtered[0]));
-      return;
-    }
-    const prev = filtered[(idx - 1 + filtered.length) % filtered.length];
-    setActiveTrack(curatedToActive(prev));
-  }, [filtered, activeTrack]);
+    if (!activeTrack || tracks.length === 0) return;
+    const idx = tracks.findIndex((t) => t.id === activeTrack.id);
+    const prev = tracks[(idx - 1 + tracks.length) % tracks.length];
+    handlePlay(prev);
+  }, [tracks, activeTrack, handlePlay]);
 
   const handleLike = useCallback(() => {
+    if (!activeTrack) return;
     recordSignal({
-      trackId: activeTrack.trackId,
+      trackId: activeTrack.id,
       artist: activeTrack.artist,
       genres: activeTrack.genres,
       action: "like",
@@ -142,165 +112,231 @@ export function MusicPlayer() {
   }, [activeTrack]);
 
   const handleDislike = useCallback(() => {
+    if (!activeTrack) return;
     recordSignal({
-      trackId: activeTrack.trackId,
+      trackId: activeTrack.id,
       artist: activeTrack.artist,
       genres: activeTrack.genres,
       action: "dislike",
     });
     setLikeState("dislike");
-  }, [activeTrack]);
+    // Skip to next
+    playNext();
+  }, [activeTrack, playNext]);
+
+  const handleTrackLike = useCallback((track: DiscoveryTrack) => {
+    recordSignal({
+      trackId: track.id,
+      artist: track.artist,
+      genres: track.genres,
+      action: "like",
+    });
+    setTracks((prev) => [...prev]); // re-render for button state
+  }, []);
+
+  const handleTrackDislike = useCallback((track: DiscoveryTrack) => {
+    recordSignal({
+      trackId: track.id,
+      artist: track.artist,
+      genres: track.genres,
+      action: "dislike",
+    });
+    setTracks((prev) => prev.filter((t) => t.id !== track.id));
+  }, []);
+
+  // ── Loading skeleton ──────────────────────────────────────────────────
+  if (loading && tracks.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="h-4 w-24 animate-pulse bg-[var(--rule-light)]" />
+        <div className="aspect-video w-full animate-pulse bg-[var(--rule-light)]" />
+        <div className="space-y-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-12 animate-pulse bg-[var(--rule-light)]" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Error state ───────────────────────────────────────────────────────
+  if (error && tracks.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <p className="mb-4 font-mono text-[10px] text-[var(--accent-red)]">
+          {error}
+        </p>
+        <button
+          type="button"
+          onClick={dig}
+          className="border border-[var(--rule)] px-6 py-2 font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* ── Video Player ─────────────────────────────────────────────── */}
-      <section ref={playerRef} className="mb-6">
-        <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
-          Now Playing
-        </h2>
-        <div
-          className="relative w-full overflow-hidden border border-[var(--rule-light)] bg-black"
-          style={{ paddingBottom: "56.25%" /* 16:9 */ }}
-        >
-          <iframe
-            className="absolute inset-0 h-full w-full"
-            src={`https://www.youtube.com/embed/${activeTrack.videoId}?rel=0&modestbranding=1&color=white`}
-            title={`${activeTrack.artist} — ${activeTrack.title}`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            loading="eager"
-          />
-        </div>
-
-        {/* Track info + controls */}
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-headline-serif text-sm font-bold text-[var(--ink)]">
-              {activeTrack.artist} &mdash; {activeTrack.title}
-            </p>
-            <p className="font-mono text-[9px] text-[var(--ink-faint)]">
-              {activeTrack.duration}
-              {activeTrack.videoId === dailyTrack.videoId && (
-                <span className="ml-2 border border-[var(--rule)] px-1 py-0.5 uppercase tracking-wider">
-                  Today&apos;s Pick
-                </span>
-              )}
-            </p>
+      {/* ── Player ──────────────────────────────────────────────────── */}
+      {activeTrack && (
+        <section ref={playerRef} className="mb-6">
+          <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
+            Now Playing
+          </h2>
+          <div
+            className="relative w-full overflow-hidden border border-[var(--rule-light)] bg-black"
+            style={{ paddingBottom: "56.25%" }}
+          >
+            <iframe
+              className="absolute inset-0 h-full w-full"
+              src={`https://www.youtube.com/embed/${activeTrack.videoId}?rel=0&modestbranding=1&color=white&autoplay=1`}
+              title={`${activeTrack.artist} — ${activeTrack.title}`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              loading="eager"
+            />
           </div>
 
-          <div className="flex shrink-0 items-center gap-0.5">
-            <button
-              type="button"
-              onClick={handleLike}
-              className={`px-2 py-1 font-mono text-[10px] transition-colors ${
-                likeState === "like"
-                  ? "font-bold text-[var(--ink)]"
-                  : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
-              }`}
-              aria-label="Like this track"
-            >
-              +1
-            </button>
-            <button
-              type="button"
-              onClick={handleDislike}
-              className={`px-2 py-1 font-mono text-[10px] transition-colors ${
-                likeState === "dislike"
-                  ? "font-bold text-[var(--accent-red)]"
-                  : "text-[var(--ink-faint)] hover:text-[var(--accent-red)]"
-              }`}
-              aria-label="Dislike this track"
-            >
-              -1
-            </button>
-            <span className="mx-1 text-[var(--rule)]">|</span>
-            <button
-              type="button"
-              onClick={playPrev}
-              className="px-2 py-1 font-mono text-[10px] text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
-              aria-label="Previous track"
-            >
-              &laquo; Prev
-            </button>
-            <button
-              type="button"
-              onClick={playNext}
-              className="px-2 py-1 font-mono text-[10px] text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
-              aria-label="Next track"
-            >
-              Next &raquo;
-            </button>
-          </div>
-        </div>
+          {/* Track info + controls */}
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-headline-serif text-sm font-bold text-[var(--ink)]">
+                {activeTrack.artist} &mdash; {activeTrack.title}
+              </p>
+              <p className="font-mono text-[9px] text-[var(--ink-faint)]">
+                {activeTrack.duration !== "unknown" && (
+                  <span>{activeTrack.duration}</span>
+                )}
+                {activeTrack.channel && (
+                  <span className={activeTrack.duration !== "unknown" ? "ml-2" : ""}>
+                    via {activeTrack.channel}
+                  </span>
+                )}
+              </p>
+            </div>
 
-        {/* Genre pills */}
-        {activeTrack.genres.length > 0 && (
-          <div className="mt-1.5 flex flex-wrap gap-1">
-            {activeTrack.genres.map((g) => (
-              <span
-                key={g}
-                className="border border-[var(--rule-light)] px-1.5 py-0.5 font-mono text-[7px] uppercase tracking-wider text-[var(--ink-faint)]"
+            <div className="flex shrink-0 items-center gap-0.5">
+              <button
+                type="button"
+                onClick={handleLike}
+                className={`px-2 py-1 font-mono text-[10px] transition-colors ${
+                  likeState === "like"
+                    ? "font-bold text-[var(--ink)]"
+                    : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+                }`}
+                aria-label="Like this track"
               >
-                {g}
-              </span>
-            ))}
+                +1
+              </button>
+              <button
+                type="button"
+                onClick={handleDislike}
+                className={`px-2 py-1 font-mono text-[10px] transition-colors ${
+                  likeState === "dislike"
+                    ? "font-bold text-[var(--accent-red)]"
+                    : "text-[var(--ink-faint)] hover:text-[var(--accent-red)]"
+                }`}
+                aria-label="Dislike this track"
+              >
+                -1
+              </button>
+              <span className="mx-1 text-[var(--rule)]">|</span>
+              <button
+                type="button"
+                onClick={playPrev}
+                className="px-2 py-1 font-mono text-[10px] text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
+                aria-label="Previous track"
+              >
+                &laquo; Prev
+              </button>
+              <button
+                type="button"
+                onClick={playNext}
+                className="px-2 py-1 font-mono text-[10px] text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
+                aria-label="Next track"
+              >
+                Next &raquo;
+              </button>
+            </div>
           </div>
-        )}
-      </section>
 
-      {/* ── Category Tabs ────────────────────────────────────────────── */}
-      <nav className="mb-4 flex flex-wrap gap-1 border-b border-[var(--rule-light)] pb-3">
-        {(Object.keys(CATEGORY_LABELS) as Category[]).map((cat) => {
-          const count =
-            cat === "all"
-              ? UNDERGROUND_PLAYLIST.length
-              : UNDERGROUND_PLAYLIST.filter((t) => t.category === cat).length;
-          if (count === 0 && cat !== "all") return null;
-          return (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => {
-                setCategory(cat);
-                setShowAll(false);
-              }}
-              className={`px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.14em] transition-colors ${
-                category === cat
-                  ? "bg-[var(--ink)] text-[var(--paper)] font-bold"
-                  : "text-[var(--ink-faint)] hover:text-[var(--ink)] hover:bg-[var(--rule-light)]"
-              }`}
-            >
-              {CATEGORY_LABELS[cat]}
-              <span className="ml-1 opacity-60">{count}</span>
-            </button>
-          );
-        })}
-      </nav>
+          {/* Genre pills */}
+          {activeTrack.genres.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {activeTrack.genres.slice(0, 5).map((g) => (
+                <span
+                  key={g}
+                  className="border border-[var(--rule-light)] px-1.5 py-0.5 font-mono text-[7px] uppercase tracking-wider text-[var(--ink-faint)]"
+                >
+                  {g}
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
-      {/* ── Curated Track List ───────────────────────────────────────── */}
-      <section>
+      {/* ── Shuffle Button ──────────────────────────────────────────── */}
+      <button
+        type="button"
+        onClick={dig}
+        disabled={loading}
+        className="mb-4 w-full border border-[var(--rule)] py-2.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--ink-faint)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)] disabled:opacity-40"
+      >
+        {loading ? "Digging..." : "Shuffle"}
+      </button>
+
+      {/* ── Track List ──────────────────────────────────────────────── */}
+      {tracks.length > 0 && (
         <div className="divide-y divide-[var(--rule-light)] border border-[var(--rule-light)]">
-          {displayList.map((track, i) => {
-            const isActive = track.videoId === activeTrack.videoId;
-            const isDaily = track.videoId === dailyTrack.videoId;
+          {tracks.map((track, i) => {
+            const isActive = activeTrack?.id === track.id;
+            const signal = getSignalForTrack(track.id);
 
             return (
-              <button
-                key={track.videoId}
-                type="button"
-                onClick={() => handleTrackClick(track)}
-                className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--rule-light)] ${
+              <div
+                key={track.id}
+                className={`flex items-center gap-2 px-3 py-2.5 transition-colors ${
                   isActive ? "bg-[var(--rule-light)]" : ""
                 }`}
               >
-                <span className="w-6 font-mono text-[9px] text-[var(--ink-faint)]">
+                {/* Track number */}
+                <span className="w-5 shrink-0 font-mono text-[9px] text-[var(--ink-faint)]">
                   {isActive ? (
                     <span className="text-[var(--accent-red)]">&#9654;</span>
                   ) : (
                     String(i + 1).padStart(2, "0")
                   )}
                 </span>
-                <span className="min-w-0 flex-1">
+
+                {/* Thumbnail */}
+                {track.thumbnail && (
+                  <button
+                    type="button"
+                    onClick={() => handlePlay(track)}
+                    className="shrink-0 overflow-hidden border border-[var(--rule-light)]"
+                    aria-label={`Play ${track.artist} — ${track.title}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={track.thumbnail}
+                      alt=""
+                      width={64}
+                      height={36}
+                      className="h-9 w-16 object-cover"
+                      loading="lazy"
+                    />
+                  </button>
+                )}
+
+                {/* Track info */}
+                <button
+                  type="button"
+                  onClick={() => handlePlay(track)}
+                  className="min-w-0 flex-1 text-left"
+                >
                   <span
                     className={`block truncate font-headline-serif text-sm ${
                       isActive
@@ -312,43 +348,64 @@ export function MusicPlayer() {
                   </span>
                   <span className="block truncate font-mono text-[9px] text-[var(--ink-faint)]">
                     {track.artist}
+                    {track.channel && track.channel !== track.artist && (
+                      <span className="ml-1.5 opacity-60">
+                        via {track.channel}
+                      </span>
+                    )}
                   </span>
-                </span>
-                <span className="shrink-0 font-mono text-[8px] text-[var(--ink-faint)]">
-                  {track.duration}
-                </span>
-                {isDaily && (
-                  <span className="shrink-0 border border-[var(--rule)] px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-                    Today
-                  </span>
-                )}
-              </button>
+                </button>
+
+                {/* Genre pills */}
+                <div className="hidden shrink-0 gap-1 sm:flex">
+                  {track.genres.slice(0, 2).map((g) => (
+                    <span
+                      key={g}
+                      className="border border-[var(--rule-light)] px-1 py-0.5 font-mono text-[7px] uppercase tracking-wider text-[var(--ink-faint)]"
+                    >
+                      {g}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Like / Dislike */}
+                <div className="flex shrink-0 items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => handleTrackLike(track)}
+                    className={`px-1.5 py-1 font-mono text-[10px] transition-colors ${
+                      signal === "like"
+                        ? "font-bold text-[var(--ink)]"
+                        : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+                    }`}
+                    aria-label="Like"
+                  >
+                    +
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTrackDislike(track)}
+                    className={`px-1.5 py-1 font-mono text-[10px] transition-colors ${
+                      signal === "dislike"
+                        ? "font-bold text-[var(--accent-red)]"
+                        : "text-[var(--ink-faint)] hover:text-[var(--accent-red)]"
+                    }`}
+                    aria-label="Dislike"
+                  >
+                    &minus;
+                  </button>
+                </div>
+              </div>
             );
           })}
         </div>
+      )}
 
-        {!showAll && filtered.length > 20 && (
-          <button
-            type="button"
-            onClick={() => setShowAll(true)}
-            className="mt-4 w-full border border-[var(--rule-light)] py-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:border-[var(--rule)] hover:text-[var(--ink)]"
-          >
-            Show all {filtered.length} tracks
-          </button>
-        )}
-
-        {filtered.length === 0 && (
-          <p className="py-8 text-center font-mono text-[10px] text-[var(--ink-faint)]">
-            No tracks in this category yet.
-          </p>
-        )}
-      </section>
-
-      {/* ── Discovery Feed ───────────────────────────────────────────── */}
-      <DiscoveryFeed
-        onPlayTrack={handleDiscoveryPlay}
-        activeVideoId={activeTrack.videoId}
-      />
+      {!loading && tracks.length === 0 && (
+        <p className="py-8 text-center font-mono text-[10px] text-[var(--ink-faint)]">
+          No tracks found. Hit shuffle.
+        </p>
+      )}
     </div>
   );
 }

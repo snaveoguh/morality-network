@@ -25,6 +25,7 @@ export interface DiscoveryTrack {
 
 export type DiscoverySource =
   | "youtube-rss"
+  | "youtube-search"
   | "lastfm"
   | "curated"
   | "ai-recommended";
