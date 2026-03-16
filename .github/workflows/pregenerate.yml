@@ -1,0 +1,29 @@
+name: Pre-generate Editorials
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 30 minutes — generates 3 articles in parallel per run
+    - cron: "*/30 * * * *"
+
+jobs:
+  pregenerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Trigger pre-generation
+        run: |
+          response=$(curl -s -w "\n%{http_code}" \
+            -X GET \
+            "https://pooter.world/api/editorial/pregenerate")
+
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Status: $http_code"
+          echo "$body" | jq . 2>/dev/null || echo "$body"
+
+          if [ "$http_code" -ge 400 ]; then
+            echo "::warning::Pre-generation returned HTTP $http_code"
+          fi
