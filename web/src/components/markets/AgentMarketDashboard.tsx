@@ -193,6 +193,23 @@ function shortHex(value: string): string {
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
 
+/** Well-known token addresses → human-readable symbols (lowercased keys). */
+const KNOWN_TOKENS: Record<string, string> = {
+  "0x4200000000000000000000000000000000000006": "WETH",
+  "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "USDC",
+  "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca": "USDbC",
+  "0x50c5725949a6f0c72e6c4a641f24049a917db0cb": "DAI",
+  "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22": "cbETH",
+  "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452": "wstETH",
+  "0x8729c70061739140ee6be00a3875cbf6d09a746c": "MO",
+  "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "WETH",
+  "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "USDC",
+  "0xdac17f958d2ee523a2206206994597c13d831ec7": "USDT",
+  "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599": "WBTC",
+  "0x6982508145454ce325ddbe47a25d4ec3d2311933": "PEPE",
+  "0xaaee1a9723aadb7afa2810263653a34ba2c21c7a": "MOG",
+};
+
 function fundingChainIdForVenue(
   venue: "base-spot" | "ethereum-spot" | "hyperliquid-perp"
 ): number {
@@ -214,7 +231,7 @@ function chainLabel(chainId: number): string {
 
 function symbolForPosition(position: Position): string {
   if (position.marketSymbol) return position.marketSymbol;
-  return shortHex(position.tokenAddress);
+  return KNOWN_TOKENS[position.tokenAddress.toLowerCase()] ?? shortHex(position.tokenAddress);
 }
 
 function pnlClass(value: number | null | undefined): string {
@@ -1090,7 +1107,7 @@ export function AgentMarketDashboard() {
             realizedPnlUsd: data.totals.realizedPnlUsd,
             deployedUsd: data.totals.deployedUsd,
             positions: data.open.map((o) => ({
-              symbol: o.position.marketSymbol ?? o.position.tokenAddress.slice(0, 10),
+              symbol: o.position.marketSymbol ?? KNOWN_TOKENS[o.position.tokenAddress.toLowerCase()] ?? shortHex(o.position.tokenAddress),
               entryPrice: o.position.entryPriceUsd,
               currentPrice: o.currentPriceUsd,
               unrealizedPnl: o.unrealizedPnlUsd,
