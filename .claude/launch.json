@@ -1,0 +1,48 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "noun-wtf",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/hugo/noun-wtf/packages/nouns-webapp && pnpm dev"],
+      "port": 5173
+    },
+    {
+      "name": "portfolio",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/hugo/portfolio && npm run dev -- -p 3001"],
+      "port": 3001
+    },
+    {
+      "name": "pooter-web",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/hugo/Downloads/morality.network-master/v2/web && npm run dev -- -p 3002"],
+      "port": 3002
+    },
+    {
+      "name": "nouns-api",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/hugo/noun-wtf/packages/nouns-api && pnpm dev"],
+      "port": 42069,
+      "autoPort": true
+    },
+    {
+      "name": "pooter-legacy",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/hugo/Downloads/morality.network-master/web && npx next dev -p 3003"],
+      "port": 3003
+    },
+    {
+      "name": "comic-nouns",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8090", "--directory", "/Users/hugo/Downloads/morality.network-master/comic-nouns"],
+      "port": 8090
+    },
+    {
+      "name": "agent-hub",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/hugo/agent-hub && npx tsx watch --env-file=.env src/index.ts"],
+      "port": 3100
+    }
+  ]
+}

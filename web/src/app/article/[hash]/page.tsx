@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { fetchAllFeeds, type FeedItem } from "@/lib/rss";
 import { computeEntityHash } from "@/lib/entity";
 import {
@@ -11,7 +12,6 @@ import { ArticleTemplate } from "@/components/article/ArticleTemplate";
 import { CommentThread } from "@/components/entity/CommentThread";
 import {
   getArchivedFeedItemByHash,
-  getAllArchivedFeedItems,
   getAllArchivedItemsWithHashes,
   autoArchiveItem,
   archiveUrlAsFeedItem,
@@ -39,6 +39,30 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
   ]);
 }
 
+/**
+ * Memoized article lookup — shared between generateMetadata and ArticlePage
+ * so both always resolve the same item for a given hash within a single request.
+ * Archive-first: the archive is the source of truth for persisted stories.
+ */
+const lookupArticle = cache(async (hash: string): Promise<FeedItem | null> => {
+  // 1. Archive is the source of truth — check first (fast, stable)
+  const archived = await getArchivedFeedItemByHash(hash as `0x${string}`);
+  if (archived) return archived;
+
+  // 2. Fall back to live RSS feeds
+  const allItems = await withTimeout(fetchAllFeeds(), 15000, []);
+  const live = allItems.find(
+    (item) => computeEntityHash(item.link) === hash,
+  );
+  if (live) {
+    autoArchiveItem(live).catch(() => {});
+    return live;
+  }
+
+  // 3. Try onchain registry recovery
+  return recoverPrimaryFromRegistry(hash as `0x${string}`);
+});
+
 interface ArticlePageProps {
   params: Promise<{ hash: string }>;
 }
@@ -49,25 +73,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  const allItems = await withTimeout(fetchAllFeeds(), 15000, []);
-
-  // Find the article matching this hash
-  const livePrimary = allItems.find(
-    (item) => computeEntityHash(item.link) === hash
-  );
-  const archivedPrimary = livePrimary
-    ? null
-    : await getArchivedFeedItemByHash(hash as `0x${string}`);
-  const recoveredPrimary =
-    livePrimary || archivedPrimary
-      ? null
-      : await recoverPrimaryFromRegistry(hash as `0x${string}`);
-  const primary = livePrimary ?? archivedPrimary ?? recoveredPrimary;
-
-  // Auto-archive the item so it survives RSS rotation
-  if (primary) {
-    autoArchiveItem(primary).catch(() => {});
-  }
+  const primary = await lookupArticle(hash);
 
   if (!primary) {
     // Check if we have a previously generated editorial in the deep archive
@@ -163,33 +169,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     );
   }
 
-  // Expand search pool with archived items for better context matching
-  const archivedItems = await withTimeout(getAllArchivedFeedItems(), 5000, []);
-
-  // Merge live + archive, dedup by link to avoid double-counting
-  const seenLinks = new Set(allItems.map((i) => i.link));
-  const combinedPool = [...allItems];
-  for (const archived of archivedItems) {
-    if (archived.link && !seenLinks.has(archived.link)) {
-      combinedPool.push(archived);
-      seenLinks.add(archived.link);
-    }
-  }
-
-  // Find related articles from the expanded pool
-  const related = findRelatedArticles(primary, combinedPool, 5);
-
-  // Find archived items related to this story (with hashes for linking)
+  // Find related articles from the archive pool (stable, no live RSS dependency)
   const archivedWithHashes = await withTimeout(getAllArchivedItemsWithHashes(), 5000, []);
+  const related = findRelatedArticles(primary, archivedWithHashes, 5);
   const archivedRelated = findRelatedArticles(
     primary,
     archivedWithHashes,
     8,
   ).map((item) => {
-    // Re-attach the hash from the original archived set
     const match = archivedWithHashes.find((a) => a.link === item.link);
     return { ...item, hash: match?.hash ?? "" };
-  }).filter((item) => item.hash); // only items with valid hashes
+  }).filter((item) => item.hash);
 
   // Generate editorial content — 30s timeout, falls back to raw feed data
   let article;
@@ -334,18 +324,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     return { title: "Article Not Found" };
   }
 
-  const allItems = await withTimeout(fetchAllFeeds(), 10000, []);
-  const liveItem = allItems.find(
-    (item) => computeEntityHash(item.link) === hash
-  );
-  const archivedItem = liveItem
-    ? null
-    : await withTimeout(
-        getArchivedFeedItemByHash(hash as `0x${string}`),
-        5000,
-        null,
-      );
-  const item = liveItem ?? archivedItem;
+  const item = await lookupArticle(hash);
 
   if (!item) {
     // Check editorial archive as last resort for OG tags

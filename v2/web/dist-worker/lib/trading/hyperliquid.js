@@ -1,0 +1,572 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getHyperliquidClients = getHyperliquidClients;
+exports.getHyperliquidWsClients = getHyperliquidWsClients;
+exports.closeHyperliquidWs = closeHyperliquidWs;
+exports.normalizeHyperliquidSymbol = normalizeHyperliquidSymbol;
+exports.fetchHyperliquidMarkets = fetchHyperliquidMarkets;
+exports.fetchHyperliquidMarketBySymbol = fetchHyperliquidMarketBySymbol;
+exports.resolveHyperliquidMarketForLaunch = resolveHyperliquidMarketForLaunch;
+exports.resolveHyperliquidAccountAddress = resolveHyperliquidAccountAddress;
+exports.fetchHyperliquidLivePositions = fetchHyperliquidLivePositions;
+exports.fetchHyperliquidAccountValueUsd = fetchHyperliquidAccountValueUsd;
+exports.simulateHyperliquidOrder = simulateHyperliquidOrder;
+exports.executeHyperliquidOrderLive = executeHyperliquidOrderLive;
+exports.fetchCandles = fetchCandles;
+const node_crypto_1 = require("node:crypto");
+const hyperliquid_1 = require("@nktkas/hyperliquid");
+const utils_1 = require("@nktkas/hyperliquid/utils");
+const accounts_1 = require("viem/accounts");
+// Polyfill CloseEvent for Node.js (required by @nktkas/rews WebSocket lib)
+if (typeof globalThis.CloseEvent === "undefined") {
+    globalThis.CloseEvent = class extends Event {
+        code;
+        reason;
+        wasClean;
+        constructor(type, init) {
+            super(type);
+            this.code = init?.code ?? 0;
+            this.reason = init?.reason ?? "";
+            this.wasClean = init?.wasClean ?? false;
+        }
+    };
+}
+const MARKET_CACHE_TTL_MS = 20_000;
+let cachedClientKey = "";
+let cachedClients = null;
+let marketCache = null;
+function parsePositive(value) {
+    if (typeof value === "number" && Number.isFinite(value) && value > 0)
+        return value;
+    if (typeof value === "string") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed) && parsed > 0)
+            return parsed;
+    }
+    return null;
+}
+function parseNonNegative(value) {
+    if (typeof value === "number" && Number.isFinite(value) && value >= 0)
+        return value;
+    if (typeof value === "string") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed) && parsed >= 0)
+            return parsed;
+    }
+    return null;
+}
+function parseFinite(value) {
+    if (typeof value === "number" && Number.isFinite(value))
+        return value;
+    if (typeof value === "string") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed))
+            return parsed;
+    }
+    return null;
+}
+async function fetchSpotUsdcBalance(config, address) {
+    const response = await fetch(`${config.hyperliquid.apiUrl.replace(/\/+$/, "")}/info`, {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+        },
+        body: JSON.stringify({
+            type: "spotClearinghouseState",
+            user: address,
+        }),
+        cache: "no-store",
+    });
+    if (!response.ok) {
+        return null;
+    }
+    const payload = (await response.json());
+    const balances = Array.isArray(payload?.balances) ? payload.balances : [];
+    const usdcBalance = balances.find((entry) => (entry.coin || "").trim().toUpperCase() === "USDC");
+    return parseNonNegative(usdcBalance?.total);
+}
+function normalizeTicker(value) {
+    let next = value.trim().toUpperCase();
+    if (next.includes("/")) {
+        next = next.split("/", 1)[0];
+    }
+    next = next.replace(/-PERP$/i, "");
+    next = next.replace(/PERP$/i, "");
+    next = next.replace(/-USD$/i, "");
+    next = next.replace(/-USDT$/i, "");
+    next = next.replace(/USD$/i, "");
+    next = next.replace(/USDT$/i, "");
+    return next.trim();
+}
+function normalizeDecimalString(value, maxDecimals) {
+    const trimmed = value.trim();
+    if (!/^\d+(\.\d+)?$/.test(trimmed)) {
+        throw new Error(`Invalid decimal value: ${value}`);
+    }
+    const [whole, fractional = ""] = trimmed.split(".");
+    const normalizedFractional = fractional.slice(0, Math.max(0, maxDecimals));
+    const withFraction = normalizedFractional.length > 0 ? `${whole}.${normalizedFractional}` : whole;
+    return withFraction.replace(/\.?0+$/, "").replace(/^$/, "0");
+}
+function rawToDecimal(raw, decimals) {
+    const sanitized = raw.replace(/^0+/, "") || "0";
+    if (decimals <= 0)
+        return sanitized;
+    if (sanitized.length <= decimals) {
+        const fractional = sanitized.padStart(decimals, "0").replace(/0+$/, "");
+        return fractional.length > 0 ? `0.${fractional}` : "0";
+    }
+    const whole = sanitized.slice(0, sanitized.length - decimals);
+    const fractional = sanitized.slice(sanitized.length - decimals).replace(/0+$/, "");
+    return fractional.length > 0 ? `${whole}.${fractional}` : whole;
+}
+function decimalToRaw(value, decimals) {
+    const normalized = normalizeDecimalString(value, decimals);
+    const [whole, fractional = ""] = normalized.split(".");
+    const paddedFractional = fractional.padEnd(decimals, "0");
+    const units = `${whole}${paddedFractional}`.replace(/^0+/, "") || "0";
+    if (!/^\d+$/.test(units)) {
+        throw new Error(`Invalid decimal conversion: ${value}`);
+    }
+    return units;
+}
+function formatDecimal(value, maxDecimals) {
+    const fixed = value.toFixed(Math.max(0, maxDecimals));
+    return fixed.replace(/\.?0+$/, "");
+}
+function syntheticHash(seed) {
+    const material = seed ?? (0, node_crypto_1.randomUUID)();
+    const raw = Buffer.from(material).toString("hex").padEnd(64, "0").slice(0, 64);
+    return `0x${raw}`;
+}
+function getClientKey(config) {
+    return [
+        config.hyperliquid.apiUrl,
+        config.hyperliquid.isTestnet ? "testnet" : "mainnet",
+        config.privateKey.slice(0, 10),
+        config.privateKey.slice(-6),
+    ].join("|");
+}
+function getHyperliquidClients(config) {
+    const key = getClientKey(config);
+    if (cachedClients && cachedClientKey === key) {
+        return cachedClients;
+    }
+    const wallet = (0, accounts_1.privateKeyToAccount)(config.privateKey);
+    const transport = new hyperliquid_1.HttpTransport({
+        apiUrl: config.hyperliquid.apiUrl,
+        isTestnet: config.hyperliquid.isTestnet,
+        timeout: 8_000,
+    });
+    cachedClients = {
+        infoClient: new hyperliquid_1.InfoClient({ transport }),
+        exchangeClient: new hyperliquid_1.ExchangeClient({ transport, wallet }),
+        leverageByAsset: new Map(),
+    };
+    cachedClientKey = key;
+    return cachedClients;
+}
+let cachedWsTransport = null;
+let cachedSubClient = null;
+function getHyperliquidWsClients(config, forceNew = false) {
+    if (!forceNew && cachedWsTransport && cachedSubClient) {
+        return { transport: cachedWsTransport, subscriptionClient: cachedSubClient };
+    }
+    if (cachedWsTransport) {
+        cachedWsTransport.close().catch(() => { });
+        cachedWsTransport = null;
+        cachedSubClient = null;
+    }
+    const transport = new hyperliquid_1.WebSocketTransport({
+        isTestnet: config.hyperliquid.isTestnet,
+        timeout: 30_000,
+    });
+    const subscriptionClient = new hyperliquid_1.SubscriptionClient({ transport });
+    cachedWsTransport = transport;
+    cachedSubClient = subscriptionClient;
+    return { transport, subscriptionClient };
+}
+async function closeHyperliquidWs() {
+    const transport = cachedWsTransport;
+    cachedWsTransport = null;
+    cachedSubClient = null;
+    if (transport) {
+        await transport.close().catch(() => { });
+    }
+}
+function mapMetaAndCtxs(raw) {
+    const markets = new Map();
+    if (!Array.isArray(raw) || raw.length < 2)
+        return markets;
+    const meta = raw[0];
+    const ctxs = raw[1];
+    const universe = Array.isArray(meta.universe) ? meta.universe : [];
+    const contexts = Array.isArray(ctxs) ? ctxs : [];
+    for (const [index, asset] of universe.entries()) {
+        const symbol = normalizeHyperliquidSymbol(asset?.name);
+        if (!symbol)
+            continue;
+        const ctx = contexts[index];
+        const snapshot = {
+            symbol,
+            marketId: index,
+            priceUsd: parsePositive(ctx?.midPx) ?? parsePositive(ctx?.markPx),
+            szDecimals: typeof asset?.szDecimals === "number" && Number.isFinite(asset.szDecimals) && asset.szDecimals >= 0
+                ? asset.szDecimals
+                : 6,
+            maxLeverage: parsePositive(asset?.maxLeverage),
+            dayNotionalVolumeUsd: parsePositive(ctx?.dayNtlVlm),
+            openInterest: parsePositive(ctx?.openInterest),
+        };
+        markets.set(symbol, snapshot);
+    }
+    return markets;
+}
+function computeSizeFromNotional(notionalUsd, priceUsd, szDecimals) {
+    if (!Number.isFinite(notionalUsd) || notionalUsd <= 0) {
+        throw new Error("Invalid notional amount");
+    }
+    if (!Number.isFinite(priceUsd) || priceUsd <= 0) {
+        throw new Error("Invalid market price");
+    }
+    const size = notionalUsd / priceUsd;
+    const sizeStr = normalizeDecimalString(formatDecimal(size, Math.max(0, szDecimals)), szDecimals);
+    if (Number(sizeStr) <= 0) {
+        throw new Error("Size rounds down to zero");
+    }
+    return sizeStr;
+}
+function parseFirstOrderStatus(response) {
+    if (!response || typeof response !== "object") {
+        throw new Error("Invalid Hyperliquid order response");
+    }
+    const envelope = response;
+    const status = envelope.response?.data?.statuses?.[0];
+    if (!status) {
+        throw new Error("Hyperliquid order missing status");
+    }
+    if (typeof status === "string") {
+        throw new Error(`Hyperliquid order status: ${status}`);
+    }
+    if (typeof status !== "object") {
+        throw new Error("Hyperliquid order returned unknown status shape");
+    }
+    const statusObject = status;
+    if ("error" in statusObject && typeof statusObject.error === "string") {
+        throw new Error(`Hyperliquid order error: ${statusObject.error}`);
+    }
+    if ("filled" in statusObject && statusObject.filled && typeof statusObject.filled === "object") {
+        const filled = statusObject.filled;
+        return {
+            orderId: typeof filled.oid === "number" ? filled.oid : undefined,
+            filledSize: filled.totalSz,
+            filledPrice: filled.avgPx,
+        };
+    }
+    if ("resting" in statusObject && statusObject.resting && typeof statusObject.resting === "object") {
+        const resting = statusObject.resting;
+        return {
+            orderId: typeof resting.oid === "number" ? resting.oid : undefined,
+        };
+    }
+    throw new Error("Hyperliquid order response not parseable");
+}
+function normalizeHyperliquidSymbol(raw) {
+    if (!raw)
+        return null;
+    const normalized = normalizeTicker(raw);
+    return normalized.length > 0 ? normalized : null;
+}
+async function fetchHyperliquidMarkets(config, opts) {
+    const now = Date.now();
+    if (!opts?.force && marketCache && now - marketCache.updatedAt < MARKET_CACHE_TTL_MS) {
+        return marketCache.markets;
+    }
+    const clients = getHyperliquidClients(config);
+    const response = await clients.infoClient.metaAndAssetCtxs();
+    const markets = mapMetaAndCtxs(response);
+    marketCache = {
+        updatedAt: now,
+        markets,
+    };
+    return markets;
+}
+async function fetchHyperliquidMarketBySymbol(config, symbol) {
+    const normalized = normalizeHyperliquidSymbol(symbol);
+    if (!normalized)
+        return null;
+    const markets = await fetchHyperliquidMarkets(config);
+    return markets.get(normalized) ?? null;
+}
+async function resolveHyperliquidMarketForLaunch(config, launch) {
+    const markets = await fetchHyperliquidMarkets(config);
+    const candidates = [
+        normalizeHyperliquidSymbol(launch.tokenMeta?.symbol),
+        normalizeHyperliquidSymbol(launch.pairedAsset),
+        normalizeHyperliquidSymbol(config.hyperliquid.defaultMarket),
+    ];
+    for (const symbol of candidates) {
+        if (!symbol)
+            continue;
+        const market = markets.get(symbol);
+        if (market)
+            return market;
+    }
+    return null;
+}
+function resolveHyperliquidAccountAddress(config, fallbackAddress) {
+    return config.hyperliquid.accountAddress ?? fallbackAddress;
+}
+async function fetchHyperliquidLivePositions(config, address) {
+    const clients = getHyperliquidClients(config);
+    const [state, markets] = await Promise.all([
+        clients.infoClient.clearinghouseState({ user: address }),
+        fetchHyperliquidMarkets(config),
+    ]);
+    const rawPositions = Array.isArray(state.assetPositions) ? state.assetPositions : [];
+    const live = [];
+    for (const rawPosition of rawPositions) {
+        const position = rawPosition?.position;
+        if (!position || typeof position !== "object")
+            continue;
+        const symbol = normalizeHyperliquidSymbol(String(position.coin ?? ""));
+        if (!symbol)
+            continue;
+        const szi = parseFinite(position.szi);
+        if (szi === null || szi === 0)
+            continue;
+        const absSize = Math.abs(szi);
+        const market = markets.get(symbol) ?? null;
+        const fallbackDecimals = String(position.szi ?? "").split(".")[1]?.length ?? 0;
+        const szDecimals = market?.szDecimals ?? Math.max(0, Math.min(8, fallbackDecimals));
+        const size = normalizeDecimalString(formatDecimal(absSize, szDecimals), szDecimals);
+        const entryPriceUsd = parsePositive(position.entryPx);
+        if (entryPriceUsd === null)
+            continue;
+        const positionValueUsd = parsePositive(position.positionValue) ?? absSize * entryPriceUsd;
+        const unrealizedPnlUsd = parseFinite(position.unrealizedPnl) ?? 0;
+        const leverageValue = parsePositive(position.leverage?.value) ?? parsePositive(position.leverage);
+        live.push({
+            symbol,
+            marketId: market?.marketId ?? null,
+            szDecimals,
+            size,
+            isShort: szi < 0,
+            entryPriceUsd,
+            positionValueUsd,
+            unrealizedPnlUsd,
+            leverage: leverageValue,
+        });
+    }
+    return live.sort((a, b) => b.positionValueUsd - a.positionValueUsd);
+}
+async function fetchHyperliquidAccountValueUsd(config, address) {
+    const clients = getHyperliquidClients(config);
+    let perpAccountValue = null;
+    try {
+        const state = await clients.infoClient.clearinghouseState({ user: address });
+        perpAccountValue =
+            parseNonNegative(state.marginSummary?.accountValue) ??
+                parseNonNegative(state.crossMarginSummary?.accountValue);
+    }
+    catch {
+        perpAccountValue = null;
+    }
+    // If perp account has non-zero value, use it directly.
+    if (perpAccountValue !== null && perpAccountValue > 0) {
+        return perpAccountValue;
+    }
+    // Fallback: some accounts hold funds only in spot before perp transfer.
+    try {
+        const spotValue = await fetchSpotUsdcBalance(config, address);
+        if (spotValue !== null) {
+            return Math.max(spotValue, perpAccountValue ?? 0);
+        }
+    }
+    catch {
+        // ignore and fall back to perp value (possibly zero/null)
+    }
+    return perpAccountValue;
+}
+async function ensureLeverage(config, market, leverage) {
+    const clients = getHyperliquidClients(config);
+    const target = Math.max(1, Math.floor(leverage));
+    const current = clients.leverageByAsset.get(market.marketId);
+    if (current === target)
+        return;
+    await clients.exchangeClient.updateLeverage({
+        asset: market.marketId,
+        isCross: true,
+        leverage: target,
+    });
+    clients.leverageByAsset.set(market.marketId, target);
+}
+async function simulateHyperliquidOrder(args) {
+    const market = await fetchHyperliquidMarketBySymbol(args.config, args.symbol);
+    const fillPriceUsd = market?.priceUsd ?? null;
+    if (!fillPriceUsd || !Number.isFinite(fillPriceUsd) || fillPriceUsd <= 0) {
+        throw new Error(`hyperliquid missing price for ${args.symbol}`);
+    }
+    const sizeStr = computeSizeFromNotional(args.notionalUsd, fillPriceUsd, args.szDecimals);
+    const size = Number(sizeStr);
+    const sizeRaw = decimalToRaw(sizeStr, args.szDecimals);
+    return {
+        id: (0, node_crypto_1.randomUUID)(),
+        symbol: normalizeTicker(args.symbol),
+        marketId: args.marketId,
+        side: args.side,
+        leverage: args.leverage,
+        notionalUsd: args.notionalUsd,
+        fillPriceUsd,
+        size,
+        sizeRaw,
+        txHash: syntheticHash(`dry-run:${args.symbol}:${Date.now()}`),
+        timestamp: Date.now(),
+    };
+}
+async function executeHyperliquidOrderLive(args) {
+    if (args.config.dryRun) {
+        throw new Error("Live Hyperliquid execution requested in dry-run mode");
+    }
+    if (!args.market.priceUsd || args.market.priceUsd <= 0) {
+        throw new Error(`Missing market price for ${args.market.symbol}`);
+    }
+    const clients = getHyperliquidClients(args.config);
+    const reduceOnly = args.reduceOnly === true;
+    if (!reduceOnly) {
+        await ensureLeverage(args.config, args.market, args.leverage);
+    }
+    const sizeStr = args.sizeRaw
+        ? rawToDecimal(args.sizeRaw, args.market.szDecimals)
+        : computeSizeFromNotional(args.notionalUsd ?? 0, args.market.priceUsd, args.market.szDecimals);
+    const normalizedSize = normalizeDecimalString(sizeStr, args.market.szDecimals);
+    if (Number(normalizedSize) <= 0) {
+        throw new Error("Order size resolved to zero");
+    }
+    const orderSize = (0, utils_1.formatSize)(normalizedSize, args.market.szDecimals);
+    const priceMultiplier = args.side === "buy" ? 1 + args.slippageBps / 10_000 : 1 - args.slippageBps / 10_000;
+    const limitPrice = args.market.priceUsd * priceMultiplier;
+    if (!Number.isFinite(limitPrice) || limitPrice <= 0) {
+        throw new Error("Invalid limit price for Hyperliquid order");
+    }
+    const orderPrice = (0, utils_1.formatPrice)(limitPrice, args.market.szDecimals, "perp");
+    const submitOrder = async () => {
+        const response = await clients.exchangeClient.order({
+            orders: [
+                {
+                    a: args.market.marketId,
+                    b: args.side === "buy",
+                    p: orderPrice,
+                    s: orderSize,
+                    r: reduceOnly,
+                    t: {
+                        limit: {
+                            tif: "FrontendMarket",
+                        },
+                    },
+                },
+            ],
+            grouping: "na",
+        });
+        return parseFirstOrderStatus(response);
+    };
+    let parsed;
+    try {
+        parsed = await submitOrder();
+    }
+    catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        const canRetryWithMarginTopUp = !reduceOnly &&
+            args.side === "buy" &&
+            /insufficient margin/i.test(message) &&
+            (args.notionalUsd ?? 0) > 0;
+        if (!canRetryWithMarginTopUp) {
+            throw error;
+        }
+        const walletAddress = (0, accounts_1.privateKeyToAccount)(args.config.privateKey).address;
+        const accountAddress = resolveHyperliquidAccountAddress(args.config, walletAddress);
+        const spotUsdcBalance = await fetchSpotUsdcBalance(args.config, accountAddress);
+        if (!spotUsdcBalance || spotUsdcBalance <= 0) {
+            throw error;
+        }
+        const desiredTopUpUsd = Math.max((args.notionalUsd ?? 0) * 1.05, 10.5);
+        const transferAmountUsd = Math.min(spotUsdcBalance, desiredTopUpUsd);
+        if (!Number.isFinite(transferAmountUsd) || transferAmountUsd <= 0) {
+            throw error;
+        }
+        await clients.exchangeClient.usdClassTransfer({
+            amount: formatDecimal(transferAmountUsd, 6),
+            toPerp: true,
+        });
+        parsed = await submitOrder();
+    }
+    if (!parsed.filledSize || !parsed.filledPrice) {
+        if (parsed.orderId !== undefined) {
+            await clients.exchangeClient.cancel({
+                cancels: [{ a: args.market.marketId, o: parsed.orderId }],
+            });
+        }
+        throw new Error(`Hyperliquid market order not fully filled for ${args.market.symbol}`);
+    }
+    const fillSize = parsePositive(parsed.filledSize);
+    const fillPrice = parsePositive(parsed.filledPrice);
+    if (!fillSize || !fillPrice) {
+        throw new Error(`Hyperliquid returned invalid fill metrics for ${args.market.symbol}`);
+    }
+    const sizeRaw = decimalToRaw(parsed.filledSize, args.market.szDecimals);
+    const notionalUsd = fillSize * fillPrice;
+    return {
+        id: (0, node_crypto_1.randomUUID)(),
+        symbol: args.market.symbol,
+        marketId: args.market.marketId,
+        side: args.side,
+        leverage: Math.max(1, Math.floor(args.leverage)),
+        notionalUsd,
+        fillPriceUsd: fillPrice,
+        size: fillSize,
+        sizeRaw,
+        txHash: syntheticHash(`live:${args.market.symbol}:${parsed.orderId ?? (0, node_crypto_1.randomUUID)()}:${Date.now()}`),
+        timestamp: Date.now(),
+        orderId: parsed.orderId,
+    };
+}
+async function fetchCandles(config, coin, interval = "15m", count = 200) {
+    const apiUrl = config.hyperliquid.apiUrl;
+    const endTime = Date.now();
+    const res = await fetch(`${apiUrl}/info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            type: "candleSnapshot",
+            req: {
+                coin: coin.toUpperCase(),
+                interval,
+                startTime: endTime - intervalToMs(interval) * count,
+                endTime,
+            },
+        }),
+        signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) {
+        throw new Error(`Hyperliquid candle API ${res.status}`);
+    }
+    const data = await res.json();
+    if (!Array.isArray(data))
+        return [];
+    return data.map((c) => ({
+        timestamp: Number(c.t),
+        open: parseFloat(c.o),
+        high: parseFloat(c.h),
+        low: parseFloat(c.l),
+        close: parseFloat(c.c),
+        volume: parseFloat(c.v),
+    }));
+}
+function intervalToMs(interval) {
+    const map = {
+        "1m": 60_000, "3m": 180_000, "5m": 300_000, "15m": 900_000, "30m": 1_800_000,
+        "1h": 3_600_000, "2h": 7_200_000, "4h": 14_400_000, "8h": 28_800_000, "12h": 43_200_000,
+        "1d": 86_400_000, "3d": 259_200_000, "1w": 604_800_000, "1M": 2_592_000_000,
+    };
+    return map[interval] ?? 900_000;
+}
