@@ -18,6 +18,7 @@ import { fetchScannerCandidates } from "./scanner-client";
 import { getAggregatedMarketSignals, type AggregatedMarketSignal } from "./signals";
 import { estimateAmountOutMin, executeSwap, readTokenDecimals, waitForSuccess } from "./swap";
 import { checkMoralGate, checkCircuitBreaker, logMoralGateDecision } from "./moral-gate";
+import { AGENT_VAULT_ABI, AGENT_VAULT_ADDRESS } from "../contracts";
 import { computeKelly, consecutiveLosses } from "./kelly";
 import { positionsToJournal } from "./trade-journal";
 import type {
@@ -856,6 +857,53 @@ class TraderEngine {
     }
   }
 
+  /**
+   * Pull ETH from the onchain vault → wrap to WETH so the spot engine can trade.
+   * Only works when the agent wallet is the vault manager on Base.
+   */
+  private async topUpWethFromVault(requiredWeth: bigint, currentWeth: bigint): Promise<void> {
+    if (!AGENT_VAULT_ADDRESS || AGENT_VAULT_ADDRESS === ZERO_ADDRESS) {
+      throw new Error("No vault address configured");
+    }
+
+    // How much more WETH do we need? Add 20% buffer
+    const deficit = requiredWeth - currentWeth;
+    const withdrawAmount = (deficit * BigInt(120)) / BigInt(100);
+
+    // Check vault liquid assets
+    const vaultBalance = await this.clients.publicClient.getBalance({
+      address: AGENT_VAULT_ADDRESS,
+    });
+    if (vaultBalance < withdrawAmount) {
+      throw new Error(`Vault only has ${formatUnits(vaultBalance, 18)} ETH, need ${formatUnits(withdrawAmount, 18)}`);
+    }
+
+    console.log(`[trader] Withdrawing ${formatUnits(withdrawAmount, 18)} ETH from vault ${AGENT_VAULT_ADDRESS}`);
+
+    // Vault.withdraw(assets) → sends ETH to caller (manager)
+    const withdrawHash = await this.clients.walletClient.writeContract({
+      address: AGENT_VAULT_ADDRESS,
+      abi: AGENT_VAULT_ABI,
+      functionName: "withdraw",
+      args: [withdrawAmount],
+    });
+    await waitForSuccess(this.clients.publicClient, withdrawHash);
+    console.log(`[trader] Vault withdrawal confirmed: ${withdrawHash}`);
+
+    // Wrap ETH → WETH via WETH contract deposit()
+    const wethAddress = this.config.quoteTokens.WETH;
+    if (!wethAddress) throw new Error("WETH address not configured");
+
+    const wrapHash = await this.clients.walletClient.writeContract({
+      address: wethAddress,
+      abi: [{ type: "function", name: "deposit", inputs: [], outputs: [], stateMutability: "payable" }],
+      functionName: "deposit",
+      value: withdrawAmount,
+    });
+    await waitForSuccess(this.clients.publicClient, wrapHash);
+    console.log(`[trader] Wrapped ${formatUnits(withdrawAmount, 18)} ETH → WETH: ${wrapHash}`);
+  }
+
   private async tryOpenPosition(
     candidate: ScannerLaunch,
     marketSignals: AggregatedMarketSignal[] = []
@@ -1062,13 +1110,12 @@ class TraderEngine {
       return null;
     }
 
-    // ═══ SOUL.md MORAL GATE — spot buys are always "long" ═══
+    // ═══ SOUL.md MORAL GATE — log-only until real onchain ratings exist ═══
     const entityId = candidate.tokenMeta?.symbol ?? candidate.tokenAddress;
     const moralGateResult = await checkMoralGate(entityId, "long");
     logMoralGateDecision(moralGateResult);
     if (!moralGateResult.allowed) {
-      console.log(`[trader] SOUL.md BLOCKED spot: ${entityId} — ${moralGateResult.justification}`);
-      return null;
+      console.log(`[trader] SOUL.md ADVISORY (not blocking) spot: ${entityId} — ${moralGateResult.justification}`);
     }
 
     const chainId = dexScreenerChainForVenue(this.config.executionVenue);
@@ -1104,12 +1151,29 @@ class TraderEngine {
     }
 
     if (!this.config.dryRun) {
-      const balance = await this.clients.publicClient.readContract({
+      let balance = await this.clients.publicClient.readContract({
         address: quoteToken,
         abi: ERC20_TRADE_ABI,
         functionName: "balanceOf",
         args: [this.clients.address],
       });
+
+      // If WETH balance is insufficient, try to pull ETH from vault + wrap
+      if (balance < amountIn && quoteSymbol === "WETH") {
+        try {
+          await this.topUpWethFromVault(amountIn, balance);
+          // Re-check balance after top-up
+          balance = await this.clients.publicClient.readContract({
+            address: quoteToken,
+            abi: ERC20_TRADE_ABI,
+            functionName: "balanceOf",
+            args: [this.clients.address],
+          });
+        } catch (err) {
+          console.warn(`[trader] vault top-up failed: ${err instanceof Error ? err.message : err}`);
+        }
+      }
+
       if (balance < amountIn) {
         throw new Error(`insufficient ${quoteSymbol} balance`);
       }
