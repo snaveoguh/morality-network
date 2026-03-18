@@ -630,7 +630,6 @@ export async function executeHyperliquidOrderLive(args: {
     const message = error instanceof Error ? error.message : String(error);
     const canRetryWithMarginTopUp =
       !reduceOnly &&
-      args.side === "buy" &&
       /insufficient margin/i.test(message) &&
       (args.notionalUsd ?? 0) > 0;
 
