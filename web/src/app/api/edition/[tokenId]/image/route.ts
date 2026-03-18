@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { computeEntityHash } from "@/lib/entity";
 import { getArchivedEditorial } from "@/lib/editorial-archive";
-import { BRAND_NAME } from "@/lib/brand";
+import { getIllustration } from "@/lib/illustration-store";
+import { BRAND_NAME, SITE_URL } from "@/lib/brand";
 
 // ============================================================================
 // /api/edition/[tokenId]/image — Newspaper-style SVG for NFT display
@@ -76,10 +77,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const subheadline = editorial?.subheadline || "A public ledger of world events and their interpretation.";
   const contentHash = editorial?.contentHash || "0x" + "0".repeat(64);
   const generatedBy = editorial?.generatedBy || "—";
+  const tags = editorial?.tags?.slice(0, 5) ?? [];
+  const editedBy = editorial?.editedBy ?? null;
+
+  // Check for DALL-E illustration
+  const illustration = await getIllustration(hash).catch(() => null);
+  const hasImage = !!illustration?.base64;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || SITE_URL;
 
   // Build SVG
   const W = 800;
-  const H = 1000;
+  const H = hasImage ? 1200 : 1000;
 
   // Wrap headline text
   const headlineLines = wrapText(headline, 38);
@@ -153,6 +161,27 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     y += i === 0 ? 28 : 20;
     return `<text x="60" y="${y}" font-family="'Source Serif 4', serif" font-size="13" fill="#333">${escapeXml(line)}</text>`;
   }).join("\n  ")}
+
+  <!-- DALL-E Illustration -->
+  ${hasImage ? `
+  <line x1="40" y1="${(y += 20)}" x2="${W - 40}" y2="${y}" stroke="#1A1A1A" stroke-width="0.5"/>
+  <image href="${baseUrl}/api/edition/${tokenId}/illustration" x="60" y="${(y += 10)}" width="${W - 120}" height="${W - 120}" preserveAspectRatio="xMidYMid slice"/>
+  ${(() => { y += W - 120; return ""; })()}
+  ` : ""}
+
+  <!-- Tags -->
+  ${tags.length > 0 ? `
+  <text x="60" y="${(y += 25)}" font-family="'JetBrains Mono', monospace" font-size="9" fill="#888" letter-spacing="2">
+    ${escapeXml(tags.map(t => `#${t.toUpperCase()}`).join("  "))}
+  </text>
+  ` : ""}
+
+  <!-- Edited by -->
+  ${editedBy ? `
+  <text x="${W - 60}" y="${y}" text-anchor="end" font-family="'JetBrains Mono', monospace" font-size="9" fill="#8B0000" letter-spacing="1">
+    EDITED BY ${escapeXml(editedBy.toUpperCase())}
+  </text>
+  ` : ""}
 
   <!-- Bottom section -->
   <line x1="40" y1="${H - 100}" x2="${W - 40}" y2="${H - 100}" stroke="#1A1A1A" stroke-width="0.5"/>
