@@ -243,6 +243,15 @@ const KNOWN_TOKENS: Record<string, string> = {
   "0xd07379a755a8f11b57610154861d694b2a0f615a": "BASE",
 };
 
+function venueLabel(venue?: Position["venue"]): string {
+  switch (venue) {
+    case "hyperliquid-perp": return "HL";
+    case "ethereum-spot":    return "ETH";
+    case "base-spot":        return "BASE";
+    default:                 return "BASE";
+  }
+}
+
 function symbolForPosition(position: Position): string {
   if (position.marketSymbol) return position.marketSymbol;
   return KNOWN_TOKENS[position.tokenAddress.toLowerCase()] ?? shortHex(position.tokenAddress);
@@ -994,6 +1003,7 @@ export function AgentMarketDashboard() {
               <thead>
                 <tr className="border-b border-[var(--rule-light)] font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
                   <th className="py-2 pr-3">Market</th>
+                  <th className="py-2 pr-3">Chain</th>
                   <th className="py-2 pr-3">Side</th>
                   <th className="py-2 pr-3">Lev</th>
                   <th className="py-2 pr-3">Entry</th>
@@ -1011,6 +1021,9 @@ export function AgentMarketDashboard() {
                   >
                     <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
                       {symbolForPosition(row.position)}
+                    </td>
+                    <td className="py-2 pr-3 font-mono text-[9px] text-[var(--ink-faint)]">
+                      {venueLabel(row.position.venue)}
                     </td>
                     <td className={`py-2 pr-3 font-mono text-[10px] ${row.position.direction === "short" ? "text-red-700" : "text-emerald-700"}`}>
                       {row.position.direction === "short" ? "SHORT" : "LONG"}
@@ -1060,6 +1073,7 @@ export function AgentMarketDashboard() {
               <thead>
                 <tr className="border-b border-[var(--rule-light)] font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
                   <th className="py-2 pr-3">Market</th>
+                  <th className="py-2 pr-3">Chain</th>
                   <th className="py-2 pr-3">Side</th>
                   <th className="py-2 pr-3">Lev</th>
                   <th className="py-2 pr-3">Entry</th>
@@ -1077,6 +1091,9 @@ export function AgentMarketDashboard() {
                   >
                     <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
                       {symbolForPosition(row.position)}
+                    </td>
+                    <td className="py-2 pr-3 font-mono text-[9px] text-[var(--ink-faint)]">
+                      {venueLabel(row.position.venue)}
                     </td>
                     <td className={`py-2 pr-3 font-mono text-[10px] ${row.position.direction === "short" ? "text-red-700" : "text-emerald-700"}`}>
                       {row.position.direction === "short" ? "SHORT" : "LONG"}
