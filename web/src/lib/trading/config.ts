@@ -213,7 +213,7 @@ export function getTraderConfig(): TraderExecutionConfig {
       trailingStopActivationPct: numberFromEnv("TRADER_TRAILING_STOP_ACTIVATION_PCT", 0.02),
       circuitBreakerLosses: numberFromEnv("TRADER_CIRCUIT_BREAKER_LOSSES", 3),
       circuitBreakerPauseMs: numberFromEnv("TRADER_CIRCUIT_BREAKER_PAUSE_MS", 3_600_000),
-      maxHoldMs: numberFromEnv("TRADER_MAX_HOLD_MS", 300_000), // 5 minutes default
+      maxHoldMs: numberFromEnv("TRADER_MAX_HOLD_MS", 14_400_000), // 4 hours default
     },
     safety: {
       minScannerCandidatesLive: numberFromEnv("TRADER_MIN_SCANNER_CANDIDATES_LIVE", 2),

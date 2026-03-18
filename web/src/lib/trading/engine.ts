@@ -821,12 +821,11 @@ class TraderEngine {
     const side: "buy" | "sell" = isBearish ? "sell" : "buy";
     const direction: "long" | "short" = isBearish ? "short" : "long";
 
-    // ═══ SOUL.md MORAL GATE — must pass before any execution ═══
+    // ═══ SOUL.md MORAL GATE — log-only until real onchain ratings exist ═══
     const moralGateResult = await checkMoralGate(market.symbol, direction);
     logMoralGateDecision(moralGateResult);
     if (!moralGateResult.allowed) {
-      console.log(`[trader] SOUL.md BLOCKED: ${market.symbol} ${direction} — ${moralGateResult.justification}`);
-      return null;
+      console.log(`[trader] SOUL.md ADVISORY (not blocking): ${market.symbol} ${direction} — ${moralGateResult.justification}`);
     }
 
     // ═══ SOUL.md KELLY CRITERION — position sizing via bankroll math ═══
