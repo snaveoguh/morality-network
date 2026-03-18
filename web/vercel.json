@@ -3,6 +3,14 @@
     {
       "path": "/api/trading/execute",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/moral-compass/crawl",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/moral-commentary/generate",
+      "schedule": "0 4 * * *"
     }
   ]
 }
