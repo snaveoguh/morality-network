@@ -593,9 +593,6 @@ class TraderEngine {
     const open = this.store.getOpen();
     if (open.length === 0) return;
 
-    const maxHoldMs = this.config.risk.maxHoldMs ?? 300_000; // 5 min default
-    const now = Date.now();
-
     for (const position of open) {
       // Skip scalper-managed positions (they have their own SL/TP via WebSocket)
       if (position.id.startsWith("scalp:")) continue;
@@ -603,45 +600,83 @@ class TraderEngine {
       try {
         const currentPriceUsd = await this.resolvePositionPriceUsd(position);
 
-        // Time-based expiry: close if held longer than maxHoldMs
-        const holdMs = now - position.openedAt;
-        if (holdMs >= maxHoldMs) {
-          const exitPrice = currentPriceUsd && Number.isFinite(currentPriceUsd) && currentPriceUsd > 0
-            ? currentPriceUsd
-            : position.entryPriceUsd; // fallback to entry if no price available
-          const closed = await this.closePosition(position, "expired", exitPrice);
-          if (closed) {
-            report.exits.push(closed);
-          }
-          continue;
-        }
-
         if (!currentPriceUsd || !Number.isFinite(currentPriceUsd) || currentPriceUsd <= 0) {
           report.skipped.push(`exit:no-price:${position.tokenAddress}`);
           continue;
         }
 
         const isShort = position.direction === "short";
+        const pnlPct = isShort
+          ? (position.entryPriceUsd - currentPriceUsd) / position.entryPriceUsd
+          : (currentPriceUsd - position.entryPriceUsd) / position.entryPriceUsd;
+
+        // ── Stop-loss: full close ──
         const stopPrice = isShort
           ? position.entryPriceUsd * (1 + position.stopLossPct)
           : position.entryPriceUsd * (1 - position.stopLossPct);
-        const takePrice = isShort
-          ? position.entryPriceUsd * (1 - position.takeProfitPct)
-          : position.entryPriceUsd * (1 + position.takeProfitPct);
-        let reason: Position["exitReason"] | null = null;
-
-        if (isShort) {
-          if (currentPriceUsd >= stopPrice) reason = "stop-loss";
-          if (currentPriceUsd <= takePrice) reason = "take-profit";
-        } else {
-          if (currentPriceUsd <= stopPrice) reason = "stop-loss";
-          if (currentPriceUsd >= takePrice) reason = "take-profit";
+        const hitStop = isShort ? currentPriceUsd >= stopPrice : currentPriceUsd <= stopPrice;
+        if (hitStop) {
+          const closed = await this.closePosition(position, "stop-loss", currentPriceUsd);
+          if (closed) report.exits.push(closed);
+          continue;
         }
-        if (!reason) continue;
 
-        const closed = await this.closePosition(position, reason, currentPriceUsd);
-        if (closed) {
-          report.exits.push(closed);
+        // ── Trailing stop: update high/low water mark, close if retraced ──
+        const trailingPct = position.trailingStopPct ?? this.config.risk.trailingStopPct ?? 0;
+        const activationPct = this.config.risk.trailingStopActivationPct ?? 0.03;
+        if (trailingPct > 0 && pnlPct >= activationPct) {
+          const hwm = position.highWaterMark ?? position.entryPriceUsd;
+          const lwm = position.lowWaterMark ?? position.entryPriceUsd;
+          if (isShort) {
+            const newLwm = Math.min(lwm, currentPriceUsd);
+            if (newLwm < lwm) await this.store.upsert({ ...position, lowWaterMark: newLwm });
+            const trailPrice = newLwm * (1 + trailingPct);
+            if (currentPriceUsd >= trailPrice) {
+              const closed = await this.closePosition(position, "trailing-stop", currentPriceUsd);
+              if (closed) report.exits.push(closed);
+              continue;
+            }
+          } else {
+            const newHwm = Math.max(hwm, currentPriceUsd);
+            if (newHwm > hwm) await this.store.upsert({ ...position, highWaterMark: newHwm });
+            const trailPrice = newHwm * (1 - trailingPct);
+            if (currentPriceUsd <= trailPrice) {
+              const closed = await this.closePosition(position, "trailing-stop", currentPriceUsd);
+              if (closed) report.exits.push(closed);
+              continue;
+            }
+          }
+        }
+
+        // ── Scaled take-profit: close 25% at each tier, let the rest ride ──
+        // Tiers: TP×1 = 25%, TP×1.5 = 25%, TP×2 = 25%, TP×3 = full close
+        const tp = position.takeProfitPct;
+        const tiers = [
+          { threshold: tp,       closePct: 0.25, label: "TP1" },
+          { threshold: tp * 1.5, closePct: 0.25, label: "TP2" },
+          { threshold: tp * 2,   closePct: 0.25, label: "TP3" },
+          { threshold: tp * 3,   closePct: 1.0,  label: "TP-FULL" },
+        ];
+        const tierHit = tiers.find((t) => pnlPct >= t.threshold);
+        if (tierHit) {
+          // Track which tiers have already been taken via highWaterMark as proxy
+          // If the remaining size is small or this is the final tier, close all
+          const qty = BigInt(position.quantityTokenRaw);
+          const partialQty = tierHit.closePct < 1.0
+            ? (qty * BigInt(Math.round(tierHit.closePct * 100))) / BigInt(100)
+            : qty;
+
+          if (partialQty <= BigInt(0) || partialQty >= qty || tierHit.closePct >= 1.0) {
+            // Full close
+            const closed = await this.closePosition(position, "take-profit", currentPriceUsd);
+            if (closed) report.exits.push(closed);
+          } else {
+            // Partial close: reduce position, keep remainder open
+            const partialClosed = await this.partialClosePosition(position, partialQty.toString(), currentPriceUsd);
+            if (partialClosed) {
+              console.log(`[trader] ${tierHit.label}: partial close ${tierHit.closePct * 100}% of ${position.marketSymbol} at ${pnlPct > 0 ? "+" : ""}${(pnlPct * 100).toFixed(2)}%`);
+            }
+          }
         }
       } catch (error) {
         report.errors.push(
@@ -738,6 +773,8 @@ class TraderEngine {
       throw new Error(`missing hyperliquid market ${position.marketSymbol}`);
     }
 
+    const closeSide = position.direction === "short" ? "buy" : "sell";
+
     if (this.config.dryRun) {
       return this.store.close(position.id, {
         exitReason: reason,
@@ -749,7 +786,7 @@ class TraderEngine {
     const execution = await executeHyperliquidOrderLive({
       config: this.config,
       market,
-      side: "sell",
+      side: closeSide,
       leverage: position.leverage ?? this.config.hyperliquid.defaultLeverage,
       slippageBps: this.config.risk.slippageBps,
       reduceOnly: true,
@@ -761,6 +798,62 @@ class TraderEngine {
       exitPriceUsd: execution.fillPriceUsd,
       exitTxHash: execution.txHash,
     });
+  }
+
+  /**
+   * Partial close: reduce position size on Hyperliquid, update stored quantity.
+   * Used for scaled take-profit (close 25% at each tier).
+   */
+  private async partialClosePosition(
+    position: Position,
+    partialSizeRaw: string,
+    currentPriceUsd: number,
+  ): Promise<boolean> {
+    if (position.venue !== "hyperliquid-perp" || !position.marketSymbol) {
+      return false;
+    }
+
+    const market = await fetchHyperliquidMarketBySymbol(this.config, position.marketSymbol);
+    if (!market) return false;
+
+    const closeSide = position.direction === "short" ? "buy" : "sell";
+
+    if (this.config.dryRun) {
+      // In dry-run, just reduce the stored quantity
+      const remaining = BigInt(position.quantityTokenRaw) - BigInt(partialSizeRaw);
+      if (remaining > BigInt(0)) {
+        await this.store.upsert({ ...position, quantityTokenRaw: remaining.toString() });
+      }
+      console.log(`[trader] dry-run partial close: ${partialSizeRaw} of ${position.quantityTokenRaw} ${position.marketSymbol}`);
+      return true;
+    }
+
+    try {
+      await executeHyperliquidOrderLive({
+        config: this.config,
+        market,
+        side: closeSide,
+        leverage: position.leverage ?? this.config.hyperliquid.defaultLeverage,
+        slippageBps: this.config.risk.slippageBps,
+        reduceOnly: true,
+        sizeRaw: partialSizeRaw,
+      });
+
+      // Update stored position with reduced quantity
+      const remaining = BigInt(position.quantityTokenRaw) - BigInt(partialSizeRaw);
+      if (remaining > BigInt(0)) {
+        await this.store.upsert({ ...position, quantityTokenRaw: remaining.toString() });
+      } else {
+        await this.store.close(position.id, {
+          exitReason: "take-profit",
+          exitPriceUsd: currentPriceUsd,
+        });
+      }
+      return true;
+    } catch (error) {
+      console.error(`[trader] partial close failed: ${error instanceof Error ? error.message : "unknown"}`);
+      return false;
+    }
   }
 
   private async tryOpenPosition(
