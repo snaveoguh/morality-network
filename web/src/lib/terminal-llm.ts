@@ -21,6 +21,8 @@ export type { TerminalTradingContext, ChatMessage };
 
 const BANKR_BASE_URL = "https://llm.bankr.bot";
 const VENICE_BASE_URL = process.env.VENICE_BASE_URL || "https://api.venice.ai/api/v1";
+const AGENT_HUB_URL = process.env.AGENT_HUB_URL || "";
+const AGENT_HUB_SECRET = process.env.AGENT_HUB_SECRET || "";
 
 const BANKR_API_KEY = process.env.BANKR_API_KEY || "";
 const VENICE_API_KEY = process.env.VENICE_API_KEY || "";
@@ -290,8 +292,18 @@ export async function* streamChat(opts: StreamOptions): AsyncGenerator<string> {
     }
   }
 
-  // Both failed
-  yield "LLM inference unavailable. Both Bankr and Venice providers failed. Try `status`, `fees`, `fund <amount>`, or `help`.";
+  // Fallback: Agent Hub (Groq free tier)
+  if (AGENT_HUB_URL) {
+    try {
+      yield* streamFromAgentHub(opts);
+      return;
+    } catch (err) {
+      console.warn("[terminal-llm] Agent Hub also failed:", err instanceof Error ? err.message : err);
+    }
+  }
+
+  // All failed
+  yield "LLM inference unavailable. All providers failed. Try `status`, `fees`, `fund <amount>`, or `help`.";
 }
 
 /**
@@ -349,7 +361,50 @@ export async function* streamVeniceRisk(opts: {
  * Check if any LLM provider is configured.
  */
 export function hasTerminalLLM(): boolean {
-  return !!(BANKR_API_KEY || VENICE_API_KEY);
+  return !!(BANKR_API_KEY || VENICE_API_KEY || AGENT_HUB_URL);
+}
+
+/**
+ * Stream from Agent Hub (Groq free tier) — OpenAI-compatible SSE.
+ */
+async function* streamFromAgentHub(opts: StreamOptions): AsyncGenerator<string> {
+  if (!AGENT_HUB_URL) throw new Error("AGENT_HUB_URL not configured");
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
+
+  if (opts.signal) {
+    opts.signal.addEventListener("abort", () => controller.abort());
+  }
+
+  try {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (AGENT_HUB_SECRET) headers.Authorization = `Bearer ${AGENT_HUB_SECRET}`;
+
+    const res = await fetch(`${AGENT_HUB_URL.replace(/\/$/, "")}/v1/chat`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        messages: [
+          { role: "system", content: opts.systemPrompt },
+          ...opts.messages.map((m) => ({ role: m.role, content: m.content })),
+        ],
+        stream: true,
+        maxTokens: 1024,
+        temperature: 0.7,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`Agent Hub ${res.status}: ${body.slice(0, 200)}`);
+    }
+
+    yield* parseSSEStream(res);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 /**
