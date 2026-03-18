@@ -383,6 +383,51 @@ export async function getAllEditorialHashes(): Promise<Set<string>> {
 }
 
 /**
+ * Return recent Pooter Originals for the feed (last 48h, AI-generated only).
+ */
+export interface PooterOriginal {
+  hash: string;
+  title: string;
+  subheadline: string;
+  category: string;
+  source: string;
+  generatedAt: string;
+  hasIllustration: boolean;
+  isDailyEdition: boolean;
+  dailyTitle?: string;
+  tags: string[];
+  editedBy?: string;
+}
+
+export async function getRecentPooterOriginals(maxAge48h = true): Promise<PooterOriginal[]> {
+  const archive = await loadArchive();
+  const cutoff = maxAge48h ? Date.now() - 48 * 60 * 60 * 1000 : 0;
+
+  return Object.values(archive.items)
+    .filter((item) => {
+      if (item.generatedBy !== "claude-ai") return false;
+      if (!item.editorialBody || item.editorialBody.length === 0) return false;
+      if (maxAge48h && new Date(item.generatedAt).getTime() < cutoff) return false;
+      return true;
+    })
+    .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())
+    .slice(0, 20)
+    .map((item) => ({
+      hash: item.entityHash,
+      title: item.primary.title,
+      subheadline: item.subheadline,
+      category: item.primary.category,
+      source: item.primary.source,
+      generatedAt: item.generatedAt,
+      hasIllustration: !!item.hasIllustration,
+      isDailyEdition: !!item.isDailyEdition,
+      dailyTitle: item.dailyTitle,
+      tags: item.tags ?? [],
+      editedBy: item.editedBy,
+    }));
+}
+
+/**
  * Return recent editorials that include structured market impact analysis.
  */
 export async function listRecentMarketImpactRecords(
