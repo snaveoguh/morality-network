@@ -2,7 +2,6 @@ import { fetchAllFeeds, type FeedItem } from "@/lib/rss";
 import { computeEntityHash, buildEntityUrl } from "@/lib/entity";
 import {
   findRelatedArticles,
-  generateEditorial,
   enrichArticleEmbeds,
   formatDateline,
   estimateReadingTime,
@@ -222,35 +221,26 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     return { ...item, hash: match?.hash ?? "" };
   }).filter((item) => item.hash); // only items with valid hashes
 
-  // Check editorial cache first — avoids re-generating on every visit
-  const cachedEditorialForPrimary = await getArchivedEditorial(hash).catch(() => null);
-  let article;
-  if (cachedEditorialForPrimary) {
-    article = await enrichArticleEmbeds(
-      cachedEditorialForPrimary.primary,
-      cachedEditorialForPrimary,
-    );
-  }
+  // ═══ CACHE-ONLY: no AI generation on click. Editorials are pre-generated
+  // by the newsroom cron. If no editorial exists yet, show raw feed data. ═══
+  const cachedEditorial = await getArchivedEditorial(hash).catch(() => null);
+  let article = cachedEditorial
+    ? await enrichArticleEmbeds(cachedEditorial.primary, cachedEditorial)
+    : null;
 
-  // Only generate if no cached editorial exists — 30s timeout, falls back to raw feed data
+  // No cached editorial — render raw feed data with "editorial pending" badge
   if (!article) {
-    try {
-      article = await withTimeout(
-        generateEditorial(primary, related),
-        30000,
-        null as Awaited<ReturnType<typeof generateEditorial>> | null,
-      );
-      if (!article) throw new Error("Editorial generation timed out");
-  } catch (err) {
-    console.error("[article] generateEditorial failed:", err);
-    // Render a minimal version with raw feed data
+    const dateline = formatDateline(primary.pubDate);
     return (
       <section className="mx-auto max-w-3xl py-10">
         <div className="border-b-2 border-[var(--rule)] pb-4 mb-6">
-          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+          <div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
             <span className="font-bold text-[var(--accent-red)]">{primary.category}</span>
-            <span className="mx-2">&middot;</span>
+            <span>&middot;</span>
             <span>{primary.source}</span>
+            <span className="ml-auto border border-[var(--ink-faint)] px-1.5 py-0.5 text-[8px]">
+              Editorial Pending
+            </span>
           </div>
           <h1 className="font-headline text-3xl leading-[1.1] text-[var(--ink)] sm:text-4xl">
             {primary.title}
@@ -260,6 +250,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               {primary.description}
             </p>
           )}
+          <p className="mt-2 font-mono text-[9px] text-[var(--ink-faint)]">{dateline}</p>
           <div className="mt-4 flex flex-wrap gap-4 font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
             <a
               href={primary.link}
@@ -278,20 +269,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       </section>
     );
   }
-  } // close if (!article)
-
-  // Persist editorial BEFORE response — blocking ensures the editorial is saved to the
-  // remote indexer (or local file) before ISR caches this page. Using after() caused
-  // silent data loss: if the indexer was down, after() would fail, Vercel's read-only FS
-  // would also fail, and the editorial was lost forever.
-  const generatedBy = (article as { generatedBy?: string }).generatedBy;
-  await withTimeout(
-    saveEditorial(hash, article, generatedBy === "claude-ai" ? "claude-ai" : "template-fallback").catch((err) => {
-      console.warn("[article] editorial save failed:", err);
-    }),
-    10000,
-    undefined,
-  );
 
   // Compute metadata
   const dateline = formatDateline(primary.pubDate);
@@ -329,10 +306,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         generatedAt: archivedEditorial.generatedAt,
         contentHash: archivedEditorial.contentHash,
         onchainTxHash: archivedEditorial.onchainTxHash,
-      } : generatedBy ? {
-        generatedBy: generatedBy === "claude-ai" ? "claude-ai" : "template-fallback",
-        generatedAt: new Date().toISOString(),
-        contentHash: "",
+      } : cachedEditorial ? {
+        generatedBy: cachedEditorial.generatedBy,
+        generatedAt: cachedEditorial.generatedAt,
+        contentHash: cachedEditorial.contentHash,
       } : undefined}
     />
   );

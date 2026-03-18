@@ -38,6 +38,49 @@ let cache: IllustrationStoreFile | null = null;
 let cacheLoadedAtMs = 0;
 const CACHE_TTL_MS = 60_000; // 1 minute — illustrations don't change often
 
+/* ── Upstash Redis for illustration persistence (survives cold starts) ── */
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL ?? "";
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN ?? "";
+const REDIS_ILLUS_PREFIX = "pooter:illustration:";
+const REDIS_ILLUS_TTL = 2592000; // 30 days
+
+function redisEnabled(): boolean {
+  return !!(UPSTASH_URL && UPSTASH_TOKEN);
+}
+
+async function redisGetIllustration(hash: string): Promise<IllustrationRecord | null> {
+  if (!redisEnabled()) return null;
+  try {
+    const res = await fetch(`${UPSTASH_URL}/get/${REDIS_ILLUS_PREFIX}${hash}`, {
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as { result?: string };
+    if (!body.result) return null;
+    return JSON.parse(body.result) as IllustrationRecord;
+  } catch {
+    return null;
+  }
+}
+
+async function redisSetIllustration(hash: string, data: IllustrationRecord): Promise<void> {
+  if (!redisEnabled()) return;
+  try {
+    await fetch(`${UPSTASH_URL}/set/${REDIS_ILLUS_PREFIX}${hash}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${UPSTASH_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ EX: REDIS_ILLUS_TTL, value: JSON.stringify(data) }),
+      cache: "no-store",
+    });
+  } catch {
+    // Non-fatal
+  }
+}
+
 async function loadStore(): Promise<IllustrationStoreFile> {
   const now = Date.now();
   if (cache && now - cacheLoadedAtMs < CACHE_TTL_MS) {
@@ -84,8 +127,16 @@ async function persistStore(store: IllustrationStoreFile): Promise<void> {
 export async function getIllustration(
   hash: string,
 ): Promise<IllustrationRecord | null> {
+  // Redis first (survives cold starts)
+  const fromRedis = await redisGetIllustration(hash);
+  if (fromRedis) return fromRedis;
+
   const store = await loadStore();
-  return store.items[hash] ?? null;
+  const local = store.items[hash] ?? null;
+  if (local) {
+    redisSetIllustration(hash, local).catch(() => {});
+  }
+  return local;
 }
 
 /**
@@ -98,14 +149,18 @@ export async function saveIllustration(
   const store = await loadStore();
   const now = new Date().toISOString();
 
-  store.items[hash] = {
+  const record: IllustrationRecord = {
     base64: data.base64,
     prompt: data.prompt,
     revisedPrompt: data.revisedPrompt,
   };
+  store.items[hash] = record;
   store.updatedAt = now;
   cache = store;
   cacheLoadedAtMs = Date.now();
+
+  // Redis first (survives Vercel cold starts)
+  redisSetIllustration(hash, record).catch(() => {});
 
   try {
     await persistStore(store);

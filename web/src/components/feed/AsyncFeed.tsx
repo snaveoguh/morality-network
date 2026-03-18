@@ -16,6 +16,7 @@ import { computeEntityHash } from "@/lib/entity";
 import { generateBiasDigest } from "@/lib/bias-digest";
 import { getSourceBias } from "@/lib/bias";
 import { getTodayPublishedHashes } from "@/lib/newsroom-edition";
+import { getRecentPooterOriginals, type PooterOriginal } from "@/lib/editorial-archive";
 import { GovernanceSocialList } from "@/components/proposals/GovernanceSocialList";
 
 /** Race a promise against a timeout — returns fallback on timeout */
@@ -27,13 +28,14 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 }
 
 export async function AsyncFeed() {
-  const [rssItems, proposals, governanceSignals, casts, videos, publishedHashes] = await Promise.all([
+  const [rssItems, proposals, governanceSignals, casts, videos, publishedHashes, pooterOriginals] = await Promise.all([
     withTimeout(fetchAllFeeds(), 8000, []),
     withTimeout(fetchAllProposals(), 8000, []),
     withTimeout(fetchGovernanceSocialSignals(), 5000, []),
     withTimeout(fetchFarcasterContent("pip"), 5000, []),
     withTimeout(fetchDailyVideos(12), 5000, []),
     withTimeout(getTodayPublishedHashes(), 3000, new Set<string>()),
+    withTimeout(getRecentPooterOriginals(), 3000, [] as PooterOriginal[]),
   ]);
 
   // Inject published stories that rotated out of the live RSS feed
@@ -88,6 +90,7 @@ export async function AsyncFeed() {
         videos={videos}
         biasDigest={biasDigest}
         publishedHashList={[...publishedHashes]}
+        pooterOriginals={pooterOriginals}
       />
     </>
   );

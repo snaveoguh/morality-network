@@ -75,6 +75,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         attributes.push({ trait_type: "Tag", value: tag });
       }
     }
+    if (editorial.contentHash) {
+      attributes.push({ trait_type: "Content Hash", value: editorial.contentHash });
+    }
+    if (editorial.editedBy) {
+      attributes.push({ trait_type: "Edited By", value: editorial.editedBy });
+    }
+    if (editorial.editorialBody?.length) {
+      // First paragraph as preview (metadata limit ~10KB)
+      attributes.push({
+        trait_type: "Editorial Preview",
+        value: editorial.editorialBody[0].slice(0, 500),
+      });
+    }
   }
 
   // Use DALL-E illustration as primary image if available, newspaper SVG as fallback

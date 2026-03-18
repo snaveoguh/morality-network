@@ -331,19 +331,19 @@ export function selectStories(
     if (selected.length >= options.max) break;
     if (selected.some((s) => s.entityHash === cluster.entityHash)) continue;
 
-    // Topic diversity: max 3 per topic
+    // Topic diversity: max 2 per topic (was 3 — enforce more diverse coverage)
     const primaryTopics = TOPIC_TAXONOMY
       .filter((t) => matchesTopicDefinition(cluster.primary, t))
       .map((t) => t.slug);
 
     const topicSaturated = primaryTopics.some(
-      (slug) => (topicCounts.get(slug) ?? 0) >= 3,
+      (slug) => (topicCounts.get(slug) ?? 0) >= 2,
     );
     if (topicSaturated && selected.length >= options.min) continue;
 
-    // Source diversity: max 2 per primary source
+    // Source diversity: max 1 per primary source (was 2 — no duplicate sources)
     const sourceKey = cluster.primary.source;
-    if ((sourceCounts.get(sourceKey) ?? 0) >= 2 && selected.length >= options.min) continue;
+    if ((sourceCounts.get(sourceKey) ?? 0) >= 1 && selected.length >= options.min) continue;
 
     selected.push(cluster);
 
@@ -361,7 +361,8 @@ export function selectStories(
 // ORCHESTRATOR — run the full newsroom pipeline
 // ============================================================================
 
-const DELAY_BETWEEN_GENERATIONS_MS = 4_000;
+const DELAY_BETWEEN_GENERATIONS_MS = 2_000;
+const DEFAULT_MAX_STORIES = 10; // Pooter Originals: 10 curated pieces per day
 
 function getTodayUTC(): string {
   return new Date().toISOString().slice(0, 10);
@@ -372,7 +373,7 @@ export async function runNewsroom(
 ): Promise<NewsroomResult> {
   const today = getTodayUTC();
   const minStories = options?.minStories ?? 5;
-  const maxStories = options?.maxStories ?? 25;
+  const maxStories = options?.maxStories ?? DEFAULT_MAX_STORIES;
 
   console.log(`[newsroom] Starting for ${today} (${minStories}-${maxStories} stories)`);
 

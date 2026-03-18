@@ -28,11 +28,26 @@ import { detectStoryCountries, ISO_TO_LABEL } from "@/lib/countries";
 
 type VisualWeight = "hero" | "major" | "standard" | "minor" | "filler";
 
+interface PooterOriginalData {
+  hash: string;
+  title: string;
+  subheadline: string;
+  category: string;
+  source: string;
+  generatedAt: string;
+  hasIllustration: boolean;
+  isDailyEdition: boolean;
+  dailyTitle?: string;
+  tags: string[];
+  editedBy?: string;
+}
+
 type TileItem =
   | { type: "rss"; data: FeedItemType; category: string; sortTime: number; countries: string[] }
   | { type: "cast"; data: Cast; category: string; sortTime: number; countries: string[] }
   | { type: "governance"; data: Proposal; category: string; sortTime: number; countries: string[] }
-  | { type: "video"; data: VideoItem; category: string; sortTime: number; countries: string[] };
+  | { type: "video"; data: VideoItem; category: string; sortTime: number; countries: string[] }
+  | { type: "pooter-original"; data: PooterOriginalData; category: string; sortTime: number; countries: string[] };
 
 interface BiasDigest {
   insight: string;
@@ -49,6 +64,7 @@ interface TileFeedProps {
   videos?: VideoItem[];
   biasDigest?: BiasDigest | null;
   publishedHashList?: string[];
+  pooterOriginals?: PooterOriginalData[];
 }
 
 const FILTER_OPTIONS = [
@@ -129,6 +145,11 @@ function assignWeight(item: TileItem, index: number, publishedHashes?: Set<strin
     if (publishedHashes.has(hash)) {
       return index === 0 ? "hero" : "major";
     }
+  }
+
+  // Pooter Originals: daily editions get hero, others get major
+  if (item.type === "pooter-original") {
+    return item.data.isDailyEdition ? "hero" : "major";
   }
 
   const ageMs = Date.now() - item.sortTime;
@@ -273,7 +294,7 @@ function MobileTabBar({
 // MAIN FEED
 // ============================================================================
 
-export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, publishedHashList }: TileFeedProps) {
+export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, publishedHashList, pooterOriginals = [] }: TileFeedProps) {
   const publishedHashes = useMemo(() => new Set(publishedHashList ?? []), [publishedHashList]);
   const [filter, setFilter] = useState("all");
   const [countryFilter, setCountryFilter] = useState("all");
@@ -290,25 +311,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
     setMobileTab(idx);
   }, []);
 
-  // Pre-generate editorials for top RSS items so they're ready before users click.
-  // Fires once after mount — picks the first 8 RSS items (the ones most likely clicked).
-  const pregenerateTriggered = useRef(false);
-  useEffect(() => {
-    if (pregenerateTriggered.current || rssItems.length === 0) return;
-    pregenerateTriggered.current = true;
-
-    const hashes = rssItems
-      .slice(0, 8)
-      .map((item) => computeEntityHash(item.link));
-
-    fetch("/api/editorial/pregenerate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ hashes }),
-    }).catch(() => {
-      // Silent — pre-generation is best-effort
-    });
-  }, [rssItems]);
+  // Editorial pre-generation removed — handled by newsroom cron (10 curated pieces/day)
 
   const allBiasSources = useMemo(() => {
     const sources: SourceBias[] = [];
@@ -324,7 +327,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
   }, [rssItems]);
 
   const items = useMemo(() => {
-    const all: TileItem[] = [];
+    let all: TileItem[] = [];
 
     for (const item of rssItems) {
       all.push({
@@ -368,7 +371,32 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
       });
     }
 
+    // Inject Pooter Originals — deduplicated against RSS items
+    const rssHashes = new Set(rssItems.map((item) => computeEntityHash(item.link)));
+    for (const original of pooterOriginals) {
+      if (rssHashes.has(original.hash as `0x${string}`)) continue; // already in feed as RSS
+      all.push({
+        type: "pooter-original",
+        data: original,
+        category: original.category.toLowerCase(),
+        sortTime: new Date(original.generatedAt).getTime(),
+        countries: detectStoryCountries(original.title, original.subheadline ?? ""),
+      });
+    }
+
     all.sort((a, b) => b.sortTime - a.sortTime);
+
+    // Pooter Originals + published articles float to top
+    const originals: TileItem[] = [];
+    const nonOriginals: TileItem[] = [];
+    for (const item of all) {
+      if (item.type === "pooter-original") {
+        originals.push(item);
+      } else {
+        nonOriginals.push(item);
+      }
+    }
+    all = [...originals, ...nonOriginals];
 
     // Published articles float to top while maintaining their relative order
     if (publishedHashes && publishedHashes.size > 0) {
@@ -388,7 +416,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
     }
 
     return all;
-  }, [rssItems, casts, proposals, videos, publishedHashList]);
+  }, [rssItems, casts, proposals, videos, publishedHashList, pooterOriginals]);
 
   const wireEntityMetaByHash = useMemo(() => {
     const map: Record<
@@ -510,6 +538,9 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
           return (item.data.tags || []).some((tag) => tag.toLowerCase() === tagFilter);
         }
         if (item.type === "governance") {
+          return (item.data.tags || []).some((tag) => tag.toLowerCase() === tagFilter);
+        }
+        if (item.type === "pooter-original") {
           return (item.data.tags || []).some((tag) => tag.toLowerCase() === tagFilter);
         }
         return false;
@@ -679,7 +710,9 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
                     ? item.data.title
                     : item.type === "video"
                       ? item.data.title
-                      : item.data.text;
+                      : item.type === "pooter-original"
+                        ? item.data.title
+                        : item.data.text;
               const seed = hashTitle(titleStr);
               const tilt = TILT_CLASSES[seed % TILT_CLASSES.length];
               const isInverted = seed % 19 === 0 && weight !== "hero";
@@ -757,7 +790,83 @@ function renderTile(item: TileItem, weight: VisualWeight, seed: number = 0, isFe
       if (p.source === "sec") return <SECTile proposal={p} weight={weight} />;
       return <GovernanceTile proposal={p} weight={weight} />;
     }
+    case "pooter-original":
+      return <PooterOriginalTile original={item.data} weight={weight} />;
   }
+}
+
+// ── Pooter Original Tile ─────────────────────────────────────────────────────
+
+function PooterOriginalTile({ original, weight }: { original: PooterOriginalData; weight: VisualWeight }) {
+  const isHero = weight === "hero";
+  const timeAgo = getRelativeTime(new Date(original.generatedAt).getTime());
+
+  return (
+    <Link href={`/article/${original.hash}`} className="block">
+      <div className={`relative ${isHero ? "pb-4" : "pb-2"}`}>
+        {/* POOTER ORIGINAL badge */}
+        <div className="mb-2 flex items-center gap-2">
+          <span className="border border-[var(--accent-red)] px-1.5 py-0.5 font-mono text-[7px] font-bold uppercase tracking-[0.2em] text-[var(--accent-red)]">
+            {original.isDailyEdition ? "Daily Edition" : "Pooter Original"}
+          </span>
+          {original.editedBy && (
+            <span className="font-mono text-[7px] uppercase tracking-wider text-[var(--ink-faint)]">
+              Edited by {original.editedBy.endsWith(".eth") ? original.editedBy : `${original.editedBy.slice(0, 6)}...`}
+            </span>
+          )}
+        </div>
+
+        {/* Daily title */}
+        {original.dailyTitle && (
+          <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--accent-red)]">
+            {original.dailyTitle}
+          </p>
+        )}
+
+        {/* Headline */}
+        <h3 className={`font-headline leading-tight text-[var(--ink)] ${
+          isHero ? "text-2xl sm:text-3xl" : "text-lg sm:text-xl"
+        }`}>
+          {original.title}
+        </h3>
+
+        {/* Subheadline */}
+        <p className={`mt-1 font-body-serif italic text-[var(--ink-light)] ${
+          isHero ? "text-base" : "text-sm line-clamp-2"
+        }`}>
+          {original.subheadline}
+        </p>
+
+        {/* Meta */}
+        <div className="mt-2 flex items-center gap-2 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+          <span>{original.source}</span>
+          <span>&middot;</span>
+          <span>{original.category}</span>
+          <span>&middot;</span>
+          <span>{timeAgo}</span>
+        </div>
+
+        {/* Tags */}
+        {original.tags.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {original.tags.slice(0, 4).map((tag) => (
+              <span key={tag} className="border border-[var(--rule-light)] px-1 py-0.5 font-mono text-[7px] uppercase tracking-wider text-[var(--ink-faint)]">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+function getRelativeTime(ms: number): string {
+  const diff = Date.now() - ms;
+  if (diff < 60_000) return "just now";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
+  return `${Math.floor(diff / 86_400_000)}d ago`;
 }
 
 // ============================================================================
