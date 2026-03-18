@@ -51,6 +51,50 @@ let cache: EditorialArchiveFile | null = null;
 let cacheLoadedAtMs = 0;
 const CACHE_TTL_MS = 30_000;
 
+/* ── Upstash Redis REST helpers (mirrors position-store.ts pattern) ── */
+
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL ?? "";
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN ?? "";
+const REDIS_EDITORIAL_PREFIX = "pooter:editorial:";
+
+function redisEnabled(): boolean {
+  return !!(UPSTASH_URL && UPSTASH_TOKEN);
+}
+
+async function redisGetEditorial(hash: string): Promise<ArchivedEditorial | null> {
+  if (!redisEnabled()) return null;
+  try {
+    const res = await fetch(`${UPSTASH_URL}/get/${REDIS_EDITORIAL_PREFIX}${hash}`, {
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as { result?: string };
+    if (!body.result) return null;
+    return JSON.parse(body.result) as ArchivedEditorial;
+  } catch {
+    return null;
+  }
+}
+
+async function redisSetEditorial(hash: string, editorial: ArchivedEditorial): Promise<void> {
+  if (!redisEnabled()) return;
+  try {
+    // TTL = 48 hours (editorial is daily, keep 2 days as buffer)
+    await fetch(`${UPSTASH_URL}/set/${REDIS_EDITORIAL_PREFIX}${hash}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${UPSTASH_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ EX: 172800, value: JSON.stringify(editorial) }),
+      cache: "no-store",
+    });
+  } catch {
+    // Redis write failure is non-fatal
+  }
+}
+
 async function fetchRemoteArchivedEditorial(
   hash: string,
 ): Promise<ArchivedEditorial | null> {
@@ -191,11 +235,19 @@ function computeContentHash(editorial: ArticleContent): string {
 export async function getArchivedEditorial(
   hash: string,
 ): Promise<ArchivedEditorial | null> {
+  // 1. Redis (fastest, survives serverless cold starts)
+  const fromRedis = await redisGetEditorial(hash);
+  if (fromRedis) {
+    console.log(`[editorial-archive] Redis hit: ${hash.slice(0, 10)}`);
+    return fromRedis;
+  }
+
+  // 2. Remote indexer
   if (getIndexerBackendUrl()) {
     try {
       const remote = await fetchRemoteArchivedEditorial(hash);
       if (remote) {
-        // Back-fill local archive so it stays in sync as a fallback
+        redisSetEditorial(hash, remote).catch(() => {});
         const archive = await loadArchive();
         if (!archive.items[hash]) {
           archive.items[hash] = remote;
@@ -211,8 +263,13 @@ export async function getArchivedEditorial(
     }
   }
 
+  // 3. Local file (fallback)
   const archive = await loadArchive();
-  return archive.items[hash] ?? null;
+  const local = archive.items[hash] ?? null;
+  if (local) {
+    redisSetEditorial(hash, local).catch(() => {});
+  }
+  return local;
 }
 
 /**
@@ -262,12 +319,14 @@ export async function saveEditorial(
   cache = archive;
   cacheLoadedAtMs = Date.now();
 
+  // Redis first — survives serverless cold starts
+  redisSetEditorial(hash, record).catch(() => {});
+
   try {
     await persistArchive(archive);
   } catch (err) {
     // Vercel serverless has a read-only filesystem — log and continue
     console.warn("[editorial-archive] local persist failed (read-only fs?):", err instanceof Error ? err.message : err);
-    return;
   }
   console.log(
     `[editorial-archive] saved ${hash.slice(0, 10)}... (${generatedBy}, v${record.version})`,
