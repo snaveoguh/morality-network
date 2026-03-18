@@ -270,8 +270,7 @@ export async function getAllArchivedItemsWithHashes(): Promise<
     records = Object.values(archive.items);
   }
 
-  const merged = await mergeCurrentFeedIntoArchive(records);
-  return merged.map((record) => ({
+  return records.map((record) => ({
     ...toFeedItem(record),
     hash: record.hash,
   }));
