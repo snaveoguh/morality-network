@@ -985,13 +985,16 @@ class TraderEngine {
       `moral=${moralGateResult.moralScore}/100 kelly=${kelly.fraction.toFixed(3)} (${kelly.phase})`,
     );
 
+    // Use Kelly-derived leverage (capped by maxLeverage), fall back to default
+    const orderLeverage = kelly.leverage > 0 ? kelly.leverage : this.config.hyperliquid.defaultLeverage;
+
     const order = this.config.dryRun
       ? await simulateHyperliquidOrder({
           config: this.config,
           symbol: market.symbol,
           marketId: market.marketId,
           side,
-          leverage: this.config.hyperliquid.defaultLeverage,
+          leverage: orderLeverage,
           notionalUsd,
           szDecimals: market.szDecimals,
         })
@@ -999,7 +1002,7 @@ class TraderEngine {
           config: this.config,
           market,
           side,
-          leverage: this.config.hyperliquid.defaultLeverage,
+          leverage: orderLeverage,
           slippageBps: this.config.risk.slippageBps,
           notionalUsd,
         });
