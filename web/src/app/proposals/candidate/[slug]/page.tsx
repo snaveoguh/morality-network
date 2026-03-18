@@ -2,7 +2,7 @@ import { fetchCandidateProposals } from "@/lib/nouns-candidates";
 import { CandidateDetail } from "@/components/proposals/CandidateDetail";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // 1 min ISR
 export const maxDuration = 55;
 
 /** Race a promise against a timeout — returns fallback on timeout */

@@ -10,6 +10,8 @@ import {
   redactedConfigSummary,
   runTraderCycles,
 } from "../lib/trading/engine";
+import { getTraderConfig, getScalperConfig } from "../lib/trading/config";
+import { ScalperManager } from "../lib/trading/scalper";
 
 type WorkerTaskName = "scanner" | "swarm" | "trader" | "bridge";
 type PersistedAgentEvent = {
@@ -94,7 +96,7 @@ function getEnabledTasks(): WorkerTaskName[] {
 async function postIndexer(path: string, body: unknown): Promise<void> {
   const baseUrl = getIndexerBaseUrl();
   const response = await fetch(new URL(path, `${baseUrl}/`).toString(), {
-    method: "POST",
+    method: "PUT", // Ponder 0.7.x maps ponder.post() to hono.put()
     headers: buildAuthHeaders(),
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(parseIntegerEnv("WORKER_BACKEND_TIMEOUT_MS", 20_000)),
@@ -166,7 +168,7 @@ async function updateBridgeCursor(
   cursor: { lastEventId: string | null; lastTimestampMs: number },
 ): Promise<void> {
   await fetch(new URL(`/api/v1/agents/cursors/${encodeURIComponent(consumer)}`, `${getIndexerBaseUrl()}/`).toString(), {
-    method: "POST",
+    method: "PUT", // Ponder 0.7.x maps ponder.post() to hono.put()
     headers: buildAuthHeaders(),
     body: JSON.stringify(cursor),
     signal: AbortSignal.timeout(parseIntegerEnv("WORKER_BACKEND_TIMEOUT_MS", 20_000)),
@@ -320,25 +322,33 @@ async function runTraderTask(): Promise<void> {
     listTraderPositionsByRunner(),
   ]);
 
-  await postIndexer("/api/v1/trading/state", {
-    executionMode: "worker",
-    config: redactedConfigSummary(),
-    report: cycles.primary,
-    parallel: cycles.parallel,
-    readiness: readinessByRunner.primary,
-    parallelReadiness: readinessByRunner.parallel,
-    performance: performanceByRunner.primary,
-    parallelPerformance: performanceByRunner.parallel,
-    positions: positionsByRunner.primary,
-    parallelPositions: positionsByRunner.parallel,
-  });
-
-  log("trader snapshot persisted", {
-    entries: cycles.primary.entries.length,
-    exits: cycles.primary.exits.length,
-    errors: cycles.primary.errors.length,
-    openPositions: cycles.primary.openPositions,
-  });
+  try {
+    await postIndexer("/api/v1/trading/state", {
+      executionMode: "worker",
+      config: redactedConfigSummary(),
+      report: cycles.primary,
+      parallel: cycles.parallel,
+      readiness: readinessByRunner.primary,
+      parallelReadiness: readinessByRunner.parallel,
+      performance: performanceByRunner.primary,
+      parallelPerformance: performanceByRunner.parallel,
+      positions: positionsByRunner.primary,
+      parallelPositions: positionsByRunner.parallel,
+    });
+    log("trader snapshot persisted", {
+      entries: cycles.primary.entries.length,
+      exits: cycles.primary.exits.length,
+      errors: cycles.primary.errors.length,
+      openPositions: cycles.primary.openPositions,
+    });
+  } catch (err) {
+    log("trader state persist failed (non-fatal)", err instanceof Error ? err.message : err);
+    log("trader cycle completed locally", {
+      entries: cycles.primary.entries.length,
+      exits: cycles.primary.exits.length,
+      openPositions: cycles.primary.openPositions,
+    });
+  }
 }
 
 async function runBridgeTask(): Promise<void> {
@@ -401,10 +411,10 @@ async function runBridgeTask(): Promise<void> {
   });
 }
 
-async function executeTask(name: WorkerTaskName): Promise<void> {
+async function executeTask(name: WorkerTaskName): Promise<boolean> {
   if (runningTasks.has(name)) {
     log(`${name} skipped because a previous run is still in flight`);
-    return;
+    return true;
   }
 
   runningTasks.add(name);
@@ -420,9 +430,10 @@ async function executeTask(name: WorkerTaskName): Promise<void> {
       await runBridgeTask();
     }
     log(`${name} finished`, { durationMs: Date.now() - startedAt });
+    return true;
   } catch (error) {
     log(`${name} failed`, error instanceof Error ? error.message : error);
-    throw error;
+    return false;
   } finally {
     runningTasks.delete(name);
   }
@@ -431,11 +442,8 @@ async function executeTask(name: WorkerTaskName): Promise<void> {
 async function runStartup(tasks: WorkerTaskName[]): Promise<boolean> {
   let success = true;
   for (const task of tasks) {
-    try {
-      await executeTask(task);
-    } catch {
-      success = false;
-    }
+    const ok = await executeTask(task);
+    if (!ok) success = false;
   }
   return success;
 }
@@ -482,16 +490,39 @@ async function main(): Promise<void> {
     log(`${task} scheduled`, { intervalMs });
   }
 
-  const shutdown = (signal: string) => {
+  // Start WebSocket-based scalper if enabled
+  let scalper: ScalperManager | null = null;
+  const scalperConfig = getScalperConfig();
+  if (scalperConfig.enabled && getTraderExecutionMode() === "worker") {
+    try {
+      const traderConfig = getTraderConfig();
+      if (traderConfig.executionVenue === "hyperliquid-perp") {
+        scalper = new ScalperManager(traderConfig, scalperConfig);
+        await scalper.start();
+        log("scalper started", { markets: scalperConfig.markets, dryRun: scalperConfig.dryRun });
+      } else {
+        log("scalper skipped: execution venue is not hyperliquid-perp");
+      }
+    } catch (error) {
+      log("scalper failed to start", error instanceof Error ? error.message : error);
+    }
+  } else if (scalperConfig.enabled) {
+    log("scalper skipped: TRADER_EXECUTION_MODE is not worker");
+  }
+
+  const shutdown = async (signal: string) => {
     for (const timer of timers) {
       clearInterval(timer);
+    }
+    if (scalper) {
+      await scalper.stop().catch(() => {});
     }
     log(`received ${signal}, shutting down`);
     process.exit(0);
   };
 
-  process.on("SIGINT", () => shutdown("SIGINT"));
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => void shutdown("SIGINT"));
+  process.on("SIGTERM", () => void shutdown("SIGTERM"));
 }
 
 void main().catch((error) => {

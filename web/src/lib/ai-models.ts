@@ -10,7 +10,9 @@ export type AIModelTask =
   | "entityScoring"
   | "sentimentScoring"
   | "factExtraction"
-  | "selfLearn";
+  | "selfLearn"
+  | "moralCompass"
+  | "tradingPatternDetection";
 
 export interface AIProviderTaskPolicy {
   providers: AIProviderId[];
@@ -112,6 +114,14 @@ export const AI_MODEL_POLICY: Record<AIModelTask, AIProviderTaskPolicy> = {
     models: FAST_MODELS,
   },
   selfLearn: {
+    providers: FAST_PROVIDER_ORDER,
+    models: FAST_MODELS,
+  },
+  moralCompass: {
+    providers: PREMIUM_PROVIDER_ORDER,
+    models: PREMIUM_MODELS,
+  },
+  tradingPatternDetection: {
     providers: FAST_PROVIDER_ORDER,
     models: FAST_MODELS,
   },

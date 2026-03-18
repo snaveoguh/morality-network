@@ -135,7 +135,7 @@ export function LiveCommentColumn({
   const hasActivity = items.length > 0;
 
   return (
-    <div className="sticky top-16 overflow-hidden">
+    <div className="sticky top-10 overflow-hidden">
       <div className="mb-3 border-b-2 border-[var(--rule)] pb-2">
         <div className="flex items-center justify-between">
           <h2 className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[var(--ink)]">

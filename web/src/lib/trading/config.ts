@@ -1,5 +1,5 @@
 import { isAddress, parseGwei, type Address } from "viem";
-import type { ExecutionVenue, TraderExecutionConfig } from "./types";
+import type { ExecutionVenue, ScalperConfig, TraderExecutionConfig } from "./types";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -207,6 +207,13 @@ export function getTraderConfig(): TraderExecutionConfig {
       stopLossPct: numberFromEnv("TRADER_STOP_LOSS_PCT", 0.2),
       takeProfitPct: numberFromEnv("TRADER_TAKE_PROFIT_PCT", 0.45),
       slippageBps: numberFromEnv("TRADER_SLIPPAGE_BPS", 250),
+      maxLeverage: numberFromEnv("TRADER_MAX_LEVERAGE", 10),
+      minSignalConfidence: numberFromEnv("TRADER_MIN_SIGNAL_CONFIDENCE", 0.4),
+      trailingStopPct: numberFromEnv("TRADER_TRAILING_STOP_PCT", 0.05),
+      trailingStopActivationPct: numberFromEnv("TRADER_TRAILING_STOP_ACTIVATION_PCT", 0.02),
+      circuitBreakerLosses: numberFromEnv("TRADER_CIRCUIT_BREAKER_LOSSES", 3),
+      circuitBreakerPauseMs: numberFromEnv("TRADER_CIRCUIT_BREAKER_PAUSE_MS", 3_600_000),
+      maxHoldMs: numberFromEnv("TRADER_MAX_HOLD_MS", 300_000), // 5 minutes default
     },
     safety: {
       minScannerCandidatesLive: numberFromEnv("TRADER_MIN_SCANNER_CANDIDATES_LIVE", 2),
@@ -220,6 +227,7 @@ export function getTraderConfig(): TraderExecutionConfig {
       defaultLeverage: numberFromEnv("HYPERLIQUID_DEFAULT_LEVERAGE", 2),
       entryNotionalUsd: numberFromEnv("HYPERLIQUID_ENTRY_USD", 50),
       minAccountValueUsd: numberFromEnv("HYPERLIQUID_MIN_ACCOUNT_VALUE_USD", 100),
+      watchMarkets: stringFromEnv("HYPERLIQUID_WATCH_MARKETS", "BTC,ETH,SOL").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean),
     },
   };
 }
@@ -337,4 +345,25 @@ export function getParallelBaseConfig(): TraderExecutionConfig | null {
   };
 
   return next;
+}
+
+export function getScalperConfig(): ScalperConfig {
+  return {
+    enabled: boolFromEnv("SCALPER_ENABLED", false),
+    markets: stringFromEnv("SCALPER_MARKETS", "BTC,ETH,SOL")
+      .split(",")
+      .map((s) => s.trim().toUpperCase())
+      .filter(Boolean),
+    candleThresholdPct: numberFromEnv("SCALPER_CANDLE_THRESHOLD_PCT", 0.015),
+    volumeSpikeMultiplier: numberFromEnv("SCALPER_VOLUME_SPIKE_MULTIPLIER", 3),
+    stopLossPct: numberFromEnv("SCALPER_STOP_LOSS_PCT", 0.005),
+    takeProfitPct: numberFromEnv("SCALPER_TAKE_PROFIT_PCT", 0.01),
+    maxPositionUsd: numberFromEnv("SCALPER_MAX_POSITION_USD", 100),
+    defaultLeverage: numberFromEnv("SCALPER_DEFAULT_LEVERAGE", 10),
+    cooldownMs: numberFromEnv("SCALPER_COOLDOWN_MS", 30_000),
+    maxHoldMs: numberFromEnv("SCALPER_MAX_HOLD_MS", 300_000),
+    maxOpenScalps: numberFromEnv("SCALPER_MAX_OPEN_SCALPS", 3),
+    vwapDeviationPct: numberFromEnv("SCALPER_VWAP_DEVIATION_PCT", 0.01),
+    dryRun: boolFromEnv("TRADER_DRY_RUN", true),
+  };
 }

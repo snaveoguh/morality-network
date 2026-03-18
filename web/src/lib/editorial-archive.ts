@@ -66,12 +66,18 @@ async function saveRemoteEditorial(
   editorial: ArticleContent,
   generatedBy: "claude-ai" | "template-fallback",
 ): Promise<void> {
+  // Strip illustration data — too large for remote JSON payload (2MB+)
+  const { illustrationBase64: _i, illustrationPrompt: _p, ...leanEditorial } = editorial;
   await fetchIndexerJson(
     "/api/v1/archive/editorials/upsert",
     {
-      method: "POST",
+      method: "PUT", // Ponder 0.7.x maps ponder.post() to hono.put()
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ hash, editorial, generatedBy }),
+      body: JSON.stringify({
+        hash,
+        editorial: { ...leanEditorial, hasIllustration: editorial.hasIllustration || !!_i },
+        generatedBy,
+      }),
       timeoutMs: 30_000,
     },
   );
@@ -84,7 +90,7 @@ async function markRemoteEditorialOnchain(
   await fetchIndexerJson(
     `/api/v1/archive/editorials/${hash}/mark-onchain`,
     {
-      method: "POST",
+      method: "PUT", // Ponder 0.7.x maps ponder.post() to hono.put()
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ txHash }),
       timeoutMs: 20_000,
@@ -187,7 +193,19 @@ export async function getArchivedEditorial(
 ): Promise<ArchivedEditorial | null> {
   if (getIndexerBackendUrl()) {
     try {
-      return await fetchRemoteArchivedEditorial(hash);
+      const remote = await fetchRemoteArchivedEditorial(hash);
+      if (remote) {
+        // Back-fill local archive so it stays in sync as a fallback
+        const archive = await loadArchive();
+        if (!archive.items[hash]) {
+          archive.items[hash] = remote;
+          archive.updatedAt = new Date().toISOString();
+          cache = archive;
+          cacheLoadedAtMs = Date.now();
+          persistArchive(archive).catch(() => {});
+        }
+        return remote;
+      }
     } catch (err) {
       console.warn("[editorial-archive] remote lookup failed, falling back to local:", err);
     }
@@ -209,11 +227,13 @@ export async function saveEditorial(
   if (getIndexerBackendUrl()) {
     try {
       await saveRemoteEditorial(hash, editorial, generatedBy);
-      return;
     } catch (err) {
-      console.warn("[editorial-archive] remote save failed, falling back to local:", err);
+      console.warn("[editorial-archive] remote save failed:", err);
     }
   }
+
+  // Always save locally — remote indexer reads are unreliable (404 after successful write),
+  // so the local file must stay up-to-date as a fallback.
 
   const archive = await loadArchive();
   const now = new Date().toISOString();
@@ -221,8 +241,13 @@ export async function saveEditorial(
 
   const contentHash = computeContentHash(editorial);
 
+  // Strip illustration data — stored separately in illustration-store.ts
+  // Keeping it inline bloats the archive from ~4MB to 6.5MB+ and causes timeouts.
+  const { illustrationBase64: _illus, illustrationPrompt: _prompt, ...editorialWithoutIllustration } = editorial;
+
   const record: ArchivedEditorial = {
-    ...editorial,
+    ...editorialWithoutIllustration,
+    hasIllustration: editorial.hasIllustration || !!_illus,
     entityHash: hash,
     generatedAt: now,
     generatedBy,
@@ -237,7 +262,13 @@ export async function saveEditorial(
   cache = archive;
   cacheLoadedAtMs = Date.now();
 
-  await persistArchive(archive);
+  try {
+    await persistArchive(archive);
+  } catch (err) {
+    // Vercel serverless has a read-only filesystem — log and continue
+    console.warn("[editorial-archive] local persist failed (read-only fs?):", err instanceof Error ? err.message : err);
+    return;
+  }
   console.log(
     `[editorial-archive] saved ${hash.slice(0, 10)}... (${generatedBy}, v${record.version})`,
   );

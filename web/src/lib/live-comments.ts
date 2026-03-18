@@ -99,28 +99,27 @@ export async function fetchProtocolWideComments(limit = 24): Promise<ProtocolCom
       }
     }
 
-    const comments = await Promise.all(
-      commentIds.map((commentId) =>
-        commentsClient.readContract({
-          address: CONTRACTS.comments,
-          abi: COMMENTS_ABI,
-          functionName: "getComment",
-          args: [commentId],
-        })
-      )
-    );
+    const results = await commentsClient.multicall({
+      contracts: commentIds.map((commentId) => ({
+        address: CONTRACTS.comments,
+        abi: COMMENTS_ABI,
+        functionName: "getComment" as const,
+        args: [commentId],
+      })),
+      allowFailure: true,
+    });
 
-    return comments
-      .filter((comment) => comment.exists)
-      .map((comment) => ({
-        id: comment.id,
-        entityHash: comment.entityHash as `0x${string}`,
-        author: comment.author as `0x${string}`,
-        content: comment.content,
-        parentId: comment.parentId,
-        score: comment.score,
-        tipTotal: comment.tipTotal,
-        timestamp: comment.timestamp,
+    return results
+      .filter((r): r is { status: "success"; result: any } => r.status === "success" && r.result?.exists)
+      .map((r) => ({
+        id: r.result.id as bigint,
+        entityHash: r.result.entityHash as `0x${string}`,
+        author: r.result.author as `0x${string}`,
+        content: r.result.content as string,
+        parentId: r.result.parentId as bigint,
+        score: r.result.score as bigint,
+        tipTotal: r.result.tipTotal as bigint,
+        timestamp: r.result.timestamp as bigint,
       }));
   } catch (error) {
     console.error("[LiveComments] Failed to fetch protocol-wide comments:", error);
@@ -186,12 +185,15 @@ async function fetchRecentTips(limit = 24): Promise<ProtocolTipActivity[]> {
       )
     );
     const blockTimestampMap = new Map<bigint, bigint>();
-    await Promise.all(
-      uniqueBlocks.map(async (blockNumber) => {
+    // Fetch block timestamps sequentially to avoid rate limits on free RPC
+    for (const blockNumber of uniqueBlocks) {
+      try {
         const block = await commentsClient.getBlock({ blockNumber });
         blockTimestampMap.set(blockNumber, block.timestamp);
-      })
-    );
+      } catch {
+        // Skip — timestamp will default to 0
+      }
+    }
 
     const tippedCommentIds = new Set<bigint>();
     for (const log of recentLogs) {
@@ -202,23 +204,22 @@ async function fetchRecentTips(limit = 24): Promise<ProtocolTipActivity[]> {
 
     const commentEntityMap = new Map<bigint, `0x${string}`>();
     if (tippedCommentIds.size > 0) {
-      await Promise.all(
-        Array.from(tippedCommentIds).map(async (commentId) => {
-          try {
-            const comment = await commentsClient.readContract({
-              address: CONTRACTS.comments,
-              abi: COMMENTS_ABI,
-              functionName: "getComment",
-              args: [commentId],
-            });
-            if (comment.exists) {
-              commentEntityMap.set(commentId, comment.entityHash as `0x${string}`);
-            }
-          } catch {
-            // Skip stale/missing comments for tip events.
-          }
-        })
-      );
+      const ids = Array.from(tippedCommentIds);
+      const tipCommentResults = await commentsClient.multicall({
+        contracts: ids.map((commentId) => ({
+          address: CONTRACTS.comments,
+          abi: COMMENTS_ABI,
+          functionName: "getComment" as const,
+          args: [commentId],
+        })),
+        allowFailure: true,
+      });
+      for (let i = 0; i < ids.length; i++) {
+        const r = tipCommentResults[i];
+        if (r.status === "success" && r.result?.exists) {
+          commentEntityMap.set(ids[i], r.result.entityHash as `0x${string}`);
+        }
+      }
     }
 
     const tipActivities: ProtocolTipActivity[] = recentLogs.map((log) => {

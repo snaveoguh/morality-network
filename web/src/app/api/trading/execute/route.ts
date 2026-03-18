@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { redactedConfigSummary, runTraderCycles } from "@/lib/trading/engine";
+import { redactedConfigSummary } from "@/lib/trading/engine";
+import { traderAgent } from "@/lib/agents/trader";
 import { isWorkerTraderRuntime } from "@/lib/runtime-mode";
 import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
 import { fetchPersistedTraderState } from "@/lib/server/runtime-backend";
@@ -9,7 +10,8 @@ export const revalidate = 0;
 export const maxDuration = 60;
 
 async function execute() {
-  const cycles = await runTraderCycles();
+  // Route through the trader agent so bus events are published
+  const cycles = await traderAgent.runCycleNow();
   return NextResponse.json(
     {
       report: cycles.primary,
@@ -26,7 +28,7 @@ async function execute() {
 
 function isAuthorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) return true;
+  if (!secret) return false;
 
   const auth = request.headers.get("authorization")?.trim();
   return auth === `Bearer ${secret}`;

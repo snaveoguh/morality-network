@@ -1,4 +1,6 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "fs/promises";
+import { join } from "path";
 import { BRAND_DOMAIN, BRAND_NAME } from "@/lib/brand";
 
 export const alt = `${BRAND_NAME} -- Permissionless News & Onchain Discussion`;
@@ -12,10 +14,13 @@ const IBM_PLEX_MONO =
   "https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n5ig.ttf";
 
 export default async function SiteOGImage() {
-  const [serifBold, mono] = await Promise.all([
+  const [serifBold, mono, imgBuf] = await Promise.all([
     fetch(NOTO_SERIF_BOLD).then((res) => res.arrayBuffer()),
     fetch(IBM_PLEX_MONO).then((res) => res.arrayBuffer()),
+    readFile(join(process.cwd(), "public", "astraea-bw.jpg")),
   ]);
+
+  const imgBase64 = `data:image/jpeg;base64,${imgBuf.toString("base64")}`;
 
   return new ImageResponse(
     (
@@ -24,13 +29,30 @@ export default async function SiteOGImage() {
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
-          backgroundColor: "#F5F0E8",
           position: "relative",
           overflow: "hidden",
+          backgroundColor: "#0A0A0A",
         }}
       >
-        {/* Paper texture */}
+        {/* Astraea painting — full bleed, B&W */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imgBase64}
+          alt=""
+          width={1200}
+          height={630}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: 0.55,
+          }}
+        />
+
+        {/* Dark gradient overlay for text legibility */}
         <div
           style={{
             position: "absolute",
@@ -38,168 +60,118 @@ export default async function SiteOGImage() {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundImage:
-              "radial-gradient(circle at 25% 40%, rgba(0,0,0,0.025) 0%, transparent 50%), radial-gradient(circle at 75% 60%, rgba(0,0,0,0.02) 0%, transparent 40%)",
+            background:
+              "linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.75) 100%)",
             display: "flex",
           }}
         />
 
-        {/* Top double rule */}
-        <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-          <div style={{ height: 4, backgroundColor: "#1A1A1A", width: "100%", display: "flex" }} />
-          <div style={{ height: 3, width: "100%", display: "flex" }} />
-          <div style={{ height: 1, backgroundColor: "#1A1A1A", width: "100%", display: "flex" }} />
-        </div>
-
-        {/* Date line */}
+        {/* Content */}
         <div
           style={{
-            display: "flex",
-            justifyContent: "center",
-            padding: "10px 48px 8px",
-            fontFamily: "Mono",
-            fontSize: 11,
-            color: "#8A8A8A",
-            letterSpacing: "0.2em",
-          }}
-        >
-          PERMISSIONLESS NEWS & ONCHAIN DISCUSSION
-        </div>
-
-        {/* Thin rule */}
-        <div
-          style={{
-            height: 1,
-            backgroundColor: "#C8C0B0",
-            marginLeft: 48,
-            marginRight: 48,
-            display: "flex",
-          }}
-        />
-
-        {/* Main masthead area */}
-        <div
-          style={{
+            position: "relative",
+            width: "100%",
+            height: "100%",
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-            padding: "0 48px",
           }}
         >
-          {/* Noggles */}
+          {/* Top rule */}
+          <div style={{ height: 3, backgroundColor: "#FFFFFF", width: "100%", display: "flex", opacity: 0.4 }} />
+
+          {/* Top bar */}
           <div
             style={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "12px 48px 10px",
               fontFamily: "Mono",
-              fontSize: 36,
-              color: "#1A1A1A",
-              marginBottom: 8,
-              display: "flex",
+              fontSize: 10,
+              color: "rgba(255,255,255,0.5)",
+              letterSpacing: "0.3em",
             }}
           >
-            {"( o_o )"}
+            PERMISSIONLESS NEWS & ONCHAIN DISCUSSION
           </div>
 
-          {/* Masthead title */}
-          <div
-            style={{
-              fontFamily: "Serif",
-              fontSize: 96,
-              fontWeight: 700,
-              color: "#1A1A1A",
-              letterSpacing: "-0.03em",
-              lineHeight: 1,
-              display: "flex",
-              marginBottom: 24,
-            }}
-          >
-            {BRAND_NAME}
-          </div>
-
-          {/* Thin rule under masthead */}
-          <div
-            style={{
-              height: 1,
-              backgroundColor: "#1A1A1A",
-              width: 400,
-              display: "flex",
-              marginBottom: 20,
-            }}
-          />
-
-          {/* Tagline */}
-          <div
-            style={{
-              fontFamily: "Serif",
-              fontSize: 22,
-              color: "#4A4A4A",
-              lineHeight: 1.4,
-              textAlign: "center",
-              display: "flex",
-              maxWidth: 700,
-            }}
-          >
-            Rate, discuss, and tip news content directly onchain. Censorship-resistant conversations powered by Base.
-          </div>
-
-          {/* Feature pills */}
+          {/* Main content */}
           <div
             style={{
               display: "flex",
-              gap: 16,
-              marginTop: 32,
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              flex: 1,
+              padding: "0 48px",
             }}
           >
-            {["70+ SOURCES", "CROSS-SPECTRUM", "ONCHAIN RATINGS", "TIPPING"].map(
-              (label) => (
-                <div
-                  key={label}
-                  style={{
-                    fontFamily: "Mono",
-                    fontSize: 10,
-                    letterSpacing: "0.2em",
-                    color: "#4A4A4A",
-                    border: "1px solid #C8C0B0",
-                    padding: "6px 14px",
-                    display: "flex",
-                  }}
-                >
-                  {label}
-                </div>
-              )
-            )}
+            <div
+              style={{
+                fontFamily: "Serif",
+                fontSize: 108,
+                fontWeight: 700,
+                color: "#FFFFFF",
+                letterSpacing: "-0.03em",
+                lineHeight: 1,
+                display: "flex",
+                textShadow: "0 2px 40px rgba(0,0,0,0.5)",
+              }}
+            >
+              {BRAND_NAME}
+            </div>
+
+            {/* Thin rule */}
+            <div
+              style={{
+                height: 1,
+                backgroundColor: "#FFFFFF",
+                width: 300,
+                display: "flex",
+                marginTop: 24,
+                marginBottom: 20,
+                opacity: 0.4,
+              }}
+            />
+
+            <div
+              style={{
+                fontFamily: "Mono",
+                fontSize: 11,
+                color: "rgba(255,255,255,0.6)",
+                letterSpacing: "0.25em",
+                display: "flex",
+                gap: 16,
+              }}
+            >
+              <span>100+ SOURCES</span>
+              <span style={{ opacity: 0.4 }}>{"\u00B7"}</span>
+              <span>CROSS-SPECTRUM</span>
+              <span style={{ opacity: 0.4 }}>{"\u00B7"}</span>
+              <span>ONCHAIN</span>
+              <span style={{ opacity: 0.4 }}>{"\u00B7"}</span>
+              <span>BASE L2</span>
+            </div>
           </div>
-        </div>
 
-        {/* Bottom double rule */}
-        <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-          <div style={{ height: 1, backgroundColor: "#1A1A1A", width: "100%", display: "flex" }} />
-          <div style={{ height: 3, width: "100%", display: "flex" }} />
-          <div style={{ height: 4, backgroundColor: "#1A1A1A", width: "100%", display: "flex" }} />
-        </div>
+          {/* Footer */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "12px 48px",
+              fontFamily: "Mono",
+              fontSize: 9,
+              color: "rgba(255,255,255,0.35)",
+              letterSpacing: "0.2em",
+            }}
+          >
+            <span>{BRAND_DOMAIN}</span>
+            <span>SALVATOR ROSA, ASTRAEA, c. 1640</span>
+          </div>
 
-        {/* Footer */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "12px 48px",
-            fontFamily: "Mono",
-            fontSize: 10,
-            color: "#8A8A8A",
-            letterSpacing: "0.25em",
-            gap: 16,
-          }}
-        >
-          <span>PERMISSIONLESS NEWS</span>
-          <span style={{ color: "#C8C0B0" }}>{"\u00B7"}</span>
-          <span>ONCHAIN</span>
-          <span style={{ color: "#C8C0B0" }}>{"\u00B7"}</span>
-          <span>BASE L2</span>
-          <span style={{ color: "#C8C0B0" }}>{"\u00B7"}</span>
-          <span>{BRAND_DOMAIN}</span>
+          {/* Bottom rule */}
+          <div style={{ height: 3, backgroundColor: "#FFFFFF", width: "100%", display: "flex", opacity: 0.4 }} />
         </div>
       </div>
     ),

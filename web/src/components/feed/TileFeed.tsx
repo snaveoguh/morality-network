@@ -4,7 +4,7 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { isAddress } from "viem";
-import { computeEntityHash } from "@/lib/entity";
+import { computeEntityHash, buildEntityUrl } from "@/lib/entity";
 import { TipButton } from "@/components/entity/TipButton";
 import { StarRating } from "@/components/shared/StarRating";
 import {
@@ -20,6 +20,7 @@ import { BiasPill, BiasBar } from "@/components/feed/BiasBar";
 import type { SourceBias } from "@/lib/bias";
 import { LiveCommentColumn } from "@/components/feed/LiveCommentColumn";
 import { openCenteredPopup, shouldKeepDefaultLinkBehavior } from "@/lib/popup";
+import { detectStoryCountries, ISO_TO_LABEL } from "@/lib/countries";
 
 // ============================================================================
 // TYPES
@@ -28,10 +29,10 @@ import { openCenteredPopup, shouldKeepDefaultLinkBehavior } from "@/lib/popup";
 type VisualWeight = "hero" | "major" | "standard" | "minor" | "filler";
 
 type TileItem =
-  | { type: "rss"; data: FeedItemType; category: string; sortTime: number }
-  | { type: "cast"; data: Cast; category: string; sortTime: number }
-  | { type: "governance"; data: Proposal; category: string; sortTime: number }
-  | { type: "video"; data: VideoItem; category: string; sortTime: number };
+  | { type: "rss"; data: FeedItemType; category: string; sortTime: number; countries: string[] }
+  | { type: "cast"; data: Cast; category: string; sortTime: number; countries: string[] }
+  | { type: "governance"; data: Proposal; category: string; sortTime: number; countries: string[] }
+  | { type: "video"; data: VideoItem; category: string; sortTime: number; countries: string[] };
 
 interface BiasDigest {
   insight: string;
@@ -52,7 +53,7 @@ interface TileFeedProps {
 
 const FILTER_OPTIONS = [
   { value: "all", label: "All" },
-  { value: "world", label: "World" },
+  { value: "news", label: "News" },
   { value: "tech", label: "Tech" },
   { value: "crypto", label: "Crypto" },
   { value: "environment", label: "Environment" },
@@ -68,6 +69,34 @@ const FILTER_OPTIONS = [
   { value: "farcaster", label: "Farcaster" },
   { value: "video", label: "Video" },
 ];
+
+// "News" filter matches all general news categories (World, Politics, Business)
+const NEWS_CATEGORIES = new Set(["world", "politics", "business"]);
+
+const COUNTRY_FILTER_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "us", label: "US" },
+  { value: "uk", label: "UK" },
+  { value: "europe", label: "Europe" },
+  { value: "mideast", label: "Mid East" },
+  { value: "asia", label: "Asia" },
+  { value: "africa", label: "Africa" },
+  { value: "americas", label: "Americas" },
+  { value: "oceania", label: "Oceania" },
+  { value: "ukraine", label: "Ukraine" },
+];
+
+const REGION_COUNTRIES: Record<string, Set<string>> = {
+  us: new Set(["US"]),
+  uk: new Set(["GB"]),
+  europe: new Set(["FR", "DE", "ES", "IT", "NL", "SE", "PL", "NO", "FI", "BE", "IE"]),
+  mideast: new Set(["IL", "PS", "IR", "SA", "IQ", "SY", "YE", "LB", "QA", "EG", "TR"]),
+  asia: new Set(["CN", "JP", "KR", "TW", "IN", "PH", "ID", "TH", "SG", "MY", "VN", "HK", "MM", "KP", "AF", "PK"]),
+  africa: new Set(["NG", "ZA", "KE", "ET", "SD", "CD", "SO"]),
+  americas: new Set(["CA", "BR", "AR", "MX", "CO", "VE", "CU", "CL", "PE"]),
+  oceania: new Set(["AU", "NZ"]),
+  ukraine: new Set(["UA"]),
+};
 
 const BIAS_FILTER_OPTIONS = [
   { value: "all", label: "All Bias" },
@@ -247,6 +276,7 @@ function MobileTabBar({
 export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, publishedHashList }: TileFeedProps) {
   const publishedHashes = useMemo(() => new Set(publishedHashList ?? []), [publishedHashList]);
   const [filter, setFilter] = useState("all");
+  const [countryFilter, setCountryFilter] = useState("all");
   const [biasFilter, setBiasFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
 
@@ -302,6 +332,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
         data: item,
         category: item.category.toLowerCase(),
         sortTime: new Date(item.pubDate).getTime(),
+        countries: detectStoryCountries(item.title, item.description ?? ""),
       });
     }
 
@@ -311,6 +342,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
         data: cast,
         category: "farcaster",
         sortTime: new Date(cast.timestamp).getTime(),
+        countries: [],
       });
     }
 
@@ -322,6 +354,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
         data: proposal,
         category,
         sortTime: proposal.startTime * 1000,
+        countries: detectStoryCountries(proposal.title ?? "", proposal.body ?? ""),
       });
     }
 
@@ -331,6 +364,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
         data: video,
         category: "video",
         sortTime: new Date(video.pubDate).getTime(),
+        countries: detectStoryCountries(video.title ?? "", ""),
       });
     }
 
@@ -445,7 +479,20 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
   const filtered = useMemo(() => {
     let result = items;
     if (filter !== "all") {
-      result = result.filter((item) => item.category === filter);
+      if (filter === "news") {
+        // "News" matches all general news categories (world, politics, business)
+        result = result.filter((item) => NEWS_CATEGORIES.has(item.category));
+      } else {
+        result = result.filter((item) => item.category === filter);
+      }
+    }
+    if (countryFilter !== "all") {
+      const regionSet = REGION_COUNTRIES[countryFilter];
+      if (regionSet) {
+        result = result.filter((item) =>
+          item.countries.some((c) => regionSet.has(c)),
+        );
+      }
     }
     if (biasFilter !== "all") {
       result = result.filter((item) => {
@@ -469,7 +516,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
       });
     }
     return result;
-  }, [items, filter, biasFilter, tagFilter]);
+  }, [items, filter, countryFilter, biasFilter, tagFilter]);
 
   // Track hero count to prevent multiple heroes
   let heroCount = 0;
@@ -488,6 +535,24 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
               className={`transition-colors ${
                 filter === opt.value
                   ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-[var(--rule)]"
+                  : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+              }`}
+            >
+              {opt.label}
+            </button>
+          </span>
+        ))}
+
+        <span className="mx-3 shrink-0 text-[var(--rule-light)]">·</span>
+
+        {COUNTRY_FILTER_OPTIONS.map((opt, i) => (
+          <span key={opt.value} className="flex shrink-0 items-center whitespace-nowrap">
+            {i > 0 && <span className="mx-1 text-[var(--rule-light)]">|</span>}
+            <button
+              onClick={() => setCountryFilter(opt.value)}
+              className={`transition-colors ${
+                countryFilter === opt.value
+                  ? "font-bold text-[var(--ink)] underline underline-offset-4"
                   : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
               }`}
             >
@@ -707,10 +772,24 @@ const HEADLINE_SIZES: Record<VisualWeight, string> = {
   filler: "text-xs leading-snug font-headline-serif font-semibold",
 };
 
+function CountryTags({ codes }: { codes: string[] }) {
+  if (codes.length === 0) return null;
+  return (
+    <>
+      {codes.slice(0, 3).map((iso) => (
+        <span key={iso} className="border border-[var(--rule)] px-1 py-px font-mono text-[7px] font-bold uppercase tracking-wider text-[var(--ink-light)]">
+          {ISO_TO_LABEL[iso] || iso}
+        </span>
+      ))}
+    </>
+  );
+}
+
 function RssTile({ item, weight, seed = 0, isFeature = false, isPublished = false }: { item: FeedItemType; weight: VisualWeight; seed?: number; isFeature?: boolean; isPublished?: boolean }) {
   const { isConnected } = useAccount();
   const timeSince = getTimeSince(item.pubDate);
   const entityHash = computeEntityHash(item.link);
+  const countries = useMemo(() => detectStoryCountries(item.title, item.description ?? ""), [item.title, item.description]);
   const isHero = weight === "hero";
   const isBreaking = (Date.now() - new Date(item.pubDate).getTime()) < 3600000;
   const rawPreview = item.canonicalClaim || item.description;
@@ -746,6 +825,7 @@ function RssTile({ item, weight, seed = 0, isFeature = false, isPublished = fals
           {item.bias && <BiasPill bias={item.bias} />}
           <span>&middot;</span>
           <span>{item.category}</span>
+          <CountryTags codes={countries} />
           <span className="ml-auto">{timeSince}</span>
         </div>
 
@@ -767,7 +847,7 @@ function RssTile({ item, weight, seed = 0, isFeature = false, isPublished = fals
         <div className="flex items-center gap-3 border-t border-[var(--rule-light)] pt-2 mt-4 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
           <Link href={`/article/${entityHash}`} className="font-bold text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]">Read</Link>
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[var(--ink)]">Source&nbsp;&rsaquo;</a>
-          <Link href={`/entity/${entityHash}`} className="transition-colors hover:text-[var(--ink)]">Discuss</Link>
+          <Link href={buildEntityUrl(entityHash, { url: item.link, title: item.title, source: item.source, type: "link" })} className="transition-colors hover:text-[var(--ink)]">Discuss</Link>
           {isConnected && <TipButton entityHash={entityHash} />}
         </div>
       </article>
@@ -804,6 +884,7 @@ function RssTile({ item, weight, seed = 0, isFeature = false, isPublished = fals
           {item.bias && <BiasPill bias={item.bias} />}
           <span>&middot;</span>
           <span>{item.category}</span>
+          <CountryTags codes={countries} />
           <span className="ml-auto">{timeSince}</span>
         </div>
 
@@ -824,7 +905,7 @@ function RssTile({ item, weight, seed = 0, isFeature = false, isPublished = fals
         <div className="flex items-center gap-3 border-t border-[var(--rule-light)] pt-2 mt-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
           <Link href={`/article/${entityHash}`} className="font-bold text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]">Read</Link>
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[var(--ink)]">Source&nbsp;&rsaquo;</a>
-          <Link href={`/entity/${entityHash}`} className="transition-colors hover:text-[var(--ink)]">Discuss</Link>
+          <Link href={buildEntityUrl(entityHash, { url: item.link, title: item.title, source: item.source, type: "link" })} className="transition-colors hover:text-[var(--ink)]">Discuss</Link>
           {isConnected && <TipButton entityHash={entityHash} />}
         </div>
       </article>
@@ -858,6 +939,7 @@ function RssTile({ item, weight, seed = 0, isFeature = false, isPublished = fals
         {item.bias && <BiasPill bias={item.bias} />}
         <span>&middot;</span>
         <span>{item.category}</span>
+        <CountryTags codes={countries} />
         <span className="ml-auto">{timeSince}</span>
       </div>
 
@@ -879,7 +961,7 @@ function RssTile({ item, weight, seed = 0, isFeature = false, isPublished = fals
       <div className="mt-auto flex items-center gap-3 border-t border-[var(--rule-light)] pt-2 mt-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
         <Link href={`/article/${entityHash}`} className="font-bold text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]">Read</Link>
         <a href={item.link} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[var(--ink)]">Source&nbsp;&rsaquo;</a>
-        <Link href={`/entity/${entityHash}`} className="transition-colors hover:text-[var(--ink)]">Discuss</Link>
+        <Link href={buildEntityUrl(entityHash, { url: item.link, title: item.title, source: item.source, type: "link" })} className="transition-colors hover:text-[var(--ink)]">Discuss</Link>
         {isConnected && <TipButton entityHash={entityHash} />}
       </div>
     </article>
@@ -949,7 +1031,7 @@ function CastTile({ cast, weight }: { cast: Cast; weight: VisualWeight }) {
         <span>{cast.recasts} ⟳</span>
         <span>{cast.replies} ✎</span>
         <Link
-          href={`/entity/${entityHash}`}
+          href={buildEntityUrl(entityHash, { url: tippableAddress || `farcaster://${cast.author.username}`, title: cast.author.displayName, source: "Farcaster", type: "cast" })}
           className="uppercase tracking-wider transition-colors hover:text-[var(--ink)]"
         >
           Discuss

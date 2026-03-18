@@ -13,6 +13,7 @@ import {
   buildAgentResearchPack,
   type AgentResearchPack,
 } from "./agent-swarm";
+import { detectStoryCountries, normalizeBiasCountry } from "./countries";
 import { generateTextForTask } from "./ai-provider";
 import { hasAIProviderForTask } from "./ai-models";
 import { extractEntities, enrichEntities } from "./entity-extract";
@@ -36,8 +37,8 @@ import { fetchMarkdown, isCloudflareAvailable } from "./cloudflare-crawl";
 
 const WRITER_MAX_TOKENS = 6144;
 const EXTRACTOR_MAX_TOKENS = 2048;
-const WRITER_TIMEOUT_MS = 45_000;
-const EXTRACTOR_TIMEOUT_MS = 15_000;
+const WRITER_TIMEOUT_MS = 20_000;   // 20s — Venice/Groq should complete in 5-15s; tight to fit Vercel timeout
+const EXTRACTOR_TIMEOUT_MS = 10_000;
 const SCRAPE_TIMEOUT_MS = 5_000;
 const MAX_SCRAPED_CHARS = 8000; // per source — CF markdown is cleaner, Claude handles more context
 
@@ -422,6 +423,7 @@ async function runWriterPass(
     maxTokens: WRITER_MAX_TOKENS,
     temperature: 1,
     timeoutMs: WRITER_TIMEOUT_MS,
+    maxAttempts: 2,  // cap retries — fail fast to template fallback
     system: WRITER_SYSTEM_PROMPT,
     user: userMessage,
   });
@@ -909,6 +911,10 @@ export async function generateAIEditorial(
     historicalParallel: writerOutput.historicalParallel,
     stakeholderAnalysis: writerOutput.stakeholderAnalysis,
     marketImpact,
+    storyCountries: [
+      ...detectStoryCountries(primary.title, primary.description ?? ""),
+      ...normalizeBiasCountry(primary.bias?.country),
+    ].filter((v, i, a) => a.indexOf(v) === i),
     generatedBy: "claude-ai" as const,
   };
 }

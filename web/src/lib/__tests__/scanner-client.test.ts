@@ -39,6 +39,12 @@ const BASE_CONFIG: TraderExecutionConfig = {
     stopLossPct: 0.2,
     takeProfitPct: 0.4,
     slippageBps: 250,
+    maxLeverage: 40,
+    minSignalConfidence: 0.55,
+    trailingStopPct: 0.05,
+    trailingStopActivationPct: 0.05,
+    circuitBreakerLosses: 3,
+    circuitBreakerPauseMs: 3_600_000,
   },
   safety: {
     minScannerCandidatesLive: 1,
@@ -51,6 +57,7 @@ const BASE_CONFIG: TraderExecutionConfig = {
     defaultLeverage: 2,
     entryNotionalUsd: 50,
     minAccountValueUsd: 100,
+    watchMarkets: ["BTC", "ETH", "SOL"],
   },
 };
 

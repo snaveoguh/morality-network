@@ -7,10 +7,11 @@ const MARKETS_API = "/api/markets";
 const POLL_MS = 60_000;
 
 interface Quote {
-  symbol: "MO" | "ETH" | "ZEC" | "BTC" | "MOG";
+  symbol: string;
   price: number | null;
   change24h: number | null;
   href: string;
+  cgId?: string;
 }
 
 const FALLBACK_QUOTES: Quote[] = [
@@ -21,28 +22,60 @@ const FALLBACK_QUOTES: Quote[] = [
     href: `https://dexscreener.com/base/${MO_TOKEN_ADDRESS}`,
   },
   {
+    symbol: "BTC",
+    price: null,
+    change24h: null,
+    href: "https://www.coingecko.com/en/coins/bitcoin",
+    cgId: "bitcoin",
+  },
+  {
     symbol: "ETH",
     price: null,
     change24h: null,
     href: "https://www.coingecko.com/en/coins/ethereum",
+    cgId: "ethereum",
+  },
+  {
+    symbol: "SOL",
+    price: null,
+    change24h: null,
+    href: "https://www.coingecko.com/en/coins/solana",
+    cgId: "solana",
+  },
+  {
+    symbol: "GOLD",
+    price: null,
+    change24h: null,
+    href: "https://www.coingecko.com/en/coins/pax-gold",
+    cgId: "pax-gold",
   },
   {
     symbol: "ZEC",
     price: null,
     change24h: null,
     href: "https://www.coingecko.com/en/coins/zcash",
+    cgId: "zcash",
   },
   {
-    symbol: "BTC",
+    symbol: "DOGE",
     price: null,
     change24h: null,
-    href: "https://www.coingecko.com/en/coins/bitcoin",
+    href: "https://www.coingecko.com/en/coins/dogecoin",
+    cgId: "dogecoin",
+  },
+  {
+    symbol: "PEPE",
+    price: null,
+    change24h: null,
+    href: "https://www.coingecko.com/en/coins/pepe",
+    cgId: "pepe",
   },
   {
     symbol: "MOG",
     price: null,
     change24h: null,
     href: "https://www.coingecko.com/en/coins/mog-coin",
+    cgId: "mog-coin",
   },
 ];
 
@@ -80,7 +113,7 @@ export function MarqueeBanner() {
       if (!res.ok) return;
 
       const data = (await res.json()) as {
-        coingecko: Record<string, { usd?: number; usd_24h_change?: number }> | null;
+        coingecko: Record<string, { usd?: number; usd_24h_change?: number }>;
         dexscreener: {
           pairs?: Array<{
             chainId?: string;
@@ -97,19 +130,8 @@ export function MarqueeBanner() {
       if (data.coingecko) {
         const cg = data.coingecko;
         next = next.map((q) => {
-          if (q.symbol === "BTC") {
-            return { ...q, price: asNumber(cg.bitcoin?.usd), change24h: asNumber(cg.bitcoin?.usd_24h_change) };
-          }
-          if (q.symbol === "ETH") {
-            return { ...q, price: asNumber(cg.ethereum?.usd), change24h: asNumber(cg.ethereum?.usd_24h_change) };
-          }
-          if (q.symbol === "ZEC") {
-            return { ...q, price: asNumber(cg.zcash?.usd), change24h: asNumber(cg.zcash?.usd_24h_change) };
-          }
-          if (q.symbol === "MOG") {
-            return { ...q, price: asNumber(cg["mog-coin"]?.usd), change24h: asNumber(cg["mog-coin"]?.usd_24h_change) };
-          }
-          return q;
+          if (!q.cgId || !cg[q.cgId]) return q;
+          return { ...q, price: asNumber(cg[q.cgId].usd), change24h: asNumber(cg[q.cgId].usd_24h_change) };
         });
       }
 
@@ -146,10 +168,7 @@ export function MarqueeBanner() {
 
   return (
     <div className="relative overflow-hidden bg-[var(--paper-dark)] py-1">
-      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4">
-        <span className="shrink-0 font-mono text-[8px] uppercase tracking-[0.22em] text-[var(--ink-faint)]">
-          Markets
-        </span>
+      <div className="flex items-center">
         <div className="overflow-hidden">
           <div className="animate-marquee whitespace-nowrap">
             {Array.from({ length: 2 }).map((_, loop) => (

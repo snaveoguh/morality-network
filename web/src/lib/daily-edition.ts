@@ -14,6 +14,8 @@ import { extractCanonicalClaim } from "./claim-extract";
 import type { ArticleContent } from "./article";
 import { BRAND_NAME, SITE_URL } from "./brand";
 import { UNDERGROUND_PLAYLIST, getDailyTrack, type YouTubeTrack } from "./music";
+import { generateIllustration } from "./image-generation";
+import { saveIllustration } from "./illustration-store";
 
 // ============================================================================
 // DAILY EDITION — AI-generated front-page editorial
@@ -440,6 +442,18 @@ async function generateDailyEdition(data: DailyEditionData): Promise<DailyEditio
     channel: v.channel,
   }));
 
+  // PASS 3: Illustration — DALL-E 3 newspaper-style woodcut
+  console.log("[daily-edition] Pass 3 (illustration) starting...");
+  const illustration = await generateIllustration(
+    extracted.headline,
+    normalizeDailyTitle(extracted.dailyTitle),
+  );
+  if (illustration) {
+    console.log(`[daily-edition] Illustration generated (${Math.round(illustration.base64.length / 1024)}KB)`);
+  } else {
+    console.log("[daily-edition] Illustration skipped (no API key or generation failed)");
+  }
+
   const article: ArticleContent = {
     primary: syntheticPrimary,
     claim: extracted.headline,
@@ -468,12 +482,29 @@ async function generateDailyEdition(data: DailyEditionData): Promise<DailyEditio
     newsVideos,
     isDailyEdition: true,
     dailyTitle: normalizeDailyTitle(extracted.dailyTitle),
+    storyCountries: [],
+    hasIllustration: !!illustration,
   };
 
-  // Save to editorial archive
-  await saveEditorial(hash, article, "claude-ai").catch((err) => {
-    console.warn("[daily-edition] Failed to save:", err instanceof Error ? err.message : err);
-  });
+  // Save editorial and illustration directly — after() doesn't fire during
+  // build-time static generation, so editions were generated but never persisted.
+  try {
+    await saveEditorial(hash, article, "claude-ai");
+  } catch (err) {
+    console.warn("[daily-edition] Failed to save editorial:", err instanceof Error ? err.message : err);
+  }
+
+  if (illustration) {
+    try {
+      await saveIllustration(hash, {
+        base64: illustration.base64,
+        prompt: illustration.prompt,
+        revisedPrompt: illustration.revisedPrompt,
+      });
+    } catch (err) {
+      console.warn("[daily-edition] Failed to save illustration:", err instanceof Error ? err.message : err);
+    }
+  }
 
   return {
     hash,

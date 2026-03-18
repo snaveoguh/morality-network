@@ -10,6 +10,7 @@ import { getArchivedEditorial } from "./editorial-archive";
 import { generateAIEditorial } from "./claude-editorial";
 import { computeEntityHash } from "./entity";
 import { extractPodcastEpisode } from "./podcast";
+import { detectStoryCountries, normalizeBiasCountry } from "./countries";
 
 // ============================================================================
 // ARTICLE CONTENT GENERATION
@@ -116,6 +117,8 @@ export interface ArticleContent {
   stakeholderAnalysis?: string | null;
   /** Per-article market impact analysis with time horizons */
   marketImpact?: MarketImpactAnalysis | null;
+  /** ISO 3166-1 alpha-2 country codes detected in the story */
+  storyCountries?: string[];
   /** Source-side podcast episode metadata when article is audio-first */
   podcastEpisode?: PodcastEpisode | null;
   /** Daily edition: music pick (Spotify preferred, YouTube legacy) */
@@ -126,6 +129,12 @@ export interface ArticleContent {
   isDailyEdition?: boolean;
   /** Daily edition: the daily title (e.g. "THE GREAT UNWINDING") */
   dailyTitle?: string;
+  /** DALL-E generated illustration (base64 PNG) — only present during generation, stripped before archiving */
+  illustrationBase64?: string;
+  /** The prompt used to generate the illustration */
+  illustrationPrompt?: string;
+  /** Whether an illustration exists in the separate illustration store */
+  hasIllustration?: boolean;
 }
 
 interface StoryContext {
@@ -639,21 +648,24 @@ const inflight = new Map<string, Promise<EditorialResult>>();
 export async function generateEditorial(
   primary: FeedItem,
   related: FeedItem[],
+  options?: { skipCache?: boolean },
 ): Promise<EditorialResult> {
   const hash = computeEntityHash(primary.link);
 
   // 1. Check editorial archive cache — already generated, serve immediately
-  try {
-    const cached = await getArchivedEditorial(hash);
-    if (cached && isCachedEditorialCompatible(primary, related, cached)) {
-      console.log(`[editorial] cache hit for ${hash.slice(0, 10)}...`);
-      return await enrichArticleEmbeds(primary, cached);
+  if (!options?.skipCache) {
+    try {
+      const cached = await getArchivedEditorial(hash);
+      if (cached && isCachedEditorialCompatible(primary, related, cached)) {
+        console.log(`[editorial] cache hit for ${hash.slice(0, 10)}...`);
+        return await enrichArticleEmbeds(primary, cached);
+      }
+      if (cached) {
+        console.log(`[editorial] cache stale for ${hash.slice(0, 10)}..., regenerating`);
+      }
+    } catch (err) {
+      console.warn("[editorial] archive lookup failed:", err);
     }
-    if (cached) {
-      console.log(`[editorial] cache stale for ${hash.slice(0, 10)}..., regenerating`);
-    }
-  } catch (err) {
-    console.warn("[editorial] archive lookup failed:", err);
   }
 
   // 2. Singleflight — if generation is already in-flight, wait for that result
@@ -907,6 +919,12 @@ async function generateEditorialTemplate(
   // Generate fallback market impact from topic regex matching
   const marketImpact = generateFallbackMarketImpact(primary, related);
 
+  // Detect story countries from content + source outlet country
+  const storyCountries = [
+    ...detectStoryCountries(primary.title, primary.description ?? ""),
+    ...normalizeBiasCountry(primary.bias?.country),
+  ].filter((v, i, a) => a.indexOf(v) === i);
+
   return {
     primary,
     claim,
@@ -922,6 +940,7 @@ async function generateEditorialTemplate(
     agentResearch,
     entities,
     marketImpact,
+    storyCountries,
   };
 }
 

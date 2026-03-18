@@ -27,6 +27,8 @@ interface MarketCardProps {
   votesFor?: number;
   votesAgainst?: number;
   quorum?: number;
+  /** True when governance voting has ended (proposal executed/defeated/etc) */
+  votingClosed?: boolean;
 }
 
 const OUTCOME_LABELS: Record<MarketOutcome, { label: string; color: string }> = {
@@ -35,8 +37,6 @@ const OUTCOME_LABELS: Record<MarketOutcome, { label: string; color: string }> = 
   [MarketOutcome.Against]: { label: "Failed", color: "var(--accent-red)" },
   [MarketOutcome.Void]: { label: "Voided", color: "var(--ink-light)" },
 };
-
-const NOT_OPEN_LABEL = { label: "Not Open", color: "var(--rule-light)" };
 
 const DEFAULT_MARKET: ParsedMarketData = {
   forPool: BigInt(0),
@@ -52,6 +52,14 @@ const DEFAULT_MARKET: ParsedMarketData = {
   againstPercent: 50,
 };
 
+const GOV_STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  executed: { label: "Executed", color: "var(--ink)" },
+  succeeded: { label: "Succeeded", color: "var(--ink)" },
+  defeated: { label: "Defeated", color: "var(--accent-red)" },
+  closed: { label: "Closed", color: "var(--ink-light)" },
+  queued: { label: "Queued", color: "var(--ink-light)" },
+};
+
 export function MarketCard({
   dao,
   proposalId,
@@ -61,6 +69,7 @@ export function MarketCard({
   votesFor,
   votesAgainst,
   quorum,
+  votingClosed,
 }: MarketCardProps) {
   const { address } = useAccount();
   const daoKey = getDaoPredictionKey(dao);
@@ -93,8 +102,13 @@ export function MarketCard({
 
   // Use actual market data if it exists, otherwise show default 50/50
   const displayMarket = market?.exists ? market : DEFAULT_MARKET;
-  const outcomeInfo = market?.exists ? OUTCOME_LABELS[displayMarket.outcome] : NOT_OPEN_LABEL;
   const isResolved = displayMarket.outcome !== MarketOutcome.Unresolved;
+  // Badge: use onchain outcome if resolved, else governance status if voting closed, else default
+  const outcomeInfo = isResolved
+    ? OUTCOME_LABELS[displayMarket.outcome]
+    : votingClosed && GOV_STATUS_LABELS[status]
+      ? GOV_STATUS_LABELS[status]
+      : OUTCOME_LABELS[displayMarket.outcome];
 
   return (
     <div className="border-2 border-[var(--rule)] bg-[var(--paper)] p-4">
@@ -160,9 +174,9 @@ export function MarketCard({
             )}
           </div>
         )}
-        {!market?.exists && (
+        {!market?.exists && !votingClosed && (
           <div className="text-[8px] uppercase tracking-wider">
-            Awaiting operator market creation on Ethereum mainnet
+            First wager auto-creates the market onchain
           </div>
         )}
       </div>
@@ -189,14 +203,15 @@ export function MarketCard({
         </div>
       )}
 
-      {/* Inline wager UI */}
-      {!isResolved && market?.exists && (
+      {/* Inline wager UI — first stake auto-creates the market onchain */}
+      {!isResolved && !votingClosed && (
         <InlineWager dao={daoKey} proposalId={proposalId} />
       )}
 
-      {!isResolved && !market?.exists && (
+      {/* Voting closed but contract not yet resolved by operator */}
+      {!isResolved && votingClosed && market?.exists && (
         <p className="py-2 text-center font-mono text-[9px] text-[var(--ink-faint)]">
-          Market not open yet
+          Voting ended &mdash; awaiting onchain resolution
         </p>
       )}
 

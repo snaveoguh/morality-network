@@ -17,7 +17,8 @@ export function getIndexerBackendUrl(): string | null {
     process.env.SCANNER_BACKEND_URL,
   );
 
-  return url ? url.replace(/\/$/, "") : null;
+  // Strip trailing slashes AND literal \n characters (common Vercel env var artifact)
+  return url ? url.replace(/\\n/g, "").replace(/\/$/, "") : null;
 }
 
 export function hasIndexerBackend(): boolean {
@@ -37,7 +38,9 @@ export async function fetchIndexerJson<T>(
   const url = new URL(path, `${baseUrl}/`);
   const response = await fetch(url.toString(), {
     ...init,
-    cache: init?.cache ?? "no-store",
+    ...(init?.method && init.method !== "GET"
+      ? { cache: "no-store" as const }
+      : { next: { revalidate: init?.cache === "no-store" ? 0 : 60 } }),
     signal: AbortSignal.timeout(timeoutMs),
   });
 

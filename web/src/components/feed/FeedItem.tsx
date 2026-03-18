@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { computeEntityHash } from "@/lib/entity";
+import { computeEntityHash, buildEntityUrl } from "@/lib/entity";
 import { StarRating } from "@/components/shared/StarRating";
 import { TipButton } from "@/components/entity/TipButton";
 import { useAccount } from "wagmi";
@@ -68,7 +68,7 @@ export function FeedItem({ item }: FeedItemProps) {
             <StarRating rating={0} size="sm" count={0} />
 
             <Link
-              href={`/entity/${entityHash}`}
+              href={buildEntityUrl(entityHash, { url: item.link, title: item.title, source: item.source, type: "link" })}
               className="uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
             >
               Discuss

@@ -11,6 +11,8 @@ import { fetchPersistedSwarmState } from "@/lib/server/runtime-backend";
 import "@/lib/agents/scanner";
 import "@/lib/agents/swarm";
 import "@/lib/agents/coordinator";
+import "@/lib/agents/trader";
+import "@/lib/agents/scalper";
 
 export const dynamic = "force-dynamic";
 
@@ -96,6 +98,30 @@ export async function GET() {
           status: "running",
           startedAt: null,
           lastActivityAt: swarmState?.updatedAt ?? null,
+          stats: {},
+          errors: [],
+          remote: true,
+          source: backendUrl,
+        },
+        {
+          id: "trader",
+          name: "Trader",
+          description: "Trading engine runs in the always-on worker tier.",
+          status: "running",
+          startedAt: null,
+          lastActivityAt: null,
+          stats: {},
+          errors: [],
+          remote: true,
+          source: backendUrl,
+        },
+        {
+          id: "scalper",
+          name: "Scalper",
+          description: "Real-time 1m candle scalper on Hyperliquid — WebSocket-driven momentum trades.",
+          status: "running",
+          startedAt: null,
+          lastActivityAt: null,
           stats: {},
           errors: [],
           remote: true,

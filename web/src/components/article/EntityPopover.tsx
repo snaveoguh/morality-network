@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import type { EntityMention } from "@/lib/types/entities";
-import { computeEntityHash } from "@/lib/entity";
+import { computeEntityHash, buildEntityUrl } from "@/lib/entity";
 
 interface EntityPopoverProps {
   entity: EntityMention;
@@ -105,7 +105,7 @@ export function EntityPopover({ entity, children }: EntityPopoverProps) {
           {/* Entity profile link */}
           <div className="mt-2 border-t border-[var(--rule-light)] pt-2">
             <Link
-              href={`/entity/${entityHash}`}
+              href={buildEntityUrl(entityHash, { url: entity.canonicalName, title: entity.name, source: "article-mention", type: entity.type })}
               className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
             >
               View Entity Profile &rarr;

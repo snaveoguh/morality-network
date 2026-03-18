@@ -8,7 +8,9 @@ import type { FeedItem } from "./rss";
 
 // ============================================================================
 // REDDIT — fetch top posts from curated subreddits as FeedItems
-// Uses Reddit's public JSON API (no auth needed, rate limit: ~60 req/min)
+// Uses old.reddit.com Atom/RSS feeds (NOT the JSON API).
+// Reddit blocks cloud-provider IPs (Vercel, AWS, etc.) from the JSON API
+// but the RSS feeds on old.reddit.com still work reliably.
 // ============================================================================
 
 interface RedditSubreddit {
@@ -46,8 +48,110 @@ const REDDIT_SUBREDDITS: RedditSubreddit[] = [
 ];
 
 /**
- * Fetch top posts from a single subreddit.
- * Returns FeedItem[] matching the RSS feed format.
+ * Strip Reddit HTML content to plain text description.
+ */
+function stripRedditHtml(html: string): string {
+  return html
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 300);
+}
+
+/**
+ * Extract external link from Reddit Atom entry content.
+ * Reddit entries contain [link] anchors pointing to the actual article.
+ */
+function extractExternalLink(content: string, permalink: string): string {
+  // Look for the [link] anchor — it points to the external article
+  const linkMatch = content.match(/href="([^"]+)"[^>]*>\[link\]/);
+  if (linkMatch?.[1]) {
+    const decoded = linkMatch[1]
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">");
+    // Skip if it's just the reddit self-post link
+    if (!decoded.includes("old.reddit.com") && !decoded.includes("reddit.com/r/")) {
+      return decoded;
+    }
+  }
+  return permalink;
+}
+
+/**
+ * Extract thumbnail from Reddit Atom entry content.
+ * Reddit entries embed img tags for thumbnails in the content HTML.
+ */
+function extractThumbnail(content: string): string | undefined {
+  const imgMatch = content.match(/<img\s+src="([^"]+)"/);
+  if (imgMatch?.[1]) {
+    const url = imgMatch[1].replace(/&amp;/g, "&");
+    if (url.startsWith("http")) return url;
+  }
+  return undefined;
+}
+
+/**
+ * Parse Reddit Atom XML into entries without a full XML parser.
+ * Reddit's Atom feeds are simple enough to parse with regex.
+ */
+function parseRedditAtom(xml: string): Array<{
+  id: string;
+  title: string;
+  link: string;
+  content: string;
+  published: string;
+  author: string;
+}> {
+  const entries: Array<{
+    id: string;
+    title: string;
+    link: string;
+    content: string;
+    published: string;
+    author: string;
+  }> = [];
+
+  // Split on <entry> tags
+  const entryBlocks = xml.split("<entry>");
+  for (let i = 1; i < entryBlocks.length; i++) {
+    const block = entryBlocks[i].split("</entry>")[0];
+
+    const idMatch = block.match(/<id>([^<]*)<\/id>/);
+    const titleMatch = block.match(/<title>([^<]*)<\/title>/);
+    const linkMatch = block.match(/<link\s+href="([^"]+)"/);
+    const contentMatch = block.match(/<content[^>]*>([\s\S]*?)<\/content>/);
+    const publishedMatch = block.match(/<published>([^<]*)<\/published>/);
+    const authorMatch = block.match(/<name>([^<]*)<\/name>/);
+
+    if (titleMatch) {
+      entries.push({
+        id: idMatch?.[1] || `entry-${i}`,
+        title: titleMatch[1]
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&quot;/g, '"')
+          .replace(/&#039;/g, "'"),
+        link: linkMatch?.[1] || "",
+        content: contentMatch?.[1] || "",
+        published: publishedMatch?.[1] || new Date().toISOString(),
+        author: authorMatch?.[1] || "",
+      });
+    }
+  }
+
+  return entries;
+}
+
+/**
+ * Fetch top posts from a single subreddit via RSS/Atom feed.
+ * Uses old.reddit.com which is not blocked from cloud IPs.
  */
 async function fetchSubreddit(
   config: RedditSubreddit,
@@ -58,7 +162,7 @@ async function fetchSubreddit(
     const timeout = setTimeout(() => controller.abort(), 5_000);
 
     const res = await fetch(
-      `https://www.reddit.com/r/${config.sub}/hot.json?limit=${limit}&raw_json=1`,
+      `https://old.reddit.com/r/${config.sub}/.rss?limit=${limit}`,
       {
         headers: { "User-Agent": "PooterWorld/2.0" },
         signal: controller.signal,
@@ -67,47 +171,30 @@ async function fetchSubreddit(
     clearTimeout(timeout);
 
     if (!res.ok) return [];
-    const data = await res.json();
+    const xml = await res.text();
 
+    const entries = parseRedditAtom(xml);
     const bias = getSourceBias("reddit.com");
 
-    return (data.data?.children || [])
-      .filter(
-        (c: any) =>
-          c.data &&
-          !c.data.over_18 &&
-          !c.data.stickied &&
-          !c.data.is_self &&     // skip self-posts (no external link)
-          c.data.url,
-      )
+    return entries
+      .filter((entry) => {
+        // Skip stickied/megathread posts (usually mod posts)
+        const author = entry.author.toLowerCase();
+        return !author.includes("automoderator") && !author.endsWith("mods");
+      })
       .slice(0, limit)
-      .map((c: any) => {
-        const d = c.data;
-
-        // Use the external link if it's a link post, otherwise the reddit permalink
-        const link =
-          d.url_overridden_by_dest || d.url || `https://reddit.com${d.permalink}`;
-
-        // Try to get a thumbnail/preview image
-        let imageUrl: string | undefined;
-        if (d.preview?.images?.[0]?.source?.url) {
-          imageUrl = d.preview.images[0].source.url;
-        } else if (
-          d.thumbnail &&
-          d.thumbnail !== "self" &&
-          d.thumbnail !== "default" &&
-          d.thumbnail !== "nsfw" &&
-          d.thumbnail !== "spoiler"
-        ) {
-          imageUrl = d.thumbnail;
-        }
+      .map((entry) => {
+        const permalink = entry.link;
+        const link = extractExternalLink(entry.content, permalink);
+        const imageUrl = extractThumbnail(entry.content);
+        const description = stripRedditHtml(entry.content);
 
         const feedItem: FeedItem = {
-          id: `reddit-${d.id}`,
-          title: d.title || "Untitled",
+          id: `reddit-${entry.id}`,
+          title: entry.title || "Untitled",
           link,
-          description: (d.selftext || "").slice(0, 300),
-          pubDate: new Date(d.created_utc * 1000).toISOString(),
+          description,
+          pubDate: entry.published,
           source: config.name,
           sourceUrl: `https://www.reddit.com/r/${config.sub}`,
           category: config.category,
@@ -128,7 +215,7 @@ async function fetchSubreddit(
 
 /**
  * Fetch top posts from all configured subreddits.
- * Fetches in parallel with a slight stagger to avoid rate limits.
+ * Fetches in parallel — RSS feeds are lightweight.
  */
 export async function fetchRedditFeeds(): Promise<FeedItem[]> {
   const results = await Promise.allSettled(

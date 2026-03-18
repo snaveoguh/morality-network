@@ -5,6 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useAccount } from "wagmi";
 import type { ArticleContent } from "@/lib/article";
+import { ISO_TO_LABEL, detectStoryCountries, normalizeBiasCountry } from "@/lib/countries";
 import { BiasPill } from "@/components/feed/BiasBar";
 import { TipButton } from "@/components/entity/TipButton";
 import { RatingWidget } from "@/components/entity/RatingWidget";
@@ -153,6 +154,15 @@ export function ArticleTemplate({
   } =
     article;
 
+  // Compute country tags — use stored value or detect from title/description
+  const storyCountries = useMemo(() => {
+    if (article.storyCountries && article.storyCountries.length > 0) return article.storyCountries;
+    return [
+      ...detectStoryCountries(primary.title, primary.description ?? ""),
+      ...normalizeBiasCountry(primary.bias?.country),
+    ].filter((v, i, a) => a.indexOf(v) === i);
+  }, [article.storyCountries, primary.title, primary.description, primary.bias?.country]);
+
   // Build funding graph from article sources
   const fundingGraph = useMemo(
     () => buildFundingGraph(primary, relatedSources),
@@ -216,6 +226,20 @@ export function ArticleTemplate({
           </p>
         </aside>
 
+        {/* Country tags */}
+        {storyCountries && storyCountries.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {storyCountries.map((iso) => (
+              <span
+                key={iso}
+                className="border border-[var(--rule)] px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-[var(--ink-light)]"
+              >
+                {ISO_TO_LABEL[iso] || iso}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Dateline — monospace ruled */}
         <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-b border-[var(--rule-light)] py-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
           <span>{dateline}</span>
@@ -237,7 +261,21 @@ export function ArticleTemplate({
       </header>
 
       {/* ══════════════ HERO IMAGE ══════════════ */}
-      {primary.imageUrl && (
+      {article.isDailyEdition && (article.hasIllustration || article.illustrationBase64) && editionNumber ? (
+        <figure className="mb-8">
+          <div className="overflow-hidden border border-[var(--rule)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/api/edition/${editionNumber}/illustration`}
+              alt={`${article.dailyTitle || "Daily Edition"} — cover illustration`}
+              className="w-full h-auto"
+            />
+          </div>
+          <figcaption className="mt-1.5 font-mono text-[9px] italic text-[var(--ink-faint)]">
+            AI-generated illustration for this edition
+          </figcaption>
+        </figure>
+      ) : primary.imageUrl ? (
         <figure className="mb-8">
           <div className="newspaper-img-hero overflow-hidden border border-[var(--rule-light)]">
             <img
@@ -250,7 +288,7 @@ export function ArticleTemplate({
             Image via {primary.source}
           </figcaption>
         </figure>
-      )}
+      ) : null}
 
       {podcastEpisode && <PodcastEmbed episode={podcastEpisode} sourceName={primary.source} />}
 
@@ -776,8 +814,6 @@ export function ArticleTemplate({
         </div>
       </footer>
 
-      {/* ══════════════ DAILY EDITION: PARALLEL WORLD FOOTER ══════════════ */}
-      {isDailyEdition && <ParallelWorldFooter />}
     </div>
   );
 }

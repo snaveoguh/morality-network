@@ -18,10 +18,12 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 
 export async function AsyncMasthead() {
   // Daily edition is the hero content — give it enough time for AI generation.
-  // On cache hit this returns in <100ms; on first generation it needs ~30s.
+  // On cache hit this returns in <100ms; on first generation it can take a while.
+  // IMPORTANT: Must stay under the page's maxDuration (30s) or Vercel kills the
+  // function mid-stream → "Connection closed" crash on the client.
   const dailyEdition = await withTimeout(
     getDailyEdition().catch(() => null),
-    40000,
+    25000,
     null,
   );
 

@@ -69,6 +69,7 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
     const title = searchParams.get("title")?.trim() || "";
     const source = searchParams.get("source")?.trim() || "";
     const type = searchParams.get("type")?.trim() || "link";
+    const description = searchParams.get("description")?.trim() || "";
 
     if (url) {
       const entry: StumbleContextEntry = {
@@ -77,6 +78,7 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
         title: title || url,
         source: source || "stumble",
         type,
+        description: description || undefined,
         savedAt: new Date().toISOString(),
       };
       saveStumbleContext(entry);
@@ -88,7 +90,8 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
   }, [entityHash, searchParams]);
 
   const resolvedIdentifier = entity?.identifier || stumbleContext?.url || entityHash;
-  const resolvedTitle = entity?.identifier || stumbleContext?.title || entityHash;
+  const resolvedTitle = stumbleContext?.title || entity?.identifier || entityHash;
+  const hasContext = !!(entity?.identifier || stumbleContext);
   const directTipAddress =
     typeof entity?.identifier === "string" && isAddress(entity.identifier.trim())
       ? (entity.identifier.trim() as `0x${string}`)
@@ -114,11 +117,63 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
               {entity && <EntityBadge entityType={entity.entityType} />}
+              {stumbleContext?.type && !entity && (
+                <span className="border border-[var(--rule)] px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-light)]">
+                  {stumbleContext.type}
+                </span>
+              )}
               <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">Entity Profile</span>
             </div>
-            <h1 className="break-all font-mono text-sm font-bold text-[var(--ink)]">
-              {resolvedIdentifier}
-            </h1>
+
+            {/* Title — show human-readable name when available */}
+            {hasContext && resolvedTitle !== entityHash ? (
+              <>
+                <h1 className="font-headline text-xl leading-tight text-[var(--ink)] sm:text-2xl">
+                  {resolvedTitle}
+                </h1>
+                {stumbleContext?.source && (
+                  <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
+                    {stumbleContext.source}
+                    {stumbleContext.type && stumbleContext.type !== "link" && (
+                      <> &middot; {stumbleContext.type}</>
+                    )}
+                  </p>
+                )}
+                {stumbleContext?.description && (
+                  <p className="mt-1.5 font-body-serif text-sm leading-relaxed text-[var(--ink-light)]">
+                    {stumbleContext.description}
+                  </p>
+                )}
+                {/* Original URL — clickable if it's a real URL */}
+                {stumbleContext?.url && /^https?:\/\//.test(stumbleContext.url) && (
+                  <a
+                    href={stumbleContext.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1.5 block truncate font-mono text-[9px] text-[var(--ink-faint)] underline decoration-[var(--rule-light)] underline-offset-2 transition-colors hover:text-[var(--ink)]"
+                  >
+                    {stumbleContext.url}
+                  </a>
+                )}
+                {/* Entity identifier from registry */}
+                {entity?.identifier && (
+                  <p className="mt-1 truncate font-mono text-[10px] text-[var(--ink-light)]">
+                    {entity.identifier}
+                  </p>
+                )}
+              </>
+            ) : (
+              <h1 className="break-all font-mono text-sm font-bold text-[var(--ink)]">
+                {resolvedIdentifier}
+              </h1>
+            )}
+
+            {/* Always show the entity hash */}
+            <p className="mt-2 font-mono text-[9px] text-[var(--ink-faint)]">
+              <span className="uppercase tracking-wider">Hash</span>{" "}
+              <span className="break-all select-all">{entityHash}</span>
+            </p>
+
             {entity?.claimedOwner &&
               entity.claimedOwner !== "0x0000000000000000000000000000000000000000" && (
                 <p className="mt-1 font-mono text-[10px] text-[var(--ink-faint)]">
@@ -126,19 +181,6 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
                   <span className="font-bold text-[var(--ink)]">{entity.claimedOwner}</span>
                 </p>
               )}
-            {!entity?.identifier && stumbleContext && (
-              <div className="mt-2 border-t border-[var(--rule-light)] pt-2">
-                <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-                  Stumble Context
-                </p>
-                <p className="mt-1 font-body-serif text-sm text-[var(--ink-light)]">
-                  {stumbleContext.title}
-                </p>
-                <p className="mt-1 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
-                  {stumbleContext.source} &middot; {stumbleContext.type}
-                </p>
-              </div>
-            )}
           </div>
           {isConnected &&
             (directTipAddress ? (

@@ -2,7 +2,7 @@
 
 import { useAccount } from "wagmi";
 import { TipButton } from "@/components/entity/TipButton";
-import { computeEntityHash } from "@/lib/entity";
+import { computeEntityHash, buildEntityUrl } from "@/lib/entity";
 import type { Cast } from "@/lib/farcaster";
 import Link from "next/link";
 import { isAddress } from "viem";
@@ -119,7 +119,7 @@ export function CastCard({ cast }: CastCardProps) {
             </span>
 
             <Link
-              href={`/entity/${entityHash}`}
+              href={buildEntityUrl(entityHash, { url: tippableAddress || `farcaster://${cast.author.username}`, title: cast.author.displayName, source: "Farcaster", type: "cast" })}
               className="transition-colors hover:text-[#2F80ED]"
             >
               Discuss

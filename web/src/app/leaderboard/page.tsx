@@ -6,7 +6,7 @@ import { EntityType } from "@/lib/contracts";
 import { buildAnalystReputationFromPredictionMarkets } from "@/lib/analyst-reputation";
 import { buildInterpretationOutcomeScores } from "@/lib/interpretation-scores";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"; // too heavy for build-time prerender
 export const maxDuration = 55;
 
 /** Race a promise against a timeout — returns fallback on timeout */

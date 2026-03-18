@@ -1,5 +1,6 @@
 import "server-only";
 
+import { after } from "next/server";
 import {
   AI_MODEL_POLICY,
   getConfiguredProvidersForTask,
@@ -19,6 +20,8 @@ export interface AITextRequest {
   maxTokens: number;
   temperature?: number;
   timeoutMs?: number;
+  /** Max provider attempts before giving up (default: all configured). */
+  maxAttempts?: number;
 }
 
 export interface AITextResult {
@@ -236,13 +239,13 @@ async function generateOpenAICompatibleText(
   };
 }
 
-async function recordAIUsageSafely(input: Parameters<typeof recordAIUsage>[0]): Promise<void> {
-  try {
-    await recordAIUsage(input);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.warn(`[ai-provider] failed to persist AI usage: ${message}`);
-  }
+function recordAIUsageSafely(input: Parameters<typeof recordAIUsage>[0]): void {
+  after(() => {
+    recordAIUsage(input).catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`[ai-provider] failed to persist AI usage: ${message}`);
+    });
+  });
 }
 
 // ─── Agent Hub (Groq free tier via centralized proxy) ────────────────────────
@@ -309,8 +312,10 @@ export async function generateTextForTask(request: AITextRequest): Promise<AITex
     throw new Error(`No AI providers configured for task "${request.task}"`);
   }
 
+  const maxAttempts = request.maxAttempts ?? providers.length;
   let lastError: Error | null = null;
   for (const [index, provider] of providers.entries()) {
+    if (index >= maxAttempts) break;
     const budgetState = await getAIProviderBudgetState(provider, request.task).catch((error) => {
       console.warn(
         `[ai-provider] budget check failed for ${provider}/${request.task}: ${
@@ -325,7 +330,7 @@ export async function generateTextForTask(request: AITextRequest): Promise<AITex
       const reason = budgetState.providerExceeded
         ? `${provider} budget exhausted for ${budgetState.windowHours}h window`
         : `global AI budget exhausted for ${budgetState.windowHours}h window`;
-      await recordAIUsageSafely({
+      recordAIUsageSafely({
         task: request.task,
         provider,
         model,
@@ -359,7 +364,7 @@ export async function generateTextForTask(request: AITextRequest): Promise<AITex
       }
 
       const latencyMs = Math.max(0, Date.now() - startedAt);
-      await recordAIUsageSafely({
+      recordAIUsageSafely({
         task: request.task,
         provider: result.provider,
         model: result.model,
@@ -390,7 +395,7 @@ export async function generateTextForTask(request: AITextRequest): Promise<AITex
       lastError = error instanceof Error ? error : new Error(String(error));
       const latencyMs = Math.max(0, Date.now() - startedAt);
       const model = getProviderModel(request.task, provider);
-      await recordAIUsageSafely({
+      recordAIUsageSafely({
         task: request.task,
         provider,
         model,

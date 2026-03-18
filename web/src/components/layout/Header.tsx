@@ -15,10 +15,12 @@ const NAV_LINKS = [
   { href: "/archive", label: "Archive" },
   { href: "/proposals", label: "Governance" },
   { href: "/predictions", label: "Predictions" },
+  { href: "/pepe", label: "Pepe" },
   { href: "/music", label: "Music" },
   { href: "/discuss", label: "Discuss" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/bots", label: "Agents" },
+  { href: "/appendix", label: "Appendix" },
 ];
 
 export function Header() {

@@ -2011,6 +2011,78 @@ export async function fetchActivePredictionProposals(): Promise<Proposal[]> {
   }
 }
 
+const RESOLVED_STATUSES = new Set<Proposal["status"]>([
+  "executed",
+  "succeeded",
+  "defeated",
+  "closed",
+  "queued",
+]);
+
+export async function fetchResolvedPredictionProposals(): Promise<Proposal[]> {
+  // Wrap in a 15s timeout so static builds don't hang on slow RPCs
+  const result = await Promise.race([
+    _fetchResolvedPredictionProposalsInner(),
+    new Promise<Proposal[]>((resolve) => setTimeout(() => resolve([]), 15_000)),
+  ]);
+  return result;
+}
+
+async function _fetchResolvedPredictionProposalsInner(): Promise<Proposal[]> {
+  const anchor = await getBlockAnchor();
+  try {
+    const { createPublicClient, http } = await import("viem");
+    const { mainnet } = await import("viem/chains");
+    const { PREDICTION_MARKET_ABI, PREDICTION_MARKET_ADDRESS } = await import("./contracts");
+
+    const rpcUrl =
+      process.env.ETHEREUM_MAINNET_RPC_URL ||
+      process.env.NEXT_PUBLIC_ETHEREUM_MAINNET_RPC_URL ||
+      "https://mainnet.rpc.buidlguidl.com";
+    const client = createPublicClient({
+      chain: mainnet,
+      transport: http(rpcUrl, { timeout: 5_000 }),
+    });
+
+    const [nounsRaw, lilNounsRaw] = await Promise.all([
+      fetchNounsProposals(25),
+      fetchLilNounsProposals(25),
+    ]);
+
+    // Only check the 10 most recent resolved proposals to stay within build timeouts
+    const resolved = [...nounsRaw, ...lilNounsRaw]
+      .map((p) => convertNounsToProposal(p, anchor))
+      .filter((p) => RESOLVED_STATUSES.has(p.status))
+      .sort((a, b) => Number(b.proposalNumber ?? 0) - Number(a.proposalNumber ?? 0))
+      .slice(0, 10);
+
+    // Only include proposals that have an onchain market (skip "Not Open" noise)
+    const withMarkets = await Promise.all(
+      resolved.map(async (p) => {
+        const daoKey = getDaoPredictionKey(p.dao);
+        const proposalId = p.proposalNumber?.toString() ?? p.id;
+        try {
+          const raw = await client.readContract({
+            address: PREDICTION_MARKET_ADDRESS,
+            abi: PREDICTION_MARKET_ABI,
+            functionName: "getMarket",
+            args: [daoKey, proposalId],
+          });
+          const exists = (raw as readonly [bigint, bigint, bigint, bigint, bigint, bigint, number, boolean])[7];
+          return exists ? p : null;
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    return withMarkets.filter((p): p is Proposal => p !== null);
+  } catch (error) {
+    console.error("[Predictions] Resolved governance fetch failed:", error);
+    return [];
+  }
+}
+
 export async function fetchActiveNounsProposals(): Promise<Proposal[]> {
   const proposals = await fetchActivePredictionProposals();
   return proposals.filter((proposal) => getDaoPredictionKey(proposal.dao) === "nouns");

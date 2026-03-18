@@ -12,6 +12,7 @@ import {
 } from "wagmi";
 import { AGENT_VAULT_ABI, ERC20_ABI, MO_TOKEN } from "@/lib/contracts";
 import { AgentBotTerminal } from "@/components/markets/AgentBotTerminal";
+import TradingChart from "@/components/markets/TradingChart";
 import type { TerminalTradingContext } from "@/lib/terminal-types";
 
 interface Position {
@@ -19,7 +20,8 @@ interface Position {
   venue?: "base-spot" | "ethereum-spot" | "hyperliquid-perp";
   tokenAddress: `0x${string}`;
   marketSymbol?: string;
-  positionDirection?: "long" | "short";
+  direction?: "long" | "short";
+  leverage?: number;
   entryPriceUsd: number;
   entryNotionalUsd: number;
   openedAt: number;
@@ -36,12 +38,14 @@ interface OpenPositionMetric {
   marketValueUsd: number | null;
   unrealizedPnlUsd: number | null;
   unrealizedPnlPct: number | null;
+  estimatedFeesUsd?: number;
 }
 
 interface ClosedPositionMetric {
   position: Position;
   realizedPnlUsd: number | null;
   realizedPnlPct: number | null;
+  estimatedFeesUsd?: number;
 }
 
 interface PerformanceTotals {
@@ -52,6 +56,7 @@ interface PerformanceTotals {
   unrealizedPnlUsd: number;
   realizedPnlUsd: number;
   grossPnlUsd: number;
+  estimatedTradingFeesUsd?: number;
   performanceFeeUsd: number;
   netPnlAfterFeeUsd: number;
 }
@@ -151,12 +156,19 @@ interface SubscriptionStatus {
 
 function formatUsd(value: number | null | undefined): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return "--";
-  return `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  const abs = Math.abs(value);
+  // Adaptive decimals: more precision for smaller values
+  const decimals = abs === 0 ? 2 : abs < 0.01 ? 6 : abs < 1 ? 4 : abs < 100 ? 2 : 2;
+  const sign = value < 0 ? "-" : "";
+  return `${sign}$${abs.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
 }
 
 function formatPct(value: number | null | undefined): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return "--";
-  return `${(value * 100).toFixed(2)}%`;
+  const pct = value * 100;
+  const abs = Math.abs(pct);
+  const decimals = abs < 0.01 ? 4 : abs < 1 ? 3 : 2;
+  return `${pct >= 0 ? "+" : ""}${pct.toFixed(decimals)}%`;
 }
 
 function formatSignedPctBps(value: string): string {
@@ -194,23 +206,6 @@ function shortHex(value: string): string {
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
 
-/** Well-known token addresses → human-readable symbols (lowercased keys). */
-const KNOWN_TOKENS: Record<string, string> = {
-  "0x4200000000000000000000000000000000000006": "WETH",
-  "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "USDC",
-  "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca": "USDbC",
-  "0x50c5725949a6f0c72e6c4a641f24049a917db0cb": "DAI",
-  "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22": "cbETH",
-  "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452": "wstETH",
-  "0x8729c70061739140ee6be00a3875cbf6d09a746c": "MO",
-  "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "WETH",
-  "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "USDC",
-  "0xdac17f958d2ee523a2206206994597c13d831ec7": "USDT",
-  "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599": "WBTC",
-  "0x6982508145454ce325ddbe47a25d4ec3d2311933": "PEPE",
-  "0xaaee1a9723aadb7afa2810263653a34ba2c21c7a": "MOG",
-};
-
 function fundingChainIdForVenue(
   venue: "base-spot" | "ethereum-spot" | "hyperliquid-perp"
 ): number {
@@ -230,14 +225,23 @@ function chainLabel(chainId: number): string {
   }
 }
 
-function venueLabel(venue?: Position["venue"]): string {
-  switch (venue) {
-    case "hyperliquid-perp": return "HL";
-    case "ethereum-spot":    return "ETH";
-    case "base-spot":        return "BASE";
-    default:                 return "BASE";
-  }
-}
+/** Well-known token addresses → human-readable symbols (lowercased keys). */
+const KNOWN_TOKENS: Record<string, string> = {
+  "0x4200000000000000000000000000000000000006": "WETH",
+  "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "USDC",
+  "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca": "USDbC",
+  "0x50c5725949a6f0c72e6c4a641f24049a917db0cb": "DAI",
+  "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22": "cbETH",
+  "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452": "wstETH",
+  "0x8729c70061739140ee6be00a3875cbf6d09a746c": "MO",
+  "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "WETH",
+  "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "USDC",
+  "0xdac17f958d2ee523a2206206994597c13d831ec7": "USDT",
+  "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599": "WBTC",
+  "0x6982508145454ce325ddbe47a25d4ec3d2311933": "PEPE",
+  "0xaaee1a9723aadb7afa2810263653a34ba2c21c7a": "MOG",
+  "0xd07379a755a8f11b57610154861d694b2a0f615a": "BASE",
+};
 
 function symbolForPosition(position: Position): string {
   if (position.marketSymbol) return position.marketSymbol;
@@ -674,7 +678,7 @@ export function AgentMarketDashboard() {
         </p>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <MetricCard
           label="Open PnL"
           value={formatUsd(data.totals.unrealizedPnlUsd)}
@@ -691,7 +695,12 @@ export function AgentMarketDashboard() {
           valueClass={pnlClass(data.totals.grossPnlUsd)}
         />
         <MetricCard
-          label={`Fee (${feePct.toFixed(2)}%)`}
+          label="Exch Fees (est)"
+          value={`-${formatUsd(data.totals.estimatedTradingFeesUsd ?? 0)}`}
+          valueClass="text-[var(--accent-red)]"
+        />
+        <MetricCard
+          label={`Perf Fee (${feePct.toFixed(1)}%)`}
           value={formatUsd(data.totals.performanceFeeUsd)}
         />
         <MetricCard
@@ -721,6 +730,10 @@ export function AgentMarketDashboard() {
           />
         </section>
       ) : null}
+
+      <section>
+        <TradingChart height={340} />
+      </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
         <div className="border border-[var(--rule-light)] p-4 lg:col-span-2">
@@ -981,8 +994,8 @@ export function AgentMarketDashboard() {
               <thead>
                 <tr className="border-b border-[var(--rule-light)] font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
                   <th className="py-2 pr-3">Market</th>
-                  <th className="py-2 pr-3">Chain</th>
                   <th className="py-2 pr-3">Side</th>
+                  <th className="py-2 pr-3">Lev</th>
                   <th className="py-2 pr-3">Entry</th>
                   <th className="py-2 pr-3">Current</th>
                   <th className="py-2 pr-3">Notional</th>
@@ -999,11 +1012,11 @@ export function AgentMarketDashboard() {
                     <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
                       {symbolForPosition(row.position)}
                     </td>
-                    <td className="py-2 pr-3 font-mono text-[9px] text-[var(--ink-faint)]">
-                      {venueLabel(row.position.venue)}
+                    <td className={`py-2 pr-3 font-mono text-[10px] ${row.position.direction === "short" ? "text-red-700" : "text-emerald-700"}`}>
+                      {row.position.direction === "short" ? "SHORT" : "LONG"}
                     </td>
-                    <td className={`py-2 pr-3 font-mono text-[10px] font-bold ${row.position.positionDirection === "short" ? "text-red-700" : "text-emerald-700"}`}>
-                      {(row.position.positionDirection ?? "long").toUpperCase()}
+                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                      {row.position.leverage ? `${row.position.leverage}x` : "--"}
                     </td>
                     <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
                       {formatUsd(row.position.entryPriceUsd)}
@@ -1047,10 +1060,11 @@ export function AgentMarketDashboard() {
               <thead>
                 <tr className="border-b border-[var(--rule-light)] font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
                   <th className="py-2 pr-3">Market</th>
-                  <th className="py-2 pr-3">Chain</th>
                   <th className="py-2 pr-3">Side</th>
+                  <th className="py-2 pr-3">Lev</th>
                   <th className="py-2 pr-3">Entry</th>
                   <th className="py-2 pr-3">Exit</th>
+                  <th className="py-2 pr-3">Fees (est)</th>
                   <th className="py-2 pr-3">Realized</th>
                   <th className="py-2 pr-0">Closed</th>
                 </tr>
@@ -1064,17 +1078,20 @@ export function AgentMarketDashboard() {
                     <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
                       {symbolForPosition(row.position)}
                     </td>
-                    <td className="py-2 pr-3 font-mono text-[9px] text-[var(--ink-faint)]">
-                      {venueLabel(row.position.venue)}
+                    <td className={`py-2 pr-3 font-mono text-[10px] ${row.position.direction === "short" ? "text-red-700" : "text-emerald-700"}`}>
+                      {row.position.direction === "short" ? "SHORT" : "LONG"}
                     </td>
-                    <td className={`py-2 pr-3 font-mono text-[10px] font-bold ${row.position.positionDirection === "short" ? "text-red-700" : "text-emerald-700"}`}>
-                      {(row.position.positionDirection ?? "long").toUpperCase()}
+                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                      {row.position.leverage ? `${row.position.leverage}x` : "--"}
                     </td>
                     <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
                       {formatUsd(row.position.entryPriceUsd)}
                     </td>
                     <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
                       {formatUsd(row.position.exitPriceUsd)}
+                    </td>
+                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--accent-red)]">
+                      {row.estimatedFeesUsd ? `-${formatUsd(row.estimatedFeesUsd)}` : "--"}
                     </td>
                     <td
                       className={`py-2 pr-3 font-mono text-[10px] ${pnlClass(

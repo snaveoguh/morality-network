@@ -12,6 +12,16 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 55; // Vercel limit
 
 /**
+ * GET /api/editorial/pregenerate
+ *
+ * Called by GitHub Actions cron (every 30 min) and Vercel cron (daily).
+ * Pre-generates top 5 feed items that don't have editorials yet.
+ */
+export async function GET() {
+  return runPregenerate([], 5);
+}
+
+/**
  * POST /api/editorial/pregenerate
  *
  * Pre-generates AI editorials for feed items that don't have one yet.
@@ -42,6 +52,10 @@ export async function POST(request: Request) {
     // Empty body is fine — we'll use defaults
   }
 
+  return runPregenerate(requestedHashes, limit);
+}
+
+async function runPregenerate(requestedHashes: string[], limit: number) {
   const allItems = await fetchAllFeeds();
   if (allItems.length === 0) {
     return NextResponse.json({ generated: 0, skipped: 0, errors: 0 });
@@ -56,10 +70,8 @@ export async function POST(request: Request) {
   // Determine which hashes to generate for
   let targetHashes: string[];
   if (requestedHashes.length > 0) {
-    // Caller specified which articles to pre-generate
     targetHashes = requestedHashes;
   } else {
-    // Default: top items from the feed that don't have editorials yet
     const existingHashes = await getAllEditorialHashes().catch(() => new Set<string>());
     targetHashes = allItems
       .map((item) => computeEntityHash(item.link))
@@ -73,7 +85,6 @@ export async function POST(request: Request) {
   const results: Array<{ hash: string; status: "generated" | "skipped" | "error"; title?: string }> = [];
 
   for (const hash of targetHashes) {
-    // Check if already archived
     try {
       const existing = await getArchivedEditorial(hash);
       if (existing) {
@@ -96,7 +107,6 @@ export async function POST(request: Request) {
       const related = findRelatedArticles(primary, allItems, 5);
       const article = await generateEditorial(primary, related);
 
-      // Save to archive (generateEditorial doesn't save — the article page does)
       const generatedBy = (article as { generatedBy?: string }).generatedBy;
       await saveEditorial(
         hash,

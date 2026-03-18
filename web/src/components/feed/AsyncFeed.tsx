@@ -5,6 +5,7 @@
 // Streams into the page as soon as all feed sources resolve (or timeout).
 // ============================================================================
 
+import { after } from "next/server";
 import { TileFeed } from "./TileFeed";
 import { fetchAllFeeds } from "@/lib/rss";
 import { fetchAllProposals, fetchGovernanceSocialSignals } from "@/lib/governance";
@@ -51,8 +52,12 @@ export async function AsyncFeed() {
     }
   }
 
-  // Fire-and-forget: archive + bias digest (don't block render)
-  autoArchiveBatch(rssItems).catch(() => {});
+  // Archive all feed items after response is sent (ISR-safe)
+  after(() => {
+    autoArchiveBatch(rssItems).catch((err) => {
+      console.warn("[AsyncFeed] archive batch failed:", err);
+    });
+  });
 
   // Compute bias digest synchronously from already-fetched data (no AI call)
   const uniqueSources = new Map<string, ReturnType<typeof getSourceBias>>();

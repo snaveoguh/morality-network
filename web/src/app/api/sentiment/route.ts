@@ -8,11 +8,20 @@ import { fetchMarketData } from "@/lib/sentiment";
 import { recordSnapshot } from "@/lib/score-history";
 
 export const revalidate = 300; // 5 minutes ISR
+export const maxDuration = 60; // allow up to 60s on Vercel Pro
 
 // In-memory cache
 let cachedSnapshot: SentimentSnapshot | null = null;
 let cacheTimestamp = 0;
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
+/** Race a promise against a timeout. */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
 
 export async function GET(req: NextRequest) {
   const topicFilter = req.nextUrl.searchParams.get("topic");
@@ -24,11 +33,15 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Fetch feeds + market data in parallel
+    // Fetch feeds + market data in parallel with timeouts
     const [allItems, marketData] = await Promise.all([
-      fetchAllFeeds(),
-      fetchMarketData(),
+      withTimeout(fetchAllFeeds(), 25_000, []),
+      withTimeout(fetchMarketData(), 8_000, { priceChanges: {} }),
     ]);
+
+    if (allItems.length === 0 && cachedSnapshot) {
+      return respond(cachedSnapshot, topicFilter);
+    }
 
     const previousSnapshot = cachedSnapshot;
     const snapshot = await computeEventShapedSentimentSnapshot(
