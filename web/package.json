@@ -16,6 +16,7 @@
     "smoke:local": "bash ./scripts/smoke-check.sh http://localhost:3000"
   },
   "dependencies": {
+    "@a16z/helios": "^0.11.1",
     "@anthropic-ai/sdk": "^0.78.0",
     "@nktkas/hyperliquid": "^0.32.1",
     "@noundry/nouns-assets": "^1.17.0",
@@ -28,6 +29,7 @@
     "@types/three": "^0.183.1",
     "ethers": "^6.16.0",
     "iron-session": "^8.0.4",
+    "lightweight-charts": "^5.1.0",
     "next": "16.1.6",
     "prisma": "^7.4.0",
     "react": "19.2.3",

@@ -321,6 +321,7 @@ export function AgentMarketDashboard() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [closedPage, setClosedPage] = useState(0);
   const [depositAmount, setDepositAmount] = useState("0.01");
   const [withdrawAmount, setWithdrawAmount] = useState("0.01");
   const [actionError, setActionError] = useState<string | null>(null);
@@ -644,7 +645,7 @@ export function AgentMarketDashboard() {
   }
 
   const balances = data.readiness.balances.slice(0, 6);
-  const closedRows = data.closed.slice(0, 20);
+  const CLOSED_PAGE_SIZE = 15;
   const subscriptionUnlocked = subscription?.account?.unlocked === true;
   const expectedFundingChainId = fundingChainIdForVenue(data.executionVenue);
   const fundingFacts = isVaultEnabled
@@ -1063,7 +1064,7 @@ export function AgentMarketDashboard() {
         <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
           Closed Positions ({data.totals.closedPositions})
         </h2>
-        {closedRows.length === 0 ? (
+        {data.closed.length === 0 ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
             No closed positions yet.
           </p>
@@ -1084,7 +1085,7 @@ export function AgentMarketDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {closedRows.map((row) => (
+                {data.closed.slice(closedPage * CLOSED_PAGE_SIZE, (closedPage + 1) * CLOSED_PAGE_SIZE).map((row) => (
                   <tr
                     key={row.position.id}
                     className="border-b border-[var(--rule-light)] last:border-0"
@@ -1127,6 +1128,30 @@ export function AgentMarketDashboard() {
                 ))}
               </tbody>
             </table>
+            {data.closed.length > CLOSED_PAGE_SIZE && (
+              <div className="mt-3 flex items-center justify-between font-mono text-[9px] text-[var(--ink-faint)]">
+                <span>
+                  Page {closedPage + 1} of {Math.ceil(data.closed.length / CLOSED_PAGE_SIZE)}
+                  {" "}({data.closed.length} total)
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setClosedPage((p) => Math.max(0, p - 1))}
+                    disabled={closedPage === 0}
+                    className="border border-[var(--rule)] px-2 py-0.5 uppercase tracking-wider hover:bg-[var(--bg-alt)] disabled:opacity-30"
+                  >
+                    ← Prev
+                  </button>
+                  <button
+                    onClick={() => setClosedPage((p) => Math.min(Math.ceil(data.closed.length / CLOSED_PAGE_SIZE) - 1, p + 1))}
+                    disabled={(closedPage + 1) * CLOSED_PAGE_SIZE >= data.closed.length}
+                    className="border border-[var(--rule)] px-2 py-0.5 uppercase tracking-wider hover:bg-[var(--bg-alt)] disabled:opacity-30"
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </section>
