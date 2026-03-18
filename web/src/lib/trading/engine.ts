@@ -241,8 +241,12 @@ class TraderEngine {
         continue;
       }
 
-      const marketValueUsd = position.entryNotionalUsd * (currentPriceUsd / position.entryPriceUsd);
-      const pnlUsd = marketValueUsd - position.entryNotionalUsd;
+      const isShort = position.positionDirection === "short";
+      const priceDelta = isShort
+        ? (position.entryPriceUsd - currentPriceUsd) / position.entryPriceUsd
+        : (currentPriceUsd - position.entryPriceUsd) / position.entryPriceUsd;
+      const pnlUsd = position.entryNotionalUsd * priceDelta;
+      const marketValueUsd = position.entryNotionalUsd + pnlUsd;
       const pnlPct = position.entryNotionalUsd > 0 ? pnlUsd / position.entryNotionalUsd : 0;
 
       openMarketValueUsd += marketValueUsd;
@@ -266,8 +270,11 @@ class TraderEngine {
         continue;
       }
 
-      const pnlUsd =
-        position.entryNotionalUsd * ((position.exitPriceUsd - position.entryPriceUsd) / position.entryPriceUsd);
+      const isShortClosed = position.positionDirection === "short";
+      const closedPriceDelta = isShortClosed
+        ? (position.entryPriceUsd - position.exitPriceUsd) / position.entryPriceUsd
+        : (position.exitPriceUsd - position.entryPriceUsd) / position.entryPriceUsd;
+      const pnlUsd = position.entryNotionalUsd * closedPriceDelta;
       const pnlPct = position.entryNotionalUsd > 0 ? pnlUsd / position.entryNotionalUsd : 0;
 
       realizedPnlUsd += pnlUsd;
@@ -457,12 +464,22 @@ class TraderEngine {
           continue;
         }
 
-        const stopPrice = position.entryPriceUsd * (1 - position.stopLossPct);
-        const takePrice = position.entryPriceUsd * (1 + position.takeProfitPct);
+        const isShort = position.positionDirection === "short";
+        const stopPrice = isShort
+          ? position.entryPriceUsd * (1 + position.stopLossPct)
+          : position.entryPriceUsd * (1 - position.stopLossPct);
+        const takePrice = isShort
+          ? position.entryPriceUsd * (1 - position.takeProfitPct)
+          : position.entryPriceUsd * (1 + position.takeProfitPct);
         let reason: Position["exitReason"] | null = null;
 
-        if (currentPriceUsd <= stopPrice) reason = "stop-loss";
-        if (currentPriceUsd >= takePrice) reason = "take-profit";
+        if (isShort) {
+          if (currentPriceUsd >= stopPrice) reason = "stop-loss";
+          if (currentPriceUsd <= takePrice) reason = "take-profit";
+        } else {
+          if (currentPriceUsd <= stopPrice) reason = "stop-loss";
+          if (currentPriceUsd >= takePrice) reason = "take-profit";
+        }
         if (!reason) continue;
 
         const closed = await this.closePosition(position, reason, currentPriceUsd);
@@ -572,10 +589,11 @@ class TraderEngine {
       });
     }
 
+    const closeSide = position.positionDirection === "short" ? "buy" : "sell";
     const execution = await executeHyperliquidOrderLive({
       config: this.config,
       market,
-      side: "sell",
+      side: closeSide,
       leverage: position.leverage ?? this.config.hyperliquid.defaultLeverage,
       slippageBps: this.config.risk.slippageBps,
       reduceOnly: true,
@@ -612,10 +630,9 @@ class TraderEngine {
     let selectedSignal: AggregatedMarketSignal | null = null;
     let market = null;
 
-    // News-first routing: pick strongest bullish market signal that exists on Hyperliquid.
+    // News-first routing: pick strongest market signal that exists on Hyperliquid.
     // Skip conflicted signals (high contradiction = sources disagree on direction).
     for (const signal of marketSignals) {
-      if (signal.direction !== "bullish") continue;
       if (signal.contradictionPenalty > 0.7) {
         console.log(
           `[trader] skipping conflicted signal: ${signal.symbol} contradiction=${signal.contradictionPenalty.toFixed(2)}`,
@@ -665,12 +682,15 @@ class TraderEngine {
       throw new Error("portfolio limit reached");
     }
 
+    const orderSide = selectedSignal?.direction === "bearish" ? "sell" : "buy";
+    const direction = orderSide === "buy" ? "long" : "short";
+
     const order = this.config.dryRun
       ? await simulateHyperliquidOrder({
           config: this.config,
           symbol: market.symbol,
           marketId: market.marketId,
-          side: "buy",
+          side: orderSide,
           leverage: this.config.hyperliquid.defaultLeverage,
           notionalUsd,
           szDecimals: market.szDecimals,
@@ -678,7 +698,7 @@ class TraderEngine {
       : await executeHyperliquidOrderLive({
           config: this.config,
           market,
-          side: "buy",
+          side: orderSide,
           leverage: this.config.hyperliquid.defaultLeverage,
           slippageBps: this.config.risk.slippageBps,
           notionalUsd,
@@ -705,6 +725,7 @@ class TraderEngine {
       quantityTokenRaw: order.sizeRaw,
       quoteSpentRaw,
       entryNotionalUsd: order.notionalUsd,
+      positionDirection: direction,
       stopLossPct: this.config.risk.stopLossPct,
       takeProfitPct: this.config.risk.takeProfitPct,
       openedAt: Date.now(),

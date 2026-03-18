@@ -54,6 +54,7 @@ export interface Position {
   takeProfitPct: number;
   openedAt: number;
   txHash?: Hash;
+  positionDirection?: "long" | "short";
   status: "open" | "closed";
   closedAt?: number;
   exitReason?: "stop-loss" | "take-profit" | "manual";
