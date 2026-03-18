@@ -207,7 +207,7 @@ export function getTraderConfig(): TraderExecutionConfig {
       stopLossPct: numberFromEnv("TRADER_STOP_LOSS_PCT", 0.2),
       takeProfitPct: numberFromEnv("TRADER_TAKE_PROFIT_PCT", 0.45),
       slippageBps: numberFromEnv("TRADER_SLIPPAGE_BPS", 250),
-      maxLeverage: numberFromEnv("TRADER_MAX_LEVERAGE", 10),
+      maxLeverage: numberFromEnv("TRADER_MAX_LEVERAGE", 40),
       minSignalConfidence: numberFromEnv("TRADER_MIN_SIGNAL_CONFIDENCE", 0.4),
       trailingStopPct: numberFromEnv("TRADER_TRAILING_STOP_PCT", 0.05),
       trailingStopActivationPct: numberFromEnv("TRADER_TRAILING_STOP_ACTIVATION_PCT", 0.02),
