@@ -49,28 +49,27 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  const allItems = await withTimeout(fetchAllFeeds(), 15000, []);
+  // Check archive/Redis FIRST (instant) — only fetch live feeds as fallback
+  const archivedPrimary = await getArchivedFeedItemByHash(hash as `0x${string}`).catch(() => null);
 
-  // Archive ALL feed items — blocking so they persist before ISR caches the response.
-  // Without this, when the indexer is down, Vercel's read-only FS means nothing persists
-  // and subsequent visits show "Awaiting content" even for articles we just rendered.
-  if (allItems.length > 0) {
-    await withTimeout(
-      autoArchiveBatch(allItems).catch((err) => {
-        console.warn("[article] feed archive batch failed:", err);
-      }),
-      10000,
-      undefined,
-    );
+  let livePrimary: Awaited<ReturnType<typeof fetchAllFeeds>>[number] | null = null;
+  let allItems: Awaited<ReturnType<typeof fetchAllFeeds>> = [];
+
+  if (!archivedPrimary) {
+    // Not in cache — try live feeds (slow but necessary for new articles)
+    allItems = await withTimeout(fetchAllFeeds(), 8000, []);
+    livePrimary = allItems.find(
+      (item) => computeEntityHash(item.link) === hash
+    ) ?? null;
+
+    // Archive in background (non-blocking) via after()
+    if (allItems.length > 0) {
+      const { after } = await import("next/server");
+      after(() => {
+        autoArchiveBatch(allItems).catch(() => {});
+      });
+    }
   }
-
-  // Find the article matching this hash
-  const livePrimary = allItems.find(
-    (item) => computeEntityHash(item.link) === hash
-  );
-  const archivedPrimary = livePrimary
-    ? null
-    : await getArchivedFeedItemByHash(hash as `0x${string}`);
   const recoveredPrimary =
     livePrimary || archivedPrimary
       ? null
@@ -193,33 +192,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     );
   }
 
-  // Expand search pool with archived items for better context matching
-  const archivedItems = await withTimeout(getAllArchivedFeedItems(), 5000, []);
-
-  // Merge live + archive, dedup by link to avoid double-counting
-  const seenLinks = new Set(allItems.map((i) => i.link));
-  const combinedPool = [...allItems];
-  for (const archived of archivedItems) {
-    if (archived.link && !seenLinks.has(archived.link)) {
-      combinedPool.push(archived);
-      seenLinks.add(archived.link);
-    }
-  }
-
-  // Find related articles from the expanded pool
-  const related = findRelatedArticles(primary, combinedPool, 5);
-
-  // Find archived items related to this story (with hashes for linking)
-  const archivedWithHashes = await withTimeout(getAllArchivedItemsWithHashes(), 5000, []);
-  const archivedRelated = findRelatedArticles(
-    primary,
-    archivedWithHashes,
-    8,
-  ).map((item) => {
-    // Re-attach the hash from the original archived set
-    const match = archivedWithHashes.find((a) => a.link === item.link);
-    return { ...item, hash: match?.hash ?? "" };
-  }).filter((item) => item.hash); // only items with valid hashes
+  // Related articles — use only live feed items (fast, no archive load)
+  const related = allItems.length > 0 ? findRelatedArticles(primary, allItems, 5) : [];
+  const archivedRelated: Array<ReturnType<typeof findRelatedArticles>[number] & { hash: string }> = [];
 
   // ═══ CACHE-ONLY: no AI generation on click. Editorials are pre-generated
   // by the newsroom cron. If no editorial exists yet, show raw feed data. ═══
