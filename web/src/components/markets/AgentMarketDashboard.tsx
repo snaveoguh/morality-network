@@ -1009,7 +1009,7 @@ export function AgentMarketDashboard() {
                   <th className="py-2 pr-3">Lev</th>
                   <th className="py-2 pr-3">Entry</th>
                   <th className="py-2 pr-3">Current</th>
-                  <th className="py-2 pr-3">Notional</th>
+                  <th className="py-2 pr-3">Size</th>
                   <th className="py-2 pr-3">Unrealized</th>
                   <th className="py-2 pr-0">Opened</th>
                 </tr>
@@ -1077,6 +1077,7 @@ export function AgentMarketDashboard() {
                   <th className="py-2 pr-3">Chain</th>
                   <th className="py-2 pr-3">Side</th>
                   <th className="py-2 pr-3">Lev</th>
+                  <th className="py-2 pr-3">Size</th>
                   <th className="py-2 pr-3">Entry</th>
                   <th className="py-2 pr-3">Exit</th>
                   <th className="py-2 pr-3">Fees (est)</th>
@@ -1101,6 +1102,9 @@ export function AgentMarketDashboard() {
                     </td>
                     <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
                       {row.position.leverage ? `${row.position.leverage}x` : "--"}
+                    </td>
+                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
+                      {formatUsd(row.position.entryNotionalUsd)}
                     </td>
                     <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
                       {formatUsd(row.position.entryPriceUsd)}
