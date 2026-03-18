@@ -1,9 +1,24 @@
 import { randomUUID } from "node:crypto";
-import { ExchangeClient, HttpTransport, InfoClient } from "@nktkas/hyperliquid";
+import { ExchangeClient, HttpTransport, InfoClient, SubscriptionClient, WebSocketTransport } from "@nktkas/hyperliquid";
 import { formatPrice, formatSize } from "@nktkas/hyperliquid/utils";
 import { privateKeyToAccount } from "viem/accounts";
 import type { Address, Hash } from "viem";
 import type { ScannerLaunch, TraderExecutionConfig } from "./types";
+
+// Polyfill CloseEvent for Node.js (required by @nktkas/rews WebSocket lib)
+if (typeof globalThis.CloseEvent === "undefined") {
+  (globalThis as Record<string, unknown>).CloseEvent = class extends Event {
+    code: number;
+    reason: string;
+    wasClean: boolean;
+    constructor(type: string, init?: Record<string, unknown>) {
+      super(type);
+      this.code = (init?.code as number) ?? 0;
+      this.reason = (init?.reason as string) ?? "";
+      this.wasClean = (init?.wasClean as boolean) ?? false;
+    }
+  };
+}
 
 const MARKET_CACHE_TTL_MS = 20_000;
 
@@ -52,6 +67,7 @@ export interface HyperliquidLivePosition {
   marketId: number | null;
   szDecimals: number;
   size: string;
+  isShort: boolean;
   entryPriceUsd: number;
   positionValueUsd: number;
   unrealizedPnlUsd: number;
@@ -185,7 +201,7 @@ function getClientKey(config: TraderExecutionConfig): string {
   ].join("|");
 }
 
-function getHyperliquidClients(config: TraderExecutionConfig): HyperliquidClientBundle {
+export function getHyperliquidClients(config: TraderExecutionConfig): HyperliquidClientBundle {
   const key = getClientKey(config);
   if (cachedClients && cachedClientKey === key) {
     return cachedClients;
@@ -205,6 +221,49 @@ function getHyperliquidClients(config: TraderExecutionConfig): HyperliquidClient
   };
   cachedClientKey = key;
   return cachedClients;
+}
+
+/* ── WebSocket client factory ── */
+
+export interface HyperliquidWsBundle {
+  transport: WebSocketTransport;
+  subscriptionClient: SubscriptionClient;
+}
+
+let cachedWsTransport: WebSocketTransport | null = null;
+let cachedSubClient: SubscriptionClient | null = null;
+
+export function getHyperliquidWsClients(config: TraderExecutionConfig, forceNew = false): HyperliquidWsBundle {
+  if (!forceNew && cachedWsTransport && cachedSubClient) {
+    return { transport: cachedWsTransport, subscriptionClient: cachedSubClient };
+  }
+
+  if (cachedWsTransport) {
+    cachedWsTransport.close().catch(() => {});
+    cachedWsTransport = null;
+    cachedSubClient = null;
+  }
+
+  const transport = new WebSocketTransport({
+    isTestnet: config.hyperliquid.isTestnet,
+    timeout: 30_000,
+  });
+
+  const subscriptionClient = new SubscriptionClient({ transport });
+
+  cachedWsTransport = transport;
+  cachedSubClient = subscriptionClient;
+
+  return { transport, subscriptionClient };
+}
+
+export async function closeHyperliquidWs(): Promise<void> {
+  const transport = cachedWsTransport;
+  cachedWsTransport = null;
+  cachedSubClient = null;
+  if (transport) {
+    await transport.close().catch(() => {});
+  }
 }
 
 function mapMetaAndCtxs(raw: unknown): Map<string, HyperliquidMarketSnapshot> {
@@ -404,6 +463,7 @@ export async function fetchHyperliquidLivePositions(
       marketId: market?.marketId ?? null,
       szDecimals,
       size,
+      isShort: szi < 0,
       entryPriceUsd,
       positionValueUsd,
       unrealizedPnlUsd,
@@ -630,4 +690,70 @@ export async function executeHyperliquidOrderLive(args: {
     timestamp: Date.now(),
     orderId: parsed.orderId,
   };
+}
+
+// ── Candle Data ──────────────────────────────────────────────────────────────
+
+export type CandleInterval =
+  | "1m" | "3m" | "5m" | "15m" | "30m"
+  | "1h" | "2h" | "4h" | "8h" | "12h"
+  | "1d" | "3d" | "1w" | "1M";
+
+export interface Candle {
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export async function fetchCandles(
+  config: TraderExecutionConfig,
+  coin: string,
+  interval: CandleInterval = "15m",
+  count = 200,
+): Promise<Candle[]> {
+  const apiUrl = config.hyperliquid.apiUrl;
+  const endTime = Date.now();
+
+  const res = await fetch(`${apiUrl}/info`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "candleSnapshot",
+      req: {
+        coin: coin.toUpperCase(),
+        interval,
+        startTime: endTime - intervalToMs(interval) * count,
+        endTime,
+      },
+    }),
+    signal: AbortSignal.timeout(10_000),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Hyperliquid candle API ${res.status}`);
+  }
+
+  const data = await res.json();
+  if (!Array.isArray(data)) return [];
+
+  return data.map((c: Record<string, unknown>) => ({
+    timestamp: Number(c.t),
+    open: parseFloat(c.o as string),
+    high: parseFloat(c.h as string),
+    low: parseFloat(c.l as string),
+    close: parseFloat(c.c as string),
+    volume: parseFloat(c.v as string),
+  }));
+}
+
+function intervalToMs(interval: CandleInterval): number {
+  const map: Record<CandleInterval, number> = {
+    "1m": 60_000, "3m": 180_000, "5m": 300_000, "15m": 900_000, "30m": 1_800_000,
+    "1h": 3_600_000, "2h": 7_200_000, "4h": 14_400_000, "8h": 28_800_000, "12h": 43_200_000,
+    "1d": 86_400_000, "3d": 259_200_000, "1w": 604_800_000, "1M": 2_592_000_000,
+  };
+  return map[interval] ?? 900_000;
 }

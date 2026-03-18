@@ -1,0 +1,8822 @@
+[
+  {
+    "asset": "RAREPEPE",
+    "series": 1,
+    "card": 1
+  },
+  {
+    "asset": "GOXPEPE",
+    "series": 1,
+    "card": 2
+  },
+  {
+    "asset": "SHITCOINCARD",
+    "series": 1,
+    "card": 3
+  },
+  {
+    "asset": "SATOSHICARD",
+    "series": 1,
+    "card": 4
+  },
+  {
+    "asset": "PEPECASH",
+    "series": 1,
+    "card": 5
+  },
+  {
+    "asset": "TRUMPRARE",
+    "series": 1,
+    "card": 6
+  },
+  {
+    "asset": "HAIRPEPE",
+    "series": 1,
+    "card": 7
+  },
+  {
+    "asset": "PEPEVIAGRA",
+    "series": 1,
+    "card": 8
+  },
+  {
+    "asset": "CLOAKPEPE",
+    "series": 1,
+    "card": 9
+  },
+  {
+    "asset": "KEANUPEPE",
+    "series": 1,
+    "card": 10
+  },
+  {
+    "asset": "PEPEAIR",
+    "series": 1,
+    "card": 11
+  },
+  {
+    "asset": "RARECHAVEZ",
+    "series": 1,
+    "card": 12
+  },
+  {
+    "asset": "CUBANPEPE",
+    "series": 1,
+    "card": 13
+  },
+  {
+    "asset": "PEPOLEON",
+    "series": 1,
+    "card": 14
+  },
+  {
+    "asset": "LORDKEK",
+    "series": 1,
+    "card": 15
+  },
+  {
+    "asset": "HOMERPEPE",
+    "series": 1,
+    "card": 16
+  },
+  {
+    "asset": "UFOPEPE",
+    "series": 1,
+    "card": 17
+  },
+  {
+    "asset": "PEPEBALTZE",
+    "series": 1,
+    "card": 18
+  },
+  {
+    "asset": "PEPELIMOUS",
+    "series": 1,
+    "card": 19
+  },
+  {
+    "asset": "HYDRAPEPE",
+    "series": 1,
+    "card": 20
+  },
+  {
+    "asset": "WOLLPEPE",
+    "series": 1,
+    "card": 21
+  },
+  {
+    "asset": "PEPENOPOLOUS",
+    "series": 1,
+    "card": 22
+  },
+  {
+    "asset": "MODERNPEPE2",
+    "series": 1,
+    "card": 23
+  },
+  {
+    "asset": "RAREPEPETEST",
+    "series": 1,
+    "card": 24
+  },
+  {
+    "asset": "RAREPEPEMINT",
+    "series": 1,
+    "card": 25
+  },
+  {
+    "asset": "PEPEJESUS",
+    "series": 1,
+    "card": 26
+  },
+  {
+    "asset": "RAREPEPEBANK",
+    "series": 1,
+    "card": 27
+  },
+  {
+    "asset": "PEPECOIN",
+    "series": 1,
+    "card": 28
+  },
+  {
+    "asset": "PEPEVIKING",
+    "series": 1,
+    "card": 29
+  },
+  {
+    "asset": "RAREKEKPEPE",
+    "series": 1,
+    "card": 30
+  },
+  {
+    "asset": "PEPEKYRIE2",
+    "series": 1,
+    "card": 31
+  },
+  {
+    "asset": "DANKPEPE",
+    "series": 1,
+    "card": 32
+  },
+  {
+    "asset": "RARESTPEPE",
+    "series": 1,
+    "card": 33
+  },
+  {
+    "asset": "PEPERMAN",
+    "series": 1,
+    "card": 34
+  },
+  {
+    "asset": "PEPETRUMP",
+    "series": 1,
+    "card": 35
+  },
+  {
+    "asset": "PEPEJONAS",
+    "series": 1,
+    "card": 36
+  },
+  {
+    "asset": "PEPETRUMP2",
+    "series": 1,
+    "card": 37
+  },
+  {
+    "asset": "PEPEMONALISA",
+    "series": 1,
+    "card": 38
+  },
+  {
+    "asset": "PEPESNOOP",
+    "series": 1,
+    "card": 39
+  },
+  {
+    "asset": "LUKEJRPEPE2",
+    "series": 1,
+    "card": 40
+  },
+  {
+    "asset": "PEPERICA",
+    "series": 1,
+    "card": 41
+  },
+  {
+    "asset": "DRPEPE",
+    "series": 1,
+    "card": 42
+  },
+  {
+    "asset": "PEPESURGEON",
+    "series": 1,
+    "card": 43
+  },
+  {
+    "asset": "PEPEINSPACE",
+    "series": 1,
+    "card": 44
+  },
+  {
+    "asset": "PEPEBUBBLE",
+    "series": 1,
+    "card": 45
+  },
+  {
+    "asset": "PEPEMCFLY",
+    "series": 1,
+    "card": 46
+  },
+  {
+    "asset": "RAREPEPEROB",
+    "series": 1,
+    "card": 47
+  },
+  {
+    "asset": "PEPEDRAGON",
+    "series": 1,
+    "card": 48
+  },
+  {
+    "asset": "PEPEWIZARD",
+    "series": 1,
+    "card": 49
+  },
+  {
+    "asset": "RAREPTARMIGN",
+    "series": 1,
+    "card": 50
+  },
+  {
+    "asset": "RPCAGENT2",
+    "series": 2,
+    "card": 1
+  },
+  {
+    "asset": "PEPEREEVES",
+    "series": 2,
+    "card": 2
+  },
+  {
+    "asset": "VOTEPEPE",
+    "series": 2,
+    "card": 3
+  },
+  {
+    "asset": "DRWHOPEPE",
+    "series": 2,
+    "card": 4
+  },
+  {
+    "asset": "PEPETRICKS",
+    "series": 2,
+    "card": 5
+  },
+  {
+    "asset": "WARHOLPEPE",
+    "series": 2,
+    "card": 6
+  },
+  {
+    "asset": "NAKAPEPE",
+    "series": 2,
+    "card": 7
+  },
+  {
+    "asset": "PEPEPUTIN",
+    "series": 2,
+    "card": 8
+  },
+  {
+    "asset": "MONAPEPE",
+    "series": 2,
+    "card": 9
+  },
+  {
+    "asset": "PEPECOLLECTR",
+    "series": 2,
+    "card": 10
+  },
+  {
+    "asset": "PEPETHEMINER",
+    "series": 2,
+    "card": 11
+  },
+  {
+    "asset": "RIPPEPE",
+    "series": 2,
+    "card": 12
+  },
+  {
+    "asset": "PEPEHARLEY",
+    "series": 2,
+    "card": 13
+  },
+  {
+    "asset": "PEPEMARIO",
+    "series": 2,
+    "card": 14
+  },
+  {
+    "asset": "PEPEDOGE",
+    "series": 2,
+    "card": 15
+  },
+  {
+    "asset": "PEPEMUSTACHE",
+    "series": 2,
+    "card": 16
+  },
+  {
+    "asset": "PEPEBARISTA",
+    "series": 2,
+    "card": 17
+  },
+  {
+    "asset": "PEPEROSS",
+    "series": 2,
+    "card": 18
+  },
+  {
+    "asset": "THEBIGLEBPEP",
+    "series": 2,
+    "card": 19
+  },
+  {
+    "asset": "KINGEMOTPEPE",
+    "series": 2,
+    "card": 20
+  },
+  {
+    "asset": "PEPERONIN",
+    "series": 2,
+    "card": 21
+  },
+  {
+    "asset": "THEPEPENING",
+    "series": 2,
+    "card": 22
+  },
+  {
+    "asset": "PEPETRATION",
+    "series": 2,
+    "card": 23
+  },
+  {
+    "asset": "PEPETERNITY",
+    "series": 2,
+    "card": 24
+  },
+  {
+    "asset": "JPEPE2",
+    "series": 2,
+    "card": 25
+  },
+  {
+    "asset": "SURNAMEPEPE",
+    "series": 2,
+    "card": 26
+  },
+  {
+    "asset": "PEPEDENTIST",
+    "series": 2,
+    "card": 27
+  },
+  {
+    "asset": "PEPERANGER2",
+    "series": 2,
+    "card": 28
+  },
+  {
+    "asset": "NIGHTMRPEPE",
+    "series": 2,
+    "card": 29
+  },
+  {
+    "asset": "PEPERONI",
+    "series": 2,
+    "card": 30
+  },
+  {
+    "asset": "PEPEILLUSION2",
+    "series": 2,
+    "card": 31
+  },
+  {
+    "asset": "HOLGAPEPE",
+    "series": 2,
+    "card": 32
+  },
+  {
+    "asset": "MOLYNEUXPEPE",
+    "series": 2,
+    "card": 33
+  },
+  {
+    "asset": "PEPESMOKING",
+    "series": 2,
+    "card": 34
+  },
+  {
+    "asset": "DJKHALED",
+    "series": 2,
+    "card": 35
+  },
+  {
+    "asset": "CALLCENTERPP",
+    "series": 2,
+    "card": 36
+  },
+  {
+    "asset": "PEPEGEISHA",
+    "series": 2,
+    "card": 37
+  },
+  {
+    "asset": "PEPECULTURE",
+    "series": 2,
+    "card": 38
+  },
+  {
+    "asset": "PEPPOPGUN",
+    "series": 2,
+    "card": 39
+  },
+  {
+    "asset": "PUMPANDPEPE",
+    "series": 2,
+    "card": 40
+  },
+  {
+    "asset": "CASHREGPEPE",
+    "series": 2,
+    "card": 41
+  },
+  {
+    "asset": "COBRACOMMNDR",
+    "series": 2,
+    "card": 42
+  },
+  {
+    "asset": "PEPEBRUCE",
+    "series": 2,
+    "card": 43
+  },
+  {
+    "asset": "PEPEDALI",
+    "series": 2,
+    "card": 44
+  },
+  {
+    "asset": "PEPETEBOW",
+    "series": 2,
+    "card": 45
+  },
+  {
+    "asset": "NINJASTARPEPE",
+    "series": 2,
+    "card": 46
+  },
+  {
+    "asset": "DOGOFPEPE",
+    "series": 2,
+    "card": 47
+  },
+  {
+    "asset": "PEPEPRINCE",
+    "series": 2,
+    "card": 48
+  },
+  {
+    "asset": "PEPEVETERAN",
+    "series": 2,
+    "card": 49
+  },
+  {
+    "asset": "VOTEPEPE2",
+    "series": 2,
+    "card": 50
+  },
+  {
+    "asset": "RPCARDPEPE",
+    "series": 3,
+    "card": 1
+  },
+  {
+    "asset": "PEPEHITLER",
+    "series": 3,
+    "card": 2
+  },
+  {
+    "asset": "PEPEPOPE",
+    "series": 3,
+    "card": 3
+  },
+  {
+    "asset": "TRUMPCARD",
+    "series": 3,
+    "card": 4
+  },
+  {
+    "asset": "PEPEANGEL2",
+    "series": 3,
+    "card": 5
+  },
+  {
+    "asset": "GHANDIPEPE",
+    "series": 3,
+    "card": 6
+  },
+  {
+    "asset": "PEPECLINTON",
+    "series": 3,
+    "card": 7
+  },
+  {
+    "asset": "RAREMCAFEE",
+    "series": 3,
+    "card": 8
+  },
+  {
+    "asset": "PEPEVIRUS",
+    "series": 3,
+    "card": 9
+  },
+  {
+    "asset": "PEPEJEW",
+    "series": 3,
+    "card": 10
+  },
+  {
+    "asset": "CRAMERPEPE",
+    "series": 3,
+    "card": 11
+  },
+  {
+    "asset": "RAREPEPEHAND",
+    "series": 3,
+    "card": 12
+  },
+  {
+    "asset": "OLDNAVYPEPE",
+    "series": 3,
+    "card": 13
+  },
+  {
+    "asset": "ALICEPEPE",
+    "series": 3,
+    "card": 14
+  },
+  {
+    "asset": "PEPEKNIFE",
+    "series": 3,
+    "card": 15
+  },
+  {
+    "asset": "PEPEFLY",
+    "series": 3,
+    "card": 16
+  },
+  {
+    "asset": "HARDCORPEPE",
+    "series": 3,
+    "card": 17
+  },
+  {
+    "asset": "PEPELOVE",
+    "series": 3,
+    "card": 18
+  },
+  {
+    "asset": "PEPEAFTERDRK",
+    "series": 3,
+    "card": 19
+  },
+  {
+    "asset": "RUBIXPEPE2",
+    "series": 3,
+    "card": 20
+  },
+  {
+    "asset": "PEPENAP",
+    "series": 3,
+    "card": 21
+  },
+  {
+    "asset": "PEPECHARIZRD",
+    "series": 3,
+    "card": 22
+  },
+  {
+    "asset": "PEPEGROWOLD",
+    "series": 3,
+    "card": 23
+  },
+  {
+    "asset": "FLASHINGPEPE",
+    "series": 3,
+    "card": 24
+  },
+  {
+    "asset": "PEPEBALBOA",
+    "series": 3,
+    "card": 25
+  },
+  {
+    "asset": "PEPEJAILBIRD",
+    "series": 3,
+    "card": 26
+  },
+  {
+    "asset": "POOLDANCPEPE",
+    "series": 3,
+    "card": 27
+  },
+  {
+    "asset": "PEPELIFE",
+    "series": 3,
+    "card": 28
+  },
+  {
+    "asset": "PEPEMJ",
+    "series": 3,
+    "card": 29
+  },
+  {
+    "asset": "BRINGTHAPEPE",
+    "series": 3,
+    "card": 30
+  },
+  {
+    "asset": "PEPECOLLECT2",
+    "series": 3,
+    "card": 31
+  },
+  {
+    "asset": "PEPEBURGER",
+    "series": 3,
+    "card": 32
+  },
+  {
+    "asset": "STFUPEPE",
+    "series": 3,
+    "card": 33
+  },
+  {
+    "asset": "WTFPEPE",
+    "series": 3,
+    "card": 34
+  },
+  {
+    "asset": "PEPETEXAS",
+    "series": 3,
+    "card": 35
+  },
+  {
+    "asset": "PEPETEXTUS",
+    "series": 3,
+    "card": 36
+  },
+  {
+    "asset": "PEPEBEAR",
+    "series": 3,
+    "card": 37
+  },
+  {
+    "asset": "PEPEFISHERMAN",
+    "series": 3,
+    "card": 38
+  },
+  {
+    "asset": "PEPEBLOODRUN",
+    "series": 3,
+    "card": 39
+  },
+  {
+    "asset": "PEPESUPERHRO",
+    "series": 3,
+    "card": 40
+  },
+  {
+    "asset": "PEPECHATTER",
+    "series": 3,
+    "card": 41
+  },
+  {
+    "asset": "PEPECLOWN",
+    "series": 3,
+    "card": 42
+  },
+  {
+    "asset": "PEPEVOTE",
+    "series": 3,
+    "card": 43
+  },
+  {
+    "asset": "PEPESTRIPPER",
+    "series": 3,
+    "card": 44
+  },
+  {
+    "asset": "PEPECOKEHEAD",
+    "series": 3,
+    "card": 45
+  },
+  {
+    "asset": "PEPESHERLOCK",
+    "series": 3,
+    "card": 46
+  },
+  {
+    "asset": "PEPEGEISHA2",
+    "series": 3,
+    "card": 47
+  },
+  {
+    "asset": "PEPETRUCK",
+    "series": 3,
+    "card": 48
+  },
+  {
+    "asset": "RAREPEPEKING",
+    "series": 3,
+    "card": 49
+  },
+  {
+    "asset": "PEPENIGHTOUT",
+    "series": 3,
+    "card": 50
+  },
+  {
+    "asset": "PEPEPARTYHAT",
+    "series": 4,
+    "card": 1
+  },
+  {
+    "asset": "PEPERICH2",
+    "series": 4,
+    "card": 2
+  },
+  {
+    "asset": "PEPEDOLPHIN",
+    "series": 4,
+    "card": 3
+  },
+  {
+    "asset": "CARDPEPE",
+    "series": 4,
+    "card": 4
+  },
+  {
+    "asset": "PEPEPICKLE",
+    "series": 4,
+    "card": 5
+  },
+  {
+    "asset": "HOTLINEPEPE",
+    "series": 4,
+    "card": 6
+  },
+  {
+    "asset": "WANKSYPEPE",
+    "series": 4,
+    "card": 7
+  },
+  {
+    "asset": "KILLARYPEPE",
+    "series": 4,
+    "card": 8
+  },
+  {
+    "asset": "VERIFIEDPEPE",
+    "series": 4,
+    "card": 9
+  },
+  {
+    "asset": "MONALISAPEPE",
+    "series": 4,
+    "card": 10
+  },
+  {
+    "asset": "PEPEBURGUNDY",
+    "series": 4,
+    "card": 11
+  },
+  {
+    "asset": "GADGETPEPE",
+    "series": 4,
+    "card": 12
+  },
+  {
+    "asset": "RPSILLYWALK",
+    "series": 4,
+    "card": 13
+  },
+  {
+    "asset": "PEPEDANCE",
+    "series": 4,
+    "card": 14
+  },
+  {
+    "asset": "PEPESUS",
+    "series": 4,
+    "card": 15
+  },
+  {
+    "asset": "NASPEPE",
+    "series": 4,
+    "card": 16
+  },
+  {
+    "asset": "HYPNOPEPE",
+    "series": 4,
+    "card": 17
+  },
+  {
+    "asset": "THEMONAPEPE",
+    "series": 4,
+    "card": 18
+  },
+  {
+    "asset": "DJPEPE",
+    "series": 4,
+    "card": 19
+  },
+  {
+    "asset": "MCPEPE",
+    "series": 4,
+    "card": 20
+  },
+  {
+    "asset": "PEPEONE",
+    "series": 4,
+    "card": 21
+  },
+  {
+    "asset": "BBOYPEPE",
+    "series": 4,
+    "card": 22
+  },
+  {
+    "asset": "RPEPEGOLDENR",
+    "series": 4,
+    "card": 23
+  },
+  {
+    "asset": "RAREPEPEDAO",
+    "series": 4,
+    "card": 24
+  },
+  {
+    "asset": "PEPEVIDEODRO",
+    "series": 4,
+    "card": 25
+  },
+  {
+    "asset": "UPINSMKPEPE",
+    "series": 4,
+    "card": 26
+  },
+  {
+    "asset": "MOBBPEPE",
+    "series": 4,
+    "card": 27
+  },
+  {
+    "asset": "RPEPELIGHTER",
+    "series": 4,
+    "card": 28
+  },
+  {
+    "asset": "EMPERORPEPE",
+    "series": 4,
+    "card": 29
+  },
+  {
+    "asset": "MISSTURNPEPE",
+    "series": 4,
+    "card": 30
+  },
+  {
+    "asset": "PRINCESSPEPE",
+    "series": 4,
+    "card": 31
+  },
+  {
+    "asset": "PEPEFETT",
+    "series": 4,
+    "card": 32
+  },
+  {
+    "asset": "HANPEPE",
+    "series": 4,
+    "card": 33
+  },
+  {
+    "asset": "RERERPERP",
+    "series": 4,
+    "card": 34
+  },
+  {
+    "asset": "BEETLEPEPE",
+    "series": 4,
+    "card": 35
+  },
+  {
+    "asset": "SOGGYPEPE",
+    "series": 4,
+    "card": 36
+  },
+  {
+    "asset": "SLVPEPE",
+    "series": 4,
+    "card": 37
+  },
+  {
+    "asset": "GLDPEPE",
+    "series": 4,
+    "card": 38
+  },
+  {
+    "asset": "PEPEPUFF",
+    "series": 4,
+    "card": 39
+  },
+  {
+    "asset": "STRIPERPEPE",
+    "series": 4,
+    "card": 40
+  },
+  {
+    "asset": "GODEMPEPE",
+    "series": 4,
+    "card": 41
+  },
+  {
+    "asset": "SPESSMUHPEPE",
+    "series": 4,
+    "card": 42
+  },
+  {
+    "asset": "GUARDSPEPE",
+    "series": 4,
+    "card": 43
+  },
+  {
+    "asset": "PEPECHE",
+    "series": 4,
+    "card": 44
+  },
+  {
+    "asset": "PEPEHEXCHANT",
+    "series": 4,
+    "card": 45
+  },
+  {
+    "asset": "PEPEDUCREUX",
+    "series": 4,
+    "card": 46
+  },
+  {
+    "asset": "BIGGIEPEPE",
+    "series": 4,
+    "card": 47
+  },
+  {
+    "asset": "FSMPEPE",
+    "series": 4,
+    "card": 48
+  },
+  {
+    "asset": "KOJIPEPE",
+    "series": 4,
+    "card": 49
+  },
+  {
+    "asset": "TOREROPEPE",
+    "series": 4,
+    "card": 50
+  },
+  {
+    "asset": "CHEECHPEPE",
+    "series": 5,
+    "card": 1
+  },
+  {
+    "asset": "CHONGPEPE",
+    "series": 5,
+    "card": 2
+  },
+  {
+    "asset": "GUMMYPEPE",
+    "series": 5,
+    "card": 3
+  },
+  {
+    "asset": "PEPESHROOMS",
+    "series": 5,
+    "card": 4
+  },
+  {
+    "asset": "RAREPEPEFONZ",
+    "series": 5,
+    "card": 5
+  },
+  {
+    "asset": "PEPEPEANUTS",
+    "series": 5,
+    "card": 6
+  },
+  {
+    "asset": "UNCLEPEPE",
+    "series": 5,
+    "card": 7
+  },
+  {
+    "asset": "PEPEANON",
+    "series": 5,
+    "card": 8
+  },
+  {
+    "asset": "SARUTOBIPEPE",
+    "series": 5,
+    "card": 9
+  },
+  {
+    "asset": "BITCOINPEPE",
+    "series": 5,
+    "card": 10
+  },
+  {
+    "asset": "PEPEMINT",
+    "series": 5,
+    "card": 11
+  },
+  {
+    "asset": "CALLHOTPEPE",
+    "series": 5,
+    "card": 12
+  },
+  {
+    "asset": "CONFUSEDPEPE",
+    "series": 5,
+    "card": 13
+  },
+  {
+    "asset": "GRNDMSTRPEPE",
+    "series": 5,
+    "card": 14
+  },
+  {
+    "asset": "SLENDERPEPE",
+    "series": 5,
+    "card": 15
+  },
+  {
+    "asset": "BURNINGPEPE",
+    "series": 5,
+    "card": 16
+  },
+  {
+    "asset": "PEPESSOU",
+    "series": 5,
+    "card": 17
+  },
+  {
+    "asset": "PEPESMURF",
+    "series": 5,
+    "card": 18
+  },
+  {
+    "asset": "LITTLEBOPEPE",
+    "series": 5,
+    "card": 19
+  },
+  {
+    "asset": "HELOPEPE",
+    "series": 5,
+    "card": 20
+  },
+  {
+    "asset": "SEVENBITPEPE",
+    "series": 5,
+    "card": 21
+  },
+  {
+    "asset": "SENPAIPEPE",
+    "series": 5,
+    "card": 22
+  },
+  {
+    "asset": "MAKEPEPERARE",
+    "series": 5,
+    "card": 23
+  },
+  {
+    "asset": "RUNDMP",
+    "series": 5,
+    "card": 24
+  },
+  {
+    "asset": "MONBOURARNO",
+    "series": 5,
+    "card": 25
+  },
+  {
+    "asset": "PEPETHESOG",
+    "series": 5,
+    "card": 26
+  },
+  {
+    "asset": "PEPEGIGA",
+    "series": 5,
+    "card": 27
+  },
+  {
+    "asset": "PEPEONMUSK",
+    "series": 5,
+    "card": 28
+  },
+  {
+    "asset": "SNOTPEPE",
+    "series": 5,
+    "card": 29
+  },
+  {
+    "asset": "PEPEKEN",
+    "series": 5,
+    "card": 30
+  },
+  {
+    "asset": "CNTRFLDPEPE",
+    "series": 5,
+    "card": 31
+  },
+  {
+    "asset": "PEPEZOMBIE",
+    "series": 5,
+    "card": 32
+  },
+  {
+    "asset": "CANNEDPEPE",
+    "series": 5,
+    "card": 33
+  },
+  {
+    "asset": "FRYPEPE",
+    "series": 5,
+    "card": 34
+  },
+  {
+    "asset": "DANPEPERIAN",
+    "series": 5,
+    "card": 35
+  },
+  {
+    "asset": "PEPEGOLDRUSH",
+    "series": 5,
+    "card": 36
+  },
+  {
+    "asset": "PEPETRAIN",
+    "series": 5,
+    "card": 37
+  },
+  {
+    "asset": "FAIRPEPE",
+    "series": 5,
+    "card": 38
+  },
+  {
+    "asset": "TRAITORPEPE",
+    "series": 5,
+    "card": 39
+  },
+  {
+    "asset": "FATHERPEPE",
+    "series": 5,
+    "card": 40
+  },
+  {
+    "asset": "SUCHSHARE",
+    "series": 5,
+    "card": 41
+  },
+  {
+    "asset": "LISKPPAPPEPE",
+    "series": 5,
+    "card": 42
+  },
+  {
+    "asset": "RETROPEPE",
+    "series": 5,
+    "card": 43
+  },
+  {
+    "asset": "BEACHPEPE",
+    "series": 5,
+    "card": 44
+  },
+  {
+    "asset": "PEPETRADER",
+    "series": 5,
+    "card": 45
+  },
+  {
+    "asset": "WANTEDPEPE",
+    "series": 5,
+    "card": 46
+  },
+  {
+    "asset": "QUEPASAPEPE",
+    "series": 5,
+    "card": 47
+  },
+  {
+    "asset": "BLOWPEPE",
+    "series": 5,
+    "card": 48
+  },
+  {
+    "asset": "PEPEASSANGE",
+    "series": 5,
+    "card": 49
+  },
+  {
+    "asset": "REYPEPE",
+    "series": 5,
+    "card": 50
+  },
+  {
+    "asset": "PEPEMONTOYA",
+    "series": 6,
+    "card": 1
+  },
+  {
+    "asset": "ROLLINGPEPE",
+    "series": 6,
+    "card": 2
+  },
+  {
+    "asset": "ZOMBIEPEPES",
+    "series": 6,
+    "card": 3
+  },
+  {
+    "asset": "THEANCAPEPE",
+    "series": 6,
+    "card": 4
+  },
+  {
+    "asset": "PEPETACO",
+    "series": 6,
+    "card": 5
+  },
+  {
+    "asset": "DAPPERPEPE",
+    "series": 6,
+    "card": 6
+  },
+  {
+    "asset": "FRACTALPEPE",
+    "series": 6,
+    "card": 7
+  },
+  {
+    "asset": "SLIMERPEPE",
+    "series": 6,
+    "card": 8
+  },
+  {
+    "asset": "PEPEPARADO",
+    "series": 6,
+    "card": 9
+  },
+  {
+    "asset": "PEPEME",
+    "series": 6,
+    "card": 10
+  },
+  {
+    "asset": "PEPETARD",
+    "series": 6,
+    "card": 11
+  },
+  {
+    "asset": "THEGODPEPE",
+    "series": 6,
+    "card": 12
+  },
+  {
+    "asset": "PEPESQRPANTS",
+    "series": 6,
+    "card": 13
+  },
+  {
+    "asset": "RPEPEGOJAIL",
+    "series": 6,
+    "card": 14
+  },
+  {
+    "asset": "THINPEPE",
+    "series": 6,
+    "card": 15
+  },
+  {
+    "asset": "PEPELEWINSKY",
+    "series": 6,
+    "card": 16
+  },
+  {
+    "asset": "PEPESSANGE",
+    "series": 6,
+    "card": 17
+  },
+  {
+    "asset": "PEPETRADERS",
+    "series": 6,
+    "card": 18
+  },
+  {
+    "asset": "PEPEJOHNS",
+    "series": 6,
+    "card": 19
+  },
+  {
+    "asset": "PEPEJOSE",
+    "series": 6,
+    "card": 20
+  },
+  {
+    "asset": "PEEKABOOPEPE",
+    "series": 6,
+    "card": 21
+  },
+  {
+    "asset": "FIREASSPEPE",
+    "series": 6,
+    "card": 22
+  },
+  {
+    "asset": "JACKOPEPE",
+    "series": 6,
+    "card": 23
+  },
+  {
+    "asset": "PEPEBURNED",
+    "series": 6,
+    "card": 24
+  },
+  {
+    "asset": "PEPEBURN",
+    "series": 6,
+    "card": 25
+  },
+  {
+    "asset": "PEPEJAPAN",
+    "series": 6,
+    "card": 26
+  },
+  {
+    "asset": "THISISFINE",
+    "series": 6,
+    "card": 27
+  },
+  {
+    "asset": "DATPEPE",
+    "series": 6,
+    "card": 28
+  },
+  {
+    "asset": "NIGHTSATPEPE",
+    "series": 6,
+    "card": 29
+  },
+  {
+    "asset": "PEPENORRIS",
+    "series": 6,
+    "card": 30
+  },
+  {
+    "asset": "PEPECOWBELL",
+    "series": 6,
+    "card": 31
+  },
+  {
+    "asset": "LONGNOSEPEPE",
+    "series": 6,
+    "card": 32
+  },
+  {
+    "asset": "PEPEGOTCHI",
+    "series": 6,
+    "card": 33
+  },
+  {
+    "asset": "INNOCOINBOT",
+    "series": 6,
+    "card": 34
+  },
+  {
+    "asset": "PEPEZ",
+    "series": 6,
+    "card": 35
+  },
+  {
+    "asset": "RAREPEPENEWS",
+    "series": 6,
+    "card": 36
+  },
+  {
+    "asset": "PEPEGREEN",
+    "series": 6,
+    "card": 37
+  },
+  {
+    "asset": "BURNPEPE",
+    "series": 6,
+    "card": 38
+  },
+  {
+    "asset": "QUEGUAYPEPE",
+    "series": 6,
+    "card": 39
+  },
+  {
+    "asset": "PEPEMARLEY",
+    "series": 6,
+    "card": 40
+  },
+  {
+    "asset": "PEPEADDICT",
+    "series": 6,
+    "card": 41
+  },
+  {
+    "asset": "PEPEARTISTE",
+    "series": 6,
+    "card": 42
+  },
+  {
+    "asset": "SECURITYPEPE",
+    "series": 6,
+    "card": 43
+  },
+  {
+    "asset": "CULTOFPEPE",
+    "series": 6,
+    "card": 44
+  },
+  {
+    "asset": "PEPEKMONGO",
+    "series": 6,
+    "card": 45
+  },
+  {
+    "asset": "PEPECAMO",
+    "series": 6,
+    "card": 46
+  },
+  {
+    "asset": "PEPERACCOON",
+    "series": 6,
+    "card": 47
+  },
+  {
+    "asset": "PEPEFREEZE",
+    "series": 6,
+    "card": 48
+  },
+  {
+    "asset": "PEPEMOON",
+    "series": 6,
+    "card": 49
+  },
+  {
+    "asset": "PEPEDATA",
+    "series": 6,
+    "card": 50
+  },
+  {
+    "asset": "WHERESPEPE",
+    "series": 7,
+    "card": 1
+  },
+  {
+    "asset": "BREATHEDPEPE",
+    "series": 7,
+    "card": 2
+  },
+  {
+    "asset": "ULTRAPEPE",
+    "series": 7,
+    "card": 3
+  },
+  {
+    "asset": "NEOPEPE",
+    "series": 7,
+    "card": 4
+  },
+  {
+    "asset": "PEPERARE",
+    "series": 7,
+    "card": 5
+  },
+  {
+    "asset": "WPPEPE",
+    "series": 7,
+    "card": 6
+  },
+  {
+    "asset": "PEPETHUGLIFE",
+    "series": 7,
+    "card": 7
+  },
+  {
+    "asset": "PARTYPEPE",
+    "series": 7,
+    "card": 8
+  },
+  {
+    "asset": "PEPETHEFIRST",
+    "series": 7,
+    "card": 9
+  },
+  {
+    "asset": "ZOOKOPEPE",
+    "series": 7,
+    "card": 10
+  },
+  {
+    "asset": "PEPEHORROR",
+    "series": 7,
+    "card": 11
+  },
+  {
+    "asset": "PEPEVOORHEES",
+    "series": 7,
+    "card": 12
+  },
+  {
+    "asset": "COMEDYPEPE",
+    "series": 7,
+    "card": 13
+  },
+  {
+    "asset": "SIXTYSIXPEPE",
+    "series": 7,
+    "card": 14
+  },
+  {
+    "asset": "MAOPEPE",
+    "series": 7,
+    "card": 15
+  },
+  {
+    "asset": "PEPEMANE",
+    "series": 7,
+    "card": 16
+  },
+  {
+    "asset": "PEPECENT",
+    "series": 7,
+    "card": 17
+  },
+  {
+    "asset": "PEPETHETROLL",
+    "series": 7,
+    "card": 18
+  },
+  {
+    "asset": "PEPEGRAVE",
+    "series": 7,
+    "card": 19
+  },
+  {
+    "asset": "PEPETODAMOON",
+    "series": 7,
+    "card": 20
+  },
+  {
+    "asset": "PINHEADPEPE",
+    "series": 7,
+    "card": 21
+  },
+  {
+    "asset": "GAINSPEPE",
+    "series": 7,
+    "card": 22
+  },
+  {
+    "asset": "PEPETUITY",
+    "series": 7,
+    "card": 23
+  },
+  {
+    "asset": "NAPKINPEPE",
+    "series": 7,
+    "card": 24
+  },
+  {
+    "asset": "FATPEPE",
+    "series": 7,
+    "card": 25
+  },
+  {
+    "asset": "KIDPEPE",
+    "series": 7,
+    "card": 26
+  },
+  {
+    "asset": "PEPEZCASH",
+    "series": 7,
+    "card": 27
+  },
+  {
+    "asset": "SHININGPEPE",
+    "series": 7,
+    "card": 28
+  },
+  {
+    "asset": "PEPA",
+    "series": 7,
+    "card": 29
+  },
+  {
+    "asset": "ILOVEPEPE",
+    "series": 7,
+    "card": 30
+  },
+  {
+    "asset": "PEPETIME",
+    "series": 7,
+    "card": 31
+  },
+  {
+    "asset": "PEPETREZOR",
+    "series": 7,
+    "card": 32
+  },
+  {
+    "asset": "SGTPEPE",
+    "series": 7,
+    "card": 33
+  },
+  {
+    "asset": "SHREMPEPE",
+    "series": 7,
+    "card": 34
+  },
+  {
+    "asset": "HANSEIPEPE",
+    "series": 7,
+    "card": 35
+  },
+  {
+    "asset": "DRILLPEPE",
+    "series": 7,
+    "card": 36
+  },
+  {
+    "asset": "ZZZZPEPE",
+    "series": 7,
+    "card": 37
+  },
+  {
+    "asset": "MAOISMPEPE",
+    "series": 7,
+    "card": 38
+  },
+  {
+    "asset": "BULLYPEPE",
+    "series": 7,
+    "card": 39
+  },
+  {
+    "asset": "XMASPEPE",
+    "series": 7,
+    "card": 40
+  },
+  {
+    "asset": "PEPETSHIRT",
+    "series": 7,
+    "card": 41
+  },
+  {
+    "asset": "GOTPEPESHIRT",
+    "series": 7,
+    "card": 42
+  },
+  {
+    "asset": "ECCEPEPE",
+    "series": 7,
+    "card": 43
+  },
+  {
+    "asset": "FUNPEPE",
+    "series": 7,
+    "card": 44
+  },
+  {
+    "asset": "RPCAGENT",
+    "series": 7,
+    "card": 45
+  },
+  {
+    "asset": "RELAXPEPE",
+    "series": 7,
+    "card": 46
+  },
+  {
+    "asset": "PWAPWAPWAPWA",
+    "series": 7,
+    "card": 47
+  },
+  {
+    "asset": "MYRIADMPEPE",
+    "series": 7,
+    "card": 48
+  },
+  {
+    "asset": "PEPESITO",
+    "series": 7,
+    "card": 49
+  },
+  {
+    "asset": "GOSPELPEPE",
+    "series": 7,
+    "card": 50
+  },
+  {
+    "asset": "PEPETHEFROG",
+    "series": 8,
+    "card": 1
+  },
+  {
+    "asset": "RELATEPEPE",
+    "series": 8,
+    "card": 2
+  },
+  {
+    "asset": "BONDPEPE",
+    "series": 8,
+    "card": 3
+  },
+  {
+    "asset": "WHEELOFPEPE",
+    "series": 8,
+    "card": 4
+  },
+  {
+    "asset": "MONTYPEPE",
+    "series": 8,
+    "card": 5
+  },
+  {
+    "asset": "KEKET",
+    "series": 8,
+    "card": 6
+  },
+  {
+    "asset": "MATADORPEPE",
+    "series": 8,
+    "card": 7
+  },
+  {
+    "asset": "PICASSOPEPE",
+    "series": 8,
+    "card": 8
+  },
+  {
+    "asset": "SAMURAIPEPE",
+    "series": 8,
+    "card": 9
+  },
+  {
+    "asset": "PEPENUMA",
+    "series": 8,
+    "card": 10
+  },
+  {
+    "asset": "XMASANTAPEPE",
+    "series": 8,
+    "card": 11
+  },
+  {
+    "asset": "PEPEMARAUDER",
+    "series": 8,
+    "card": 12
+  },
+  {
+    "asset": "VANGOUGHPEPE",
+    "series": 8,
+    "card": 13
+  },
+  {
+    "asset": "PEPELAND",
+    "series": 8,
+    "card": 14
+  },
+  {
+    "asset": "PROUDPEPEWIN",
+    "series": 8,
+    "card": 15
+  },
+  {
+    "asset": "MATISSEPEPE",
+    "series": 8,
+    "card": 16
+  },
+  {
+    "asset": "DALIPEPE",
+    "series": 8,
+    "card": 17
+  },
+  {
+    "asset": "PEPEJIRAIYA",
+    "series": 8,
+    "card": 18
+  },
+  {
+    "asset": "NEWYEARPEPE",
+    "series": 8,
+    "card": 19
+  },
+  {
+    "asset": "FRIENDSPEPE",
+    "series": 8,
+    "card": 20
+  },
+  {
+    "asset": "MIROPEPE",
+    "series": 8,
+    "card": 21
+  },
+  {
+    "asset": "PEPERUS",
+    "series": 8,
+    "card": 22
+  },
+  {
+    "asset": "PEPELENNON",
+    "series": 8,
+    "card": 23
+  },
+  {
+    "asset": "PEPESTRANGE",
+    "series": 8,
+    "card": 24
+  },
+  {
+    "asset": "BOSSHOGPEPE",
+    "series": 8,
+    "card": 25
+  },
+  {
+    "asset": "SECRETPEPE",
+    "series": 8,
+    "card": 26
+  },
+  {
+    "asset": "MASTROPEPE",
+    "series": 8,
+    "card": 27
+  },
+  {
+    "asset": "JOELOONEYBIN",
+    "series": 8,
+    "card": 28
+  },
+  {
+    "asset": "CLASSICPEPE",
+    "series": 8,
+    "card": 29
+  },
+  {
+    "asset": "PEPERFUME",
+    "series": 8,
+    "card": 30
+  },
+  {
+    "asset": "PEPERICH",
+    "series": 8,
+    "card": 31
+  },
+  {
+    "asset": "PEPEHELP",
+    "series": 8,
+    "card": 32
+  },
+  {
+    "asset": "GIVEKUDOS",
+    "series": 8,
+    "card": 33
+  },
+  {
+    "asset": "LAUTRECPEPE",
+    "series": 8,
+    "card": 34
+  },
+  {
+    "asset": "BERNIEPEPE",
+    "series": 8,
+    "card": 35
+  },
+  {
+    "asset": "TAKARAPEPE",
+    "series": 8,
+    "card": 36
+  },
+  {
+    "asset": "SURFINGPEPE",
+    "series": 8,
+    "card": 37
+  },
+  {
+    "asset": "KUNISADAPEPE",
+    "series": 8,
+    "card": 38
+  },
+  {
+    "asset": "TRUMPEPE",
+    "series": 8,
+    "card": 39
+  },
+  {
+    "asset": "PEPETANGCLAN",
+    "series": 8,
+    "card": 40
+  },
+  {
+    "asset": "SNOWDENPEPE",
+    "series": 8,
+    "card": 41
+  },
+  {
+    "asset": "PEPENACCI",
+    "series": 8,
+    "card": 42
+  },
+  {
+    "asset": "STEALPEPE",
+    "series": 8,
+    "card": 43
+  },
+  {
+    "asset": "THEPEPE",
+    "series": 8,
+    "card": 44
+  },
+  {
+    "asset": "PEPETUNADE",
+    "series": 8,
+    "card": 45
+  },
+  {
+    "asset": "RUBBERPEPE",
+    "series": 8,
+    "card": 46
+  },
+  {
+    "asset": "PEPEPOOR",
+    "series": 8,
+    "card": 47
+  },
+  {
+    "asset": "TERRIBLEPEPE",
+    "series": 8,
+    "card": 48
+  },
+  {
+    "asset": "PEPEPSI",
+    "series": 8,
+    "card": 49
+  },
+  {
+    "asset": "PPKING",
+    "series": 8,
+    "card": 50
+  },
+  {
+    "asset": "MANDELPEPE",
+    "series": 9,
+    "card": 1
+  },
+  {
+    "asset": "PEPESPACE",
+    "series": 9,
+    "card": 2
+  },
+  {
+    "asset": "PREPEDATOR",
+    "series": 9,
+    "card": 3
+  },
+  {
+    "asset": "DDDPEPE",
+    "series": 9,
+    "card": 4
+  },
+  {
+    "asset": "SNAPCHATPEPE",
+    "series": 9,
+    "card": 5
+  },
+  {
+    "asset": "PEPEOROCHI",
+    "series": 9,
+    "card": 6
+  },
+  {
+    "asset": "SANTAPEPE",
+    "series": 9,
+    "card": 7
+  },
+  {
+    "asset": "RPEPERAMI",
+    "series": 9,
+    "card": 8
+  },
+  {
+    "asset": "STORYPEPE",
+    "series": 9,
+    "card": 9
+  },
+  {
+    "asset": "MURICAPEPE",
+    "series": 9,
+    "card": 10
+  },
+  {
+    "asset": "PEPOCALYPSE",
+    "series": 9,
+    "card": 11
+  },
+  {
+    "asset": "SCORPEPE",
+    "series": 9,
+    "card": 12
+  },
+  {
+    "asset": "PEPEGANDHI",
+    "series": 9,
+    "card": 13
+  },
+  {
+    "asset": "PEPEDEX",
+    "series": 9,
+    "card": 14
+  },
+  {
+    "asset": "CUBEPEPE",
+    "series": 9,
+    "card": 15
+  },
+  {
+    "asset": "JAKETHEPEPE",
+    "series": 9,
+    "card": 16
+  },
+  {
+    "asset": "PEPETRON",
+    "series": 9,
+    "card": 17
+  },
+  {
+    "asset": "JOINTPEPE",
+    "series": 9,
+    "card": 18
+  },
+  {
+    "asset": "BITGIRLPEPE",
+    "series": 9,
+    "card": 19
+  },
+  {
+    "asset": "TIMEPEPE",
+    "series": 9,
+    "card": 20
+  },
+  {
+    "asset": "STANDINGPEPE",
+    "series": 9,
+    "card": 21
+  },
+  {
+    "asset": "MASTEROFPEPE",
+    "series": 9,
+    "card": 22
+  },
+  {
+    "asset": "DRONEPEPE",
+    "series": 9,
+    "card": 23
+  },
+  {
+    "asset": "RAREPEPEPRTY",
+    "series": 9,
+    "card": 24
+  },
+  {
+    "asset": "MAPEPENEMR",
+    "series": 9,
+    "card": 25
+  },
+  {
+    "asset": "TESTNETPEPE",
+    "series": 9,
+    "card": 26
+  },
+  {
+    "asset": "LEPEWPEPE",
+    "series": 9,
+    "card": 27
+  },
+  {
+    "asset": "OSKARPEPE",
+    "series": 9,
+    "card": 28
+  },
+  {
+    "asset": "RICHPEPEPOOR",
+    "series": 9,
+    "card": 29
+  },
+  {
+    "asset": "PEPEMILEY",
+    "series": 9,
+    "card": 30
+  },
+  {
+    "asset": "UKIPEPE",
+    "series": 9,
+    "card": 31
+  },
+  {
+    "asset": "RAREPEPEPUMP",
+    "series": 9,
+    "card": 32
+  },
+  {
+    "asset": "MTPEPEMORE",
+    "series": 9,
+    "card": 33
+  },
+  {
+    "asset": "HARRYPEPES",
+    "series": 9,
+    "card": 34
+  },
+  {
+    "asset": "PPLNMDNTNY",
+    "series": 9,
+    "card": 35
+  },
+  {
+    "asset": "VOLDEPEPE",
+    "series": 9,
+    "card": 36
+  },
+  {
+    "asset": "PEPERRR",
+    "series": 9,
+    "card": 37
+  },
+  {
+    "asset": "RADIOPEPE",
+    "series": 9,
+    "card": 38
+  },
+  {
+    "asset": "PEPEHOUSE",
+    "series": 9,
+    "card": 39
+  },
+  {
+    "asset": "CICACOINPEPE",
+    "series": 9,
+    "card": 40
+  },
+  {
+    "asset": "PEPEREPUBLIC",
+    "series": 9,
+    "card": 41
+  },
+  {
+    "asset": "BOYSCLUBPEPE",
+    "series": 9,
+    "card": 42
+  },
+  {
+    "asset": "MAOZEPEPE",
+    "series": 9,
+    "card": 43
+  },
+  {
+    "asset": "RUBEUSPEPE",
+    "series": 9,
+    "card": 44
+  },
+  {
+    "asset": "LOVEISPEPE",
+    "series": 9,
+    "card": 45
+  },
+  {
+    "asset": "PEPELYN",
+    "series": 9,
+    "card": 46
+  },
+  {
+    "asset": "BLKSWANPEPE",
+    "series": 9,
+    "card": 47
+  },
+  {
+    "asset": "DUMBLEPEPE",
+    "series": 9,
+    "card": 48
+  },
+  {
+    "asset": "PROOFOFPEPE",
+    "series": 9,
+    "card": 49
+  },
+  {
+    "asset": "PEPECITY",
+    "series": 9,
+    "card": 50
+  },
+  {
+    "asset": "PEPEBUCKS",
+    "series": 10,
+    "card": 1
+  },
+  {
+    "asset": "ICQPEPE",
+    "series": 10,
+    "card": 2
+  },
+  {
+    "asset": "SKIINGPEPE",
+    "series": 10,
+    "card": 3
+  },
+  {
+    "asset": "WINSTONPEPE",
+    "series": 10,
+    "card": 4
+  },
+  {
+    "asset": "TAJPEPE",
+    "series": 10,
+    "card": 5
+  },
+  {
+    "asset": "PEPEBRICK",
+    "series": 10,
+    "card": 6
+  },
+  {
+    "asset": "BANKRUPTPEPE",
+    "series": 10,
+    "card": 7
+  },
+  {
+    "asset": "BTCPEPE",
+    "series": 10,
+    "card": 8
+  },
+  {
+    "asset": "REVOLUCIONAR",
+    "series": 10,
+    "card": 9
+  },
+  {
+    "asset": "PEPEWEST",
+    "series": 10,
+    "card": 10
+  },
+  {
+    "asset": "BRIGHTONPEPE",
+    "series": 10,
+    "card": 11
+  },
+  {
+    "asset": "TOMANDPEPE",
+    "series": 10,
+    "card": 12
+  },
+  {
+    "asset": "PEPEALIEN",
+    "series": 10,
+    "card": 13
+  },
+  {
+    "asset": "LIKEPEPEBRO",
+    "series": 10,
+    "card": 14
+  },
+  {
+    "asset": "PEPEHUNGRY",
+    "series": 10,
+    "card": 15
+  },
+  {
+    "asset": "EYETESTPEPE",
+    "series": 10,
+    "card": 16
+  },
+  {
+    "asset": "PEPEDOTCOM",
+    "series": 10,
+    "card": 17
+  },
+  {
+    "asset": "SITHLORDPEPE",
+    "series": 10,
+    "card": 18
+  },
+  {
+    "asset": "PEPECONF",
+    "series": 10,
+    "card": 19
+  },
+  {
+    "asset": "RPDF",
+    "series": 10,
+    "card": 20
+  },
+  {
+    "asset": "WNPEPEPEPEPE",
+    "series": 10,
+    "card": 21
+  },
+  {
+    "asset": "PEPENUKES",
+    "series": 10,
+    "card": 22
+  },
+  {
+    "asset": "BLAINEPEPE",
+    "series": 10,
+    "card": 23
+  },
+  {
+    "asset": "SUPERMANPEPE",
+    "series": 10,
+    "card": 24
+  },
+  {
+    "asset": "PHILANTHROPE",
+    "series": 10,
+    "card": 25
+  },
+  {
+    "asset": "PEPEMAXAF",
+    "series": 10,
+    "card": 26
+  },
+  {
+    "asset": "PEPELOU",
+    "series": 10,
+    "card": 27
+  },
+  {
+    "asset": "PEEPHOLEPEPE",
+    "series": 10,
+    "card": 28
+  },
+  {
+    "asset": "ELEVATORPEPE",
+    "series": 10,
+    "card": 29
+  },
+  {
+    "asset": "CRYPTOPEPE",
+    "series": 10,
+    "card": 30
+  },
+  {
+    "asset": "VONPEPEHAYEK",
+    "series": 10,
+    "card": 31
+  },
+  {
+    "asset": "BATMANPEPE",
+    "series": 10,
+    "card": 32
+  },
+  {
+    "asset": "JMPEPEKEYNES",
+    "series": 10,
+    "card": 33
+  },
+  {
+    "asset": "PEPEASTRO",
+    "series": 10,
+    "card": 34
+  },
+  {
+    "asset": "PIGPEPE",
+    "series": 10,
+    "card": 35
+  },
+  {
+    "asset": "PEPESOUP",
+    "series": 10,
+    "card": 36
+  },
+  {
+    "asset": "SPIDERMNPEPE",
+    "series": 10,
+    "card": 37
+  },
+  {
+    "asset": "THELASTPEPE",
+    "series": 10,
+    "card": 38
+  },
+  {
+    "asset": "NYANPEPE",
+    "series": 10,
+    "card": 39
+  },
+  {
+    "asset": "DOCTORPEPE",
+    "series": 10,
+    "card": 40
+  },
+  {
+    "asset": "HULKPEPE",
+    "series": 10,
+    "card": 41
+  },
+  {
+    "asset": "JSSICAPEPE",
+    "series": 10,
+    "card": 42
+  },
+  {
+    "asset": "PEPEOUTSIDE",
+    "series": 10,
+    "card": 43
+  },
+  {
+    "asset": "PEPEWICKED",
+    "series": 10,
+    "card": 44
+  },
+  {
+    "asset": "PEPEFROMHELL",
+    "series": 10,
+    "card": 45
+  },
+  {
+    "asset": "PEPEFATHER",
+    "series": 10,
+    "card": 46
+  },
+  {
+    "asset": "VICEPEPE",
+    "series": 10,
+    "card": 47
+  },
+  {
+    "asset": "RARESHADILAY",
+    "series": 10,
+    "card": 48
+  },
+  {
+    "asset": "PEPEMEETUPBK",
+    "series": 10,
+    "card": 49
+  },
+  {
+    "asset": "PEPESTARBOY",
+    "series": 10,
+    "card": 50
+  },
+  {
+    "asset": "PEPEKART",
+    "series": 11,
+    "card": 1
+  },
+  {
+    "asset": "MARSPEPE",
+    "series": 11,
+    "card": 2
+  },
+  {
+    "asset": "PEPELEO",
+    "series": 11,
+    "card": 3
+  },
+  {
+    "asset": "PEPELYNMASON",
+    "series": 11,
+    "card": 4
+  },
+  {
+    "asset": "PEPEMONROE",
+    "series": 11,
+    "card": 5
+  },
+  {
+    "asset": "PEPEPONY",
+    "series": 11,
+    "card": 6
+  },
+  {
+    "asset": "POWERTOPEPE",
+    "series": 11,
+    "card": 7
+  },
+  {
+    "asset": "BADHAIRDAY",
+    "series": 11,
+    "card": 8
+  },
+  {
+    "asset": "NOBRAKESPEPE",
+    "series": 11,
+    "card": 9
+  },
+  {
+    "asset": "TODAMOONPEPE",
+    "series": 11,
+    "card": 10
+  },
+  {
+    "asset": "THEPEPELIST",
+    "series": 11,
+    "card": 11
+  },
+  {
+    "asset": "PEPEBILL",
+    "series": 11,
+    "card": 12
+  },
+  {
+    "asset": "PEPERIDER",
+    "series": 11,
+    "card": 13
+  },
+  {
+    "asset": "WIREDPEPE",
+    "series": 11,
+    "card": 14
+  },
+  {
+    "asset": "PEPEENEUMAN",
+    "series": 11,
+    "card": 15
+  },
+  {
+    "asset": "FREEMYPEPE",
+    "series": 11,
+    "card": 16
+  },
+  {
+    "asset": "PEPEBIRTH",
+    "series": 11,
+    "card": 17
+  },
+  {
+    "asset": "PEPETINDER",
+    "series": 11,
+    "card": 18
+  },
+  {
+    "asset": "CSAT",
+    "series": 11,
+    "card": 19
+  },
+  {
+    "asset": "PEPEMARIOLR",
+    "series": 11,
+    "card": 20
+  },
+  {
+    "asset": "PEPELAMBO",
+    "series": 11,
+    "card": 21
+  },
+  {
+    "asset": "PEPESCIENCE",
+    "series": 11,
+    "card": 22
+  },
+  {
+    "asset": "SOCRATESPEPE",
+    "series": 11,
+    "card": 23
+  },
+  {
+    "asset": "KEKUI",
+    "series": 11,
+    "card": 24
+  },
+  {
+    "asset": "SPHINXPEPE",
+    "series": 11,
+    "card": 25
+  },
+  {
+    "asset": "PEPESMALLS",
+    "series": 11,
+    "card": 26
+  },
+  {
+    "asset": "PORPEPELAMBO",
+    "series": 11,
+    "card": 27
+  },
+  {
+    "asset": "PEPELEVICH",
+    "series": 11,
+    "card": 28
+  },
+  {
+    "asset": "LEGOPEPE",
+    "series": 11,
+    "card": 29
+  },
+  {
+    "asset": "LORDSHIVA",
+    "series": 11,
+    "card": 30
+  },
+  {
+    "asset": "PEPECAPCHA",
+    "series": 11,
+    "card": 31
+  },
+  {
+    "asset": "CHIKUNPEPE",
+    "series": 11,
+    "card": 32
+  },
+  {
+    "asset": "PEPETRODOL",
+    "series": 11,
+    "card": 33
+  },
+  {
+    "asset": "DOLLARPEPE",
+    "series": 11,
+    "card": 34
+  },
+  {
+    "asset": "PEPEPRINGLES",
+    "series": 11,
+    "card": 35
+  },
+  {
+    "asset": "RAREIVANKA",
+    "series": 11,
+    "card": 36
+  },
+  {
+    "asset": "EXCLUPEPE",
+    "series": 11,
+    "card": 37
+  },
+  {
+    "asset": "PEPEXIT",
+    "series": 11,
+    "card": 38
+  },
+  {
+    "asset": "PEPEFIFTYONE",
+    "series": 11,
+    "card": 39
+  },
+  {
+    "asset": "DORAETROLL",
+    "series": 11,
+    "card": 40
+  },
+  {
+    "asset": "SOUNDOFPEPE",
+    "series": 11,
+    "card": 41
+  },
+  {
+    "asset": "SHEMANPEPE",
+    "series": 11,
+    "card": 42
+  },
+  {
+    "asset": "PEPEISLOVE",
+    "series": 11,
+    "card": 43
+  },
+  {
+    "asset": "CROPPEPE",
+    "series": 11,
+    "card": 44
+  },
+  {
+    "asset": "DIAVOLO",
+    "series": 11,
+    "card": 45
+  },
+  {
+    "asset": "PACPEPE",
+    "series": 11,
+    "card": 46
+  },
+  {
+    "asset": "EARTHPEPE",
+    "series": 11,
+    "card": 47
+  },
+  {
+    "asset": "PEPEPIRATE",
+    "series": 11,
+    "card": 48
+  },
+  {
+    "asset": "KARTANDPEPE",
+    "series": 11,
+    "card": 49
+  },
+  {
+    "asset": "RPDUMPSTER",
+    "series": 11,
+    "card": 50
+  },
+  {
+    "asset": "PEPEGOLDBAR",
+    "series": 12,
+    "card": 1
+  },
+  {
+    "asset": "DOSPEPES",
+    "series": 12,
+    "card": 2
+  },
+  {
+    "asset": "PEPEGROOT",
+    "series": 12,
+    "card": 3
+  },
+  {
+    "asset": "PEPEGLOBE",
+    "series": 12,
+    "card": 4
+  },
+  {
+    "asset": "GOTHICPEPE",
+    "series": 12,
+    "card": 5
+  },
+  {
+    "asset": "PEPERGRIFFIN",
+    "series": 12,
+    "card": 6
+  },
+  {
+    "asset": "PEPENEWTON",
+    "series": 12,
+    "card": 7
+  },
+  {
+    "asset": "TREEOFPEPE",
+    "series": 12,
+    "card": 8
+  },
+  {
+    "asset": "GOKUPEPE",
+    "series": 12,
+    "card": 9
+  },
+  {
+    "asset": "PYTHONPEPE",
+    "series": 12,
+    "card": 10
+  },
+  {
+    "asset": "PEPEYE",
+    "series": 12,
+    "card": 11
+  },
+  {
+    "asset": "PEPECOASTER",
+    "series": 12,
+    "card": 12
+  },
+  {
+    "asset": "MIRACLEPEPE",
+    "series": 12,
+    "card": 13
+  },
+  {
+    "asset": "BATBUTBOO",
+    "series": 12,
+    "card": 14
+  },
+  {
+    "asset": "OLYMPICPEPE",
+    "series": 12,
+    "card": 15
+  },
+  {
+    "asset": "IWANTTOPEPE",
+    "series": 12,
+    "card": 16
+  },
+  {
+    "asset": "XPEPE",
+    "series": 12,
+    "card": 17
+  },
+  {
+    "asset": "PEPEBRANDO",
+    "series": 12,
+    "card": 18
+  },
+  {
+    "asset": "PEPEJOBS",
+    "series": 12,
+    "card": 19
+  },
+  {
+    "asset": "PEPESCAVHUNT",
+    "series": 12,
+    "card": 20
+  },
+  {
+    "asset": "PEPELEFTLEG",
+    "series": 12,
+    "card": 21
+  },
+  {
+    "asset": "PEPETHAGORAS",
+    "series": 12,
+    "card": 22
+  },
+  {
+    "asset": "PAPILLON",
+    "series": 12,
+    "card": 23
+  },
+  {
+    "asset": "PEPETIP",
+    "series": 12,
+    "card": 24
+  },
+  {
+    "asset": "PEPONG",
+    "series": 12,
+    "card": 25
+  },
+  {
+    "asset": "NINJAPEPES",
+    "series": 12,
+    "card": 26
+  },
+  {
+    "asset": "USMCPEPE",
+    "series": 12,
+    "card": 27
+  },
+  {
+    "asset": "GRAFFITIPEPE",
+    "series": 12,
+    "card": 28
+  },
+  {
+    "asset": "SHREKPEPE",
+    "series": 12,
+    "card": 29
+  },
+  {
+    "asset": "PEPEDUROV",
+    "series": 12,
+    "card": 30
+  },
+  {
+    "asset": "PEPECCOLO",
+    "series": 12,
+    "card": 31
+  },
+  {
+    "asset": "MONOPEPEOLY",
+    "series": 12,
+    "card": 32
+  },
+  {
+    "asset": "PEPEOTHERLEG",
+    "series": 12,
+    "card": 33
+  },
+  {
+    "asset": "COLDPEPE",
+    "series": 12,
+    "card": 34
+  },
+  {
+    "asset": "LORDOFMEMES",
+    "series": 12,
+    "card": 35
+  },
+  {
+    "asset": "IRONPEPE",
+    "series": 12,
+    "card": 36
+  },
+  {
+    "asset": "THISPEPE",
+    "series": 12,
+    "card": 37
+  },
+  {
+    "asset": "DROPPEPE",
+    "series": 12,
+    "card": 38
+  },
+  {
+    "asset": "RAGZTOPEPE",
+    "series": 12,
+    "card": 39
+  },
+  {
+    "asset": "PEPEISPEACE",
+    "series": 12,
+    "card": 40
+  },
+  {
+    "asset": "PEPEPASSPORT",
+    "series": 12,
+    "card": 41
+  },
+  {
+    "asset": "PEPETEX",
+    "series": 12,
+    "card": 42
+  },
+  {
+    "asset": "LETSTALKKEK",
+    "series": 12,
+    "card": 43
+  },
+  {
+    "asset": "JINQIANSHU",
+    "series": 12,
+    "card": 44
+  },
+  {
+    "asset": "SATURDAYPEPE",
+    "series": 12,
+    "card": 45
+  },
+  {
+    "asset": "PLATINUMPEPE",
+    "series": 12,
+    "card": 46
+  },
+  {
+    "asset": "PEPEAMD",
+    "series": 12,
+    "card": 47
+  },
+  {
+    "asset": "HANGINPEPE",
+    "series": 12,
+    "card": 48
+  },
+  {
+    "asset": "PEPEKARLMARX",
+    "series": 12,
+    "card": 49
+  },
+  {
+    "asset": "NAPALMPEPE",
+    "series": 12,
+    "card": 50
+  },
+  {
+    "asset": "PEPEDRAKE",
+    "series": 13,
+    "card": 1
+  },
+  {
+    "asset": "MINIONPEPE",
+    "series": 13,
+    "card": 2
+  },
+  {
+    "asset": "PEPEFLATION",
+    "series": 13,
+    "card": 3
+  },
+  {
+    "asset": "RAREPEPEMAG",
+    "series": 13,
+    "card": 4
+  },
+  {
+    "asset": "PEPECOLLECT",
+    "series": 13,
+    "card": 5
+  },
+  {
+    "asset": "TWEEKPEPE",
+    "series": 13,
+    "card": 6
+  },
+  {
+    "asset": "MCPEPESCHER",
+    "series": 13,
+    "card": 7
+  },
+  {
+    "asset": "TEAPEPE",
+    "series": 13,
+    "card": 8
+  },
+  {
+    "asset": "IRONMANPEPE",
+    "series": 13,
+    "card": 9
+  },
+  {
+    "asset": "CNPEPE",
+    "series": 13,
+    "card": 10
+  },
+  {
+    "asset": "PEPEBREAKUP",
+    "series": 13,
+    "card": 11
+  },
+  {
+    "asset": "KEKSBASILISK",
+    "series": 13,
+    "card": 12
+  },
+  {
+    "asset": "SALVADORPEPE",
+    "series": 13,
+    "card": 13
+  },
+  {
+    "asset": "LORDGLEN",
+    "series": 13,
+    "card": 14
+  },
+  {
+    "asset": "PEPEMCLOVIN",
+    "series": 13,
+    "card": 15
+  },
+  {
+    "asset": "PEPEWOKE",
+    "series": 13,
+    "card": 16
+  },
+  {
+    "asset": "CRYSTALPEPE",
+    "series": 13,
+    "card": 17
+  },
+  {
+    "asset": "SHIALEBPEPE",
+    "series": 13,
+    "card": 18
+  },
+  {
+    "asset": "PEPEOLDCHAP",
+    "series": 13,
+    "card": 19
+  },
+  {
+    "asset": "PEPUNCONFIRM",
+    "series": 13,
+    "card": 20
+  },
+  {
+    "asset": "PEPITCHY",
+    "series": 13,
+    "card": 21
+  },
+  {
+    "asset": "PEPEKIM",
+    "series": 13,
+    "card": 22
+  },
+  {
+    "asset": "MEMPOOLPEPE",
+    "series": 13,
+    "card": 23
+  },
+  {
+    "asset": "PEPEGLOVER",
+    "series": 13,
+    "card": 24
+  },
+  {
+    "asset": "FINNTHEPEPE",
+    "series": 13,
+    "card": 25
+  },
+  {
+    "asset": "DRSTRNGEPEPE",
+    "series": 13,
+    "card": 26
+  },
+  {
+    "asset": "CUBANPEPE",
+    "series": 13,
+    "card": 27
+  },
+  {
+    "asset": "PEPEPUNCHOUT",
+    "series": 13,
+    "card": 28
+  },
+  {
+    "asset": "WISEPEPE",
+    "series": 13,
+    "card": 29
+  },
+  {
+    "asset": "BUDDHAPEPES",
+    "series": 13,
+    "card": 30
+  },
+  {
+    "asset": "PEPELEMMING",
+    "series": 13,
+    "card": 31
+  },
+  {
+    "asset": "BEWPEPE",
+    "series": 13,
+    "card": 32
+  },
+  {
+    "asset": "PEPEHEPBURN",
+    "series": 13,
+    "card": 33
+  },
+  {
+    "asset": "MEMETICMAGIC",
+    "series": 13,
+    "card": 34
+  },
+  {
+    "asset": "PEPEMACARONI",
+    "series": 13,
+    "card": 35
+  },
+  {
+    "asset": "GODDESSHEQET",
+    "series": 13,
+    "card": 36
+  },
+  {
+    "asset": "STARLORDKEK",
+    "series": 13,
+    "card": 37
+  },
+  {
+    "asset": "MARTYPEPFLY",
+    "series": 13,
+    "card": 38
+  },
+  {
+    "asset": "PEPEFLESH",
+    "series": 13,
+    "card": 39
+  },
+  {
+    "asset": "PEPEMORPHS",
+    "series": 13,
+    "card": 40
+  },
+  {
+    "asset": "JUSTINTPEPE",
+    "series": 13,
+    "card": 41
+  },
+  {
+    "asset": "PEPERIGHTARM",
+    "series": 13,
+    "card": 42
+  },
+  {
+    "asset": "PEPESTONED",
+    "series": 13,
+    "card": 43
+  },
+  {
+    "asset": "PROBLEMSOLVE",
+    "series": 13,
+    "card": 44
+  },
+  {
+    "asset": "PEPERAZZIS",
+    "series": 13,
+    "card": 45
+  },
+  {
+    "asset": "SUPAPEPE",
+    "series": 13,
+    "card": 46
+  },
+  {
+    "asset": "MFPEPE",
+    "series": 13,
+    "card": 47
+  },
+  {
+    "asset": "KEKPEPE",
+    "series": 13,
+    "card": 48
+  },
+  {
+    "asset": "FISHERPEPE",
+    "series": 13,
+    "card": 49
+  },
+  {
+    "asset": "DANKVADER",
+    "series": 13,
+    "card": 50
+  },
+  {
+    "asset": "RICHPEPE",
+    "series": 14,
+    "card": 1
+  },
+  {
+    "asset": "PEPEHUANA",
+    "series": 14,
+    "card": 2
+  },
+  {
+    "asset": "YOGAPEPE",
+    "series": 14,
+    "card": 3
+  },
+  {
+    "asset": "PEPEVIRAL",
+    "series": 14,
+    "card": 4
+  },
+  {
+    "asset": "PEPENAPOLEON",
+    "series": 14,
+    "card": 5
+  },
+  {
+    "asset": "PSYCHEPEPE",
+    "series": 14,
+    "card": 6
+  },
+  {
+    "asset": "LEVELUPPEPE",
+    "series": 14,
+    "card": 7
+  },
+  {
+    "asset": "DEEZPEPENUTS",
+    "series": 14,
+    "card": 8
+  },
+  {
+    "asset": "PEPENORMIES",
+    "series": 14,
+    "card": 9
+  },
+  {
+    "asset": "PEPEREQUEST",
+    "series": 14,
+    "card": 10
+  },
+  {
+    "asset": "STATUEOFPEPE",
+    "series": 14,
+    "card": 11
+  },
+  {
+    "asset": "NEEDPEPE",
+    "series": 14,
+    "card": 12
+  },
+  {
+    "asset": "FLAPPYPEPE",
+    "series": 14,
+    "card": 13
+  },
+  {
+    "asset": "NEONFROGS",
+    "series": 14,
+    "card": 14
+  },
+  {
+    "asset": "PEPEWAVE",
+    "series": 14,
+    "card": 15
+  },
+  {
+    "asset": "PEPEOTHERARM",
+    "series": 14,
+    "card": 16
+  },
+  {
+    "asset": "TUBBIES",
+    "series": 14,
+    "card": 17
+  },
+  {
+    "asset": "PEPEDAVID",
+    "series": 14,
+    "card": 18
+  },
+  {
+    "asset": "HOLYPEPE",
+    "series": 14,
+    "card": 19
+  },
+  {
+    "asset": "PEPEIMPOSTOR",
+    "series": 14,
+    "card": 20
+  },
+  {
+    "asset": "CHOCOPEPE",
+    "series": 14,
+    "card": 21
+  },
+  {
+    "asset": "PEPEPAWNSHOP",
+    "series": 14,
+    "card": 22
+  },
+  {
+    "asset": "GODDESSISIS",
+    "series": 14,
+    "card": 23
+  },
+  {
+    "asset": "FAKERPEPE",
+    "series": 14,
+    "card": 24
+  },
+  {
+    "asset": "PEPEVICH",
+    "series": 14,
+    "card": 25
+  },
+  {
+    "asset": "PEPEKEKCOIN",
+    "series": 14,
+    "card": 26
+  },
+  {
+    "asset": "PEPERETRO",
+    "series": 14,
+    "card": 27
+  },
+  {
+    "asset": "GAIUSPEPEUS",
+    "series": 14,
+    "card": 28
+  },
+  {
+    "asset": "CARCRASHPEPE",
+    "series": 14,
+    "card": 29
+  },
+  {
+    "asset": "FORBIDENPEPE",
+    "series": 14,
+    "card": 30
+  },
+  {
+    "asset": "PEPERAMBO",
+    "series": 14,
+    "card": 31
+  },
+  {
+    "asset": "PEPEMOVIE",
+    "series": 14,
+    "card": 32
+  },
+  {
+    "asset": "PEPEVINCI",
+    "series": 14,
+    "card": 33
+  },
+  {
+    "asset": "RESERVPEPES",
+    "series": 14,
+    "card": 34
+  },
+  {
+    "asset": "FUTURESPEPE",
+    "series": 14,
+    "card": 35
+  },
+  {
+    "asset": "PEPEPYRAMID",
+    "series": 14,
+    "card": 36
+  },
+  {
+    "asset": "PEPELOOP",
+    "series": 14,
+    "card": 37
+  },
+  {
+    "asset": "CPTMRICAPEPE",
+    "series": 14,
+    "card": 38
+  },
+  {
+    "asset": "BOGDAPEPE",
+    "series": 14,
+    "card": 39
+  },
+  {
+    "asset": "THEPEPEWHALE",
+    "series": 14,
+    "card": 40
+  },
+  {
+    "asset": "PEPEILLUSION",
+    "series": 14,
+    "card": 41
+  },
+  {
+    "asset": "GEISHAPEPE",
+    "series": 14,
+    "card": 42
+  },
+  {
+    "asset": "GAUDISPEPE",
+    "series": 14,
+    "card": 43
+  },
+  {
+    "asset": "KATYPEPE",
+    "series": 14,
+    "card": 44
+  },
+  {
+    "asset": "PEPEFREEDOM",
+    "series": 14,
+    "card": 45
+  },
+  {
+    "asset": "PEPETOWN",
+    "series": 14,
+    "card": 46
+  },
+  {
+    "asset": "PEPENIKOLAI",
+    "series": 14,
+    "card": 47
+  },
+  {
+    "asset": "STAMPOFKEK",
+    "series": 14,
+    "card": 48
+  },
+  {
+    "asset": "PEPEPAMPERS",
+    "series": 14,
+    "card": 49
+  },
+  {
+    "asset": "FLUFFYPEPES",
+    "series": 14,
+    "card": 50
+  },
+  {
+    "asset": "RAREDIETIES",
+    "series": 15,
+    "card": 1
+  },
+  {
+    "asset": "NICOLAPEPE",
+    "series": 15,
+    "card": 2
+  },
+  {
+    "asset": "KEYBOARDPEPE",
+    "series": 15,
+    "card": 3
+  },
+  {
+    "asset": "PEPERBOY",
+    "series": 15,
+    "card": 4
+  },
+  {
+    "asset": "HANNIBALPEPE",
+    "series": 15,
+    "card": 5
+  },
+  {
+    "asset": "PEPEANGRY",
+    "series": 15,
+    "card": 6
+  },
+  {
+    "asset": "GODANUBIS",
+    "series": 15,
+    "card": 7
+  },
+  {
+    "asset": "PEPELANDER",
+    "series": 15,
+    "card": 8
+  },
+  {
+    "asset": "PEPEJONES",
+    "series": 15,
+    "card": 9
+  },
+  {
+    "asset": "PPPGLOBAL",
+    "series": 15,
+    "card": 10
+  },
+  {
+    "asset": "PEPECLUB",
+    "series": 15,
+    "card": 11
+  },
+  {
+    "asset": "PLINKOPEPE",
+    "series": 15,
+    "card": 12
+  },
+  {
+    "asset": "PEPEBERLUSCA",
+    "series": 15,
+    "card": 13
+  },
+  {
+    "asset": "ZOETROPEPE",
+    "series": 15,
+    "card": 14
+  },
+  {
+    "asset": "GRANDPEPE",
+    "series": 15,
+    "card": 15
+  },
+  {
+    "asset": "PEPEDIEPIE",
+    "series": 15,
+    "card": 16
+  },
+  {
+    "asset": "SPCPEPEWOJAK",
+    "series": 15,
+    "card": 17
+  },
+  {
+    "asset": "DOUBLEPEPE",
+    "series": 15,
+    "card": 18
+  },
+  {
+    "asset": "PEPETRAZ",
+    "series": 15,
+    "card": 19
+  },
+  {
+    "asset": "PEPETRASH",
+    "series": 15,
+    "card": 20
+  },
+  {
+    "asset": "PEPEART",
+    "series": 15,
+    "card": 21
+  },
+  {
+    "asset": "PEPEGAMBIT",
+    "series": 15,
+    "card": 22
+  },
+  {
+    "asset": "PEPEGOLUM",
+    "series": 15,
+    "card": 23
+  },
+  {
+    "asset": "PEPEBRICKJR",
+    "series": 15,
+    "card": 24
+  },
+  {
+    "asset": "PEPECREAM",
+    "series": 15,
+    "card": 25
+  },
+  {
+    "asset": "MOAIPEPE",
+    "series": 15,
+    "card": 26
+  },
+  {
+    "asset": "PEPEANDFEELS",
+    "series": 15,
+    "card": 27
+  },
+  {
+    "asset": "GODAMUNRA",
+    "series": 15,
+    "card": 28
+  },
+  {
+    "asset": "PEPEWANTSYOU",
+    "series": 15,
+    "card": 29
+  },
+  {
+    "asset": "THREEPEPES",
+    "series": 15,
+    "card": 30
+  },
+  {
+    "asset": "KOIPEPE",
+    "series": 15,
+    "card": 31
+  },
+  {
+    "asset": "PEPEWATTS",
+    "series": 15,
+    "card": 32
+  },
+  {
+    "asset": "MCPEPEDEBUFF",
+    "series": 15,
+    "card": 33
+  },
+  {
+    "asset": "LEGENDOFPEPE",
+    "series": 15,
+    "card": 34
+  },
+  {
+    "asset": "MYPEPELITTLE",
+    "series": 15,
+    "card": 35
+  },
+  {
+    "asset": "PEPEADDAMS",
+    "series": 15,
+    "card": 36
+  },
+  {
+    "asset": "PEPESWITCH",
+    "series": 15,
+    "card": 37
+  },
+  {
+    "asset": "SMUGPEPE",
+    "series": 15,
+    "card": 38
+  },
+  {
+    "asset": "RAREKEKUIT",
+    "series": 15,
+    "card": 39
+  },
+  {
+    "asset": "THREEDPEPE",
+    "series": 15,
+    "card": 40
+  },
+  {
+    "asset": "CLCKWRKGREEN",
+    "series": 15,
+    "card": 41
+  },
+  {
+    "asset": "CANTDRAWPEPE",
+    "series": 15,
+    "card": 42
+  },
+  {
+    "asset": "SEAPEPE",
+    "series": 15,
+    "card": 43
+  },
+  {
+    "asset": "PEPEKIDSART",
+    "series": 15,
+    "card": 44
+  },
+  {
+    "asset": "PEPESKELETON",
+    "series": 15,
+    "card": 45
+  },
+  {
+    "asset": "PEPERREVENGE",
+    "series": 15,
+    "card": 46
+  },
+  {
+    "asset": "GREEDYPEPES",
+    "series": 15,
+    "card": 47
+  },
+  {
+    "asset": "ROCKINGPEPE",
+    "series": 15,
+    "card": 48
+  },
+  {
+    "asset": "SOLODADPEPE",
+    "series": 15,
+    "card": 49
+  },
+  {
+    "asset": "YOUCANPEPE",
+    "series": 15,
+    "card": 50
+  },
+  {
+    "asset": "PEPEPARADISE",
+    "series": 16,
+    "card": 1
+  },
+  {
+    "asset": "PEPESCHEME",
+    "series": 16,
+    "card": 2
+  },
+  {
+    "asset": "KNITTEDPEPE",
+    "series": 16,
+    "card": 3
+  },
+  {
+    "asset": "RAREWOLFPEPE",
+    "series": 16,
+    "card": 4
+  },
+  {
+    "asset": "PEPEFLECTION",
+    "series": 16,
+    "card": 5
+  },
+  {
+    "asset": "MRPOTATOPEPE",
+    "series": 16,
+    "card": 6
+  },
+  {
+    "asset": "PEPEAXEGANG",
+    "series": 16,
+    "card": 7
+  },
+  {
+    "asset": "SERVALPEPE",
+    "series": 16,
+    "card": 8
+  },
+  {
+    "asset": "PERAPPA",
+    "series": 16,
+    "card": 9
+  },
+  {
+    "asset": "PEPEPILLOW",
+    "series": 16,
+    "card": 10
+  },
+  {
+    "asset": "DOGEVSPEPE",
+    "series": 16,
+    "card": 11
+  },
+  {
+    "asset": "VEGGIEPEPE",
+    "series": 16,
+    "card": 12
+  },
+  {
+    "asset": "PEPEGOTSWAG",
+    "series": 16,
+    "card": 13
+  },
+  {
+    "asset": "PEPEBASQUIAT",
+    "series": 16,
+    "card": 14
+  },
+  {
+    "asset": "PUZZLEPEPE",
+    "series": 16,
+    "card": 15
+  },
+  {
+    "asset": "MADMAXPEPE",
+    "series": 16,
+    "card": 16
+  },
+  {
+    "asset": "BOFPEPE",
+    "series": 16,
+    "card": 17
+  },
+  {
+    "asset": "PEPESHELDON",
+    "series": 16,
+    "card": 18
+  },
+  {
+    "asset": "THINKINGPEPE",
+    "series": 16,
+    "card": 19
+  },
+  {
+    "asset": "PEPEGODDESS",
+    "series": 16,
+    "card": 20
+  },
+  {
+    "asset": "TWOPLYPEPE",
+    "series": 16,
+    "card": 21
+  },
+  {
+    "asset": "RARESLIMPEPE",
+    "series": 16,
+    "card": 22
+  },
+  {
+    "asset": "WESTERNPEPE",
+    "series": 16,
+    "card": 23
+  },
+  {
+    "asset": "MEDICINEPEPE",
+    "series": 16,
+    "card": 24
+  },
+  {
+    "asset": "BEHAPPYPEPE",
+    "series": 16,
+    "card": 25
+  },
+  {
+    "asset": "SEXAYEPEPE",
+    "series": 16,
+    "card": 26
+  },
+  {
+    "asset": "SAVEPEPE",
+    "series": 16,
+    "card": 27
+  },
+  {
+    "asset": "TRUMPWALL",
+    "series": 16,
+    "card": 28
+  },
+  {
+    "asset": "PEPENOSAURUS",
+    "series": 16,
+    "card": 29
+  },
+  {
+    "asset": "GENIEPEPE",
+    "series": 16,
+    "card": 30
+  },
+  {
+    "asset": "PEPESUPREME",
+    "series": 16,
+    "card": 31
+  },
+  {
+    "asset": "PEPERECHAUN",
+    "series": 16,
+    "card": 32
+  },
+  {
+    "asset": "PEPEMAORI",
+    "series": 16,
+    "card": 33
+  },
+  {
+    "asset": "PEPEPOOL",
+    "series": 16,
+    "card": 34
+  },
+  {
+    "asset": "GRANDPEPES",
+    "series": 16,
+    "card": 35
+  },
+  {
+    "asset": "OWLPEPE",
+    "series": 16,
+    "card": 36
+  },
+  {
+    "asset": "ZENAFPEPE",
+    "series": 16,
+    "card": 37
+  },
+  {
+    "asset": "ILLIDANPEPE",
+    "series": 16,
+    "card": 38
+  },
+  {
+    "asset": "BANDAGEDPEPE",
+    "series": 16,
+    "card": 39
+  },
+  {
+    "asset": "PISFORPEPE",
+    "series": 16,
+    "card": 40
+  },
+  {
+    "asset": "RESURKEKTION",
+    "series": 16,
+    "card": 41
+  },
+  {
+    "asset": "PEPERANGER",
+    "series": 16,
+    "card": 42
+  },
+  {
+    "asset": "RARELORDKEK",
+    "series": 16,
+    "card": 43
+  },
+  {
+    "asset": "PEPEROYAL",
+    "series": 16,
+    "card": 44
+  },
+  {
+    "asset": "TRINITYPEPE",
+    "series": 16,
+    "card": 45
+  },
+  {
+    "asset": "GOODNITEPEPE",
+    "series": 16,
+    "card": 46
+  },
+  {
+    "asset": "HICKSPEPE",
+    "series": 16,
+    "card": 47
+  },
+  {
+    "asset": "ROBOTPEPE",
+    "series": 16,
+    "card": 48
+  },
+  {
+    "asset": "NMPPEPE",
+    "series": 16,
+    "card": 49
+  },
+  {
+    "asset": "MISSPEPE",
+    "series": 16,
+    "card": 50
+  },
+  {
+    "asset": "KAPPAPEPE",
+    "series": 17,
+    "card": 1
+  },
+  {
+    "asset": "PEPEDWARD",
+    "series": 17,
+    "card": 2
+  },
+  {
+    "asset": "KEKVSMOLOCH",
+    "series": 17,
+    "card": 3
+  },
+  {
+    "asset": "PEPERIVETER",
+    "series": 17,
+    "card": 4
+  },
+  {
+    "asset": "MEMESTEALER",
+    "series": 17,
+    "card": 5
+  },
+  {
+    "asset": "ULTIMATEPEPE",
+    "series": 17,
+    "card": 6
+  },
+  {
+    "asset": "MOONWAVEPEPE",
+    "series": 17,
+    "card": 7
+  },
+  {
+    "asset": "PEPESTYLE",
+    "series": 17,
+    "card": 8
+  },
+  {
+    "asset": "QBITSPEPE",
+    "series": 17,
+    "card": 9
+  },
+  {
+    "asset": "PEPESPIDER",
+    "series": 17,
+    "card": 10
+  },
+  {
+    "asset": "BENDERPEPE",
+    "series": 17,
+    "card": 11
+  },
+  {
+    "asset": "RUNTHEPEPE",
+    "series": 17,
+    "card": 12
+  },
+  {
+    "asset": "FULLMETALPEP",
+    "series": 17,
+    "card": 13
+  },
+  {
+    "asset": "LEDZEPEPELIN",
+    "series": 17,
+    "card": 14
+  },
+  {
+    "asset": "THEVERYPEPE",
+    "series": 17,
+    "card": 15
+  },
+  {
+    "asset": "BBAEPEPE",
+    "series": 17,
+    "card": 16
+  },
+  {
+    "asset": "SEGWITPEPE",
+    "series": 17,
+    "card": 17
+  },
+  {
+    "asset": "PEPEDHARMA",
+    "series": 17,
+    "card": 18
+  },
+  {
+    "asset": "SMUGCHIPS",
+    "series": 17,
+    "card": 19
+  },
+  {
+    "asset": "PEPEFREQ",
+    "series": 17,
+    "card": 20
+  },
+  {
+    "asset": "MORNINGPEPE",
+    "series": 17,
+    "card": 21
+  },
+  {
+    "asset": "PEPEKEEPER",
+    "series": 17,
+    "card": 22
+  },
+  {
+    "asset": "BADLTPEPE",
+    "series": 17,
+    "card": 23
+  },
+  {
+    "asset": "VENUSPEPE",
+    "series": 17,
+    "card": 24
+  },
+  {
+    "asset": "THEPEPEKISS",
+    "series": 17,
+    "card": 25
+  },
+  {
+    "asset": "FRENCHPEPE",
+    "series": 17,
+    "card": 26
+  },
+  {
+    "asset": "PEPEGUEVARA",
+    "series": 17,
+    "card": 27
+  },
+  {
+    "asset": "PEPEUNIVERSE",
+    "series": 17,
+    "card": 28
+  },
+  {
+    "asset": "FIGHTPEPE",
+    "series": 17,
+    "card": 29
+  },
+  {
+    "asset": "HEKET",
+    "series": 17,
+    "card": 30
+  },
+  {
+    "asset": "HWNDUPEPE",
+    "series": 17,
+    "card": 31
+  },
+  {
+    "asset": "FRATPEPE",
+    "series": 17,
+    "card": 32
+  },
+  {
+    "asset": "MODERNPEPE",
+    "series": 17,
+    "card": 33
+  },
+  {
+    "asset": "GNUPEPE",
+    "series": 17,
+    "card": 34
+  },
+  {
+    "asset": "PEPEHARDTALK",
+    "series": 17,
+    "card": 35
+  },
+  {
+    "asset": "PEPEHOFFMAN",
+    "series": 17,
+    "card": 36
+  },
+  {
+    "asset": "KEKRELOADED",
+    "series": 17,
+    "card": 37
+  },
+  {
+    "asset": "WARRIORPEPE",
+    "series": 17,
+    "card": 38
+  },
+  {
+    "asset": "BILLNTEDPEPE",
+    "series": 17,
+    "card": 39
+  },
+  {
+    "asset": "BULBAPEPECRD",
+    "series": 17,
+    "card": 40
+  },
+  {
+    "asset": "LEIAPEPE",
+    "series": 17,
+    "card": 41
+  },
+  {
+    "asset": "STITCHESPEPE",
+    "series": 17,
+    "card": 42
+  },
+  {
+    "asset": "TOWEROFPEPE",
+    "series": 17,
+    "card": 43
+  },
+  {
+    "asset": "LUPEPEN",
+    "series": 17,
+    "card": 44
+  },
+  {
+    "asset": "PEPECHAININ",
+    "series": 17,
+    "card": 45
+  },
+  {
+    "asset": "PEPEOMUERTE",
+    "series": 17,
+    "card": 46
+  },
+  {
+    "asset": "DRDIRTYPEPE",
+    "series": 17,
+    "card": 47
+  },
+  {
+    "asset": "PEPEMINO",
+    "series": 17,
+    "card": 48
+  },
+  {
+    "asset": "BOYZIIPEPE",
+    "series": 17,
+    "card": 49
+  },
+  {
+    "asset": "PEPEKYRIE",
+    "series": 17,
+    "card": 50
+  },
+  {
+    "asset": "SMITHPEPE",
+    "series": 18,
+    "card": 1
+  },
+  {
+    "asset": "CRUSADERPEPE",
+    "series": 18,
+    "card": 2
+  },
+  {
+    "asset": "PEPEGAIA",
+    "series": 18,
+    "card": 3
+  },
+  {
+    "asset": "PEPEDOTS",
+    "series": 18,
+    "card": 4
+  },
+  {
+    "asset": "SPIRITPEPE",
+    "series": 18,
+    "card": 5
+  },
+  {
+    "asset": "PEPEVOLUTION",
+    "series": 18,
+    "card": 6
+  },
+  {
+    "asset": "PEPI",
+    "series": 18,
+    "card": 7
+  },
+  {
+    "asset": "PEPEBEARD",
+    "series": 18,
+    "card": 8
+  },
+  {
+    "asset": "KEKTOPUS",
+    "series": 18,
+    "card": 9
+  },
+  {
+    "asset": "OBEYPEPE",
+    "series": 18,
+    "card": 10
+  },
+  {
+    "asset": "ERDOPEPEGAN",
+    "series": 18,
+    "card": 11
+  },
+  {
+    "asset": "PEPEDZILLA",
+    "series": 18,
+    "card": 12
+  },
+  {
+    "asset": "MERKLETREEPE",
+    "series": 18,
+    "card": 13
+  },
+  {
+    "asset": "LIBERPEPE",
+    "series": 18,
+    "card": 14
+  },
+  {
+    "asset": "BTFDPEPE",
+    "series": 18,
+    "card": 15
+  },
+  {
+    "asset": "KEKWAVE",
+    "series": 18,
+    "card": 16
+  },
+  {
+    "asset": "PEPETERROR",
+    "series": 18,
+    "card": 17
+  },
+  {
+    "asset": "PUREPEPE",
+    "series": 18,
+    "card": 18
+  },
+  {
+    "asset": "RARESPURDO",
+    "series": 18,
+    "card": 19
+  },
+  {
+    "asset": "NINEFIVEPEPA",
+    "series": 18,
+    "card": 20
+  },
+  {
+    "asset": "BADASSPEPE",
+    "series": 18,
+    "card": 21
+  },
+  {
+    "asset": "PEPEARCHER",
+    "series": 18,
+    "card": 22
+  },
+  {
+    "asset": "HIPPIEPEPE",
+    "series": 18,
+    "card": 23
+  },
+  {
+    "asset": "PEPEBACKPACK",
+    "series": 18,
+    "card": 24
+  },
+  {
+    "asset": "YETIPEPE",
+    "series": 18,
+    "card": 25
+  },
+  {
+    "asset": "PEPEJUGGLER",
+    "series": 18,
+    "card": 26
+  },
+  {
+    "asset": "SEGWTPEPE",
+    "series": 18,
+    "card": 27
+  },
+  {
+    "asset": "PEPEMEMECARD",
+    "series": 18,
+    "card": 28
+  },
+  {
+    "asset": "MELANCHOLIA",
+    "series": 18,
+    "card": 29
+  },
+  {
+    "asset": "PEPEMOMWRATH",
+    "series": 18,
+    "card": 30
+  },
+  {
+    "asset": "PEPEAMCANI",
+    "series": 18,
+    "card": 31
+  },
+  {
+    "asset": "PEPENITOR",
+    "series": 18,
+    "card": 32
+  },
+  {
+    "asset": "WITCHBLADE",
+    "series": 18,
+    "card": 33
+  },
+  {
+    "asset": "PEPENGHTMUM",
+    "series": 18,
+    "card": 34
+  },
+  {
+    "asset": "PEPEATARI",
+    "series": 18,
+    "card": 35
+  },
+  {
+    "asset": "PEPERAGEQUIT",
+    "series": 18,
+    "card": 36
+  },
+  {
+    "asset": "PEPEACE",
+    "series": 18,
+    "card": 37
+  },
+  {
+    "asset": "PEPERSEXUAL",
+    "series": 18,
+    "card": 38
+  },
+  {
+    "asset": "PEPERUSSIAN",
+    "series": 18,
+    "card": 39
+  },
+  {
+    "asset": "PEPEMARKET",
+    "series": 18,
+    "card": 40
+  },
+  {
+    "asset": "CMNWRKRPEPE",
+    "series": 18,
+    "card": 41
+  },
+  {
+    "asset": "PEPEASTRONAT",
+    "series": 18,
+    "card": 42
+  },
+  {
+    "asset": "PEPEBGDWORK",
+    "series": 18,
+    "card": 43
+  },
+  {
+    "asset": "PEPEBROOM",
+    "series": 18,
+    "card": 44
+  },
+  {
+    "asset": "PEPECAMERA",
+    "series": 18,
+    "card": 45
+  },
+  {
+    "asset": "PEPEDABOMB",
+    "series": 18,
+    "card": 46
+  },
+  {
+    "asset": "PEPEFLORIST",
+    "series": 18,
+    "card": 47
+  },
+  {
+    "asset": "PEPEGOODY",
+    "series": 18,
+    "card": 48
+  },
+  {
+    "asset": "PEPEGOTSICK",
+    "series": 18,
+    "card": 49
+  },
+  {
+    "asset": "PEPEGOTTIME",
+    "series": 18,
+    "card": 50
+  },
+  {
+    "asset": "PEPEISNUBLK",
+    "series": 19,
+    "card": 1
+  },
+  {
+    "asset": "PEPEBUCKET",
+    "series": 19,
+    "card": 2
+  },
+  {
+    "asset": "PEPEGUITAR",
+    "series": 19,
+    "card": 3
+  },
+  {
+    "asset": "PEPEMIRROR",
+    "series": 19,
+    "card": 4
+  },
+  {
+    "asset": "PEPERSSNRLTT",
+    "series": 19,
+    "card": 5
+  },
+  {
+    "asset": "PEPESKATES",
+    "series": 19,
+    "card": 6
+  },
+  {
+    "asset": "PEPECAKEFACE",
+    "series": 19,
+    "card": 7
+  },
+  {
+    "asset": "PEPEMPTYWLLT",
+    "series": 19,
+    "card": 8
+  },
+  {
+    "asset": "PEPESYRINGE",
+    "series": 19,
+    "card": 9
+  },
+  {
+    "asset": "PEPEXMASBOY",
+    "series": 19,
+    "card": 10
+  },
+  {
+    "asset": "SHADEPEPE",
+    "series": 19,
+    "card": 11
+  },
+  {
+    "asset": "PEPEAUDIOPHL",
+    "series": 19,
+    "card": 12
+  },
+  {
+    "asset": "PEPEBRARIAN",
+    "series": 19,
+    "card": 13
+  },
+  {
+    "asset": "PEPEBUSYFLOR",
+    "series": 19,
+    "card": 14
+  },
+  {
+    "asset": "PEPECHPLGHTR",
+    "series": 19,
+    "card": 15
+  },
+  {
+    "asset": "PEPEDEALWTHT",
+    "series": 19,
+    "card": 16
+  },
+  {
+    "asset": "PEPEFUDUP",
+    "series": 19,
+    "card": 17
+  },
+  {
+    "asset": "PEPEGAPHONE",
+    "series": 19,
+    "card": 18
+  },
+  {
+    "asset": "PEPEHELTEACH",
+    "series": 19,
+    "card": 19
+  },
+  {
+    "asset": "PEPEISOTTO",
+    "series": 19,
+    "card": 20
+  },
+  {
+    "asset": "PEPEJUDGE",
+    "series": 19,
+    "card": 21
+  },
+  {
+    "asset": "PEPENUT",
+    "series": 19,
+    "card": 22
+  },
+  {
+    "asset": "PEPEORACLE",
+    "series": 19,
+    "card": 23
+  },
+  {
+    "asset": "PEPERATATATT",
+    "series": 19,
+    "card": 24
+  },
+  {
+    "asset": "PEPESCUBA",
+    "series": 19,
+    "card": 25
+  },
+  {
+    "asset": "PEPESPRAY",
+    "series": 19,
+    "card": 26
+  },
+  {
+    "asset": "PEPEZENMSTR",
+    "series": 19,
+    "card": 27
+  },
+  {
+    "asset": "SOLDATPEPE",
+    "series": 19,
+    "card": 28
+  },
+  {
+    "asset": "PEPEFOCUSED",
+    "series": 19,
+    "card": 29
+  },
+  {
+    "asset": "PEPEBRELLA",
+    "series": 19,
+    "card": 30
+  },
+  {
+    "asset": "PIMENTOLOAF",
+    "series": 19,
+    "card": 31
+  },
+  {
+    "asset": "MNTNDWRVSMNG",
+    "series": 19,
+    "card": 32
+  },
+  {
+    "asset": "TWNOFEVNGLST",
+    "series": 19,
+    "card": 33
+  },
+  {
+    "asset": "BTTLFTHESUBS",
+    "series": 19,
+    "card": 34
+  },
+  {
+    "asset": "BLKCHNJESUS",
+    "series": 19,
+    "card": 35
+  },
+  {
+    "asset": "PEPEBROKEBU",
+    "series": 19,
+    "card": 36
+  },
+  {
+    "asset": "PEPEHIGHTOWR",
+    "series": 19,
+    "card": 37
+  },
+  {
+    "asset": "VSTRSSLBRTCH",
+    "series": 19,
+    "card": 38
+  },
+  {
+    "asset": "PEPEBEARWHLE",
+    "series": 19,
+    "card": 39
+  },
+  {
+    "asset": "PEPEASYSQUEZ",
+    "series": 19,
+    "card": 40
+  },
+  {
+    "asset": "PEPESHKRELI",
+    "series": 19,
+    "card": 41
+  },
+  {
+    "asset": "ERISPEPE",
+    "series": 19,
+    "card": 42
+  },
+  {
+    "asset": "KEKISTAN",
+    "series": 19,
+    "card": 43
+  },
+  {
+    "asset": "UNITEDPEPE",
+    "series": 19,
+    "card": 44
+  },
+  {
+    "asset": "PEPEXILE",
+    "series": 19,
+    "card": 45
+  },
+  {
+    "asset": "PEPENOFF",
+    "series": 19,
+    "card": 46
+  },
+  {
+    "asset": "DOKUGANPEPE",
+    "series": 19,
+    "card": 47
+  },
+  {
+    "asset": "JIHANWU",
+    "series": 19,
+    "card": 48
+  },
+  {
+    "asset": "PEPETITAN",
+    "series": 19,
+    "card": 49
+  },
+  {
+    "asset": "PEPEISUNITY",
+    "series": 19,
+    "card": 50
+  },
+  {
+    "asset": "MIDIPEPE",
+    "series": 20,
+    "card": 1
+  },
+  {
+    "asset": "WOKEPEPE",
+    "series": 20,
+    "card": 2
+  },
+  {
+    "asset": "YAMATOPEPE",
+    "series": 20,
+    "card": 3
+  },
+  {
+    "asset": "PEPELAMA",
+    "series": 20,
+    "card": 4
+  },
+  {
+    "asset": "JOKERPEPEKEK",
+    "series": 20,
+    "card": 5
+  },
+  {
+    "asset": "VAPORMAGIC",
+    "series": 20,
+    "card": 6
+  },
+  {
+    "asset": "PEPECANCAN",
+    "series": 20,
+    "card": 7
+  },
+  {
+    "asset": "PEPEHODLER",
+    "series": 20,
+    "card": 8
+  },
+  {
+    "asset": "NULLCPEPE",
+    "series": 20,
+    "card": 9
+  },
+  {
+    "asset": "DEEPWEBPEPE",
+    "series": 20,
+    "card": 10
+  },
+  {
+    "asset": "PEPEZILLA",
+    "series": 20,
+    "card": 11
+  },
+  {
+    "asset": "PEPEKEK",
+    "series": 20,
+    "card": 12
+  },
+  {
+    "asset": "THREERARE",
+    "series": 20,
+    "card": 13
+  },
+  {
+    "asset": "NEUROPEPE",
+    "series": 20,
+    "card": 14
+  },
+  {
+    "asset": "GUESSWHATPEP",
+    "series": 20,
+    "card": 15
+  },
+  {
+    "asset": "PEPECONCERT",
+    "series": 20,
+    "card": 16
+  },
+  {
+    "asset": "MARIACHIPEPE",
+    "series": 20,
+    "card": 17
+  },
+  {
+    "asset": "PEPEHONDO",
+    "series": 20,
+    "card": 18
+  },
+  {
+    "asset": "XONOTICPEPE",
+    "series": 20,
+    "card": 19
+  },
+  {
+    "asset": "THEJOYOFPEPE",
+    "series": 20,
+    "card": 20
+  },
+  {
+    "asset": "PEPERMAID",
+    "series": 20,
+    "card": 21
+  },
+  {
+    "asset": "PEPEAUCTIOND",
+    "series": 20,
+    "card": 22
+  },
+  {
+    "asset": "RANDOMPEPE",
+    "series": 20,
+    "card": 23
+  },
+  {
+    "asset": "PEPENIETZSCH",
+    "series": 20,
+    "card": 24
+  },
+  {
+    "asset": "ONEPUNCHPEPE",
+    "series": 20,
+    "card": 25
+  },
+  {
+    "asset": "GODALIEN",
+    "series": 20,
+    "card": 26
+  },
+  {
+    "asset": "THEPEPEZONE",
+    "series": 20,
+    "card": 27
+  },
+  {
+    "asset": "PEPEHOTEP",
+    "series": 20,
+    "card": 28
+  },
+  {
+    "asset": "KEKUIT",
+    "series": 20,
+    "card": 29
+  },
+  {
+    "asset": "PEPEPUMPETTE",
+    "series": 20,
+    "card": 30
+  },
+  {
+    "asset": "STACYPEPE",
+    "series": 20,
+    "card": 31
+  },
+  {
+    "asset": "PEPEJOANARC",
+    "series": 20,
+    "card": 32
+  },
+  {
+    "asset": "PEPEZIO",
+    "series": 20,
+    "card": 33
+  },
+  {
+    "asset": "CANNONPEPE",
+    "series": 20,
+    "card": 34
+  },
+  {
+    "asset": "PEPEDON",
+    "series": 20,
+    "card": 35
+  },
+  {
+    "asset": "TRANSMEME",
+    "series": 20,
+    "card": 36
+  },
+  {
+    "asset": "PEPEBALT",
+    "series": 20,
+    "card": 37
+  },
+  {
+    "asset": "PEPEFRENCH",
+    "series": 20,
+    "card": 38
+  },
+  {
+    "asset": "CHUNRIPEPE",
+    "series": 20,
+    "card": 39
+  },
+  {
+    "asset": "FEELSGOODMAN",
+    "series": 20,
+    "card": 40
+  },
+  {
+    "asset": "PEPETIA",
+    "series": 20,
+    "card": 41
+  },
+  {
+    "asset": "ROOMRAREPEPE",
+    "series": 20,
+    "card": 42
+  },
+  {
+    "asset": "BOWIEPEP",
+    "series": 20,
+    "card": 43
+  },
+  {
+    "asset": "PUMPINGPEPE",
+    "series": 20,
+    "card": 44
+  },
+  {
+    "asset": "ICARUSPEPE",
+    "series": 20,
+    "card": 45
+  },
+  {
+    "asset": "PEPETOPKEK",
+    "series": 20,
+    "card": 46
+  },
+  {
+    "asset": "LUKEJRPEPE",
+    "series": 20,
+    "card": 47
+  },
+  {
+    "asset": "PEPELSD",
+    "series": 20,
+    "card": 48
+  },
+  {
+    "asset": "BOWLPEPE",
+    "series": 20,
+    "card": 49
+  },
+  {
+    "asset": "GAMEBOIPEPE",
+    "series": 20,
+    "card": 50
+  },
+  {
+    "asset": "DANNIBOIPEPE",
+    "series": 21,
+    "card": 1
+  },
+  {
+    "asset": "COVPEPERARE",
+    "series": 21,
+    "card": 2
+  },
+  {
+    "asset": "CULTOFKEK",
+    "series": 21,
+    "card": 3
+  },
+  {
+    "asset": "PEPEFRED",
+    "series": 21,
+    "card": 4
+  },
+  {
+    "asset": "PUREGOLDPEPE",
+    "series": 21,
+    "card": 5
+  },
+  {
+    "asset": "KAMIKAZEPEPE",
+    "series": 21,
+    "card": 6
+  },
+  {
+    "asset": "ICPEPE",
+    "series": 21,
+    "card": 7
+  },
+  {
+    "asset": "PEPEBALL",
+    "series": 21,
+    "card": 8
+  },
+  {
+    "asset": "KABUKIPEPE",
+    "series": 21,
+    "card": 9
+  },
+  {
+    "asset": "GAMEOFPEPE",
+    "series": 21,
+    "card": 10
+  },
+  {
+    "asset": "HULAPEPE",
+    "series": 21,
+    "card": 11
+  },
+  {
+    "asset": "PEPEHAMMER",
+    "series": 21,
+    "card": 12
+  },
+  {
+    "asset": "MAUIPEPE",
+    "series": 21,
+    "card": 13
+  },
+  {
+    "asset": "MELANCOLIE",
+    "series": 21,
+    "card": 14
+  },
+  {
+    "asset": "PEPEANDY",
+    "series": 21,
+    "card": 15
+  },
+  {
+    "asset": "DUMMIES",
+    "series": 21,
+    "card": 16
+  },
+  {
+    "asset": "LIBERTYPEPE",
+    "series": 21,
+    "card": 17
+  },
+  {
+    "asset": "PEPEGOP",
+    "series": 21,
+    "card": 18
+  },
+  {
+    "asset": "PEPEXECUTIVE",
+    "series": 21,
+    "card": 19
+  },
+  {
+    "asset": "TADPOLEPEPE",
+    "series": 21,
+    "card": 20
+  },
+  {
+    "asset": "THESKYPEPE",
+    "series": 21,
+    "card": 21
+  },
+  {
+    "asset": "LUCHAPEPE",
+    "series": 21,
+    "card": 22
+  },
+  {
+    "asset": "PEPEPLISSKEN",
+    "series": 21,
+    "card": 23
+  },
+  {
+    "asset": "KEROPEPE",
+    "series": 21,
+    "card": 24
+  },
+  {
+    "asset": "BUBREAKUP",
+    "series": 21,
+    "card": 25
+  },
+  {
+    "asset": "PEPEMAONE",
+    "series": 21,
+    "card": 26
+  },
+  {
+    "asset": "PEPEFOBIA",
+    "series": 21,
+    "card": 27
+  },
+  {
+    "asset": "PEPELARGE",
+    "series": 21,
+    "card": 28
+  },
+  {
+    "asset": "KEKENESIS",
+    "series": 21,
+    "card": 29
+  },
+  {
+    "asset": "SICKDEVPEPE",
+    "series": 21,
+    "card": 30
+  },
+  {
+    "asset": "MUNETOPEPE",
+    "series": 21,
+    "card": 31
+  },
+  {
+    "asset": "PEPEJIRO",
+    "series": 21,
+    "card": 32
+  },
+  {
+    "asset": "FATPEPSLIM",
+    "series": 21,
+    "card": 33
+  },
+  {
+    "asset": "NECROPEPE",
+    "series": 21,
+    "card": 34
+  },
+  {
+    "asset": "PSYKEKDELIC",
+    "series": 21,
+    "card": 35
+  },
+  {
+    "asset": "EAZYP",
+    "series": 21,
+    "card": 36
+  },
+  {
+    "asset": "PBOCPEPE",
+    "series": 21,
+    "card": 37
+  },
+  {
+    "asset": "PEPEGIRL",
+    "series": 21,
+    "card": 38
+  },
+  {
+    "asset": "PEPENCEPTION",
+    "series": 21,
+    "card": 39
+  },
+  {
+    "asset": "PEPLACE",
+    "series": 21,
+    "card": 40
+  },
+  {
+    "asset": "PEPEMOTHRA",
+    "series": 21,
+    "card": 41
+  },
+  {
+    "asset": "PEPEPALACE",
+    "series": 21,
+    "card": 42
+  },
+  {
+    "asset": "PEPEFALLOUT",
+    "series": 21,
+    "card": 43
+  },
+  {
+    "asset": "SCHROEPEPE",
+    "series": 21,
+    "card": 44
+  },
+  {
+    "asset": "SQUATCHPEPE",
+    "series": 21,
+    "card": 45
+  },
+  {
+    "asset": "PEPEGIGGITY",
+    "series": 21,
+    "card": 46
+  },
+  {
+    "asset": "CREWLOVEPEPE",
+    "series": 21,
+    "card": 47
+  },
+  {
+    "asset": "PEPEREALM",
+    "series": 21,
+    "card": 48
+  },
+  {
+    "asset": "PEPETUUR",
+    "series": 21,
+    "card": 49
+  },
+  {
+    "asset": "PEPOCKY",
+    "series": 21,
+    "card": 50
+  },
+  {
+    "asset": "MEMEFIGHTERS",
+    "series": 22,
+    "card": 1
+  },
+  {
+    "asset": "DOGSALL",
+    "series": 22,
+    "card": 2
+  },
+  {
+    "asset": "PEPELUFFY",
+    "series": 22,
+    "card": 3
+  },
+  {
+    "asset": "SEXYLADYPEPE",
+    "series": 22,
+    "card": 4
+  },
+  {
+    "asset": "CINEKEK",
+    "series": 22,
+    "card": 5
+  },
+  {
+    "asset": "MYSPEPE",
+    "series": 22,
+    "card": 6
+  },
+  {
+    "asset": "ENGELPEPE",
+    "series": 22,
+    "card": 7
+  },
+  {
+    "asset": "GTPEPE",
+    "series": 22,
+    "card": 8
+  },
+  {
+    "asset": "MCGREGOR",
+    "series": 22,
+    "card": 9
+  },
+  {
+    "asset": "MOBIUSPEPE",
+    "series": 22,
+    "card": 10
+  },
+  {
+    "asset": "PEPERRIDA",
+    "series": 22,
+    "card": 11
+  },
+  {
+    "asset": "DONTBEMENACE",
+    "series": 22,
+    "card": 12
+  },
+  {
+    "asset": "PEPENAL",
+    "series": 22,
+    "card": 13
+  },
+  {
+    "asset": "PEPMONDRIAN",
+    "series": 22,
+    "card": 14
+  },
+  {
+    "asset": "DELOREANPEPE",
+    "series": 22,
+    "card": 15
+  },
+  {
+    "asset": "PEPEYOTES",
+    "series": 22,
+    "card": 16
+  },
+  {
+    "asset": "PMOPEPE",
+    "series": 22,
+    "card": 17
+  },
+  {
+    "asset": "PEPEVINNY",
+    "series": 22,
+    "card": 18
+  },
+  {
+    "asset": "BAGHOLDRPEPE",
+    "series": 22,
+    "card": 19
+  },
+  {
+    "asset": "PEPESAIYAN",
+    "series": 22,
+    "card": 20
+  },
+  {
+    "asset": "MAYWEATHPEPE",
+    "series": 22,
+    "card": 21
+  },
+  {
+    "asset": "PEPEINTRO",
+    "series": 22,
+    "card": 22
+  },
+  {
+    "asset": "PEPEROGAN",
+    "series": 22,
+    "card": 23
+  },
+  {
+    "asset": "PEPEHARING",
+    "series": 22,
+    "card": 24
+  },
+  {
+    "asset": "PEPEPOET",
+    "series": 22,
+    "card": 25
+  },
+  {
+    "asset": "MADARAPEPE",
+    "series": 22,
+    "card": 26
+  },
+  {
+    "asset": "PEPENARUTO",
+    "series": 22,
+    "card": 27
+  },
+  {
+    "asset": "PEPELVSD",
+    "series": 22,
+    "card": 28
+  },
+  {
+    "asset": "PEPENATTI",
+    "series": 22,
+    "card": 29
+  },
+  {
+    "asset": "PEPESUMO",
+    "series": 22,
+    "card": 30
+  },
+  {
+    "asset": "VINCEMCPEPE",
+    "series": 22,
+    "card": 31
+  },
+  {
+    "asset": "WALLPEPE",
+    "series": 22,
+    "card": 32
+  },
+  {
+    "asset": "PEPESAILOR",
+    "series": 22,
+    "card": 33
+  },
+  {
+    "asset": "PEPEKICKS",
+    "series": 22,
+    "card": 34
+  },
+  {
+    "asset": "EXKEKUTIONER",
+    "series": 22,
+    "card": 35
+  },
+  {
+    "asset": "FIGHTSYSTEM",
+    "series": 22,
+    "card": 36
+  },
+  {
+    "asset": "PEPESOURCE",
+    "series": 22,
+    "card": 37
+  },
+  {
+    "asset": "PEPEBOBBY",
+    "series": 22,
+    "card": 38
+  },
+  {
+    "asset": "PEPESURRECT",
+    "series": 22,
+    "card": 39
+  },
+  {
+    "asset": "PEPETREK",
+    "series": 22,
+    "card": 40
+  },
+  {
+    "asset": "GUYBRUSH",
+    "series": 22,
+    "card": 41
+  },
+  {
+    "asset": "RICKYPEPE",
+    "series": 22,
+    "card": 42
+  },
+  {
+    "asset": "PEPETERSON",
+    "series": 22,
+    "card": 43
+  },
+  {
+    "asset": "BAYLOP",
+    "series": 22,
+    "card": 44
+  },
+  {
+    "asset": "RINGITPEPE",
+    "series": 22,
+    "card": 45
+  },
+  {
+    "asset": "BARBARICPEPE",
+    "series": 22,
+    "card": 46
+  },
+  {
+    "asset": "MODIPEPE",
+    "series": 22,
+    "card": 47
+  },
+  {
+    "asset": "FEELSPEPE",
+    "series": 22,
+    "card": 48
+  },
+  {
+    "asset": "HODLWOOD",
+    "series": 22,
+    "card": 49
+  },
+  {
+    "asset": "ISOPEPE",
+    "series": 22,
+    "card": 50
+  },
+  {
+    "asset": "LOWRIDERPEPE",
+    "series": 23,
+    "card": 1
+  },
+  {
+    "asset": "PEPEAMANDA",
+    "series": 23,
+    "card": 2
+  },
+  {
+    "asset": "PEPELAVEY",
+    "series": 23,
+    "card": 3
+  },
+  {
+    "asset": "PEPESURF",
+    "series": 23,
+    "card": 4
+  },
+  {
+    "asset": "PEPETARO",
+    "series": 23,
+    "card": 5
+  },
+  {
+    "asset": "PEROCHI",
+    "series": 23,
+    "card": 6
+  },
+  {
+    "asset": "SPEPECTRE",
+    "series": 23,
+    "card": 7
+  },
+  {
+    "asset": "FLINTPEPE",
+    "series": 23,
+    "card": 8
+  },
+  {
+    "asset": "GUARDSASKIAN",
+    "series": 23,
+    "card": 9
+  },
+  {
+    "asset": "PEPESHADES",
+    "series": 23,
+    "card": 10
+  },
+  {
+    "asset": "RABBIPEPE",
+    "series": 23,
+    "card": 11
+  },
+  {
+    "asset": "PHNTOMOFPEPE",
+    "series": 23,
+    "card": 12
+  },
+  {
+    "asset": "OPTIMUSPEPE",
+    "series": 23,
+    "card": 13
+  },
+  {
+    "asset": "CINDERPEPE",
+    "series": 23,
+    "card": 14
+  },
+  {
+    "asset": "PEPEGHIDORAH",
+    "series": 23,
+    "card": 15
+  },
+  {
+    "asset": "PEPELITTLE",
+    "series": 23,
+    "card": 16
+  },
+  {
+    "asset": "PEPEWONKA",
+    "series": 23,
+    "card": 17
+  },
+  {
+    "asset": "WILEPEPE",
+    "series": 23,
+    "card": 18
+  },
+  {
+    "asset": "PEPEACIDTRIP",
+    "series": 23,
+    "card": 19
+  },
+  {
+    "asset": "GETPEPEFREE",
+    "series": 23,
+    "card": 20
+  },
+  {
+    "asset": "ISEEYOUPEPE",
+    "series": 23,
+    "card": 21
+  },
+  {
+    "asset": "PEPEFAUCET",
+    "series": 23,
+    "card": 22
+  },
+  {
+    "asset": "PEPEWATCH",
+    "series": 23,
+    "card": 23
+  },
+  {
+    "asset": "BUGSPEPE",
+    "series": 23,
+    "card": 24
+  },
+  {
+    "asset": "GNITEPEPE",
+    "series": 23,
+    "card": 25
+  },
+  {
+    "asset": "CYBERPEPE",
+    "series": 23,
+    "card": 26
+  },
+  {
+    "asset": "LIZZFACEPEPE",
+    "series": 23,
+    "card": 27
+  },
+  {
+    "asset": "PEPECARNIVAL",
+    "series": 23,
+    "card": 28
+  },
+  {
+    "asset": "PEPEGOKU",
+    "series": 23,
+    "card": 29
+  },
+  {
+    "asset": "TAKAKO",
+    "series": 23,
+    "card": 30
+  },
+  {
+    "asset": "PEPEBRICCO",
+    "series": 23,
+    "card": 31
+  },
+  {
+    "asset": "PEPEDRAGO",
+    "series": 23,
+    "card": 32
+  },
+  {
+    "asset": "PEPEHERO",
+    "series": 23,
+    "card": 33
+  },
+  {
+    "asset": "PEPEDRACULA",
+    "series": 23,
+    "card": 34
+  },
+  {
+    "asset": "SANPOPEPE",
+    "series": 23,
+    "card": 35
+  },
+  {
+    "asset": "DIERCHANCHU",
+    "series": 23,
+    "card": 36
+  },
+  {
+    "asset": "EPEPESODEONE",
+    "series": 23,
+    "card": 37
+  },
+  {
+    "asset": "PEPEEVO",
+    "series": 23,
+    "card": 38
+  },
+  {
+    "asset": "PEPEGROUNDS",
+    "series": 23,
+    "card": 39
+  },
+  {
+    "asset": "PEPESCOOBY",
+    "series": 23,
+    "card": 40
+  },
+  {
+    "asset": "PEPEKARMA",
+    "series": 23,
+    "card": 41
+  },
+  {
+    "asset": "PEPELEVI",
+    "series": 23,
+    "card": 42
+  },
+  {
+    "asset": "TUPACPEP",
+    "series": 23,
+    "card": 43
+  },
+  {
+    "asset": "HLYPEPANCAKE",
+    "series": 23,
+    "card": 44
+  },
+  {
+    "asset": "PEPENGAROO",
+    "series": 23,
+    "card": 45
+  },
+  {
+    "asset": "HISTORICPEPE",
+    "series": 23,
+    "card": 46
+  },
+  {
+    "asset": "PEPESWORD",
+    "series": 23,
+    "card": 47
+  },
+  {
+    "asset": "UKIYOEPEPE",
+    "series": 23,
+    "card": 48
+  },
+  {
+    "asset": "SZECHUANPEPE",
+    "series": 23,
+    "card": 49
+  },
+  {
+    "asset": "UZUMAKIPEPE",
+    "series": 23,
+    "card": 50
+  },
+  {
+    "asset": "PEPESEARCH",
+    "series": 24,
+    "card": 1
+  },
+  {
+    "asset": "PEPEHOPE",
+    "series": 24,
+    "card": 2
+  },
+  {
+    "asset": "PEPEHARU",
+    "series": 24,
+    "card": 3
+  },
+  {
+    "asset": "PEPECHARLES",
+    "series": 24,
+    "card": 4
+  },
+  {
+    "asset": "LILMERMAID",
+    "series": 24,
+    "card": 5
+  },
+  {
+    "asset": "KANDINSKYPEP",
+    "series": 24,
+    "card": 6
+  },
+  {
+    "asset": "HAIKUPEPE",
+    "series": 24,
+    "card": 7
+  },
+  {
+    "asset": "FASTPEPE",
+    "series": 24,
+    "card": 8
+  },
+  {
+    "asset": "PEPEMEGAMAN",
+    "series": 24,
+    "card": 9
+  },
+  {
+    "asset": "PEPEWAT",
+    "series": 24,
+    "card": 10
+  },
+  {
+    "asset": "PEPEDETCTVE",
+    "series": 24,
+    "card": 11
+  },
+  {
+    "asset": "KEKOFWAR",
+    "series": 24,
+    "card": 12
+  },
+  {
+    "asset": "QPEPE",
+    "series": 24,
+    "card": 13
+  },
+  {
+    "asset": "PEPEWHITE",
+    "series": 24,
+    "card": 14
+  },
+  {
+    "asset": "PEPETHREESIX",
+    "series": 24,
+    "card": 15
+  },
+  {
+    "asset": "PEPESAMSON",
+    "series": 24,
+    "card": 16
+  },
+  {
+    "asset": "PEPEARTHUR",
+    "series": 24,
+    "card": 17
+  },
+  {
+    "asset": "KIGURUMIPEPE",
+    "series": 24,
+    "card": 18
+  },
+  {
+    "asset": "PEPESACE",
+    "series": 24,
+    "card": 19
+  },
+  {
+    "asset": "DECENTRAPEPE",
+    "series": 24,
+    "card": 20
+  },
+  {
+    "asset": "POKERPEPE",
+    "series": 24,
+    "card": 21
+  },
+  {
+    "asset": "PEPECHAIRMAN",
+    "series": 24,
+    "card": 22
+  },
+  {
+    "asset": "PEPESPINNER",
+    "series": 24,
+    "card": 23
+  },
+  {
+    "asset": "PLAYBOYPEPE",
+    "series": 24,
+    "card": 24
+  },
+  {
+    "asset": "PEPETHUR",
+    "series": 24,
+    "card": 25
+  },
+  {
+    "asset": "PEPEAKI",
+    "series": 24,
+    "card": 26
+  },
+  {
+    "asset": "PEPEICHIGO",
+    "series": 24,
+    "card": 27
+  },
+  {
+    "asset": "WHOTHATPEPE",
+    "series": 24,
+    "card": 28
+  },
+  {
+    "asset": "PEPEKAPARKER",
+    "series": 24,
+    "card": 29
+  },
+  {
+    "asset": "PEPEPHARAON",
+    "series": 24,
+    "card": 30
+  },
+  {
+    "asset": "PEPEWYATT",
+    "series": 24,
+    "card": 31
+  },
+  {
+    "asset": "DRAGONKEK",
+    "series": 24,
+    "card": 32
+  },
+  {
+    "asset": "PEPECONTRACT",
+    "series": 24,
+    "card": 33
+  },
+  {
+    "asset": "SOJOURNPEPE",
+    "series": 24,
+    "card": 34
+  },
+  {
+    "asset": "PEPEHOMER",
+    "series": 24,
+    "card": 35
+  },
+  {
+    "asset": "DOHCASH",
+    "series": 24,
+    "card": 36
+  },
+  {
+    "asset": "JOJOXPEPE",
+    "series": 24,
+    "card": 37
+  },
+  {
+    "asset": "PEPEPOLLOCK",
+    "series": 24,
+    "card": 38
+  },
+  {
+    "asset": "PEPERECALL",
+    "series": 24,
+    "card": 39
+  },
+  {
+    "asset": "CLIFFORDPEPE",
+    "series": 24,
+    "card": 40
+  },
+  {
+    "asset": "CEETHREEPEPE",
+    "series": 24,
+    "card": 41
+  },
+  {
+    "asset": "PEPEJEANS",
+    "series": 24,
+    "card": 42
+  },
+  {
+    "asset": "SPEEDPEPE",
+    "series": 24,
+    "card": 43
+  },
+  {
+    "asset": "BACKTOPEPE",
+    "series": 24,
+    "card": 44
+  },
+  {
+    "asset": "KPEPE",
+    "series": 24,
+    "card": 45
+  },
+  {
+    "asset": "PEPEDJ",
+    "series": 24,
+    "card": 46
+  },
+  {
+    "asset": "PEPEDROID",
+    "series": 24,
+    "card": 47
+  },
+  {
+    "asset": "MRPPBUTTHOLE",
+    "series": 24,
+    "card": 48
+  },
+  {
+    "asset": "TOBIASPEPE",
+    "series": 24,
+    "card": 49
+  },
+  {
+    "asset": "RARECHERRY",
+    "series": 24,
+    "card": 50
+  },
+  {
+    "asset": "PEPFICTION",
+    "series": 25,
+    "card": 1
+  },
+  {
+    "asset": "PEPESAKURA",
+    "series": 25,
+    "card": 2
+  },
+  {
+    "asset": "PEPEOLDTRADE",
+    "series": 25,
+    "card": 3
+  },
+  {
+    "asset": "PEPEHUNTER",
+    "series": 25,
+    "card": 4
+  },
+  {
+    "asset": "MATSURIPEPE",
+    "series": 25,
+    "card": 5
+  },
+  {
+    "asset": "PEPEON",
+    "series": 25,
+    "card": 6
+  },
+  {
+    "asset": "YAMAPEPE",
+    "series": 25,
+    "card": 7
+  },
+  {
+    "asset": "EPEENPEPE",
+    "series": 25,
+    "card": 8
+  },
+  {
+    "asset": "JASMINEPEPE",
+    "series": 25,
+    "card": 9
+  },
+  {
+    "asset": "PEAKYPEPE",
+    "series": 25,
+    "card": 10
+  },
+  {
+    "asset": "PEPEAIRLINES",
+    "series": 25,
+    "card": 11
+  },
+  {
+    "asset": "XCHAINPEPE",
+    "series": 25,
+    "card": 12
+  },
+  {
+    "asset": "PEPEA",
+    "series": 25,
+    "card": 13
+  },
+  {
+    "asset": "PEPEDIRECTOR",
+    "series": 25,
+    "card": 14
+  },
+  {
+    "asset": "PEPEFRACTAL",
+    "series": 25,
+    "card": 15
+  },
+  {
+    "asset": "PEPEFUYU",
+    "series": 25,
+    "card": 16
+  },
+  {
+    "asset": "PEPEHAND",
+    "series": 25,
+    "card": 17
+  },
+  {
+    "asset": "PEPEPORTRAIT",
+    "series": 25,
+    "card": 18
+  },
+  {
+    "asset": "PEPEZEUS",
+    "series": 25,
+    "card": 19
+  },
+  {
+    "asset": "FAIRYODDPEPE",
+    "series": 25,
+    "card": 20
+  },
+  {
+    "asset": "FINNPEPE",
+    "series": 25,
+    "card": 21
+  },
+  {
+    "asset": "PEPEANDSON",
+    "series": 25,
+    "card": 22
+  },
+  {
+    "asset": "BERLINPEPE",
+    "series": 25,
+    "card": 23
+  },
+  {
+    "asset": "CUBISTPEPE",
+    "series": 25,
+    "card": 24
+  },
+  {
+    "asset": "DARKSIDEPEPE",
+    "series": 25,
+    "card": 25
+  },
+  {
+    "asset": "ENTERTHEPEPE",
+    "series": 25,
+    "card": 26
+  },
+  {
+    "asset": "PEPEFMYLIFE",
+    "series": 25,
+    "card": 27
+  },
+  {
+    "asset": "CHAMPAGNETNT",
+    "series": 25,
+    "card": 28
+  },
+  {
+    "asset": "PEPEJOKER",
+    "series": 25,
+    "card": 29
+  },
+  {
+    "asset": "PEPEPENPEN",
+    "series": 25,
+    "card": 30
+  },
+  {
+    "asset": "PEPESPLANET",
+    "series": 25,
+    "card": 31
+  },
+  {
+    "asset": "PEPOLLO",
+    "series": 25,
+    "card": 32
+  },
+  {
+    "asset": "RINGOFPEPE",
+    "series": 25,
+    "card": 33
+  },
+  {
+    "asset": "RPBANHAMMER",
+    "series": 25,
+    "card": 34
+  },
+  {
+    "asset": "RUBIXPEPE",
+    "series": 25,
+    "card": 35
+  },
+  {
+    "asset": "STANPEPEE",
+    "series": 25,
+    "card": 36
+  },
+  {
+    "asset": "THEPEPENATOR",
+    "series": 25,
+    "card": 37
+  },
+  {
+    "asset": "TOMATOPEPE",
+    "series": 25,
+    "card": 38
+  },
+  {
+    "asset": "WHOAPEPE",
+    "series": 25,
+    "card": 39
+  },
+  {
+    "asset": "MYFIRSTPEPE",
+    "series": 25,
+    "card": 40
+  },
+  {
+    "asset": "PEPESHIELD",
+    "series": 25,
+    "card": 41
+  },
+  {
+    "asset": "RAREPPODCAST",
+    "series": 25,
+    "card": 42
+  },
+  {
+    "asset": "PEPEMOM",
+    "series": 25,
+    "card": 43
+  },
+  {
+    "asset": "PEPELOUX",
+    "series": 25,
+    "card": 44
+  },
+  {
+    "asset": "PEPEVANEYCK",
+    "series": 25,
+    "card": 45
+  },
+  {
+    "asset": "FTERTHERAIN",
+    "series": 25,
+    "card": 46
+  },
+  {
+    "asset": "FUJINPEPE",
+    "series": 25,
+    "card": 47
+  },
+  {
+    "asset": "NURSEPEPE",
+    "series": 25,
+    "card": 48
+  },
+  {
+    "asset": "PEPEFONDLERS",
+    "series": 25,
+    "card": 49
+  },
+  {
+    "asset": "PEPESUMMER",
+    "series": 25,
+    "card": 50
+  },
+  {
+    "asset": "PEPETONE",
+    "series": 26,
+    "card": 1
+  },
+  {
+    "asset": "PEPEVANHALEN",
+    "series": 26,
+    "card": 2
+  },
+  {
+    "asset": "SCREAMPEPE",
+    "series": 26,
+    "card": 3
+  },
+  {
+    "asset": "SLEEPINGPEPE",
+    "series": 26,
+    "card": 4
+  },
+  {
+    "asset": "UNCLEPEPESAM",
+    "series": 26,
+    "card": 5
+  },
+  {
+    "asset": "VAULTBOYPEPE",
+    "series": 26,
+    "card": 6
+  },
+  {
+    "asset": "VEGANPEPE",
+    "series": 26,
+    "card": 7
+  },
+  {
+    "asset": "VERYDOGEPEPE",
+    "series": 26,
+    "card": 8
+  },
+  {
+    "asset": "FEATHERSPEPE",
+    "series": 26,
+    "card": 9
+  },
+  {
+    "asset": "FULMETALPEPE",
+    "series": 26,
+    "card": 10
+  },
+  {
+    "asset": "PEPEASTROBOY",
+    "series": 26,
+    "card": 11
+  },
+  {
+    "asset": "PEPELETTERA",
+    "series": 26,
+    "card": 12
+  },
+  {
+    "asset": "PEPEOLDCASH",
+    "series": 26,
+    "card": 13
+  },
+  {
+    "asset": "PEPERAILWAYS",
+    "series": 26,
+    "card": 14
+  },
+  {
+    "asset": "TETSUWANPEPE",
+    "series": 26,
+    "card": 15
+  },
+  {
+    "asset": "SMELLPEPE",
+    "series": 26,
+    "card": 16
+  },
+  {
+    "asset": "WWFPEPE",
+    "series": 26,
+    "card": 17
+  },
+  {
+    "asset": "TITANICPEPE",
+    "series": 26,
+    "card": 18
+  },
+  {
+    "asset": "CREMAPEPE",
+    "series": 26,
+    "card": 19
+  },
+  {
+    "asset": "JPEPE",
+    "series": 26,
+    "card": 20
+  },
+  {
+    "asset": "PEPEHEMAN",
+    "series": 26,
+    "card": 21
+  },
+  {
+    "asset": "PEPEHOLOGRAM",
+    "series": 26,
+    "card": 22
+  },
+  {
+    "asset": "PLEGO",
+    "series": 26,
+    "card": 23
+  },
+  {
+    "asset": "SENJUPEPE",
+    "series": 26,
+    "card": 24
+  },
+  {
+    "asset": "SAILMOONPEPE",
+    "series": 26,
+    "card": 25
+  },
+  {
+    "asset": "YANAGINIPEPE",
+    "series": 26,
+    "card": 26
+  },
+  {
+    "asset": "BATTLEPEPE",
+    "series": 26,
+    "card": 27
+  },
+  {
+    "asset": "GIPEPE",
+    "series": 26,
+    "card": 28
+  },
+  {
+    "asset": "PEPEBOW",
+    "series": 26,
+    "card": 29
+  },
+  {
+    "asset": "BEATLESPEPE",
+    "series": 26,
+    "card": 30
+  },
+  {
+    "asset": "KITANO",
+    "series": 26,
+    "card": 31
+  },
+  {
+    "asset": "SWAROPEPE",
+    "series": 26,
+    "card": 32
+  },
+  {
+    "asset": "PEPEAMAZING",
+    "series": 26,
+    "card": 33
+  },
+  {
+    "asset": "PEPELMINING",
+    "series": 26,
+    "card": 34
+  },
+  {
+    "asset": "HAPPYRAINY",
+    "series": 26,
+    "card": 35
+  },
+  {
+    "asset": "KUMADORIPEPE",
+    "series": 26,
+    "card": 36
+  },
+  {
+    "asset": "PEPEJORN",
+    "series": 26,
+    "card": 37
+  },
+  {
+    "asset": "PEPENSTEIN",
+    "series": 26,
+    "card": 38
+  },
+  {
+    "asset": "RAIJINPEPE",
+    "series": 26,
+    "card": 39
+  },
+  {
+    "asset": "PEPESINCITY",
+    "series": 26,
+    "card": 40
+  },
+  {
+    "asset": "PEPESTAFF",
+    "series": 26,
+    "card": 41
+  },
+  {
+    "asset": "WEEDTIME",
+    "series": 26,
+    "card": 42
+  },
+  {
+    "asset": "THEKINGPEPE",
+    "series": 26,
+    "card": 43
+  },
+  {
+    "asset": "PACPEP",
+    "series": 26,
+    "card": 44
+  },
+  {
+    "asset": "HUMBLEPEPE",
+    "series": 26,
+    "card": 45
+  },
+  {
+    "asset": "ROTATINGPEPE",
+    "series": 26,
+    "card": 46
+  },
+  {
+    "asset": "CLAYPEPE",
+    "series": 26,
+    "card": 47
+  },
+  {
+    "asset": "RAREAPPLE",
+    "series": 26,
+    "card": 48
+  },
+  {
+    "asset": "SODAPEPENSKI",
+    "series": 26,
+    "card": 49
+  },
+  {
+    "asset": "DEUSEXPEPE",
+    "series": 26,
+    "card": 50
+  },
+  {
+    "asset": "PAWNTHELAMBO",
+    "series": 27,
+    "card": 1
+  },
+  {
+    "asset": "ORTRAILPEPE",
+    "series": 27,
+    "card": 2
+  },
+  {
+    "asset": "RONINKEK",
+    "series": 27,
+    "card": 3
+  },
+  {
+    "asset": "PENPEN",
+    "series": 27,
+    "card": 4
+  },
+  {
+    "asset": "PEPEBUSTER",
+    "series": 27,
+    "card": 5
+  },
+  {
+    "asset": "PEPEDOL",
+    "series": 27,
+    "card": 6
+  },
+  {
+    "asset": "PEPEGRAM",
+    "series": 27,
+    "card": 7
+  },
+  {
+    "asset": "QQPEPE",
+    "series": 27,
+    "card": 8
+  },
+  {
+    "asset": "NOHPEPE",
+    "series": 27,
+    "card": 9
+  },
+  {
+    "asset": "ENDRACISMPE",
+    "series": 27,
+    "card": 10
+  },
+  {
+    "asset": "PEPESIGNGUY",
+    "series": 27,
+    "card": 11
+  },
+  {
+    "asset": "YUGUREPEPE",
+    "series": 27,
+    "card": 12
+  },
+  {
+    "asset": "VIKINGSPEPE",
+    "series": 27,
+    "card": 13
+  },
+  {
+    "asset": "PEPESAILORV",
+    "series": 27,
+    "card": 14
+  },
+  {
+    "asset": "PEPEPEARL",
+    "series": 27,
+    "card": 15
+  },
+  {
+    "asset": "PEPELCHTNSTN",
+    "series": 27,
+    "card": 16
+  },
+  {
+    "asset": "PEPEINSIDE",
+    "series": 27,
+    "card": 17
+  },
+  {
+    "asset": "PEPEAGYO",
+    "series": 27,
+    "card": 18
+  },
+  {
+    "asset": "MYSTERYPEPE",
+    "series": 27,
+    "card": 19
+  },
+  {
+    "asset": "POSTMDRNPEPE",
+    "series": 27,
+    "card": 20
+  },
+  {
+    "asset": "PEPEFAMOUS",
+    "series": 27,
+    "card": 21
+  },
+  {
+    "asset": "NOBORDERPEPE",
+    "series": 27,
+    "card": 22
+  },
+  {
+    "asset": "PEPEANDROID",
+    "series": 27,
+    "card": 23
+  },
+  {
+    "asset": "PEPECOURAGE",
+    "series": 27,
+    "card": 24
+  },
+  {
+    "asset": "KUNGFUPEPE",
+    "series": 27,
+    "card": 25
+  },
+  {
+    "asset": "UMENIPEPE",
+    "series": 27,
+    "card": 26
+  },
+  {
+    "asset": "PEPERONCINO",
+    "series": 27,
+    "card": 27
+  },
+  {
+    "asset": "MINDPEPEHOFF",
+    "series": 27,
+    "card": 28
+  },
+  {
+    "asset": "PEPEHITMAN",
+    "series": 27,
+    "card": 29
+  },
+  {
+    "asset": "PEPEJUICE",
+    "series": 27,
+    "card": 30
+  },
+  {
+    "asset": "BLINGBLING",
+    "series": 27,
+    "card": 31
+  },
+  {
+    "asset": "DAPHNIAPEPE",
+    "series": 27,
+    "card": 32
+  },
+  {
+    "asset": "FILEONPEPE",
+    "series": 27,
+    "card": 33
+  },
+  {
+    "asset": "FLATEARTH",
+    "series": 27,
+    "card": 34
+  },
+  {
+    "asset": "FLOWERPEPE",
+    "series": 27,
+    "card": 35
+  },
+  {
+    "asset": "FREETIBETPP",
+    "series": 27,
+    "card": 36
+  },
+  {
+    "asset": "GAMESOFTRUMP",
+    "series": 27,
+    "card": 37
+  },
+  {
+    "asset": "GLUTTONYPEPE",
+    "series": 27,
+    "card": 38
+  },
+  {
+    "asset": "JJPEPE",
+    "series": 27,
+    "card": 39
+  },
+  {
+    "asset": "KKPEPE",
+    "series": 27,
+    "card": 40
+  },
+  {
+    "asset": "JAPANESEPEPE",
+    "series": 27,
+    "card": 41
+  },
+  {
+    "asset": "MRSTAYPEPT",
+    "series": 27,
+    "card": 42
+  },
+  {
+    "asset": "MYLADYPEPE",
+    "series": 27,
+    "card": 43
+  },
+  {
+    "asset": "PEPAPINUP",
+    "series": 27,
+    "card": 44
+  },
+  {
+    "asset": "PEPEDDIT",
+    "series": 27,
+    "card": 45
+  },
+  {
+    "asset": "PEPEDUCK",
+    "series": 27,
+    "card": 46
+  },
+  {
+    "asset": "PEPEKIDROBOT",
+    "series": 27,
+    "card": 47
+  },
+  {
+    "asset": "PEPELEGOMAN",
+    "series": 27,
+    "card": 48
+  },
+  {
+    "asset": "PEPELIKE",
+    "series": 27,
+    "card": 49
+  },
+  {
+    "asset": "PEPEIMPOSER",
+    "series": 27,
+    "card": 50
+  },
+  {
+    "asset": "PEPESAX",
+    "series": 28,
+    "card": 1
+  },
+  {
+    "asset": "PEPEUNGYO",
+    "series": 28,
+    "card": 2
+  },
+  {
+    "asset": "RAINYPEPE",
+    "series": 28,
+    "card": 3
+  },
+  {
+    "asset": "RAMBOPEPE",
+    "series": 28,
+    "card": 4
+  },
+  {
+    "asset": "PEPEMANTIS",
+    "series": 28,
+    "card": 5
+  },
+  {
+    "asset": "PEPEYAKUZA",
+    "series": 28,
+    "card": 6
+  },
+  {
+    "asset": "NAMIDAPEPE",
+    "series": 28,
+    "card": 7
+  },
+  {
+    "asset": "PEPEZONCARD",
+    "series": 28,
+    "card": 8
+  },
+  {
+    "asset": "PEPECINDERS",
+    "series": 28,
+    "card": 9
+  },
+  {
+    "asset": "DRUNKENPEPE",
+    "series": 28,
+    "card": 10
+  },
+  {
+    "asset": "YUMMYPEPE",
+    "series": 28,
+    "card": 11
+  },
+  {
+    "asset": "DEGENERPEPE",
+    "series": 28,
+    "card": 12
+  },
+  {
+    "asset": "CUPIDPEPE",
+    "series": 28,
+    "card": 13
+  },
+  {
+    "asset": "FRESHPEPE",
+    "series": 28,
+    "card": 14
+  },
+  {
+    "asset": "PEPEKNIEVEL",
+    "series": 28,
+    "card": 15
+  },
+  {
+    "asset": "PEPEPET",
+    "series": 28,
+    "card": 16
+  },
+  {
+    "asset": "PEPETIN",
+    "series": 28,
+    "card": 17
+  },
+  {
+    "asset": "SAKURANIPEPE",
+    "series": 28,
+    "card": 18
+  },
+  {
+    "asset": "PEPEFICRIM",
+    "series": 28,
+    "card": 19
+  },
+  {
+    "asset": "PEKMAN",
+    "series": 28,
+    "card": 20
+  },
+  {
+    "asset": "NATIVEPEPETH",
+    "series": 28,
+    "card": 21
+  },
+  {
+    "asset": "TALESPEPE",
+    "series": 28,
+    "card": 22
+  },
+  {
+    "asset": "THUNDERPEPS",
+    "series": 28,
+    "card": 23
+  },
+  {
+    "asset": "FROGBUS",
+    "series": 28,
+    "card": 24
+  },
+  {
+    "asset": "PEPEAFRIKA",
+    "series": 28,
+    "card": 25
+  },
+  {
+    "asset": "PEPEAIR",
+    "series": 28,
+    "card": 26
+  },
+  {
+    "asset": "VINTAGEPEP",
+    "series": 28,
+    "card": 27
+  },
+  {
+    "asset": "PEPETIE",
+    "series": 28,
+    "card": 28
+  },
+  {
+    "asset": "TAKOPEPE",
+    "series": 28,
+    "card": 29
+  },
+  {
+    "asset": "BEATPEPE",
+    "series": 28,
+    "card": 30
+  },
+  {
+    "asset": "MONEYPEPE",
+    "series": 28,
+    "card": 31
+  },
+  {
+    "asset": "PEPEBOUNTY",
+    "series": 28,
+    "card": 32
+  },
+  {
+    "asset": "PEPESTORM",
+    "series": 28,
+    "card": 33
+  },
+  {
+    "asset": "SEASIDEPEPE",
+    "series": 28,
+    "card": 34
+  },
+  {
+    "asset": "TEMPURAPEPE",
+    "series": 28,
+    "card": 35
+  },
+  {
+    "asset": "VANILLAPEPE",
+    "series": 28,
+    "card": 36
+  },
+  {
+    "asset": "KAWAPEPE",
+    "series": 28,
+    "card": 37
+  },
+  {
+    "asset": "PENIC",
+    "series": 28,
+    "card": 38
+  },
+  {
+    "asset": "KEKLORDGABEN",
+    "series": 28,
+    "card": 39
+  },
+  {
+    "asset": "PEPEDRYAD",
+    "series": 28,
+    "card": 40
+  },
+  {
+    "asset": "KINGYOPEPE",
+    "series": 28,
+    "card": 41
+  },
+  {
+    "asset": "PEPEJERICHO",
+    "series": 28,
+    "card": 42
+  },
+  {
+    "asset": "PEPEPUNKDOLL",
+    "series": 28,
+    "card": 43
+  },
+  {
+    "asset": "PUNCHPEPE",
+    "series": 28,
+    "card": 44
+  },
+  {
+    "asset": "SUSUKINIPEPE",
+    "series": 28,
+    "card": 45
+  },
+  {
+    "asset": "PEPELINK",
+    "series": 28,
+    "card": 46
+  },
+  {
+    "asset": "RARETEMPLATE",
+    "series": 28,
+    "card": 47
+  },
+  {
+    "asset": "PEPEWORLDCUP",
+    "series": 28,
+    "card": 48
+  },
+  {
+    "asset": "PEPESURFING",
+    "series": 28,
+    "card": 49
+  },
+  {
+    "asset": "MASTERSPEPE",
+    "series": 28,
+    "card": 50
+  },
+  {
+    "asset": "WORLDOFPEPE",
+    "series": 29,
+    "card": 1
+  },
+  {
+    "asset": "FLYINGACEPEP",
+    "series": 29,
+    "card": 2
+  },
+  {
+    "asset": "MANDARAPEPE",
+    "series": 29,
+    "card": 3
+  },
+  {
+    "asset": "PAKALOLO",
+    "series": 29,
+    "card": 4
+  },
+  {
+    "asset": "VRPEPE",
+    "series": 29,
+    "card": 5
+  },
+  {
+    "asset": "PSEUDOPEPE",
+    "series": 29,
+    "card": 6
+  },
+  {
+    "asset": "KEKANC",
+    "series": 29,
+    "card": 7
+  },
+  {
+    "asset": "PEPEAA",
+    "series": 29,
+    "card": 8
+  },
+  {
+    "asset": "PEPECGYVER",
+    "series": 29,
+    "card": 9
+  },
+  {
+    "asset": "WAMPUMPEPE",
+    "series": 29,
+    "card": 10
+  },
+  {
+    "asset": "PROPHECYPEPE",
+    "series": 29,
+    "card": 11
+  },
+  {
+    "asset": "CHINAPEPE",
+    "series": 29,
+    "card": 12
+  },
+  {
+    "asset": "CLOWNPEPE",
+    "series": 29,
+    "card": 13
+  },
+  {
+    "asset": "PEPENIN",
+    "series": 29,
+    "card": 14
+  },
+  {
+    "asset": "PEPERIKISHI",
+    "series": 29,
+    "card": 15
+  },
+  {
+    "asset": "PEPEJPN",
+    "series": 29,
+    "card": 16
+  },
+  {
+    "asset": "PEPESCREAM",
+    "series": 29,
+    "card": 17
+  },
+  {
+    "asset": "BOBDOBBS",
+    "series": 29,
+    "card": 18
+  },
+  {
+    "asset": "COLORPEPE",
+    "series": 29,
+    "card": 19
+  },
+  {
+    "asset": "PEPEXGALLERY",
+    "series": 29,
+    "card": 20
+  },
+  {
+    "asset": "PEPEUN",
+    "series": 29,
+    "card": 21
+  },
+  {
+    "asset": "LILUPEPE",
+    "series": 29,
+    "card": 22
+  },
+  {
+    "asset": "PEPEGETABLE",
+    "series": 29,
+    "card": 23
+  },
+  {
+    "asset": "BETTYPEPE",
+    "series": 29,
+    "card": 24
+  },
+  {
+    "asset": "ENGLISHPEPE",
+    "series": 29,
+    "card": 25
+  },
+  {
+    "asset": "GOLDGODPEPE",
+    "series": 29,
+    "card": 26
+  },
+  {
+    "asset": "GTAPEP",
+    "series": 29,
+    "card": 27
+  },
+  {
+    "asset": "JOKERPE",
+    "series": 29,
+    "card": 28
+  },
+  {
+    "asset": "KICKPEPE",
+    "series": 29,
+    "card": 29
+  },
+  {
+    "asset": "MATSUNIPEPE",
+    "series": 29,
+    "card": 30
+  },
+  {
+    "asset": "MAXPEPE",
+    "series": 29,
+    "card": 31
+  },
+  {
+    "asset": "PEPEBANDICUT",
+    "series": 29,
+    "card": 32
+  },
+  {
+    "asset": "PEPEBASS",
+    "series": 29,
+    "card": 33
+  },
+  {
+    "asset": "PEPECIGARS",
+    "series": 29,
+    "card": 34
+  },
+  {
+    "asset": "PEPEDARKSIDE",
+    "series": 29,
+    "card": 35
+  },
+  {
+    "asset": "PEPEFOREVER",
+    "series": 29,
+    "card": 36
+  },
+  {
+    "asset": "PEPEYIP",
+    "series": 29,
+    "card": 37
+  },
+  {
+    "asset": "PEPTARO",
+    "series": 29,
+    "card": 38
+  },
+  {
+    "asset": "PROCESSPEPE",
+    "series": 29,
+    "card": 39
+  },
+  {
+    "asset": "SELFPORTRAIT",
+    "series": 29,
+    "card": 40
+  },
+  {
+    "asset": "PEPEZAALBINO",
+    "series": 29,
+    "card": 41
+  },
+  {
+    "asset": "TIKIPEPE",
+    "series": 29,
+    "card": 42
+  },
+  {
+    "asset": "YELLPEPE",
+    "series": 29,
+    "card": 43
+  },
+  {
+    "asset": "PIRATESPEPES",
+    "series": 29,
+    "card": 44
+  },
+  {
+    "asset": "PEPEBRAIN",
+    "series": 29,
+    "card": 45
+  },
+  {
+    "asset": "PEPEAN",
+    "series": 29,
+    "card": 46
+  },
+  {
+    "asset": "DOMPEPENON",
+    "series": 29,
+    "card": 47
+  },
+  {
+    "asset": "DOTPEPE",
+    "series": 29,
+    "card": 48
+  },
+  {
+    "asset": "PEPECLOKWORK",
+    "series": 29,
+    "card": 49
+  },
+  {
+    "asset": "PEPESHIRT",
+    "series": 29,
+    "card": 50
+  },
+  {
+    "asset": "REAPERPEPE",
+    "series": 30,
+    "card": 1
+  },
+  {
+    "asset": "PEPETTER",
+    "series": 30,
+    "card": 2
+  },
+  {
+    "asset": "EMBRYOPEPE",
+    "series": 30,
+    "card": 3
+  },
+  {
+    "asset": "HYPNOTIST",
+    "series": 30,
+    "card": 4
+  },
+  {
+    "asset": "JONSNOWPEPE",
+    "series": 30,
+    "card": 5
+  },
+  {
+    "asset": "BACKPAGEPEPE",
+    "series": 30,
+    "card": 6
+  },
+  {
+    "asset": "PEPEPEACE",
+    "series": 30,
+    "card": 7
+  },
+  {
+    "asset": "PEPERAKUL",
+    "series": 30,
+    "card": 8
+  },
+  {
+    "asset": "MRHANSEL",
+    "series": 30,
+    "card": 9
+  },
+  {
+    "asset": "PEPEHEFNER",
+    "series": 30,
+    "card": 10
+  },
+  {
+    "asset": "LONELYPEPE",
+    "series": 30,
+    "card": 11
+  },
+  {
+    "asset": "MIKOPEPE",
+    "series": 30,
+    "card": 12
+  },
+  {
+    "asset": "MIYAKO",
+    "series": 30,
+    "card": 13
+  },
+  {
+    "asset": "NINJAPEPE",
+    "series": 30,
+    "card": 14
+  },
+  {
+    "asset": "PEPEIRI",
+    "series": 30,
+    "card": 15
+  },
+  {
+    "asset": "PEPEWOMAN",
+    "series": 30,
+    "card": 16
+  },
+  {
+    "asset": "PEPMANIA",
+    "series": 30,
+    "card": 17
+  },
+  {
+    "asset": "TRANSPOSE",
+    "series": 30,
+    "card": 18
+  },
+  {
+    "asset": "VIRUSPEPE",
+    "series": 30,
+    "card": 19
+  },
+  {
+    "asset": "PEPENOMIST",
+    "series": 30,
+    "card": 20
+  },
+  {
+    "asset": "GOODBYEPEPE",
+    "series": 30,
+    "card": 21
+  },
+  {
+    "asset": "MONSTERPEPE",
+    "series": 30,
+    "card": 22
+  },
+  {
+    "asset": "NAHUAL",
+    "series": 30,
+    "card": 23
+  },
+  {
+    "asset": "PEPEBRIEFS",
+    "series": 30,
+    "card": 24
+  },
+  {
+    "asset": "PEPETSAMURAI",
+    "series": 30,
+    "card": 25
+  },
+  {
+    "asset": "SATOSHIRARE",
+    "series": 30,
+    "card": 26
+  },
+  {
+    "asset": "KEKRESURRECT",
+    "series": 30,
+    "card": 27
+  },
+  {
+    "asset": "PEPEIRON",
+    "series": 30,
+    "card": 28
+  },
+  {
+    "asset": "KEKALITY",
+    "series": 30,
+    "card": 29
+  },
+  {
+    "asset": "PEPEBANG",
+    "series": 30,
+    "card": 30
+  },
+  {
+    "asset": "SANDORPEPE",
+    "series": 30,
+    "card": 31
+  },
+  {
+    "asset": "GANGPEPE",
+    "series": 30,
+    "card": 32
+  },
+  {
+    "asset": "UNGAISOUTEN",
+    "series": 30,
+    "card": 33
+  },
+  {
+    "asset": "CARTOONPEPE",
+    "series": 30,
+    "card": 34
+  },
+  {
+    "asset": "PEPEFORM",
+    "series": 30,
+    "card": 35
+  },
+  {
+    "asset": "PEPETE",
+    "series": 30,
+    "card": 36
+  },
+  {
+    "asset": "PEPEARROW",
+    "series": 30,
+    "card": 37
+  },
+  {
+    "asset": "SHADILOUNGE",
+    "series": 30,
+    "card": 38
+  },
+  {
+    "asset": "PEPLACERESLT",
+    "series": 30,
+    "card": 39
+  },
+  {
+    "asset": "INVISIBLPEPE",
+    "series": 30,
+    "card": 40
+  },
+  {
+    "asset": "RAREGROYPER",
+    "series": 30,
+    "card": 41
+  },
+  {
+    "asset": "OUIJAPEPE",
+    "series": 30,
+    "card": 42
+  },
+  {
+    "asset": "LITTLEGREEN",
+    "series": 30,
+    "card": 43
+  },
+  {
+    "asset": "PEPECAFFE",
+    "series": 30,
+    "card": 44
+  },
+  {
+    "asset": "SPACEMOUTH",
+    "series": 30,
+    "card": 45
+  },
+  {
+    "asset": "PEPEKK",
+    "series": 30,
+    "card": 46
+  },
+  {
+    "asset": "WEREWOLFKEK",
+    "series": 30,
+    "card": 47
+  },
+  {
+    "asset": "PEPEAKIBA",
+    "series": 30,
+    "card": 48
+  },
+  {
+    "asset": "LIGHTITON",
+    "series": 30,
+    "card": 49
+  },
+  {
+    "asset": "GROYPAUCTION",
+    "series": 30,
+    "card": 50
+  },
+  {
+    "asset": "CRYPTOPEPES",
+    "series": 31,
+    "card": 1
+  },
+  {
+    "asset": "THEPEPEHOFF",
+    "series": 31,
+    "card": 2
+  },
+  {
+    "asset": "PEPELOCATION",
+    "series": 31,
+    "card": 3
+  },
+  {
+    "asset": "SPADESPEPE",
+    "series": 31,
+    "card": 4
+  },
+  {
+    "asset": "PEPETAXMAN",
+    "series": 31,
+    "card": 5
+  },
+  {
+    "asset": "PEPEKITTIES",
+    "series": 31,
+    "card": 6
+  },
+  {
+    "asset": "UGANDANPEPE",
+    "series": 31,
+    "card": 7
+  },
+  {
+    "asset": "GROYPMAN",
+    "series": 31,
+    "card": 8
+  },
+  {
+    "asset": "COINEATER",
+    "series": 31,
+    "card": 9
+  },
+  {
+    "asset": "PEPEWISHPERS",
+    "series": 31,
+    "card": 10
+  },
+  {
+    "asset": "PEPEHAWKING",
+    "series": 31,
+    "card": 11
+  },
+  {
+    "asset": "HODLERPEPE",
+    "series": 31,
+    "card": 12
+  },
+  {
+    "asset": "PEPEDAUGHTER",
+    "series": 31,
+    "card": 13
+  },
+  {
+    "asset": "MAJESTYPEPE",
+    "series": 31,
+    "card": 14
+  },
+  {
+    "asset": "RAREPEGO",
+    "series": 31,
+    "card": 15
+  },
+  {
+    "asset": "JURASSICKEK",
+    "series": 31,
+    "card": 16
+  },
+  {
+    "asset": "PEPENNATOR",
+    "series": 31,
+    "card": 17
+  },
+  {
+    "asset": "BULLSEYEPEPE",
+    "series": 31,
+    "card": 18
+  },
+  {
+    "asset": "PEPEDARWIN",
+    "series": 31,
+    "card": 19
+  },
+  {
+    "asset": "PEPEROCKWELL",
+    "series": 31,
+    "card": 20
+  },
+  {
+    "asset": "JANDPEPE",
+    "series": 31,
+    "card": 21
+  },
+  {
+    "asset": "MMXVIII",
+    "series": 31,
+    "card": 22
+  },
+  {
+    "asset": "PEPEWAY",
+    "series": 31,
+    "card": 23
+  },
+  {
+    "asset": "SHININGXPEPE",
+    "series": 31,
+    "card": 24
+  },
+  {
+    "asset": "KEKOGGS",
+    "series": 31,
+    "card": 25
+  },
+  {
+    "asset": "MRTALPHA",
+    "series": 31,
+    "card": 26
+  },
+  {
+    "asset": "GROYLEX",
+    "series": 31,
+    "card": 27
+  },
+  {
+    "asset": "INDIANAPEPE",
+    "series": 31,
+    "card": 28
+  },
+  {
+    "asset": "PEPESTRY",
+    "series": 31,
+    "card": 29
+  },
+  {
+    "asset": "CALMHODLPEPE",
+    "series": 31,
+    "card": 30
+  },
+  {
+    "asset": "MEGAPEPEMAN",
+    "series": 31,
+    "card": 31
+  },
+  {
+    "asset": "NIGHTKINGPEP",
+    "series": 31,
+    "card": 32
+  },
+  {
+    "asset": "HEARTSPEPE",
+    "series": 31,
+    "card": 33
+  },
+  {
+    "asset": "GROYPERMONKY",
+    "series": 31,
+    "card": 34
+  },
+  {
+    "asset": "PEPECLOCK",
+    "series": 31,
+    "card": 35
+  },
+  {
+    "asset": "KEKEVOLUTION",
+    "series": 31,
+    "card": 36
+  },
+  {
+    "asset": "PEDURO",
+    "series": 31,
+    "card": 37
+  },
+  {
+    "asset": "PEPEJ",
+    "series": 31,
+    "card": 38
+  },
+  {
+    "asset": "CONSPIRATARD",
+    "series": 31,
+    "card": 39
+  },
+  {
+    "asset": "PEPEPEACOCK",
+    "series": 31,
+    "card": 40
+  },
+  {
+    "asset": "PEPEPARIETAL",
+    "series": 31,
+    "card": 41
+  },
+  {
+    "asset": "EGGPLANTMKNY",
+    "series": 31,
+    "card": 42
+  },
+  {
+    "asset": "GROYPERTL",
+    "series": 31,
+    "card": 43
+  },
+  {
+    "asset": "KFPEPE",
+    "series": 31,
+    "card": 44
+  },
+  {
+    "asset": "PEPECAKEK",
+    "series": 31,
+    "card": 45
+  },
+  {
+    "asset": "PSYCHICPEPE",
+    "series": 31,
+    "card": 46
+  },
+  {
+    "asset": "PEPENOK",
+    "series": 31,
+    "card": 47
+  },
+  {
+    "asset": "PEPESINLOVE",
+    "series": 31,
+    "card": 48
+  },
+  {
+    "asset": "PEPEXMAS",
+    "series": 31,
+    "card": 49
+  },
+  {
+    "asset": "RARELEAGUE",
+    "series": 31,
+    "card": 50
+  },
+  {
+    "asset": "SUCKMYPEPE",
+    "series": 32,
+    "card": 1
+  },
+  {
+    "asset": "WITCHPEPE",
+    "series": 32,
+    "card": 2
+  },
+  {
+    "asset": "CACTUSPEPE",
+    "series": 32,
+    "card": 3
+  },
+  {
+    "asset": "SPACECOOKIE",
+    "series": 32,
+    "card": 4
+  },
+  {
+    "asset": "PEPEQQ",
+    "series": 32,
+    "card": 5
+  },
+  {
+    "asset": "REALPEPEOFBH",
+    "series": 32,
+    "card": 6
+  },
+  {
+    "asset": "POWH",
+    "series": 32,
+    "card": 7
+  },
+  {
+    "asset": "DIAMONDSPEPE",
+    "series": 32,
+    "card": 8
+  },
+  {
+    "asset": "LAUGHINGMAN",
+    "series": 32,
+    "card": 9
+  },
+  {
+    "asset": "LEIAORGAPEPE",
+    "series": 32,
+    "card": 10
+  },
+  {
+    "asset": "PAXOLOTL",
+    "series": 32,
+    "card": 11
+  },
+  {
+    "asset": "PEPEAMANIA",
+    "series": 32,
+    "card": 12
+  },
+  {
+    "asset": "PEPEANGEL",
+    "series": 32,
+    "card": 13
+  },
+  {
+    "asset": "PEPEFLIES",
+    "series": 32,
+    "card": 14
+  },
+  {
+    "asset": "PEPEMOJI",
+    "series": 32,
+    "card": 15
+  },
+  {
+    "asset": "PEPEOPOLIS",
+    "series": 32,
+    "card": 16
+  },
+  {
+    "asset": "PEPEPOST",
+    "series": 32,
+    "card": 17
+  },
+  {
+    "asset": "PEPEPRAKEK",
+    "series": 32,
+    "card": 18
+  },
+  {
+    "asset": "PIRATPEPE",
+    "series": 32,
+    "card": 19
+  },
+  {
+    "asset": "PEPEMICO",
+    "series": 32,
+    "card": 20
+  },
+  {
+    "asset": "BCCPEPE",
+    "series": 32,
+    "card": 21
+  },
+  {
+    "asset": "SISTNCHAPEPE",
+    "series": 32,
+    "card": 22
+  },
+  {
+    "asset": "ONEEYEMONKEY",
+    "series": 32,
+    "card": 23
+  },
+  {
+    "asset": "THENEWYORKEK",
+    "series": 32,
+    "card": 24
+  },
+  {
+    "asset": "YUNOPEPE",
+    "series": 32,
+    "card": 25
+  },
+  {
+    "asset": "BARBARIANPEP",
+    "series": 32,
+    "card": 26
+  },
+  {
+    "asset": "CLUBSPEPE",
+    "series": 32,
+    "card": 27
+  },
+  {
+    "asset": "HORRORCOIN",
+    "series": 32,
+    "card": 28
+  },
+  {
+    "asset": "ECLIPTICPEPE",
+    "series": 32,
+    "card": 29
+  },
+  {
+    "asset": "FLAMINPEPE",
+    "series": 32,
+    "card": 30
+  },
+  {
+    "asset": "MERMAIDPEPE",
+    "series": 32,
+    "card": 31
+  },
+  {
+    "asset": "PEPEBOSCH",
+    "series": 32,
+    "card": 32
+  },
+  {
+    "asset": "PEPEKFC",
+    "series": 32,
+    "card": 33
+  },
+  {
+    "asset": "PEPEMNEMONIC",
+    "series": 32,
+    "card": 34
+  },
+  {
+    "asset": "ROCKETPEPE",
+    "series": 32,
+    "card": 35
+  },
+  {
+    "asset": "SKULLPEPE",
+    "series": 32,
+    "card": 36
+  },
+  {
+    "asset": "TSUNADE",
+    "series": 32,
+    "card": 37
+  },
+  {
+    "asset": "CERSEIPEPE",
+    "series": 32,
+    "card": 38
+  },
+  {
+    "asset": "FAIRYCASH",
+    "series": 32,
+    "card": 39
+  },
+  {
+    "asset": "HOODEDPEPE",
+    "series": 32,
+    "card": 40
+  },
+  {
+    "asset": "GROYONOMICON",
+    "series": 32,
+    "card": 41
+  },
+  {
+    "asset": "BADWISHES",
+    "series": 32,
+    "card": 42
+  },
+  {
+    "asset": "KEKFURY",
+    "series": 32,
+    "card": 43
+  },
+  {
+    "asset": "PEPEDICK",
+    "series": 32,
+    "card": 44
+  },
+  {
+    "asset": "PEPEGRAFFITI",
+    "series": 32,
+    "card": 45
+  },
+  {
+    "asset": "RAREQUEEM",
+    "series": 32,
+    "card": 46
+  },
+  {
+    "asset": "SICKPEPE",
+    "series": 32,
+    "card": 47
+  },
+  {
+    "asset": "GERPER",
+    "series": 32,
+    "card": 48
+  },
+  {
+    "asset": "MURASAKIPEPE",
+    "series": 32,
+    "card": 49
+  },
+  {
+    "asset": "FFFFFFFFFFFF",
+    "series": 32,
+    "card": 50
+  },
+  {
+    "asset": "PEPETOULLE",
+    "series": 33,
+    "card": 1
+  },
+  {
+    "asset": "NATTYALPHA",
+    "series": 33,
+    "card": 2
+  },
+  {
+    "asset": "PEPETRO",
+    "series": 33,
+    "card": 3
+  },
+  {
+    "asset": "BEAUTYPEPE",
+    "series": 33,
+    "card": 4
+  },
+  {
+    "asset": "BOOGERPEPE",
+    "series": 33,
+    "card": 5
+  },
+  {
+    "asset": "JUDYPEPE",
+    "series": 33,
+    "card": 6
+  },
+  {
+    "asset": "HODLPEPECASH",
+    "series": 33,
+    "card": 7
+  },
+  {
+    "asset": "FORKPEPE",
+    "series": 33,
+    "card": 8
+  },
+  {
+    "asset": "BABERUTHPEPE",
+    "series": 33,
+    "card": 9
+  },
+  {
+    "asset": "CARLOSPEPE",
+    "series": 33,
+    "card": 10
+  },
+  {
+    "asset": "PAJAMASPEPE",
+    "series": 33,
+    "card": 11
+  },
+  {
+    "asset": "OROCHIPEPE",
+    "series": 33,
+    "card": 12
+  },
+  {
+    "asset": "PEPEAFRIKEK",
+    "series": 33,
+    "card": 13
+  },
+  {
+    "asset": "PUFFPEPE",
+    "series": 33,
+    "card": 14
+  },
+  {
+    "asset": "PEPECAGE",
+    "series": 33,
+    "card": 15
+  },
+  {
+    "asset": "BODYBACKPEPE",
+    "series": 33,
+    "card": 16
+  },
+  {
+    "asset": "COBAINPEPE",
+    "series": 33,
+    "card": 17
+  },
+  {
+    "asset": "PEPEMIND",
+    "series": 33,
+    "card": 18
+  },
+  {
+    "asset": "PEPECART",
+    "series": 33,
+    "card": 19
+  },
+  {
+    "asset": "MARGINED",
+    "series": 33,
+    "card": 20
+  },
+  {
+    "asset": "PEPETHOR",
+    "series": 33,
+    "card": 21
+  },
+  {
+    "asset": "RAOULDUKEPEP",
+    "series": 33,
+    "card": 22
+  },
+  {
+    "asset": "ROADMAPEPE",
+    "series": 33,
+    "card": 23
+  },
+  {
+    "asset": "SALVATORPEPE",
+    "series": 33,
+    "card": 24
+  },
+  {
+    "asset": "TRAININGT",
+    "series": 33,
+    "card": 25
+  },
+  {
+    "asset": "WAYPEPE",
+    "series": 33,
+    "card": 26
+  },
+  {
+    "asset": "PEPEPRINT",
+    "series": 33,
+    "card": 27
+  },
+  {
+    "asset": "PEPEHONGKONG",
+    "series": 33,
+    "card": 28
+  },
+  {
+    "asset": "PEPEKUN",
+    "series": 33,
+    "card": 29
+  },
+  {
+    "asset": "PEPERCULESS",
+    "series": 33,
+    "card": 30
+  },
+  {
+    "asset": "PECTERIA",
+    "series": 33,
+    "card": 31
+  },
+  {
+    "asset": "PEPEMUACK",
+    "series": 33,
+    "card": 32
+  },
+  {
+    "asset": "PEPETOBI",
+    "series": 33,
+    "card": 33
+  },
+  {
+    "asset": "KEKMONTECRLO",
+    "series": 33,
+    "card": 34
+  },
+  {
+    "asset": "STORMYTRUMP",
+    "series": 33,
+    "card": 35
+  },
+  {
+    "asset": "CHUWAPEPE",
+    "series": 33,
+    "card": 36
+  },
+  {
+    "asset": "PEPEROOTS",
+    "series": 33,
+    "card": 37
+  },
+  {
+    "asset": "PEPEVYPER",
+    "series": 33,
+    "card": 38
+  },
+  {
+    "asset": "GROYPERDB",
+    "series": 33,
+    "card": 39
+  },
+  {
+    "asset": "RAREINKONE",
+    "series": 33,
+    "card": 40
+  },
+  {
+    "asset": "CHECKPEPE",
+    "series": 33,
+    "card": 41
+  },
+  {
+    "asset": "PEPERAREPEPE",
+    "series": 33,
+    "card": 42
+  },
+  {
+    "asset": "ITPEPE",
+    "series": 33,
+    "card": 43
+  },
+  {
+    "asset": "CYBERPEP",
+    "series": 33,
+    "card": 44
+  },
+  {
+    "asset": "CAPEPELE",
+    "series": 33,
+    "card": 45
+  },
+  {
+    "asset": "YODAPEPE",
+    "series": 33,
+    "card": 46
+  },
+  {
+    "asset": "PEPEDESIGN",
+    "series": 33,
+    "card": 47
+  },
+  {
+    "asset": "PEPEJACKSON",
+    "series": 33,
+    "card": 48
+  },
+  {
+    "asset": "SMALLRATPEPE",
+    "series": 33,
+    "card": 49
+  },
+  {
+    "asset": "XENOPEPE",
+    "series": 33,
+    "card": 50
+  },
+  {
+    "asset": "PEPEUBU",
+    "series": 34,
+    "card": 1
+  },
+  {
+    "asset": "RARELEE",
+    "series": 34,
+    "card": 2
+  },
+  {
+    "asset": "PEPEOLDONE",
+    "series": 34,
+    "card": 3
+  },
+  {
+    "asset": "BATMANNPEPE",
+    "series": 34,
+    "card": 4
+  },
+  {
+    "asset": "CRIMINALPEPE",
+    "series": 34,
+    "card": 5
+  },
+  {
+    "asset": "EATEPEPE",
+    "series": 34,
+    "card": 6
+  },
+  {
+    "asset": "ILUMINATRARE",
+    "series": 34,
+    "card": 7
+  },
+  {
+    "asset": "PEPEMASK",
+    "series": 34,
+    "card": 8
+  },
+  {
+    "asset": "RARECARDDECK",
+    "series": 34,
+    "card": 9
+  },
+  {
+    "asset": "SAKURAPENPEN",
+    "series": 34,
+    "card": 10
+  },
+  {
+    "asset": "GAMABUNTA",
+    "series": 34,
+    "card": 11
+  },
+  {
+    "asset": "PEPEBUZZ",
+    "series": 34,
+    "card": 12
+  },
+  {
+    "asset": "RAREPEPENOTE",
+    "series": 34,
+    "card": 13
+  },
+  {
+    "asset": "PEPESKEK",
+    "series": 34,
+    "card": 14
+  },
+  {
+    "asset": "PEPENEON",
+    "series": 34,
+    "card": 15
+  },
+  {
+    "asset": "NBAPEPE",
+    "series": 34,
+    "card": 16
+  },
+  {
+    "asset": "PEPECEZANNE",
+    "series": 34,
+    "card": 17
+  },
+  {
+    "asset": "PEPEMERMAN",
+    "series": 34,
+    "card": 18
+  },
+  {
+    "asset": "PEPEDRINO",
+    "series": 34,
+    "card": 19
+  },
+  {
+    "asset": "PEPESGYM",
+    "series": 34,
+    "card": 20
+  },
+  {
+    "asset": "MILLIONAIRPP",
+    "series": 34,
+    "card": 21
+  },
+  {
+    "asset": "PEPETAR",
+    "series": 34,
+    "card": 22
+  },
+  {
+    "asset": "PEPEIT",
+    "series": 34,
+    "card": 23
+  },
+  {
+    "asset": "PEPEJOCKER",
+    "series": 34,
+    "card": 24
+  },
+  {
+    "asset": "STONEPEPE",
+    "series": 34,
+    "card": 25
+  },
+  {
+    "asset": "THEKING",
+    "series": 34,
+    "card": 26
+  },
+  {
+    "asset": "RPEPE",
+    "series": 34,
+    "card": 27
+  },
+  {
+    "asset": "PINCHAN",
+    "series": 34,
+    "card": 28
+  },
+  {
+    "asset": "PEPEHUNDRED",
+    "series": 34,
+    "card": 29
+  },
+  {
+    "asset": "BREITBARTPEP",
+    "series": 34,
+    "card": 30
+  },
+  {
+    "asset": "CHERRYONTOP",
+    "series": 34,
+    "card": 31
+  },
+  {
+    "asset": "GAMBITPEPE",
+    "series": 34,
+    "card": 32
+  },
+  {
+    "asset": "GIANCARLO",
+    "series": 34,
+    "card": 33
+  },
+  {
+    "asset": "GROYAPEPE",
+    "series": 34,
+    "card": 34
+  },
+  {
+    "asset": "GUNSNPEPES",
+    "series": 34,
+    "card": 35
+  },
+  {
+    "asset": "HARAKIRIPEPE",
+    "series": 34,
+    "card": 36
+  },
+  {
+    "asset": "HUCKAPEPE",
+    "series": 34,
+    "card": 37
+  },
+  {
+    "asset": "JORDANPEPE",
+    "series": 34,
+    "card": 38
+  },
+  {
+    "asset": "KEKKETY",
+    "series": 34,
+    "card": 39
+  },
+  {
+    "asset": "PEPEDINHO",
+    "series": 34,
+    "card": 40
+  },
+  {
+    "asset": "UNDEADPEPE",
+    "series": 34,
+    "card": 41
+  },
+  {
+    "asset": "RAREZOMBIE",
+    "series": 34,
+    "card": 42
+  },
+  {
+    "asset": "LTCPEPE",
+    "series": 34,
+    "card": 43
+  },
+  {
+    "asset": "RAREPOTTER",
+    "series": 34,
+    "card": 44
+  },
+  {
+    "asset": "LILROCKETMAN",
+    "series": 34,
+    "card": 45
+  },
+  {
+    "asset": "JOLIELEGPEPE",
+    "series": 34,
+    "card": 46
+  },
+  {
+    "asset": "KUNAIKEK",
+    "series": 34,
+    "card": 47
+  },
+  {
+    "asset": "KYUDOPEPE",
+    "series": 34,
+    "card": 48
+  },
+  {
+    "asset": "MATRYOSHKAPP",
+    "series": 34,
+    "card": 49
+  },
+  {
+    "asset": "PEBBLEE",
+    "series": 34,
+    "card": 50
+  },
+  {
+    "asset": "NOBUSHIPEPE",
+    "series": 35,
+    "card": 1
+  },
+  {
+    "asset": "PEPEADDICTS",
+    "series": 35,
+    "card": 2
+  },
+  {
+    "asset": "PEPEDPOOL",
+    "series": 35,
+    "card": 3
+  },
+  {
+    "asset": "THEMASKRARE",
+    "series": 35,
+    "card": 4
+  },
+  {
+    "asset": "PEPELIBRIUM",
+    "series": 35,
+    "card": 5
+  },
+  {
+    "asset": "PEPENICTESLA",
+    "series": 35,
+    "card": 6
+  },
+  {
+    "asset": "PEPEFURIOUS",
+    "series": 35,
+    "card": 7
+  },
+  {
+    "asset": "SHAKAPEPE",
+    "series": 35,
+    "card": 8
+  },
+  {
+    "asset": "WORLDPEPEHD",
+    "series": 35,
+    "card": 9
+  },
+  {
+    "asset": "PEPEGROYA",
+    "series": 35,
+    "card": 10
+  },
+  {
+    "asset": "PEPERELOADED",
+    "series": 35,
+    "card": 11
+  },
+  {
+    "asset": "RAREPITUFINA",
+    "series": 35,
+    "card": 12
+  },
+  {
+    "asset": "PRISONERPEPE",
+    "series": 35,
+    "card": 13
+  },
+  {
+    "asset": "PEPEAVENGER",
+    "series": 35,
+    "card": 14
+  },
+  {
+    "asset": "PEPEACTION",
+    "series": 35,
+    "card": 15
+  },
+  {
+    "asset": "TWOWEEKSPEPE",
+    "series": 35,
+    "card": 16
+  },
+  {
+    "asset": "UBUNTUPEPE",
+    "series": 35,
+    "card": 17
+  },
+  {
+    "asset": "PEPENAUT",
+    "series": 35,
+    "card": 18
+  },
+  {
+    "asset": "BULBEGAR",
+    "series": 35,
+    "card": 19
+  },
+  {
+    "asset": "KRUEGERPEPE",
+    "series": 35,
+    "card": 20
+  },
+  {
+    "asset": "PEPALISA",
+    "series": 35,
+    "card": 21
+  },
+  {
+    "asset": "PEPCASSO",
+    "series": 35,
+    "card": 22
+  },
+  {
+    "asset": "PEPEFARMER",
+    "series": 35,
+    "card": 23
+  },
+  {
+    "asset": "PEPEMIRO",
+    "series": 35,
+    "card": 24
+  },
+  {
+    "asset": "PEPENDRIX",
+    "series": 35,
+    "card": 25
+  },
+  {
+    "asset": "RANGOPEPE",
+    "series": 35,
+    "card": 26
+  },
+  {
+    "asset": "THELAWNMOWER",
+    "series": 35,
+    "card": 27
+  },
+  {
+    "asset": "ZAZENPEPE",
+    "series": 35,
+    "card": 28
+  },
+  {
+    "asset": "PEPEPEEPS",
+    "series": 35,
+    "card": 29
+  },
+  {
+    "asset": "PYJAMASPEPE",
+    "series": 35,
+    "card": 30
+  },
+  {
+    "asset": "PEPEELITE",
+    "series": 35,
+    "card": 31
+  },
+  {
+    "asset": "PENNYPEPE",
+    "series": 35,
+    "card": 32
+  },
+  {
+    "asset": "PEBAY",
+    "series": 35,
+    "card": 33
+  },
+  {
+    "asset": "YODAPEP",
+    "series": 35,
+    "card": 34
+  },
+  {
+    "asset": "XIPEPE",
+    "series": 35,
+    "card": 35
+  },
+  {
+    "asset": "SPOCKPEPE",
+    "series": 35,
+    "card": 36
+  },
+  {
+    "asset": "SNOWMANPEPE",
+    "series": 35,
+    "card": 37
+  },
+  {
+    "asset": "SEDUSAPEP",
+    "series": 35,
+    "card": 38
+  },
+  {
+    "asset": "PICKLEPEPE",
+    "series": 35,
+    "card": 39
+  },
+  {
+    "asset": "PEPEREME",
+    "series": 35,
+    "card": 40
+  },
+  {
+    "asset": "PEPAGEISHA",
+    "series": 35,
+    "card": 41
+  },
+  {
+    "asset": "MUPEPETS",
+    "series": 35,
+    "card": 42
+  },
+  {
+    "asset": "PEPEPAIDCARD",
+    "series": 35,
+    "card": 43
+  },
+  {
+    "asset": "CAMPINGPEPE",
+    "series": 35,
+    "card": 44
+  },
+  {
+    "asset": "WITCHRARE",
+    "series": 35,
+    "card": 45
+  },
+  {
+    "asset": "GENPEPE",
+    "series": 35,
+    "card": 46
+  },
+  {
+    "asset": "MOONPEPESUN",
+    "series": 35,
+    "card": 47
+  },
+  {
+    "asset": "PEPBOT",
+    "series": 35,
+    "card": 48
+  },
+  {
+    "asset": "PECATRINA",
+    "series": 35,
+    "card": 49
+  },
+  {
+    "asset": "FASHIONPEP",
+    "series": 35,
+    "card": 50
+  },
+  {
+    "asset": "PEFUNGUS",
+    "series": 36,
+    "card": 1
+  },
+  {
+    "asset": "PEPEGIANT",
+    "series": 36,
+    "card": 2
+  },
+  {
+    "asset": "PEPEFANTASY",
+    "series": 36,
+    "card": 3
+  },
+  {
+    "asset": "DELUXEPEPEHD",
+    "series": 36,
+    "card": 4
+  },
+  {
+    "asset": "OMEGAPEPE",
+    "series": 36,
+    "card": 5
+  },
+  {
+    "asset": "PEPEBALLOON",
+    "series": 36,
+    "card": 6
+  },
+  {
+    "asset": "KATPEPA",
+    "series": 36,
+    "card": 7
+  },
+  {
+    "asset": "ONSENPEPE",
+    "series": 36,
+    "card": 8
+  },
+  {
+    "asset": "DAWNOTHEPEPE",
+    "series": 36,
+    "card": 9
+  },
+  {
+    "asset": "MCGROYPER",
+    "series": 36,
+    "card": 10
+  },
+  {
+    "asset": "KINGRINGPEPE",
+    "series": 36,
+    "card": 11
+  },
+  {
+    "asset": "HINAMATSURI",
+    "series": 36,
+    "card": 12
+  },
+  {
+    "asset": "SPACEXPEPE",
+    "series": 36,
+    "card": 13
+  },
+  {
+    "asset": "PEPEBUSHIDO",
+    "series": 36,
+    "card": 14
+  }
+]

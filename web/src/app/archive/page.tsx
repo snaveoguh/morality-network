@@ -3,7 +3,7 @@ import { getAllArchivedItemsWithHashes } from "@/lib/archive";
 import { BiasPill } from "@/components/feed/BiasBar";
 import { BRAND_NAME, withBrand } from "@/lib/brand";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // 5 min ISR
 export const maxDuration = 55;
 
 /** Race a promise against a timeout — returns fallback on timeout */

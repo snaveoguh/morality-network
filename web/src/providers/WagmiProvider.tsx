@@ -27,7 +27,10 @@ const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
 // With an invalid project ID the relay rejects → "Connection closed" → React crash.
 // When no valid WC project ID, use raw wagmi connectors (no WC relay at all).
 const hasValidWC =
-  projectId.length > 0 && projectId !== "demo" && projectId !== "placeholder";
+  projectId.length > 0 &&
+  projectId !== "demo" &&
+  projectId !== "placeholder" &&
+  !projectId.startsWith("replace");
 
 const chains = [base, baseSepolia, mainnet] as const;
 

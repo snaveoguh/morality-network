@@ -194,6 +194,7 @@ export async function* streamFromBankr(opts: StreamOptions): AsyncGenerator<stri
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${BANKR_API_KEY}`,
         "X-API-Key": BANKR_API_KEY,
       },
       body: JSON.stringify({

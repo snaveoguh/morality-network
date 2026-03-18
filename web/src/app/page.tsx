@@ -5,12 +5,7 @@ import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
 import { AsyncMasthead } from "@/components/layout/AsyncMasthead";
 import { AsyncFeed } from "@/components/feed/AsyncFeed";
 
-// Cache the rendered page for 24h via ISR — prevents re-generating the daily
-// editorial (which costs AI credits) on every single page refresh.
-// Vercel's serverless FS is ephemeral so the local editorial-archive.json
-// doesn't survive between invocations; ISR caching at the CDN layer is the
-// only thing keeping us from burning credits on every hit.
-export const revalidate = 86400; // 24 hours
+export const revalidate = 60; // 1 min ISR
 export const maxDuration = 30;
 
 // ============================================================================

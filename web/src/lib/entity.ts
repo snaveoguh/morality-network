@@ -54,6 +54,28 @@ export function formatEth(wei: bigint): string {
   return `${eth.toFixed(3)} ETH`;
 }
 
+/** Build an entity page URL with metadata query params for stumble context. */
+export function buildEntityUrl(
+  entityHash: `0x${string}`,
+  meta?: {
+    url?: string;
+    title?: string;
+    source?: string;
+    type?: string;
+    description?: string;
+  },
+): string {
+  if (!meta) return `/entity/${entityHash}`;
+  const params = new URLSearchParams();
+  if (meta.url) params.set("url", meta.url);
+  if (meta.title) params.set("title", meta.title);
+  if (meta.source) params.set("source", meta.source);
+  if (meta.type) params.set("type", meta.type);
+  if (meta.description) params.set("description", meta.description);
+  const qs = params.toString();
+  return qs ? `/entity/${entityHash}?${qs}` : `/entity/${entityHash}`;
+}
+
 /** Client-safe daily edition hash — mirrors server-side getDailyEditionHash(). */
 export function getDailyEditionHashClient(): `0x${string}` {
   const d = new Date();

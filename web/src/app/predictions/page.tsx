@@ -1,8 +1,12 @@
-import { fetchActivePredictionProposals } from "@/lib/governance";
+import {
+  fetchActivePredictionProposals,
+  fetchResolvedPredictionProposals,
+} from "@/lib/governance";
 import { MarketCard } from "@/components/predictions/MarketCard";
+import { OperatorPanel } from "@/components/predictions/OperatorPanel";
 import { withBrand } from "@/lib/brand";
 
-export const revalidate = 60;
+export const revalidate = 60; // 1 min ISR
 
 export const metadata = {
   title: withBrand("Nouns + Lil Nouns Predictions"),
@@ -12,8 +16,12 @@ export const metadata = {
 
 export default async function PredictionsPage() {
   let proposals: Awaited<ReturnType<typeof fetchActivePredictionProposals>> = [];
+  let resolved: Awaited<ReturnType<typeof fetchResolvedPredictionProposals>> = [];
   try {
-    proposals = await fetchActivePredictionProposals();
+    [proposals, resolved] = await Promise.all([
+      fetchActivePredictionProposals(),
+      fetchResolvedPredictionProposals(),
+    ]);
   } catch (error) {
     console.error("[Predictions] Failed to fetch proposals:", error);
   }
@@ -58,8 +66,8 @@ export default async function PredictionsPage() {
         </section>
       )}
 
-      {/* Empty state */}
-      {proposals.length === 0 && (
+      {/* Empty state — only when both active and resolved are empty */}
+      {proposals.length === 0 && resolved.length === 0 && (
         <div className="py-16 text-center">
           <p className="font-body-serif text-sm italic text-[var(--ink-faint)]">
             No active Nouns or Lil Nouns proposals at the moment. Check back
@@ -67,6 +75,37 @@ export default async function PredictionsPage() {
           </p>
         </div>
       )}
+
+      {/* Resolved Markets — claim winnings here */}
+      {resolved.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
+            Resolved Markets ({resolved.length})
+          </h2>
+          <p className="mb-3 font-body-serif text-[11px] text-[var(--ink-light)]">
+            These proposals have finished voting. If you placed a winning wager, claim your payout below.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {resolved.map((p) => (
+              <MarketCard
+                key={`${p.dao}-${p.id}`}
+                dao={p.dao}
+                proposalId={p.proposalNumber?.toString() ?? p.id}
+                title={p.title}
+                status={p.status}
+                url={p.link}
+                votesFor={p.votesFor}
+                votesAgainst={p.votesAgainst}
+                quorum={p.quorum}
+                votingClosed
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Operator Panel — fetches its own data client-side */}
+      <OperatorPanel />
 
       {/* How it works */}
       <section className="border-t-2 border-[var(--rule)] pt-6">

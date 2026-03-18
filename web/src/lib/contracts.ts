@@ -955,6 +955,33 @@ export const PROPOSAL_VOTING_ABI = [
 ] as const;
 
 // ============================================================================
+// EMBLEM VAULT — NFT vault for pepe listings (ERC-721 approval interface)
+// ============================================================================
+
+export const EMBLEM_VAULT_ABI = [
+  {
+    type: "function",
+    name: "isApprovedForAll",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "operator", type: "address" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "setApprovalForAll",
+    inputs: [
+      { name: "operator", type: "address" },
+      { name: "approved", type: "bool" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+] as const;
+
+// ============================================================================
 // AGENT VAULT — Shared capital pool for autonomous agent trading
 // ============================================================================
 
@@ -1082,6 +1109,37 @@ export const PREDICTION_MARKET_ABI = [
     inputs: [{ name: "dao", type: "string" }],
     outputs: [{ name: "", type: "bool" }],
     stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "createMarket",
+    inputs: [
+      { name: "dao", type: "string" },
+      { name: "proposalId", type: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "resolve",
+    inputs: [
+      { name: "dao", type: "string" },
+      { name: "proposalId", type: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "ownerResolve",
+    inputs: [
+      { name: "dao", type: "string" },
+      { name: "proposalId", type: "string" },
+      { name: "outcome", type: "uint8" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
     type: "function",

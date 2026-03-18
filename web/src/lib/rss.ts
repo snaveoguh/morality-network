@@ -293,6 +293,20 @@ export async function fetchFeed(source: FeedSource): Promise<FeedItem[]> {
 let feedCache: { items: FeedItem[]; ts: number } | null = null;
 const FEED_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
+/** Fetch an array of promises in batches to avoid overwhelming serverless connections. */
+async function batchSettled<T>(
+  tasks: (() => Promise<T>)[],
+  batchSize: number,
+): Promise<PromiseSettledResult<T>[]> {
+  const results: PromiseSettledResult<T>[] = [];
+  for (let i = 0; i < tasks.length; i += batchSize) {
+    const batch = tasks.slice(i, i + batchSize);
+    const batchResults = await Promise.allSettled(batch.map((fn) => fn()));
+    results.push(...batchResults);
+  }
+  return results;
+}
+
 export async function fetchAllFeeds(
   sources: FeedSource[] = DEFAULT_FEEDS
 ): Promise<FeedItem[]> {
@@ -302,9 +316,13 @@ export async function fetchAllFeeds(
     return feedCache.items;
   }
 
-  // Fetch RSS, Reddit, and 4chan in parallel
+  // Fetch RSS in batches of 15 to avoid overwhelming serverless connections,
+  // plus Reddit and 4chan scrapers in parallel
   const [rssResults, redditItems, chanItems] = await Promise.all([
-    Promise.allSettled(sources.map((source) => fetchFeed(source))),
+    batchSettled(
+      sources.map((source) => () => fetchFeed(source)),
+      15,
+    ),
     fetchRedditFeeds().catch((err) => {
       console.error("[Scrapers] Reddit fetch failed:", err);
       return [] as FeedItem[];

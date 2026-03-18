@@ -42,6 +42,7 @@ export interface Position {
   quoteSymbol: string;
   quoteTokenDecimals: number;
   dex: DexKind;
+  direction?: "long" | "short";
   marketSymbol?: string;
   marketId?: number;
   leverage?: number;
@@ -54,12 +55,21 @@ export interface Position {
   takeProfitPct: number;
   openedAt: number;
   txHash?: Hash;
-  positionDirection?: "long" | "short";
   status: "open" | "closed";
   closedAt?: number;
-  exitReason?: "stop-loss" | "take-profit" | "manual";
+  exitReason?: "stop-loss" | "take-profit" | "trailing-stop" | "signal-reversal" | "expired" | "manual";
   exitPriceUsd?: number;
   exitTxHash?: Hash;
+  trailingStopPct?: number;
+  highWaterMark?: number;
+  lowWaterMark?: number;
+  signalSource?: string;
+  signalConfidence?: number;
+  kellyFraction?: number;
+  /** Moral score at time of entry (0-100). SOUL.md requires >70 for long, <30 for short. */
+  moralScore?: number;
+  /** Human-readable moral justification for the trade. SOUL.md §Trading Constraints. */
+  moralJustification?: string;
 }
 
 export interface TraderRiskConfig {
@@ -71,6 +81,13 @@ export interface TraderRiskConfig {
   stopLossPct: number;
   takeProfitPct: number;
   slippageBps: number;
+  maxLeverage: number;
+  minSignalConfidence: number;
+  trailingStopPct: number;
+  trailingStopActivationPct: number;
+  circuitBreakerLosses: number;
+  circuitBreakerPauseMs: number;
+  maxHoldMs?: number;
 }
 
 export interface TraderSafetyConfig {
@@ -86,6 +103,49 @@ export interface HyperliquidConfig {
   defaultLeverage: number;
   entryNotionalUsd: number;
   minAccountValueUsd: number;
+  /** markets to scan each cycle (e.g., ["BTC","ETH","SOL"]) */
+  watchMarkets: string[];
+}
+
+export interface SignalWeights {
+  technical: number;
+  pattern: number;
+  news: number;
+}
+
+export interface TradeJournalEntry {
+  id: string;
+  symbol: string;
+  direction: "long" | "short";
+  entryTimestamp: number;
+  exitTimestamp?: number;
+  entryPrice: number;
+  exitPrice?: number;
+  leverage: number;
+  notionalUsd: number;
+  pnlUsd?: number;
+  pnlPct?: number;
+  holdDurationMs?: number;
+  signalSource: string;
+  compositeConfidence: number;
+  kellyFraction: number;
+  exitReason?: string;
+}
+
+export interface ScalperConfig {
+  enabled: boolean;
+  markets: string[];
+  candleThresholdPct: number;
+  volumeSpikeMultiplier: number;
+  stopLossPct: number;
+  takeProfitPct: number;
+  maxPositionUsd: number;
+  defaultLeverage: number;
+  cooldownMs: number;
+  maxHoldMs: number;
+  maxOpenScalps: number;
+  vwapDeviationPct: number;
+  dryRun: boolean;
 }
 
 export interface TraderExecutionConfig {
@@ -161,12 +221,16 @@ export interface TraderOpenPositionMetric {
   marketValueUsd: number | null;
   unrealizedPnlUsd: number | null;
   unrealizedPnlPct: number | null;
+  /** Estimated round-trip exchange fees (entry already paid + estimated exit) */
+  estimatedFeesUsd: number;
 }
 
 export interface TraderClosedPositionMetric {
   position: Position;
   realizedPnlUsd: number | null;
   realizedPnlPct: number | null;
+  /** Estimated round-trip exchange fees (entry + exit) */
+  estimatedFeesUsd: number;
 }
 
 export interface TraderPerformanceTotals {
@@ -177,6 +241,8 @@ export interface TraderPerformanceTotals {
   unrealizedPnlUsd: number;
   realizedPnlUsd: number;
   grossPnlUsd: number;
+  /** Estimated total exchange trading fees across all positions */
+  estimatedTradingFeesUsd: number;
   performanceFeeUsd: number;
   netPnlAfterFeeUsd: number;
 }
@@ -192,4 +258,38 @@ export interface TraderPerformanceReport {
   totals: TraderPerformanceTotals;
   open: TraderOpenPositionMetric[];
   closed: TraderClosedPositionMetric[];
+}
+
+/* ═══════════════════════  Scalper Types  ═══════════════════════ */
+
+export interface ScalpSignal {
+  symbol: string;
+  timestamp: number;
+  direction: "long" | "short";
+  trigger: "big-candle" | "volume-spike" | "vwap-deviation" | "multi-confluence";
+  confidence: number;
+  triggerCandle: { open: number; high: number; low: number; close: number; volume: number; bodyPct: number };
+  indicators: { rsi14: number; ema9: number; ema21: number; bollingerPercentB: number; vwap: number; volumeRatio: number; priceVsVwap: number };
+  reasons: string[];
+}
+
+export interface ScalpPosition {
+  id: string;
+  symbol: string;
+  marketId: number | null;
+  direction: "long" | "short";
+  entryPriceUsd: number;
+  sizeRaw: string;
+  notionalUsd: number;
+  leverage: number;
+  stopLossPriceUsd: number;
+  takeProfitPriceUsd: number;
+  openedAt: number;
+  expiresAt: number;
+  signal: ScalpSignal;
+  status: "open" | "closed";
+  closedAt?: number;
+  exitPriceUsd?: number;
+  exitReason?: "stop-loss" | "take-profit" | "timeout" | "manual";
+  pnlUsd?: number;
 }

@@ -2,7 +2,7 @@
 
 import { useAccount } from "wagmi";
 import { TipButton } from "@/components/entity/TipButton";
-import { computeEntityHash } from "@/lib/entity";
+import { computeEntityHash, buildEntityUrl } from "@/lib/entity";
 import type { StumbleItem } from "@/lib/stumble";
 import Link from "next/link";
 
@@ -161,7 +161,7 @@ export function StumbleCard({ item }: StumbleCardProps) {
 
               {/* Discuss on MO */}
               <Link
-                href={`/entity/${entityHash}`}
+                href={buildEntityUrl(entityHash, { url: item.url, title: item.title, source: item.source, type: item.type })}
                 className="font-comic rounded-lg border border-[#2F80ED]/30 bg-[#2F80ED]/10 px-4 py-2 text-sm text-[#2F80ED] transition-colors hover:bg-[#2F80ED]/20"
               >
                 Discuss on MO

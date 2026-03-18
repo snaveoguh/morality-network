@@ -2,7 +2,7 @@ import { fetchAllProposals, fetchSingleProposal } from "@/lib/governance";
 import { ProposalDetail } from "@/components/proposals/ProposalDetail";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // 1 min ISR
 export const maxDuration = 55;
 
 /** Race a promise against a timeout — returns fallback on timeout */

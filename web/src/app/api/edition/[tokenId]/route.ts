@@ -77,11 +77,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
   }
 
+  // Use DALL-E illustration as primary image if available, newspaper SVG as fallback
+  const hasIllustration = editorial?.hasIllustration || !!editorial?.illustrationBase64;
+  const image = hasIllustration
+    ? `${baseUrl}/api/edition/${tokenId}/illustration`
+    : `${baseUrl}/api/edition/${tokenId}/image`;
+
   const metadata = {
     name,
     description,
     external_url: `${baseUrl}/article/${hash}`,
-    image: `${baseUrl}/api/edition/${tokenId}/image`,
+    image,
+    // Keep the SVG newspaper as animation_url so OpenSea shows both
+    ...(hasIllustration ? { animation_url: `${baseUrl}/api/edition/${tokenId}/image` } : {}),
     attributes,
   };
 

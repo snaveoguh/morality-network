@@ -174,7 +174,7 @@ export async function publishPersistedAgentEvents(
   }
 
   const response = await fetch(new URL("/api/v1/agents/events", `${baseUrl}/`).toString(), {
-    method: "POST",
+    method: "PUT", // Ponder 0.7.x maps ponder.post() to hono.put()
     headers,
     body: JSON.stringify({ source, messages }),
     cache: "no-store",

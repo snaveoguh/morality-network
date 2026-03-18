@@ -21,8 +21,22 @@ type ContradictionPayload = {
   count?: number;
 };
 
-const SCORE_REQUEST_COOLDOWN_MS = 3 * 60 * 1000;
-const TRADE_SIGNAL_COOLDOWN_MS = 2 * 60 * 1000;
+type PositionClosedPayload = {
+  isLoss?: boolean;
+};
+
+type TraderCyclePayload = {
+  circuitBreakerActive?: boolean;
+};
+
+// Base cooldowns — dynamically scaled by cooldownMultiplier when trader is struggling
+const BASE_SCORE_REQUEST_COOLDOWN_MS = 3 * 60 * 1000;
+const BASE_TRADE_SIGNAL_COOLDOWN_MS = 2 * 60 * 1000;
+
+// Throttle multipliers
+const NORMAL_MULTIPLIER = 1.0;
+const ELEVATED_MULTIPLIER = 1.5; // High loss rate (≥3 losses since last reset)
+const STRESSED_MULTIPLIER = 3.0; // Circuit breaker active
 
 class BusCoordinatorAgent implements Agent {
   readonly id = "bus-coordinator";
@@ -43,9 +57,17 @@ class BusCoordinatorAgent implements Agent {
   private scoreRequestsSent = 0;
   private scoreResultsSeen = 0;
   private tradeCandidatesPublished = 0;
+  private tradeCandidatesSuppressed = 0;
   private emergingEventsSeen = 0;
   private contradictionsSeen = 0;
   private spawnedAgents = 0;
+
+  // Trader feedback state
+  private traderCircuitBreakerActive = false;
+  private traderLossCount = 0;
+  private traderCyclesSeen = 0;
+  private tradePaused = false;
+  private cooldownMultiplier = NORMAL_MULTIPLIER;
 
   status(): AgentStatus {
     return this._status;
@@ -66,6 +88,11 @@ class BusCoordinatorAgent implements Agent {
       messageBus.subscribe("score-result", (message) => this.onScoreResult(message)),
       messageBus.subscribe("emerging-event", (message) => this.onEmergingEvent(message)),
       messageBus.subscribe("contradictions-detected", (message) => this.onContradictions(message)),
+      // Trader feedback loop
+      messageBus.subscribe("trade-executed", (message) => this.onTradeExecuted(message)),
+      messageBus.subscribe("position-closed", (message) => this.onPositionClosed(message)),
+      messageBus.subscribe("circuit-breaker-tripped", (message) => this.onCircuitBreakerTripped(message)),
+      messageBus.subscribe("trader-cycle-complete", (message) => this.onTraderCycleComplete(message)),
       messageBus.subscribeDirect(this.id, (message) => this.onDirectMessage(message))
     );
 
@@ -98,11 +125,18 @@ class BusCoordinatorAgent implements Agent {
         scoreRequestsSent: this.scoreRequestsSent,
         scoreResultsSeen: this.scoreResultsSeen,
         tradeCandidatesPublished: this.tradeCandidatesPublished,
+        tradeCandidatesSuppressed: this.tradeCandidatesSuppressed,
         emergingEventsSeen: this.emergingEventsSeen,
         contradictionsSeen: this.contradictionsSeen,
         spawnedAgents: this.spawnedAgents,
         trackedScoreRequests: this.scoreRequestedAt.size,
         trackedTradeSignals: this.tradeSignaledAt.size,
+        // Trader feedback
+        traderCircuitBreakerActive: this.traderCircuitBreakerActive ? 1 : 0,
+        traderLossCount: this.traderLossCount,
+        tradePaused: this.tradePaused ? 1 : 0,
+        cooldownMultiplier: Math.round(this.cooldownMultiplier * 100) / 100,
+        traderCyclesSeen: this.traderCyclesSeen,
         uptimeSeconds: this.startedAt ? Math.floor((now - this.startedAt) / 1000) : 0,
       },
       errors: this.errors.slice(-10),
@@ -181,7 +215,7 @@ class BusCoordinatorAgent implements Agent {
   private async requestScore(tokenAddress: string, reason: string): Promise<void> {
     const now = Date.now();
     const last = this.scoreRequestedAt.get(tokenAddress) || 0;
-    if (now - last < SCORE_REQUEST_COOLDOWN_MS) return;
+    if (now - last < BASE_SCORE_REQUEST_COOLDOWN_MS * this.cooldownMultiplier) return;
 
     this.scoreRequestedAt.set(tokenAddress, now);
     this.scoreRequestsSent += 1;
@@ -202,9 +236,15 @@ class BusCoordinatorAgent implements Agent {
     source: string,
     breakdown: unknown
   ): Promise<void> {
+    // Suppress trade candidates entirely when trader circuit breaker is active
+    if (this.tradePaused) {
+      this.tradeCandidatesSuppressed += 1;
+      return;
+    }
+
     const now = Date.now();
     const last = this.tradeSignaledAt.get(tokenAddress) || 0;
-    if (now - last < TRADE_SIGNAL_COOLDOWN_MS) return;
+    if (now - last < BASE_TRADE_SIGNAL_COOLDOWN_MS * this.cooldownMultiplier) return;
 
     this.tradeSignaledAt.set(tokenAddress, now);
     this.tradeCandidatesPublished += 1;
@@ -223,6 +263,59 @@ class BusCoordinatorAgent implements Agent {
       timestamp: now,
     });
   }
+
+  // ─── Trader Feedback Handlers ─────────────────────────────────────────
+
+  private onTradeExecuted(_message: AgentMessage): void {
+    this.bumpActivity();
+    // Informational — tracked via bus persistence
+  }
+
+  private onPositionClosed(message: AgentMessage): void {
+    this.bumpActivity();
+    const payload = (message.payload || {}) as PositionClosedPayload;
+    if (payload.isLoss) {
+      this.traderLossCount += 1;
+      this.recalculateCooldownMultiplier();
+    }
+  }
+
+  private onCircuitBreakerTripped(_message: AgentMessage): void {
+    this.bumpActivity();
+    this.traderCircuitBreakerActive = true;
+    this.tradePaused = true;
+    this.recalculateCooldownMultiplier();
+    console.log("[Coordinator] Trader circuit breaker tripped — pausing trade-candidate emission");
+  }
+
+  private onTraderCycleComplete(message: AgentMessage): void {
+    this.bumpActivity();
+    this.traderCyclesSeen += 1;
+    const payload = (message.payload || {}) as TraderCyclePayload;
+
+    // Detect recovery: circuit breaker was active but trader reports it's now clear
+    if (this.traderCircuitBreakerActive && payload.circuitBreakerActive === false) {
+      this.traderCircuitBreakerActive = false;
+      this.tradePaused = false;
+      this.traderLossCount = 0;
+      this.recalculateCooldownMultiplier();
+      console.log("[Coordinator] Trader recovered from circuit breaker — resuming normal cooldowns");
+    }
+  }
+
+  private recalculateCooldownMultiplier(): void {
+    if (this.traderCircuitBreakerActive) {
+      this.cooldownMultiplier = STRESSED_MULTIPLIER;
+      return;
+    }
+    if (this.traderLossCount >= 3) {
+      this.cooldownMultiplier = ELEVATED_MULTIPLIER;
+      return;
+    }
+    this.cooldownMultiplier = NORMAL_MULTIPLIER;
+  }
+
+  // ─── Watcher Spawning ──────────────────────────────────────────────────
 
   private async spawnWatcher(topic: string, burstSize: number): Promise<void> {
     if (this.spawnedWatcherTopics.has(`watch-${topic}`)) return;

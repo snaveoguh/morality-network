@@ -1,6 +1,5 @@
-import { cache } from "react";
 import { fetchAllFeeds, type FeedItem } from "@/lib/rss";
-import { computeEntityHash } from "@/lib/entity";
+import { computeEntityHash, buildEntityUrl } from "@/lib/entity";
 import {
   findRelatedArticles,
   generateEditorial,
@@ -12,8 +11,10 @@ import { ArticleTemplate } from "@/components/article/ArticleTemplate";
 import { CommentThread } from "@/components/entity/CommentThread";
 import {
   getArchivedFeedItemByHash,
+  getAllArchivedFeedItems,
   getAllArchivedItemsWithHashes,
   autoArchiveItem,
+  autoArchiveBatch,
   archiveUrlAsFeedItem,
 } from "@/lib/archive";
 import {
@@ -28,9 +29,7 @@ import { BRAND_NAME, withBrand } from "@/lib/brand";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-// Article pages are keyed by permanent hash — content never changes.
-// Cache forever (revalidate = false means fully static / no expiry).
-export const revalidate = false;
+export const revalidate = 3600; // 1 hour ISR
 export const maxDuration = 55;
 
 /** Race a promise against a timeout — returns fallback on timeout */
@@ -40,30 +39,6 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
     new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
   ]);
 }
-
-/**
- * Memoized article lookup — shared between generateMetadata and ArticlePage
- * so both always resolve the same item for a given hash within a single request.
- * Archive-first: the archive is the source of truth for persisted stories.
- */
-const lookupArticle = cache(async (hash: string): Promise<FeedItem | null> => {
-  // 1. Archive is the source of truth — check first (fast, stable)
-  const archived = await getArchivedFeedItemByHash(hash as `0x${string}`);
-  if (archived) return archived;
-
-  // 2. Fall back to live RSS feeds
-  const allItems = await withTimeout(fetchAllFeeds(), 15000, []);
-  const live = allItems.find(
-    (item) => computeEntityHash(item.link) === hash,
-  );
-  if (live) {
-    autoArchiveItem(live).catch(() => {});
-    return live;
-  }
-
-  // 3. Try onchain registry recovery
-  return recoverPrimaryFromRegistry(hash as `0x${string}`);
-});
 
 interface ArticlePageProps {
   params: Promise<{ hash: string }>;
@@ -75,7 +50,40 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  const primary = await lookupArticle(hash);
+  const allItems = await withTimeout(fetchAllFeeds(), 15000, []);
+
+  // Archive ALL feed items — blocking so they persist before ISR caches the response.
+  // Without this, when the indexer is down, Vercel's read-only FS means nothing persists
+  // and subsequent visits show "Awaiting content" even for articles we just rendered.
+  if (allItems.length > 0) {
+    await withTimeout(
+      autoArchiveBatch(allItems).catch((err) => {
+        console.warn("[article] feed archive batch failed:", err);
+      }),
+      10000,
+      undefined,
+    );
+  }
+
+  // Find the article matching this hash
+  const livePrimary = allItems.find(
+    (item) => computeEntityHash(item.link) === hash
+  );
+  const archivedPrimary = livePrimary
+    ? null
+    : await getArchivedFeedItemByHash(hash as `0x${string}`);
+  const recoveredPrimary =
+    livePrimary || archivedPrimary
+      ? null
+      : await recoverPrimaryFromRegistry(hash as `0x${string}`);
+  const primary = livePrimary ?? archivedPrimary ?? recoveredPrimary;
+
+  // Ensure the specific primary is archived (may have been recovered from registry)
+  if (primary && !livePrimary) {
+    await autoArchiveItem(primary).catch((err) => {
+      console.warn("[article] primary archive failed:", err);
+    });
+  }
 
   if (!primary) {
     // Check if we have a previously generated editorial in the deep archive
@@ -86,13 +94,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         cachedEditorial,
       );
       if (hydratedEditorial !== cachedEditorial) {
-        saveEditorial(
-          hash,
-          hydratedEditorial,
-          cachedEditorial.generatedBy,
-        ).catch((err) => {
-          console.warn("[article] cached editorial refresh failed:", err);
-        });
+        await withTimeout(
+          saveEditorial(hash, hydratedEditorial, cachedEditorial.generatedBy).catch((err) => {
+            console.warn("[article] cached editorial refresh failed:", err);
+          }),
+          10000,
+          undefined,
+        );
       }
 
       // We have the full editorial — render it even without a live/archived feed item
@@ -133,55 +141,86 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
     return (
       <section className="mx-auto max-w-4xl py-10">
-        <div className="border-b border-[var(--rule)] pb-4">
+        <div className="border-b-2 border-[var(--rule)] pb-6">
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[var(--ink-faint)]">
-            Not Yet Archived
+            Permanent Record
           </p>
           <h1 className="mt-1 font-headline text-3xl leading-tight text-[var(--ink)] md:text-4xl">
-            Article not yet archived
+            Awaiting content
           </h1>
           <p className="mt-3 max-w-3xl font-body-serif text-base leading-relaxed text-[var(--ink-light)]">
-            This hash has not been matched to a known article in our archive.
-            Ratings and comments can still be submitted &mdash; they will persist onchain.
+            This hash is a permanent address on {BRAND_NAME}. Content has not yet been
+            matched to it &mdash; but once it is, it stays forever. Ratings, comments,
+            and claims submitted here persist onchain regardless.
           </p>
-          <p className="mt-2 max-w-3xl font-body-serif text-sm leading-relaxed text-[var(--ink-faint)]">
-            Automatic recovery is attempted from onchain entity identifiers.
-            This hash currently has no recoverable source URL in the registry/archive.
+
+          {/* Hash — always visible, always selectable */}
+          <div className="mt-4 border border-[var(--rule-light)] bg-[var(--paper-dark,var(--paper))] px-3 py-2">
+            <p className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+              Entity Hash
+            </p>
+            <p className="mt-0.5 break-all select-all font-mono text-xs text-[var(--ink)]">
+              {hash}
+            </p>
+          </div>
+
+          <p className="mt-3 max-w-3xl font-body-serif text-sm leading-relaxed text-[var(--ink-faint)]">
+            Content accumulates over time &mdash; as our AI processes sources, generates
+            editorials, and users contribute context, this page will fill in. Every
+            article, entity, and claim on {BRAND_NAME} builds a permanent, evolving record.
           </p>
+
           <div className="mt-4 flex flex-wrap gap-4">
             <Link
-              href={`/entity/${hash}`}
+              href={buildEntityUrl(hash as `0x${string}`)}
               className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink)] underline underline-offset-4 decoration-[var(--rule)] transition-colors hover:text-[var(--accent-red)]"
             >
-              Open Entity Ledger
+              Entity Ledger &rsaquo;
             </Link>
             <Link
               href="/"
               className="font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
             >
-              &larr; Return to Front Page
+              &larr; Front Page
             </Link>
           </div>
         </div>
 
-        <div className="mt-8 border border-[var(--rule-light)] p-4">
+        {/* Discussion — the hash is permanent, so comments always work */}
+        <div className="mt-6">
           <CommentThread entityHash={hash as `0x${string}`} />
         </div>
       </section>
     );
   }
 
-  // Find related articles from the archive pool (stable, no live RSS dependency)
+  // Expand search pool with archived items for better context matching
+  const archivedItems = await withTimeout(getAllArchivedFeedItems(), 5000, []);
+
+  // Merge live + archive, dedup by link to avoid double-counting
+  const seenLinks = new Set(allItems.map((i) => i.link));
+  const combinedPool = [...allItems];
+  for (const archived of archivedItems) {
+    if (archived.link && !seenLinks.has(archived.link)) {
+      combinedPool.push(archived);
+      seenLinks.add(archived.link);
+    }
+  }
+
+  // Find related articles from the expanded pool
+  const related = findRelatedArticles(primary, combinedPool, 5);
+
+  // Find archived items related to this story (with hashes for linking)
   const archivedWithHashes = await withTimeout(getAllArchivedItemsWithHashes(), 5000, []);
-  const related = findRelatedArticles(primary, archivedWithHashes, 5);
   const archivedRelated = findRelatedArticles(
     primary,
     archivedWithHashes,
     8,
   ).map((item) => {
+    // Re-attach the hash from the original archived set
     const match = archivedWithHashes.find((a) => a.link === item.link);
     return { ...item, hash: match?.hash ?? "" };
-  }).filter((item) => item.hash);
+  }).filter((item) => item.hash); // only items with valid hashes
 
   // Generate editorial content — 30s timeout, falls back to raw feed data
   let article;
@@ -220,7 +259,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             >
               Read Original Source &rsaquo;
             </a>
-            <Link href={`/entity/${hash}`} className="hover:text-[var(--ink)]">
+            <Link href={buildEntityUrl(hash as `0x${string}`, { url: primary.link, title: primary.title, source: primary.source, type: "link" })} className="hover:text-[var(--ink)]">
               Entity Ledger &rsaquo;
             </Link>
           </div>
@@ -230,15 +269,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     );
   }
 
-  // Persist editorial to deep archive (fire-and-forget)
+  // Persist editorial BEFORE response — blocking ensures the editorial is saved to the
+  // remote indexer (or local file) before ISR caches this page. Using after() caused
+  // silent data loss: if the indexer was down, after() would fail, Vercel's read-only FS
+  // would also fail, and the editorial was lost forever.
   const generatedBy = (article as { generatedBy?: string }).generatedBy;
-  saveEditorial(
-    hash,
-    article,
-    (generatedBy === "claude-ai" ? "claude-ai" : "template-fallback"),
-  ).catch((err) => {
-    console.warn("[article] editorial save failed:", err);
-  });
+  await withTimeout(
+    saveEditorial(hash, article, generatedBy === "claude-ai" ? "claude-ai" : "template-fallback").catch((err) => {
+      console.warn("[article] editorial save failed:", err);
+    }),
+    10000,
+    undefined,
+  );
 
   // Compute metadata
   const dateline = formatDateline(primary.pubDate);
@@ -326,7 +368,13 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     return { title: "Article Not Found" };
   }
 
-  const item = await lookupArticle(hash);
+  // Skip heavy fetchAllFeeds() — check archive + editorial only (instant)
+  const archivedItem = await withTimeout(
+    getArchivedFeedItemByHash(hash as `0x${string}`),
+    5000,
+    null,
+  );
+  const item = archivedItem;
 
   if (!item) {
     // Check editorial archive as last resort for OG tags
@@ -354,22 +402,22 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     }
 
     return {
-      title: withBrand("Article Not Yet Archived"),
+      title: withBrand("Permanent Record — Awaiting Content"),
       description:
-        "This article hash has not been matched to a known source. Ratings and comments can still be submitted onchain.",
+        "This hash is a permanent address. Content accumulates over time as AI processes sources and users contribute context.",
       openGraph: {
-        title: withBrand("Article Not Yet Archived"),
+        title: withBrand("Permanent Record — Awaiting Content"),
         description:
-          "This article hash has not been matched to a known source.",
+          "A permanent onchain record awaiting content. Ratings and comments persist regardless.",
         type: "article" as const,
         siteName: BRAND_NAME,
         locale: "en_US",
       },
       twitter: {
         card: "summary_large_image" as const,
-        title: withBrand("Article Not Yet Archived"),
+        title: withBrand("Permanent Record — Awaiting Content"),
         description:
-          "This article hash has not been matched to a known source.",
+          "A permanent onchain record awaiting content.",
       },
     };
   }

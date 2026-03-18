@@ -236,7 +236,7 @@ class MessageBus {
       }
 
       const res = await fetch(relayUrl, {
-        method: "POST",
+        method: "PUT", // Ponder 0.7.x maps ponder.post() to hono.put()
         headers,
         body: JSON.stringify(message),
         signal: AbortSignal.timeout(5_000),

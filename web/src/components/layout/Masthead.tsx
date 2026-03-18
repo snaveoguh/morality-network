@@ -94,7 +94,7 @@ export function Masthead({
               href={`/article/${dailyHash}`}
               className="group block"
             >
-              <h1 className="font-headline text-2xl font-bold leading-[1.15] text-[var(--ink)] transition-colors group-hover:text-[var(--accent-red)] sm:text-3xl lg:text-4xl">
+              <h1 className="font-headline text-4xl font-bold leading-[1.15] text-[var(--ink)] transition-colors group-hover:text-[var(--accent-red)] sm:text-5xl lg:text-6xl">
                 {dailyHeadline}
               </h1>
             </Link>
@@ -108,7 +108,7 @@ export function Masthead({
         ) : (
           <>
             {/* Fallback when no daily edition */}
-            <h1 className="font-headline text-3xl font-bold leading-none text-[var(--ink)] sm:text-4xl lg:text-5xl">
+            <h1 className="font-headline text-4xl font-bold leading-none text-[var(--ink)] sm:text-5xl lg:text-6xl">
               {BRAND_NAME}
             </h1>
             <p className="mt-2 font-body-serif text-xs italic text-[var(--ink-light)] sm:text-sm">

@@ -17,6 +17,9 @@ import { PositionStore } from "./position-store";
 import { fetchScannerCandidates } from "./scanner-client";
 import { getAggregatedMarketSignals, type AggregatedMarketSignal } from "./signals";
 import { estimateAmountOutMin, executeSwap, readTokenDecimals, waitForSuccess } from "./swap";
+import { checkMoralGate, checkCircuitBreaker, logMoralGateDecision } from "./moral-gate";
+import { computeKelly, consecutiveLosses } from "./kelly";
+import { positionsToJournal } from "./trade-journal";
 import type {
   Position,
   ScannerLaunch,
@@ -29,6 +32,11 @@ import type {
 } from "./types";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
+
+// Hyperliquid taker fee: 0.035% per side → 0.07% round-trip (entry + exit)
+// Applied as estimated exchange cost on notional position value
+const HL_TAKER_FEE_PER_SIDE = 0.00035;
+const HL_ROUND_TRIP_FEE_RATE = HL_TAKER_FEE_PER_SIDE * 2; // 0.0007
 
 function computeHyperliquidMinOrderNotionalUsd(priceUsd: number, szDecimals: number): number {
   if (!Number.isFinite(priceUsd) || priceUsd <= 0) return Number.POSITIVE_INFINITY;
@@ -63,6 +71,8 @@ class TraderEngine {
   private readonly store: PositionStore;
   private readonly clients: ReturnType<typeof createTraderClients>;
   private readonly initPromise: Promise<void>;
+  /** Circuit breaker pause timestamp — null = not paused */
+  private circuitBreakerPauseUntil: number | null = null;
 
   constructor(config: TraderExecutionConfig) {
     this.config = config;
@@ -96,6 +106,32 @@ class TraderEngine {
       return report;
     }
 
+    // SOUL.md §Trading: Circuit breaker — 3 consecutive losses = pause
+    const journal = positionsToJournal(this.store.getAll());
+    const lossStreak = consecutiveLosses(journal);
+    const cbCheck = checkCircuitBreaker(
+      lossStreak,
+      this.config.risk.circuitBreakerLosses,
+      this.circuitBreakerPauseUntil,
+    );
+    if (cbCheck.blocked) {
+      // Set pause timer if not already set
+      if (this.circuitBreakerPauseUntil === null || Date.now() >= this.circuitBreakerPauseUntil) {
+        this.circuitBreakerPauseUntil = Date.now() + this.config.risk.circuitBreakerPauseMs;
+      }
+      console.log(`[trader] ${cbCheck.reason}`);
+      report.errors.push(`circuit-breaker:${cbCheck.reason}`);
+      // Still evaluate exits (close losing positions) but don't open new ones
+      await this.evaluateOpenPositions(report);
+      report.finishedAt = Date.now();
+      return report;
+    }
+    // Clear pause if we're past it and no longer in loss streak
+    if (this.circuitBreakerPauseUntil !== null && Date.now() >= this.circuitBreakerPauseUntil) {
+      console.log(`[trader] circuit breaker pause expired, resuming trading`);
+      this.circuitBreakerPauseUntil = null;
+    }
+
     await this.evaluateOpenPositions(report);
 
     let marketSignals: AggregatedMarketSignal[] = [];
@@ -113,12 +149,26 @@ class TraderEngine {
     }
 
     let candidates: ScannerLaunch[] = [];
-    try {
-      candidates = await fetchScannerCandidates(this.config);
-    } catch (error) {
-      report.errors.push(error instanceof Error ? error.message : "scanner fetch failed");
-      report.finishedAt = Date.now();
-      return report;
+    if (isSpotVenue(this.config.executionVenue)) {
+      try {
+        candidates = await fetchScannerCandidates(this.config);
+      } catch (error) {
+        report.errors.push(error instanceof Error ? error.message : "scanner fetch failed");
+        report.finishedAt = Date.now();
+        return report;
+      }
+    } else if (this.config.executionVenue === "hyperliquid-perp") {
+      // HL perp doesn't need scanner candidates — use a synthetic placeholder
+      // so the loop below calls tryOpenPosition which routes to signal-based HL entry.
+      try {
+        candidates = await fetchScannerCandidates(this.config);
+      } catch {
+        // Scanner failure is non-fatal for HL perp — signals drive entries
+      }
+      // Ensure at least one dummy candidate so the entry loop runs for signal routing
+      if (candidates.length === 0 && marketSignals.length > 0) {
+        candidates = [{ tokenAddress: "0x0000000000000000000000000000000000000000", dex: "uniswap-v3", score: 0 } as unknown as ScannerLaunch];
+      }
     }
 
     report.scannerCandidates = candidates.length;
@@ -126,7 +176,7 @@ class TraderEngine {
 
     for (const candidate of candidates) {
       if (entries >= this.config.risk.maxNewEntriesPerCycle) break;
-      if (this.store.getByToken(candidate.tokenAddress)) {
+      if (candidate.tokenAddress !== "0x0000000000000000000000000000000000000000" && this.store.getByToken(candidate.tokenAddress)) {
         report.skipped.push(`already-open:${candidate.tokenAddress}`);
         continue;
       }
@@ -165,14 +215,31 @@ class TraderEngine {
     const quoteTokenAddress = this.config.quoteTokens.USDC ?? ZERO_ADDRESS;
     const quoteTokenDecimals = this.config.quoteTokenDecimals.USDC ?? 6;
 
-    return livePositions.map((live) => {
+    const liveIds = new Set<string>();
+    const positions: Position[] = [];
+
+    for (const live of livePositions) {
+      const id = `hl:${live.symbol}:${live.marketId ?? "unknown"}`;
+      liveIds.add(id);
+
       const quantityRaw = decimalStringToRaw(live.size, live.szDecimals);
       const sizeNumeric = Number(live.size);
       const entryNotionalUsd = Number.isFinite(sizeNumeric) ? sizeNumeric * live.entryPriceUsd : live.positionValueUsd;
       const quoteSpentRaw = Math.max(1, Math.floor(entryNotionalUsd * 10 ** quoteTokenDecimals)).toString();
 
-      return {
-        id: `hl:${live.symbol}:${live.marketId ?? "unknown"}`,
+      // Merge with existing store data to preserve openedAt, signalSource, etc.
+      const existing = this.store.getAll().find((p) => p.id === id && p.status === "open");
+
+      // If a CLOSED position exists with this deterministic ID, archive it with a
+      // unique suffix so the upsert below doesn't overwrite historical records.
+      const closedAtId = this.store.getAll().find((p) => p.id === id && p.status === "closed");
+      if (closedAtId) {
+        const archiveId = `${id}:closed:${closedAtId.closedAt ?? Date.now()}`;
+        await this.store.upsert({ ...closedAtId, id: archiveId });
+      }
+
+      const position: Position = {
+        id,
         venue: "hyperliquid-perp",
         tokenAddress: quoteTokenAddress,
         tokenDecimals: live.szDecimals,
@@ -190,11 +257,57 @@ class TraderEngine {
         entryNotionalUsd,
         stopLossPct: this.config.risk.stopLossPct,
         takeProfitPct: this.config.risk.takeProfitPct,
-        openedAt: Date.now(),
-        txHash: undefined,
+        openedAt: existing?.openedAt ?? Date.now(),
+        txHash: existing?.txHash,
         status: "open",
+        direction: live.isShort ? "short" : "long",
+        trailingStopPct: this.config.risk.trailingStopPct,
+        signalSource: existing?.signalSource,
+        signalConfidence: existing?.signalConfidence,
+        kellyFraction: existing?.kellyFraction,
+        highWaterMark: existing?.highWaterMark,
+        lowWaterMark: existing?.lowWaterMark,
       };
-    });
+
+      // Persist to store (→ Redis) so positions survive cold starts
+      await this.store.upsert(position);
+      positions.push(position);
+    }
+
+    // Detect positions that disappeared from HL (closed externally / liquidated).
+    // Build a set of live market symbols so UUID-based positions that match a live
+    // hl: position aren't falsely closed as "manual".
+    const liveSymbols = new Set(livePositions.map((lp) => lp.symbol.toUpperCase()));
+    const storeOpen = this.store.getOpen().filter((p) => p.venue === "hyperliquid-perp");
+    for (const stored of storeOpen) {
+      if (liveIds.has(stored.id)) continue;
+
+      // If this is a UUID-based entry and the same symbol is live under an hl: ID,
+      // it's the same position — just remove the duplicate UUID entry, don't close it.
+      if (!stored.id.startsWith("hl:") && stored.marketSymbol && liveSymbols.has(stored.marketSymbol.toUpperCase())) {
+        await this.store.upsert({ ...stored, status: "closed", closedAt: Date.now(), exitReason: "expired" as const });
+        // Remove duplicate — the hl: version is the canonical record
+        continue;
+      }
+
+      // Position gone from HL — fetch current market price for accurate exit PnL
+      let exitPriceUsd = stored.entryPriceUsd; // fallback
+      try {
+        const currentPrice = await this.resolvePositionPriceUsd(stored);
+        if (currentPrice && Number.isFinite(currentPrice) && currentPrice > 0) {
+          exitPriceUsd = currentPrice;
+        }
+      } catch {
+        // keep fallback
+      }
+      await this.store.close(stored.id, {
+        exitReason: "manual",
+        exitPriceUsd,
+        closedAt: Date.now(),
+      });
+    }
+
+    return positions;
   }
 
   private async getCurrentOpenPositionCount(): Promise<number> {
@@ -225,10 +338,19 @@ class TraderEngine {
     let openMarketValueUsd = 0;
     let unrealizedPnlUsd = 0;
     let realizedPnlUsd = 0;
+    let estimatedTradingFeesUsd = 0;
+
+    // Fee rate depends on venue — Hyperliquid perps use taker fee
+    const isHyperliquid = this.config.executionVenue === "hyperliquid-perp";
+    const feeRate = isHyperliquid ? HL_ROUND_TRIP_FEE_RATE : 0;
 
     for (const position of openPositions) {
       deployedUsd += position.entryNotionalUsd;
       const currentPriceUsd = await this.resolvePositionPriceUsd(position);
+
+      // Estimated round-trip fees on notional (entry already paid + estimated exit)
+      const estFees = position.entryNotionalUsd * feeRate;
+      estimatedTradingFeesUsd += estFees;
 
       if (!currentPriceUsd || !Number.isFinite(currentPriceUsd) || position.entryPriceUsd <= 0) {
         open.push({
@@ -237,16 +359,18 @@ class TraderEngine {
           marketValueUsd: null,
           unrealizedPnlUsd: null,
           unrealizedPnlPct: null,
+          estimatedFeesUsd: estFees,
         });
         continue;
       }
 
-      const isShort = position.positionDirection === "short";
-      const priceDelta = isShort
-        ? (position.entryPriceUsd - currentPriceUsd) / position.entryPriceUsd
-        : (currentPriceUsd - position.entryPriceUsd) / position.entryPriceUsd;
-      const pnlUsd = position.entryNotionalUsd * priceDelta;
-      const marketValueUsd = position.entryNotionalUsd + pnlUsd;
+      const priceRatio = currentPriceUsd / position.entryPriceUsd;
+      const marketValueUsd = position.direction === "short"
+        ? position.entryNotionalUsd * (2 - priceRatio)
+        : position.entryNotionalUsd * priceRatio;
+      // PnL includes estimated round-trip exchange fees
+      const grossPnl = marketValueUsd - position.entryNotionalUsd;
+      const pnlUsd = grossPnl - estFees;
       const pnlPct = position.entryNotionalUsd > 0 ? pnlUsd / position.entryNotionalUsd : 0;
 
       openMarketValueUsd += marketValueUsd;
@@ -257,24 +381,31 @@ class TraderEngine {
         marketValueUsd,
         unrealizedPnlUsd: pnlUsd,
         unrealizedPnlPct: pnlPct,
+        estimatedFeesUsd: estFees,
       });
     }
 
     for (const position of closedPositions) {
+      // Estimated round-trip fees on entry notional
+      const estFees = position.entryNotionalUsd * feeRate;
+      estimatedTradingFeesUsd += estFees;
+
       if (!position.exitPriceUsd || !Number.isFinite(position.exitPriceUsd) || position.entryPriceUsd <= 0) {
         closed.push({
           position,
           realizedPnlUsd: null,
           realizedPnlPct: null,
+          estimatedFeesUsd: estFees,
         });
         continue;
       }
 
-      const isShortClosed = position.positionDirection === "short";
-      const closedPriceDelta = isShortClosed
+      const priceMove = position.direction === "short"
         ? (position.entryPriceUsd - position.exitPriceUsd) / position.entryPriceUsd
         : (position.exitPriceUsd - position.entryPriceUsd) / position.entryPriceUsd;
-      const pnlUsd = position.entryNotionalUsd * closedPriceDelta;
+      // PnL includes estimated round-trip exchange fees
+      const grossPnl = position.entryNotionalUsd * priceMove;
+      const pnlUsd = grossPnl - estFees;
       const pnlPct = position.entryNotionalUsd > 0 ? pnlUsd / position.entryNotionalUsd : 0;
 
       realizedPnlUsd += pnlUsd;
@@ -282,6 +413,7 @@ class TraderEngine {
         position,
         realizedPnlUsd: pnlUsd,
         realizedPnlPct: pnlPct,
+        estimatedFeesUsd: estFees,
       });
     }
 
@@ -298,6 +430,7 @@ class TraderEngine {
       unrealizedPnlUsd,
       realizedPnlUsd,
       grossPnlUsd,
+      estimatedTradingFeesUsd,
       performanceFeeUsd,
       netPnlAfterFeeUsd,
     };
@@ -323,15 +456,19 @@ class TraderEngine {
     let scannerCandidates = 0;
     let scannerFetchError: string | undefined;
 
-    try {
-      scannerCandidates = (await fetchScannerCandidates(this.config)).length;
-    } catch (error) {
-      scannerFetchError = error instanceof Error ? error.message : "scanner fetch failed";
-      reasons.push("scanner_unavailable");
-    }
+    // Scanner is only relevant for spot venues (token discovery).
+    // Hyperliquid perp trades use sentiment signals, not scanner candidates.
+    if (isSpotVenue(this.config.executionVenue)) {
+      try {
+        scannerCandidates = (await fetchScannerCandidates(this.config)).length;
+      } catch (error) {
+        scannerFetchError = error instanceof Error ? error.message : "scanner fetch failed";
+        reasons.push("scanner_unavailable");
+      }
 
-    if (scannerCandidates < this.config.safety.minScannerCandidatesLive) {
-      reasons.push(`scanner_candidates_lt_${this.config.safety.minScannerCandidatesLive}`);
+      if (scannerCandidates < this.config.safety.minScannerCandidatesLive) {
+        reasons.push(`scanner_candidates_lt_${this.config.safety.minScannerCandidatesLive}`);
+      }
     }
 
     const balances: TraderReadinessBalance[] = [];
@@ -456,15 +593,35 @@ class TraderEngine {
     const open = this.store.getOpen();
     if (open.length === 0) return;
 
+    const maxHoldMs = this.config.risk.maxHoldMs ?? 300_000; // 5 min default
+    const now = Date.now();
+
     for (const position of open) {
+      // Skip scalper-managed positions (they have their own SL/TP via WebSocket)
+      if (position.id.startsWith("scalp:")) continue;
+
       try {
         const currentPriceUsd = await this.resolvePositionPriceUsd(position);
+
+        // Time-based expiry: close if held longer than maxHoldMs
+        const holdMs = now - position.openedAt;
+        if (holdMs >= maxHoldMs) {
+          const exitPrice = currentPriceUsd && Number.isFinite(currentPriceUsd) && currentPriceUsd > 0
+            ? currentPriceUsd
+            : position.entryPriceUsd; // fallback to entry if no price available
+          const closed = await this.closePosition(position, "expired", exitPrice);
+          if (closed) {
+            report.exits.push(closed);
+          }
+          continue;
+        }
+
         if (!currentPriceUsd || !Number.isFinite(currentPriceUsd) || currentPriceUsd <= 0) {
           report.skipped.push(`exit:no-price:${position.tokenAddress}`);
           continue;
         }
 
-        const isShort = position.positionDirection === "short";
+        const isShort = position.direction === "short";
         const stopPrice = isShort
           ? position.entryPriceUsd * (1 + position.stopLossPct)
           : position.entryPriceUsd * (1 - position.stopLossPct);
@@ -589,11 +746,10 @@ class TraderEngine {
       });
     }
 
-    const closeSide = position.positionDirection === "short" ? "buy" : "sell";
     const execution = await executeHyperliquidOrderLive({
       config: this.config,
       market,
-      side: closeSide,
+      side: "sell",
       leverage: position.leverage ?? this.config.hyperliquid.defaultLeverage,
       slippageBps: this.config.risk.slippageBps,
       reduceOnly: true,
@@ -630,8 +786,8 @@ class TraderEngine {
     let selectedSignal: AggregatedMarketSignal | null = null;
     let market = null;
 
-    // News-first routing: pick strongest market signal that exists on Hyperliquid.
-    // Skip conflicted signals (high contradiction = sources disagree on direction).
+    // News-first routing: pick strongest directional signal (bullish OR bearish)
+    // that exists on Hyperliquid. Skip conflicted signals (sources disagree).
     for (const signal of marketSignals) {
       if (signal.contradictionPenalty > 0.7) {
         console.log(
@@ -644,7 +800,7 @@ class TraderEngine {
       selectedSignal = signal;
       market = signaledMarket;
       console.log(
-        `[trader] signal-route: ${signal.symbol} score=${signal.score.toFixed(3)} contradiction=${signal.contradictionPenalty.toFixed(2)} obs=${signal.observations}`,
+        `[trader] signal-route: ${signal.symbol} ${signal.direction} score=${signal.score.toFixed(3)} contradiction=${signal.contradictionPenalty.toFixed(2)} obs=${signal.observations}`,
       );
       break;
     }
@@ -660,12 +816,62 @@ class TraderEngine {
       return null;
     }
 
+    // Determine trade direction from signal: bearish → short (sell), bullish → long (buy)
+    const isBearish = selectedSignal?.direction === "bearish";
+    const side: "buy" | "sell" = isBearish ? "sell" : "buy";
+    const direction: "long" | "short" = isBearish ? "short" : "long";
+
+    // ═══ SOUL.md MORAL GATE — must pass before any execution ═══
+    const moralGateResult = await checkMoralGate(market.symbol, direction);
+    logMoralGateDecision(moralGateResult);
+    if (!moralGateResult.allowed) {
+      console.log(`[trader] SOUL.md BLOCKED: ${market.symbol} ${direction} — ${moralGateResult.justification}`);
+      return null;
+    }
+
+    // ═══ SOUL.md KELLY CRITERION — position sizing via bankroll math ═══
+    const journal = positionsToJournal(this.store.getAll());
+    const compositeConfidence = selectedSignal
+      ? Math.min(1, Math.max(0.1, Math.abs(selectedSignal.score)))
+      : 0.5;
+
+    // Get account value for Kelly sizing
+    let accountValueUsd = this.config.risk.maxPortfolioUsd; // fallback
+    if (!this.config.dryRun) {
+      try {
+        const accountAddress = resolveHyperliquidAccountAddress(this.config, this.clients.address);
+        const hlValue = await fetchHyperliquidAccountValueUsd(this.config, accountAddress);
+        if (hlValue !== null && Number.isFinite(hlValue) && hlValue > 0) {
+          accountValueUsd = hlValue;
+        }
+      } catch { /* use fallback */ }
+    }
+
+    const kelly = computeKelly({
+      config: this.config,
+      accountValueUsd,
+      compositeConfidence,
+      journal,
+      symbol: market.symbol,
+      stopDistancePct: this.config.risk.stopLossPct,
+    });
+
+    if (kelly.skip) {
+      console.log(`[trader] Kelly skip: ${kelly.skipReason}`);
+      return null;
+    }
+
+    // Use Kelly-derived position size, bounded by config limits
     const rawConviction = selectedSignal ? selectedSignal.score : 1;
     const convictionMultiplier = Number.isFinite(rawConviction)
       ? Math.min(1.5, Math.max(0.75, rawConviction))
       : 1;
+    const kellyNotionalUsd = kelly.positionNotionalUsd;
+    const convictionNotionalUsd = this.config.hyperliquid.entryNotionalUsd * convictionMultiplier;
+    // Take the smaller of Kelly-derived and conviction-derived (conservative)
     const requestedNotionalUsd = Math.min(
-      this.config.hyperliquid.entryNotionalUsd * convictionMultiplier,
+      kellyNotionalUsd,
+      convictionNotionalUsd,
       this.config.risk.maxPositionUsd
     );
     if (!Number.isFinite(requestedNotionalUsd) || requestedNotionalUsd <= 0) {
@@ -682,15 +888,17 @@ class TraderEngine {
       throw new Error("portfolio limit reached");
     }
 
-    const orderSide = selectedSignal?.direction === "bearish" ? "sell" : "buy";
-    const direction = orderSide === "buy" ? "long" : "short";
+    console.log(
+      `[trader] opening ${direction} ${market.symbol} notional=$${notionalUsd.toFixed(2)} side=${side} | ` +
+      `moral=${moralGateResult.moralScore}/100 kelly=${kelly.fraction.toFixed(3)} (${kelly.phase})`,
+    );
 
     const order = this.config.dryRun
       ? await simulateHyperliquidOrder({
           config: this.config,
           symbol: market.symbol,
           marketId: market.marketId,
-          side: orderSide,
+          side,
           leverage: this.config.hyperliquid.defaultLeverage,
           notionalUsd,
           szDecimals: market.szDecimals,
@@ -698,7 +906,7 @@ class TraderEngine {
       : await executeHyperliquidOrderLive({
           config: this.config,
           market,
-          side: orderSide,
+          side,
           leverage: this.config.hyperliquid.defaultLeverage,
           slippageBps: this.config.risk.slippageBps,
           notionalUsd,
@@ -708,8 +916,18 @@ class TraderEngine {
     const quoteDecimals = this.config.quoteTokenDecimals.USDC ?? 6;
     const quoteSpentRaw = Math.max(1, Math.floor(order.notionalUsd * 10 ** quoteDecimals)).toString();
 
+    // Use deterministic ID matching HL sync format so positions stay consistent
+    const positionId = `hl:${market.symbol}:${market.marketId}`;
+
+    // Archive any closed position at this ID before creating the new one
+    const closedAtId = this.store.getAll().find((p) => p.id === positionId && p.status === "closed");
+    if (closedAtId) {
+      const archiveId = `${positionId}:closed:${closedAtId.closedAt ?? Date.now()}`;
+      await this.store.upsert({ ...closedAtId, id: archiveId });
+    }
+
     const opened: Position = {
-      id: randomUUID(),
+      id: positionId,
       venue: "hyperliquid-perp",
       tokenAddress: quoteTokenAddress,
       tokenDecimals: market.szDecimals,
@@ -725,12 +943,18 @@ class TraderEngine {
       quantityTokenRaw: order.sizeRaw,
       quoteSpentRaw,
       entryNotionalUsd: order.notionalUsd,
-      positionDirection: direction,
       stopLossPct: this.config.risk.stopLossPct,
       takeProfitPct: this.config.risk.takeProfitPct,
       openedAt: Date.now(),
       txHash: order.txHash,
       status: "open",
+      direction,
+      trailingStopPct: this.config.risk.trailingStopPct,
+      signalSource: selectedSignal ? `${selectedSignal.symbol}:${selectedSignal.direction}` : undefined,
+      signalConfidence: selectedSignal ? Math.abs(selectedSignal.score) : undefined,
+      kellyFraction: kelly.fraction,
+      moralScore: moralGateResult.moralScore ?? undefined,
+      moralJustification: moralGateResult.justification,
     };
 
     await this.store.upsert(opened);
@@ -740,6 +964,15 @@ class TraderEngine {
   private async tryOpenSpotPosition(candidate: ScannerLaunch): Promise<Position | null> {
     const openPositions = this.store.getOpen();
     if (openPositions.length >= this.config.risk.maxOpenPositions) {
+      return null;
+    }
+
+    // ═══ SOUL.md MORAL GATE — spot buys are always "long" ═══
+    const entityId = candidate.tokenMeta?.symbol ?? candidate.tokenAddress;
+    const moralGateResult = await checkMoralGate(entityId, "long");
+    logMoralGateDecision(moralGateResult);
+    if (!moralGateResult.allowed) {
+      console.log(`[trader] SOUL.md BLOCKED spot: ${entityId} — ${moralGateResult.justification}`);
       return null;
     }
 
@@ -840,6 +1073,7 @@ class TraderEngine {
       quoteSymbol,
       quoteTokenDecimals: quoteDecimals,
       dex: candidate.dex,
+      marketSymbol: candidate.tokenMeta?.symbol || tokenMarket.baseTokenSymbol || undefined,
       poolAddress: candidate.poolAddress,
       entryPriceUsd: tokenPriceUsd,
       quantityTokenRaw: amountOutMin > BigInt(0) ? amountOutMin.toString() : "1",
@@ -850,6 +1084,8 @@ class TraderEngine {
       openedAt: Date.now(),
       txHash,
       status: "open",
+      moralScore: moralGateResult.moralScore ?? undefined,
+      moralJustification: moralGateResult.justification,
     };
 
     await this.store.upsert(opened);

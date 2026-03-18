@@ -19,6 +19,7 @@ export interface TokenMarketSnapshot {
   priceUsd: number | null;
   pairAddress: Address | null;
   quoteSymbol: string | null;
+  baseTokenSymbol: string | null;
   liquidityUsd: number | null;
 }
 
@@ -45,6 +46,7 @@ export async function fetchTokenMarketSnapshot(
         priceUsd: null,
         pairAddress: null,
         quoteSymbol: null,
+        baseTokenSymbol: null,
         liquidityUsd: null,
       };
     }
@@ -59,6 +61,7 @@ export async function fetchTokenMarketSnapshot(
         priceUsd: null,
         pairAddress: null,
         quoteSymbol: null,
+        baseTokenSymbol: null,
         liquidityUsd: null,
       };
     }
@@ -71,6 +74,7 @@ export async function fetchTokenMarketSnapshot(
       priceUsd: normalizedPrice,
       pairAddress: best.pairAddress ? (best.pairAddress as Address) : null,
       quoteSymbol: best.quoteToken?.symbol?.toUpperCase() ?? null,
+      baseTokenSymbol: best.baseToken?.symbol?.toUpperCase() ?? null,
       liquidityUsd: best.liquidity?.usd ?? null,
     };
   } catch {
@@ -79,6 +83,7 @@ export async function fetchTokenMarketSnapshot(
       priceUsd: null,
       pairAddress: null,
       quoteSymbol: null,
+      baseTokenSymbol: null,
       liquidityUsd: null,
     };
   } finally {

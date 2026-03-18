@@ -106,7 +106,7 @@ export async function remember(scope: string, key: string, content: string): Pro
 
   try {
     await indexerFetch("/api/v1/memory/remember", {
-      method: "POST",
+      method: "PUT", // Ponder 0.7.x maps ponder.post() to hono.put()
       headers: getAuthHeaders(),
       body: JSON.stringify({ scope, key, content }),
     });
@@ -174,7 +174,7 @@ export async function forget(scope: string, key: string): Promise<void> {
 
   try {
     await indexerFetch("/api/v1/memory/forget", {
-      method: "POST",
+      method: "PUT", // Ponder 0.7.x maps ponder.post() to hono.put()
       headers: getAuthHeaders(),
       body: JSON.stringify({ scope, key }),
     });

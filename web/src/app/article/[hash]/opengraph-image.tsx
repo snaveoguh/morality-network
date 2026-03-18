@@ -1,15 +1,14 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "fs/promises";
+import { join } from "path";
 import { fetchAllFeeds } from "@/lib/rss";
 import { computeEntityHash } from "@/lib/entity";
 import { getArchivedFeedItemByHash } from "@/lib/archive";
 import { getArchivedEditorial } from "@/lib/editorial-archive";
 import { formatDateline } from "@/lib/article";
-import { BIAS_LABELS, BIAS_COLORS } from "@/lib/bias";
-import type { BiasRating } from "@/lib/bias";
 import { BRAND_DOMAIN, BRAND_NAME } from "@/lib/brand";
 
 // 24h revalidation — the image is deterministic per article hash.
-// Once an article exists, its OG image never changes.
 export const revalidate = 86400;
 export const maxDuration = 55;
 
@@ -17,7 +16,7 @@ export const alt = `${BRAND_NAME} article`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Font URLs — static weights known to work with Satori
+// Font URLs
 const NOTO_SERIF_BOLD =
   "https://fonts.gstatic.com/s/notoserif/v33/ga6iaw1J5X9T9RW6j9bNVls-hfgvz8JcMofYTa32J4wsL2JAlAhZT1ejwA.ttf";
 const IBM_PLEX_MONO =
@@ -25,19 +24,8 @@ const IBM_PLEX_MONO =
 const IBM_PLEX_MONO_BOLD =
   "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3pQP8lc.ttf";
 
-// Bias pill colors for OG image (desaturated for e-ink feel)
-const OG_BIAS_COLORS: Record<BiasRating, string> = {
-  "far-left": "#4A6FA5",
-  left: "#5A80B0",
-  "lean-left": "#7A9FC0",
-  center: "#888888",
-  "lean-right": "#C08A7A",
-  right: "#B07060",
-  "far-right": "#A05050",
-};
-
 // ============================================================================
-// Normalized article shape for OG rendering
+// Normalized article shape
 // ============================================================================
 
 interface OGArticle {
@@ -48,8 +36,6 @@ interface OGArticle {
   dateline: string;
   imageUrl: string | null;
   tags: string[];
-  biasRating: BiasRating | null;
-  /** Daily editions only — e.g. "STRAIT OF CONVERGENCE" */
   dailyTitle: string | null;
   isDailyEdition: boolean;
 }
@@ -61,11 +47,11 @@ export default async function ArticleOGImage({
 }) {
   const { hash } = await params;
 
-  // Load fonts in parallel with data
-  const [serifBold, mono, monoBold] = await Promise.all([
+  const [serifBold, mono, monoBold, imgBuf] = await Promise.all([
     fetch(NOTO_SERIF_BOLD).then((res) => res.arrayBuffer()),
     fetch(IBM_PLEX_MONO).then((res) => res.arrayBuffer()),
     fetch(IBM_PLEX_MONO_BOLD).then((res) => res.arrayBuffer()),
+    readFile(join(process.cwd(), "public", "astraea-bw.jpg")),
   ]);
 
   const fonts = [
@@ -74,25 +60,20 @@ export default async function ArticleOGImage({
     { name: "MonoBold", data: monoBold, style: "normal" as const, weight: 700 as const },
   ];
 
-  // ── Resolve article data: RSS → feed archive → editorial archive ──
+  const bgBase64 = `data:image/jpeg;base64,${imgBuf.toString("base64")}`;
   const article = await resolveArticle(hash);
 
   if (!article) {
-    return renderNotFound(fonts);
+    return renderFallback(bgBase64, fonts);
   }
 
-  if (article.imageUrl) {
-    return renderWithImage(article, fonts);
-  }
-
-  return renderTypography(article, fonts);
+  return renderArticle(article, bgBase64, fonts);
 }
 
 // ============================================================================
-// DATA RESOLUTION — three-tier lookup
+// DATA RESOLUTION
 // ============================================================================
 
-/** Race a promise against a timeout — returns fallback on timeout */
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
   return Promise.race([
     promise,
@@ -101,11 +82,6 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 }
 
 async function resolveArticle(hash: string): Promise<OGArticle | null> {
-  // Check fast sources first: editorial archive + feed archive (both are
-  // file/DB lookups, no external HTTP). This avoids the expensive fetchAllFeeds()
-  // for daily editions and archived articles.
-
-  // 1. Editorial archive (AI-generated editorials + daily editions)
   const editorial = await getArchivedEditorial(hash).catch(() => null);
   if (editorial) {
     return {
@@ -116,13 +92,11 @@ async function resolveArticle(hash: string): Promise<OGArticle | null> {
       dateline: formatDateline(editorial.generatedAt),
       imageUrl: editorial.primary.imageUrl || null,
       tags: editorial.tags || [],
-      biasRating: null,
       dailyTitle: editorial.dailyTitle || null,
       isDailyEdition: editorial.isDailyEdition || false,
     };
   }
 
-  // 2. Feed archive (persisted RSS items — fast local/remote lookup)
   const archivedItem = await withTimeout(
     getArchivedFeedItemByHash(hash as `0x${string}`).catch(() => null),
     10000,
@@ -137,13 +111,11 @@ async function resolveArticle(hash: string): Promise<OGArticle | null> {
       dateline: formatDateline(archivedItem.pubDate),
       imageUrl: archivedItem.imageUrl || null,
       tags: archivedItem.tags || [],
-      biasRating: archivedItem.bias?.bias || null,
       dailyTitle: null,
       isDailyEdition: false,
     };
   }
 
-  // 3. Live RSS feed (expensive — fetches 70+ sources, 7-15s cold start)
   const allItems = await withTimeout(fetchAllFeeds(), 20000, []);
   const liveItem = allItems.find((i) => computeEntityHash(i.link) === hash);
   if (liveItem) {
@@ -155,7 +127,6 @@ async function resolveArticle(hash: string): Promise<OGArticle | null> {
       dateline: formatDateline(liveItem.pubDate),
       imageUrl: liveItem.imageUrl || null,
       tags: liveItem.tags || [],
-      biasRating: liveItem.bias?.bias || null,
       dailyTitle: null,
       isDailyEdition: false,
     };
@@ -165,448 +136,145 @@ async function resolveArticle(hash: string): Promise<OGArticle | null> {
 }
 
 // ============================================================================
-// SHARED COMPONENTS
+// RENDER: ARTICLE — always B&W editorial with painting background
 // ============================================================================
 
-function PaperTexture() {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundImage:
-          "radial-gradient(circle at 20% 50%, rgba(0,0,0,0.02) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(0,0,0,0.015) 0%, transparent 40%), radial-gradient(circle at 50% 80%, rgba(0,0,0,0.02) 0%, transparent 45%)",
-        display: "flex",
-      }}
-    />
-  );
-}
+function renderArticle(
+  article: OGArticle,
+  bgBase64: string,
+  fonts: { name: string; data: ArrayBuffer; style: "normal"; weight: 400 | 700 }[],
+) {
+  const title =
+    article.title.length > 120 ? article.title.slice(0, 117) + "\u2026" : article.title;
+  const description = article.description
+    ? article.description.length > 180
+      ? article.description.slice(0, 177) + "\u2026"
+      : article.description
+    : null;
 
-function DoubleRuleTop() {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-      <div style={{ height: 3, backgroundColor: "#1A1A1A", width: "100%", display: "flex" }} />
-      <div style={{ height: 2, width: "100%", display: "flex" }} />
-      <div style={{ height: 1, backgroundColor: "#1A1A1A", width: "100%", display: "flex" }} />
-    </div>
-  );
-}
+  // Dynamic font sizing
+  const titleFontSize =
+    title.length > 100 ? 38 : title.length > 80 ? 44 : title.length > 50 ? 52 : 60;
 
-function DoubleRuleBottom() {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-      <div style={{ height: 1, backgroundColor: "#1A1A1A", width: "100%", display: "flex" }} />
-      <div style={{ height: 2, width: "100%", display: "flex" }} />
-      <div style={{ height: 3, backgroundColor: "#1A1A1A", width: "100%", display: "flex" }} />
-    </div>
-  );
-}
-
-function MastheadRow() {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingTop: 16,
-        paddingBottom: 12,
-        borderBottom: "1px solid #C8C0B0",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <span
-          style={{
-            fontFamily: "Serif",
-            fontSize: 28,
-            fontWeight: 700,
-            color: "#1A1A1A",
-            letterSpacing: "-0.02em",
-          }}
-        >
-          {BRAND_NAME}
-        </span>
-        <span style={{ fontFamily: "Mono", fontSize: 18, color: "#1A1A1A", display: "flex" }}>
-          {"( o_o )"}
-        </span>
-      </div>
+  return new ImageResponse(
+    (
       <div
         style={{
+          width: "100%",
+          height: "100%",
           display: "flex",
-          alignItems: "center",
-          gap: 16,
-          fontFamily: "Mono",
-          fontSize: 11,
-          color: "#8A8A8A",
-          letterSpacing: "0.15em",
+          position: "relative",
+          overflow: "hidden",
+          backgroundColor: "#0A0A0A",
         }}
       >
-        <span>PERMISSIONLESS NEWS</span>
-        <span style={{ color: "#C8C0B0" }}>|</span>
-        <span>ONCHAIN</span>
-        <span style={{ color: "#C8C0B0" }}>|</span>
-        <span>BASE L2</span>
-      </div>
-    </div>
-  );
-}
-
-function FooterRow() {
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "10px 48px",
-        fontFamily: "Mono",
-        fontSize: 10,
-        color: "#8A8A8A",
-        letterSpacing: "0.25em",
-        gap: 16,
-      }}
-    >
-      <span>PERMISSIONLESS NEWS</span>
-      <span style={{ color: "#C8C0B0" }}>{"\u00B7"}</span>
-      <span>ONCHAIN</span>
-      <span style={{ color: "#C8C0B0" }}>{"\u00B7"}</span>
-      <span>BASE L2</span>
-      <span style={{ color: "#C8C0B0" }}>{"\u00B7"}</span>
-      <span>{BRAND_DOMAIN}</span>
-    </div>
-  );
-}
-
-function TagPills({ tags }: { tags: string[] }) {
-  if (tags.length === 0) return null;
-  return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-      {tags.slice(0, 5).map((tag) => (
-        <span
-          key={tag}
+        {/* B&W painting background */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={bgBase64}
+          alt=""
+          width={1200}
+          height={630}
           style={{
-            fontFamily: "Mono",
-            fontSize: 9,
-            letterSpacing: "0.15em",
-            color: "#8A8A8A",
-            border: "1px solid #C8C0B0",
-            padding: "3px 8px",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: 0.2,
+          }}
+        />
+
+        {/* Dark gradient for text */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background:
+              "linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.7) 100%)",
             display: "flex",
           }}
+        />
+
+        {/* Content */}
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
         >
-          {tag.toUpperCase()}
-        </span>
-      ))}
-    </div>
-  );
-}
+          {/* Top rule */}
+          <div style={{ height: 3, backgroundColor: "#FFFFFF", width: "100%", display: "flex", opacity: 0.25 }} />
 
-function MetaRow({ article }: { article: OGArticle }) {
-  const biasLabel = article.biasRating ? BIAS_LABELS[article.biasRating] : null;
-  const biasColor = article.biasRating
-    ? OG_BIAS_COLORS[article.biasRating] || BIAS_COLORS[article.biasRating]
-    : null;
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        paddingTop: 14,
-        paddingBottom: 10,
-        fontFamily: "Mono",
-        fontSize: 11,
-        letterSpacing: "0.2em",
-        color: "#8A8A8A",
-      }}
-    >
-      <span style={{ color: "#8B0000", fontFamily: "MonoBold" }}>
-        {article.category.toUpperCase()}
-      </span>
-      <span style={{ color: "#C8C0B0" }}>{"\u00B7"}</span>
-      <span>{article.source.toUpperCase()}</span>
-      <span style={{ color: "#C8C0B0" }}>{"\u00B7"}</span>
-      <span>{article.dateline.toUpperCase()}</span>
-      {biasLabel && biasColor && (
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ color: "#C8C0B0" }}>{"\u00B7"}</span>
-          <span
-            style={{
-              display: "flex",
-              alignItems: "center",
-              backgroundColor: biasColor,
-              color: "#FFFFFF",
-              padding: "2px 8px",
-              fontSize: 9,
-              fontFamily: "MonoBold",
-              letterSpacing: "0.15em",
-            }}
-          >
-            {biasLabel.toUpperCase()}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ============================================================================
-// LAYOUT: NOT FOUND
-// ============================================================================
-
-function renderNotFound(fonts: { name: string; data: ArrayBuffer; style: "normal"; weight: 400 | 700 }[]) {
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          backgroundColor: "#F5F0E8",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <PaperTexture />
-        <DoubleRuleTop />
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "0 48px" }}>
-          <MastheadRow />
+          {/* Masthead */}
           <div
             style={{
               display: "flex",
-              flex: 1,
               alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "column",
-              gap: 12,
+              justifyContent: "space-between",
+              padding: "14px 48px 12px",
             }}
           >
-            <span style={{ fontFamily: "Serif", fontSize: 36, fontWeight: 700, color: "#1A1A1A" }}>
-              {BRAND_NAME}
-            </span>
-            <span style={{ fontFamily: "Mono", fontSize: 14, color: "#8A8A8A", letterSpacing: "0.2em" }}>
-              A PUBLIC LEDGER OF WORLD EVENTS
-            </span>
-          </div>
-        </div>
-        <DoubleRuleBottom />
-        <FooterRow />
-      </div>
-    ),
-    { ...size, fonts },
-  );
-}
-
-// ============================================================================
-// LAYOUT: WITH IMAGE — newspaper broadsheet (headline left, image right)
-// ============================================================================
-
-function renderWithImage(
-  article: OGArticle,
-  fonts: { name: string; data: ArrayBuffer; style: "normal"; weight: 400 | 700 }[],
-) {
-  const title =
-    article.title.length > 120 ? article.title.slice(0, 117) + "..." : article.title;
-  const description = article.description
-    ? article.description.length > 160
-      ? article.description.slice(0, 157) + "..."
-      : article.description
-    : null;
-  const titleFontSize = title.length > 80 ? 36 : title.length > 50 ? 42 : 48;
-
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          backgroundColor: "#F5F0E8",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <PaperTexture />
-        <DoubleRuleTop />
-
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "0 48px" }}>
-          <MastheadRow />
-          <MetaRow article={article} />
-
-          {/* Main content: headline left + image right */}
-          <div style={{ display: "flex", flex: 1, gap: 40, paddingTop: 8, paddingBottom: 16 }}>
-            {/* Left column */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
-                justifyContent: "flex-start",
-                minWidth: 0,
-              }}
-            >
-              <div
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span
                 style={{
                   fontFamily: "Serif",
-                  fontSize: titleFontSize,
+                  fontSize: 22,
                   fontWeight: 700,
-                  color: "#1A1A1A",
-                  lineHeight: 1.1,
-                  letterSpacing: "-0.02em",
-                  display: "flex",
-                  marginBottom: 20,
+                  color: "#FFFFFF",
+                  opacity: 0.8,
                 }}
               >
-                {title}
-              </div>
-
-              {description && (
-                <div
-                  style={{
-                    fontFamily: "Mono",
-                    fontSize: 14,
-                    color: "#4A4A4A",
-                    lineHeight: 1.6,
-                    display: "flex",
-                  }}
-                >
-                  {description}
-                </div>
-              )}
-
-              <div style={{ marginTop: 20, display: "flex" }}>
-                <TagPills tags={article.tags} />
-              </div>
+                {BRAND_NAME}
+              </span>
             </div>
-
-            {/* Right column: image with halftone/grayscale */}
             <div
               style={{
                 display: "flex",
-                width: 340,
-                height: 340,
-                position: "relative",
-                flexShrink: 0,
-                overflow: "hidden",
+                fontFamily: "Mono",
+                fontSize: 9,
+                color: "rgba(255,255,255,0.4)",
+                letterSpacing: "0.2em",
+                gap: 12,
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  width: "100%",
-                  height: "100%",
-                  overflow: "hidden",
-                  clipPath: "polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%)",
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={article.imageUrl!}
-                  alt=""
-                  width={340}
-                  height={340}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    filter: "grayscale(100%) contrast(1.3) brightness(1.05)",
-                  }}
-                />
-              </div>
-              {/* Halftone dot overlay */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundImage: "radial-gradient(circle, #1A1A1A 0.5px, transparent 0.5px)",
-                  backgroundSize: "3px 3px",
-                  opacity: 0.08,
-                  display: "flex",
-                }}
-              />
+              <span>PERMISSIONLESS NEWS</span>
+              <span style={{ opacity: 0.4 }}>|</span>
+              <span>ONCHAIN</span>
+              <span style={{ opacity: 0.4 }}>|</span>
+              <span>BASE L2</span>
             </div>
           </div>
-        </div>
 
-        <DoubleRuleBottom />
-        <FooterRow />
-      </div>
-    ),
-    { ...size, fonts },
-  );
-}
+          {/* Thin rule */}
+          <div style={{ height: 1, backgroundColor: "#FFFFFF", opacity: 0.15, marginLeft: 48, marginRight: 48, display: "flex" }} />
 
-// ============================================================================
-// LAYOUT: TYPOGRAPHY — full-bleed headline (no image)
-//
-// Used for daily editions + any article without an image.
-// The headline fills the canvas at 56-72px for maximum visual impact.
-// ============================================================================
-
-function renderTypography(
-  article: OGArticle,
-  fonts: { name: string; data: ArrayBuffer; style: "normal"; weight: 400 | 700 }[],
-) {
-  const title =
-    article.title.length > 140 ? article.title.slice(0, 137) + "..." : article.title;
-  const description = article.description
-    ? article.description.length > 200
-      ? article.description.slice(0, 197) + "..."
-      : article.description
-    : null;
-
-  // Larger font sizes for the full-bleed layout
-  const titleFontSize = title.length > 100 ? 44 : title.length > 70 ? 52 : title.length > 50 ? 60 : 68;
-
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          backgroundColor: "#F5F0E8",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <PaperTexture />
-        <DoubleRuleTop />
-
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "0 48px" }}>
-          <MastheadRow />
-
-          {/* Full-bleed content area */}
+          {/* Main content area */}
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               flex: 1,
               justifyContent: "center",
-              alignItems: "center",
-              textAlign: "center",
-              padding: "0 24px",
+              padding: "0 56px",
             }}
           >
-            {/* Daily title signal word — only for daily editions */}
+            {/* Daily title */}
             {article.dailyTitle && (
               <div
                 style={{
                   fontFamily: "MonoBold",
-                  fontSize: 13,
-                  color: "#8B0000",
-                  letterSpacing: "0.35em",
-                  marginBottom: 20,
+                  fontSize: 12,
+                  color: "#C0392B",
+                  letterSpacing: "0.4em",
+                  marginBottom: 16,
                   display: "flex",
                 }}
               >
@@ -614,58 +282,54 @@ function renderTypography(
               </div>
             )}
 
-            {/* Category + date for non-daily editions */}
+            {/* Category + meta line */}
             {!article.isDailyEdition && (
               <div
                 style={{
                   fontFamily: "Mono",
-                  fontSize: 11,
-                  color: "#8A8A8A",
+                  fontSize: 10,
                   letterSpacing: "0.2em",
                   marginBottom: 16,
                   display: "flex",
-                  gap: 12,
+                  gap: 10,
                 }}
               >
-                <span style={{ color: "#8B0000", fontFamily: "MonoBold" }}>
-                  {article.category.toUpperCase()}
-                </span>
-                <span style={{ color: "#C8C0B0" }}>{"\u00B7"}</span>
-                <span>{article.source.toUpperCase()}</span>
-                <span style={{ color: "#C8C0B0" }}>{"\u00B7"}</span>
-                <span>{article.dateline.toUpperCase()}</span>
+                <span style={{ color: "#C0392B" }}>{article.category.toUpperCase()}</span>
+                <span style={{ color: "rgba(255,255,255,0.25)" }}>{"\u00B7"}</span>
+                <span style={{ color: "rgba(255,255,255,0.45)" }}>{article.source.toUpperCase()}</span>
+                <span style={{ color: "rgba(255,255,255,0.25)" }}>{"\u00B7"}</span>
+                <span style={{ color: "rgba(255,255,255,0.45)" }}>{article.dateline.toUpperCase()}</span>
               </div>
             )}
 
-            {/* HEADLINE — the hero */}
+            {/* Headline */}
             <div
               style={{
                 fontFamily: "Serif",
                 fontSize: titleFontSize,
                 fontWeight: 700,
-                color: "#1A1A1A",
-                lineHeight: 1.08,
+                color: "#FFFFFF",
+                lineHeight: 1.1,
                 letterSpacing: "-0.02em",
                 display: "flex",
-                textAlign: "center",
                 maxWidth: 1050,
+                textShadow: "0 1px 20px rgba(0,0,0,0.4)",
               }}
             >
               {title}
             </div>
 
-            {/* Subheadline / description */}
+            {/* Subheadline */}
             {description && (
               <div
                 style={{
                   fontFamily: "Serif",
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: 700,
-                  color: "#4A4A4A",
+                  color: "rgba(255,255,255,0.6)",
                   lineHeight: 1.5,
-                  marginTop: 24,
+                  marginTop: 20,
                   display: "flex",
-                  textAlign: "center",
                   maxWidth: 900,
                   fontStyle: "italic",
                 }}
@@ -675,14 +339,119 @@ function renderTypography(
             )}
 
             {/* Tags */}
-            <div style={{ marginTop: 24, display: "flex" }}>
-              <TagPills tags={article.tags} />
-            </div>
+            {article.tags.length > 0 && (
+              <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+                {article.tags.slice(0, 5).map((tag) => (
+                  <span
+                    key={tag}
+                    style={{
+                      fontFamily: "Mono",
+                      fontSize: 8,
+                      letterSpacing: "0.15em",
+                      color: "rgba(255,255,255,0.45)",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      padding: "3px 8px",
+                      display: "flex",
+                    }}
+                  >
+                    {tag.toUpperCase()}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
 
-        <DoubleRuleBottom />
-        <FooterRow />
+          {/* Footer */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "10px 48px",
+              fontFamily: "Mono",
+              fontSize: 9,
+              color: "rgba(255,255,255,0.25)",
+              letterSpacing: "0.2em",
+            }}
+          >
+            <span>{BRAND_DOMAIN}</span>
+            <span>ONCHAIN EDITORIAL</span>
+          </div>
+
+          {/* Bottom rule */}
+          <div style={{ height: 3, backgroundColor: "#FFFFFF", width: "100%", display: "flex", opacity: 0.25 }} />
+        </div>
+      </div>
+    ),
+    { ...size, fonts },
+  );
+}
+
+// ============================================================================
+// RENDER: FALLBACK — when article not found
+// ============================================================================
+
+function renderFallback(
+  bgBase64: string,
+  fonts: { name: string; data: ArrayBuffer; style: "normal"; weight: 400 | 700 }[],
+) {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          position: "relative",
+          overflow: "hidden",
+          backgroundColor: "#0A0A0A",
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={bgBase64}
+          alt=""
+          width={1200}
+          height={630}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: 0.35,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%)",
+            display: "flex",
+          }}
+        />
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+          }}
+        >
+          <span style={{ fontFamily: "Serif", fontSize: 48, fontWeight: 700, color: "#FFFFFF" }}>
+            {BRAND_NAME}
+          </span>
+          <span style={{ fontFamily: "Mono", fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: "0.3em" }}>
+            A PUBLIC LEDGER OF WORLD EVENTS
+          </span>
+        </div>
       </div>
     ),
     { ...size, fonts },

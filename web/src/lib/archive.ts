@@ -78,7 +78,7 @@ async function upsertRemoteArchivedItems(items: FeedItem[]): Promise<void> {
   await fetchIndexerJson(
     "/api/v1/archive/articles/upsert",
     {
-      method: "POST",
+      method: "PUT", // Ponder 0.7.x maps ponder.post() to hono.put()
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ items }),
       timeoutMs: 20_000,
@@ -270,7 +270,8 @@ export async function getAllArchivedItemsWithHashes(): Promise<
     records = Object.values(archive.items);
   }
 
-  return records.map((record) => ({
+  const merged = await mergeCurrentFeedIntoArchive(records);
+  return merged.map((record) => ({
     ...toFeedItem(record),
     hash: record.hash,
   }));
@@ -280,11 +281,11 @@ export async function getAllArchivedItemsWithHashes(): Promise<
 // AUTO-ARCHIVE: persist live feed items so they survive RSS rotation
 // ============================================================================
 
-let saveInFlight = false;
+let saveInFlight: Promise<void> | null = null;
 
 /**
  * Save a single live feed item to the archive.
- * Fire-and-forget — never blocks the caller, never throws.
+ * Blocks until the write completes.
  */
 export async function autoArchiveItem(item: FeedItem): Promise<void> {
   return autoArchiveBatch([item]);
@@ -292,91 +293,104 @@ export async function autoArchiveItem(item: FeedItem): Promise<void> {
 
 /**
  * Batch-archive many live feed items in one disk write.
- * Called from the front page to persist the entire current feed.
- * Skips write if nothing is new (only updates lastSeenAt in memory).
+ * Called from the front page and article pages to persist feed items.
+ * Waits for any in-flight save to complete before starting a new one.
  */
 export async function autoArchiveBatch(items: FeedItem[]): Promise<void> {
-  if (saveInFlight || items.length === 0) return;
-  try {
-    if (getIndexerBackendUrl()) {
-      await upsertRemoteArchivedItems(items);
-      return;
-    }
+  if (items.length === 0) return;
+  // Wait for any in-flight save to finish before starting a new one
+  if (saveInFlight) {
+    await saveInFlight.catch(() => {});
+  }
+  const doSave = async () => {
+    try {
+      if (getIndexerBackendUrl()) {
+        try {
+          await upsertRemoteArchivedItems(items);
+          return;
+        } catch (err) {
+          console.warn("[archive] remote upsert failed, falling back to local:", err);
+          // Fall through to local file write
+        }
+      }
 
-    const archive = await loadArchive();
-    const now = new Date().toISOString();
-    let newCount = 0;
-    let updatedCount = 0;
+      const archive = await loadArchive();
+      const now = new Date().toISOString();
+      let newCount = 0;
+      let updatedCount = 0;
 
-    for (const item of items) {
-      if (!item.link) continue;
-      const hash = computeEntityHash(item.link) as `0x${string}`;
+      for (const item of items) {
+        if (!item.link) continue;
+        const hash = computeEntityHash(item.link) as `0x${string}`;
 
-      const existing = archive.items[hash];
-      if (existing) {
-        existing.lastSeenAt = now;
-        existing.seenCount = (existing.seenCount || 1) + 1;
-        if (!existing.canonicalClaim || existing.canonicalClaim === "Claim unavailable.") {
-          existing.canonicalClaim =
+        const existing = archive.items[hash];
+        if (existing) {
+          existing.lastSeenAt = now;
+          existing.seenCount = (existing.seenCount || 1) + 1;
+          if (!existing.canonicalClaim || existing.canonicalClaim === "Claim unavailable.") {
+            existing.canonicalClaim =
+              item.canonicalClaim ||
+              extractCanonicalClaim({
+                title: item.title,
+                description: item.description,
+                url: item.link,
+              });
+            updatedCount++;
+          }
+        } else {
+          const canonicalClaim =
             item.canonicalClaim ||
             extractCanonicalClaim({
               title: item.title,
               description: item.description,
               url: item.link,
             });
-          updatedCount++;
-        }
-      } else {
-        const canonicalClaim =
-          item.canonicalClaim ||
-          extractCanonicalClaim({
+
+          archive.items[hash] = {
+            hash,
+            id: item.id || hash,
             title: item.title,
-            description: item.description,
-            url: item.link,
-          });
-
-        archive.items[hash] = {
-          hash,
-          id: item.id || hash,
-          title: item.title,
-          link: item.link,
-          description: item.description || "",
-          pubDate: item.pubDate,
-          source: item.source,
-          sourceUrl: item.sourceUrl || "",
-          category: item.category,
-          imageUrl: item.imageUrl ?? undefined,
-          bias: item.bias ?? undefined,
-          tags: item.tags ?? [],
-          canonicalClaim,
-          firstSeenAt: now,
-          lastSeenAt: now,
-          seenCount: 1,
-          archivedAt: now,
-        };
-        newCount++;
+            link: item.link,
+            description: item.description || "",
+            pubDate: item.pubDate,
+            source: item.source,
+            sourceUrl: item.sourceUrl || "",
+            category: item.category,
+            imageUrl: item.imageUrl ?? undefined,
+            bias: item.bias ?? undefined,
+            tags: item.tags ?? [],
+            canonicalClaim,
+            firstSeenAt: now,
+            lastSeenAt: now,
+            seenCount: 1,
+            archivedAt: now,
+          };
+          newCount++;
+        }
       }
-    }
 
-    archive.updatedAt = now;
-    cache = archive;
-    cacheLoadedAtMs = Date.now();
+      archive.updatedAt = now;
+      cache = archive;
+      cacheLoadedAtMs = Date.now();
 
-    // Only write to disk if we actually added new items
-    if (newCount > 0 || updatedCount > 0) {
-      saveInFlight = true;
-      const dir = path.dirname(ARCHIVE_FILE_PATH);
-      await mkdir(dir, { recursive: true });
-      await writeFile(ARCHIVE_FILE_PATH, JSON.stringify(archive, null, 2), "utf8");
-      console.log(
-        `[archive] +${newCount} new, +${updatedCount} updated (${Object.keys(archive.items).length} total)`
-      );
+      // Only write to disk if we actually added new items
+      if (newCount > 0 || updatedCount > 0) {
+        const dir = path.dirname(ARCHIVE_FILE_PATH);
+        await mkdir(dir, { recursive: true });
+        await writeFile(ARCHIVE_FILE_PATH, JSON.stringify(archive, null, 2), "utf8");
+        console.log(
+          `[archive] +${newCount} new, +${updatedCount} updated (${Object.keys(archive.items).length} total)`
+        );
+      }
+    } catch (err) {
+      console.warn("[archive] auto-save failed:", err);
+    } finally {
+      saveInFlight = null;
     }
-  } catch (err) {
-    console.warn("[archive] auto-save failed:", err);
-  } finally {
-    saveInFlight = false;
-  }
+  };
+
+  saveInFlight = doSave();
+  await saveInFlight;
 }
 
 function deriveSourceLabelFromHost(host: string): string {

@@ -69,6 +69,7 @@ type EditionStatus = "minted" | "auctioning" | "settling" | "available";
 export function AuctionCard({ editionNumber }: AuctionCardProps) {
   const { isConnected } = useAccount();
   const [bidAmount, setBidAmount] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
   const auctionsDeployed = POOTER_AUCTIONS_ADDRESS !== ZERO_ADDRESS;
 
   // Check if edition is minted
@@ -206,11 +207,45 @@ export function AuctionCard({ editionNumber }: AuctionCardProps) {
           <span className="font-mono text-[9px] text-[var(--ink-faint)]">
             {dateStr}
           </span>
+          <button
+            onClick={() => setShowPreview((p) => !p)}
+            className="font-mono text-[8px] uppercase tracking-wider text-[var(--accent-red)] transition-colors hover:text-[var(--ink)]"
+          >
+            {showPreview ? "Hide" : "Preview"}
+          </button>
         </div>
         <span className={`font-mono text-[8px] font-bold uppercase tracking-wider ${statusColor}`}>
           {statusLabel}
         </span>
       </div>
+
+      {/* Edition preview — illustration + newspaper SVG */}
+      {showPreview && (
+        <div className="mt-2 space-y-2">
+          {/* DALL-E illustration (if available) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`/api/edition/${editionNumber}/illustration`}
+            alt={`Edition #${editionNumber} illustration`}
+            className="w-full h-auto border border-[var(--rule)] bg-[#FAF8F3]"
+            loading="lazy"
+            onError={(e) => {
+              // Hide if no illustration exists (404)
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+          {/* Newspaper SVG */}
+          <div className="overflow-hidden border border-[var(--rule)] bg-[#FAF8F3]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/api/edition/${editionNumber}/image`}
+              alt={`Edition #${editionNumber} preview`}
+              className="w-full h-auto"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Minted state */}
       {status === "minted" && isMinted && (

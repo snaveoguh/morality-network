@@ -126,7 +126,7 @@ export async function recordAIUsage(input: AIUsageRecordInput): Promise<void> {
   }
 
   const response = await fetch(new URL("/api/v1/ai/usage", `${baseUrl}/`).toString(), {
-    method: "POST",
+    method: "PUT", // Ponder 0.7.x maps ponder.post() to hono.put()
     headers,
     body: JSON.stringify({
       ...input,
