@@ -28,7 +28,9 @@ import { BRAND_NAME, withBrand } from "@/lib/brand";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-export const dynamic = "force-dynamic";
+// Article pages are keyed by permanent hash — content never changes.
+// Cache forever (revalidate = false means fully static / no expiry).
+export const revalidate = false;
 export const maxDuration = 55;
 
 /** Race a promise against a timeout — returns fallback on timeout */

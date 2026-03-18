@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-15T01:12:27.339Z",
+  "updatedAt": "2026-03-18T13:56:11.024Z",
   "items": {
     "0xe533669faba4e7a07384e8534ec208f259895e6bd9661a89cb2b5da571c6867a": {
       "primary": {
@@ -22725,6 +22725,1674 @@
       "generatedAt": "2026-03-15T01:12:27.339Z",
       "contentHash": "0x24829a6c78acf72a8b0f103ff2392b3f057a6311287e9ef300958c52d23da790",
       "version": 1
+    },
+    "0xe37b8e39038b72e4d608868c32fb5de0accdac8e6301dbb3eefc2ee467ec8ccd": {
+      "primary": {
+        "id": "108279448",
+        "title": "Israel says it has killed Iran’s intelligence minister in third assassination in two days",
+        "link": "https://www.cnbc.com/2026/03/18/iran-war-intelligence-esmail-khatib-israel-middle-east-crisis.html",
+        "description": "Israel's Defense Forces said Wednesday that Iran's Intelligence Minister Esmail Khatib had been killed in a \"targeted strike\" in Tehran.",
+        "pubDate": "Wed, 18 Mar 2026 13:55:21 GMT",
+        "source": "CNBC",
+        "sourceUrl": "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+        "category": "Business",
+        "bias": {
+          "name": "CNBC",
+          "domain": "cnbc.com",
+          "bias": "center",
+          "factuality": "high",
+          "ownership": "NBCUniversal (Comcast)",
+          "country": "US",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "Israel says it has killed Iran’s intelligence minister in third assassination in two days.",
+        "tags": [
+          "security"
+        ]
+      },
+      "claim": "Israel says it has killed Iran’s intelligence minister in third assassination in two days.",
+      "relatedSources": [
+        {
+          "id": "https://thehill.com/?p=5789267",
+          "title": "Israel says Iran intelligence minister Esmail Khatib killed ",
+          "link": "https://thehill.com/policy/international/5789267-israel-iran-intelligence-minister-esmail-khatib-strikes/",
+          "description": "Israeli Defense Minister Israel Katz said Tuesday’s overnight strikes in Tehran also took out Iran’s intelligence minister. Iran has yet to confirm Esmail Khatib’s death, which would mark the third killing of a high-ranked official in the Middle East nation in the latest attacks. The regime confirme",
+          "pubDate": "Wed, 18 Mar 2026 12:19:36 +0000",
+          "source": "The Hill",
+          "sourceUrl": "https://thehill.com/feed/",
+          "category": "Politics",
+          "imageUrl": "https://thehill.com/wp-content/uploads/sites/2/2026/03/GettyImages-2264994719-e1773836130670.jpg?w=900",
+          "bias": {
+            "name": "The Hill",
+            "domain": "thehill.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Nexstar Media",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "Israel says Iran intelligence minister Esmail Khatib killed.",
+          "tags": [
+            "security"
+          ]
+        },
+        {
+          "id": "436125 at https://www.middleeasteye.net/",
+          "title": "Israel claims it killed Iran's intelligence minister",
+          "link": "https://www.middleeasteye.net/live-blog/live-blog-update/israel-claims-it-killed-irans-intelligence-minister",
+          "description": "Israel claims it killed Iran's intelligence minister\n\n    \nIsrael said it had killed Iran's inteligence minister, Esmail Khatib, warning that Israeli attacks would escalate.\nIsraeli Defence Minister Israel Katz announced the killing in a statement on Wednesday during a meeting with senior military o",
+          "pubDate": "Wed, 18 Mar 2026 12:20:10 +0000",
+          "source": "Middle East Eye",
+          "sourceUrl": "https://www.middleeasteye.net/rss",
+          "category": "World",
+          "imageUrl": "https://www.middleeasteye.net/sites/default/files/styles/max_2600x2600/public/images-story/IRAN_INTEL_CHIEF_AFP.jpg.jpg?itok=RBFDesSn",
+          "bias": {
+            "name": "Middle East Eye",
+            "domain": "middleeasteye.net",
+            "bias": "lean-left",
+            "factuality": "mostly-factual",
+            "ownership": "Independent",
+            "country": "UK",
+            "fundingModel": "independent"
+          },
+          "canonicalClaim": "Israel claims it killed Iran's intelligence minister.",
+          "tags": [
+            "war",
+            "security"
+          ]
+        },
+        {
+          "id": "https://www.dw.com/en/iran-war-israel-says-iranian-intelligence-minister-killed/live-76402968?maca=en-rss-en-all-1573-rdf",
+          "title": "Iran war: Israel says Iranian intelligence minister killed",
+          "link": "https://www.dw.com/en/iran-war-israel-says-iranian-intelligence-minister-killed/live-76402968?maca=en-rss-en-all-1573-rdf",
+          "description": "Israel has said that Iranian Intelligence Minister Esmaeil Khatib was \"eliminated\" in the latest assassination of top Iranian officials. Iran has not confirmed Khatib's death. DW has the latest.",
+          "pubDate": "2026-03-18T10:41:00.000Z",
+          "source": "DW News",
+          "sourceUrl": "https://rss.dw.com/rdf/rss-en-all",
+          "category": "World",
+          "bias": {
+            "name": "DW News",
+            "domain": "dw.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Deutsche Welle (State)",
+            "country": "Germany",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "Iran war: Israel says Iranian intelligence minister killed.",
+          "tags": [
+            "war",
+            "security"
+          ]
+        },
+        {
+          "id": "https://www.aljazeera.com/?t=1773839433",
+          "title": "Israel says it killed Iranian intelligence chief Khatib",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/3/18/israel-says-it-killed-iranian-intelligence-chief-khatib?traffic_source=rss",
+          "description": "Israel’s Defence Minister Israel Katz said an overnight strike killed Iran’s Intelligence Minister Esmail Khatib.",
+          "pubDate": "Wed, 18 Mar 2026 13:15:07 +0000",
+          "source": "Al Jazeera",
+          "sourceUrl": "https://www.aljazeera.com/xml/rss/all.xml",
+          "category": "World",
+          "bias": {
+            "name": "Al Jazeera",
+            "domain": "aljazeera.com",
+            "bias": "center",
+            "factuality": "mostly-factual",
+            "ownership": "Qatar (State)",
+            "country": "Qatar",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "Israel says it killed Iranian intelligence chief Khatib.",
+          "tags": [
+            "security"
+          ]
+        },
+        {
+          "id": "https://www.npr.org/2026/03/18/nx-s1-5751694/iran-retaliates-israel-kills-two-top-iranian-officials",
+          "title": "Israel says it killed Iran's intelligence chief in overnight strike",
+          "link": "https://www.npr.org/2026/03/18/nx-s1-5751694/iran-retaliates-israel-kills-two-top-iranian-officials",
+          "description": "Israel said it killed Iran's minister of intelligence, Esmail Khatib, in an overnight strike Wednesday. The announcement came after Iran attacked Israel in missile strikes that killed two people.",
+          "pubDate": "Wed, 18 Mar 2026 06:14:38 -0400",
+          "source": "NPR",
+          "sourceUrl": "https://feeds.npr.org/1001/rss.xml",
+          "category": "World",
+          "bias": {
+            "name": "NPR",
+            "domain": "npr.org",
+            "bias": "lean-left",
+            "factuality": "very-high",
+            "ownership": "NPR (Public)",
+            "country": "US",
+            "fundingModel": "public"
+          },
+          "canonicalClaim": "Israel says it killed Iran's intelligence chief in overnight strike.",
+          "tags": [
+            "war",
+            "security"
+          ]
+        }
+      ],
+      "subheadline": "CNBC focuses on assassination and intelligence, with context pulled from source reporting instead of recycled feed copy. Cross-checked against The Hill and Middle East Eye.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: Israel&#x27;s Defense Forces said Wednesday that Iran&#x27;s Intelligence Minister Esmail Khatib had been killed in a \"targeted strike\" in Tehran, marking the third assassination of a...",
+        "Cross-source context: The Hill highlights israeli Defense Minister Israel Katz said Tuesday’s overnight strikes in Tehran also took out Iran’s intelligence minister. Iran has yet to confirm Esmail Khatib’s death, which would mark the third killing of a high-ranked official... Middle East Eye highlights israeli Defence Minister Israel Katz announced the killing in a statement on Wednesday during a meeting with senior military officials. DW News highlights israel has said that Iranian Intelligence Minister Esmaeil Khatib was \"eliminated\" in the latest assassination of top Iranian officials.",
+        "What to watch next: movement around assassination, intelligence."
+      ],
+      "wireSummary": "The Hill: Israeli Defense Minister Israel Katz said Tuesday’s overnight strikes in Tehran also took out Iran’s intelligence minister. Iran... | Middle East Eye: Israeli Defence Minister Israel Katz announced the killing in a statement on Wednesday during a meeting with senior... | DW News: Israel has said that Iranian Intelligence Minister Esmaeil Khatib was \"eliminated\" in the latest assassination of top Iranian...",
+      "biasContext": "CNBC reports from a centrist position, with a strong factual track record. For counterpoint, Middle East Eye covers this from with a slight leftward lean.",
+      "tags": [
+        "business",
+        "war",
+        "intelligence",
+        "minister"
+      ],
+      "contextSnippets": [
+        {
+          "source": "The Hill",
+          "link": "https://thehill.com/policy/international/5789267-israel-iran-intelligence-minister-esmail-khatib-strikes/",
+          "summary": "Israeli Defense Minister Israel Katz said Tuesday’s overnight strikes in Tehran also took out Iran’s intelligence minister. Iran has yet to confirm Esmail Khatib’s death, which would mark the third killing of a high-ranked official..."
+        },
+        {
+          "source": "Middle East Eye",
+          "link": "https://www.middleeasteye.net/live-blog/live-blog-update/israel-claims-it-killed-irans-intelligence-minister",
+          "summary": "Israeli Defence Minister Israel Katz announced the killing in a statement on Wednesday during a meeting with senior military officials."
+        },
+        {
+          "source": "DW News",
+          "link": "https://www.dw.com/en/iran-war-israel-says-iranian-intelligence-minister-killed/live-76402968?maca=en-rss-en-all-1573-rdf",
+          "summary": "Israel has said that Iranian Intelligence Minister Esmaeil Khatib was \"eliminated\" in the latest assassination of top Iranian officials."
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "Israel says it has killed Iran’s intelligence minister in third assassination in two days.",
+        "claimVariants": [
+          {
+            "source": "CNBC",
+            "link": "https://www.cnbc.com/2026/03/18/iran-war-intelligence-esmail-khatib-israel-middle-east-crisis.html",
+            "claim": "Israel says it has killed Iran’s intelligence minister in third assassination in two days.",
+            "confidence": 0.85
+          },
+          {
+            "source": "The Hill",
+            "link": "https://thehill.com/policy/international/5789267-israel-iran-intelligence-minister-esmail-khatib-strikes/",
+            "claim": "Israel says Iran intelligence minister Esmail Khatib killed.",
+            "confidence": 0.8166666666666667
+          },
+          {
+            "source": "Middle East Eye",
+            "link": "https://www.middleeasteye.net/live-blog/live-blog-update/israel-claims-it-killed-irans-intelligence-minister",
+            "claim": "Israel claims it killed Iran's intelligence minister.",
+            "confidence": 0.76
+          },
+          {
+            "source": "DW News",
+            "link": "https://www.dw.com/en/iran-war-israel-says-iranian-intelligence-minister-killed/live-76402968?maca=en-rss-en-all-1573-rdf",
+            "claim": "Iran war: Israel says Iranian intelligence minister killed.",
+            "confidence": 0.8166666666666667
+          },
+          {
+            "source": "Al Jazeera",
+            "link": "https://www.aljazeera.com/video/newsfeed/2026/3/18/israel-says-it-killed-iranian-intelligence-chief-khatib?traffic_source=rss",
+            "claim": "Israel says it killed Iranian intelligence chief Khatib.",
+            "confidence": 0.8
+          },
+          {
+            "source": "NPR",
+            "link": "https://www.npr.org/2026/03/18/nx-s1-5751694/iran-retaliates-israel-kills-two-top-iranian-officials",
+            "claim": "Israel says it killed Iran's intelligence chief in overnight strike.",
+            "confidence": 0.7766666666666666
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "CNBC",
+            "title": "Israel says it has killed Iran’s intelligence minister in third assassination in two days",
+            "link": "https://www.cnbc.com/2026/03/18/iran-war-intelligence-esmail-khatib-israel-middle-east-crisis.html",
+            "summary": "Israel&#x27;s Defense Forces said Wednesday that Iran&#x27;s Intelligence Minister Esmail Khatib had been killed in a \"targeted strike\" in Tehran, marking the third assassination of a...",
+            "pubDate": "Wed, 18 Mar 2026 13:55:21 GMT"
+          },
+          {
+            "kind": "link",
+            "source": "The Hill",
+            "title": "Israel says Iran intelligence minister Esmail Khatib killed ",
+            "link": "https://thehill.com/policy/international/5789267-israel-iran-intelligence-minister-esmail-khatib-strikes/",
+            "summary": "Israeli Defense Minister Israel Katz said Tuesday’s overnight strikes in Tehran also took out Iran’s intelligence minister. Iran has yet to confirm Esmail Khatib’s death, which would mark the third killing of a high-ranked official...",
+            "pubDate": "Wed, 18 Mar 2026 12:19:36 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Middle East Eye",
+            "title": "Israel claims it killed Iran's intelligence minister",
+            "link": "https://www.middleeasteye.net/live-blog/live-blog-update/israel-claims-it-killed-irans-intelligence-minister",
+            "summary": "Israeli Defence Minister Israel Katz announced the killing in a statement on Wednesday during a meeting with senior military officials.",
+            "pubDate": "Wed, 18 Mar 2026 12:20:10 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "DW News",
+            "title": "Iran war: Israel says Iranian intelligence minister killed",
+            "link": "https://www.dw.com/en/iran-war-israel-says-iranian-intelligence-minister-killed/live-76402968?maca=en-rss-en-all-1573-rdf",
+            "summary": "Israel has said that Iranian Intelligence Minister Esmaeil Khatib was \"eliminated\" in the latest assassination of top Iranian officials.",
+            "pubDate": "2026-03-18T10:41:00.000Z"
+          },
+          {
+            "kind": "link",
+            "source": "Al Jazeera",
+            "title": "Israel says it killed Iranian intelligence chief Khatib",
+            "link": "https://www.aljazeera.com/video/newsfeed/2026/3/18/israel-says-it-killed-iranian-intelligence-chief-khatib?traffic_source=rss",
+            "summary": "Israel’s Defence Minister Israel Katz said an overnight strike killed Iran’s Intelligence Minister Esmail Khatib.",
+            "pubDate": "Wed, 18 Mar 2026 13:15:07 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "NPR",
+            "title": "Israel says it killed Iran's intelligence chief in overnight strike",
+            "link": "https://www.npr.org/2026/03/18/nx-s1-5751694/iran-retaliates-israel-kills-two-top-iranian-officials",
+            "summary": "Israel said it killed Iran's minister of intelligence, Esmail Khatib, in an overnight strike Wednesday. The announcement came after Iran attacked Israel in missile strikes that killed two people.",
+            "pubDate": "Wed, 18 Mar 2026 06:14:38 -0400"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 6
+      },
+      "entities": [
+        {
+          "name": "Israel",
+          "canonicalName": "israel",
+          "type": "country",
+          "context": "What happened: Israel&#x27;s Defense Forces said Wednesday that Iran&#x27;s Intelligence Minister Esmail Khatib had b...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 15,
+              "endChar": 21
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 67,
+              "endChar": 73
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 329,
+              "endChar": 335
+            }
+          ]
+        },
+        {
+          "name": "Iran",
+          "canonicalName": "iran",
+          "type": "country",
+          "context": "What happened: Israel&#x27;s Defense Forces said Wednesday that Iran&#x27;s Intelligence Minister Esmail Khatib had b...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 64,
+              "endChar": 68
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 136,
+              "endChar": 140
+            },
+            {
+              "paragraphIndex": 1,
+              "startChar": 166,
+              "endChar": 170
+            }
+          ]
+        }
+      ],
+      "marketImpact": {
+        "significance": 25,
+        "headline": "Potential exposure across 1 topic detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "war"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0xe37b8e39038b72e4d608868c32fb5de0accdac8e6301dbb3eefc2ee467ec8ccd",
+      "generatedAt": "2026-03-18T13:56:01.574Z",
+      "contentHash": "0xc4a487ea70a8f0638c4513d9849009bf7321682d4687aec37c0529fef5b9721d",
+      "version": 1
+    },
+    "0xe27ff95463886438223b1847cf27f10c5d7cdde3cb53438107e906101e2cd7db": {
+      "primary": {
+        "id": "https://apnews.com/article/popular-dog-breeds-dachshund-french-bulldog-d94ee9db8d56bcb29ccf39e8554a2827",
+        "title": "French bulldog frenzy may be cooling in US, but dachshunds are riding high",
+        "link": "https://apnews.com/article/popular-dog-breeds-dachshund-french-bulldog-d94ee9db8d56bcb29ccf39e8554a2827",
+        "description": "Four dachshunds wait in a basket of a breeder at a dog show in Dortmund, Germany, Friday, Nov. 8, 2024. (AP Photo/Martin Meissner, file)\n2026-03-18T13:41:55Z\nNEW YORK (AP) — Americans still dig French bulldogs, retrievers and German shepherds. But dachshunds are increasingly hot dogs.\nFor the first ",
+        "pubDate": "Wed, 18 Mar 2026 13:53:02 +0000",
+        "source": "Associated Press",
+        "sourceUrl": "https://feedx.net/rss/ap.xml",
+        "category": "World",
+        "imageUrl": "https://dims.apnews.com/dims4/default/e4c7a17/2147483647/strip/true/crop/6233x4153+0+1/resize/980x653!/quality/90/?url=https%3A%2F%2Fassets.apnews.com%2F3a%2F69%2F5cadc4977bbae18e19f6c9eec3cd%2F0ead769f907f46e28a34e12f1fd4468e",
+        "bias": {
+          "name": "Associated Press",
+          "domain": "apnews.com",
+          "bias": "center",
+          "factuality": "very-high",
+          "ownership": "AP (Cooperative)",
+          "country": "US",
+          "fundingModel": "nonprofit"
+        },
+        "canonicalClaim": "French bulldog frenzy may be cooling in US, but dachshunds are riding high."
+      },
+      "claim": "French bulldog frenzy may be cooling in US, but dachshunds are riding high.",
+      "relatedSources": [
+        {
+          "id": "reddit-1rwx2s2",
+          "title": "Canada could join EU, French foreign minister says",
+          "link": "https://www.politico.eu/article/canada-could-join-eu-says-french-foreign-minister-jean-noel-barrot/",
+          "description": "",
+          "pubDate": "2026-03-18T07:18:47.000Z",
+          "source": "r/worldnews",
+          "sourceUrl": "https://www.reddit.com/r/worldnews",
+          "category": "World",
+          "imageUrl": "https://external-preview.redd.it/b1kPq18ZgYk5guHZs9seoXb8jQcV78c7PG446uWoBYE.jpeg?auto=webp&s=045c3f2d7ed9c8656fd815170693e5d417cacb41",
+          "bias": {
+            "name": "Reddit",
+            "domain": "reddit.com",
+            "bias": "lean-left",
+            "factuality": "mixed",
+            "ownership": "Reddit Inc / Advance Publications",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "Canada could join EU, French foreign minister says."
+        },
+        {
+          "id": "https://jacobin.com/2026/03/france-insoumise-center-left-elections/",
+          "title": "A Missed Opportunity for the French Left",
+          "link": "https://jacobin.com/2026/03/france-insoumise-center-left-elections/",
+          "description": "First-round results suggest the French left can hold its ground in this month’s local elections. This positive outcome comes despite a campaign defined by an acrimonious civil war between the center-left establishment and France Insoumise.\nThe price of disunity is that the Left is at best holding it",
+          "pubDate": "2026-03-17T09:11:27.000Z",
+          "source": "Jacobin",
+          "sourceUrl": "https://jacobin.com/feed",
+          "category": "World",
+          "imageUrl": "https://images.jacobinmag.com/wp-content/uploads/2026/03/17090252/GettyImages-2264667900-1-1-900x651.jpg",
+          "bias": {
+            "name": "Jacobin",
+            "domain": "jacobin.com",
+            "bias": "far-left",
+            "factuality": "high",
+            "ownership": "Independent",
+            "country": "US",
+            "fundingModel": "independent"
+          },
+          "canonicalClaim": "A Missed Opportunity for the French Left.",
+          "tags": [
+            "war",
+            "election"
+          ]
+        }
+      ],
+      "subheadline": "Associated Press focuses on dachshunds and bulldog, with context pulled from source reporting instead of recycled feed copy. Cross-checked against Jacobin.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: Four dachshunds wait in a basket of a breeder at a dog show in Dortmund, Germany, Friday, Nov.",
+        "Cross-source context: Jacobin highlights first-round results suggest the French left can hold its ground in this month’s local elections. This positive outcome comes despite a campaign defined by an acrimonious civil war between the center-left establishment and...",
+        "What to watch next: movement around dachshunds, bulldog."
+      ],
+      "wireSummary": "Jacobin: First-round results suggest the French left can hold its ground in this month’s local elections. This positive outcome...",
+      "biasContext": "Associated Press reports from a centrist position, with an excellent factual track record. For counterpoint, r/worldnews covers this from with a slight leftward lean.",
+      "tags": [
+        "world",
+        "war",
+        "election",
+        "french",
+        "dachshunds"
+      ],
+      "contextSnippets": [
+        {
+          "source": "Jacobin",
+          "link": "https://jacobin.com/2026/03/france-insoumise-center-left-elections/",
+          "summary": "First-round results suggest the French left can hold its ground in this month’s local elections. This positive outcome comes despite a campaign defined by an acrimonious civil war between the center-left establishment and..."
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "French bulldog frenzy may be cooling in US, but dachshunds are riding high.",
+        "claimVariants": [
+          {
+            "source": "Associated Press",
+            "link": "https://apnews.com/article/popular-dog-breeds-dachshund-french-bulldog-d94ee9db8d56bcb29ccf39e8554a2827",
+            "claim": "French bulldog frenzy may be cooling in US, but dachshunds are riding high.",
+            "confidence": 0.6633333333333333
+          },
+          {
+            "source": "r/worldnews",
+            "link": "https://www.politico.eu/article/canada-could-join-eu-says-french-foreign-minister-jean-noel-barrot/",
+            "claim": "Canada could join EU, French foreign minister says.",
+            "confidence": 0.63
+          },
+          {
+            "source": "Jacobin",
+            "link": "https://jacobin.com/2026/03/france-insoumise-center-left-elections/",
+            "claim": "A Missed Opportunity for the French Left.",
+            "confidence": 0.5966666666666667
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Associated Press",
+            "title": "French bulldog frenzy may be cooling in US, but dachshunds are riding high",
+            "link": "https://apnews.com/article/popular-dog-breeds-dachshund-french-bulldog-d94ee9db8d56bcb29ccf39e8554a2827",
+            "summary": "Four dachshunds wait in a basket of a breeder at a dog show in Dortmund, Germany, Friday, Nov.",
+            "pubDate": "Wed, 18 Mar 2026 13:53:02 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "r/worldnews",
+            "title": "Canada could join EU, French foreign minister says",
+            "link": "https://www.politico.eu/article/canada-could-join-eu-says-french-foreign-minister-jean-noel-barrot/",
+            "summary": "Canada could join EU, French foreign minister says",
+            "pubDate": "2026-03-18T07:18:47.000Z"
+          },
+          {
+            "kind": "link",
+            "source": "Jacobin",
+            "title": "A Missed Opportunity for the French Left",
+            "link": "https://jacobin.com/2026/03/france-insoumise-center-left-elections/",
+            "summary": "First-round results suggest the French left can hold its ground in this month’s local elections. This positive outcome comes despite a campaign defined by an acrimonious civil war between the center-left establishment and...",
+            "pubDate": "2026-03-17T09:11:27.000Z"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 3
+      },
+      "entities": [
+        {
+          "name": "Germany",
+          "canonicalName": "germany",
+          "type": "country",
+          "context": "What happened: Four dachshunds wait in a basket of a breeder at a dog show in Dortmund, Germany, Friday, Nov.",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 88,
+              "endChar": 95
+            }
+          ]
+        }
+      ],
+      "marketImpact": {
+        "significance": 35,
+        "headline": "Potential exposure across 2 topics detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Political Risk",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"election\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "war",
+          "election"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0xe27ff95463886438223b1847cf27f10c5d7cdde3cb53438107e906101e2cd7db",
+      "generatedAt": "2026-03-18T13:56:03.121Z",
+      "contentHash": "0x929091f04883d753de4a7e1305bac9935ece7066005d38a04c4c7b6f34a43d3c",
+      "version": 1
+    },
+    "0x99810973dc4027e5c5f3ab847420307e040c0e9de039457591c4f64d0e7b4156": {
+      "primary": {
+        "id": "https://apnews.com/article/britain-meningitis-outbreak-students-kent-5434f6eb5cb73745e694bfb3f4892116",
+        "title": "What to know about the meningitis outbreak in England causing angst among university students",
+        "link": "https://apnews.com/article/britain-meningitis-outbreak-students-kent-5434f6eb5cb73745e694bfb3f4892116",
+        "description": "Students queue for antibiotics outside a building at the University of Kent, following an outbreak of meningitis, in Canterbury, Kent, England, Monday March 16, 2026. (Gareth Fuller/PA via AP)\n2026-03-18T13:17:36Z\nLONDON (AP) — A meningitis outbreak in southeast England has led to the deaths of a un",
+        "pubDate": "Wed, 18 Mar 2026 13:53:02 +0000",
+        "source": "Associated Press",
+        "sourceUrl": "https://feedx.net/rss/ap.xml",
+        "category": "World",
+        "imageUrl": "https://dims.apnews.com/dims4/default/fcc9593/2147483647/strip/true/crop/3248x2164+0+2/resize/980x653!/quality/90/?url=https%3A%2F%2Fassets.apnews.com%2F24%2Fc3%2Ff3e4b171eb7922ede0cf5db14e4e%2F9c13c577825f43abac359c2aaf1bcffb",
+        "bias": {
+          "name": "Associated Press",
+          "domain": "apnews.com",
+          "bias": "center",
+          "factuality": "very-high",
+          "ownership": "AP (Cooperative)",
+          "country": "US",
+          "fundingModel": "nonprofit"
+        },
+        "canonicalClaim": "What to know about the meningitis outbreak in England causing angst among university students.",
+        "tags": [
+          "health"
+        ]
+      },
+      "claim": "What to know about the meningitis outbreak in England causing angst among university students.",
+      "relatedSources": [
+        {
+          "id": "https://order-order.com/?p=543306",
+          "title": "Streeting Announces “Targeted” Vaccination Plan for “Unprecedented” Meningitis Outbreak",
+          "link": "https://order-order.com/2026/03/17/streeting-announces-targeted-vaccination-plan-for-unprecedented-meningitis-outbreak/",
+          "description": "Confirming the UK Health Security Agency’s (UKHSA) plan for a ‘targeted’ vaccination programme for students who live in Kent University’s Canterbury campus accommodation. The programme “may expand further” depending on the UKHSA’s risk assessment…",
+          "pubDate": "Tue, 17 Mar 2026 12:58:59 +0000",
+          "source": "Guido Fawkes",
+          "sourceUrl": "https://order-order.com/feed/",
+          "category": "Politics",
+          "bias": {
+            "name": "Guido Fawkes",
+            "domain": "order-order.com",
+            "bias": "right",
+            "factuality": "mixed",
+            "ownership": "Independent",
+            "country": "UK",
+            "fundingModel": "independent"
+          },
+          "canonicalClaim": "Streeting Announces “Targeted” Vaccination Plan for “Unprecedented” Meningitis Outbreak.",
+          "tags": [
+            "health"
+          ]
+        },
+        {
+          "id": "https://www.bbc.com/news/articles/c7432klgyldo#1",
+          "title": "What are the symptoms of meningitis and how is it spread?",
+          "link": "https://www.bbc.com/news/articles/c7432klgyldo?at_medium=RSS&at_campaign=rss",
+          "description": "Two people have died following an \"unpredecented\" outbreak of meningitis in Kent.",
+          "pubDate": "Wed, 18 Mar 2026 11:04:30 GMT",
+          "source": "BBC News",
+          "sourceUrl": "http://feeds.bbci.co.uk/news/rss.xml",
+          "category": "World",
+          "bias": {
+            "name": "BBC News",
+            "domain": "bbc.co.uk",
+            "bias": "lean-left",
+            "factuality": "high",
+            "ownership": "BBC (Public)",
+            "country": "UK",
+            "fundingModel": "public"
+          },
+          "canonicalClaim": "What are the symptoms of meningitis and how is it spread?",
+          "tags": [
+            "health"
+          ]
+        },
+        {
+          "id": "CBMiugFBVV95cUxORGNHd0VIQ0pVeEJLWXl1NEN4SGZYTTlGVlNIZG9wZDJEMVkwbVVsZjhHTTdic1VoR3BobHcwZmtYZGl4RnBZVlpIY3pqYm80LXZqODhDZXNWVWhVVUJWaUZFT2VVc2dwcTBYSWo3Y0h0c1preTBFcE1yNGRaUTNIOGMxQ2tiOEEtNWV0RjJQbm0tYXRaWTNiY1I4ZTdLcXFqLWtQdnpXbDZQT29PVDVISVVKcC1tTmJqY3c",
+          "title": "Chinese university tells students to 'fall in love' during spring break - Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxORGNHd0VIQ0pVeEJLWXl1NEN4SGZYTTlGVlNIZG9wZDJEMVkwbVVsZjhHTTdic1VoR3BobHcwZmtYZGl4RnBZVlpIY3pqYm80LXZqODhDZXNWVWhVVUJWaUZFT2VVc2dwcTBYSWo3Y0h0c1preTBFcE1yNGRaUTNIOGMxQ2tiOEEtNWV0RjJQbm0tYXRaWTNiY1I4ZTdLcXFqLWtQdnpXbDZQT29PVDVISVVKcC1tTmJqY3c?oc=5",
+          "description": "Chinese university tells students to 'fall in love' during spring break  Reuters",
+          "pubDate": "Wed, 18 Mar 2026 06:43:00 GMT",
+          "source": "Reuters",
+          "sourceUrl": "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en",
+          "category": "World",
+          "bias": {
+            "name": "Reuters",
+            "domain": "reuters.com",
+            "bias": "center",
+            "factuality": "very-high",
+            "ownership": "Thomson Reuters",
+            "country": "UK/US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "Chinese university tells students to 'fall in love' during spring break."
+        },
+        {
+          "id": "https://reason.com/?post_type=volokh-post&p=8374117",
+          "title": "\"Denaturalization's Missing Limit\" to Appear in Northwestern University Law Review Online",
+          "link": "https://reason.com/volokh/2026/03/17/denaturalizations-missing-limit-to-appear-in-northwestern-university-law-review-online/",
+          "description": "Why civil denaturalization should have a five-year statute of limitations under existing law",
+          "pubDate": "Wed, 18 Mar 2026 00:28:58 +0000",
+          "source": "Reason",
+          "sourceUrl": "https://reason.com/feed/",
+          "category": "World",
+          "bias": {
+            "name": "Reason",
+            "domain": "reason.com",
+            "bias": "lean-right",
+            "factuality": "high",
+            "ownership": "Reason Foundation",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Denaturalization's Missing Limit\" to Appear in Northwestern University Law Review Online."
+        },
+        {
+          "id": "https://freebeacon.com/?p=2123284",
+          "title": "Columbia-Funded Legal Group Fights for Release of Jack Smith’s Mar-a-Lago Documents Report in Wake of University’s $221 Million Settlement With Trump",
+          "link": "https://freebeacon.com/campus/columbia-funded-legal-group-fights-for-release-of-jack-smiths-mar-a-lago-documents-report-in-wake-of-universitys-221-million-settlement-with-trump/",
+          "description": "The Knight First Amendment Institute, an activist legal group funded by Columbia University, has already lost two legal attempts to force the release of Special Counsel Jack Smith's report into President Donald Trump's handling of classified information. It's now hoping the third time will be the ch",
+          "pubDate": "Tue, 17 Mar 2026 09:00:43 +0000",
+          "source": "Free Beacon",
+          "sourceUrl": "https://freebeacon.com/feed/",
+          "category": "World",
+          "bias": {
+            "name": "Washington Free Beacon",
+            "domain": "freebeacon.com",
+            "bias": "right",
+            "factuality": "mostly-factual",
+            "ownership": "Center for American Freedom",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Columbia-Funded Legal Group Fights for Release of Jack Smith’s Mar-a-Lago Documents Report in Wake of University’s $221 Million Settlement With Trump."
+        }
+      ],
+      "subheadline": "Associated Press focuses on meningitis and university, with context pulled from source reporting instead of recycled feed copy. Cross-checked against Guido Fawkes and BBC News.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: Students queue for antibiotics outside a building at the University of Kent, following an outbreak of meningitis, in Canterbury, Kent, England, Monday March 16, 2026.",
+        "Cross-source context: Guido Fawkes highlights confirming the UK Health Security Agency's (UKHSA) plan for a &#8216;targeted' vaccination programme for students who live in Kent University's Canterbury campus accommodation. The programme &#8220;may expand further&#8221; depending on the UKHSA's risk assessment&#8230; BBC News highlights two people have died following an \"unpredecented\" outbreak of meningitis in Kent.",
+        "What to watch next: movement around meningitis, university."
+      ],
+      "wireSummary": "Guido Fawkes: Confirming the UK Health Security Agency's (UKHSA) plan for a &#8216;targeted' vaccination programme for students who live in... | BBC News: Two people have died following an \"unpredecented\" outbreak of meningitis in Kent.",
+      "biasContext": "Associated Press reports from a centrist position, with an excellent factual track record. For counterpoint, Guido Fawkes covers this from from a right-leaning editorial position.",
+      "tags": [
+        "world",
+        "health",
+        "meningitis",
+        "university"
+      ],
+      "contextSnippets": [
+        {
+          "source": "Guido Fawkes",
+          "link": "https://order-order.com/2026/03/17/streeting-announces-targeted-vaccination-plan-for-unprecedented-meningitis-outbreak/",
+          "summary": "Confirming the UK Health Security Agency's (UKHSA) plan for a &#8216;targeted' vaccination programme for students who live in Kent University's Canterbury campus accommodation. The programme &#8220;may expand further&#8221; depending on the UKHSA's risk assessment&#8230;"
+        },
+        {
+          "source": "BBC News",
+          "link": "https://www.bbc.com/news/articles/c7432klgyldo?at_medium=RSS&at_campaign=rss",
+          "summary": "Two people have died following an \"unpredecented\" outbreak of meningitis in Kent."
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "Columbia-Funded Legal Group Fights for Release of Jack Smith’s Mar-a-Lago Documents Report in Wake of University’s $221 Million Settlement With Trump.",
+        "claimVariants": [
+          {
+            "source": "Associated Press",
+            "link": "https://apnews.com/article/britain-meningitis-outbreak-students-kent-5434f6eb5cb73745e694bfb3f4892116",
+            "claim": "What to know about the meningitis outbreak in England causing angst among university students.",
+            "confidence": 0.6799999999999999
+          },
+          {
+            "source": "Guido Fawkes",
+            "link": "https://order-order.com/2026/03/17/streeting-announces-targeted-vaccination-plan-for-unprecedented-meningitis-outbreak/",
+            "claim": "Streeting Announces “Targeted” Vaccination Plan for “Unprecedented” Meningitis Outbreak.",
+            "confidence": 0.6233333333333333
+          },
+          {
+            "source": "BBC News",
+            "link": "https://www.bbc.com/news/articles/c7432klgyldo?at_medium=RSS&at_campaign=rss",
+            "claim": "What are the symptoms of meningitis and how is it spread?",
+            "confidence": 0.37999999999999995
+          },
+          {
+            "source": "Reuters",
+            "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxORGNHd0VIQ0pVeEJLWXl1NEN4SGZYTTlGVlNIZG9wZDJEMVkwbVVsZjhHTTdic1VoR3BobHcwZmtYZGl4RnBZVlpIY3pqYm80LXZqODhDZXNWVWhVVUJWaUZFT2VVc2dwcTBYSWo3Y0h0c1preTBFcE1yNGRaUTNIOGMxQ2tiOEEtNWV0RjJQbm0tYXRaWTNiY1I4ZTdLcXFqLWtQdnpXbDZQT29PVDVISVVKcC1tTmJqY3c?oc=5",
+            "claim": "Chinese university tells students to 'fall in love' during spring break.",
+            "confidence": 0.6399999999999999
+          },
+          {
+            "source": "Reason",
+            "link": "https://reason.com/volokh/2026/03/17/denaturalizations-missing-limit-to-appear-in-northwestern-university-law-review-online/",
+            "claim": "Denaturalization's Missing Limit\" to Appear in Northwestern University Law Review Online.",
+            "confidence": 0.6399999999999999
+          },
+          {
+            "source": "Free Beacon",
+            "link": "https://freebeacon.com/campus/columbia-funded-legal-group-fights-for-release-of-jack-smiths-mar-a-lago-documents-report-in-wake-of-universitys-221-million-settlement-with-trump/",
+            "claim": "Columbia-Funded Legal Group Fights for Release of Jack Smith’s Mar-a-Lago Documents Report in Wake of University’s $221 Million Settlement With Trump.",
+            "confidence": 0.78
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Associated Press",
+            "title": "What to know about the meningitis outbreak in England causing angst among university students",
+            "link": "https://apnews.com/article/britain-meningitis-outbreak-students-kent-5434f6eb5cb73745e694bfb3f4892116",
+            "summary": "Students queue for antibiotics outside a building at the University of Kent, following an outbreak of meningitis, in Canterbury, Kent, England, Monday March 16, 2026.",
+            "pubDate": "Wed, 18 Mar 2026 13:53:02 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Guido Fawkes",
+            "title": "Streeting Announces “Targeted” Vaccination Plan for “Unprecedented” Meningitis Outbreak",
+            "link": "https://order-order.com/2026/03/17/streeting-announces-targeted-vaccination-plan-for-unprecedented-meningitis-outbreak/",
+            "summary": "Confirming the UK Health Security Agency's (UKHSA) plan for a &#8216;targeted' vaccination programme for students who live in Kent University's Canterbury campus accommodation. The programme &#8220;may expand further&#8221; depending on the UKHSA's risk assessment&#8230;",
+            "pubDate": "Tue, 17 Mar 2026 12:58:59 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "BBC News",
+            "title": "What are the symptoms of meningitis and how is it spread?",
+            "link": "https://www.bbc.com/news/articles/c7432klgyldo?at_medium=RSS&at_campaign=rss",
+            "summary": "Two people have died following an \"unpredecented\" outbreak of meningitis in Kent.",
+            "pubDate": "Wed, 18 Mar 2026 11:04:30 GMT"
+          },
+          {
+            "kind": "link",
+            "source": "Reuters",
+            "title": "Chinese university tells students to 'fall in love' during spring break - Reuters",
+            "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxORGNHd0VIQ0pVeEJLWXl1NEN4SGZYTTlGVlNIZG9wZDJEMVkwbVVsZjhHTTdic1VoR3BobHcwZmtYZGl4RnBZVlpIY3pqYm80LXZqODhDZXNWVWhVVUJWaUZFT2VVc2dwcTBYSWo3Y0h0c1preTBFcE1yNGRaUTNIOGMxQ2tiOEEtNWV0RjJQbm0tYXRaWTNiY1I4ZTdLcXFqLWtQdnpXbDZQT29PVDVISVVKcC1tTmJqY3c?oc=5",
+            "summary": "Chinese university tells students to 'fall in love' during spring break Reuters",
+            "pubDate": "Wed, 18 Mar 2026 06:43:00 GMT"
+          },
+          {
+            "kind": "link",
+            "source": "Reason",
+            "title": "\"Denaturalization's Missing Limit\" to Appear in Northwestern University Law Review Online",
+            "link": "https://reason.com/volokh/2026/03/17/denaturalizations-missing-limit-to-appear-in-northwestern-university-law-review-online/",
+            "summary": "Why civil denaturalization should have a five-year statute of limitations under existing law",
+            "pubDate": "Wed, 18 Mar 2026 00:28:58 +0000"
+          },
+          {
+            "kind": "report",
+            "source": "Free Beacon",
+            "title": "Columbia-Funded Legal Group Fights for Release of Jack Smith’s Mar-a-Lago Documents Report in Wake of University’s $221 Million Settlement With Trump",
+            "link": "https://freebeacon.com/campus/columbia-funded-legal-group-fights-for-release-of-jack-smiths-mar-a-lago-documents-report-in-wake-of-universitys-221-million-settlement-with-trump/",
+            "summary": "The Knight First Amendment Institute, an activist legal group funded by Columbia University, has already lost two legal attempts to force the release of Special Counsel Jack Smith's report into President Donald Trump's handling of classified information. It's now hoping the third time will be the ch",
+            "pubDate": "Tue, 17 Mar 2026 09:00:43 +0000"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 6
+      },
+      "entities": [
+        {
+          "name": "University of Kent",
+          "canonicalName": "university of kent",
+          "type": "person",
+          "context": "What happened: Students queue for antibiotics outside a building at the University of Kent, following an outbreak of ...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 72,
+              "endChar": 90
+            }
+          ]
+        }
+      ],
+      "marketImpact": {
+        "significance": 25,
+        "headline": "Potential exposure across 1 topic detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Healthcare & Biotech",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"health\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "health"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0x99810973dc4027e5c5f3ab847420307e040c0e9de039457591c4f64d0e7b4156",
+      "generatedAt": "2026-03-18T13:56:05.092Z",
+      "contentHash": "0x3a7e5026d7c8d803a159bc429cfaf01bb17ee41d35447f4846b45c23bb3718e4",
+      "version": 2
+    },
+    "0xa13a4fe620b4a573bc45f0bbd2e6c9faa8f0f20ada9fd546db69e5cecbdcc889": {
+      "primary": {
+        "id": "https://www.dw.com/en/norway-prosecutors-seek-7-year-term-for-crown-princess-son/a-76412558?maca=en-rss-en-all-1573-rdf",
+        "title": "Norway: Prosecutors seek 7-year term for crown princess' son",
+        "link": "https://www.dw.com/en/norway-prosecutors-seek-7-year-term-for-crown-princess-son/a-76412558?maca=en-rss-en-all-1573-rdf",
+        "description": "Prosecutors have called for a sentence of seven years and seven months for Marius Borg Hoiby, the stepson of Norway's crown prince. The high-profile case, which includes four rape allegations, has captivated the nation.",
+        "pubDate": "2026-03-18T13:53:00.000Z",
+        "source": "DW News",
+        "sourceUrl": "https://rss.dw.com/rdf/rss-en-all",
+        "category": "World",
+        "bias": {
+          "name": "DW News",
+          "domain": "dw.com",
+          "bias": "center",
+          "factuality": "high",
+          "ownership": "Deutsche Welle (State)",
+          "country": "Germany",
+          "fundingModel": "state"
+        },
+        "canonicalClaim": "Norway: Prosecutors seek 7-year term for crown princess' son."
+      },
+      "claim": "Norway: Prosecutors seek 7-year term for crown princess' son.",
+      "relatedSources": [
+        {
+          "id": "https://theintercept.com/2026/03/12/antifa-ice-protest-texas-trial-terrorism/",
+          "title": "Wearing All Black at Protests Makes You Guilty of Terrorism, Prosecutors Tell Jury",
+          "link": "https://theintercept.com/2026/03/12/antifa-ice-protest-texas-trial-terrorism/",
+          "description": "The Prairieland case is a major test of the Trump administration’s push to label “antifa” protesters as terrorists.\nThe post Wearing All Black at Protests Makes You Guilty of Terrorism, Prosecutors Tell Jury appeared first on The Intercept.",
+          "pubDate": "Thu, 12 Mar 2026 21:02:07 +0000",
+          "source": "The Intercept",
+          "sourceUrl": "https://theintercept.com/feed/?rss",
+          "category": "World",
+          "bias": {
+            "name": "The Intercept",
+            "domain": "theintercept.com",
+            "bias": "left",
+            "factuality": "high",
+            "ownership": "First Look Media",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Wearing All Black at Protests Makes You Guilty of Terrorism, Prosecutors Tell Jury.",
+          "tags": [
+            "security"
+          ]
+        },
+        {
+          "id": "CBMiigFBVV95cUxNalZyTzVGWWtTS3pTc0lrYnBQVDRtOGt5QXdjVDE5Z0NBRHBqRWcxSzJYRE5SWE4tMHdDb3laMm9ZZHNKakU0TC1FQTB6Mld6WFNTLTFTYUJGaVFSMlNHWC1xOWhtY1NrRVQ1allYX3FqMjF5dGJzbWh4ekloZkFJMmZ0VEN3MUYzVXc",
+          "title": "NORWAY AND THE GROUPS - The Spectator Archive",
+          "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxNalZyTzVGWWtTS3pTc0lrYnBQVDRtOGt5QXdjVDE5Z0NBRHBqRWcxSzJYRE5SWE4tMHdDb3laMm9ZZHNKakU0TC1FQTB6Mld6WFNTLTFTYUJGaVFSMlNHWC1xOWhtY1NrRVQ1allYX3FqMjF5dGJzbWh4ekloZkFJMmZ0VEN3MUYzVXc?oc=5",
+          "description": "NORWAY AND THE GROUPS  The Spectator Archive",
+          "pubDate": "Fri, 13 Mar 2026 02:58:10 GMT",
+          "source": "The Spectator",
+          "sourceUrl": "https://news.google.com/rss/search?q=site:spectator.co.uk+when:7d&hl=en-GB&gl=GB&ceid=GB:en",
+          "category": "Politics",
+          "bias": {
+            "name": "The Spectator",
+            "domain": "spectator.co.uk",
+            "bias": "lean-right",
+            "factuality": "mostly-factual",
+            "ownership": "Press Holdings",
+            "country": "UK",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "NORWAY AND THE GROUPS."
+        }
+      ],
+      "subheadline": "DW News focuses on prosecutors and princess', with context pulled from source reporting instead of recycled feed copy.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: Prosecutors have called for a sentence of seven years and seven months for Marius Borg Hoiby, the stepson of Norway's crown prince. The high-profile case, which includes four rape allegations, has captivated the nation.",
+        "What to watch next: movement around prosecutors, princess'."
+      ],
+      "wireSummary": null,
+      "biasContext": "DW News reports from a centrist position, with a strong factual track record. For counterpoint, The Intercept covers this from from a left-leaning editorial position.",
+      "tags": [
+        "world",
+        "prosecutors"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "Wearing All Black at Protests Makes You Guilty of Terrorism, Prosecutors Tell Jury.",
+        "claimVariants": [
+          {
+            "source": "DW News",
+            "link": "https://www.dw.com/en/norway-prosecutors-seek-7-year-term-for-crown-princess-son/a-76412558?maca=en-rss-en-all-1573-rdf",
+            "claim": "Norway: Prosecutors seek 7-year term for crown princess' son.",
+            "confidence": 0.6733333333333333
+          },
+          {
+            "source": "The Intercept",
+            "link": "https://theintercept.com/2026/03/12/antifa-ice-protest-texas-trial-terrorism/",
+            "claim": "Wearing All Black at Protests Makes You Guilty of Terrorism, Prosecutors Tell Jury.",
+            "confidence": 0.6966666666666667
+          },
+          {
+            "source": "The Spectator",
+            "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxNalZyTzVGWWtTS3pTc0lrYnBQVDRtOGt5QXdjVDE5Z0NBRHBqRWcxSzJYRE5SWE4tMHdDb3laMm9ZZHNKakU0TC1FQTB6Mld6WFNTLTFTYUJGaVFSMlNHWC1xOWhtY1NrRVQ1allYX3FqMjF5dGJzbWh4ekloZkFJMmZ0VEN3MUYzVXc?oc=5",
+            "claim": "NORWAY AND THE GROUPS.",
+            "confidence": 0.4533333333333333
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "DW News",
+            "title": "Norway: Prosecutors seek 7-year term for crown princess' son",
+            "link": "https://www.dw.com/en/norway-prosecutors-seek-7-year-term-for-crown-princess-son/a-76412558?maca=en-rss-en-all-1573-rdf",
+            "summary": "Prosecutors have called for a sentence of seven years and seven months for Marius Borg Hoiby, the stepson of Norway's crown prince. The high-profile case, which includes four rape allegations, has captivated the nation.",
+            "pubDate": "2026-03-18T13:53:00.000Z"
+          },
+          {
+            "kind": "link",
+            "source": "The Intercept",
+            "title": "Wearing All Black at Protests Makes You Guilty of Terrorism, Prosecutors Tell Jury",
+            "link": "https://theintercept.com/2026/03/12/antifa-ice-protest-texas-trial-terrorism/",
+            "summary": "The Prairieland case is a major test of the Trump administration’s push to label “antifa” protesters as terrorists. The post Wearing All Black at Protests Makes You Guilty of Terrorism, Prosecutors Tell Jury appeared first on The Intercept.",
+            "pubDate": "Thu, 12 Mar 2026 21:02:07 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "The Spectator",
+            "title": "NORWAY AND THE GROUPS - The Spectator Archive",
+            "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxNalZyTzVGWWtTS3pTc0lrYnBQVDRtOGt5QXdjVDE5Z0NBRHBqRWcxSzJYRE5SWE4tMHdDb3laMm9ZZHNKakU0TC1FQTB6Mld6WFNTLTFTYUJGaVFSMlNHWC1xOWhtY1NrRVQ1allYX3FqMjF5dGJzbWh4ekloZkFJMmZ0VEN3MUYzVXc?oc=5",
+            "summary": "NORWAY AND THE GROUPS The Spectator Archive",
+            "pubDate": "Fri, 13 Mar 2026 02:58:10 GMT"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 3
+      },
+      "entities": [
+        {
+          "name": "Norway",
+          "canonicalName": "norway",
+          "type": "country",
+          "context": "What happened: Prosecutors have called for a sentence of seven years and seven months for Marius Borg Hoiby, the step...",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 124,
+              "endChar": 130
+            }
+          ]
+        }
+      ],
+      "marketImpact": null,
+      "generatedBy": "template-fallback",
+      "entityHash": "0xa13a4fe620b4a573bc45f0bbd2e6c9faa8f0f20ada9fd546db69e5cecbdcc889",
+      "generatedAt": "2026-03-18T13:56:05.647Z",
+      "contentHash": "0xe27931aa40d552d743d4916ebb17e5418aea49aa5a617be181c2677574d98757",
+      "version": 2
+    },
+    "0x375eda5dece7b461f380a35cbfe8c024adab669462d27c655684cf19cd2cb47f": {
+      "primary": {
+        "id": "https://www.newstatesman.com/?p=520808",
+        "title": "Five things we learned about “Zackonomics”",
+        "link": "https://www.newstatesman.com/politics/uk-politics/2026/03/five-things-we-learned-about-zackonomics",
+        "description": "Zack Polanski wants to see Britain rejoin the EU, forgive student debt, cap rent, nationalise the water industry, and much more",
+        "pubDate": "Wed, 18 Mar 2026 13:52:01 +0000",
+        "source": "New Statesman",
+        "sourceUrl": "https://www.newstatesman.com/feed",
+        "category": "Politics",
+        "bias": {
+          "name": "New Statesman",
+          "domain": "newstatesman.com",
+          "bias": "left",
+          "factuality": "high",
+          "ownership": "Independent",
+          "country": "UK",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "Five things we learned about “Zackonomics."
+      },
+      "claim": "Five things we learned about “Zackonomics.",
+      "relatedSources": [],
+      "subheadline": "New Statesman focuses on zackonomics and learned, with context pulled from source reporting instead of recycled feed copy.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: Zack Polanski wants to see Britain rejoin the EU, forgive student debt, cap rent, nationalise the water industry, and much more",
+        "What to watch next: movement around zackonomics, learned."
+      ],
+      "wireSummary": null,
+      "biasContext": "New Statesman reports from a left-leaning editorial position, with a strong factual track record.",
+      "tags": [
+        "politics"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "Five things we learned about “Zackonomics.",
+        "claimVariants": [
+          {
+            "source": "New Statesman",
+            "link": "https://www.newstatesman.com/politics/uk-politics/2026/03/five-things-we-learned-about-zackonomics",
+            "claim": "Five things we learned about “Zackonomics.",
+            "confidence": 0.5733333333333333
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "New Statesman",
+            "title": "Five things we learned about “Zackonomics”",
+            "link": "https://www.newstatesman.com/politics/uk-politics/2026/03/five-things-we-learned-about-zackonomics",
+            "summary": "Zack Polanski wants to see Britain rejoin the EU, forgive student debt, cap rent, nationalise the water industry, and much more",
+            "pubDate": "Wed, 18 Mar 2026 13:52:01 +0000"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 1
+      },
+      "entities": [],
+      "marketImpact": null,
+      "generatedBy": "template-fallback",
+      "entityHash": "0x375eda5dece7b461f380a35cbfe8c024adab669462d27c655684cf19cd2cb47f",
+      "generatedAt": "2026-03-18T13:56:07.383Z",
+      "contentHash": "0x59bc7f9a5d0ff347c753f89cd899c3f86e624851fcfbb19da3e59917d1e85e9f",
+      "version": 3
+    },
+    "0x9ecb490c7b8009144ae04eb01d0215f6c5dbc06fda8fe23bb1db640054247ab2": {
+      "primary": {
+        "id": "dcfa08b8-2243-11f1-b273-73ed9a9c8e00",
+        "title": "'Cuba is not Venezuela': Trump's takeover threat collides with 'disciplined revolutionary state'",
+        "link": "https://www.france24.com/en/cuba-is-not-venezuela-trump-s-takeover-threat-collides-with-disciplined-revolutionary-state-1",
+        "description": "As Donald Trump threatens to take over Cuba, following the forced collapse of their national electric grid, Mark Owen welcomes Christopher Sabatini, Senior Research Fellow for Latin America Programme at the Chatham House. What we are witnessing today, explains Mr. Sabatini, is not an isolated infras",
+        "pubDate": "Wed, 18 Mar 2026 13:51:58 GMT",
+        "source": "AFP / France 24",
+        "sourceUrl": "https://www.france24.com/en/rss",
+        "category": "World",
+        "imageUrl": "https://s.france24.com/media/display/856f8fd0-22d1-11f1-810d-005056a90284/w:1024/p:16x9/capture-20060783769baadce506fc8-49140313.jpg",
+        "bias": {
+          "name": "France 24",
+          "domain": "france24.com",
+          "bias": "center",
+          "factuality": "high",
+          "ownership": "France Médias Monde (State)",
+          "country": "France",
+          "fundingModel": "state"
+        },
+        "canonicalClaim": "Cuba is not Venezuela': Trump's takeover threat collides with 'disciplined revolutionary state.",
+        "tags": [
+          "energy"
+        ]
+      },
+      "claim": "Cuba is not Venezuela': Trump's takeover threat collides with 'disciplined revolutionary state.",
+      "relatedSources": [
+        {
+          "id": "CBMilgFBVV95cUxQY3hKc1k0enEwcnVPOWVCLXZqVUdUSGRMZDk2WkExSTlXZ2hobHdRWmZqUDBkVUhCN1JUOGVDblVzRG4yLU5Jc2xhSHdQWG1GRFpzTTY4V05TWTNNMWI0WlgyS1JLTU42MEI4UnAwa3FSMllYWjRCUU5UYkpETUNsal95enVVRXVDdWU5Z2lPRHI3a0Zwa1E",
+          "title": "Top counterterrorism official Kent resigns over Trump's Iran war, says Iran posed no imminent threat - AP News",
+          "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxQY3hKc1k0enEwcnVPOWVCLXZqVUdUSGRMZDk2WkExSTlXZ2hobHdRWmZqUDBkVUhCN1JUOGVDblVzRG4yLU5Jc2xhSHdQWG1GRFpzTTY4V05TWTNNMWI0WlgyS1JLTU42MEI4UnAwa3FSMllYWjRCUU5UYkpETUNsal95enVVRXVDdWU5Z2lPRHI3a0Zwa1E?oc=5",
+          "description": "Top counterterrorism official Kent resigns over Trump's Iran war, says Iran posed no imminent threat  AP News",
+          "pubDate": "Tue, 17 Mar 2026 20:03:00 GMT",
+          "source": "Associated Press (Top)",
+          "sourceUrl": "https://news.google.com/rss/search?q=site:apnews.com+when:1d&hl=en-US&gl=US&ceid=US:en",
+          "category": "World",
+          "bias": null,
+          "canonicalClaim": "Top counterterrorism official Kent resigns over Trump's Iran war, says Iran posed no imminent threat.",
+          "tags": [
+            "war"
+          ]
+        },
+        {
+          "id": "https://www.dw.com/en/cuba-vows-unbreakable-resistance-to-any-takeover-attempt/a-76404114?maca=en-rss-en-all-1573-rdf",
+          "title": "Cuba vows 'unbreakable resistance' to any takeover attempt",
+          "link": "https://www.dw.com/en/cuba-vows-unbreakable-resistance-to-any-takeover-attempt/a-76404114?maca=en-rss-en-all-1573-rdf",
+          "description": "Cuba's leader says the US is inflicting \"collective punishment\" on the Cuban people amid plans to seize the country. US President Trump has said it would be a \"big honor\" to take the island nation.",
+          "pubDate": "2026-03-18T06:55:00.000Z",
+          "source": "DW News",
+          "sourceUrl": "https://rss.dw.com/rdf/rss-en-all",
+          "category": "World",
+          "bias": {
+            "name": "DW News",
+            "domain": "dw.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Deutsche Welle (State)",
+            "country": "Germany",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "Cuba vows 'unbreakable resistance' to any takeover attempt."
+        },
+        {
+          "id": "https://www.dw.com/en/pete-hegseth-who-is-trump-s-secretary-of-war/a-76402519?maca=en-rss-en-all-1573-rdf",
+          "title": "Pete Hegseth: Who is Trump's Secretary of War?",
+          "link": "https://www.dw.com/en/pete-hegseth-who-is-trump-s-secretary-of-war/a-76402519?maca=en-rss-en-all-1573-rdf",
+          "description": "While he considers himself a Christian patriot, critics view Pete Hegseth as a far-right agitator. For Donald Trump, the former soldier and television commentator is, above all, a loyal Secretary of War.",
+          "pubDate": "2026-03-18T11:12:00.000Z",
+          "source": "DW News",
+          "sourceUrl": "https://rss.dw.com/rdf/rss-en-all",
+          "category": "World",
+          "bias": {
+            "name": "DW News",
+            "domain": "dw.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Deutsche Welle (State)",
+            "country": "Germany",
+            "fundingModel": "state"
+          },
+          "canonicalClaim": "Pete Hegseth: Who is Trump's Secretary of War?",
+          "tags": [
+            "war",
+            "health"
+          ]
+        },
+        {
+          "id": "https://arstechnica.com/science/2026/03/university-group-sues-trump-administration-over-shutdown-of-climate-center/",
+          "title": "Trump's plan to shut down weather and climate center triggers lawsuit",
+          "link": "https://arstechnica.com/science/2026/03/university-group-sues-trump-administration-over-shutdown-of-climate-center/",
+          "description": "Suit: The National Center for Atmospheric Research is to be terminated for no rational reason.",
+          "pubDate": "Tue, 17 Mar 2026 17:38:10 +0000",
+          "source": "Ars Technica",
+          "sourceUrl": "https://feeds.arstechnica.com/arstechnica/index",
+          "category": "Tech",
+          "bias": {
+            "name": "Ars Technica",
+            "domain": "arstechnica.com",
+            "bias": "lean-left",
+            "factuality": "high",
+            "ownership": "Condé Nast",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "Trump's plan to shut down weather and climate center triggers lawsuit.",
+          "tags": [
+            "climate"
+          ]
+        },
+        {
+          "id": "https://thehill.com/?p=5788581",
+          "title": "Trump’s takeover of DC landmarks reaches legal apex",
+          "link": "https://thehill.com/newsletters/the-gavel/5788581-trump-kennedy-center-lawsuit/",
+          "description": "President Trump’s government real estate projects in the nation’s capital are reaching an apex in court.  Environmental groups, a Democratic congresswoman and even golfers have sued.  Judges so far have largely declined to stop the president’s projects, from rebuilding the Kennedy Center to construc",
+          "pubDate": "Wed, 18 Mar 2026 12:00:00 +0000",
+          "source": "The Hill",
+          "sourceUrl": "https://thehill.com/feed/",
+          "category": "Politics",
+          "imageUrl": "https://thehill.com/wp-content/uploads/sites/2/2025/10/AP25296596255064-e1761245831579.jpg?w=900",
+          "bias": {
+            "name": "The Hill",
+            "domain": "thehill.com",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Nexstar Media",
+            "country": "US",
+            "fundingModel": "corporate"
+          },
+          "canonicalClaim": "Trump’s takeover of DC landmarks reaches legal apex."
+        }
+      ],
+      "subheadline": "AFP / France 24 focuses on revolutionary and 'disciplined, with context pulled from source reporting instead of recycled feed copy.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: As Donald Trump threatens to take over Cuba, following the forced collapse of their national electric grid, Mark Owen welcomes Christopher Sabatini, Senior Research Fellow for... What we are witnessing today, explains Mr.",
+        "What to watch next: movement around revolutionary, 'disciplined."
+      ],
+      "wireSummary": null,
+      "biasContext": "France 24 reports from a centrist position, with a strong factual track record. For counterpoint, Ars Technica covers this from with a slight leftward lean.",
+      "tags": [
+        "world",
+        "takeover"
+      ],
+      "contextSnippets": [],
+      "agentResearch": {
+        "canonicalClaim": "Top counterterrorism official Kent resigns over Trump's Iran war, says Iran posed no imminent threat.",
+        "claimVariants": [
+          {
+            "source": "AFP / France 24",
+            "link": "https://www.france24.com/en/cuba-is-not-venezuela-trump-s-takeover-threat-collides-with-disciplined-revolutionary-state-1",
+            "claim": "Cuba is not Venezuela': Trump's takeover threat collides with 'disciplined revolutionary state.",
+            "confidence": 0.6399999999999999
+          },
+          {
+            "source": "Associated Press (Top)",
+            "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxQY3hKc1k0enEwcnVPOWVCLXZqVUdUSGRMZDk2WkExSTlXZ2hobHdRWmZqUDBkVUhCN1JUOGVDblVzRG4yLU5Jc2xhSHdQWG1GRFpzTTY4V05TWTNNMWI0WlgyS1JLTU42MEI4UnAwa3FSMllYWjRCUU5UYkpETUNsal95enVVRXVDdWU5Z2lPRHI3a0Zwa1E?oc=5",
+            "claim": "Top counterterrorism official Kent resigns over Trump's Iran war, says Iran posed no imminent threat.",
+            "confidence": 0.69
+          },
+          {
+            "source": "DW News",
+            "link": "https://www.dw.com/en/cuba-vows-unbreakable-resistance-to-any-takeover-attempt/a-76404114?maca=en-rss-en-all-1573-rdf",
+            "claim": "Cuba vows 'unbreakable resistance' to any takeover attempt.",
+            "confidence": 0.6066666666666666
+          },
+          {
+            "source": "DW News",
+            "link": "https://www.dw.com/en/pete-hegseth-who-is-trump-s-secretary-of-war/a-76402519?maca=en-rss-en-all-1573-rdf",
+            "claim": "Pete Hegseth: Who is Trump's Secretary of War?",
+            "confidence": 0.3733333333333333
+          },
+          {
+            "source": "Ars Technica",
+            "link": "https://arstechnica.com/science/2026/03/university-group-sues-trump-administration-over-shutdown-of-climate-center/",
+            "claim": "Trump's plan to shut down weather and climate center triggers lawsuit.",
+            "confidence": 0.6399999999999999
+          },
+          {
+            "source": "The Hill",
+            "link": "https://thehill.com/newsletters/the-gavel/5788581-trump-kennedy-center-lawsuit/",
+            "claim": "Trump’s takeover of DC landmarks reaches legal apex.",
+            "confidence": 0.6466666666666666
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "AFP / France 24",
+            "title": "'Cuba is not Venezuela': Trump's takeover threat collides with 'disciplined revolutionary state'",
+            "link": "https://www.france24.com/en/cuba-is-not-venezuela-trump-s-takeover-threat-collides-with-disciplined-revolutionary-state-1",
+            "summary": "As Donald Trump threatens to take over Cuba, following the forced collapse of their national electric grid, Mark Owen welcomes Christopher Sabatini, Senior Research Fellow for... What we are witnessing today, explains Mr.",
+            "pubDate": "Wed, 18 Mar 2026 13:51:58 GMT"
+          },
+          {
+            "kind": "link",
+            "source": "Associated Press (Top)",
+            "title": "Top counterterrorism official Kent resigns over Trump's Iran war, says Iran posed no imminent threat - AP News",
+            "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxQY3hKc1k0enEwcnVPOWVCLXZqVUdUSGRMZDk2WkExSTlXZ2hobHdRWmZqUDBkVUhCN1JUOGVDblVzRG4yLU5Jc2xhSHdQWG1GRFpzTTY4V05TWTNNMWI0WlgyS1JLTU42MEI4UnAwa3FSMllYWjRCUU5UYkpETUNsal95enVVRXVDdWU5Z2lPRHI3a0Zwa1E?oc=5",
+            "summary": "Top counterterrorism official Kent resigns over Trump's Iran war, says Iran posed no imminent threat AP News",
+            "pubDate": "Tue, 17 Mar 2026 20:03:00 GMT"
+          },
+          {
+            "kind": "link",
+            "source": "DW News",
+            "title": "Cuba vows 'unbreakable resistance' to any takeover attempt",
+            "link": "https://www.dw.com/en/cuba-vows-unbreakable-resistance-to-any-takeover-attempt/a-76404114?maca=en-rss-en-all-1573-rdf",
+            "summary": "Cuba's leader says the US is inflicting \"collective punishment\" on the Cuban people amid plans to seize the country. US President Trump has said it would be a \"big honor\" to take the island nation.",
+            "pubDate": "2026-03-18T06:55:00.000Z"
+          },
+          {
+            "kind": "link",
+            "source": "DW News",
+            "title": "Pete Hegseth: Who is Trump's Secretary of War?",
+            "link": "https://www.dw.com/en/pete-hegseth-who-is-trump-s-secretary-of-war/a-76402519?maca=en-rss-en-all-1573-rdf",
+            "summary": "While he considers himself a Christian patriot, critics view Pete Hegseth as a far-right agitator. For Donald Trump, the former soldier and television commentator is, above all, a loyal Secretary of War.",
+            "pubDate": "2026-03-18T11:12:00.000Z"
+          },
+          {
+            "kind": "link",
+            "source": "Ars Technica",
+            "title": "Trump's plan to shut down weather and climate center triggers lawsuit",
+            "link": "https://arstechnica.com/science/2026/03/university-group-sues-trump-administration-over-shutdown-of-climate-center/",
+            "summary": "Suit: The National Center for Atmospheric Research is to be terminated for no rational reason.",
+            "pubDate": "Tue, 17 Mar 2026 17:38:10 +0000"
+          },
+          {
+            "kind": "report",
+            "source": "The Hill",
+            "title": "Trump’s takeover of DC landmarks reaches legal apex",
+            "link": "https://thehill.com/newsletters/the-gavel/5788581-trump-kennedy-center-lawsuit/",
+            "summary": "President Trump’s government real estate projects in the nation’s capital are reaching an apex in court. Environmental groups, a Democratic congresswoman and even golfers have sued. Judges so far have largely declined to stop the president’s projects, from rebuilding the Kennedy Center to construc",
+            "pubDate": "Wed, 18 Mar 2026 12:00:00 +0000"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 5
+      },
+      "entities": [],
+      "marketImpact": {
+        "significance": 35,
+        "headline": "Potential exposure across 2 topics detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          },
+          {
+            "asset": "Energy Transition",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"climate\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "war",
+          "climate"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0x9ecb490c7b8009144ae04eb01d0215f6c5dbc06fda8fe23bb1db640054247ab2",
+      "generatedAt": "2026-03-18T13:56:09.108Z",
+      "contentHash": "0x2870254b5e73d85a994d70260f09b736f29e46bdcea5b05b9543197e8cc56491",
+      "version": 3
+    },
+    "0xd079c4962db5d5276f464e7de7ee4fd1ffa91f5eb138788d1fd2d1d545009290": {
+      "primary": {
+        "id": "436128 at https://www.middleeasteye.net/",
+        "title": "'We are crazy radicals': Israel's anti-war protesters struggle against ruling consensus",
+        "link": "https://www.middleeasteye.net/news/we-are-crazy-radicals-israels-anti-war-protesters-struggle-against-ruling-consensus",
+        "description": "'We are crazy radicals': Israel's anti-war protesters struggle against ruling consensus\n\n    \nJared Hillel\n on \nWed, 03/18/2026 - 12:21\n\n        \n      \nIsrael's political and media class back the war on Iran, with the public following suit\n    \nProtesters hold placards during a Stop The War demonst",
+        "pubDate": "Wed, 18 Mar 2026 13:49:14 +0000",
+        "source": "Middle East Eye",
+        "sourceUrl": "https://www.middleeasteye.net/rss",
+        "category": "World",
+        "imageUrl": "https://www.middleeasteye.net/sites/default/files/styles/max_2600x2600/public/images-story/Israel%20anti%20war%20reuters.jpg.jpg?itok=GNDH2yRS",
+        "bias": {
+          "name": "Middle East Eye",
+          "domain": "middleeasteye.net",
+          "bias": "lean-left",
+          "factuality": "mostly-factual",
+          "ownership": "Independent",
+          "country": "UK",
+          "fundingModel": "independent"
+        },
+        "canonicalClaim": "We are crazy radicals': Israel's anti-war protesters struggle against ruling consensus.",
+        "tags": [
+          "war"
+        ]
+      },
+      "claim": "We are crazy radicals': Israel's anti-war protesters struggle against ruling consensus.",
+      "relatedSources": [
+        {
+          "id": "https://theintercept.com/2026/03/17/ice-protester-terrorism-convictions-trump-prairieland/",
+          "title": "Why We Have to Fight Back Against ICE Protesters’ Terror Convictions",
+          "link": "https://theintercept.com/2026/03/17/ice-protester-terrorism-convictions-trump-prairieland/",
+          "description": "Since his first inauguration, Trump has been throwing charges at protesters and seeing what sticks. He always failed — until now.\nThe post Why We Have to Fight Back Against ICE Protesters’ Terror Convictions appeared first on The Intercept.",
+          "pubDate": "Tue, 17 Mar 2026 10:07:00 +0000",
+          "source": "The Intercept",
+          "sourceUrl": "https://theintercept.com/feed/?rss",
+          "category": "World",
+          "bias": {
+            "name": "The Intercept",
+            "domain": "theintercept.com",
+            "bias": "left",
+            "factuality": "high",
+            "ownership": "First Look Media",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Why We Have to Fight Back Against ICE Protesters’ Terror Convictions."
+        },
+        {
+          "id": "tag:democracynow.org,2026-03-17:en/story/4ff001",
+          "title": "Prairieland Trial: Anti-ICE Protesters Convicted on Terrorism Charges as DOJ Targets \"Antifa Cell\"",
+          "link": "http://www.democracynow.org/2026/3/17/antifa",
+          "description": "A jury in Texas has convicted eight people in the first federal anti-terror case since the Trump administration declared “antifa” a terror group. Nine defendants alleged to be members of an “antifa terror cell” stood trial on federal and state charges including rioting, using explosives and attempte",
+          "pubDate": "Tue, 17 Mar 2026 08:50:50 -0400",
+          "source": "Democracy Now!",
+          "sourceUrl": "https://www.democracynow.org/democracynow.rss",
+          "category": "World",
+          "bias": {
+            "name": "Democracy Now!",
+            "domain": "democracynow.org",
+            "bias": "far-left",
+            "factuality": "high",
+            "ownership": "Independent",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Prairieland Trial: Anti-ICE Protesters Convicted on Terrorism Charges as DOJ Targets \"Antifa Cell.",
+          "tags": [
+            "security"
+          ]
+        },
+        {
+          "id": "https://theintercept.com/2026/03/13/ice-protesters-terrorism-prairieland-antifa/",
+          "title": "Anti-ICE Protesters Convicted on Terrorism Charges for Wearing All Black",
+          "link": "https://theintercept.com/2026/03/13/ice-protesters-terrorism-prairieland-antifa/",
+          "description": "The government won on most of its charges, including convicting defendants for moving a box of radical zines.\nThe post Anti-ICE Protesters Convicted on Terrorism Charges for Wearing All Black appeared first on The Intercept.",
+          "pubDate": "Fri, 13 Mar 2026 21:25:24 +0000",
+          "source": "The Intercept",
+          "sourceUrl": "https://theintercept.com/feed/?rss",
+          "category": "World",
+          "bias": {
+            "name": "The Intercept",
+            "domain": "theintercept.com",
+            "bias": "left",
+            "factuality": "high",
+            "ownership": "First Look Media",
+            "country": "US",
+            "fundingModel": "nonprofit"
+          },
+          "canonicalClaim": "Anti-ICE Protesters Convicted on Terrorism Charges for Wearing All Black.",
+          "tags": [
+            "security"
+          ]
+        }
+      ],
+      "subheadline": "Middle East Eye focuses on protesters and radicals', with context pulled from source reporting instead of recycled feed copy. Cross-checked against The Intercept.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: 'We are crazy radicals': Israel's anti-war protesters struggle against ruling consensus",
+        "Cross-source context: The Intercept highlights since his first inauguration, Trump has been throwing charges at protesters and seeing what sticks.",
+        "What to watch next: movement around protesters, radicals'."
+      ],
+      "wireSummary": "The Intercept: Since his first inauguration, Trump has been throwing charges at protesters and seeing what sticks.",
+      "biasContext": "Middle East Eye reports with a slight leftward lean, with a generally reliable factual record. For counterpoint, The Intercept covers this from from a left-leaning editorial position.",
+      "tags": [
+        "world",
+        "war",
+        "protesters"
+      ],
+      "contextSnippets": [
+        {
+          "source": "The Intercept",
+          "link": "https://theintercept.com/2026/03/17/ice-protester-terrorism-convictions-trump-prairieland/",
+          "summary": "Since his first inauguration, Trump has been throwing charges at protesters and seeing what sticks."
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "Prairieland Trial: Anti-ICE Protesters Convicted on Terrorism Charges as DOJ Targets \"Antifa Cell.",
+        "claimVariants": [
+          {
+            "source": "Middle East Eye",
+            "link": "https://www.middleeasteye.net/news/we-are-crazy-radicals-israels-anti-war-protesters-struggle-against-ruling-consensus",
+            "claim": "We are crazy radicals': Israel's anti-war protesters struggle against ruling consensus.",
+            "confidence": 0.6566666666666666
+          },
+          {
+            "source": "The Intercept",
+            "link": "https://theintercept.com/2026/03/17/ice-protester-terrorism-convictions-trump-prairieland/",
+            "claim": "Why We Have to Fight Back Against ICE Protesters’ Terror Convictions.",
+            "confidence": 0.6633333333333333
+          },
+          {
+            "source": "Democracy Now!",
+            "link": "http://www.democracynow.org/2026/3/17/antifa",
+            "claim": "Prairieland Trial: Anti-ICE Protesters Convicted on Terrorism Charges as DOJ Targets \"Antifa Cell.",
+            "confidence": 0.6733333333333332
+          },
+          {
+            "source": "The Intercept",
+            "link": "https://theintercept.com/2026/03/13/ice-protesters-terrorism-prairieland-antifa/",
+            "claim": "Anti-ICE Protesters Convicted on Terrorism Charges for Wearing All Black.",
+            "confidence": 0.6466666666666666
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "Middle East Eye",
+            "title": "'We are crazy radicals': Israel's anti-war protesters struggle against ruling consensus",
+            "link": "https://www.middleeasteye.net/news/we-are-crazy-radicals-israels-anti-war-protesters-struggle-against-ruling-consensus",
+            "summary": "'We are crazy radicals': Israel's anti-war protesters struggle against ruling consensus",
+            "pubDate": "Wed, 18 Mar 2026 13:49:14 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "The Intercept",
+            "title": "Why We Have to Fight Back Against ICE Protesters’ Terror Convictions",
+            "link": "https://theintercept.com/2026/03/17/ice-protester-terrorism-convictions-trump-prairieland/",
+            "summary": "Since his first inauguration, Trump has been throwing charges at protesters and seeing what sticks.",
+            "pubDate": "Tue, 17 Mar 2026 10:07:00 +0000"
+          },
+          {
+            "kind": "link",
+            "source": "Democracy Now!",
+            "title": "Prairieland Trial: Anti-ICE Protesters Convicted on Terrorism Charges as DOJ Targets \"Antifa Cell\"",
+            "link": "http://www.democracynow.org/2026/3/17/antifa",
+            "summary": "A jury in Texas has convicted eight people in the first federal anti-terror case since the Trump administration declared “antifa” a terror group. Nine defendants alleged to be members of an “antifa terror cell” stood trial on federal and state charges including rioting, using explosives and attempte",
+            "pubDate": "Tue, 17 Mar 2026 08:50:50 -0400"
+          },
+          {
+            "kind": "link",
+            "source": "The Intercept",
+            "title": "Anti-ICE Protesters Convicted on Terrorism Charges for Wearing All Black",
+            "link": "https://theintercept.com/2026/03/13/ice-protesters-terrorism-prairieland-antifa/",
+            "summary": "The government won on most of its charges, including convicting defendants for moving a box of radical zines. The post Anti-ICE Protesters Convicted on Terrorism Charges for Wearing All Black appeared first on The Intercept.",
+            "pubDate": "Fri, 13 Mar 2026 21:25:24 +0000"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 3
+      },
+      "entities": [
+        {
+          "name": "Israel",
+          "canonicalName": "israel",
+          "type": "country",
+          "context": "What happened: 'We are crazy radicals': Israel's anti-war protesters struggle against ruling consensus",
+          "occurrences": [
+            {
+              "paragraphIndex": 0,
+              "startChar": 40,
+              "endChar": 46
+            }
+          ]
+        }
+      ],
+      "marketImpact": {
+        "significance": 25,
+        "headline": "Potential exposure across 1 topic detected via keyword analysis.",
+        "primaryTimeHorizon": "days",
+        "affectedMarkets": [
+          {
+            "asset": "Defense & Commodities",
+            "ticker": null,
+            "direction": "volatile",
+            "confidence": 0.3,
+            "timeHorizons": [
+              "days"
+            ],
+            "rationale": "Topic \"war\" detected in article text via keyword matching."
+          }
+        ],
+        "topicSlugs": [
+          "war"
+        ],
+        "transmissionMechanism": null
+      },
+      "generatedBy": "template-fallback",
+      "entityHash": "0xd079c4962db5d5276f464e7de7ee4fd1ffa91f5eb138788d1fd2d1d545009290",
+      "generatedAt": "2026-03-18T13:56:10.000Z",
+      "contentHash": "0x2494f8ad1c081c15a6fc065649126f0c19e7d08bf6192896eab132b2aec94ee2",
+      "version": 4
+    },
+    "0xbbae81b7d77830cd47561c329e632eebb5f049d6c517c2d8d4534c53206b2178": {
+      "primary": {
+        "id": "https://www.theblock.co/post/394124",
+        "title": "S&P Dow Jones Indices licenses brand for first official S&P 500 perp to trade on Hyperliquid",
+        "link": "https://www.theblock.co/post/394124/sp-dow-jones-indices-licenses-brand-for-first-official-sp-500-perp-to-trade-on-hyperliquid?utm_source=rss&utm_medium=rss",
+        "description": "XYZ, a perps provider on Hyperliquid, is launching “the first officially licensed perpetual derivative contract” based on the S&P 500.",
+        "pubDate": "Wed, 18 Mar 2026 09:48:39 -0400",
+        "source": "The Block",
+        "sourceUrl": "https://www.theblock.co/rss.xml",
+        "category": "Crypto",
+        "bias": {
+          "name": "The Block",
+          "domain": "theblock.co",
+          "bias": "center",
+          "factuality": "high",
+          "ownership": "Foresight Ventures",
+          "country": "US",
+          "fundingModel": "corporate"
+        },
+        "canonicalClaim": "S&P Dow Jones Indices licenses brand for first official S&P 500 perp to trade on Hyperliquid."
+      },
+      "claim": "S&P Dow Jones Indices licenses brand for first official S&P 500 perp to trade on Hyperliquid.",
+      "relatedSources": [
+        {
+          "id": "https://blockworks.co/news/cantons-rwa-rails",
+          "title": "Canton’s $6T RWA rails and Lighter’s Hyperliquid multiple",
+          "link": "https://blockworks.co/news/cantons-rwa-rails",
+          "description": "DTCC moves DTC-custodied Treasuries onchain via Canton, while Lighter’s LIT launches trading at a fees multiple in Hyperliquid territory",
+          "pubDate": "2026-01-01T18:00:00.000Z",
+          "source": "Blockworks",
+          "sourceUrl": "https://blockworks.co/feed",
+          "category": "Crypto",
+          "bias": {
+            "name": "Blockworks",
+            "domain": "blockworks.co",
+            "bias": "center",
+            "factuality": "high",
+            "ownership": "Independent",
+            "country": "US",
+            "fundingModel": "independent"
+          },
+          "canonicalClaim": "Canton’s $6T RWA rails and Lighter’s Hyperliquid multiple."
+        }
+      ],
+      "subheadline": "The Block focuses on hyperliquid and licenses, with context pulled from source reporting instead of recycled feed copy. Cross-checked against Blockworks.",
+      "subheadlineEnglish": null,
+      "editorialBody": [
+        "What happened: XYZ, a perps provider on Hyperliquid, is launching “the first officially licensed perpetual derivative contract” based on the S&P 500.",
+        "Cross-source context: Blockworks highlights dTCC moves DTC-custodied Treasuries onchain via Canton, while Lighter’s LIT launches trading at a fees multiple in Hyperliquid territory.",
+        "What to watch next: movement around hyperliquid, licenses."
+      ],
+      "wireSummary": "Blockworks: DTCC moves DTC-custodied Treasuries onchain via Canton, while Lighter’s LIT launches trading at a fees multiple in Hyperliquid...",
+      "biasContext": "The Block reports from a centrist position, with a strong factual track record.",
+      "tags": [
+        "crypto",
+        "economy",
+        "hyperliquid"
+      ],
+      "contextSnippets": [
+        {
+          "source": "Blockworks",
+          "link": "https://blockworks.co/news/cantons-rwa-rails",
+          "summary": "DTCC moves DTC-custodied Treasuries onchain via Canton, while Lighter’s LIT launches trading at a fees multiple in Hyperliquid territory."
+        }
+      ],
+      "agentResearch": {
+        "canonicalClaim": "S&P Dow Jones Indices licenses brand for first official S&P 500 perp to trade on Hyperliquid.",
+        "claimVariants": [
+          {
+            "source": "The Block",
+            "link": "https://www.theblock.co/post/394124/sp-dow-jones-indices-licenses-brand-for-first-official-sp-500-perp-to-trade-on-hyperliquid?utm_source=rss&utm_medium=rss",
+            "claim": "S&P Dow Jones Indices licenses brand for first official S&P 500 perp to trade on Hyperliquid.",
+            "confidence": 0.7633333333333333
+          },
+          {
+            "source": "Blockworks",
+            "link": "https://blockworks.co/news/cantons-rwa-rails",
+            "claim": "Canton’s $6T RWA rails and Lighter’s Hyperliquid multiple.",
+            "confidence": 0.6966666666666667
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "link",
+            "source": "The Block",
+            "title": "S&P Dow Jones Indices licenses brand for first official S&P 500 perp to trade on Hyperliquid",
+            "link": "https://www.theblock.co/post/394124/sp-dow-jones-indices-licenses-brand-for-first-official-sp-500-perp-to-trade-on-hyperliquid?utm_source=rss&utm_medium=rss",
+            "summary": "XYZ, a perps provider on Hyperliquid, is launching “the first officially licensed perpetual derivative contract” based on the S&P 500.",
+            "pubDate": "Wed, 18 Mar 2026 09:48:39 -0400"
+          },
+          {
+            "kind": "link",
+            "source": "Blockworks",
+            "title": "Canton’s $6T RWA rails and Lighter’s Hyperliquid multiple",
+            "link": "https://blockworks.co/news/cantons-rwa-rails",
+            "summary": "DTCC moves DTC-custodied Treasuries onchain via Canton, while Lighter’s LIT launches trading at a fees multiple in Hyperliquid territory.",
+            "pubDate": "2026-01-01T18:00:00.000Z"
+          }
+        ],
+        "contradictionFlags": [],
+        "sourceCount": 2
+      },
+      "entities": [],
+      "marketImpact": null,
+      "generatedBy": "template-fallback",
+      "entityHash": "0xbbae81b7d77830cd47561c329e632eebb5f049d6c517c2d8d4534c53206b2178",
+      "generatedAt": "2026-03-18T13:56:11.024Z",
+      "contentHash": "0x56819f00c3057ef6f3969c0a93049d842d21897c2ace7681378e3af4f09cf323",
+      "version": 4
     }
   }
 }
