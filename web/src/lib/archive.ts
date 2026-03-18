@@ -57,6 +57,76 @@ let cacheLoadedAtMs = 0;
 const CACHE_TTL_MS = 30_000;
 const REMOTE_ARCHIVE_LIMIT = 100_000;
 
+/* ── Upstash Redis REST helpers (survives Vercel cold starts) ── */
+
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL ?? "";
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN ?? "";
+const REDIS_ARTICLE_PREFIX = "pooter:article:";
+const REDIS_ARTICLE_TTL = 604800; // 7 days
+
+function redisEnabled(): boolean {
+  return !!(UPSTASH_URL && UPSTASH_TOKEN);
+}
+
+async function redisGetArticle(hash: string): Promise<ArchivedFeedItem | null> {
+  if (!redisEnabled()) return null;
+  try {
+    const res = await fetch(`${UPSTASH_URL}/get/${REDIS_ARTICLE_PREFIX}${hash}`, {
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as { result?: string };
+    if (!body.result) return null;
+    return JSON.parse(body.result) as ArchivedFeedItem;
+  } catch {
+    return null;
+  }
+}
+
+async function redisSetArticle(hash: string, item: ArchivedFeedItem): Promise<void> {
+  if (!redisEnabled()) return;
+  try {
+    await fetch(`${UPSTASH_URL}/set/${REDIS_ARTICLE_PREFIX}${hash}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${UPSTASH_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ EX: REDIS_ARTICLE_TTL, value: JSON.stringify(item) }),
+      cache: "no-store",
+    });
+  } catch {
+    // Non-fatal
+  }
+}
+
+/** Batch-set multiple articles to Redis via pipeline */
+async function redisSetArticleBatch(items: ArchivedFeedItem[]): Promise<void> {
+  if (!redisEnabled() || items.length === 0) return;
+  try {
+    // Upstash REST pipeline: POST array of commands
+    const commands = items.map((item) => [
+      "SET",
+      `${REDIS_ARTICLE_PREFIX}${item.hash}`,
+      JSON.stringify(item),
+      "EX",
+      String(REDIS_ARTICLE_TTL),
+    ]);
+    await fetch(`${UPSTASH_URL}/pipeline`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${UPSTASH_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(commands),
+      cache: "no-store",
+    });
+  } catch {
+    // Non-fatal
+  }
+}
+
 async function fetchRemoteArchivedItem(
   hash: `0x${string}`,
 ): Promise<ArchivedFeedItem | null> {
@@ -216,18 +286,28 @@ async function mergeCurrentFeedIntoArchive(
 export async function getArchivedFeedItemByHash(
   hash: `0x${string}`
 ): Promise<FeedItem | null> {
+  // 1. Redis (fastest, survives cold starts)
+  const fromRedis = await redisGetArticle(hash);
+  if (fromRedis) return toFeedItem(fromRedis);
+
+  // 2. Remote indexer
   if (getIndexerBackendUrl()) {
     try {
       const record = await fetchRemoteArchivedItem(hash);
-      return record ? toFeedItem(record) : null;
+      if (record) {
+        redisSetArticle(hash, record).catch(() => {});
+        return toFeedItem(record);
+      }
     } catch (err) {
       console.warn("[archive] remote hash lookup failed, falling back to local:", err);
     }
   }
 
+  // 3. Local file
   const archive = await loadArchive();
   const record = archive.items[hash];
   if (!record) return null;
+  redisSetArticle(hash, record).catch(() => {});
   return toFeedItem(record);
 }
 
@@ -373,7 +453,19 @@ export async function autoArchiveBatch(items: FeedItem[]): Promise<void> {
       cache = archive;
       cacheLoadedAtMs = Date.now();
 
-      // Only write to disk if we actually added new items
+      // Persist to Redis (survives Vercel cold starts + read-only FS)
+      if (newCount > 0 || updatedCount > 0) {
+        const changedItems = items
+          .map((item) => {
+            if (!item.link) return null;
+            const h = computeEntityHash(item.link) as `0x${string}`;
+            return archive.items[h] ?? null;
+          })
+          .filter((x): x is ArchivedFeedItem => x !== null);
+        redisSetArticleBatch(changedItems).catch(() => {});
+      }
+
+      // Also write to disk (may fail on Vercel read-only FS)
       if (newCount > 0 || updatedCount > 0) {
         const dir = path.dirname(ARCHIVE_FILE_PATH);
         await mkdir(dir, { recursive: true });
