@@ -34,7 +34,7 @@ export default async function SignalsPage() {
         </p>
         <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
           Conflicting signals trigger contradiction penalty dampening.
-          Long-only execution — bearish signals are informational only.
+          Bullish signals open long, bearish signals open short.
         </p>
       </div>
 

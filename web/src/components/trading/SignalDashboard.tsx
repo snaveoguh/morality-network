@@ -50,7 +50,7 @@ export function SignalDashboard({ signals }: SignalDashboardProps) {
           {signals.length} ticker{signals.length !== 1 ? "s" : ""}
         </span>
         <span className="ml-auto border border-[var(--ink)] px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink)]">
-          Long-Only
+          Long + Short
         </span>
       </div>
 
@@ -142,7 +142,7 @@ export function SignalDashboard({ signals }: SignalDashboardProps) {
       <div className="mt-6 border-t border-[var(--rule)] pt-3">
         <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
           Signals aggregated from editorial archive &middot; 48h exponential
-          decay &middot; Contradiction-dampened &middot; Long-only
+          decay &middot; Contradiction-dampened &middot; Long + Short
         </p>
       </div>
     </div>
