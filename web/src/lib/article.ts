@@ -135,6 +135,12 @@ export interface ArticleContent {
   illustrationPrompt?: string;
   /** Whether an illustration exists in the separate illustration store */
   hasIllustration?: boolean;
+  /** God mode: wallet address that last edited this editorial */
+  editedBy?: string;
+  /** God mode: ISO timestamp of last edit */
+  editedAt?: string;
+  /** God mode: number of times this editorial has been edited */
+  editCount?: number;
 }
 
 interface StoryContext {

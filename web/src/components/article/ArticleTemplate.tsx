@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useAccount } from "wagmi";
@@ -113,7 +113,61 @@ export function ArticleTemplate({
   archiveStatus,
   editionNumber,
 }: ArticleTemplateProps) {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+
+  // ── God Mode: editorial editing ──
+  const GOD_MODE_ADDRESSES = useMemo(() => new Set(
+    (process.env.NEXT_PUBLIC_GOD_MODE_ADDRESSES || "")
+      .split(",")
+      .map((a) => a.trim().toLowerCase())
+      .filter(Boolean),
+  ), []);
+  const isGodMode = address ? GOD_MODE_ADDRESSES.has(address.toLowerCase()) : false;
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const headlineRef = useRef<HTMLHeadingElement>(null);
+  const subheadlineRef = useRef<HTMLParagraphElement>(null);
+  const bodyRefs = useRef<(HTMLParagraphElement | null)[]>([]);
+
+  const handleSaveEdits = useCallback(async () => {
+    if (!address || !entityHash) return;
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      const editedHeadline = headlineRef.current?.innerText?.trim();
+      const editedSubheadline = subheadlineRef.current?.innerText?.trim();
+      const editedBody = bodyRefs.current
+        .map((ref) => ref?.innerText?.trim() ?? "")
+        .filter((p) => p.length > 0);
+
+      const res = await fetch("/api/editorial/edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hash: entityHash,
+          wallet: address,
+          edits: {
+            headline: editedHeadline,
+            subheadline: editedSubheadline,
+            editorialBody: editedBody.length > 0 ? editedBody : undefined,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSaveMsg("Saved ✓");
+        setEditing(false);
+      } else {
+        setSaveMsg(data.error || "Save failed");
+      }
+    } catch (err) {
+      setSaveMsg(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setSaving(false);
+      setTimeout(() => setSaveMsg(null), 3000);
+    }
+  }, [address, entityHash]);
 
   // Broadcast context to extension when on pooter.world
   useEffect(() => {
@@ -202,12 +256,22 @@ export function ArticleTemplate({
         </div>
 
         {/* Headline — Playfair Display, massive */}
-        <h1 className="font-headline text-3xl leading-[1.1] text-[var(--ink)] sm:text-4xl lg:text-5xl">
+        <h1
+          ref={headlineRef}
+          contentEditable={editing}
+          suppressContentEditableWarning
+          className={`font-headline text-3xl leading-[1.1] text-[var(--ink)] sm:text-4xl lg:text-5xl ${editing ? "outline outline-1 outline-dashed outline-[var(--accent-red)] px-2 py-1" : ""}`}
+        >
           {primary.title}
         </h1>
 
         {/* Subheadline — editorial, italic */}
-        <p className="mt-3 font-body-serif text-base italic leading-relaxed text-[var(--ink-light)] sm:text-lg">
+        <p
+          ref={subheadlineRef}
+          contentEditable={editing}
+          suppressContentEditableWarning
+          className={`mt-3 font-body-serif text-base italic leading-relaxed text-[var(--ink-light)] sm:text-lg ${editing ? "outline outline-1 outline-dashed outline-[var(--accent-red)] px-2 py-1" : ""}`}
+        >
           {subheadline}
         </p>
         {subheadlineEnglish &&
@@ -302,6 +366,42 @@ export function ArticleTemplate({
             AI Editorial
           </span>
         )}
+        {article.editedBy && (
+          <span className="border border-[var(--accent-red)] px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--accent-red)]">
+            Edited by {article.editedBy.endsWith(".eth") ? article.editedBy : `${article.editedBy.slice(0, 6)}...${article.editedBy.slice(-4)}`}
+          </span>
+        )}
+        {isGodMode && (
+          <div className="ml-auto flex items-center gap-2">
+            {editing ? (
+              <>
+                <button
+                  onClick={handleSaveEdits}
+                  disabled={saving}
+                  className="border border-emerald-700 px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save"}
+                </button>
+                <button
+                  onClick={() => setEditing(false)}
+                  className="border border-[var(--rule)] px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)] hover:text-[var(--ink)]"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setEditing(true)}
+                className="border border-[var(--ink)] px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink)] hover:bg-[var(--bg-alt)]"
+              >
+                ✎ Edit
+              </button>
+            )}
+            {saveMsg && (
+              <span className="font-mono text-[8px] text-emerald-700">{saveMsg}</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ══════════════ ARTICLE BODY ══════════════ */}
@@ -309,11 +409,14 @@ export function ArticleTemplate({
         {editorialBody.map((paragraph, i) => (
           <div key={i} className={`mb-5 ${i === 0 ? "mb-6" : ""}`}>
             <p
+              ref={(el) => { bodyRefs.current[i] = el; }}
+              contentEditable={editing}
+              suppressContentEditableWarning
               className={`font-body-serif leading-[1.85] text-[var(--ink-light)] ${
                 i === 0
                   ? "drop-cap text-[1.125rem] leading-[1.9] text-[var(--ink)]"
                   : "text-base"
-              }`}
+              } ${editing ? "outline outline-1 outline-dashed outline-[var(--rule)] px-2 py-1" : ""}`}
             >
               {renderParagraphWithEntities(paragraph, i, entities || [])}
             </p>
