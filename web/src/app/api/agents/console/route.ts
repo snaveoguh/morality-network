@@ -341,6 +341,7 @@ export async function GET(request: Request) {
         windowHours: aiWindowHours,
         summary: aiSummary,
         budgets: providerBudgets.map((entry) => ({
+          provider: entry.provider,
           ...(entry.budget ?? defaultBudgetState(entry.provider, aiWindowHours)),
         })),
       },
