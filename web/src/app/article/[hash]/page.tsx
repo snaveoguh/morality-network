@@ -222,15 +222,25 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     return { ...item, hash: match?.hash ?? "" };
   }).filter((item) => item.hash); // only items with valid hashes
 
-  // Generate editorial content — 30s timeout, falls back to raw feed data
+  // Check editorial cache first — avoids re-generating on every visit
+  const cachedEditorialForPrimary = await getArchivedEditorial(hash).catch(() => null);
   let article;
-  try {
-    article = await withTimeout(
-      generateEditorial(primary, related),
-      30000,
-      null as Awaited<ReturnType<typeof generateEditorial>> | null,
+  if (cachedEditorialForPrimary) {
+    article = await enrichArticleEmbeds(
+      cachedEditorialForPrimary.primary,
+      cachedEditorialForPrimary,
     );
-    if (!article) throw new Error("Editorial generation timed out");
+  }
+
+  // Only generate if no cached editorial exists — 30s timeout, falls back to raw feed data
+  if (!article) {
+    try {
+      article = await withTimeout(
+        generateEditorial(primary, related),
+        30000,
+        null as Awaited<ReturnType<typeof generateEditorial>> | null,
+      );
+      if (!article) throw new Error("Editorial generation timed out");
   } catch (err) {
     console.error("[article] generateEditorial failed:", err);
     // Render a minimal version with raw feed data
@@ -268,6 +278,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       </section>
     );
   }
+  } // close if (!article)
 
   // Persist editorial BEFORE response — blocking ensures the editorial is saved to the
   // remote indexer (or local file) before ISR caches this page. Using after() caused
