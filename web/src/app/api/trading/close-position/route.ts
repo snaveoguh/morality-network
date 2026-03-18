@@ -46,9 +46,10 @@ export async function POST(request: NextRequest) {
 
     // Close: if long → sell, if short → buy
     const closeSide = pos.isShort ? "buy" : "sell";
-    // pos.size is a decimal string like "0.00015" — pass absolute value as-is
-    const absSize = pos.size.startsWith("-") ? pos.size.slice(1) : pos.size;
-    const sizeRaw = absSize.startsWith(".") ? `0${absSize}` : absSize;
+    // Get exact size from HL clearinghouse state (pos.size may lose formatting)
+    // Format size with enough decimals for HL API (szDecimals for BTC = 5)
+    const parsedSize = Math.abs(parseFloat(pos.size));
+    const sizeStr = parsedSize.toFixed(Math.max(5, pos.szDecimals));
 
     const result = await executeHyperliquidOrderLive({
       config,
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       leverage: pos.leverage ?? config.hyperliquid.defaultLeverage,
       slippageBps: config.risk.slippageBps,
       reduceOnly: true,
-      sizeRaw,
+      sizeRaw: sizeStr,
     });
 
     return NextResponse.json({
