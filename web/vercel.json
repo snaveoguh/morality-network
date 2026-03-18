@@ -1,8 +1,8 @@
 {
-  "crons": [
+"crons": [
     {
       "path": "/api/trading/execute",
-      "schedule": "0 0 * * *"
+      "schedule": "*/10 * * * *"
     },
     {
       "path": "/api/moral-compass/crawl",
@@ -11,6 +11,10 @@
     {
       "path": "/api/moral-commentary/generate",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/editorial/pregenerate",
+      "schedule": "0 5 * * *"
     }
   ]
 }
