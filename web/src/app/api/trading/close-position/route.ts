@@ -46,9 +46,9 @@ export async function POST(request: NextRequest) {
 
     // Close: if long → sell, if short → buy
     const closeSide = pos.isShort ? "buy" : "sell";
-    // Use the absolute size string, preserving decimal formatting for HL API
-    const rawSize = parseFloat(pos.size ?? "0");
-    const sizeRaw = Math.abs(rawSize).toFixed(pos.szDecimals);
+    // pos.size is a decimal string like "0.00015" — pass absolute value as-is
+    const absSize = pos.size.startsWith("-") ? pos.size.slice(1) : pos.size;
+    const sizeRaw = absSize.startsWith(".") ? `0${absSize}` : absSize;
 
     const result = await executeHyperliquidOrderLive({
       config,
