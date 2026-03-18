@@ -424,6 +424,8 @@ async function* parseSSEStream(response: Response): AsyncGenerator<string> {
 
   const decoder = new TextDecoder();
   let buffer = "";
+  let insideThink = false;
+  let thinkBuffer = "";
 
   try {
     while (true) {
@@ -438,7 +440,7 @@ async function* parseSSEStream(response: Response): AsyncGenerator<string> {
 
       for (const line of lines) {
         const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith(":")) continue; // Skip empty lines and comments
+        if (!trimmed || trimmed.startsWith(":")) continue;
 
         if (trimmed.startsWith("data: ")) {
           const data = trimmed.slice(6);
@@ -446,8 +448,34 @@ async function* parseSSEStream(response: Response): AsyncGenerator<string> {
 
           try {
             const parsed = JSON.parse(data);
-            const delta = parsed.choices?.[0]?.delta?.content;
-            if (delta) yield delta;
+            let delta = parsed.choices?.[0]?.delta?.content;
+            if (!delta) continue;
+
+            // Strip <think>...</think> blocks from reasoning models
+            thinkBuffer += delta;
+            if (insideThink) {
+              const closeIdx = thinkBuffer.indexOf("</think>");
+              if (closeIdx >= 0) {
+                insideThink = false;
+                delta = thinkBuffer.slice(closeIdx + 8);
+                thinkBuffer = "";
+                if (!delta) continue;
+              } else {
+                continue; // Still inside think block, suppress
+              }
+            } else {
+              const openIdx = thinkBuffer.indexOf("<think>");
+              if (openIdx >= 0) {
+                const before = thinkBuffer.slice(0, openIdx);
+                insideThink = true;
+                thinkBuffer = thinkBuffer.slice(openIdx);
+                if (before) yield before;
+                continue;
+              }
+              thinkBuffer = "";
+            }
+
+            yield delta;
           } catch {
             // Skip malformed JSON
           }
