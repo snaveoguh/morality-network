@@ -245,7 +245,65 @@ async function recordAIUsageSafely(input: Parameters<typeof recordAIUsage>[0]): 
   }
 }
 
+// ─── Agent Hub (Groq free tier via centralized proxy) ────────────────────────
+
+async function tryAgentHub(request: AITextRequest): Promise<AITextResult | null> {
+  const hubUrl = readEnv("AGENT_HUB_URL");
+  if (!hubUrl) return null;
+
+  const hubSecret = readEnv("AGENT_HUB_SECRET");
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (hubSecret) headers.authorization = `Bearer ${hubSecret}`;
+
+  try {
+    const response = await fetch(`${hubUrl.replace(/\/$/, "")}/v1/generate`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        system: request.system,
+        user: request.user,
+        maxTokens: request.maxTokens,
+        temperature: request.temperature ?? 0,
+        task: request.task,
+      }),
+      signal: AbortSignal.timeout(request.timeoutMs ?? 60_000),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      console.warn(`[ai-provider] hub ${response.status}: ${body.slice(0, 200)}`);
+      return null;
+    }
+
+    const payload = (await response.json()) as {
+      text?: string;
+      model?: string;
+      provider?: string;
+      usage?: { totalTokens?: number };
+    };
+
+    let text = typeof payload.text === "string" ? payload.text.trim() : "";
+    // Strip <think> tags from reasoning models (Qwen, DeepSeek)
+    text = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+    if (!text) return null;
+
+    console.log(`[ai-provider] hub success for ${request.task} (${payload.provider}/${payload.model})`);
+    return {
+      provider: "ollama" as AIProviderId, // track as free-tier provider
+      model: payload.model ?? "hub",
+      text,
+    };
+  } catch (err) {
+    console.warn(`[ai-provider] hub failed: ${err instanceof Error ? err.message : err}`);
+    return null;
+  }
+}
+
 export async function generateTextForTask(request: AITextRequest): Promise<AITextResult> {
+  // Try Agent Hub first (free Groq tier)
+  const hubResult = await tryAgentHub(request);
+  if (hubResult) return hubResult;
+
   const providers = getConfiguredProvidersForTask(request.task);
   if (providers.length === 0) {
     throw new Error(`No AI providers configured for task "${request.task}"`);
