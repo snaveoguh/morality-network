@@ -28,6 +28,29 @@ export interface AggregatedMarketSignal {
   rawScore: number;
 }
 
+/** Extended signal with LLM-synthesized newsdesk fields (optional — absent in raw aggregation mode). */
+export interface NewsdeskEnrichedSignal extends AggregatedMarketSignal {
+  /** LLM-generated narrative synthesis for this asset */
+  narrative?: string;
+  /** LLM-suggested action */
+  suggestedAction?: "enter-long" | "enter-short" | "hold" | "exit";
+  /** LLM confidence in the synthesis (0-1) */
+  synthesisConfidence?: number;
+}
+
+/** Newsdesk API response shape */
+export interface NewsdeskSignalsResponse {
+  signals: NewsdeskEnrichedSignal[];
+  count: number;
+  synthesizedAt: string | null;
+  synthesizedFrom: number;
+  windowHours: number;
+  narrative: string;
+  model: string;
+  provider: string;
+  latencyMs: number;
+}
+
 interface SignalAccumulator {
   bullishWeight: number;
   bearishWeight: number;
@@ -296,15 +319,61 @@ async function getFallbackFeedSignals(): Promise<AggregatedMarketSignal[]> {
   }
 }
 
+// ── Newsdesk Agent Integration ────────────────────────────────────────────
+
+let _lastNewsdeskResponse: NewsdeskSignalsResponse | null = null;
+
+/** Fetch LLM-synthesized signals from the agent-hub newsdesk. */
+async function fetchNewsdeskSignals(): Promise<NewsdeskEnrichedSignal[]> {
+  const hubUrl = process.env.AGENT_HUB_URL;
+  if (!hubUrl) return [];
+
+  try {
+    const response = await fetch(`${hubUrl}/v1/newsdesk/signals`, {
+      headers: {
+        Authorization: `Bearer ${process.env.AGENT_HUB_SECRET ?? ""}`,
+        Accept: "application/json",
+      },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return [];
+
+    const data = (await response.json()) as NewsdeskSignalsResponse;
+    if (data.signals?.length > 0) {
+      _lastNewsdeskResponse = data;
+    }
+    return data.signals ?? [];
+  } catch (err) {
+    console.warn(
+      "[signals] newsdesk fetch failed:",
+      err instanceof Error ? err.message : err,
+    );
+    return [];
+  }
+}
+
+/** Get the last successful newsdesk response (for narrative metadata). */
+export function getLastNewsdeskResponse(): NewsdeskSignalsResponse | null {
+  return _lastNewsdeskResponse;
+}
+
 // ── Main Aggregator ────────────────────────────────────────────────────────
 
 export async function getAggregatedMarketSignals(options?: {
   limit?: number;
   minAbsScore?: number;
-}): Promise<AggregatedMarketSignal[]> {
+}): Promise<NewsdeskEnrichedSignal[]> {
   const limit = options?.limit ?? 250;
   const minAbsScore = options?.minAbsScore ?? 0.2;
 
+  // Try newsdesk first — has LLM synthesis (narratives, suggested actions)
+  const newsdeskSignals = await withTimeout(fetchNewsdeskSignals(), 10_000, []);
+  if (newsdeskSignals.length > 0) {
+    console.log(`[signals] using newsdesk: ${newsdeskSignals.length} synthesized signals`);
+    return newsdeskSignals.filter((s) => s.score >= minAbsScore);
+  }
+
+  // Fallback: raw aggregation from indexer
   // Race the indexer call against a 10s timeout — if the backend is down, fail fast to fallback
   const records = await withTimeout(
     listRecentMarketImpactRecords(limit),
