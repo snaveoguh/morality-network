@@ -1,16 +1,16 @@
 "use client";
 
-import type { AggregatedMarketSignal } from "@/lib/trading/signals";
+import type { NewsdeskEnrichedSignal } from "@/lib/trading/signals";
 
 interface SignalDashboardProps {
-  signals: AggregatedMarketSignal[];
+  signals: NewsdeskEnrichedSignal[];
 }
 
 function directionArrow(direction: string): { symbol: string; className: string } {
   switch (direction) {
-    case "bullish":  return { symbol: "▲", className: "text-[var(--ink)]" };
-    case "bearish":  return { symbol: "▼", className: "text-[var(--accent-red)]" };
-    default:         return { symbol: "·", className: "text-[var(--ink-faint)]" };
+    case "bullish":  return { symbol: "\u25B2", className: "text-[var(--ink)]" };
+    case "bearish":  return { symbol: "\u25BC", className: "text-[var(--accent-red)]" };
+    default:         return { symbol: "\u00B7", className: "text-[var(--ink-faint)]" };
   }
 }
 
@@ -23,6 +23,39 @@ function scoreColor(score: number): string {
   if (score >= 1.5) return "bg-[var(--ink)]";
   if (score >= 0.8) return "bg-[var(--ink-light)]";
   return "bg-[var(--ink-faint)]";
+}
+
+function actionBadge(
+  action: string | undefined,
+): { label: string; className: string } | null {
+  switch (action) {
+    case "enter-long":
+      return {
+        label: "ENTER LONG",
+        className:
+          "border-[var(--ink)] text-[var(--ink)]",
+      };
+    case "enter-short":
+      return {
+        label: "ENTER SHORT",
+        className:
+          "border-[var(--accent-red)] text-[var(--accent-red)]",
+      };
+    case "exit":
+      return {
+        label: "EXIT",
+        className:
+          "border-[var(--accent-red)] text-[var(--accent-red)]",
+      };
+    case "hold":
+      return {
+        label: "HOLD",
+        className:
+          "border-[var(--ink-faint)] text-[var(--ink-faint)]",
+      };
+    default:
+      return null;
+  }
 }
 
 export function SignalDashboard({ signals }: SignalDashboardProps) {
@@ -59,6 +92,7 @@ export function SignalDashboard({ signals }: SignalDashboardProps) {
         {signals.map((signal) => {
           const arrow = directionArrow(signal.direction);
           const isConflicted = signal.contradictionPenalty > 0.3;
+          const badge = actionBadge(signal.suggestedAction);
 
           return (
             <div
@@ -72,24 +106,34 @@ export function SignalDashboard({ signals }: SignalDashboardProps) {
 
               {/* Main content */}
               <div className="flex-1 min-w-0">
-                {/* Ticker + direction + contradiction */}
-                <div className="flex items-baseline gap-2">
+                {/* Ticker + direction + action badge + contradiction */}
+                <div className="flex items-baseline gap-2 flex-wrap">
                   <span className="font-mono text-sm font-bold uppercase tracking-wider text-[var(--ink)]">
                     {signal.symbol}
                   </span>
                   <span className="font-mono text-[9px] capitalize text-[var(--ink-faint)]">
                     {signal.direction}
                   </span>
+                  {badge && (
+                    <span
+                      className={`border px-1 py-px font-mono text-[7px] font-bold uppercase tracking-wider ${badge.className}`}
+                    >
+                      {badge.label}
+                    </span>
+                  )}
                   {isConflicted && (
                     <span
                       className="font-mono text-[8px] text-[var(--accent-red)]"
-                      title={`Contradiction penalty: ${Math.round(signal.contradictionPenalty * 100)}% — sources disagree on direction`}
+                      title={`Contradiction penalty: ${Math.round(signal.contradictionPenalty * 100)}% \u2014 sources disagree on direction`}
                     >
                       &#9889; {Math.round(signal.contradictionPenalty * 100)}% conflict
                     </span>
                   )}
                   <span className="ml-auto font-mono text-[9px] text-[var(--ink-faint)]">
                     from {signal.observations} article{signal.observations !== 1 ? "s" : ""}
+                    {signal.synthesisConfidence != null && (
+                      <> &middot; {Math.round(signal.synthesisConfidence * 100)}% conf</>
+                    )}
                   </span>
                 </div>
 
@@ -130,6 +174,15 @@ export function SignalDashboard({ signals }: SignalDashboardProps) {
                         &ldquo;{claim}&rdquo;
                       </p>
                     ))}
+                  </div>
+                )}
+
+                {/* Newsdesk narrative (LLM synthesis — only when present) */}
+                {signal.narrative && (
+                  <div className="mt-2 border-l border-[var(--rule)] pl-3">
+                    <p className="font-body-serif text-xs leading-relaxed text-[var(--ink)]">
+                      {signal.narrative}
+                    </p>
                   </div>
                 )}
               </div>

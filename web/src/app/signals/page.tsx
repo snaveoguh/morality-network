@@ -1,4 +1,7 @@
-import { getAggregatedMarketSignals } from "@/lib/trading/signals";
+import {
+  getAggregatedMarketSignals,
+  getLastNewsdeskResponse,
+} from "@/lib/trading/signals";
 import { SignalDashboard } from "@/components/trading/SignalDashboard";
 
 export const revalidate = 60; // 1 min ISR
@@ -9,7 +12,11 @@ export default async function SignalsPage() {
     minAbsScore: 0.1,
   });
 
-  const totalObservations = signals.reduce((sum, s) => sum + s.observations, 0);
+  const newsdesk = getLastNewsdeskResponse();
+  const totalObservations = signals.reduce(
+    (sum, s) => sum + s.observations,
+    0,
+  );
 
   return (
     <div>
@@ -25,6 +32,26 @@ export default async function SignalsPage() {
         </p>
       </div>
 
+      {/* Newsdesk narrative banner (when LLM synthesis is active) */}
+      {newsdesk?.narrative && (
+        <div className="mb-6 border-l-2 border-[var(--ink)] bg-[var(--paper-dark,#f8f5f0)] px-4 py-3">
+          <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+            Newsdesk &mdash; synthesized from {newsdesk.synthesizedFrom}{" "}
+            editorials
+          </p>
+          <p className="mt-1 font-body-serif text-sm leading-relaxed text-[var(--ink)]">
+            {newsdesk.narrative}
+          </p>
+          <p className="mt-1 font-mono text-[8px] text-[var(--ink-faint)]">
+            {newsdesk.model} via {newsdesk.provider} &middot;{" "}
+            {newsdesk.latencyMs}ms &middot;{" "}
+            {newsdesk.synthesizedAt
+              ? new Date(newsdesk.synthesizedAt).toLocaleTimeString()
+              : ""}
+          </p>
+        </div>
+      )}
+
       {/* Methodology */}
       <div className="mb-6 border border-[var(--rule-light)] p-4">
         <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
@@ -33,8 +60,8 @@ export default async function SignalsPage() {
           Decay (48h) &times; Time Horizon Weight
         </p>
         <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-          Conflicting signals trigger contradiction penalty dampening.
-          Bullish signals open long, bearish signals open short.
+          Conflicting signals trigger contradiction penalty dampening. Bullish
+          signals open long, bearish signals open short.
         </p>
       </div>
 
