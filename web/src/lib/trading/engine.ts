@@ -133,8 +133,7 @@ class TraderEngine {
       this.circuitBreakerPauseUntil = null;
     }
 
-    await this.evaluateOpenPositions(report);
-
+    // Fetch signals BEFORE exits so signal-reversal exit can use them
     let marketSignals: AggregatedMarketSignal[] = [];
     if (this.config.executionVenue === "hyperliquid-perp") {
       try {
@@ -148,6 +147,8 @@ class TraderEngine {
         );
       }
     }
+
+    await this.evaluateOpenPositions(report, marketSignals);
 
     let candidates: ScannerLaunch[] = [];
     if (isSpotVenue(this.config.executionVenue)) {
@@ -590,7 +591,10 @@ class TraderEngine {
     };
   }
 
-  private async evaluateOpenPositions(report: TraderCycleReport): Promise<void> {
+  private async evaluateOpenPositions(
+    report: TraderCycleReport,
+    marketSignals: AggregatedMarketSignal[] = [],
+  ): Promise<void> {
     const open = this.store.getOpen();
     if (open.length === 0) return;
 
@@ -599,6 +603,39 @@ class TraderEngine {
       if (position.id.startsWith("scalp:")) continue;
 
       try {
+        // ── Max hold time: close stale positions ──
+        const maxHoldMs = this.config.risk.maxHoldMs ?? 14_400_000; // 4h default
+        const positionAgeMs = Date.now() - position.openedAt;
+        if (maxHoldMs > 0 && positionAgeMs > maxHoldMs) {
+          const currentPrice = await this.resolvePositionPriceUsd(position);
+          console.log(
+            `[trader] max-hold-time: closing ${position.marketSymbol} after ${(positionAgeMs / 3_600_000).toFixed(1)}h (limit=${(maxHoldMs / 3_600_000).toFixed(1)}h)`,
+          );
+          const closed = await this.closePosition(position, "max-hold-time", currentPrice ?? position.entryPriceUsd);
+          if (closed) report.exits.push(closed);
+          continue;
+        }
+
+        // ── Signal reversal: close if newsdesk signal flipped direction ──
+        if (position.signalSource && position.marketSymbol && marketSignals.length > 0) {
+          const currentSignal = marketSignals.find(
+            (s) => s.symbol === position.marketSymbol,
+          );
+          if (currentSignal && currentSignal.contradictionPenalty <= 0.5) {
+            const positionIsBullish = position.direction === "long";
+            const signalIsBullish = currentSignal.direction === "bullish";
+            if (positionIsBullish !== signalIsBullish) {
+              const currentPrice = await this.resolvePositionPriceUsd(position);
+              console.log(
+                `[trader] signal-reversal: ${position.marketSymbol} was ${position.direction}, signal now ${currentSignal.direction} (score=${currentSignal.score.toFixed(2)})`,
+              );
+              const closed = await this.closePosition(position, "signal-reversal", currentPrice ?? position.entryPriceUsd);
+              if (closed) report.exits.push(closed);
+              continue;
+            }
+          }
+        }
+
         const currentPriceUsd = await this.resolvePositionPriceUsd(position);
 
         if (!currentPriceUsd || !Number.isFinite(currentPriceUsd) || currentPriceUsd <= 0) {
@@ -1033,8 +1070,10 @@ class TraderEngine {
       `moral=${moralGateResult.moralScore}/100 kelly=${kelly.fraction.toFixed(3)} (${kelly.phase})`,
     );
 
-    // Use Kelly-derived leverage (capped by maxLeverage), fall back to default
-    const orderLeverage = kelly.leverage > 0 ? kelly.leverage : this.config.hyperliquid.defaultLeverage;
+    // Use Kelly-derived leverage (capped by maxLeverage), fall back to default.
+    // If Kelly returns ≤ 1 (cold start / small account), use the configured default
+    // so we actually apply leverage instead of always trading at 1x.
+    const orderLeverage = kelly.leverage > 1 ? kelly.leverage : this.config.hyperliquid.defaultLeverage;
 
     const order = this.config.dryRun
       ? await simulateHyperliquidOrder({
