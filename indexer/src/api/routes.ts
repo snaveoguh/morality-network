@@ -687,10 +687,25 @@ async function upsertArticleArchiveRow(
     return "inserted";
   }
 
-  const canonicalClaim =
+  // --- Only update if there's actually new/better data ---
+  const newCanonicalClaim =
     row.canonicalClaim && row.canonicalClaim !== "Claim unavailable."
-      ? row.canonicalClaim
-      : (record.canonicalClaim ?? row.canonicalClaim ?? null);
+      ? null // already good, no change
+      : (record.canonicalClaim && record.canonicalClaim !== "Claim unavailable." ? record.canonicalClaim : null);
+
+  const newBias = record.bias && !row.biasJson ? JSON.stringify(record.bias) : null;
+  const newDescription = !row.description && record.description ? record.description : null;
+  const newImageUrl = !row.imageUrl && record.imageUrl ? record.imageUrl : null;
+
+  const hasNewData = !!(newCanonicalClaim || newBias || newDescription || newImageUrl);
+
+  if (!hasNewData) {
+    // Nothing meaningful changed — skip the DB write entirely.
+    // This prevents Ponder reorg table bloat from no-op updates.
+    return "updated";
+  }
+
+  const canonicalClaim = newCanonicalClaim ?? row.canonicalClaim ?? null;
 
   await c.db
     .update(articleArchive, { id: record.hash })
@@ -698,13 +713,13 @@ async function upsertArticleArchiveRow(
       feedItemId: record.id || row.feedItemId,
       title: record.title || row.title,
       link: record.link,
-      description: record.description || row.description,
+      description: newDescription ?? row.description,
       pubDate: record.pubDate || row.pubDate,
       source: record.source || row.source,
       sourceUrl: record.sourceUrl || row.sourceUrl,
       category: record.category || row.category,
-      imageUrl: record.imageUrl ?? row.imageUrl,
-      biasJson: record.bias ? JSON.stringify(record.bias) : row.biasJson,
+      imageUrl: newImageUrl ?? row.imageUrl,
+      biasJson: newBias ?? row.biasJson,
       tagsJson: JSON.stringify(record.tags ?? safeJsonParse(row.tagsJson, [] as string[])),
       canonicalClaim,
       preservedLinksJson: JSON.stringify(
@@ -776,7 +791,9 @@ async function upsertEditorialArchiveRow(
       id: hash,
       ...values,
     });
-  } else {
+  } else if (row.contentHash !== contentHash) {
+    // Only update if content actually changed — skip no-op rewrites
+    // to prevent Ponder reorg table bloat
     await c.db.update(editorialArchive, { id: hash }).set(values);
   }
 
