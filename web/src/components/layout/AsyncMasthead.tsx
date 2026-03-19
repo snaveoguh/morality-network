@@ -2,16 +2,15 @@
 // ASYNC MASTHEAD — server component that renders the daily edition masthead
 //
 // CACHE-ONLY: never generates AI content. Daily editions are pre-generated
-// by the newsroom cron. If no cached edition exists, shows default masthead.
+// by the newsroom cron. If no daily edition exists, falls back to the most
+// recent Pooter Original so the masthead is never empty.
 // ============================================================================
 
 import { Masthead } from "./Masthead";
 import { getDailyEditionHash } from "@/lib/daily-edition";
-import { getArchivedEditorial } from "@/lib/editorial-archive";
+import { getArchivedEditorial, getRecentPooterOriginals } from "@/lib/editorial-archive";
 
 export async function AsyncMasthead() {
-  // Cache-only lookup — no AI generation on page load
-  const hash = getDailyEditionHash();
   let dailyEdition: {
     hash: string;
     dailyTitle: string;
@@ -20,7 +19,9 @@ export async function AsyncMasthead() {
     generatedAt: string;
   } | null = null;
 
+  // 1. Try today's daily edition
   try {
+    const hash = getDailyEditionHash();
     const cached = await getArchivedEditorial(hash);
     if (cached?.isDailyEdition) {
       dailyEdition = {
@@ -32,7 +33,26 @@ export async function AsyncMasthead() {
       };
     }
   } catch {
-    // Cache miss — show default masthead
+    // Cache miss
+  }
+
+  // 2. Fallback: most recent Pooter Original
+  if (!dailyEdition) {
+    try {
+      const originals = await getRecentPooterOriginals();
+      const best = originals[0];
+      if (best) {
+        dailyEdition = {
+          hash: best.hash,
+          dailyTitle: best.dailyTitle ?? "POOTER ORIGINAL",
+          headline: best.title,
+          subheadline: best.subheadline,
+          generatedAt: best.generatedAt,
+        };
+      }
+    } catch {
+      // No originals available
+    }
   }
 
   return (
