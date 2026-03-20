@@ -68,7 +68,7 @@ async function recoverPrimaryFromRegistry(
   return recovered;
 }
 
-const EDITION_EPOCH_MS = 1741651200 * 1000; // March 11 2026 00:00 UTC
+const EDITION_EPOCH_MS = 1741651200 * 1000; // March 11 2025 00:00 UTC (edition #1)
 
 export async function AsyncArticleBody({ hash }: { hash: string }) {
   // 1. Check editorial archive first (instant on cache hit)

@@ -69,6 +69,7 @@ interface TileFeedProps {
 
 const FILTER_OPTIONS = [
   { value: "all", label: "All" },
+  { value: "pooter-og", label: "Pooter OG" },
   { value: "news", label: "News" },
   { value: "tech", label: "Tech" },
   { value: "crypto", label: "Crypto" },
@@ -386,17 +387,8 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
 
     all.sort((a, b) => b.sortTime - a.sortTime);
 
-    // Pooter Originals + published articles float to top
-    const originals: TileItem[] = [];
-    const nonOriginals: TileItem[] = [];
-    for (const item of all) {
-      if (item.type === "pooter-original") {
-        originals.push(item);
-      } else {
-        nonOriginals.push(item);
-      }
-    }
-    all = [...originals, ...nonOriginals];
+    // Pooter Originals mix naturally by timestamp — no float-to-top.
+    // Users can filter to "Pooter OG" tab to see only originals.
 
     // Published articles float to top while maintaining their relative order
     if (publishedHashes && publishedHashes.size > 0) {
@@ -507,7 +499,10 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
   const filtered = useMemo(() => {
     let result = items;
     if (filter !== "all") {
-      if (filter === "news") {
+      if (filter === "pooter-og") {
+        // Show only Pooter Originals (AI-generated editorials + moral commentary)
+        result = result.filter((item) => item.type === "pooter-original");
+      } else if (filter === "news") {
         // "News" matches all general news categories (world, politics, business)
         result = result.filter((item) => NEWS_CATEGORIES.has(item.category));
       } else {

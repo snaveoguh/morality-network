@@ -10,7 +10,7 @@ import { BRAND_NAME, SITE_URL } from "@/lib/brand";
 // and returns structured JSON metadata for marketplaces.
 // ============================================================================
 
-const EPOCH = 1741651200; // March 11 2026 00:00 UTC
+const EPOCH = 1741651200; // March 11 2025 00:00 UTC (edition #1)
 const SECONDS_PER_DAY = 86400;
 
 interface RouteParams {

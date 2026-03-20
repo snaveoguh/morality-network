@@ -1,5 +1,5 @@
 {
-"crons": [
+  "crons": [
     {
       "path": "/api/trading/execute",
       "schedule": "*/10 * * * *"
@@ -17,8 +17,16 @@
       "schedule": "0 5 * * *"
     },
     {
+      "path": "/api/cron/daily-edition",
+      "schedule": "30 5,11,17,23 * * *"
+    },
+    {
       "path": "/api/newsroom",
       "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/cron/daily-illustration",
+      "schedule": "45 5,11,17,23 * * *"
     }
   ]
 }

@@ -79,12 +79,17 @@ async function saveFile(data: NewsroomEditionsFile): Promise<void> {
   try {
     await mkdir(path.dirname(EDITIONS_FILE_PATH), { recursive: true });
     await writeFile(EDITIONS_FILE_PATH, JSON.stringify(data, null, 2), "utf-8");
-    cache = data;
-    cacheLoadedAtMs = Date.now();
-  } finally {
-    writeLock = null;
-    unlock!();
+  } catch (err) {
+    // Vercel serverless has a read-only filesystem — just keep in-memory cache
+    console.warn("[newsroom-edition] file write failed (read-only fs?):", err instanceof Error ? err.message : err);
   }
+
+  // Always update in-memory cache regardless of file write success
+  cache = data;
+  cacheLoadedAtMs = Date.now();
+
+  writeLock = null;
+  unlock!();
 }
 
 // ============================================================================

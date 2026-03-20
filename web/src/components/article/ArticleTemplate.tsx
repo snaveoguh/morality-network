@@ -129,6 +129,32 @@ export function ArticleTemplate({
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const subheadlineRef = useRef<HTMLParagraphElement>(null);
   const bodyRefs = useRef<(HTMLParagraphElement | null)[]>([]);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Validate: PNG or JPEG, max 4MB
+    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
+      setSaveMsg("Only PNG, JPEG, or WebP images");
+      setTimeout(() => setSaveMsg(null), 3000);
+      return;
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      setSaveMsg("Image must be under 4MB");
+      setTimeout(() => setSaveMsg(null), 3000);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      // Extract base64 without the data:image/... prefix for PNG storage
+      setImagePreview(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  }, []);
 
   const handleSaveEdits = useCallback(async () => {
     if (!address || !entityHash) return;
@@ -141,6 +167,27 @@ export function ArticleTemplate({
         .map((ref) => ref?.innerText?.trim() ?? "")
         .filter((p) => p.length > 0);
 
+      // If there's a new image, extract the base64 data
+      let illustrationBase64: string | undefined;
+      if (imagePreview) {
+        // Convert to PNG base64 via canvas for consistency
+        const img = new Image();
+        const loaded = new Promise<string>((resolve) => {
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext("2d");
+            ctx?.drawImage(img, 0, 0);
+            // Get base64 without prefix
+            const pngBase64 = canvas.toDataURL("image/png").split(",")[1];
+            resolve(pngBase64);
+          };
+        });
+        img.src = imagePreview;
+        illustrationBase64 = await loaded;
+      }
+
       const res = await fetch("/api/editorial/edit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -151,6 +198,7 @@ export function ArticleTemplate({
             headline: editedHeadline,
             subheadline: editedSubheadline,
             editorialBody: editedBody.length > 0 ? editedBody : undefined,
+            illustrationBase64,
           },
         }),
       });
@@ -158,6 +206,11 @@ export function ArticleTemplate({
       if (res.ok) {
         setSaveMsg("Saved ✓");
         setEditing(false);
+        setImagePreview(null);
+        // Reload to show new illustration
+        if (illustrationBase64) {
+          window.location.reload();
+        }
       } else {
         setSaveMsg(data.error || "Save failed");
       }
@@ -167,7 +220,7 @@ export function ArticleTemplate({
       setSaving(false);
       setTimeout(() => setSaveMsg(null), 3000);
     }
-  }, [address, entityHash]);
+  }, [address, entityHash, imagePreview]);
 
   // Broadcast context to extension when on pooter.world
   useEffect(() => {
@@ -326,18 +379,90 @@ export function ArticleTemplate({
 
       {/* ══════════════ HERO IMAGE ══════════════ */}
       {article.isDailyEdition && (article.hasIllustration || article.illustrationBase64) && editionNumber ? (
-        <figure className="mb-8">
+        <figure className="mb-8 relative group">
           <div className="overflow-hidden border border-[var(--rule)]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`/api/edition/${editionNumber}/illustration`}
-              alt={`${article.dailyTitle || "Daily Edition"} — cover illustration`}
-              className="w-full h-auto"
-            />
+            {imagePreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imagePreview}
+                alt="New illustration preview"
+                className="w-full h-auto"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={`/api/edition/${editionNumber}/illustration`}
+                alt={`${article.dailyTitle || "Daily Edition"} — cover illustration`}
+                className="w-full h-auto"
+              />
+            )}
           </div>
+          {editing && isGodMode && (
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              <button
+                onClick={() => imageInputRef.current?.click()}
+                className="border border-[var(--ink)] px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink)] hover:bg-[var(--bg-alt)]"
+              >
+                Replace Image
+              </button>
+              {imagePreview && (
+                <button
+                  onClick={() => setImagePreview(null)}
+                  className="border border-[var(--rule)] px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)] hover:text-[var(--ink)]"
+                >
+                  Undo
+                </button>
+              )}
+            </div>
+          )}
           <figcaption className="mt-1.5 font-mono text-[9px] italic text-[var(--ink-faint)]">
-            AI-generated illustration for this edition
+            {imagePreview ? "New illustration (unsaved)" : "AI-generated illustration for this edition"}
           </figcaption>
+        </figure>
+      ) : article.isDailyEdition && editing && isGodMode ? (
+        <figure className="mb-8">
+          <div className="border-2 border-dashed border-[var(--rule)] p-8 text-center">
+            {imagePreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imagePreview}
+                alt="New illustration preview"
+                className="w-full h-auto mb-2"
+              />
+            ) : (
+              <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)] mb-2">
+                No illustration yet
+              </p>
+            )}
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => imageInputRef.current?.click()}
+              className="border border-[var(--ink)] px-3 py-1 font-mono text-[9px] uppercase tracking-wider text-[var(--ink)] hover:bg-[var(--bg-alt)]"
+            >
+              Upload Illustration
+            </button>
+            {imagePreview && (
+              <button
+                onClick={() => setImagePreview(null)}
+                className="ml-2 border border-[var(--rule)] px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)] hover:text-[var(--ink)]"
+              >
+                Remove
+              </button>
+            )}
+          </div>
         </figure>
       ) : primary.imageUrl ? (
         <figure className="mb-8">

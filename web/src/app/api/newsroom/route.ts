@@ -6,20 +6,32 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 55; // Vercel hobby plan limit
 
 // ============================================================================
-// GET /api/newsroom — returns today's edition (public, read-only)
+// GET /api/newsroom — run the newsroom pipeline (cron endpoint)
+//
+// Called by Vercel cron every 2h. Generates Pooter Originals for top stories.
+// Idempotent — skips stories that already have editorials.
 // ============================================================================
 
 export async function GET() {
   try {
-    const edition = await getNewsroomEdition();
-    if (!edition) {
-      return NextResponse.json(
-        { edition: null, message: "No edition generated today yet" },
-        { status: 200 },
-      );
-    }
-    return NextResponse.json({ edition });
+    // Run the pipeline — capped at 2 stories per cron invocation to fit
+    // within Vercel's 55s maxDuration. Runs every 2h, so ~24 originals/day.
+    // Idempotent: skips already-generated stories.
+    const result = await runNewsroom({
+      forceRegenerate: false,
+      maxStories: 2,
+      minStories: 1,
+    });
+
+    return NextResponse.json({
+      generated: result.generated,
+      skipped: result.skipped,
+      errors: result.errors,
+      totalStories: result.edition.stories.length,
+      details: result.details,
+    });
   } catch (err) {
+    console.error("[newsroom/cron] Pipeline failed:", err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Unknown error" },
       { status: 500 },
