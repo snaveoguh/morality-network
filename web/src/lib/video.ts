@@ -1,3 +1,5 @@
+import { reportWarn } from "./report-error";
+
 // ============================================================================
 // VIDEO FEED — Daily video embeds from YouTube news channels
 // Uses YouTube RSS feeds (free, no API key) to surface today's top videos.
@@ -100,7 +102,8 @@ export async function fetchDailyVideos(limit = 8): Promise<VideoItem[]> {
         if (!res.ok) return [];
         const xml = await res.text();
         return parseYouTubeRSS(xml, ch.name, ch.channelId, ch.category);
-      } catch {
+      } catch (e) {
+        reportWarn("video:embed-extract", e);
         return [];
       }
     })

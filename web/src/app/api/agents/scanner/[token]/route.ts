@@ -3,6 +3,7 @@
 // Looks up a token by pool address or token address.
 
 import { NextResponse } from "next/server";
+import { reportWarn } from "@/lib/report-error";
 import { agentRegistry } from "@/lib/agents/core";
 import { launchStore, scannerAgent } from "@/lib/agents/scanner";
 import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
@@ -26,7 +27,8 @@ async function triggerBackendScannerSync(baseUrl: string): Promise<boolean> {
       signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
     });
     return response.ok;
-  } catch {
+  } catch (e) {
+    reportWarn("api:scanner-token:auth", e);
     return false;
   }
 }

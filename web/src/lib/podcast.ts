@@ -1,5 +1,6 @@
 import "server-only";
 
+import { reportWarn } from "./report-error";
 import type { FeedItem } from "./rss";
 import type { PodcastEpisode, PodcastPlatformLink } from "./article";
 
@@ -97,7 +98,8 @@ async function fetchHtml(url: string): Promise<string | null> {
     if (!/text\/html|application\/xhtml\+xml/i.test(contentType)) return null;
 
     return await res.text();
-  } catch {
+  } catch (e) {
+    reportWarn("podcast:fetch", e);
     return null;
   } finally {
     clearTimeout(timeout);
@@ -160,7 +162,8 @@ async function extractFromCneAudioScript(scriptUrl: string): Promise<PodcastEpis
       embedScriptUrl: scriptUrl,
       platformLinks,
     };
-  } catch {
+  } catch (e) {
+    reportWarn("podcast:fetch", e);
     return null;
   } finally {
     clearTimeout(timeout);

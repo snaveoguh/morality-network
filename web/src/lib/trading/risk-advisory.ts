@@ -4,6 +4,7 @@
 // Fail-open: if Venice is down or advisory is stale, engine runs unconstrained.
 
 import { promises as fs } from "node:fs";
+import { reportWarn } from "@/lib/report-error";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -99,7 +100,7 @@ async function storeAdvisory(advisory: RiskAdvisory): Promise<void> {
   if (!redisOk) {
     try {
       await fs.writeFile(FS_PATH, JSON.stringify(advisory), "utf-8");
-    } catch { /* not fatal */ }
+    } catch (e) { reportWarn("risk-advisory:cache-write", e); }
   }
 }
 

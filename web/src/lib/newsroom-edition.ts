@@ -2,6 +2,7 @@ import "server-only";
 
 import path from "node:path";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { reportWarn } from "./report-error";
 
 // ============================================================================
 // NEWSROOM EDITION TRACKER
@@ -60,7 +61,8 @@ async function loadFile(): Promise<NewsroomEditionsFile> {
     cache = JSON.parse(raw) as NewsroomEditionsFile;
     cacheLoadedAtMs = Date.now();
     return cache;
-  } catch {
+  } catch (e) {
+    reportWarn("newsroom-edition:cache-init", e);
     cache = { ...EMPTY_FILE };
     cacheLoadedAtMs = Date.now();
     return cache;

@@ -19,6 +19,7 @@ import { injected, coinbaseWallet as cbWallet } from "wagmi/connectors";
 import "@rainbow-me/rainbowkit/styles.css";
 import { type ReactNode } from "react";
 import { pooterWallet } from "@/lib/pooterWallet";
+import { NotificationProvider } from "@/providers/NotificationProvider";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
 
@@ -78,7 +79,9 @@ export function Providers({ children }: { children: ReactNode }) {
     <WagmiProviderBase config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider theme={rkTheme}>
-          {children}
+          <NotificationProvider>
+            {children}
+          </NotificationProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProviderBase>

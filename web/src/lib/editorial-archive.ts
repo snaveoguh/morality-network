@@ -5,6 +5,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { keccak256, toBytes } from "viem";
 import type { ArticleContent } from "./article";
 import { fetchIndexerJson, getIndexerBackendUrl } from "./server/indexer-backend";
+import { reportWarn } from "./report-error";
 
 // ============================================================================
 // EDITORIAL ARCHIVE — Deep persistence for AI-generated editorials
@@ -98,8 +99,8 @@ async function redisSetEditorial(hash: string, editorial: ArchivedEditorial): Pr
       body: JSON.stringify([["SET", `${REDIS_EDITORIAL_PREFIX}${hash}`, serialized, "EX", "172800"]]),
       cache: "no-store",
     });
-  } catch {
-    // Redis write failure is non-fatal
+  } catch (e) {
+    reportWarn("editorial-archive:redis-set", e);
   }
 }
 

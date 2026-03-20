@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { reportWarn } from "@/lib/report-error";
 import { getTraderConfig } from "@/lib/trading/config";
 import { fetchTechnicalSignal } from "@/lib/trading/technical";
 import { detectPatterns } from "@/lib/trading/pattern-detector";
@@ -14,7 +15,7 @@ export async function GET() {
     let newsSignals: Awaited<ReturnType<typeof getAggregatedMarketSignals>> = [];
     try {
       newsSignals = await getAggregatedMarketSignals({ limit: 250, minAbsScore: 0.2 });
-    } catch { /* non-fatal */ }
+    } catch (e) { reportWarn("api:signals-live:news", e); }
 
     // Compute signals for all watched markets in parallel
     const results = await Promise.all(

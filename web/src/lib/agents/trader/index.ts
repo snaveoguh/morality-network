@@ -5,6 +5,7 @@
 // and exposes live position/P&L telemetry via snapshot().
 
 import { randomUUID } from "node:crypto";
+import { reportWarn } from "@/lib/report-error";
 import type { Agent, AgentSnapshot, AgentStatus } from "../core/types";
 import { agentRegistry } from "../core/registry";
 import { messageBus } from "../core/bus";
@@ -226,8 +227,8 @@ class TraderAgent implements Agent {
         ];
         this.cachedJournal = positionsToJournal(allPositions);
         this.lastConsecutiveLosses = consecutiveLosses(this.cachedJournal);
-      } catch {
-        // Non-critical — snapshot will use stale data
+      } catch (e) {
+        reportWarn("trader:snapshot", e);
       }
 
       // Always publish cycle-complete

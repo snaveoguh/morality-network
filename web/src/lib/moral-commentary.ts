@@ -27,6 +27,7 @@ import { hasAIProviderForTask } from "./ai-models";
 import { saveEditorial, getArchivedEditorial } from "./editorial-archive";
 import { getMoralCompassSynthesis } from "./agents/core/moral-compass";
 import { recall } from "./agents/core/memory";
+import { reportWarn } from "./report-error";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -339,8 +340,8 @@ export async function generateMoralCommentary(): Promise<MoralCommentaryResult> 
         skipped: true,
       };
     }
-  } catch {
-    // Continue — archive might not be available
+  } catch (e) {
+    reportWarn("moral-commentary:archive", e);
   }
 
   // 2. Check AI availability

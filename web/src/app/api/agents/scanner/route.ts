@@ -7,6 +7,7 @@
 //   ?enriched=true  — only return enriched launches (with DexScreener data)
 
 import { NextResponse } from "next/server";
+import { reportWarn } from "@/lib/report-error";
 import { agentRegistry } from "@/lib/agents/core";
 import { scannerAgent, launchStore } from "@/lib/agents/scanner";
 import type { TokenLaunch } from "@/lib/agents/scanner";
@@ -39,7 +40,8 @@ async function triggerBackendScannerSync(baseUrl: string, limit: number): Promis
       signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
     });
     return response.ok;
-  } catch {
+  } catch (e) {
+    reportWarn("api:scanner:auth", e);
     return false;
   }
 }
