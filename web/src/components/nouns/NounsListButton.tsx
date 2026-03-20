@@ -2,17 +2,16 @@
 
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import type { Address } from "viem";
+import { NOUNS_CONTRACT } from "@/lib/nouns-marketplace";
 import { useCreateListing } from "@/hooks/useSeaport";
 
-interface ListButtonProps {
-  tokenId: string;
-  contract: Address;
+interface NounsListButtonProps {
+  nounId: number;
 }
 
-export function ListButton({ tokenId, contract }: ListButtonProps) {
+export function NounsListButton({ nounId }: NounsListButtonProps) {
   const { address } = useAccount();
-  const { list, status, error, reset } = useCreateListing(contract, tokenId);
+  const { list, status, error, reset } = useCreateListing(NOUNS_CONTRACT, String(nounId));
   const [showInput, setShowInput] = useState(false);
   const [priceInput, setPriceInput] = useState("");
 
@@ -45,7 +44,7 @@ export function ListButton({ tokenId, contract }: ListButtonProps) {
         {status === "switching"
           ? "Switching Chain..."
           : status === "approving"
-            ? "Approving..."
+            ? "Approving Nouns Token..."
             : status === "signing"
               ? "Signing Order..."
               : "Storing Order..."}
@@ -58,12 +57,12 @@ export function ListButton({ tokenId, contract }: ListButtonProps) {
       <span className="inline-flex items-center gap-1">
         <input
           type="number"
-          step="0.001"
+          step="0.01"
           min="0"
           placeholder="ETH"
           value={priceInput}
           onChange={(e) => setPriceInput(e.target.value)}
-          className="w-20 border border-[var(--rule)] bg-[var(--paper)] px-1 py-0.5 font-mono text-[9px] text-[var(--ink)] outline-none focus:border-[var(--ink)]"
+          className="w-24 border border-[var(--rule)] bg-[var(--paper)] px-1 py-0.5 font-mono text-[9px] text-[var(--ink)] outline-none focus:border-[var(--ink)]"
         />
         <button
           onClick={() => list(priceInput)}

@@ -80,10 +80,9 @@ export function PepeCard({ pepe }: { pepe: PepeFeedItem }) {
 
         {/* Actions */}
         <div className="mt-auto flex items-center gap-2 border-t border-[var(--rule-light)] pt-2 mt-2">
-          {pepe.listedPriceEth && pepe.emblemTokenId && pepe.emblemContract ? (
+          {pepe.listedPriceEth && pepe.orderHash ? (
             <BuyButton
-              tokenId={pepe.emblemTokenId}
-              contract={pepe.emblemContract}
+              orderHash={pepe.orderHash}
               priceEth={pepe.listedPriceEth}
             />
           ) : pepe.marketplaceUrl ? (

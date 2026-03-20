@@ -316,6 +316,32 @@ export const agentMemory = onchainTable("agent_memory", (t) => ({
 }));
 
 // ============================================================================
+// MARKETPLACE ORDERS — Seaport 1.6 NFT marketplace (Nouns + PEPE)
+// ============================================================================
+
+export const marketplaceOrder = onchainTable("marketplace_order", (t) => ({
+  id: t.text().primaryKey(),               // orderHash (offerer-salt-token-tokenId)
+  tokenContract: t.text().notNull(),       // NFT contract address
+  tokenId: t.text().notNull(),             // Token ID
+  maker: t.text().notNull(),               // Seller address
+  priceWei: t.text().notNull(),            // Price in wei (text for BigInt safety)
+  expiresAt: t.bigint().notNull(),         // Unix timestamp expiration
+  status: t.text().notNull(),              // ACTIVE | FILLED | CANCELLED | EXPIRED
+  orderJson: t.text().notNull(),           // Full Seaport order JSON (needed for fulfillment)
+  signature: t.text().notNull(),           // EIP-712 signature
+  collection: t.text().notNull(),          // 'nouns' | 'emblem-vault-legacy' | 'emblem-vault-curated'
+  taker: t.text(),                         // Buyer address (filled on purchase)
+  txHash: t.text(),                        // Fill/cancel tx hash
+  createdAt: t.bigint().notNull(),         // Unix timestamp
+}), (table) => ({
+  tokenIdx: index().on(table.tokenContract, table.tokenId),
+  makerIdx: index().on(table.maker),
+  collectionIdx: index().on(table.collection),
+  statusIdx: index().on(table.status),
+  expiresIdx: index().on(table.expiresAt),
+}));
+
+// ============================================================================
 // RELATIONS
 // ============================================================================
 

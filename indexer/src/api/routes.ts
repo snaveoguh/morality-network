@@ -10,6 +10,7 @@ import {
   editorialArchive,
   entity,
   feedItem,
+  marketplaceOrder,
   scannerLaunch,
   swarmState,
   traderState,
@@ -2599,6 +2600,261 @@ ponder.get("/api/v1/memory/all", async (c) => {
     })),
     count: rows.length,
   });
+});
+
+// ============================================================================
+// MARKETPLACE ORDERS — Seaport 1.6 NFT marketplace (Nouns + PEPE)
+// ============================================================================
+
+const VALID_COLLECTIONS = new Set(["nouns", "emblem-vault-legacy", "emblem-vault-curated"]);
+const VALID_ORDER_STATUSES = new Set(["ACTIVE", "FILLED", "CANCELLED", "EXPIRED"]);
+
+/**
+ * GET /api/v1/marketplace/orders
+ * List marketplace orders with optional filters.
+ * Query params: collection, tokenId, tokenContract, maker, status, limit
+ */
+ponder.get("/api/v1/marketplace/orders", async (c) => {
+  const collection = c.req.query("collection");
+  const tokenId = c.req.query("tokenId");
+  const tokenContract = c.req.query("tokenContract")?.toLowerCase();
+  const maker = c.req.query("maker")?.toLowerCase();
+  const status = c.req.query("status")?.toUpperCase() || "ACTIVE";
+  const limit = parseLimit(c.req.query("limit"));
+
+  const conditions = [];
+
+  if (status && VALID_ORDER_STATUSES.has(status)) {
+    conditions.push(eq(marketplaceOrder.status, status));
+  }
+  if (collection && VALID_COLLECTIONS.has(collection)) {
+    conditions.push(eq(marketplaceOrder.collection, collection));
+  }
+  if (tokenContract) {
+    conditions.push(eq(marketplaceOrder.tokenContract, tokenContract));
+  }
+  if (tokenId) {
+    conditions.push(eq(marketplaceOrder.tokenId, tokenId));
+  }
+  if (maker) {
+    conditions.push(eq(marketplaceOrder.maker, maker));
+  }
+
+  // Filter out expired orders
+  const nowBigint = BigInt(Math.floor(Date.now() / 1000));
+  conditions.push(gte(marketplaceOrder.expiresAt, nowBigint));
+
+  const rows = await c.db
+    .select()
+    .from(marketplaceOrder)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(desc(marketplaceOrder.createdAt))
+    .limit(limit);
+
+  return c.json({
+    orders: rows.map((r) => ({
+      orderHash: r.id,
+      tokenContract: r.tokenContract,
+      tokenId: r.tokenId,
+      maker: r.maker,
+      priceWei: r.priceWei,
+      expiresAt: Number(r.expiresAt),
+      status: r.status,
+      orderJson: r.orderJson,
+      signature: r.signature,
+      collection: r.collection,
+      taker: r.taker,
+      txHash: r.txHash,
+      createdAt: Number(r.createdAt),
+    })),
+    count: rows.length,
+    meta: { generatedAt: Date.now() },
+  });
+});
+
+/**
+ * GET /api/v1/marketplace/orders/:hash
+ * Get a single order by hash.
+ */
+ponder.get("/api/v1/marketplace/orders/:hash", async (c) => {
+  const hash = c.req.param("hash");
+  if (!hash) return c.json({ error: "missing hash" }, 400);
+
+  const rows = await c.db
+    .select()
+    .from(marketplaceOrder)
+    .where(eq(marketplaceOrder.id, hash))
+    .limit(1);
+
+  const row = rows[0];
+  if (!row) return c.json({ error: "not found" }, 404);
+
+  return c.json({
+    orderHash: row.id,
+    tokenContract: row.tokenContract,
+    tokenId: row.tokenId,
+    maker: row.maker,
+    priceWei: row.priceWei,
+    expiresAt: Number(row.expiresAt),
+    status: row.status,
+    orderJson: row.orderJson,
+    signature: row.signature,
+    collection: row.collection,
+    taker: row.taker,
+    txHash: row.txHash,
+    createdAt: Number(row.createdAt),
+  });
+});
+
+/**
+ * POST /api/v1/marketplace/orders
+ * Submit a new signed Seaport order.
+ * Auth: The signed order IS the authentication (EIP-712 signature matches maker).
+ */
+ponder.post("/api/v1/marketplace/orders", async (c) => {
+  const body = await c.req.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return c.json({ error: "invalid body" }, 400);
+  }
+
+  const {
+    orderHash,
+    tokenContract,
+    tokenId,
+    maker,
+    priceWei,
+    expiresAt,
+    orderJson,
+    signature,
+    collection,
+  } = body as Record<string, unknown>;
+
+  // Validate required fields
+  if (
+    typeof orderHash !== "string" || !orderHash ||
+    typeof tokenContract !== "string" || !tokenContract ||
+    typeof tokenId !== "string" || !tokenId ||
+    typeof maker !== "string" || !maker ||
+    typeof priceWei !== "string" || !priceWei ||
+    typeof orderJson !== "string" || !orderJson ||
+    typeof signature !== "string" || !signature ||
+    typeof collection !== "string" || !VALID_COLLECTIONS.has(collection)
+  ) {
+    return c.json({ error: "missing or invalid required fields" }, 400);
+  }
+
+  const expiresAtBigint = BigInt(Number(expiresAt) || 0);
+  if (expiresAtBigint <= BigInt(Math.floor(Date.now() / 1000))) {
+    return c.json({ error: "order already expired" }, 400);
+  }
+
+  // Validate the orderJson parses correctly
+  try {
+    JSON.parse(orderJson);
+  } catch {
+    return c.json({ error: "invalid orderJson" }, 400);
+  }
+
+  const nowBigint = BigInt(Math.floor(Date.now() / 1000));
+
+  // Check if order already exists
+  const existing = await c.db
+    .select()
+    .from(marketplaceOrder)
+    .where(eq(marketplaceOrder.id, orderHash))
+    .limit(1);
+
+  if (existing.length > 0) {
+    return c.json({ error: "order already exists", orderHash }, 409);
+  }
+
+  await c.db.insert(marketplaceOrder).values({
+    id: orderHash,
+    tokenContract: tokenContract.toLowerCase(),
+    tokenId,
+    maker: maker.toLowerCase(),
+    priceWei,
+    expiresAt: expiresAtBigint,
+    status: "ACTIVE",
+    orderJson,
+    signature,
+    collection,
+    taker: null,
+    txHash: null,
+    createdAt: nowBigint,
+  });
+
+  return c.json({ ok: true, orderHash });
+});
+
+/**
+ * PUT /api/v1/marketplace/orders/:hash/fill
+ * Mark an order as filled (purchased).
+ */
+ponder.post("/api/v1/marketplace/orders/:hash/fill", async (c) => {
+  const hash = c.req.param("hash");
+  if (!hash) return c.json({ error: "missing hash" }, 400);
+
+  const body = await c.req.json().catch(() => null);
+  const txHash = (body as Record<string, unknown>)?.txHash;
+  const taker = (body as Record<string, unknown>)?.taker;
+
+  if (typeof txHash !== "string" || !txHash) {
+    return c.json({ error: "missing txHash" }, 400);
+  }
+
+  const existing = await c.db
+    .select()
+    .from(marketplaceOrder)
+    .where(eq(marketplaceOrder.id, hash))
+    .limit(1);
+
+  if (existing.length === 0) return c.json({ error: "not found" }, 404);
+  if (existing[0].status !== "ACTIVE") {
+    return c.json({ error: `order is ${existing[0].status}` }, 409);
+  }
+
+  await c.db
+    .update(marketplaceOrder, { id: hash })
+    .set({
+      status: "FILLED",
+      txHash: typeof txHash === "string" ? txHash : null,
+      taker: typeof taker === "string" ? taker.toLowerCase() : null,
+    });
+
+  return c.json({ ok: true, orderHash: hash, status: "FILLED" });
+});
+
+/**
+ * PUT /api/v1/marketplace/orders/:hash/cancel
+ * Mark an order as cancelled.
+ */
+ponder.post("/api/v1/marketplace/orders/:hash/cancel", async (c) => {
+  const hash = c.req.param("hash");
+  if (!hash) return c.json({ error: "missing hash" }, 400);
+
+  const body = await c.req.json().catch(() => null);
+  const txHash = (body as Record<string, unknown>)?.txHash;
+
+  const existing = await c.db
+    .select()
+    .from(marketplaceOrder)
+    .where(eq(marketplaceOrder.id, hash))
+    .limit(1);
+
+  if (existing.length === 0) return c.json({ error: "not found" }, 404);
+  if (existing[0].status !== "ACTIVE") {
+    return c.json({ error: `order is ${existing[0].status}` }, 409);
+  }
+
+  await c.db
+    .update(marketplaceOrder, { id: hash })
+    .set({
+      status: "CANCELLED",
+      txHash: typeof txHash === "string" ? txHash : null,
+    });
+
+  return c.json({ ok: true, orderHash: hash, status: "CANCELLED" });
 });
 
 // Keep GraphQL API available when custom API routes are registered.

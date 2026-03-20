@@ -120,10 +120,9 @@ export function PepeDetailView({ asset }: { asset: string }) {
                     {parseFloat(detail.listedPriceEth).toFixed(4)} ETH
                   </p>
                 </div>
-                {detail.emblemTokenId && detail.emblemContract && (
+                {detail.orderHash && (
                   <BuyButton
-                    tokenId={detail.emblemTokenId}
-                    contract={detail.emblemContract}
+                    orderHash={detail.orderHash}
                     priceEth={detail.listedPriceEth}
                   />
                 )}
