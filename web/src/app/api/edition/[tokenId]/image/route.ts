@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { computeEntityHash } from "@/lib/entity";
-import { getArchivedEditorial } from "@/lib/editorial-archive";
 import { getIllustration } from "@/lib/illustration-store";
 import { BRAND_NAME, SITE_URL } from "@/lib/brand";
+import {
+  getEditionContext,
+  ZERO_CONTENT_HASH,
+} from "@/lib/server/edition-context";
 
 // ============================================================================
 // /api/edition/[tokenId]/image — Newspaper-style SVG for NFT display
@@ -10,9 +12,6 @@ import { BRAND_NAME, SITE_URL } from "@/lib/brand";
 // Generates a dynamic SVG that looks like a broadsheet front page.
 // Layout: masthead → edition/date → daily title → headline → subheadline → hash
 // ============================================================================
-
-const EPOCH = 1741651200;
-const SECONDS_PER_DAY = 86400;
 
 interface RouteParams {
   params: Promise<{ tokenId: string }>;
@@ -52,37 +51,43 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return new NextResponse("Invalid tokenId", { status: 400 });
   }
 
-  // Compute edition date
-  const editionTimestamp = EPOCH + (tokenId - 1) * SECONDS_PER_DAY;
-  const editionDate = new Date(editionTimestamp * 1000);
-  const dateStr = editionDate
-    .toLocaleDateString("en-GB", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    })
-    .toUpperCase();
+  const {
+    editorial,
+    editorialHash,
+    dateStr,
+    officialTitle,
+    auctionExists,
+    communityTitle,
+    communityContentHash,
+  } = await getEditionContext(tokenId);
 
-  // Look up editorial
-  const year = editionDate.getUTCFullYear();
-  const month = String(editionDate.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(editionDate.getUTCDate()).padStart(2, "0");
-  const dailyId = `pooter-daily-${year}-${month}-${day}`;
-  const hash = computeEntityHash(dailyId);
-  const editorial = await getArchivedEditorial(hash).catch(() => null);
-
-  const dailyTitle = editorial?.dailyTitle || "DAILY EDITION";
-  const headline = editorial?.primary.title || `Edition #${tokenId}`;
-  const subheadline = editorial?.subheadline || "A public ledger of world events and their interpretation.";
-  const contentHash = editorial?.contentHash || "0x" + "0".repeat(64);
-  const generatedBy = editorial?.generatedBy || "—";
-  const tags = editorial?.tags?.slice(0, 5) ?? [];
-  const editedBy = editorial?.editedBy ?? null;
+  const isCommunityEdition = auctionExists;
+  const uppercaseDate = dateStr.toUpperCase();
+  const dailyTitle = isCommunityEdition
+    ? "COMMUNITY EDITION"
+    : editorial?.dailyTitle || "DAILY EDITION";
+  const headline = isCommunityEdition
+    ? communityTitle || `Historical Claim #${tokenId}`
+    : editorial?.primary.title || `Edition #${tokenId}`;
+  const subheadline = isCommunityEdition
+    ? officialTitle
+      ? `User-generated metadata attached to a historical pooter date. Reference article: ${officialTitle}.`
+      : "User-generated historical edition. Metadata comes from the community, not the newsroom."
+    : editorial?.subheadline || "A public ledger of world events and their interpretation.";
+  const contentHash = isCommunityEdition
+    ? communityContentHash || ZERO_CONTENT_HASH
+    : editorial?.contentHash || ZERO_CONTENT_HASH;
+  const generatedBy = isCommunityEdition ? "community" : editorial?.generatedBy || "—";
+  const tags = isCommunityEdition
+    ? ["community", ...(editorial?.tags?.slice(0, 4) ?? [])]
+    : editorial?.tags?.slice(0, 5) ?? [];
+  const editedBy = isCommunityEdition ? null : editorial?.editedBy ?? null;
 
   // Check for DALL-E illustration
-  const illustration = await getIllustration(hash).catch(() => null);
-  const hasImage = !!illustration?.base64;
+  const illustration = editorial
+    ? await getIllustration(editorialHash).catch(() => null)
+    : null;
+  const hasImage = !isCommunityEdition && !!illustration?.base64;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || SITE_URL;
 
   // Build SVG
@@ -94,9 +99,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const subheadlineLines = wrapText(subheadline, 55);
 
   // First editorial paragraph (truncated)
-  const bodyPreview = editorial?.editorialBody?.[0]
-    ? editorial.editorialBody[0].slice(0, 200) + (editorial.editorialBody[0].length > 200 ? "..." : "")
-    : "";
+  const bodyPreview = isCommunityEdition
+    ? editorial?.editorialBody?.[0]
+      ? `REFERENCE ARTICLE: ${editorial.editorialBody[0].slice(0, 170)}${editorial.editorialBody[0].length > 170 ? "..." : ""}`
+      : "Open, user-generated historical claim. The community title and optional content hash become the NFT record."
+    : editorial?.editorialBody?.[0]
+      ? editorial.editorialBody[0].slice(0, 200) + (editorial.editorialBody[0].length > 200 ? "..." : "")
+      : "";
   const bodyLines = bodyPreview ? wrapText(bodyPreview, 60) : [];
 
   let y = 0;
@@ -118,7 +127,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   <!-- Dateline bar -->
   <line x1="40" y1="${(y = 60)}" x2="${W - 40}" y2="${y}" stroke="#1A1A1A" stroke-width="0.5"/>
   <text x="${W / 2}" y="${(y += 18)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" letter-spacing="3" fill="#888">
-    ${escapeXml(dateStr)} · EDITION ${tokenId} · BASE L2
+    ${escapeXml(`${uppercaseDate} · ${isCommunityEdition ? "COMMUNITY CLAIM" : "EDITION"} ${tokenId} · BASE L2`)}
   </text>
   <line x1="40" y1="${(y += 10)}" x2="${W - 40}" y2="${y}" stroke="#1A1A1A" stroke-width="0.5"/>
 
