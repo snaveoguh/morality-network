@@ -342,7 +342,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   if (!item) {
     // Check editorial archive as last resort for OG tags
     const editorial = await getArchivedEditorial(hash).catch(() => null);
-    if (editorial) {
+    if (editorial?.primary?.title) {
       return {
         title: withBrand(editorial.primary.title),
         description: editorial.subheadline,
