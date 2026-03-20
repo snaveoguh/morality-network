@@ -39,6 +39,8 @@ export interface AgentBotTerminalProps {
   onFundAmount: (amount: string) => Promise<string>;
   onWithdrawAmount?: (amount: string) => Promise<string>;
   onUnlockPlan?: () => Promise<string>;
+  /** Monthly MO subscription fee (e.g. "50"). Used in button label. */
+  monthlyFeeMo?: string;
   // Extended trading context for LLM
   tradingContext?: TerminalTradingContext;
 }
@@ -189,6 +191,7 @@ export function AgentBotTerminal({
   onFundAmount,
   onWithdrawAmount,
   onUnlockPlan,
+  monthlyFeeMo,
   tradingContext,
 }: AgentBotTerminalProps) {
   const fundingSummary = getFundingSummary(canWithdraw, executionVenue, fundingAddress);
@@ -580,7 +583,7 @@ export function AgentBotTerminal({
 
   async function handleUnlockClick() {
     if (!onUnlockPlan) {
-      appendMessage("assistant", "Unlock flow is not wired yet. We can route 50 MO monthly into vault + LP next.");
+      appendMessage("assistant", `Unlock flow is not wired yet. We can route ${monthlyFeeMo || "50"} MO monthly into vault + LP next.`);
       return;
     }
     setIsBusy(true);
@@ -702,7 +705,7 @@ export function AgentBotTerminal({
             disabled={isBusy}
             className="border border-[var(--ink)] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)] disabled:opacity-50"
           >
-            Unlock 50 MO / mo
+            Unlock {monthlyFeeMo || "50"} MO / mo
           </button>
         </div>
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyCronAuth } from "@/lib/cron-auth";
-import { validateExternalUrl } from "@/lib/url-validator";
+import { validateExternalUrlWithDns } from "@/lib/url-validator";
 import { learnFromUrl, batchLearn } from "@/lib/agents/core/knowledge";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
   // Single URL
   if (typeof body.url === "string" && body.url.trim()) {
-    const validation = validateExternalUrl(body.url.trim());
+    const validation = await validateExternalUrlWithDns(body.url.trim());
     if (!validation.valid) {
       return NextResponse.json(
         { error: `Blocked URL: ${validation.error}` },
@@ -51,11 +51,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No valid URLs provided" }, { status: 400 });
     }
 
-    // Validate all URLs against SSRF
+    // Validate all URLs against SSRF (with DNS resolution)
     const blocked: string[] = [];
     const safe: string[] = [];
     for (const u of urls) {
-      const v = validateExternalUrl(u);
+      const v = await validateExternalUrlWithDns(u);
       if (v.valid) {
         safe.push(u);
       } else {
