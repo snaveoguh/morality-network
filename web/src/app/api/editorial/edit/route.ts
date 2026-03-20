@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getArchivedEditorial, saveEditorial } from "@/lib/editorial-archive";
+import { saveIllustration } from "@/lib/illustration-store";
 import type { ArticleContent } from "@/lib/article";
 
 export const runtime = "nodejs";
-export const maxDuration = 15;
+export const maxDuration = 30;
 
 /**
  * God mode addresses — these wallets can edit any editorial.
@@ -26,6 +27,8 @@ interface EditRequestBody {
     claim?: string;
     tags?: string[];
     dailyTitle?: string;
+    /** Base64-encoded PNG for illustration replacement */
+    illustrationBase64?: string;
   };
 }
 
@@ -75,6 +78,21 @@ export async function POST(request: NextRequest) {
     (updated as unknown as Record<string, unknown>).dailyTitle = edits.dailyTitle;
   }
 
+  // Handle illustration upload — save to illustration store
+  if (edits.illustrationBase64) {
+    try {
+      await saveIllustration(hash, {
+        base64: edits.illustrationBase64,
+        prompt: `Uploaded by ${wallet.toLowerCase()} via god mode`,
+        revisedPrompt: null,
+      });
+      updated.hasIllustration = true;
+      console.log(`[editorial/edit] Illustration uploaded for ${hash.slice(0, 14)} by ${wallet.slice(0, 10)}`);
+    } catch (err) {
+      console.warn("[editorial/edit] Failed to save illustration:", err instanceof Error ? err.message : err);
+    }
+  }
+
   // Save back — this persists to Redis + file + remote indexer
   await saveEditorial(hash, updated, existing.generatedBy);
 
@@ -83,5 +101,6 @@ export async function POST(request: NextRequest) {
     hash,
     editedBy: wallet.toLowerCase(),
     editCount: updated.editCount,
+    illustrationUploaded: !!edits.illustrationBase64,
   });
 }

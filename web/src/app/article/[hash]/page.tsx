@@ -259,8 +259,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   ]);
 
   // Re-use earlyEditorial from parallel fetch (no duplicate request)
-  // Compute edition number for daily editions (days since March 11 2026 epoch)
-  const EDITION_EPOCH_MS = 1741651200 * 1000; // March 11 2026 00:00 UTC
+  // Compute edition number for daily editions (days since March 11 2025 epoch)
+  const EDITION_EPOCH_MS = 1741651200 * 1000; // March 11 2025 00:00 UTC (edition #1)
   let editionNumber: number | undefined;
   if (article.isDailyEdition) {
     const editorialDate = earlyEditorial?.generatedAt

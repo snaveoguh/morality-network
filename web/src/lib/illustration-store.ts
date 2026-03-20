@@ -64,20 +64,33 @@ async function redisGetIllustration(hash: string): Promise<IllustrationRecord | 
   }
 }
 
-async function redisSetIllustration(hash: string, data: IllustrationRecord): Promise<void> {
-  if (!redisEnabled()) return;
+async function redisSetIllustration(hash: string, data: IllustrationRecord): Promise<boolean> {
+  if (!redisEnabled()) return false;
   try {
-    await fetch(`${UPSTASH_URL}/set/${REDIS_ILLUS_PREFIX}${hash}`, {
+    // Use Upstash pipeline format (same as editorial-archive.ts) —
+    // the /set/key endpoint doesn't accept large values in the body.
+    const serialized = JSON.stringify(data);
+    console.log(`[illustration-store] Redis SET ${hash.slice(0, 14)}... (${Math.round(serialized.length / 1024)}KB)`);
+    const res = await fetch(`${UPSTASH_URL}/pipeline`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${UPSTASH_TOKEN}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ EX: REDIS_ILLUS_TTL, value: JSON.stringify(data) }),
+      body: JSON.stringify([["SET", `${REDIS_ILLUS_PREFIX}${hash}`, serialized, "EX", String(REDIS_ILLUS_TTL)]]),
       cache: "no-store",
     });
-  } catch {
-    // Non-fatal
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.warn(`[illustration-store] Redis SET failed: HTTP ${res.status} — ${body.slice(0, 200)}`);
+      return false;
+    }
+    const body = await res.json().catch(() => null);
+    console.log(`[illustration-store] Redis SET response:`, JSON.stringify(body)?.slice(0, 200));
+    return true;
+  } catch (err) {
+    console.warn("[illustration-store] Redis SET error:", err instanceof Error ? err.message : err);
+    return false;
   }
 }
 
@@ -141,11 +154,12 @@ export async function getIllustration(
 
 /**
  * Save an illustration for an entity hash.
+ * Returns true if saved to at least one persistent store (Redis or file).
  */
 export async function saveIllustration(
   hash: string,
   data: { base64: string; prompt: string; revisedPrompt?: string | null },
-): Promise<void> {
+): Promise<boolean> {
   const store = await loadStore();
   const now = new Date().toISOString();
 
@@ -159,11 +173,15 @@ export async function saveIllustration(
   cache = store;
   cacheLoadedAtMs = Date.now();
 
+  let persisted = false;
+
   // Redis first (survives Vercel cold starts)
-  redisSetIllustration(hash, record).catch(() => {});
+  const redisSaved = await redisSetIllustration(hash, record);
+  if (redisSaved) persisted = true;
 
   try {
     await persistStore(store);
+    persisted = true;
     console.log(
       `[illustration-store] saved ${hash.slice(0, 10)}... (${Math.round(data.base64.length / 1024)}KB)`,
     );
@@ -174,4 +192,10 @@ export async function saveIllustration(
       err instanceof Error ? err.message : err,
     );
   }
+
+  if (!persisted) {
+    console.warn("[illustration-store] WARNING: illustration not persisted to any store");
+  }
+
+  return persisted;
 }

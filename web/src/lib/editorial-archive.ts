@@ -243,8 +243,26 @@ function computeContentHash(editorial: ArticleContent): string {
 export async function getArchivedEditorial(
   hash: string,
 ): Promise<ArchivedEditorial | null> {
+  // Validate that a returned editorial actually belongs to the requested hash.
+  // The indexer/Redis can return stale or corrupted data where entityHash
+  // inside the payload doesn't match the row ID (e.g. a daily edition
+  // overwriting a regular article's slot). Skip mismatches silently.
+  function validateEditorial(
+    editorial: ArchivedEditorial | null,
+    source: string,
+  ): ArchivedEditorial | null {
+    if (!editorial) return null;
+    if (editorial.entityHash && editorial.entityHash !== hash) {
+      console.warn(
+        `[editorial-archive] ${source} hash mismatch: requested ${hash.slice(0, 14)} but got ${editorial.entityHash.slice(0, 14)} — skipping`,
+      );
+      return null;
+    }
+    return editorial;
+  }
+
   // 1. Redis (fastest, survives serverless cold starts)
-  const fromRedis = await redisGetEditorial(hash);
+  const fromRedis = validateEditorial(await redisGetEditorial(hash), "Redis");
   if (fromRedis) {
     console.log(`[editorial-archive] Redis hit: ${hash.slice(0, 10)}`);
     return fromRedis;
@@ -253,7 +271,10 @@ export async function getArchivedEditorial(
   // 2. Remote indexer
   if (getIndexerBackendUrl()) {
     try {
-      const remote = await fetchRemoteArchivedEditorial(hash);
+      const remote = validateEditorial(
+        await fetchRemoteArchivedEditorial(hash),
+        "indexer",
+      );
       if (remote) {
         redisSetEditorial(hash, remote).catch(() => {});
         const archive = await loadArchive();
@@ -273,7 +294,7 @@ export async function getArchivedEditorial(
 
   // 3. Local file (fallback)
   const archive = await loadArchive();
-  const local = archive.items[hash] ?? null;
+  const local = validateEditorial(archive.items[hash] ?? null, "local");
   if (local) {
     redisSetEditorial(hash, local).catch(() => {});
   }

@@ -6,11 +6,11 @@ import { getArchivedEditorial } from "@/lib/editorial-archive";
 // ============================================================================
 // /api/edition/[tokenId]/illustration — Serves the DALL-E illustration as PNG
 //
-// Reads from the separate illustration store first (fast, small file).
+// Reads from the separate illustration store first (Redis, then local file).
 // Falls back to inline illustrationBase64 on the editorial for backward compat.
 // ============================================================================
 
-const EPOCH = 1741651200;
+const EPOCH = 1741651200; // March 11 2025 00:00 UTC (edition #1)
 const SECONDS_PER_DAY = 86400;
 
 interface RouteParams {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const dailyId = `pooter-daily-${year}-${month}-${day}`;
   const hash = computeEntityHash(dailyId);
 
-  // Try the separate illustration store first (fast, small file)
+  // Try the separate illustration store first (Redis → local file)
   const illustration = await getIllustration(hash).catch(() => null);
   let base64 = illustration?.base64 ?? null;
 
