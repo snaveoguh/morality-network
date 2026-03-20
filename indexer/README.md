@@ -64,7 +64,7 @@ COMMENTS_ADDRESS=0x66ba3ce1280bf86dfe957b52e9888a1de7f81d7b
 TIPPING_ADDRESS=0x27c79a57be68eb62c9c6bb19875db76d33fd099b
 LEADERBOARD_ADDRESS=0x29f0235d74e09536f0b7df9c6529de17b8af5fc6
 START_BLOCK=<optional>
-INDEXER_WORKER_SECRET=<optional-shared-write-secret>
+INDEXER_WORKER_SECRET=<required-shared-write-secret>
 ```
 
 Use `PONDER_NETWORK=baseSepolia` and override addresses if you want staging instead of mainnet.
@@ -97,7 +97,7 @@ npm run healthcheck   # verify root/health/feed/graphql endpoints
 - `ponder serve` does not support the default PGlite mode in this setup.
 - For production, run with persistent DB; keep public RPC for low-traffic launch periods and switch to paid RPC only after rate limits or reliability become measured bottlenecks.
 - `INDEXER_BACKEND_URL` in the web app can now be used as the single durable backend for scanner plus archive/editorial persistence.
-- `INDEXER_WORKER_SECRET` protects worker-only write endpoints when the indexer is internet-reachable.
+- `INDEXER_WORKER_SECRET` **required** — protects all write and memory-read endpoints. The indexer fails closed (rejects all writes) if this is unset.
 
 ## Related Docs
 

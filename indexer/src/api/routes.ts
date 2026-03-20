@@ -1597,6 +1597,9 @@ ponder.get("/api/v1/scanner/launches/:address", async (c) => {
 });
 
 const handleScannerSync = async (c: any) => {
+  if (!hasWorkerWriteAccess(c.req.header("authorization"))) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
   const query = (c.req.query("q") ?? "base").trim() || "base";
   const limit = parseLimit(c.req.query("limit"));
 
@@ -2238,6 +2241,9 @@ ponder.get("/api/v1/archive/articles/:hash", async (c) => {
 });
 
 ponder.post("/api/v1/archive/articles/upsert", async (c) => {
+  if (!hasWorkerWriteAccess(c.req.header("authorization"))) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
   const body = await c.req.json().catch(() => null);
   const rawItems = Array.isArray(body)
     ? body
@@ -2346,6 +2352,9 @@ ponder.get("/api/v1/archive/editorials/:hash", async (c) => {
 });
 
 ponder.post("/api/v1/archive/editorials/upsert", async (c) => {
+  if (!hasWorkerWriteAccess(c.req.header("authorization"))) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
   const body = await c.req.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return c.json({ error: "invalid body" }, 400);
@@ -2374,6 +2383,9 @@ ponder.post("/api/v1/archive/editorials/upsert", async (c) => {
 });
 
 ponder.post("/api/v1/archive/editorials/:hash/mark-onchain", async (c) => {
+  if (!hasWorkerWriteAccess(c.req.header("authorization"))) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
   const hash = parseEntityHash(c.req.param("hash"));
   if (!hash) {
     return c.json({ error: "invalid hash" }, 400);
@@ -2471,6 +2483,9 @@ ponder.post("/api/v1/memory/remember", async (c) => {
 });
 
 ponder.get("/api/v1/memory/recall", async (c) => {
+  if (!hasWorkerWriteAccess(c.req.header("authorization"))) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
   const scope = c.req.query("scope")?.trim();
   const key = c.req.query("key")?.trim();
   const limitParam = c.req.query("limit");
@@ -2544,6 +2559,9 @@ ponder.post("/api/v1/memory/forget", async (c) => {
 });
 
 ponder.get("/api/v1/memory/count", async (c) => {
+  if (!hasWorkerWriteAccess(c.req.header("authorization"))) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
   const scope = c.req.query("scope")?.trim();
 
   if (!scope) {
@@ -2559,6 +2577,9 @@ ponder.get("/api/v1/memory/count", async (c) => {
 });
 
 ponder.get("/api/v1/memory/all", async (c) => {
+  if (!hasWorkerWriteAccess(c.req.header("authorization"))) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
   const limitParam = c.req.query("limit");
   const limit = Math.min(Math.max(1, Math.floor(Number(limitParam ?? 100))), 500);
 

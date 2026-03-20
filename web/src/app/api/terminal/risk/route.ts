@@ -4,6 +4,7 @@ import {
   hasVeniceLLM,
   type TerminalTradingContext,
 } from "@/lib/terminal-llm";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -24,6 +25,10 @@ interface RiskRequestBody {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 15 risk analyses per minute per IP (matches terminal/chat)
+  const limited = rateLimit(request, { maxRequests: 15, windowMs: 60_000 });
+  if (limited) return limited;
+
   if (!hasVeniceLLM()) {
     return Response.json(
       { error: "Venice AI not configured (set VENICE_API_KEY)" },
