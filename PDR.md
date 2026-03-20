@@ -25,7 +25,7 @@ A permissionless, censorship-resistant news feed and discussion platform where:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│                              FRONTEND (Next.js 14)                               │
+│                              FRONTEND (Next.js 16)                               │
 │                                                                                  │
 │   pooter.world / dev.pooter.world — Vercel                                      │
 │                                                                                  │
@@ -78,13 +78,13 @@ A permissionless, censorship-resistant news feed and discussion platform where:
 
 | Layer | Technology | Why |
 |-------|-----------|-----|
-| Frontend | Next.js 14 (App Router) | SSR, RSC, API routes, ISR caching |
+| Frontend | Next.js 16 (App Router) | SSR, RSC, API routes, ISR caching |
 | Styling | Tailwind CSS | Fast iteration, newspaper aesthetic |
 | Wallet | wagmi v2 + viem + RainbowKit | Best Base L2 wallet UX |
 | Auth | SIWE (Sign-In With Ethereum) | Permissionless identity |
 | Blockchain | Base L2 (Ethereum) | Cheap txns (~$0.001) |
 | Trading | Hyperliquid L1 | Perp DEX, onchain order book |
-| Contracts | Solidity 0.8.24 + Foundry | 5 contracts deployed |
+| Contracts | Solidity 0.8.24 + Foundry | 10 contracts (5 Morality + 2 Pooter + 3 governance/market) |
 | Indexer | Ponder v0.16 + PostgreSQL | Event indexing + editorial archive |
 | LLM Hub | Hono + Groq API (agent-hub) | Centralized LLM routing, $0/day |
 | AI Models | Qwen3-32B (premium), Llama 3.3 70B (fast) | Free tier on Groq |
@@ -273,7 +273,7 @@ Raw Signal Aggregation          Enriched Signals
                    │  - Cross-margin
                    │  - Taker fee: 0.035% per side
                    ▼
-        Position Monitoring (3-min cron cycle)
+        Position Monitoring (10-min cron cycle)
 ```
 
 ### Signal Aggregation
@@ -404,15 +404,20 @@ Multi-agent architecture with shared memory, event bus, and moral compass.
 
 ## 10. ONCHAIN CONTRACTS (Base L2)
 
-5 contracts (Solidity 0.8.24, Foundry):
+10 contracts (Solidity 0.8.24, Foundry, UUPS upgradeable proxies):
 
-| Contract | Purpose |
-|----------|---------|
-| `MoralityRegistry.sol` | Universal entity registration (URL, DOMAIN, ADDRESS, CONTRACT) |
-| `MoralityRatings.sol` | 1-5 star onchain ratings per entity |
-| `MoralityComments.sol` | Threaded onchain comments with up/downvotes |
-| `MoralityTipping.sol` | Direct ETH tipping + escrow for unclaimed entities |
-| `MoralityLeaderboard.sol` | Reputation rankings with AI oracle integration |
+| Contract | Purpose | Security |
+|----------|---------|----------|
+| `MoralityRegistry.sol` | Universal entity registration (URL, DOMAIN, ADDRESS, CONTRACT) | UUPS + Ownable |
+| `MoralityRatings.sol` | 1-5 star onchain ratings per entity | UUPS + Ownable |
+| `MoralityComments.sol` | Threaded onchain comments with up/downvotes | UUPS + Ownable |
+| `MoralityTipping.sol` | Direct ETH tipping + escrow for unclaimed entities | UUPS + Pausable + ReentrancyGuard |
+| `MoralityLeaderboard.sol` | Reputation rankings with AI oracle integration | UUPS + Ownable |
+| `MoralityPredictionMarket.sol` | Binary prediction markets on DAO proposals | UUPS + Pausable + ReentrancyGuard |
+| `MoralityAgentVault.sol` | Shared vault for AI agent strategies (ERC-4626 style) | UUPS + Pausable + inflation-safe |
+| `MoralityProposalVoting.sol` | Signal voting with Noun holder gas refunds | UUPS + Pausable |
+| `PooterEditions.sol` | Daily edition NFTs (ERC-721) | UUPS + Ownable |
+| `PooterAuctions.sol` | 24hr auctions for edition minting | Ownable + ReentrancyGuard |
 
 ### Entity System
 
@@ -473,7 +478,7 @@ totalScore = (onchainRatingAvg × 0.4) + (aiScore × 0.3) + (tipVolume × 0.2) +
 │ pooter.world (prod)    │     │ Agent Hub (Hono)       │
 │ dev.pooter.world (dev) │◄───►│ heartfelt-flow         │
 │                        │     │ Port 3100              │
-│ - Next.js 14           │     │                        │
+│ - Next.js 16           │     │                        │
 │ - ISR (60s revalidate) │     │ Pooter Indexer (Ponder)│
 │ - Cron: /api/trading   │     │ - PostgreSQL 5GB       │
 │ - Ephemeral FS         │     │ - Editorial archive    │
@@ -522,7 +527,7 @@ cd /Users/hugo/agent-hub && railway up --detach
 
 ```
 morality.network-master/
-├── web/                              # Next.js 14 app (pooter.world)
+├── web/                              # Next.js 16 app (pooter.world)
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── layout.tsx            # Root layout + providers
@@ -648,7 +653,7 @@ RSS Feeds ──► Claim Extraction ──► Editorial Generation ──► Ma
                                                │
                                                ▼
                                     Position Monitoring
-                                    (3-min cron cycle)
+                                    (10-min cron cycle)
                                                │
                                     ┌──────────┴──────────┐
                                     │                     │

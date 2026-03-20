@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
 /// @title MoralityProposalVoting
 /// @notice Signal voting on DAO proposals. Noun holders get gas refund, everyone else pays.
@@ -17,7 +18,7 @@ interface IProposalState {
     function state(uint256 proposalId) external view returns (uint8);
 }
 
-contract MoralityProposalVoting is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+contract MoralityProposalVoting is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
     enum VoteType { AGAINST, FOR, ABSTAIN }
 
     struct DaoResolverConfig {
@@ -72,6 +73,7 @@ contract MoralityProposalVoting is Initializable, UUPSUpgradeable, OwnableUpgrad
     function initialize(address _nounsToken) public initializer {
         require(_nounsToken != address(0), "Nouns token required");
         __Ownable_init(msg.sender);
+        __Pausable_init();
         nounsToken = INounsToken(_nounsToken);
         maxRefund = 0.01 ether;
     }
@@ -88,7 +90,7 @@ contract MoralityProposalVoting is Initializable, UUPSUpgradeable, OwnableUpgrad
         string calldata proposalId,
         VoteType support,
         string calldata reason
-    ) external {
+    ) external whenNotPaused {
         require(bytes(reason).length <= MAX_REASON_LENGTH, "Reason too long");
         bytes32 proposalKey = keccak256(abi.encodePacked(dao, ":", proposalId));
         require(!hasVoted[proposalKey][msg.sender], "Already voted");
@@ -186,6 +188,8 @@ contract MoralityProposalVoting is Initializable, UUPSUpgradeable, OwnableUpgrad
         return (value, true);
     }
 
+    // ── Admin ────────────────────────────────────────────────────────────
+
     /// @notice Update max refund amount
     function setMaxRefund(uint256 _maxRefund) external onlyOwner {
         maxRefund = _maxRefund;
@@ -212,14 +216,25 @@ contract MoralityProposalVoting is Initializable, UUPSUpgradeable, OwnableUpgrad
         return cfg.enabled && cfg.governor != address(0);
     }
 
-    /// @notice Fund the contract for gas refunds
-    receive() external payable {}
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    /// @notice Fund the contract for gas refunds (owner only)
+    function fund() external payable onlyOwner {}
 
     /// @notice Withdraw excess funds
     function withdraw() external onlyOwner {
         (bool ok, ) = payable(owner()).call{value: address(this).balance}("");
         require(ok, "Withdraw failed");
     }
+
+    // NOTE: receive() intentionally omitted — use fund() to add gas refund ETH.
+    // This prevents accidental ETH sends from being permanently stuck.
 
     uint256[50] private __gap;
 }

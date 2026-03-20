@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDailyEdition, getDailyEditionHash } from "@/lib/daily-edition";
 import { getArchivedEditorial } from "@/lib/editorial-archive";
+import { verifyCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55;
@@ -10,8 +11,12 @@ export const maxDuration = 55;
  *
  * Called by Vercel cron (every 2h). Checks cache first — only generates
  * if today's edition doesn't exist yet. Safe to call repeatedly.
+ *
+ * Auth: Requires CRON_SECRET Bearer token (sent automatically by Vercel cron).
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
   try {
     const hash = getDailyEditionHash();
 

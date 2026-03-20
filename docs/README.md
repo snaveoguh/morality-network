@@ -4,22 +4,22 @@ This folder is the source of truth for architecture, style, deployments, and pub
 
 ## Quick Start
 
-- Style guide web page: `v2/docs/style-guide.html`
-- In-app style guide route: `v2/web/src/app/style-guide/page.tsx` (visit `/style-guide`)
-- Style guide markdown: `v2/docs/STYLE_GUIDE.md`
-- API reference: `v2/docs/API_REFERENCE.md`
-- Architecture overview: `v2/docs/ARCHITECTURE.md`
-- Board-facing architecture report: `v2/docs/POOTER_WORLD_ARCHITECTURE_REPORT.md`
-- Launch hardening + production decisions: `v2/docs/LAUNCH_HARDENING.md`
-- Deployments: `v2/docs/DEPLOYMENTS.md`
-- Open-source roadmap: `v2/docs/OPEN_SOURCE_ROADMAP.md`
-- Deliverables tracker: `v2/docs/DELIVERABLES_MASTER.md`
-- Execution plan: `v2/docs/EXECUTION_PLAN.md`
-- GitHub workflow: `v2/docs/GITHUB_WORKFLOW.md`
-- Status log: `v2/docs/STATUS_LOG.md`
-- Next actions queue: `v2/docs/NEXT_ACTIONS.md`
-- README sync checklist: `v2/docs/README_UPDATES_CHECKLIST.md`
-- Indexer runbook: `v2/docs/RUNBOOK_INDEXER.md`
+- Style guide web page: `docs/style-guide.html`
+- In-app style guide route: `web/src/app/style-guide/page.tsx` (visit `/style-guide`)
+- Style guide markdown: `docs/STYLE_GUIDE.md`
+- API reference: `docs/API_REFERENCE.md`
+- Architecture overview: `docs/ARCHITECTURE.md`
+- Board-facing architecture report: `docs/POOTER_WORLD_ARCHITECTURE_REPORT.md`
+- Launch hardening + production decisions: `docs/LAUNCH_HARDENING.md`
+- Deployments: `docs/DEPLOYMENTS.md`
+- Open-source roadmap: `docs/OPEN_SOURCE_ROADMAP.md`
+- Deliverables tracker: `docs/DELIVERABLES_MASTER.md`
+- Execution plan: `docs/EXECUTION_PLAN.md`
+- GitHub workflow: `docs/GITHUB_WORKFLOW.md`
+- Status log: `docs/STATUS_LOG.md`
+- Next actions queue: `docs/NEXT_ACTIONS.md`
+- README sync checklist: `docs/README_UPDATES_CHECKLIST.md`
+- Indexer runbook: `docs/RUNBOOK_INDEXER.md`
 
 ## Context
 

@@ -4,6 +4,8 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /// @title MoralityPredictionMarket
 /// @notice Prediction markets on DAO proposal outcomes.
@@ -20,7 +22,7 @@ interface IProposalState {
     function state(uint256 proposalId) external view returns (uint8);
 }
 
-contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable, ReentrancyGuard {
     enum Outcome { UNRESOLVED, FOR, AGAINST, VOID }
 
     struct DaoResolverConfig {
@@ -75,6 +77,7 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
 
     function initialize() public initializer {
         __Ownable_init(msg.sender);
+        __Pausable_init();
         protocolFeeBps = 200; // 2% fee on winnings
     }
 
@@ -138,7 +141,7 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
         string calldata dao,
         string calldata proposalId,
         bool isFor
-    ) external payable {
+    ) external payable whenNotPaused nonReentrant {
         require(msg.value > 0, "Must stake ETH");
 
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
@@ -237,7 +240,7 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
     function claim(
         string calldata dao,
         string calldata proposalId
-    ) external {
+    ) external nonReentrant {
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
         Market storage m = markets[key];
         require(m.exists, "No market");
@@ -405,7 +408,23 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
         require(ok, "Withdraw failed");
     }
 
-    receive() external payable {}
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    /// @notice Rescue ETH accidentally sent directly to contract.
+    function rescueETH(address payable to) external onlyOwner {
+        require(to != address(0), "Zero address");
+        (bool ok, ) = to.call{value: address(this).balance}("");
+        require(ok, "Rescue failed");
+    }
+
+    // NOTE: receive() intentionally omitted — ETH should enter only via
+    // stake(). Direct sends are not tracked and would be permanently stuck.
 
     uint256[50] private __gap;
 }

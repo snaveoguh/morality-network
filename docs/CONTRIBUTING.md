@@ -4,16 +4,16 @@ Thanks for contributing to pooter world v2.
 
 ## Repo Areas
 
-- `v2/contracts`: Solidity contracts and deployment scripts
-- `v2/web`: Next.js frontend + API routes
-- `v2/extension`: Chrome extension
-- `v2/indexer`: Ponder event indexer
+- `contracts`: Solidity contracts and deployment scripts
+- `web`: Next.js frontend + API routes
+- `extension`: Chrome extension
+- `indexer`: Ponder event indexer
 
 ## Contribution Rules
 
 1. Keep PRs small and scoped to one subsystem when possible.
 2. Include before/after behavior notes.
-3. Update docs in `v2/docs` when changing API, design tokens, or architecture.
+3. Update docs in `docs` when changing API, design tokens, or architecture.
 4. Add/adjust tests for contract logic changes.
 5. Avoid hardcoding production secrets or private keys.
 

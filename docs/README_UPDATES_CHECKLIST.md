@@ -2,7 +2,7 @@
 
 Use this checklist before merging any substantial feature.
 
-## Root README (`v2/README.md`)
+## Root README (`README.md`)
 
 - [ ] New features reflected in "What is this?"
 - [ ] Contract/API/indexer links updated
@@ -11,15 +11,15 @@ Use this checklist before merging any substantial feature.
 
 ## Package READMEs
 
-### Web (`v2/web/README.md`)
+### Web (`web/README.md`)
 - [ ] New route/pages documented
 - [ ] API usage examples updated
 
-### Extension (`v2/extension/README.md` if present)
+### Extension (`extension/README.md` if present)
 - [ ] Permissions and UX behavior updated
 - [ ] Build/load steps still accurate
 
-### Indexer (`v2/indexer/README.md`)
+### Indexer (`indexer/README.md`)
 - [ ] Endpoint list updated
 - [ ] Runtime dependencies (RPC/DB) documented
 - [ ] Local run and deployment instructions verified

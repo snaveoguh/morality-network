@@ -27,13 +27,13 @@ Ship a public API + schema docs so anyone can:
 
 ### 2. Open Client Surfaces
 
-- Web app (`v2/web`)
-- Chrome extension (`v2/extension`)
+- Web app (`web`)
+- Chrome extension (`extension`)
 - SDK + typed client (planned)
 
 ### 3. Open Indexing Layer
 
-- Ponder indexer (`v2/indexer`)
+- Ponder indexer (`indexer`)
 - Normalized tables for ratings, comments, tips, and feed items
 - Stable query contract for future paid API tier
 

@@ -47,6 +47,7 @@ contract PooterAuctions is Ownable, ReentrancyGuard {
     event TreasuryUpdated(address indexed newTreasury);
 
     // ── Errors ────────────────────────────────────────────────────────────
+    error InvalidEdition();
     error EditionAlreadyMinted();
     error FutureEdition();
     error AuctionAlreadyExists();
@@ -70,6 +71,7 @@ contract PooterAuctions is Ownable, ReentrancyGuard {
         bytes32 contentHash,
         string calldata dailyTitle
     ) external payable nonReentrant {
+        if (editionNumber == 0) revert InvalidEdition();
         if (editionNumber >= editions.currentEditionNumber()) revert FutureEdition();
         if (auctions[editionNumber].startTime != 0) revert AuctionAlreadyExists();
         if (msg.value < MIN_BID) revert BidTooLow();

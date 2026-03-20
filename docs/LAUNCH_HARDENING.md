@@ -1,12 +1,12 @@
 # Launch Hardening
 
-This document captures the current launch stance after the hardening pass across `v2/web`, `v2/indexer`, and `v2/contracts`.
+This document captures the current launch stance after the hardening pass across `web`, `indexer`, and `contracts`.
 
 ## Implemented In Repo
 
 - Secret-bearing local env files were replaced with placeholders and checked-in examples:
-  - `v2/web/.env.example`
-  - `v2/contracts/.env.example`
+  - `web/.env.example`
+  - `contracts/.env.example`
 - Governance and market-data fetches now use shared in-process TTL caching to reduce repeat fan-out to Snapshot, Tally, parliaments, CoinGecko, and adjacent vendors.
 - The indexer now exposes durable worker-state endpoints:
   - `GET/POST /api/v1/swarm/latest`
@@ -14,7 +14,7 @@ This document captures the current launch stance after the hardening pass across
 - The web app supports worker-owned runtime modes:
   - `AGENT_RUNTIME_MODE=worker`
   - `TRADER_EXECUTION_MODE=worker`
-- A standalone always-on worker is available under `v2/web`:
+- A standalone always-on worker is available under `web`:
   - build: `npm run worker:build`
   - run: `npm run worker:start`
   - one-shot validation: `npm run worker:once`
@@ -23,14 +23,14 @@ This document captures the current launch stance after the hardening pass across
 
 ### Launch-critical
 
-- `v2/web`: public Next.js surface on Vercel or equivalent
-- `v2/indexer`: Ponder API + persistent Postgres
-- `v2/web` worker process: scanner sync, swarm refresh, optional trader execution
+- `web`: public Next.js surface on Vercel or equivalent
+- `indexer`: Ponder API + persistent Postgres
+- `web` worker process: scanner sync, swarm refresh, optional trader execution
 - Base mainnet contracts and addresses aligned across web + indexer
 
 ### Deferred from wave one
 
-- `v2/extension`
+- `extension`
 - local in-process agent message bus as an operational dependency
 - paid dedicated RPC
 - experimental telemetry or non-essential bot surfaces
@@ -66,7 +66,7 @@ Required operator actions:
 1. Create a new `SESSION_SECRET`.
 2. Rotate `ANTHROPIC_API_KEY`.
 3. Rotate `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` if the prior value was shared too broadly.
-4. Create a new deployer key, fund it minimally, and update `v2/contracts/.env`.
+4. Create a new deployer key, fund it minimally, and update `contracts/.env`.
 5. Set `INDEXER_WORKER_SECRET` for worker writes into the indexer.
 
 ## Paid RPC Decision

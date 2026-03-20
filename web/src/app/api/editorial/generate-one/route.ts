@@ -5,6 +5,7 @@ import {
   getArchivedEditorial,
   saveEditorial,
 } from "@/lib/editorial-archive";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55;
@@ -30,6 +31,9 @@ function withDeadline<T>(promise: Promise<T>, ms: number, label: string): Promis
  * Body: { hash: string, primary: FeedItem, related: FeedItem[] }
  */
 export async function POST(request: Request) {
+  // Rate limit: 5 editorial generations per minute per IP
+  const limited = rateLimit(request, { maxRequests: 5, windowMs: 60_000 });
+  if (limited) return limited;
   let hash: string;
   let primary: FeedItem;
   let related: FeedItem[];
