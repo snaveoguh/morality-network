@@ -1,5 +1,7 @@
 import "server-only";
 
+import { reportWarn } from "./report-error";
+
 // ============================================================================
 // CLOUDFLARE BROWSER RENDERING — Rich content extraction
 //
@@ -138,7 +140,8 @@ export async function fetchRenderedHTML(
 
     const html = await res.text();
     return html || null;
-  } catch {
+  } catch (e) {
+    reportWarn("cloudflare-crawl:fetch", e);
     return null;
   } finally {
     clearTimeout(timeout);
@@ -265,7 +268,8 @@ export async function getCrawlResults(
     if (!data.success || !data.result) return null;
 
     return data.result;
-  } catch {
+  } catch (e) {
+    reportWarn("cloudflare-crawl:fetch", e);
     return null;
   }
 }

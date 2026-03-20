@@ -8,6 +8,7 @@ import { ExtensionBanner } from "@/components/layout/ExtensionBanner";
 import { SITE_URL, withBrand } from "@/lib/brand";
 import { InstallPrompt } from "@/components/layout/InstallPrompt";
 import { BetaToast } from "@/components/layout/BetaToast";
+import { PooterNotificationHub } from "@/components/notifications/PooterNotificationHub";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -91,6 +92,7 @@ export default function RootLayout({
           <main className="mx-auto max-w-7xl px-4 py-2">{children}</main>
           <InstallPrompt />
           <BetaToast />
+          <PooterNotificationHub />
         </Providers>
       </body>
     </html>

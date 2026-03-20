@@ -1,6 +1,7 @@
 // ─── GET /api/agents — List all agents + remote agents ──────────────────────
 
 import { NextResponse } from "next/server";
+import { reportWarn } from "@/lib/report-error";
 import { agentRegistry, getAgentSoulSummary } from "@/lib/agents/core";
 import { buildNounIrlAgentSnapshot } from "@/lib/agents/nounirl";
 import { isWorkerAgentRuntime } from "@/lib/runtime-mode";
@@ -189,7 +190,8 @@ async function fetchBridgeJson(url: string): Promise<unknown | null> {
       return null;
     }
     return await response.json();
-  } catch {
+  } catch (e) {
+    reportWarn("api:agents:snapshot", e);
     return null;
   }
 }

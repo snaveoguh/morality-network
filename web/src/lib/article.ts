@@ -1,3 +1,4 @@
+import { reportWarn } from "@/lib/report-error";
 import type { FeedItem } from "./rss";
 import {
   buildAgentResearchPack,
@@ -1044,7 +1045,8 @@ async function fetchSourceSummary(
 
     candidates.sort((a, b) => scoreCandidate(b, targetKeywords) - scoreCandidate(a, targetKeywords));
     return candidates[0] || null;
-  } catch {
+  } catch (e) {
+    reportWarn("article:parse", e);
     return null;
   } finally {
     clearTimeout(timeout);
@@ -1600,7 +1602,8 @@ async function translateToEnglish(input: string): Promise<string | null> {
     });
 
     return translated;
-  } catch {
+  } catch (e) {
+    reportWarn("article:parse", e);
     return null;
   } finally {
     clearTimeout(timeout);

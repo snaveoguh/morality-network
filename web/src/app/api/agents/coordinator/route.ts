@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { reportWarn } from "@/lib/report-error";
 import { agentRegistry, messageBus } from "@/lib/agents/core";
 import { agentFactory } from "@/lib/agents/factory";
 import { coordinatorAgent } from "@/lib/agents/coordinator";
@@ -54,7 +55,8 @@ export async function GET(request: Request) {
         if (recent[0]?.timestamp) {
           lastActivityAt = Math.max(lastActivityAt ?? 0, recent[0].timestamp);
         }
-      } catch {
+      } catch (e) {
+        reportWarn("api:coordinator:events", e);
         recent = [];
       }
 

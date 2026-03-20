@@ -5,6 +5,7 @@
 import type { AgentMessage, MessageHandler } from "./types";
 import { signBridgeMessage } from "./bridge-signature";
 import { hasIndexerBackend } from "../../server/indexer-backend";
+import { reportWarn } from "../../report-error";
 import {
   publishPersistedAgentEvents,
   type PersistedAgentEvent,
@@ -245,8 +246,8 @@ class MessageBus {
       if (!res.ok) {
         console.warn(`[AgentBus] Bridge relay ${res.status}: ${await res.text().catch(() => "")}`);
       }
-    } catch {
-      // Fire-and-forget — don't crash the bus
+    } catch (e) {
+      reportWarn("agent-bus:relay", e);
     }
   }
 }

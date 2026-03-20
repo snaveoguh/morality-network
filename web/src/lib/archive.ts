@@ -7,6 +7,7 @@ import { computeEntityHash } from "./entity";
 import { extractCanonicalClaim } from "./claim-extract";
 import { normalizeUrl, verifyEvidence } from "./evidence-verify";
 import { fetchIndexerJson, getIndexerBackendUrl } from "./server/indexer-backend";
+import { reportWarn } from "./report-error";
 
 export interface ArchivedFeedItem {
   hash: `0x${string}`;
@@ -103,8 +104,8 @@ async function redisSetArticle(hash: string, item: ArchivedFeedItem): Promise<vo
       body: JSON.stringify([["SET", `${REDIS_ARTICLE_PREFIX}${hash}`, serialized, "EX", String(REDIS_ARTICLE_TTL)]]),
       cache: "no-store",
     });
-  } catch {
-    // Non-fatal
+  } catch (e) {
+    reportWarn("archive:redis-set", e);
   }
 }
 
@@ -129,8 +130,8 @@ async function redisSetArticleBatch(items: ArchivedFeedItem[]): Promise<void> {
       body: JSON.stringify(commands),
       cache: "no-store",
     });
-  } catch {
-    // Non-fatal
+  } catch (e) {
+    reportWarn("archive:redis-set", e);
   }
 }
 

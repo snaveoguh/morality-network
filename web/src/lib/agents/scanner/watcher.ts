@@ -4,6 +4,7 @@
 // Identifies new tokens, fetches ERC20 metadata, schedules DexScreener enrichment.
 // Pattern adapted from live-comments.ts chunked getLogs.
 
+import { reportWarn } from "@/lib/report-error";
 import { createPublicClient, http, type Log } from "viem";
 import { base } from "viem/chains";
 import { messageBus } from "../core";
@@ -337,7 +338,8 @@ async function fetchDexScreenerData(
       fdv: pair.fdv ?? null,
       marketCap: pair.marketCap ?? null,
     };
-  } catch {
+  } catch (e) {
+    reportWarn("scanner:watcher", e);
     return null;
   }
 }
@@ -408,7 +410,8 @@ async function pollDexScreenerProfiles(): Promise<TokenLaunch[]> {
     }
 
     return launches;
-  } catch {
+  } catch (e) {
+    reportWarn("scanner:watcher", e);
     return [];
   }
 }
