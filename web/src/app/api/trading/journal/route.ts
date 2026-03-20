@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
+import { verifyOperatorAuth } from "@/lib/operator-auth";
 import { getTraderConfig } from "@/lib/trading/config";
 import { PositionStore } from "@/lib/trading/position-store";
 import { positionsToJournal } from "@/lib/trading/trade-journal";
 
 export async function GET(request: Request) {
   try {
+    const unauthorized = await verifyOperatorAuth(request);
+    if (unauthorized) return unauthorized;
+
     const url = new URL(request.url);
     const symbol = url.searchParams.get("symbol")?.toUpperCase() ?? undefined;
     const limit = Math.min(500, Math.max(1, parseInt(url.searchParams.get("limit") ?? "100", 10)));

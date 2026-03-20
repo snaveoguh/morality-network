@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyOperatorAuth } from "@/lib/operator-auth";
 import { getTraderReadinessByRunner, redactedConfigSummary } from "@/lib/trading/engine";
 import { isWorkerTraderRuntime } from "@/lib/runtime-mode";
 import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
@@ -7,8 +8,11 @@ import { fetchPersistedTraderState } from "@/lib/server/runtime-backend";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const unauthorized = await verifyOperatorAuth(request);
+    if (unauthorized) return unauthorized;
+
     if (isWorkerTraderRuntime()) {
       const backendUrl = getIndexerBackendUrl();
       if (!backendUrl) {

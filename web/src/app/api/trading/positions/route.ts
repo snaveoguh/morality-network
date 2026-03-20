@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyOperatorAuth } from "@/lib/operator-auth";
 import { listTraderPositionsByRunner, redactedConfigSummary } from "@/lib/trading/engine";
 import { isWorkerTraderRuntime } from "@/lib/runtime-mode";
 import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
@@ -9,6 +10,9 @@ export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {
+    const unauthorized = await verifyOperatorAuth(request);
+    if (unauthorized) return unauthorized;
+
     const { searchParams } = new URL(request.url);
     const openOnly = searchParams.get("openOnly") === "1";
 

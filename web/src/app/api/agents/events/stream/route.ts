@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { messageBus } from "@/lib/agents/core";
+import { verifyOperatorAuth } from "@/lib/operator-auth";
 import { isWorkerAgentRuntime } from "@/lib/runtime-mode";
 import { fetchPersistedAgentEvents, type PersistedAgentEvent } from "@/lib/server/runtime-backend";
 
@@ -55,6 +56,9 @@ function filterLocalMessages(
 }
 
 export async function GET(request: NextRequest) {
+  const unauthorized = await verifyOperatorAuth(request);
+  if (unauthorized) return unauthorized;
+
   const topics = parseTopics(request.nextUrl.searchParams.get("topic"));
   const pollMs = parsePositiveInteger(request.nextUrl.searchParams.get("pollMs"), 3000, 500);
   const limit = Math.min(parsePositiveInteger(request.nextUrl.searchParams.get("limit"), 50), 200);

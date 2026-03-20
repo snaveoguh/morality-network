@@ -25,6 +25,15 @@ export function hasIndexerBackend(): boolean {
   return getIndexerBackendUrl() !== null;
 }
 
+function buildIndexerHeaders(headers?: HeadersInit): Headers {
+  const nextHeaders = new Headers(headers);
+  const secret = process.env.INDEXER_WORKER_SECRET?.trim();
+  if (secret && !nextHeaders.has("authorization")) {
+    nextHeaders.set("authorization", `Bearer ${secret}`);
+  }
+  return nextHeaders;
+}
+
 export async function fetchIndexerJson<T>(
   path: string,
   init: (RequestInit & { timeoutMs?: number }) | undefined = undefined,
@@ -38,6 +47,7 @@ export async function fetchIndexerJson<T>(
   const url = new URL(path, `${baseUrl}/`);
   const response = await fetch(url.toString(), {
     ...init,
+    headers: buildIndexerHeaders(init?.headers),
     ...(init?.method && init.method !== "GET"
       ? { cache: "no-store" as const }
       : { next: { revalidate: init?.cache === "no-store" ? 0 : 60 } }),

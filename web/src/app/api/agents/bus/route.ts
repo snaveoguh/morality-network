@@ -1,6 +1,7 @@
 // ─── GET /api/agents/bus — Debug message log ────────────────────────────────
 
 import { NextResponse } from "next/server";
+import { verifyOperatorAuth } from "@/lib/operator-auth";
 import { messageBus } from "@/lib/agents/core";
 import { isWorkerAgentRuntime } from "@/lib/runtime-mode";
 import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
@@ -9,6 +10,9 @@ import { fetchPersistedAgentEvents } from "@/lib/server/runtime-backend";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  const unauthorized = await verifyOperatorAuth(request);
+  if (unauthorized) return unauthorized;
+
   const { searchParams } = new URL(request.url);
   const limit = Math.min(
     Math.max(Number(searchParams.get("limit") || "50"), 1),

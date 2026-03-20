@@ -88,6 +88,8 @@ async function readFunderSnapshot(
 export async function fetchVaultOverview(options?: {
   limit?: number;
   account?: Address | null;
+  includeFunders?: boolean;
+  includeAccount?: boolean;
 }): Promise<VaultOverview | null> {
   if (!isVaultConfigured()) {
     return null;
@@ -95,6 +97,8 @@ export async function fetchVaultOverview(options?: {
 
   const limit = Math.min(Math.max(Math.trunc(options?.limit ?? 50), 1), 200);
   const account = options?.account ?? null;
+  const includeFunders = options?.includeFunders ?? true;
+  const includeAccount = options?.includeAccount ?? true;
 
   try {
     const state = await vaultClient.readContract({
@@ -113,19 +117,22 @@ export async function fetchVaultOverview(options?: {
       cumulativeStrategyProfit, cumulativeStrategyLoss, totalFeesPaid, funderCount,
     ] = state;
 
-    const funderAddresses = await vaultClient.readContract({
-      address: AGENT_VAULT_ADDRESS,
-      abi: AGENT_VAULT_ABI,
-      functionName: "getFunders",
-      args: [BigInt(0), BigInt(limit)],
-    });
-
-    const funders = await Promise.all(
-      funderAddresses.map((funder) => readFunderSnapshot(funder as Address))
-    );
+    const funders = includeFunders
+      ? await (async () => {
+          const funderAddresses = await vaultClient.readContract({
+            address: AGENT_VAULT_ADDRESS,
+            abi: AGENT_VAULT_ABI,
+            functionName: "getFunders",
+            args: [BigInt(0), BigInt(limit)],
+          });
+          return Promise.all(
+            funderAddresses.map((funder) => readFunderSnapshot(funder as Address))
+          );
+        })()
+      : [];
 
     const accountSnapshot =
-      account && isAddress(account)
+      includeAccount && account && isAddress(account)
         ? await readFunderSnapshot(account)
         : null;
 

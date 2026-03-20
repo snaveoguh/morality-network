@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+import { isAddress } from "viem";
+import { sessionMatchesAddress } from "@/lib/operator-auth";
 import {
   buildTerminalSystemPromptWithMemory,
   streamChat,
@@ -47,6 +49,18 @@ export async function POST(request: NextRequest) {
   const { messages, context, wallet } = body;
   if (!Array.isArray(messages) || messages.length === 0) {
     return Response.json({ error: "messages array required" }, { status: 400 });
+  }
+  if (wallet) {
+    if (!isAddress(wallet)) {
+      return Response.json({ error: "wallet must be a valid address" }, { status: 400 });
+    }
+    const allowed = await sessionMatchesAddress(wallet);
+    if (!allowed) {
+      return Response.json(
+        { error: "wallet memory access requires a matching authenticated session" },
+        { status: 403 },
+      );
+    }
   }
 
   // Trim to last 20 messages to keep context window reasonable

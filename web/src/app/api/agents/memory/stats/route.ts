@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyOperatorAuth } from "@/lib/operator-auth";
 import { recallAll, countByScope } from "@/lib/agents/core/memory";
 import { getKnowledgeStats } from "@/lib/agents/core/knowledge";
 
@@ -10,8 +11,11 @@ export const dynamic = "force-dynamic";
  * Returns memory statistics: total memories, breakdown by scope,
  * knowledge stats (total facts, sources), and recent memories.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const unauthorized = await verifyOperatorAuth(request);
+    if (unauthorized) return unauthorized;
+
     const [
       knowledgeCount,
       globalCount,
