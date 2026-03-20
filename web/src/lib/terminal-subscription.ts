@@ -82,7 +82,12 @@ function monthBoundsUtc(now = new Date()): { monthKey: string; startUnix: number
 
 function formatMo(wei: bigint): string {
   const formatted = formatUnits(wei, MO_TOKEN.decimals);
-  return formatted.replace(/\.?0+$/, "") || "0";
+  // Only strip trailing zeros after a decimal point — never from whole numbers
+  // (e.g. "50.000000" → "50", but "50" stays "50", not "5")
+  if (formatted.includes(".")) {
+    return formatted.replace(/\.?0+$/, "") || "0";
+  }
+  return formatted || "0";
 }
 
 function getSubscriptionConfig() {

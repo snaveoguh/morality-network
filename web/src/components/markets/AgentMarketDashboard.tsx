@@ -120,8 +120,15 @@ interface VaultOverview {
   account: VaultFunderSnapshot | null;
 }
 
+interface ParallelRunnerEntry {
+  runnerId: string;
+  label: string;
+  performance: TraderPerformanceReport;
+}
+
 interface MetricsResponse {
   performance?: TraderPerformanceReport;
+  parallel?: ParallelRunnerEntry[];
   vault?: VaultOverview | null;
   error?: string;
 }
@@ -276,11 +283,19 @@ function pnlWeiClass(value: string): string {
   }
 }
 
+const CHAIN_EXPLORERS: Record<number, string> = {
+  1: "https://etherscan.io",
+  11155111: "https://sepolia.etherscan.io",
+  8453: "https://basescan.org",
+  84532: "https://sepolia.basescan.org",
+  42161: "https://arbiscan.io",
+  421614: "https://sepolia.arbiscan.io",
+  10: "https://optimistic.etherscan.io",
+};
+
 function txExplorerUrl(chainId: number, txHash: string): string {
-  if (chainId === 84532) {
-    return `https://sepolia.basescan.org/tx/${txHash}`;
-  }
-  return `https://basescan.org/tx/${txHash}`;
+  const base = CHAIN_EXPLORERS[chainId] ?? "https://basescan.org";
+  return `${base}/tx/${txHash}`;
 }
 
 function sortFundersByEquity(
@@ -315,7 +330,9 @@ export function AgentMarketDashboard() {
   const subscriptionPublicClient = usePublicClient();
 
   const [data, setData] = useState<TraderPerformanceReport | null>(null);
+  const [parallelRunners, setParallelRunners] = useState<ParallelRunnerEntry[]>([]);
   const [vault, setVault] = useState<VaultOverview | null>(null);
+  const [ethPriceUsd, setEthPriceUsd] = useState<number>(0);
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(
     null
   );
@@ -346,19 +363,31 @@ export function AgentMarketDashboard() {
   const refresh = useCallback(async () => {
     try {
       const query = connectedAddress ? `?account=${connectedAddress}` : "";
-      const response = await fetch(`/api/trading/metrics${query}`, {
-        cache: "no-store",
-      });
-      const payload = (await response.json()) as MetricsResponse;
-      if (!response.ok || payload.error) {
-        throw new Error(payload.error || `HTTP ${response.status}`);
+      const [metricsRes, marketsRes] = await Promise.all([
+        fetch(`/api/trading/metrics${query}`, { cache: "no-store" }),
+        fetch("/api/markets", { cache: "no-store" }),
+      ]);
+      const payload = (await metricsRes.json()) as MetricsResponse;
+      if (!metricsRes.ok || payload.error) {
+        throw new Error(payload.error || `HTTP ${metricsRes.status}`);
       }
       if (!payload.performance) {
         throw new Error("Missing performance payload");
       }
 
       setData(payload.performance);
+      setParallelRunners(payload.parallel ?? []);
       setVault(payload.vault ?? null);
+
+      // Extract ETH/USD price for vault conversion
+      try {
+        const markets = await marketsRes.json();
+        const ethUsd = markets?.coingecko?.ethereum?.usd;
+        if (typeof ethUsd === "number" && ethUsd > 0) {
+          setEthPriceUsd(ethUsd);
+        }
+      } catch { /* markets price fetch failed — keep previous value */ }
+
       setError(null);
     } catch (err) {
       setError(
@@ -1160,6 +1189,53 @@ export function AgentMarketDashboard() {
         )}
       </section>
 
+      {/* ── Parallel Runners ─────────────────────────────────────────── */}
+      {parallelRunners.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+            Parallel Runners
+          </h2>
+          <div className="space-y-2">
+            {parallelRunners.map((runner) => (
+              <div
+                key={runner.runnerId}
+                className="border border-[var(--rule-light)] p-3 space-y-1"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]">
+                    {runner.label}
+                  </span>
+                  <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">
+                    {runner.performance.executionVenue}
+                    {runner.performance.dryRun ? " (dry-run)" : ""}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-4">
+                  <div>
+                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">Open</span>
+                    <p className="font-mono text-xs text-[var(--ink)]">{runner.performance.totals.openPositions}</p>
+                  </div>
+                  <div>
+                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">Closed</span>
+                    <p className="font-mono text-xs text-[var(--ink)]">{runner.performance.totals.closedPositions}</p>
+                  </div>
+                  <div>
+                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">Deployed</span>
+                    <p className="font-mono text-xs text-[var(--ink)]">${runner.performance.totals.deployedUsd.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">Unrealized PnL</span>
+                    <p className={`font-mono text-xs ${runner.performance.totals.unrealizedPnlUsd >= 0 ? "text-emerald-700" : "text-red-700"}`}>
+                      ${runner.performance.totals.unrealizedPnlUsd.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="space-y-2">
         <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
           Bot Terminal
@@ -1175,6 +1251,7 @@ export function AgentMarketDashboard() {
           isUnlocked={subscriptionUnlocked}
           unlockSummary={unlockSummary}
           canWithdraw={isVaultEnabled}
+          monthlyFeeMo={subscription?.monthlyFeeMo}
           onFundAmount={async (amount) =>
             isVaultEnabled
               ? submitVaultDeposit(amount)
@@ -1203,9 +1280,9 @@ export function AgentMarketDashboard() {
               size: o.position.entryNotionalUsd,
             })),
             vault: safeVault ? {
-              aumUsd: Number(formatEther(BigInt(safeVault.totalManagedAssetsWei))) * (data.open[0]?.currentPriceUsd ?? 0) || 0,
-              liquidUsd: Number(formatEther(BigInt(safeVault.liquidAssetsWei))) * (data.open[0]?.currentPriceUsd ?? 0) || 0,
-              deployedUsd: Number(formatEther(BigInt(safeVault.deployedCapitalWei))) * (data.open[0]?.currentPriceUsd ?? 0) || 0,
+              aumUsd: Number(formatEther(BigInt(safeVault.totalManagedAssetsWei))) * ethPriceUsd,
+              liquidUsd: Number(formatEther(BigInt(safeVault.liquidAssetsWei))) * ethPriceUsd,
+              deployedUsd: Number(formatEther(BigInt(safeVault.deployedCapitalWei))) * ethPriceUsd,
               totalFunders: safeVault.funderCount,
               feePct: safeVault.performanceFeeBps / 100,
             } : undefined,

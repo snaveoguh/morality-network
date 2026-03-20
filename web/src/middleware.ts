@@ -46,16 +46,23 @@ export function middleware(request: NextRequest) {
 
     if (SENSITIVE_GET_PATHS.has(pathname)) {
       const secret = process.env.CRON_SECRET?.trim();
-      if (secret) {
-        const auth = request.headers.get("authorization")?.trim();
-        if (auth !== `Bearer ${secret}`) {
-          return NextResponse.json(
-            { error: "Unauthorized" },
-            { status: 401, headers: Object.fromEntries(
-              Object.entries(SECURITY_HEADERS),
-            ) },
-          );
-        }
+      if (!secret) {
+        // Fail closed — no secret configured means deny all sensitive GETs
+        return NextResponse.json(
+          { error: "Service unavailable" },
+          { status: 503, headers: Object.fromEntries(
+            Object.entries(SECURITY_HEADERS),
+          ) },
+        );
+      }
+      const auth = request.headers.get("authorization")?.trim();
+      if (auth !== `Bearer ${secret}`) {
+        return NextResponse.json(
+          { error: "Unauthorized" },
+          { status: 401, headers: Object.fromEntries(
+            Object.entries(SECURITY_HEADERS),
+          ) },
+        );
       }
     }
   }
