@@ -5,6 +5,7 @@
 // ============================================================================
 
 import { NextResponse } from "next/server";
+import { getOperatorAuthState, getSessionAddress } from "@/lib/operator-auth";
 import { fetchMusicDiscovery } from "@/lib/music-discovery";
 import type { DiscoveryRequest } from "@/lib/music-types";
 import { rateLimit } from "@/lib/rate-limit";
@@ -22,6 +23,19 @@ export async function POST(request: Request) {
   // Rate limit: 20 discovery requests per minute per IP
   const limited = rateLimit(request, { maxRequests: 20, windowMs: 60_000 });
   if (limited) return limited;
+
+  if (process.env.NODE_ENV === "production") {
+    const [operatorAuth, sessionAddress] = await Promise.all([
+      getOperatorAuthState(request),
+      getSessionAddress(),
+    ]);
+    if (!operatorAuth.authorized && !sessionAddress) {
+      return NextResponse.json(
+        { error: "Authentication required for personalized discovery" },
+        { status: 401 },
+      );
+    }
+  }
 
   try {
     const body = (await request.json()) as Partial<DiscoveryRequest>;
@@ -54,7 +68,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   // Rate limit: 20 discovery requests per minute per IP
-  const limited = rateLimit(request, { maxRequests: 20, windowMs: 60_000 });
+  const limited = rateLimit(request, { maxRequests: 10, windowMs: 60_000 });
   if (limited) return limited;
 
   try {
@@ -66,7 +80,11 @@ export async function GET(request: Request) {
       limit: 20,
       mode: "explore",
     });
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: {
+        "cache-control": "public, max-age=60, s-maxage=60",
+      },
+    });
   } catch (error) {
     console.error("[api/music/discover] GET error:", error);
     return NextResponse.json(

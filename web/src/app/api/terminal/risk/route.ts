@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { requireTerminalAccess } from "@/lib/terminal-access";
 import {
   streamVeniceRisk,
   hasVeniceLLM,
@@ -48,6 +49,9 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "userMessage string required" }, { status: 400 });
   }
 
+  const terminalAccess = await requireTerminalAccess(request, { consume: false });
+  if (terminalAccess instanceof Response) return terminalAccess;
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
@@ -85,6 +89,9 @@ export async function POST(request: NextRequest) {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
+      "X-Terminal-Free-Remaining": String(terminalAccess.freeAccess.remaining),
+      "X-Terminal-Free-Limit": String(terminalAccess.freeAccess.limit),
+      "X-Terminal-Unlocked": terminalAccess.unlocked ? "1" : "0",
     },
   });
 }

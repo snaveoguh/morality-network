@@ -8,6 +8,8 @@ export interface SessionData {
   chainId?: number;
   nonce?: string;
   siweIssuedAt?: string;
+  terminalUsageMonthKey?: string;
+  terminalUsageCount?: number;
 }
 
 /**

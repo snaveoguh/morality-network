@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getOperatorAuthState, getSessionAddress } from "@/lib/operator-auth";
 import { getSourceBias } from "@/lib/bias";
 import { generateTextForTask } from "@/lib/ai-provider";
 import { hasAIProviderForTask } from "@/lib/ai-models";
@@ -216,6 +217,19 @@ export async function POST(request: Request) {
   // Rate limit: 20 scoring requests per minute per IP
   const limited = rateLimit(request, { maxRequests: 20, windowMs: 60_000 });
   if (limited) return limited;
+
+  if (process.env.NODE_ENV === "production") {
+    const [operatorAuth, sessionAddress] = await Promise.all([
+      getOperatorAuthState(request),
+      getSessionAddress(),
+    ]);
+    if (!operatorAuth.authorized && !sessionAddress) {
+      return NextResponse.json(
+        { error: "Authentication required for AI scoring" },
+        { status: 401 },
+      );
+    }
+  }
 
   try {
     const body: ScoreRequest = await request.json();

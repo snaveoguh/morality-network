@@ -30,7 +30,7 @@ export function DiscoveryFeed({ onPlayTrack, activeVideoId }: DiscoveryFeedProps
 
     try {
       const profile = getTasteProfile();
-      const res = await fetch("/api/music/discover", {
+      let res = await fetch("/api/music/discover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -42,6 +42,9 @@ export function DiscoveryFeed({ onPlayTrack, activeVideoId }: DiscoveryFeedProps
           mode: "explore",
         }),
       });
+      if (res.status === 401) {
+        res = await fetch("/api/music/discover", { cache: "no-store" });
+      }
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 

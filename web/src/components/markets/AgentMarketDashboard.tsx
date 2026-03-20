@@ -168,6 +168,12 @@ interface SubscriptionStatus {
     paidMoTotal: string;
     txHashes: string[];
   };
+  freeAccess?: {
+    monthKey: string;
+    limit: number;
+    used: number;
+    remaining: number;
+  };
   reason?: string;
 }
 
@@ -1250,7 +1256,7 @@ export function AgentMarketDashboard() {
           isUnlocked={subscriptionUnlocked}
           unlockSummary={unlockSummary}
           canWithdraw={isVaultEnabled}
-          monthlyFeeMo={subscription?.monthlyFeeMo}
+          freeAccess={subscription?.freeAccess ?? null}
           onFundAmount={async (amount) =>
             isVaultEnabled
               ? submitVaultDeposit(amount)

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { isAddress } from "viem";
 import { sessionMatchesAddress } from "@/lib/operator-auth";
+import { requireTerminalAccess } from "@/lib/terminal-access";
 import {
   buildTerminalSystemPromptWithMemory,
   streamChat,
@@ -63,6 +64,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const terminalAccess = await requireTerminalAccess(request, { consume: true });
+  if (terminalAccess instanceof Response) return terminalAccess;
+
   // Trim to last 20 messages to keep context window reasonable
   const recentMessages = messages.slice(-20);
 
@@ -108,6 +112,9 @@ export async function POST(request: NextRequest) {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
+      "X-Terminal-Free-Remaining": String(terminalAccess.freeAccess.remaining),
+      "X-Terminal-Free-Limit": String(terminalAccess.freeAccess.limit),
+      "X-Terminal-Unlocked": terminalAccess.unlocked ? "1" : "0",
     },
   });
 }
