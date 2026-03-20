@@ -20,11 +20,11 @@ export default function ArticleError({
           Rendering Error
         </p>
         <h1 className="mt-1 font-headline text-2xl leading-tight text-[var(--ink)] sm:text-3xl">
-          Something went wrong loading this article.
+          Failed to load article
         </h1>
         <p className="mt-3 font-body-serif text-base leading-relaxed text-[var(--ink-light)]">
-          This is usually a temporary issue with contract reads or network
-          connectivity. The onchain data for this story is still permanent.
+          The page timed out fetching article data. This can happen on cold
+          starts when multiple upstream services respond slowly. Try refreshing.
         </p>
         <p className="mt-2 font-mono text-[9px] text-[var(--ink-faint)]">
           {error.message}
