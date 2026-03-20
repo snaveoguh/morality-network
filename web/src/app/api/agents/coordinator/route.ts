@@ -33,7 +33,8 @@ export async function GET(request: Request) {
       try {
         const swarmState = await fetchPersistedSwarmState();
         lastActivityAt = swarmState.updatedAt;
-      } catch {
+      } catch (e) {
+        reportWarn("api:coordinator:swarm-state", e);
         lastActivityAt = null;
       }
 

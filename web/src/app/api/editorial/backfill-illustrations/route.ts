@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/cron-auth";
 import { getIllustration, saveIllustration } from "@/lib/illustration-store";
 import { generateIllustration, buildIllustrationPrompt } from "@/lib/image-generation";
 import { getArchivedEditorial, saveEditorial } from "@/lib/editorial-archive";
@@ -12,8 +13,11 @@ export const maxDuration = 300; // 5 min — DALL-E takes ~15s per image
  *
  * Generates DALL-E illustrations for daily editions that don't have one.
  * Costs ~$0.08 per image (DALL-E 3 HD).
+ * Requires CRON_SECRET bearer token.
  */
-export async function POST() {
+export async function POST(request: Request) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
   const results: Array<{ hash: string; title: string; status: string }> = [];
 
   // Check last 14 days of daily editions

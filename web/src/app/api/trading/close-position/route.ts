@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/cron-auth";
 import { getTraderConfig } from "@/lib/trading/config";
 import {
   getHyperliquidClients,
@@ -15,8 +16,12 @@ export const maxDuration = 30;
 /**
  * POST /api/trading/close-position
  * Body: { symbol: "BTC" } — closes the open position for that symbol.
+ * Requires CRON_SECRET bearer token.
  */
 export async function POST(request: NextRequest) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
+
   try {
     const { symbol } = await request.json();
     if (!symbol) {

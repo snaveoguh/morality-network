@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import type { FeedItem } from "@/lib/rss";
+import { verifyCronAuth } from "@/lib/cron-auth";
 import { generateEditorial } from "@/lib/article";
 import {
   getArchivedEditorial,
   saveEditorial,
 } from "@/lib/editorial-archive";
-import { rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55;
@@ -27,13 +27,13 @@ function withDeadline<T>(promise: Promise<T>, ms: number, label: string): Promis
  * Generates a single editorial from pre-computed feed data.
  * No feed fetching — primary + related items are passed in the body.
  * Designed to fit within Vercel's function timeout.
+ * Requires CRON_SECRET bearer token.
  *
  * Body: { hash: string, primary: FeedItem, related: FeedItem[] }
  */
 export async function POST(request: Request) {
-  // Rate limit: 5 editorial generations per minute per IP
-  const limited = rateLimit(request, { maxRequests: 5, windowMs: 60_000 });
-  if (limited) return limited;
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
   let hash: string;
   let primary: FeedItem;
   let related: FeedItem[];

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/cron-auth";
 import { getTraderConfig } from "@/lib/trading/config";
 import {
   getHyperliquidClients,
@@ -13,8 +14,11 @@ export const maxDuration = 30;
 /**
  * POST /api/trading/transfer-to-perp
  * Transfers all USDC from HL spot → perp account.
+ * Requires CRON_SECRET bearer token.
  */
-export async function POST() {
+export async function POST(request: Request) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
   try {
     const config = getTraderConfig();
     if (config.executionVenue !== "hyperliquid-perp") {

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/cron-auth";
+import { validateExternalUrl } from "@/lib/url-validator";
 import { learnFromUrl, batchLearn } from "@/lib/agents/core/knowledge";
 
 export const dynamic = "force-dynamic";
@@ -8,12 +10,17 @@ export const maxDuration = 55;
  * POST /api/agents/memory/learn
  *
  * Trigger URL knowledge ingestion.
+ * Requires CRON_SECRET bearer token.
+ * All URLs are validated against SSRF before fetching.
  *
  * Body:
  *   { url: string }           — learn from a single URL
  *   { urls: string[] }        — batch learn from multiple URLs
  */
 export async function POST(request: Request) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
+
   let body: { url?: string; urls?: string[] };
   try {
     body = await request.json();
@@ -23,6 +30,13 @@ export async function POST(request: Request) {
 
   // Single URL
   if (typeof body.url === "string" && body.url.trim()) {
+    const validation = validateExternalUrl(body.url.trim());
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: `Blocked URL: ${validation.error}` },
+        { status: 400 },
+      );
+    }
     const result = await learnFromUrl(body.url.trim());
     return NextResponse.json(result);
   }
@@ -37,12 +51,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No valid URLs provided" }, { status: 400 });
     }
 
-    const results = await batchLearn(urls);
+    // Validate all URLs against SSRF
+    const blocked: string[] = [];
+    const safe: string[] = [];
+    for (const u of urls) {
+      const v = validateExternalUrl(u);
+      if (v.valid) {
+        safe.push(u);
+      } else {
+        blocked.push(u);
+      }
+    }
+
+    if (safe.length === 0) {
+      return NextResponse.json(
+        { error: "All URLs blocked by SSRF filter", blocked },
+        { status: 400 },
+      );
+    }
+
+    const results = await batchLearn(safe);
     const totalFacts = results.reduce((sum, r) => sum + r.factsLearned, 0);
     return NextResponse.json({
       results,
       totalUrls: results.length,
       totalFacts,
+      ...(blocked.length > 0 ? { blockedUrls: blocked } : {}),
     });
   }
 

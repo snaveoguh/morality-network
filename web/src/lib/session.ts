@@ -10,20 +10,31 @@ export interface SessionData {
   siweIssuedAt?: string;
 }
 
-export const sessionOptions = {
-  password:
-    process.env.SESSION_SECRET ||
-    "morality-network-v2-session-secret-change-in-production-32chars!",
-  cookieName: "morality-session",
-  cookieOptions: {
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    sameSite: "lax" as const,
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 1 week
-  },
-};
+/**
+ * Build session options lazily — SESSION_SECRET is only available at runtime
+ * on Vercel, not during `next build`. Throws in production if missing.
+ */
+function getSessionOptions() {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error(
+      "SESSION_SECRET environment variable is required in production",
+    );
+  }
+  return {
+    password:
+      secret || "dev-only-morality-session-secret-not-for-production!!",
+    cookieName: "morality-session",
+    cookieOptions: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "lax" as const,
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+    },
+  };
+}
 
 export async function getSession(): Promise<IronSession<SessionData>> {
-  return getIronSession<SessionData>(await cookies(), sessionOptions);
+  return getIronSession<SessionData>(await cookies(), getSessionOptions());
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/cron-auth";
 import { runSelfLearn, runPipeline } from "@/lib/agents/core/self-learn";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +9,7 @@ export const maxDuration = 55;
  * POST /api/agents/memory/self-learn
  *
  * Trigger self-learning pipelines.
+ * Requires CRON_SECRET bearer token.
  *
  * Body (optional):
  *   { pipeline?: "sentiment-trends" | "event-corpus" | "source-quality" | "editorial-archive" }
@@ -16,6 +18,9 @@ export const maxDuration = 55;
  * Otherwise, runs all 4 pipelines in parallel.
  */
 export async function POST(request: Request) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
+
   let body: { pipeline?: string } = {};
   try {
     body = await request.json();

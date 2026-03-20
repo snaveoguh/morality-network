@@ -41,6 +41,7 @@ const GOVERNANCE_ENDPOINTS: GovernanceEndpoint[] = [
   },
   {
     name: "US Congress API",
+    // Key appended at fetch time — never exposed in JSON response URLs
     url: `https://api.congress.gov/v3/bill?format=json&limit=1&api_key=${process.env.CONGRESS_API_KEY || "DEMO_KEY"}`,
     method: "GET" as const,
   },
@@ -253,11 +254,17 @@ export async function GET() {
   const healthy = allResults.filter((r) => r.status === "ok").length;
   const degraded = allResults.filter((r) => r.status === "error").length;
 
+  // Redact API keys from URLs before sending response
+  const redactUrl = (url: string) =>
+    url.replace(/api_key=[^&]+/g, "api_key=REDACTED");
+  const redactResults = (results: SourceStatus[]) =>
+    results.map((r) => ({ ...r, url: redactUrl(r.url) }));
+
   const response: HealthResponse = {
     generatedAt: Date.now(),
     sources: {
-      rss: rssResults,
-      governance: govResults,
+      rss: redactResults(rssResults),
+      governance: redactResults(govResults),
     },
     ingestion: {
       registry: registryStats(),
