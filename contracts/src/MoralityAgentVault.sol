@@ -21,29 +21,31 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
     uint256 private constant VIRTUAL_SHARES = 1e3;
     uint256 private constant VIRTUAL_ASSETS = 1e3;
 
-    address public manager;
-    address public feeRecipient;
-    uint256 public performanceFeeBps;
+    // ─── Storage layout (MUST match deployed order — DO NOT reorder) ────
+    address public manager;              // slot 0
+    address public feeRecipient;         // slot 1
+    uint256 public performanceFeeBps;    // slot 2
+
+    uint256 public totalShares;          // slot 3
+    uint256 public deployedCapital;      // slot 4
+    uint256 public cumulativeStrategyProfit; // slot 5
+    uint256 public cumulativeStrategyLoss;   // slot 6
+    uint256 public totalFeesPaid;        // slot 7
+
+    mapping(address => uint256) public shareBalance;       // slot 8
+    mapping(address => uint256) public cumulativeDeposits;  // slot 9
+    mapping(address => uint256) public cumulativeWithdrawals; // slot 10
+
+    mapping(address => bool) private isKnownFunder; // slot 11
+    address[] private funders;                      // slot 12
+
+    uint256 private reentrancyLock;      // slot 13
 
     /// @notice Maximum percentage of total managed assets that can be deployed (in BPS).
     /// Prevents manager from allocating 100% of vault to a strategy wallet (rug vector).
     /// Default: 5000 (50%). Owner can adjust via setMaxAllocationBps().
-    uint256 public maxAllocationBps;
-
-    uint256 public totalShares;
-    uint256 public deployedCapital;
-    uint256 public cumulativeStrategyProfit;
-    uint256 public cumulativeStrategyLoss;
-    uint256 public totalFeesPaid;
-
-    mapping(address => uint256) public shareBalance;
-    mapping(address => uint256) public cumulativeDeposits;
-    mapping(address => uint256) public cumulativeWithdrawals;
-
-    mapping(address => bool) private isKnownFunder;
-    address[] private funders;
-
-    uint256 private reentrancyLock;
+    /// @dev APPENDED after reentrancyLock to preserve storage layout compatibility.
+    uint256 public maxAllocationBps;     // slot 14 (new — uses first __gap slot)
 
     event ManagerUpdated(address indexed previousManager, address indexed newManager);
     event FeeRecipientUpdated(address indexed previousFeeRecipient, address indexed newFeeRecipient);
@@ -411,5 +413,5 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
         return int256(value);
     }
 
-    uint256[50] private __gap;
+    uint256[49] private __gap; // was 50, now 49 after adding maxAllocationBps
 }
