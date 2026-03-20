@@ -16,6 +16,7 @@ import {
   CONTRACTS_CHAIN_ID,
   ZERO_ADDRESS,
 } from "@/lib/contracts";
+import { shortenAddress } from "@/lib/entity";
 import { AuctionCard } from "./AuctionCard";
 
 // ============================================================================
@@ -61,6 +62,14 @@ export function EditionsPanel({ currentEdition, onClose }: EditionsPanelProps) {
     args: address ? [address] : undefined,
     chainId: CONTRACTS_CHAIN_ID,
     query: { enabled: auctionsDeployed && !!address },
+  });
+
+  const { data: treasuryAddress } = useReadContract({
+    address: POOTER_AUCTIONS_ADDRESS,
+    abi: POOTER_AUCTIONS_ABI,
+    functionName: "treasury",
+    chainId: CONTRACTS_CHAIN_ID,
+    query: { enabled: auctionsDeployed },
   });
 
   const {
@@ -134,7 +143,8 @@ export function EditionsPanel({ currentEdition, onClose }: EditionsPanelProps) {
         {/* Info bar */}
         <div className="border-b border-[var(--rule-light)] px-4 py-2">
           <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-            {totalPastEditions} past date{totalPastEditions !== 1 ? "s" : ""} · current: #{currentEdition} · proceeds to nouns small grants
+            {totalPastEditions} past date{totalPastEditions !== 1 ? "s" : ""} · current: #{currentEdition} · funds go to support r&amp;d
+            {treasuryAddress ? ` · treasury: ${shortenAddress(treasuryAddress as string)}` : ""}
           </p>
           <p className="mt-1 font-mono text-[8px] leading-relaxed text-[var(--ink-light)]">
             Community members can auction unminted past dates and set the onchain title/hash for those NFTs.
