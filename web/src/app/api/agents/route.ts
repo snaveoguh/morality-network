@@ -38,7 +38,8 @@ export async function GET() {
 
       try {
         swarmState = await fetchPersistedSwarmState();
-      } catch {
+      } catch (e) {
+        reportWarn("api:agents:swarm-state", e);
         swarmState = null;
       }
 
@@ -57,7 +58,8 @@ export async function GET() {
           };
           scannerCount = payload.totalStored ?? payload.count ?? 0;
         }
-      } catch {
+      } catch (e) {
+        reportWarn("api:agents:scanner-count", e);
         scannerCount = 0;
       }
 

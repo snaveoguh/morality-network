@@ -99,9 +99,16 @@ function executionVenueFromEnv(): ExecutionVenue {
 function privateKeyFromEnv(): `0x${string}` {
   const raw = process.env.AGENT_PRIVATE_KEY || process.env.PRIVATE_KEY || "";
   const trimmed = raw.trim();
-  if (!trimmed && boolFromEnv("TRADER_DRY_RUN", true)) {
-    // Deterministic dev key for dry-run mode only.
-    return "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+  if (!trimmed) {
+    if (boolFromEnv("TRADER_DRY_RUN", true)) {
+      // Dry-run mode with no key — generate a random throwaway key.
+      // Never hardcode a well-known key (e.g. Hardhat account #0).
+      const randomHex = Array.from({ length: 64 }, () =>
+        Math.floor(Math.random() * 16).toString(16),
+      ).join("");
+      return `0x${randomHex}` as `0x${string}`;
+    }
+    throw new Error("Missing AGENT_PRIVATE_KEY (required when TRADER_DRY_RUN is false)");
   }
   if (!trimmed.startsWith("0x") || trimmed.length !== 66) {
     throw new Error("Missing or invalid AGENT_PRIVATE_KEY (expected 0x-prefixed 32-byte key)");

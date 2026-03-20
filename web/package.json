@@ -12,6 +12,7 @@
     "worker:once": "npm run worker:build && node ./dist-worker/worker/index.js --once",
     "archive:snapshot": "node ./scripts/snapshot-archive.mjs",
     "editorial:generate": "node ./scripts/generate-editorials.mjs",
+    "redteam:local": "node ./scripts/red-team-local.mjs",
     "smoke:prod": "bash ./scripts/smoke-check.sh https://pooter.world",
     "smoke:local": "bash ./scripts/smoke-check.sh http://localhost:3000"
   },

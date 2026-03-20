@@ -188,12 +188,11 @@ export function ArticleTemplate({
         illustrationBase64 = await loaded;
       }
 
-      const godModeSecret = process.env.NEXT_PUBLIC_GOD_MODE_SECRET || "";
+      // Auth uses SIWE session cookie — no client-side secret needed
       const res = await fetch("/api/editorial/edit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(godModeSecret ? { Authorization: `Bearer ${godModeSecret}` } : {}),
         },
         body: JSON.stringify({
           hash: entityHash,

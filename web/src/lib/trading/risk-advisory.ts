@@ -52,7 +52,8 @@ async function redisGetAdvisory(): Promise<RiskAdvisory | null> {
     const body = await res.json();
     if (!body.result) return null;
     return JSON.parse(body.result as string) as RiskAdvisory;
-  } catch {
+  } catch (e) {
+    reportWarn("risk-advisory:redis-get", e);
     return null;
   }
 }
@@ -70,7 +71,8 @@ async function redisSetAdvisory(advisory: RiskAdvisory): Promise<boolean> {
       cache: "no-store",
     });
     return res.ok;
-  } catch {
+  } catch (e) {
+    reportWarn("risk-advisory:redis-set", e);
     return false;
   }
 }
@@ -90,7 +92,7 @@ export async function getLatestAdvisory(): Promise<RiskAdvisory | null> {
     if (Date.now() - parsed.timestamp < ADVISORY_TTL_MS) {
       return parsed;
     }
-  } catch { /* no cached advisory */ }
+  } catch (e) { reportWarn("risk-advisory:fs-read", e); }
 
   return null;
 }
@@ -379,7 +381,7 @@ export async function pollVeniceRiskAdvisory(): Promise<RiskAdvisory> {
         payload: advisory,
         timestamp: Date.now(),
       });
-    } catch { /* bus publish failure is non-fatal */ }
+    } catch (e) { reportWarn("risk-advisory:bus-publish", e); }
 
     console.log(
       `[risk-advisory] polled Venice: ${directives.length} directives (parse=${parseStatus})`,

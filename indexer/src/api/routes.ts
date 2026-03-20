@@ -40,7 +40,11 @@ const WORKER_STATE_ROW_ID = "latest";
 
 function hasWorkerWriteAccess(authHeader: string | null | undefined): boolean {
   const secret = process.env.INDEXER_WORKER_SECRET?.trim();
-  if (!secret) return true;
+  if (!secret) {
+    // Fail CLOSED — block all writes if secret is not configured.
+    console.error("[indexer] INDEXER_WORKER_SECRET not set — rejecting write request");
+    return false;
+  }
   return authHeader?.trim() === `Bearer ${secret}`;
 }
 

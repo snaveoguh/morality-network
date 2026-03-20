@@ -441,7 +441,8 @@ export async function hasCommentaryForToday(): Promise<boolean> {
   try {
     const existing = await getArchivedEditorial(getCommentaryHash());
     return existing !== null;
-  } catch {
+  } catch (e) {
+    reportWarn("moral-commentary:check-today", e);
     return false;
   }
 }

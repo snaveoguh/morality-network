@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/session";
 import { getArchivedEditorial, saveEditorial } from "@/lib/editorial-archive";
 import { saveIllustration } from "@/lib/illustration-store";
 import type { ArticleContent } from "@/lib/article";
@@ -11,11 +12,9 @@ export const maxDuration = 30;
  * Edits are persisted to the editorial archive (Redis + file).
  *
  * Security:
- *   1. Bearer token (GOD_MODE_SECRET) — prevents unauthenticated requests
- *   2. Wallet allowlist (GOD_MODE_ADDRESSES) — limits to specific addresses
- *
- * The wallet address in the body is NOT trusted for auth — it's only used
- * for audit logging AFTER the Bearer token is verified.
+ *   1. SIWE session auth (preferred) — wallet proven via Sign-In with Ethereum
+ *   2. Bearer token (GOD_MODE_SECRET) — for server-side / cron callers only
+ *   3. Wallet allowlist (GOD_MODE_ADDRESSES) — limits to specific addresses
  */
 const GOD_MODE_SECRET = process.env.GOD_MODE_SECRET?.trim() || "";
 const GOD_MODE_ADDRESSES = new Set(
@@ -41,18 +40,22 @@ interface EditRequestBody {
 }
 
 export async function POST(request: NextRequest) {
-  // Auth layer 1: Bearer token (blocks spoofed requests)
-  if (process.env.NODE_ENV === "production") {
-    if (!GOD_MODE_SECRET) {
-      return NextResponse.json(
-        { error: "God mode not configured" },
-        { status: 503 },
-      );
+  // Auth: accept SIWE session OR Bearer token
+  const auth = request.headers.get("authorization")?.trim();
+  const hasBearer = GOD_MODE_SECRET && auth === `Bearer ${GOD_MODE_SECRET}`;
+
+  let sessionAddress: string | undefined;
+  if (!hasBearer) {
+    try {
+      const session = await getSession();
+      sessionAddress = session.address?.toLowerCase();
+    } catch {
+      // No session available
     }
-    const auth = request.headers.get("authorization")?.trim();
-    if (auth !== `Bearer ${GOD_MODE_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  }
+
+  if (process.env.NODE_ENV === "production" && !hasBearer && !sessionAddress) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   let body: EditRequestBody;
@@ -67,7 +70,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing hash, wallet, or edits" }, { status: 400 });
   }
 
-  // Auth layer 2: Wallet allowlist (limits which addresses can edit)
+  // If using session auth, wallet in body must match session wallet
+  if (sessionAddress && wallet.toLowerCase() !== sessionAddress) {
+    return NextResponse.json({ error: "Wallet mismatch" }, { status: 403 });
+  }
+
+  // Wallet allowlist (limits which addresses can edit)
   if (!GOD_MODE_ADDRESSES.has(wallet.toLowerCase())) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }

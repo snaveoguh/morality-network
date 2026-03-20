@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/cron-auth";
 import { markOnchain } from "@/lib/editorial-archive";
 
+/**
+ * POST /api/editorial/mark-onchain
+ * Marks an editorial as published onchain. Requires CRON_SECRET bearer token.
+ */
 export async function POST(request: Request) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { entityHash, txHash } = body;

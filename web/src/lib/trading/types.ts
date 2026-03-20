@@ -57,7 +57,7 @@ export interface Position {
   txHash?: Hash;
   status: "open" | "closed";
   closedAt?: number;
-  exitReason?: "stop-loss" | "take-profit" | "trailing-stop" | "signal-reversal" | "expired" | "manual";
+  exitReason?: "stop-loss" | "take-profit" | "trailing-stop" | "signal-reversal" | "expired" | "manual" | "max-hold-time";
   exitPriceUsd?: number;
   exitTxHash?: Hash;
   trailingStopPct?: number;
