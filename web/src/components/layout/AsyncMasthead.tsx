@@ -39,7 +39,7 @@ export async function AsyncMasthead() {
   // 2. Fallback: most recent Pooter Original
   if (!dailyEdition) {
     try {
-      const originals = await getRecentPooterOriginals();
+      const originals = await getRecentPooterOriginals(false);
       const best = originals[0];
       if (best) {
         dailyEdition = {

@@ -35,7 +35,7 @@ export async function AsyncFeed() {
     withTimeout(fetchFarcasterContent("pip"), 5000, []),
     withTimeout(fetchDailyVideos(12), 5000, []),
     withTimeout(getTodayPublishedHashes(), 3000, new Set<string>()),
-    withTimeout(getRecentPooterOriginals(), 3000, [] as PooterOriginal[]),
+    withTimeout(getRecentPooterOriginals(false), 3000, [] as PooterOriginal[]),
   ]);
 
   // Inject published stories that rotated out of the live RSS feed
