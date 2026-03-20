@@ -165,8 +165,8 @@ const API_ENDPOINTS: { category: string; endpoints: ApiEntry[] }[] = [
   {
     category: "Editions & Auctions",
     endpoints: [
-      { method: "GET", path: "/api/edition/[tokenId]", description: "Edition metadata", auth: "PUBLIC" },
-      { method: "GET", path: "/api/edition/[tokenId]/image", description: "Edition OG image", auth: "PUBLIC" },
+      { method: "GET", path: "/api/edition/[tokenId]", description: "Edition / community-claim metadata", auth: "PUBLIC" },
+      { method: "GET", path: "/api/edition/[tokenId]/image", description: "Edition / community-claim image", auth: "PUBLIC" },
       { method: "GET", path: "/api/daily-edition", description: "Daily edition", auth: "PUBLIC" },
     ],
   },
@@ -238,7 +238,8 @@ export default function AppendixPage() {
       <Section title="I. Smart Contracts &mdash; Base Mainnet">
         <p className="mb-4 font-body-serif text-sm text-[var(--ink-light)]">
           Core protocol contracts on Base (chain ID 8453). All upgradeable contracts use the
-          ERC-1967 UUPS proxy pattern.
+          ERC-1967 UUPS proxy pattern. The editions stack supports open, community-authored
+          historical claims alongside the main pooter archive.
         </p>
         <ContractTable contracts={BASE_CONTRACTS} />
       </Section>

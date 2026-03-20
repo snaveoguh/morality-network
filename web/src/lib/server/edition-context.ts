@@ -109,7 +109,7 @@ async function readAuction(tokenId: number): Promise<AuctionRecord> {
       args: [BigInt(tokenId)],
     });
 
-    if (auction[0] === 0n) {
+    if (auction[0] === BigInt(0)) {
       return { exists: false, contentHash: null, dailyTitle: null };
     }
 

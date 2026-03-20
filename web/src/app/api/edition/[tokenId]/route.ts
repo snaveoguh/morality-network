@@ -9,9 +9,6 @@ import { getEditionContext } from "@/lib/server/edition-context";
 // and returns structured JSON metadata for marketplaces.
 // ============================================================================
 
-const EPOCH = 1741651200; // March 11 2025 00:00 UTC (edition #1)
-const SECONDS_PER_DAY = 86400;
-
 interface RouteParams {
   params: Promise<{ tokenId: string }>;
 }
