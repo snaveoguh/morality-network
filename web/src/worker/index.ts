@@ -272,10 +272,9 @@ async function runScannerTask(): Promise<void> {
   );
 
   const response = await fetch(url.toString(), {
-    method: "POST",
-    headers: process.env.INDEXER_WORKER_SECRET?.trim()
-      ? { authorization: `Bearer ${process.env.INDEXER_WORKER_SECRET.trim()}` }
-      : undefined,
+    // Ponder 0.7.x exposes mutable routes via PUT even when declared as post().
+    method: "PUT",
+    headers: buildAuthHeaders(),
     signal: AbortSignal.timeout(parseIntegerEnv("WORKER_BACKEND_TIMEOUT_MS", 20_000)),
   });
 
