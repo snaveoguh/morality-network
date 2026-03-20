@@ -34,8 +34,10 @@ async function triggerBackendScannerSync(baseUrl: string, limit: number): Promis
   try {
     const syncUrl = new URL("/api/v1/scanner/sync", `${baseUrl}/`);
     syncUrl.searchParams.set("limit", String(Math.max(limit, 25)));
+    const workerSecret = process.env.INDEXER_WORKER_SECRET?.trim();
     const response = await fetch(syncUrl.toString(), {
-      method: "GET",
+      method: "PUT",
+      headers: workerSecret ? { authorization: `Bearer ${workerSecret}` } : undefined,
       cache: "no-store",
       signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
     });
