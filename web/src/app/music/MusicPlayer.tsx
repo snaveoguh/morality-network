@@ -39,7 +39,7 @@ export function MusicPlayer() {
     setError(null);
     try {
       const profile = getTasteProfile();
-      const res = await fetch("/api/music/discover", {
+      let res = await fetch("/api/music/discover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -51,6 +51,9 @@ export function MusicPlayer() {
           mode: "explore",
         }),
       });
+      if (res.status === 401) {
+        res = await fetch("/api/music/discover", { cache: "no-store" });
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = (await res.json()) as DiscoveryResponse;

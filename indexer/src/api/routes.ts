@@ -2642,6 +2642,10 @@ ponder.get("/api/v1/memory/all", async (c) => {
 const VALID_COLLECTIONS = new Set(["nouns", "emblem-vault-legacy", "emblem-vault-curated"]);
 const VALID_ORDER_STATUSES = new Set(["ACTIVE", "FILLED", "CANCELLED", "EXPIRED"]);
 
+function marketplaceWritesEnabled(): boolean {
+  return process.env.ENABLE_PUBLIC_MARKETPLACE_WRITES?.trim() === "true";
+}
+
 /**
  * GET /api/v1/marketplace/orders
  * List marketplace orders with optional filters.
@@ -2745,6 +2749,10 @@ ponder.get("/api/v1/marketplace/orders/:hash", async (c) => {
  * Auth: The signed order IS the authentication (EIP-712 signature matches maker).
  */
 ponder.post("/api/v1/marketplace/orders", async (c) => {
+  if (!marketplaceWritesEnabled()) {
+    return c.json({ error: "marketplace writes disabled" }, 503);
+  }
+
   const body = await c.req.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return c.json({ error: "invalid body" }, 400);
@@ -2825,6 +2833,10 @@ ponder.post("/api/v1/marketplace/orders", async (c) => {
  * Mark an order as filled (purchased).
  */
 ponder.post("/api/v1/marketplace/orders/:hash/fill", async (c) => {
+  if (!marketplaceWritesEnabled()) {
+    return c.json({ error: "marketplace writes disabled" }, 503);
+  }
+
   const hash = c.req.param("hash");
   if (!hash) return c.json({ error: "missing hash" }, 400);
 
@@ -2863,6 +2875,10 @@ ponder.post("/api/v1/marketplace/orders/:hash/fill", async (c) => {
  * Mark an order as cancelled.
  */
 ponder.post("/api/v1/marketplace/orders/:hash/cancel", async (c) => {
+  if (!marketplaceWritesEnabled()) {
+    return c.json({ error: "marketplace writes disabled" }, 503);
+  }
+
   const hash = c.req.param("hash");
   if (!hash) return c.json({ error: "missing hash" }, 400);
 

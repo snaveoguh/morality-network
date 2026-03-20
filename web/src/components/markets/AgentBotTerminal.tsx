@@ -39,7 +39,10 @@ export interface AgentBotTerminalProps {
   onFundAmount: (amount: string) => Promise<string>;
   onWithdrawAmount?: (amount: string) => Promise<string>;
   onUnlockPlan?: () => Promise<string>;
-  monthlyFeeMo?: string;
+  freeAccess?: {
+    remaining: number;
+    limit: number;
+  } | null;
   // Extended trading context for LLM
   tradingContext?: TerminalTradingContext;
 }
@@ -190,6 +193,7 @@ export function AgentBotTerminal({
   onFundAmount,
   onWithdrawAmount,
   onUnlockPlan,
+  freeAccess,
   tradingContext,
 }: AgentBotTerminalProps) {
   const fundingSummary = getFundingSummary(canWithdraw, executionVenue, fundingAddress);
@@ -202,6 +206,9 @@ export function AgentBotTerminal({
   const [isBusy, setIsBusy] = useState(false);
   const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
   const [streamingRiskId, setStreamingRiskId] = useState<string | null>(null);
+  const [freeRemainingServer, setFreeRemainingServer] = useState<number | null>(
+    freeAccess?.remaining ?? null,
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -222,6 +229,12 @@ export function AgentBotTerminal({
   }, [activeId, sessions]);
 
   useEffect(() => {
+    setFreeRemainingServer(
+      typeof freeAccess?.remaining === "number" ? freeAccess.remaining : null,
+    );
+  }, [freeAccess?.remaining]);
+
+  useEffect(() => {
     if (!activeId || sessions.length === 0) return;
     localStorage.setItem(
       STORAGE_KEY,
@@ -239,7 +252,8 @@ export function AgentBotTerminal({
     [sessions, activeId]
   );
   const monthUsage = usage.monthKey === monthKeyNow() ? usage.used : 0;
-  const freeRemaining = Math.max(0, FREE_MONTHLY_MESSAGES - monthUsage);
+  const freeRemaining = freeRemainingServer ?? Math.max(0, FREE_MONTHLY_MESSAGES - monthUsage);
+  const freeLimit = freeAccess?.limit ?? FREE_MONTHLY_MESSAGES;
   const locked = !isUnlocked && freeRemaining <= 0;
 
   function updateActiveSession(mutator: (session: TerminalSession) => TerminalSession) {
@@ -282,6 +296,10 @@ export function AgentBotTerminal({
   }, []);
 
   function incrementUsage() {
+    if (freeRemainingServer !== null) {
+      setFreeRemainingServer((prev) => (prev === null ? null : Math.max(0, prev - 1)));
+      return;
+    }
     setUsage((prev) => {
       const currentMonth = monthKeyNow();
       if (prev.monthKey !== currentMonth) {
@@ -415,8 +433,18 @@ export function AgentBotTerminal({
       // Start consuming Bankr stream immediately
       const bankrRes = await bankrPromise;
       if (!bankrRes.ok) {
-        const errBody = await bankrRes.text().catch(() => "");
-        throw new Error(errBody || `HTTP ${bankrRes.status}`);
+        const errText = await bankrRes.text().catch(() => "");
+        let parsedError: string | null = null;
+        try {
+          const parsed = JSON.parse(errText) as { error?: string; freeAccess?: { remaining?: number } };
+          if (typeof parsed.freeAccess?.remaining === "number") {
+            setFreeRemainingServer(parsed.freeAccess.remaining);
+          }
+          parsedError = parsed.error || null;
+        } catch {
+          parsedError = parsedError ?? null;
+        }
+        throw new Error(parsedError || errText || `HTTP ${bankrRes.status}`);
       }
 
       // Consume both streams concurrently
@@ -702,7 +730,7 @@ export function AgentBotTerminal({
               ? `Unlocked${unlockSummary ? ` — ${unlockSummary}` : ""}`
               : locked
               ? "Usage cap reached"
-              : `${freeRemaining} free messages left this month`}
+              : `${freeRemaining} free messages left this month (${freeLimit} total)`}
           </p>
           <button
             onClick={handleUnlockClick}
