@@ -14,7 +14,7 @@ export function NotificationStack() {
   if (notifications.length === 0) return null;
 
   return (
-    <div className="fixed bottom-28 right-4 z-40 flex flex-col-reverse gap-2 lg:bottom-28 lg:right-4 max-lg:inset-x-4 max-lg:bottom-4">
+    <div className="fixed bottom-20 right-4 z-40 flex flex-col-reverse gap-2 lg:bottom-28 max-lg:inset-x-4">
       {notifications.map((n) => (
         <NotificationToast key={n.id} notification={n} onDismiss={dismiss} />
       ))}

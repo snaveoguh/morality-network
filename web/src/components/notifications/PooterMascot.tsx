@@ -6,25 +6,25 @@ import { useNotification } from "@/providers/NotificationProvider";
 import { PooterScene } from "./PooterScene";
 
 /**
- * 3D pooter mascot — fixed bottom-right corner.
- * Hidden on mobile (< lg). Click toggles the notification panel.
- * Displays unread count badge when notifications exist.
+ * 3D pooter mascot — fixed bottom-right corner on ALL viewports.
+ * Desktop (≥1024px): 96×96 Three.js Canvas with 3D printer bot.
+ * Mobile  (<1024px): 48×48 2D fallback using pooter-icon.svg.
+ * Click toggles the notification panel. Unread count badge.
  */
 export function PooterMascot() {
   const { pooterMood, panelOpen, setPanelOpen, notifications } = useNotification();
   const unreadCount = notifications.length;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 hidden lg:block">
-      {/* Click target — slightly larger than the canvas */}
+    <div className="fixed bottom-4 right-4 z-50">
       <button
         onClick={() => setPanelOpen(!panelOpen)}
-        className="relative block h-[96px] w-[96px] cursor-pointer"
+        className="relative block cursor-pointer"
         aria-label={panelOpen ? "Close notification panel" : "Open notification panel"}
         title="pooter notifications"
       >
-        {/* Three.js Canvas */}
-        <div className="pointer-events-none h-[96px] w-[96px]">
+        {/* Desktop: Three.js 3D Canvas */}
+        <div className="pointer-events-none hidden h-[96px] w-[96px] lg:block">
           <Canvas
             dpr={1}
             camera={{ position: [0, 0, 4], fov: 30 }}
@@ -35,6 +35,12 @@ export function PooterMascot() {
               <PooterScene mood={pooterMood} />
             </Suspense>
           </Canvas>
+        </div>
+
+        {/* Mobile: 2D fallback icon */}
+        <div className="pointer-events-none flex h-12 w-12 items-center justify-center border-2 border-[var(--rule)] bg-[var(--paper)] shadow-lg lg:hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/pooter-icon.svg" alt="pooter" width={32} height={32} className="opacity-80" />
         </div>
 
         {/* Notification count badge */}
