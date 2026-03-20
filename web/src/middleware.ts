@@ -20,6 +20,39 @@ const SECURITY_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
 };
 
+// ── Content-Security-Policy ─────────────────────────────────────────────────
+// Next.js requires 'unsafe-inline' for hydration scripts and Tailwind styles.
+// Nonce-based CSP can be a future hardening step.
+//
+// connect-src: Only client-side origins — server-side API fetches (RSS,
+// CoinGecko, news, etc.) happen in route handlers and bypass CSP.
+
+const CSP_DIRECTIVES = [
+  "default-src 'self'",
+  // Next.js hydration + RainbowKit inline scripts require unsafe-inline
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  // Tailwind + RainbowKit inline styles + Google Fonts CSS
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  // Broad img-src: many CDN sources for articles, NFTs, favicons, etc.
+  "img-src 'self' data: blob: https:",
+  // Embedded media: YouTube, Spotify, Apple Podcasts, WalletConnect
+  "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com https://open.spotify.com https://embed.podcasts.apple.com https://*.walletconnect.com",
+  // Client-side fetches: own API, WalletConnect relay, RPC endpoints
+  [
+    "connect-src 'self'",
+    "https://*.walletconnect.com wss://*.walletconnect.com",
+    "https://mainnet.rpc.buidlguidl.com https://mainnet.base.org https://sepolia.base.org",
+    "https://api.hyperliquid.xyz",
+    "https://relay.walletconnect.com wss://relay.walletconnect.com",
+  ].join(" "),
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "upgrade-insecure-requests",
+].join("; ");
+
 // ── Sensitive API paths that should require auth ─────────────────────────────
 // (Auth is also enforced in each route handler; this is defense-in-depth.)
 
@@ -38,6 +71,7 @@ export function middleware(request: NextRequest) {
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     response.headers.set(key, value);
   }
+  response.headers.set("Content-Security-Policy", CSP_DIRECTIVES);
 
   // Rate-limit defense for sensitive trading GETs:
   // In production, require CRON_SECRET for sensitive endpoints

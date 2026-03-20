@@ -10,16 +10,27 @@ interface PositionStoreFile {
 
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL ?? "";
 const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN ?? "";
-const REDIS_KEY = "pooter:positions";
+
+/**
+ * Derive a Redis key from the filesystem persist path.
+ * e.g. "/tmp/pooter-trader-positions.json"       → "pooter:positions"
+ *      "/tmp/pooter-trader-positions-base.json"   → "pooter:positions-base"
+ * This ensures each runner has its own isolated key.
+ */
+function deriveRedisKey(persistPath: string): string {
+  const base = persistPath.split("/").pop() ?? "positions";
+  const stem = base.replace(/\.json$/i, "").replace(/^pooter-trader-/, "");
+  return `pooter:${stem}`;
+}
 
 function redisEnabled(): boolean {
   return !!(UPSTASH_URL && UPSTASH_TOKEN);
 }
 
-async function redisGet(): Promise<Position[] | null> {
+async function redisGet(redisKey: string): Promise<Position[] | null> {
   if (!redisEnabled()) return null;
   try {
-    const res = await fetch(`${UPSTASH_URL}/get/${REDIS_KEY}`, {
+    const res = await fetch(`${UPSTASH_URL}/get/${redisKey}`, {
       headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
       cache: "no-store",
     });
@@ -33,7 +44,7 @@ async function redisGet(): Promise<Position[] | null> {
   }
 }
 
-async function redisSet(positions: Position[]): Promise<boolean> {
+async function redisSet(redisKey: string, positions: Position[]): Promise<boolean> {
   if (!redisEnabled()) return false;
   try {
     const payload: PositionStoreFile = { positions };
@@ -43,7 +54,7 @@ async function redisSet(positions: Position[]): Promise<boolean> {
         Authorization: `Bearer ${UPSTASH_TOKEN}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(["SET", REDIS_KEY, JSON.stringify(payload)]),
+      body: JSON.stringify(["SET", redisKey, JSON.stringify(payload)]),
       cache: "no-store",
     });
     return res.ok;
@@ -56,12 +67,14 @@ async function redisSet(positions: Position[]): Promise<boolean> {
 
 export class PositionStore {
   private readonly persistPath: string;
+  private readonly redisKey: string;
   private loaded = false;
   private positions = new Map<string, Position>();
   private writeInFlight: Promise<void> = Promise.resolve();
 
   constructor(persistPath: string) {
     this.persistPath = persistPath;
+    this.redisKey = deriveRedisKey(persistPath);
   }
 
   async load(): Promise<void> {
@@ -69,7 +82,7 @@ export class PositionStore {
     this.loaded = true;
 
     // Try Redis first (persistent across deploys)
-    const redisPositions = await redisGet();
+    const redisPositions = await redisGet(this.redisKey);
     if (redisPositions) {
       for (const position of redisPositions) {
         this.positions.set(position.id, position);
@@ -87,7 +100,7 @@ export class PositionStore {
       }
       // Migrate: if we loaded from disk and Redis is available, sync up
       if (redisEnabled() && list.length > 0) {
-        await redisSet(list);
+        await redisSet(this.redisKey, list);
       }
     } catch {
       // Fresh store.
@@ -149,8 +162,8 @@ export class PositionStore {
     this.writeInFlight = this.writeInFlight.then(async () => {
       const all = this.getAll();
 
-      // Write to Redis (primary)
-      const redisDone = await redisSet(all);
+      // Write to Redis (per-runner key)
+      const redisDone = await redisSet(this.redisKey, all);
 
       // Also write to filesystem (backup / local dev)
       if (!redisDone) {
