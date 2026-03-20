@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyOperatorAuth } from "@/lib/operator-auth";
 import { getAIBudgetWindowHours } from "@/lib/ai-budget";
 import { type AIProviderId } from "@/lib/ai-models";
 import { messageBus } from "@/lib/agents/core";
@@ -184,6 +185,9 @@ function defaultBudgetState(provider: AIProviderId, windowHours: number) {
 
 export async function GET(request: Request) {
   try {
+    const unauthorized = await verifyOperatorAuth(request);
+    if (unauthorized) return unauthorized;
+
     const windowMs = parseWindowMs(request);
     const now = Date.now();
     const bridgeTopics = getBridgeTopics();

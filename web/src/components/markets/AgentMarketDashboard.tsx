@@ -5,12 +5,12 @@ import { formatEther, parseEther, type Address } from "viem";
 import {
   useAccount,
   useChainId,
-  usePublicClient,
   useSendTransaction,
+  useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import { AGENT_VAULT_ABI, ERC20_ABI, MO_TOKEN } from "@/lib/contracts";
+import { AGENT_VAULT_ABI } from "@/lib/contracts";
 import { AgentBotTerminal } from "@/components/markets/AgentBotTerminal";
 import TradingChart from "@/components/markets/TradingChart";
 import type { TerminalTradingContext } from "@/lib/terminal-types";
@@ -81,8 +81,8 @@ interface TraderPerformanceReport {
   timestamp: number;
   executionVenue: "base-spot" | "ethereum-spot" | "hyperliquid-perp";
   dryRun: boolean;
-  account: `0x${string}`;
-  fundingAddress: `0x${string}`;
+  account?: `0x${string}`;
+  fundingAddress?: `0x${string}`;
   performanceFeeBps: number;
   readiness: Readiness;
   totals: PerformanceTotals;
@@ -104,8 +104,8 @@ interface VaultOverview {
   enabled: true;
   chainId: number;
   address: `0x${string}`;
-  manager: `0x${string}`;
-  feeRecipient: `0x${string}`;
+  manager?: `0x${string}`;
+  feeRecipient?: `0x${string}`;
   performanceFeeBps: number;
   totalManagedAssetsWei: string;
   liquidAssetsWei: string;
@@ -116,8 +116,8 @@ interface VaultOverview {
   cumulativeStrategyLossWei: string;
   totalFeesPaidWei: string;
   funderCount: number;
-  funders: VaultFunderSnapshot[];
-  account: VaultFunderSnapshot | null;
+  funders?: VaultFunderSnapshot[];
+  account?: VaultFunderSnapshot | null;
 }
 
 interface ParallelRunnerEntry {
@@ -130,6 +130,11 @@ interface MetricsResponse {
   performance?: TraderPerformanceReport;
   parallel?: ParallelRunnerEntry[];
   vault?: VaultOverview | null;
+  access?: {
+    operator: boolean;
+    via?: string | null;
+    accountMatched?: boolean;
+  };
   error?: string;
 }
 
@@ -146,14 +151,19 @@ interface SubscriptionSplit {
 
 interface SubscriptionStatus {
   enabled: boolean;
+  accessMode?: "holder-balance";
   chainId: number;
   monthKey: string;
+  requiredMoBalance?: string;
+  requiredWeiBalance?: string;
   monthlyFeeMo: string;
   monthlyFeeWei: string;
   splits: SubscriptionSplit[];
   account?: {
     address: Address;
     unlocked: boolean;
+    balanceWei?: string;
+    balanceMo?: string;
     paidWeiTotal: string;
     paidMoTotal: string;
     txHashes: string[];
@@ -327,11 +337,11 @@ function normalizeAmountInput(value: string): string {
 export function AgentMarketDashboard() {
   const { address: connectedAddress } = useAccount();
   const connectedChainId = useChainId();
-  const subscriptionPublicClient = usePublicClient();
 
   const [data, setData] = useState<TraderPerformanceReport | null>(null);
   const [parallelRunners, setParallelRunners] = useState<ParallelRunnerEntry[]>([]);
   const [vault, setVault] = useState<VaultOverview | null>(null);
+  const [metricsAccess, setMetricsAccess] = useState<MetricsResponse["access"] | null>(null);
   const [ethPriceUsd, setEthPriceUsd] = useState<number>(0);
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(
     null
@@ -355,6 +365,7 @@ export function AgentMarketDashboard() {
     isPending: isVaultWritePending,
     error: vaultWriteError,
   } = useWriteContract();
+  const { switchChainAsync } = useSwitchChain();
   const { isLoading: isTxConfirming, isSuccess: txSuccess } =
     useWaitForTransactionReceipt({
       hash: lastTxHash,
@@ -378,6 +389,7 @@ export function AgentMarketDashboard() {
       setData(payload.performance);
       setParallelRunners(payload.parallel ?? []);
       setVault(payload.vault ?? null);
+      setMetricsAccess(payload.access ?? { operator: false });
 
       // Extract ETH/USD price for vault conversion
       try {
@@ -438,6 +450,59 @@ export function AgentMarketDashboard() {
     () => (vault?.funders ? sortFundersByEquity(vault.funders) : []),
     [vault]
   );
+  const isOperatorView = metricsAccess?.operator === true;
+
+  // ── Merge parallel runner positions into unified views ──────────────
+  // All positions from all runners (primary + parallel) in one table.
+  const allOpen = useMemo(() => {
+    if (!data) return [];
+    const combined = [...data.open];
+    for (const runner of parallelRunners) {
+      combined.push(...runner.performance.open);
+    }
+    return combined;
+  }, [data, parallelRunners]);
+
+  const allClosed = useMemo(() => {
+    if (!data) return [];
+    const combined = [...data.closed];
+    for (const runner of parallelRunners) {
+      combined.push(...runner.performance.closed);
+    }
+    // Sort by most recently closed first
+    return combined.sort((a, b) => (b.position.closedAt ?? 0) - (a.position.closedAt ?? 0));
+  }, [data, parallelRunners]);
+
+  // Combined totals across all runners
+  const combinedTotals = useMemo((): PerformanceTotals | undefined => {
+    if (!data) return undefined;
+    const base = { ...data.totals };
+    for (const runner of parallelRunners) {
+      const t = runner.performance.totals;
+      base.openPositions += t.openPositions;
+      base.closedPositions += t.closedPositions;
+      base.unrealizedPnlUsd += t.unrealizedPnlUsd;
+      base.realizedPnlUsd += t.realizedPnlUsd;
+      base.grossPnlUsd += t.grossPnlUsd;
+      base.deployedUsd += t.deployedUsd;
+      base.netPnlAfterFeeUsd += t.netPnlAfterFeeUsd;
+      base.performanceFeeUsd += t.performanceFeeUsd;
+      base.estimatedTradingFeesUsd =
+        (base.estimatedTradingFeesUsd ?? 0) + (t.estimatedTradingFeesUsd ?? 0);
+    }
+    return base;
+  }, [data, parallelRunners]);
+
+  // Active venue labels for display
+  const activeVenues = useMemo(() => {
+    if (!data) return "";
+    const venues = [data.executionVenue];
+    for (const runner of parallelRunners) {
+      const v = runner.performance.executionVenue;
+      if (!venues.includes(v)) venues.push(v);
+    }
+    return venues.join(" + ");
+  }, [data, parallelRunners]);
 
   // Use a type guard so TS narrows `vault` in branches checking `isVaultEnabled`
   const isVaultEnabled = vault?.enabled === true;
@@ -457,6 +522,11 @@ export function AgentMarketDashboard() {
         }
         const amount = normalizeAmountInput(amountRaw);
         setDepositAmount(amount);
+
+        // Auto-switch chain if wallet is on the wrong network
+        if (connectedChainId !== vault.chainId) {
+          await switchChainAsync({ chainId: vault.chainId });
+        }
 
         const txHash = await writeContractAsync({
           address: vault.address,
@@ -481,7 +551,7 @@ export function AgentMarketDashboard() {
         throw new Error(message);
       }
     },
-    [connectedAddress, isVaultEnabled, refresh, vault, writeContractAsync]
+    [connectedAddress, connectedChainId, isVaultEnabled, refresh, switchChainAsync, vault, writeContractAsync]
   );
 
   const submitVaultWithdraw = useCallback(
@@ -496,6 +566,11 @@ export function AgentMarketDashboard() {
         }
         const amount = normalizeAmountInput(amountRaw);
         setWithdrawAmount(amount);
+
+        // Auto-switch chain if wallet is on the wrong network
+        if (connectedChainId !== vault.chainId) {
+          await switchChainAsync({ chainId: vault.chainId });
+        }
 
         const txHash = await writeContractAsync({
           address: vault.address,
@@ -520,7 +595,7 @@ export function AgentMarketDashboard() {
         throw new Error(message);
       }
     },
-    [connectedAddress, isVaultEnabled, refresh, vault, writeContractAsync]
+    [connectedAddress, connectedChainId, isVaultEnabled, refresh, switchChainAsync, vault, writeContractAsync]
   );
 
   const submitDirectFund = useCallback(
@@ -529,6 +604,9 @@ export function AgentMarketDashboard() {
         setActionError(null);
         if (!data) {
           throw new Error("Funding destination unavailable");
+        }
+        if (!data.fundingAddress) {
+          throw new Error("Direct funding is restricted to operator view");
         }
         const expectedChainId = fundingChainIdForVenue(data.executionVenue);
         if (connectedChainId !== expectedChainId) {
@@ -586,71 +664,14 @@ export function AgentMarketDashboard() {
 
   const handleUnlockPlan = useCallback(async (): Promise<string> => {
     if (!connectedAddress) {
-      throw new Error("Connect wallet to unlock terminal access");
+      throw new Error("Connect a wallet holding 100,000 MO for full terminal access");
     }
-    if (!subscription?.enabled) {
-      throw new Error(subscription?.reason || "Subscription plan is not configured");
-    }
-    if (connectedChainId !== subscription.chainId) {
-      throw new Error(
-        `Switch wallet network to chain ${subscription.chainId} to pay in MO`
-      );
-    }
-    if (subscription.account?.unlocked) {
-      return `Already unlocked for ${subscription.monthKey}`;
-    }
-
-    const pendingSplits = subscription.splits.filter(
-      (split) => BigInt(split.remainingWei) > BigInt(0)
-    );
-    if (pendingSplits.length === 0) {
-      return `No remaining payment due for ${subscription.monthKey}`;
-    }
-
-    const submittedTxs: string[] = [];
-
-    for (const split of pendingSplits) {
-      const txHash = await writeContractAsync({
-        address: MO_TOKEN.address,
-        abi: ERC20_ABI,
-        functionName: "transfer",
-        args: [split.recipient, BigInt(split.remainingWei)],
-        chainId: subscription.chainId,
-      });
-      submittedTxs.push(txHash);
-      setLastTxHash(txHash);
-      setLastTxChainId(subscription.chainId);
-      if (subscriptionPublicClient) {
-        await subscriptionPublicClient.waitForTransactionReceipt({
-          hash: txHash,
-          confirmations: 1,
-        });
-      }
-    }
-
-    const verify = await fetch(
-      `/api/terminal/subscription/status?address=${connectedAddress}&refresh=1`,
-      { cache: "no-store" }
-    );
-    const payload = (await verify.json()) as SubscriptionStatus & { error?: string };
-    if (!verify.ok || payload.error) {
-      throw new Error(payload.error || "Failed to verify subscription payment");
-    }
-
-    setSubscription(payload);
-
-    if (payload.account?.unlocked) {
-      return `Unlocked for ${payload.monthKey}. Paid ${payload.account.paidMoTotal} MO.`;
-    }
-
-    return `Submitted ${submittedTxs.length} tx(s). Payment observed but unlock not fully verified yet.`;
-  }, [
-    connectedAddress,
-    connectedChainId,
-    subscription,
-    subscriptionPublicClient,
-    writeContractAsync,
-  ]);
+    const requiredBalance = subscription?.requiredMoBalance || "100,000";
+    const currentBalance = subscription?.account?.balanceMo;
+    return currentBalance
+      ? `Current wallet balance: ${currentBalance} MO. Hold ${requiredBalance} MO for full terminal access.`
+      : `Full terminal access unlocks automatically for wallets holding ${requiredBalance} MO.`;
+  }, [connectedAddress, subscription?.account?.balanceMo, subscription?.requiredMoBalance]);
 
   if (loading && !data) {
     return (
@@ -673,7 +694,7 @@ export function AgentMarketDashboard() {
     );
   }
 
-  const balances = data.readiness.balances.slice(0, 6);
+  const balances = isOperatorView ? data.readiness.balances.slice(0, 6) : [];
   const CLOSED_PAGE_SIZE = 15;
   const subscriptionUnlocked = subscription?.account?.unlocked === true;
   const expectedFundingChainId = fundingChainIdForVenue(data.executionVenue);
@@ -694,12 +715,10 @@ export function AgentMarketDashboard() {
       ];
   const unlockSummary = subscription
     ? subscriptionUnlocked
-      ? `${subscription.account?.paidMoTotal || "0"} MO received for ${
-          subscription.monthKey
-        }`
-      : `${subscription.splits
-          .reduce((acc, split) => acc + Number(split.remainingMo || "0"), 0)
-          .toFixed(2)} MO remaining this month`
+      ? `${subscription.account?.balanceMo || subscription.requiredMoBalance || "100000"} MO holder verified`
+      : subscription.account?.balanceMo
+        ? `${subscription.account.balanceMo} MO held • ${subscription.requiredMoBalance || "100000"} MO required`
+        : `Hold ${subscription.requiredMoBalance || "100000"} MO in the connected wallet for full access`
     : null;
 
   return (
@@ -709,10 +728,10 @@ export function AgentMarketDashboard() {
           Agent Markets
         </h1>
         <p className="mt-1 font-body-serif text-sm text-[var(--ink-light)]">
-          Live agent performance, balances, and onchain vault accounting.
+          Live agent performance, vault accounting, and terminal access.
         </p>
         <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--ink-faint)]">
-          Venue: {data.executionVenue} | {data.dryRun ? "Dry Run" : "Live"} |
+          Venue: {activeVenues} | {data.dryRun ? "Dry Run" : "Live"} |
           Updated {new Date(data.timestamp).toLocaleTimeString()}
         </p>
       </section>
@@ -720,32 +739,32 @@ export function AgentMarketDashboard() {
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <MetricCard
           label="Open PnL"
-          value={formatUsd(data.totals.unrealizedPnlUsd)}
-          valueClass={pnlClass(data.totals.unrealizedPnlUsd)}
+          value={formatUsd(combinedTotals?.unrealizedPnlUsd ?? 0)}
+          valueClass={pnlClass(combinedTotals?.unrealizedPnlUsd ?? 0)}
         />
         <MetricCard
           label="Realized PnL"
-          value={formatUsd(data.totals.realizedPnlUsd)}
-          valueClass={pnlClass(data.totals.realizedPnlUsd)}
+          value={formatUsd(combinedTotals?.realizedPnlUsd ?? 0)}
+          valueClass={pnlClass(combinedTotals?.realizedPnlUsd ?? 0)}
         />
         <MetricCard
           label="Gross PnL"
-          value={formatUsd(data.totals.grossPnlUsd)}
-          valueClass={pnlClass(data.totals.grossPnlUsd)}
+          value={formatUsd(combinedTotals?.grossPnlUsd ?? 0)}
+          valueClass={pnlClass(combinedTotals?.grossPnlUsd ?? 0)}
         />
         <MetricCard
           label="Exch Fees (est)"
-          value={`-${formatUsd(data.totals.estimatedTradingFeesUsd ?? 0)}`}
+          value={`-${formatUsd(combinedTotals?.estimatedTradingFeesUsd ?? 0)}`}
           valueClass="text-[var(--accent-red)]"
         />
         <MetricCard
           label={`Perf Fee (${feePct.toFixed(1)}%)`}
-          value={formatUsd(data.totals.performanceFeeUsd)}
+          value={formatUsd(combinedTotals?.performanceFeeUsd ?? 0)}
         />
         <MetricCard
           label="Net PnL"
-          value={formatUsd(data.totals.netPnlAfterFeeUsd)}
-          valueClass={pnlClass(data.totals.netPnlAfterFeeUsd)}
+          value={formatUsd(combinedTotals?.netPnlAfterFeeUsd ?? 0)}
+          valueClass={pnlClass(combinedTotals?.netPnlAfterFeeUsd ?? 0)}
         />
       </section>
 
@@ -780,36 +799,42 @@ export function AgentMarketDashboard() {
             Readiness & Balances
           </h2>
           <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
-            {data.readiness.liveReady ? "Live Ready" : "Gated"} |{" "}
-            {shortHex(data.account)}
+            {data.readiness.liveReady ? "Live Ready" : "Gated"}
+            {isOperatorView && data.account ? ` | ${shortHex(data.account)}` : ""}
           </p>
 
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {balances.map((balance) => (
-              <div
-                key={balance.symbol}
-                className="border border-[var(--rule-light)] p-2"
-              >
-                <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
-                  {balance.symbol}
-                </p>
-                <p
-                  className={`font-headline text-sm ${
-                    balance.meetsRequirement
-                      ? "text-[var(--ink)]"
-                      : "text-red-700"
-                  }`}
+          {isOperatorView ? (
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {balances.map((balance) => (
+                <div
+                  key={balance.symbol}
+                  className="border border-[var(--rule-light)] p-2"
                 >
-                  {balance.formatted}
-                </p>
-                {balance.requiredFormatted ? (
-                  <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink-faint)]">
-                    Min {balance.requiredFormatted}
+                  <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+                    {balance.symbol}
                   </p>
-                ) : null}
-              </div>
-            ))}
-          </div>
+                  <p
+                    className={`font-headline text-sm ${
+                      balance.meetsRequirement
+                        ? "text-[var(--ink)]"
+                        : "text-red-700"
+                    }`}
+                  >
+                    {balance.formatted}
+                  </p>
+                  {balance.requiredFormatted ? (
+                    <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink-faint)]">
+                      Min {balance.requiredFormatted}
+                    </p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 font-body-serif text-sm text-[var(--ink-faint)]">
+              Detailed balances and live readiness checks are restricted to operator view.
+            </p>
+          )}
 
           {data.readiness.reasons.length > 0 ? (
             <div className="mt-3 border-t border-[var(--rule-light)] pt-2">
@@ -836,7 +861,9 @@ export function AgentMarketDashboard() {
             {isVaultEnabled ? "Fund Vault" : "Fund Agent"}
           </h2>
           <p className="mt-1 break-all font-mono text-[9px] text-[var(--ink-faint)]">
-            {isVaultEnabled ? vault!.address : data.fundingAddress}
+            {isVaultEnabled
+              ? vault!.address
+              : data.fundingAddress ?? "Operator view required"}
           </p>
           <p className="mt-2 font-body-serif text-xs text-[var(--ink-light)]">
             {isVaultEnabled
@@ -959,7 +986,8 @@ export function AgentMarketDashboard() {
             )}
           </div>
 
-          <div className="border border-[var(--rule-light)] p-4 lg:col-span-2">
+          {isOperatorView ? (
+            <div className="border border-[var(--rule-light)] p-4 lg:col-span-2">
             <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
               Funder Leaderboard ({vault.funderCount})
             </h2>
@@ -1015,15 +1043,29 @@ export function AgentMarketDashboard() {
                 </table>
               </div>
             )}
-          </div>
+            </div>
+          ) : (
+            <div className="border border-[var(--rule-light)] p-4 lg:col-span-2">
+              <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+                Funder Leaderboard
+              </h2>
+              <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+                Individual funder data is restricted to operator view.
+              </p>
+            </div>
+          )}
         </section>
       ) : null}
 
       <section className="border border-[var(--rule-light)] p-4">
         <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-          Open Positions ({data.totals.openPositions})
+          Open Positions ({combinedTotals?.openPositions ?? 0})
         </h2>
-        {data.open.length === 0 ? (
+        {!isOperatorView ? (
+          <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+            Detailed open-position telemetry is restricted to operator view.
+          </p>
+        ) : allOpen.length === 0 ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
             No open positions.
           </p>
@@ -1044,7 +1086,7 @@ export function AgentMarketDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {data.open.map((row) => (
+                {allOpen.map((row) => (
                   <tr
                     key={row.position.id}
                     className="border-b border-[var(--rule-light)] last:border-0"
@@ -1091,9 +1133,13 @@ export function AgentMarketDashboard() {
 
       <section className="border border-[var(--rule-light)] p-4">
         <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-          Closed Positions ({data.totals.closedPositions})
+          Closed Positions ({combinedTotals?.closedPositions ?? 0})
         </h2>
-        {data.closed.length === 0 ? (
+        {!isOperatorView ? (
+          <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+            Detailed trade history is restricted to operator view.
+          </p>
+        ) : allClosed.length === 0 ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
             No closed positions yet.
           </p>
@@ -1115,7 +1161,7 @@ export function AgentMarketDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {data.closed.slice(closedPage * CLOSED_PAGE_SIZE, (closedPage + 1) * CLOSED_PAGE_SIZE).map((row) => (
+                {allClosed.slice(closedPage * CLOSED_PAGE_SIZE, (closedPage + 1) * CLOSED_PAGE_SIZE).map((row) => (
                   <tr
                     key={row.position.id}
                     className="border-b border-[var(--rule-light)] last:border-0"
@@ -1161,11 +1207,11 @@ export function AgentMarketDashboard() {
                 ))}
               </tbody>
             </table>
-            {data.closed.length > CLOSED_PAGE_SIZE && (
+            {allClosed.length > CLOSED_PAGE_SIZE && (
               <div className="mt-3 flex items-center justify-between font-mono text-[9px] text-[var(--ink-faint)]">
                 <span>
-                  Page {closedPage + 1} of {Math.ceil(data.closed.length / CLOSED_PAGE_SIZE)}
-                  {" "}({data.closed.length} total)
+                  Page {closedPage + 1} of {Math.ceil(allClosed.length / CLOSED_PAGE_SIZE)}
+                  {" "}({allClosed.length} total)
                 </span>
                 <div className="flex gap-2">
                   <button
@@ -1176,8 +1222,8 @@ export function AgentMarketDashboard() {
                     ← Prev
                   </button>
                   <button
-                    onClick={() => setClosedPage((p) => Math.min(Math.ceil(data.closed.length / CLOSED_PAGE_SIZE) - 1, p + 1))}
-                    disabled={(closedPage + 1) * CLOSED_PAGE_SIZE >= data.closed.length}
+                    onClick={() => setClosedPage((p) => Math.min(Math.ceil(allClosed.length / CLOSED_PAGE_SIZE) - 1, p + 1))}
+                    disabled={(closedPage + 1) * CLOSED_PAGE_SIZE >= allClosed.length}
                     className="border border-[var(--rule)] px-2 py-0.5 uppercase tracking-wider hover:bg-[var(--bg-alt)] disabled:opacity-30"
                   >
                     Next →
@@ -1189,65 +1235,18 @@ export function AgentMarketDashboard() {
         )}
       </section>
 
-      {/* ── Parallel Runners ─────────────────────────────────────────── */}
-      {parallelRunners.length > 0 && (
-        <section className="space-y-2">
-          <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-            Parallel Runners
-          </h2>
-          <div className="space-y-2">
-            {parallelRunners.map((runner) => (
-              <div
-                key={runner.runnerId}
-                className="border border-[var(--rule-light)] p-3 space-y-1"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]">
-                    {runner.label}
-                  </span>
-                  <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">
-                    {runner.performance.executionVenue}
-                    {runner.performance.dryRun ? " (dry-run)" : ""}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-4">
-                  <div>
-                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">Open</span>
-                    <p className="font-mono text-xs text-[var(--ink)]">{runner.performance.totals.openPositions}</p>
-                  </div>
-                  <div>
-                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">Closed</span>
-                    <p className="font-mono text-xs text-[var(--ink)]">{runner.performance.totals.closedPositions}</p>
-                  </div>
-                  <div>
-                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">Deployed</span>
-                    <p className="font-mono text-xs text-[var(--ink)]">${runner.performance.totals.deployedUsd.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">Unrealized PnL</span>
-                    <p className={`font-mono text-xs ${runner.performance.totals.unrealizedPnlUsd >= 0 ? "text-emerald-700" : "text-red-700"}`}>
-                      ${runner.performance.totals.unrealizedPnlUsd.toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       <section className="space-y-2">
         <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
           Bot Terminal
         </h2>
         <AgentBotTerminal
           feePct={feePct}
-          executionVenue={data.executionVenue}
+          executionVenue={activeVenues}
           dryRun={data.dryRun}
-          openPositions={data.totals.openPositions}
-          grossPnlUsd={data.totals.grossPnlUsd}
-          netPnlUsd={data.totals.netPnlAfterFeeUsd}
-          fundingAddress={safeVault ? safeVault.address : data.fundingAddress}
+          openPositions={combinedTotals?.openPositions ?? 0}
+          grossPnlUsd={combinedTotals?.grossPnlUsd ?? 0}
+          netPnlUsd={combinedTotals?.netPnlAfterFeeUsd ?? 0}
+          fundingAddress={safeVault ? safeVault.address : data.fundingAddress ?? "operator-only"}
           isUnlocked={subscriptionUnlocked}
           unlockSummary={unlockSummary}
           canWithdraw={isVaultEnabled}
@@ -1260,24 +1259,25 @@ export function AgentMarketDashboard() {
           onWithdrawAmount={isVaultEnabled ? submitVaultWithdraw : undefined}
           onUnlockPlan={handleUnlockPlan}
           tradingContext={{
-            executionVenue: data.executionVenue,
+            executionVenue: activeVenues,
             dryRun: data.dryRun,
             feePct,
-            fundingAddress: safeVault ? safeVault.address : data.fundingAddress,
+            fundingAddress: safeVault ? safeVault.address : data.fundingAddress ?? "operator-only",
             canWithdraw: isVaultEnabled,
-            openPositions: data.totals.openPositions,
-            closedPositions: data.totals.closedPositions,
-            grossPnlUsd: data.totals.grossPnlUsd,
-            netPnlUsd: data.totals.netPnlAfterFeeUsd,
-            unrealizedPnlUsd: data.totals.unrealizedPnlUsd,
-            realizedPnlUsd: data.totals.realizedPnlUsd,
-            deployedUsd: data.totals.deployedUsd,
-            positions: data.open.map((o) => ({
+            openPositions: combinedTotals?.openPositions ?? 0,
+            closedPositions: combinedTotals?.closedPositions ?? 0,
+            grossPnlUsd: combinedTotals?.grossPnlUsd ?? 0,
+            netPnlUsd: combinedTotals?.netPnlAfterFeeUsd ?? 0,
+            unrealizedPnlUsd: combinedTotals?.unrealizedPnlUsd ?? 0,
+            realizedPnlUsd: combinedTotals?.realizedPnlUsd ?? 0,
+            deployedUsd: combinedTotals?.deployedUsd ?? 0,
+            positions: allOpen.map((o) => ({
               symbol: o.position.marketSymbol ?? KNOWN_TOKENS[o.position.tokenAddress.toLowerCase()] ?? shortHex(o.position.tokenAddress),
               entryPrice: o.position.entryPriceUsd,
               currentPrice: o.currentPriceUsd,
               unrealizedPnl: o.unrealizedPnlUsd,
               size: o.position.entryNotionalUsd,
+              venue: o.position.venue,
             })),
             vault: safeVault ? {
               aumUsd: Number(formatEther(BigInt(safeVault.totalManagedAssetsWei))) * ethPriceUsd,

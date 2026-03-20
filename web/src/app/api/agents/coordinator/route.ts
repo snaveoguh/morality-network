@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyOperatorAuth } from "@/lib/operator-auth";
 import { reportWarn } from "@/lib/report-error";
 import { agentRegistry, messageBus } from "@/lib/agents/core";
 import { agentFactory } from "@/lib/agents/factory";
@@ -19,6 +20,9 @@ export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {
+    const unauthorized = await verifyOperatorAuth(request);
+    if (unauthorized) return unauthorized;
+
     if (isWorkerAgentRuntime()) {
       const backendUrl = getIndexerBackendUrl();
       if (!backendUrl) {

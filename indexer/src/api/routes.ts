@@ -49,6 +49,16 @@ function hasWorkerWriteAccess(authHeader: string | null | undefined): boolean {
   return authHeader?.trim() === `Bearer ${secret}`;
 }
 
+function requireWorkerAccess(c: {
+  req: { header: (name: string) => string | null | undefined };
+  json: (body: unknown, status?: number) => unknown;
+}) {
+  if (!hasWorkerWriteAccess(c.req.header("authorization"))) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+  return null;
+}
+
 function parseLimit(value: string | undefined): number {
   const parsed = Number(value ?? DEFAULT_LIMIT);
   if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_LIMIT;
@@ -1048,6 +1058,9 @@ ponder.get("/api/v1/feed/global", async (c) => {
 // ----------------------------------------------------------------------------
 
 ponder.get("/api/v1/agents/events", async (c) => {
+  const unauthorized = requireWorkerAccess(c);
+  if (unauthorized) return unauthorized;
+
   const limit = Math.min(parseLimit(c.req.query("limit")), 200);
   const cursor = parseTimestamp(c.req.query("cursor"));
   const since = parseTimestamp(c.req.query("since"));
@@ -1144,6 +1157,9 @@ ponder.post("/api/v1/agents/events", async (c) => {
 });
 
 ponder.get("/api/v1/agents/events/summary", async (c) => {
+  const unauthorized = requireWorkerAccess(c);
+  if (unauthorized) return unauthorized;
+
   const windowMs = Math.max(
     60_000,
     Math.min(7 * 24 * 60 * 60 * 1000, Math.floor(safeNumber(c.req.query("windowMs"), 15 * 60 * 1000))),
@@ -1228,6 +1244,9 @@ ponder.get("/api/v1/agents/events/summary", async (c) => {
 });
 
 ponder.get("/api/v1/agents/cursors/:consumer", async (c) => {
+  const unauthorized = requireWorkerAccess(c);
+  if (unauthorized) return unauthorized;
+
   const consumer = parseText(c.req.param("consumer")).trim();
   if (!consumer) {
     return c.json({ error: "consumer is required" }, 400);
@@ -1319,6 +1338,9 @@ ponder.post("/api/v1/agents/cursors/:consumer", async (c) => {
 // ----------------------------------------------------------------------------
 
 ponder.get("/api/v1/ai/usage", async (c) => {
+  const unauthorized = requireWorkerAccess(c);
+  if (unauthorized) return unauthorized;
+
   const limit = Math.min(parseLimit(c.req.query("limit")), 200);
   const since = parseTimestamp(c.req.query("since"));
   const cursor = parseTimestamp(c.req.query("cursor"));
@@ -1396,6 +1418,9 @@ ponder.post("/api/v1/ai/usage", async (c) => {
 });
 
 ponder.get("/api/v1/ai/usage/summary", async (c) => {
+  const unauthorized = requireWorkerAccess(c);
+  if (unauthorized) return unauthorized;
+
   const since = parseTimestamp(c.req.query("since"));
   const hours = Math.max(1, Math.min(24 * 30, Math.floor(safeNumber(c.req.query("hours"), 24))));
   const effectiveSince = since ?? BigInt(Date.now() - hours * 60 * 60 * 1000);
@@ -1827,7 +1852,9 @@ const handleScannerSync = async (c: any) => {
   });
 };
 
-ponder.get("/api/v1/scanner/sync", handleScannerSync);
+ponder.get("/api/v1/scanner/sync", async (c) => {
+  return c.json({ error: "method not allowed" }, 405);
+});
 ponder.post("/api/v1/scanner/sync", handleScannerSync);
 
 // ----------------------------------------------------------------------------
@@ -1835,6 +1862,9 @@ ponder.post("/api/v1/scanner/sync", handleScannerSync);
 // ----------------------------------------------------------------------------
 
 ponder.get("/api/v1/swarm/latest", async (c) => {
+  const unauthorized = requireWorkerAccess(c);
+  if (unauthorized) return unauthorized;
+
   const rows = await c.db
     .select()
     .from(swarmState)
@@ -2032,6 +2062,9 @@ ponder.post("/api/v1/swarm/latest", async (c) => {
 });
 
 ponder.get("/api/v1/trading/state", async (c) => {
+  const unauthorized = requireWorkerAccess(c);
+  if (unauthorized) return unauthorized;
+
   const rows = await c.db
     .select()
     .from(traderState)

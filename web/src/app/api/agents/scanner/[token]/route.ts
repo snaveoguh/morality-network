@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { reportWarn } from "@/lib/report-error";
 import { agentRegistry } from "@/lib/agents/core";
 import { launchStore, scannerAgent } from "@/lib/agents/scanner";
+import { getOperatorAuthState } from "@/lib/operator-auth";
 import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
 import { isWorkerAgentRuntime } from "@/lib/runtime-mode";
 
@@ -57,7 +58,7 @@ async function fetchBackendLaunch(baseUrl: string, address: string): Promise<{
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
@@ -74,9 +75,10 @@ export async function GET(
     const scannerBackendUrl = getIndexerBackendUrl();
     if (scannerBackendUrl) {
       const baseUrl = scannerBackendUrl.replace(/\/$/, "");
+      const operatorAuth = await getOperatorAuthState(request);
       let lookup = await fetchBackendLaunch(baseUrl, address);
 
-      if (!lookup.launch && lookup.status === 404) {
+      if (!lookup.launch && lookup.status === 404 && operatorAuth.authorized) {
         await triggerBackendScannerSync(baseUrl);
         lookup = await fetchBackendLaunch(baseUrl, address);
       }

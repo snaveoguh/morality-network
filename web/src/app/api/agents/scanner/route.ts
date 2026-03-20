@@ -11,6 +11,7 @@ import { reportWarn } from "@/lib/report-error";
 import { agentRegistry } from "@/lib/agents/core";
 import { scannerAgent, launchStore } from "@/lib/agents/scanner";
 import type { TokenLaunch } from "@/lib/agents/scanner";
+import { getOperatorAuthState, verifyOperatorAuth } from "@/lib/operator-auth";
 import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
 import { isWorkerAgentRuntime } from "@/lib/runtime-mode";
 
@@ -110,12 +111,19 @@ export async function GET(request: Request) {
     const enrichedOnly = searchParams.get("enriched") === "true";
     const forceRefresh = searchParams.get("refresh") === "1";
     const scannerBackendUrl = getIndexerBackendUrl();
+    const operatorAuth = scannerBackendUrl
+      ? await getOperatorAuthState(request)
+      : null;
+
+    if (forceRefresh && operatorAuth && !operatorAuth.authorized) {
+      return (await verifyOperatorAuth(request))!;
+    }
 
     if (scannerBackendUrl) {
       const baseUrl = scannerBackendUrl.replace(/\/$/, "");
       let syncTriggered = false;
 
-      if (forceRefresh) {
+      if (forceRefresh && operatorAuth?.authorized) {
         syncTriggered = await triggerBackendScannerSync(baseUrl, limit);
       }
 
@@ -127,7 +135,12 @@ export async function GET(request: Request) {
         enrichedOnly,
       });
 
-      if (persisted.ok && persisted.totalStored === 0 && !syncTriggered) {
+      if (
+        persisted.ok &&
+        persisted.totalStored === 0 &&
+        !syncTriggered &&
+        operatorAuth?.authorized
+      ) {
         syncTriggered = await triggerBackendScannerSync(baseUrl, limit);
         persisted = await fetchPersistedScannerLaunches({
           baseUrl,

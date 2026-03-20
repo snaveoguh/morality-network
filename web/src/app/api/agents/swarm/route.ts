@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { agentRegistry } from "@/lib/agents/core";
 import { swarmAgent } from "@/lib/agents/swarm";
+import { verifyOperatorAuth } from "@/lib/operator-auth";
 import { fetchAllFeeds, DEFAULT_FEEDS } from "@/lib/rss";
 import { runResearchSwarm } from "@/lib/agent-swarm";
 import { isWorkerAgentRuntime } from "@/lib/runtime-mode";
@@ -19,6 +20,9 @@ import "@/lib/agents/coordinator";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  const unauthorized = await verifyOperatorAuth(request);
+  if (unauthorized) return unauthorized;
+
   const { searchParams } = new URL(request.url);
   const clusterLimit = Number(searchParams.get("clusters") || "20");
   const safeLimit = Number.isFinite(clusterLimit)

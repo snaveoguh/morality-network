@@ -39,7 +39,6 @@ export interface AgentBotTerminalProps {
   onFundAmount: (amount: string) => Promise<string>;
   onWithdrawAmount?: (amount: string) => Promise<string>;
   onUnlockPlan?: () => Promise<string>;
-  /** Monthly MO subscription fee (e.g. "50"). Used in button label. */
   monthlyFeeMo?: string;
   // Extended trading context for LLM
   tradingContext?: TerminalTradingContext;
@@ -191,7 +190,6 @@ export function AgentBotTerminal({
   onFundAmount,
   onWithdrawAmount,
   onUnlockPlan,
-  monthlyFeeMo,
   tradingContext,
 }: AgentBotTerminalProps) {
   const fundingSummary = getFundingSummary(canWithdraw, executionVenue, fundingAddress);
@@ -501,7 +499,10 @@ export function AgentBotTerminal({
     if (!command || !activeSession || isBusy) return;
 
     if (locked) {
-      appendMessage("system", "Free monthly usage reached. Deposit 50 MO to unlock unlimited terminal access.");
+      appendMessage(
+        "system",
+        "Free monthly usage reached. Hold 100,000 MO in the connected wallet for full terminal access.",
+      );
       setInput("");
       return;
     }
@@ -583,7 +584,10 @@ export function AgentBotTerminal({
 
   async function handleUnlockClick() {
     if (!onUnlockPlan) {
-      appendMessage("assistant", `Unlock flow is not wired yet. We can route ${monthlyFeeMo || "50"} MO monthly into vault + LP next.`);
+      appendMessage(
+        "assistant",
+        "Full terminal access unlocks automatically for wallets holding 100,000 MO.",
+      );
       return;
     }
     setIsBusy(true);
@@ -705,7 +709,7 @@ export function AgentBotTerminal({
             disabled={isBusy}
             className="border border-[var(--ink)] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)] disabled:opacity-50"
           >
-            Unlock {monthlyFeeMo || "50"} MO / mo
+            Hold 100k MO For Full Access
           </button>
         </div>
 
@@ -719,7 +723,7 @@ export function AgentBotTerminal({
                 void handleSend();
               }
             }}
-            placeholder={locked ? "Unlock to continue..." : "ask about positions, risk, strategy..."}
+            placeholder={locked ? "Hold 100k MO to continue..." : "ask about positions, risk, strategy..."}
             className="w-full border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-2 font-mono text-[12px] text-[var(--ink)] outline-none focus:border-[var(--rule)]"
           />
           <button
