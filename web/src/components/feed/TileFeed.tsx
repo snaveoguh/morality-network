@@ -490,11 +490,18 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
       }
     }
 
+    for (const original of pooterOriginals) {
+      for (const tag of original.tags || []) {
+        const normalized = tag.toLowerCase();
+        counts.set(normalized, (counts.get(normalized) || 0) + 1);
+      }
+    }
+
     return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .slice(0, 12)
       .map(([tag]) => tag);
-  }, [rssItems, proposals]);
+  }, [rssItems, proposals, pooterOriginals]);
 
   const filtered = useMemo(() => {
     let result = items;

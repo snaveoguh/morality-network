@@ -413,7 +413,11 @@ export async function getAllEditorialHashes(): Promise<Set<string>> {
 }
 
 /**
- * Return recent Pooter Originals for the feed (last 48h, AI-generated only).
+ * Return recent Pooter Originals for the feed.
+ *
+ * Tries the remote indexer first (fresh data that survives deploys), then
+ * falls back to the local JSON archive. Each editorial is resolved via
+ * getArchivedEditorial() which checks Redis → indexer → local file.
  */
 export interface PooterOriginal {
   hash: string;
@@ -429,32 +433,61 @@ export interface PooterOriginal {
   editedBy?: string;
 }
 
+function archivedToOriginal(item: ArchivedEditorial): PooterOriginal {
+  return {
+    hash: item.entityHash,
+    title: item.primary.title,
+    subheadline: item.subheadline,
+    category: item.primary.category,
+    source: item.primary.source,
+    generatedAt: item.generatedAt,
+    hasIllustration: !!item.hasIllustration,
+    isDailyEdition: !!item.isDailyEdition,
+    dailyTitle: item.dailyTitle,
+    tags: item.tags ?? [],
+    editedBy: item.editedBy,
+  };
+}
+
+function filterOriginal(item: ArchivedEditorial, cutoff: number): boolean {
+  if (item.generatedBy !== "claude-ai") return false;
+  if (!item.editorialBody || item.editorialBody.length === 0) return false;
+  if (cutoff > 0 && new Date(item.generatedAt).getTime() < cutoff) return false;
+  return true;
+}
+
 export async function getRecentPooterOriginals(maxAge48h = true): Promise<PooterOriginal[]> {
-  const archive = await loadArchive();
   const cutoff = maxAge48h ? Date.now() - 48 * 60 * 60 * 1000 : 0;
 
+  // Try remote indexer first — has fresh data from crons
+  if (getIndexerBackendUrl()) {
+    try {
+      const hashes = await fetchRemoteEditorialHashes(30);
+      if (hashes.size > 0) {
+        const resolved = await Promise.all(
+          Array.from(hashes).slice(0, 30).map((h) =>
+            getArchivedEditorial(h).catch(() => null),
+          ),
+        );
+        const originals = resolved
+          .filter((item): item is ArchivedEditorial => item !== null && filterOriginal(item, cutoff))
+          .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())
+          .slice(0, 20)
+          .map(archivedToOriginal);
+        if (originals.length > 0) return originals;
+      }
+    } catch (err) {
+      console.warn("[editorial-archive] remote originals fetch failed, falling back to local:", err);
+    }
+  }
+
+  // Fallback: local JSON archive
+  const archive = await loadArchive();
   return Object.values(archive.items)
-    .filter((item) => {
-      if (item.generatedBy !== "claude-ai") return false;
-      if (!item.editorialBody || item.editorialBody.length === 0) return false;
-      if (maxAge48h && new Date(item.generatedAt).getTime() < cutoff) return false;
-      return true;
-    })
+    .filter((item) => filterOriginal(item, cutoff))
     .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())
     .slice(0, 20)
-    .map((item) => ({
-      hash: item.entityHash,
-      title: item.primary.title,
-      subheadline: item.subheadline,
-      category: item.primary.category,
-      source: item.primary.source,
-      generatedAt: item.generatedAt,
-      hasIllustration: !!item.hasIllustration,
-      isDailyEdition: !!item.isDailyEdition,
-      dailyTitle: item.dailyTitle,
-      tags: item.tags ?? [],
-      editedBy: item.editedBy,
-    }));
+    .map(archivedToOriginal);
 }
 
 /**
