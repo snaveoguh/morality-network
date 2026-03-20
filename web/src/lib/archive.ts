@@ -78,7 +78,12 @@ async function redisGetArticle(hash: string): Promise<ArchivedFeedItem | null> {
     if (!res.ok) return null;
     const body = (await res.json()) as { result?: string };
     if (!body.result) return null;
-    return JSON.parse(body.result) as ArchivedFeedItem;
+    const parsed = JSON.parse(body.result);
+    // Handle double-wrapped format from legacy SET calls
+    if (parsed && typeof parsed === "object" && "value" in parsed && typeof parsed.value === "string") {
+      return JSON.parse(parsed.value) as ArchivedFeedItem;
+    }
+    return parsed as ArchivedFeedItem;
   } catch {
     return null;
   }
@@ -87,13 +92,15 @@ async function redisGetArticle(hash: string): Promise<ArchivedFeedItem | null> {
 async function redisSetArticle(hash: string, item: ArchivedFeedItem): Promise<void> {
   if (!redisEnabled()) return;
   try {
-    await fetch(`${UPSTASH_URL}/set/${REDIS_ARTICLE_PREFIX}${hash}`, {
+    // Use pipeline format to SET with EX correctly
+    const serialized = JSON.stringify(item);
+    await fetch(`${UPSTASH_URL}/pipeline`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${UPSTASH_TOKEN}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ EX: REDIS_ARTICLE_TTL, value: JSON.stringify(item) }),
+      body: JSON.stringify([["SET", `${REDIS_ARTICLE_PREFIX}${hash}`, serialized, "EX", String(REDIS_ARTICLE_TTL)]]),
       cache: "no-store",
     });
   } catch {

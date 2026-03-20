@@ -71,7 +71,13 @@ async function redisGetEditorial(hash: string): Promise<ArchivedEditorial | null
     if (!res.ok) return null;
     const body = (await res.json()) as { result?: string };
     if (!body.result) return null;
-    return JSON.parse(body.result) as ArchivedEditorial;
+    const parsed = JSON.parse(body.result);
+    // Handle double-wrapped format: SET stores {"EX":ttl,"value":"<json>"}
+    // as the raw value instead of extracting the value field
+    if (parsed && typeof parsed === "object" && "value" in parsed && typeof parsed.value === "string") {
+      return JSON.parse(parsed.value) as ArchivedEditorial;
+    }
+    return parsed as ArchivedEditorial;
   } catch {
     return null;
   }
@@ -81,13 +87,15 @@ async function redisSetEditorial(hash: string, editorial: ArchivedEditorial): Pr
   if (!redisEnabled()) return;
   try {
     // TTL = 48 hours (editorial is daily, keep 2 days as buffer)
-    await fetch(`${UPSTASH_URL}/set/${REDIS_EDITORIAL_PREFIX}${hash}`, {
+    // Use Upstash pipeline format to SET with EX correctly
+    const serialized = JSON.stringify(editorial);
+    await fetch(`${UPSTASH_URL}/pipeline`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${UPSTASH_TOKEN}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ EX: 172800, value: JSON.stringify(editorial) }),
+      body: JSON.stringify([["SET", `${REDIS_EDITORIAL_PREFIX}${hash}`, serialized, "EX", "172800"]]),
       cache: "no-store",
     });
   } catch {
