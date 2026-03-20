@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { fetchAllFeeds, type FeedItem } from "@/lib/rss";
 import { computeEntityHash } from "@/lib/entity";
 import { findRelatedArticles, generateEditorial } from "@/lib/article";
@@ -7,6 +7,7 @@ import {
   saveEditorial,
   getAllEditorialHashes,
 } from "@/lib/editorial-archive";
+import { verifyCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55; // Vercel limit
@@ -16,8 +17,12 @@ export const maxDuration = 55; // Vercel limit
  *
  * Called by GitHub Actions cron (every 30 min) and Vercel cron (daily).
  * Pre-generates top 5 feed items that don't have editorials yet.
+ *
+ * Auth: Requires CRON_SECRET Bearer token (sent automatically by Vercel cron).
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
   return runPregenerate([], 5);
 }
 
@@ -31,10 +36,14 @@ export async function GET() {
  * Body (optional):
  *   { hashes?: string[], limit?: number }
  *
+ * Auth: Requires CRON_SECRET Bearer token.
+ *
  * This ensures editorials are ready in the archive BEFORE users click,
  * so every user sees the exact same AI-generated content.
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
   let requestedHashes: string[] = [];
   let limit = 5;
 

@@ -6,6 +6,7 @@ import {
   type ChatMessage,
   type TerminalTradingContext,
 } from "@/lib/terminal-llm";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -24,6 +25,10 @@ interface ChatRequestBody {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 15 chat messages per minute per IP
+  const limited = rateLimit(request, { maxRequests: 15, windowMs: 60_000 });
+  if (limited) return limited;
+
   // Check provider availability
   if (!hasTerminalLLM()) {
     return Response.json(

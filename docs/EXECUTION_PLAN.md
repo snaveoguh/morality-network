@@ -80,7 +80,7 @@ Each PR must include:
 
 A deliverable can move to `Done` only when:
 1. Acceptance criteria are all checked.
-2. Docs updated in `v2/docs`.
+2. Docs updated in `docs`.
 3. Validation evidence is attached.
 4. At least one reviewer signs off.
 

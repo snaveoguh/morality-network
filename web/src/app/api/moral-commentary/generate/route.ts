@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { generateMoralCommentary } from "@/lib/moral-commentary";
+import { verifyCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55;
@@ -8,8 +9,12 @@ export const maxDuration = 55;
  * GET /api/moral-commentary/generate
  * Called by Vercel cron daily at 4 AM UTC (1 hour after moral compass crawl).
  * Generates today's Moral Commentary article.
+ *
+ * Auth: Requires CRON_SECRET Bearer token (sent automatically by Vercel cron).
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
   try {
     const result = await generateMoralCommentary();
     console.log("[moral-commentary] route result:", result);

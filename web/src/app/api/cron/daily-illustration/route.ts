@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { computeEntityHash } from "@/lib/entity";
 import { getArchivedEditorial, saveEditorial } from "@/lib/editorial-archive";
 import { generateIllustration } from "@/lib/image-generation";
 import { getIllustration, saveIllustration } from "@/lib/illustration-store";
+import { verifyCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55;
@@ -19,8 +20,12 @@ export const maxDuration = 55;
  * Storage strategy: illustration-store (Redis + local file) is primary,
  * but as a fallback also stores base64 inline on the editorial itself.
  * The illustration endpoint checks both locations.
+ *
+ * Auth: Requires CRON_SECRET Bearer token (sent automatically by Vercel cron).
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
   try {
     // Compute today's daily edition hash
     const today = new Date().toISOString().slice(0, 10);

@@ -4,19 +4,31 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
 /// @title MoralityAgentVault
 /// @notice Shared ETH vault for funding autonomous trading agents.
 ///         Depositors receive vault shares and can withdraw against available liquidity.
 ///         Manager can allocate capital to an external strategy wallet and settle returns.
 /// @dev Performance fee is charged only on realized positive strategy PnL when capital is returned.
-contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
     uint256 public constant BPS_DENOMINATOR = 10_000;
     uint256 public constant MAX_PERFORMANCE_FEE_BPS = 2_000; // 20%
+
+    /// @notice Virtual offset to prevent first-depositor inflation attack (ERC-4626 style).
+    /// Adds 1e3 virtual shares and 1e3 virtual assets so rounding-based share
+    /// manipulation requires donating 1000x more capital than the attacker gains.
+    uint256 private constant VIRTUAL_SHARES = 1e3;
+    uint256 private constant VIRTUAL_ASSETS = 1e3;
 
     address public manager;
     address public feeRecipient;
     uint256 public performanceFeeBps;
+
+    /// @notice Maximum percentage of total managed assets that can be deployed (in BPS).
+    /// Prevents manager from allocating 100% of vault to a strategy wallet (rug vector).
+    /// Default: 5000 (50%). Owner can adjust via setMaxAllocationBps().
+    uint256 public maxAllocationBps;
 
     uint256 public totalShares;
     uint256 public deployedCapital;
@@ -74,10 +86,12 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
         require(_performanceFeeBps <= MAX_PERFORMANCE_FEE_BPS, "Fee too high");
 
         __Ownable_init(msg.sender);
+        __Pausable_init();
 
         manager = _manager;
         feeRecipient = _feeRecipient;
         performanceFeeBps = _performanceFeeBps;
+        maxAllocationBps = 5000; // 50% — conservative default
         reentrancyLock = 1;
 
         emit ManagerUpdated(address(0), _manager);
@@ -101,25 +115,23 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
     }
 
     /// @notice Share price scaled by 1e18.
+    /// Uses virtual offset to prevent first-depositor inflation attack.
     function sharePriceE18() public view returns (uint256) {
-        if (totalShares == 0) return 1e18;
-        uint256 managed = totalManagedAssets();
-        if (managed == 0) return 1e18;
-        return (managed * 1e18) / totalShares;
+        uint256 virtualTotalShares = totalShares + VIRTUAL_SHARES;
+        uint256 virtualTotalAssets = totalManagedAssets() + VIRTUAL_ASSETS;
+        return (virtualTotalAssets * 1e18) / virtualTotalShares;
     }
 
+    /// @notice Convert assets to shares using virtual offset (prevents inflation attack).
     function convertToShares(uint256 assets) public view returns (uint256) {
         if (assets == 0) return 0;
-        uint256 managed = totalManagedAssets();
-        if (totalShares == 0 || managed == 0) return assets;
-        return (assets * totalShares) / managed;
+        return (assets * (totalShares + VIRTUAL_SHARES)) / (totalManagedAssets() + VIRTUAL_ASSETS);
     }
 
+    /// @notice Convert shares to assets using virtual offset (prevents inflation attack).
     function convertToAssets(uint256 shares) public view returns (uint256) {
         if (shares == 0) return 0;
-        uint256 managed = totalManagedAssets();
-        if (totalShares == 0 || managed == 0) return shares;
-        return (shares * managed) / totalShares;
+        return (shares * (totalManagedAssets() + VIRTUAL_ASSETS)) / (totalShares + VIRTUAL_SHARES);
     }
 
     function maxWithdraw(address funder) public view returns (uint256) {
@@ -130,12 +142,12 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
 
     function maxRedeem(address funder) public view returns (uint256) {
         uint256 holderShares = shareBalance[funder];
-        if (holderShares == 0 || totalShares == 0) return 0;
+        if (holderShares == 0) return 0;
 
-        uint256 managed = totalManagedAssets();
-        if (managed == 0) return 0;
+        uint256 virtualTotalShares = totalShares + VIRTUAL_SHARES;
+        uint256 virtualTotalAssets = totalManagedAssets() + VIRTUAL_ASSETS;
 
-        uint256 liquidShares = (address(this).balance * totalShares) / managed;
+        uint256 liquidShares = (address(this).balance * virtualTotalShares) / virtualTotalAssets;
         return holderShares < liquidShares ? holderShares : liquidShares;
     }
 
@@ -215,15 +227,13 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
     // DEPOSITS / WITHDRAWALS
     // =========================================================================
 
-    function deposit() external payable nonReentrant returns (uint256 sharesMinted) {
+    function deposit() external payable nonReentrant whenNotPaused returns (uint256 sharesMinted) {
         require(msg.value > 0, "Zero deposit");
 
+        // Use virtual offset to prevent first-depositor inflation attack.
+        // managedBefore is the total assets BEFORE this deposit's ETH was added.
         uint256 managedBefore = totalManagedAssets() - msg.value;
-        if (totalShares == 0 || managedBefore == 0) {
-            sharesMinted = msg.value;
-        } else {
-            sharesMinted = (msg.value * totalShares) / managedBefore;
-        }
+        sharesMinted = (msg.value * (totalShares + VIRTUAL_SHARES)) / (managedBefore + VIRTUAL_ASSETS);
         require(sharesMinted > 0, "Deposit too small");
 
         totalShares += sharesMinted;
@@ -276,9 +286,10 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
 
     function previewWithdraw(uint256 assets) public view returns (uint256 sharesNeeded) {
         if (assets == 0) return 0;
-        uint256 managed = totalManagedAssets();
-        if (totalShares == 0 || managed == 0) return assets;
-        sharesNeeded = _ceilDiv(assets * totalShares, managed);
+        sharesNeeded = _ceilDiv(
+            assets * (totalShares + VIRTUAL_SHARES),
+            totalManagedAssets() + VIRTUAL_ASSETS
+        );
     }
 
     // =========================================================================
@@ -286,12 +297,22 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
     // =========================================================================
 
     /// @notice Move vault ETH into a strategy wallet (e.g. autonomous agent wallet).
-    function allocateToStrategy(address payable to, uint256 amount) external onlyManager nonReentrant {
+    /// Capped by maxAllocationBps to prevent manager from draining the vault.
+    function allocateToStrategy(address payable to, uint256 amount) external onlyManager nonReentrant whenNotPaused {
         require(to != address(0), "Zero recipient");
         require(amount > 0, "Zero amount");
         require(amount <= address(this).balance, "Insufficient liquid assets");
 
-        deployedCapital += amount;
+        // Enforce allocation cap: deployed capital after this allocation must not
+        // exceed maxAllocationBps of total managed assets.
+        uint256 newDeployed = deployedCapital + amount;
+        uint256 totalAfter = totalManagedAssets(); // already includes current balance
+        require(
+            newDeployed * BPS_DENOMINATOR <= totalAfter * maxAllocationBps,
+            "Exceeds max allocation"
+        );
+
+        deployedCapital = newDeployed;
 
         (bool ok,) = to.call{value: amount}("");
         require(ok, "Transfer failed");
@@ -360,6 +381,20 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
         require(newFeeBps <= MAX_PERFORMANCE_FEE_BPS, "Fee too high");
         emit PerformanceFeeUpdated(performanceFeeBps, newFeeBps);
         performanceFeeBps = newFeeBps;
+    }
+
+    /// @notice Set max allocation percentage (in BPS). 5000 = 50%, 10000 = 100%.
+    function setMaxAllocationBps(uint256 newMaxBps) external onlyOwner {
+        require(newMaxBps <= BPS_DENOMINATOR, "Max 100%");
+        maxAllocationBps = newMaxBps;
+    }
+
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
     }
 
     // =========================================================================

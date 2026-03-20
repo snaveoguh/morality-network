@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { runNewsroom } from "@/lib/newsroom";
 import { getNewsroomEdition } from "@/lib/newsroom-edition";
+import { verifyCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55; // Vercel hobby plan limit
@@ -10,9 +11,13 @@ export const maxDuration = 55; // Vercel hobby plan limit
 //
 // Called by Vercel cron every 2h. Generates Pooter Originals for top stories.
 // Idempotent — skips stories that already have editorials.
+//
+// Auth: Requires CRON_SECRET Bearer token (sent automatically by Vercel cron).
 // ============================================================================
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
   try {
     // Run the pipeline — capped at 2 stories per cron invocation to fit
     // within Vercel's 55s maxDuration. Runs every 2h, so ~24 originals/day.
@@ -46,18 +51,10 @@ export async function GET() {
 // Auth: Authorization: Bearer <NEWSROOM_SECRET>
 // ============================================================================
 
-export async function POST(request: Request) {
-  // Auth check
-  const secret = process.env.NEWSROOM_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 },
-      );
-    }
-  }
+export async function POST(request: NextRequest) {
+  // Auth check — use CRON_SECRET (consistent with all other cron endpoints)
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
 
   let body: {
     forceRegenerate?: boolean;

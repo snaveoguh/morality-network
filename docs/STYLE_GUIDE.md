@@ -1,6 +1,6 @@
 # Style Guide
 
-This guide documents the current visual language across `v2/web` and `v2/extension`.
+This guide documents the current visual language across `web` and `extension`.
 
 ## Design Principles
 
@@ -15,7 +15,7 @@ This guide documents the current visual language across `v2/web` and `v2/extensi
 
 Used in feed/proposals/leaderboard shell.
 
-Core tokens from `v2/web/src/app/globals.css`:
+Core tokens from `web/src/app/globals.css`:
 
 - `--paper: #F5F0E8`
 - `--paper-dark: #EDE6D6`

@@ -2,9 +2,9 @@
 
 ## Launch Runtime Topology
 
-- Web: `v2/web` on Vercel or equivalent
-- Indexer API + Postgres: `v2/indexer`
-- Always-on worker: `v2/web` via `npm run worker:start`
+- Web: `web` on Vercel or equivalent
+- Indexer API + Postgres: `indexer`
+- Always-on worker: `web` via `npm run worker:start`
 - Extension: deferred from the first-wave launch path
 
 Runtime mode flags:
@@ -16,8 +16,8 @@ Runtime mode flags:
 
 ## Base Sepolia (Chain ID: 84532)
 
-Latest deploy artifact: `v2/contracts/broadcast/DeployAll.s.sol/84532/run-latest.json`
-Deployment script: `v2/contracts/script/DeployAll.s.sol`
+Latest deploy artifact: `contracts/broadcast/DeployAll.s.sol/84532/run-latest.json`
+Deployment script: `contracts/script/DeployAll.s.sol`
 
 | Contract | Address |
 |---|---|
@@ -33,9 +33,9 @@ Deployment script: `v2/contracts/script/DeployAll.s.sol`
 ## Where Config Is Read
 
 - Extension currently points to deployed Base Sepolia addresses in:
-  - `v2/extension/src/shared/contracts.ts`
+  - `extension/src/shared/contracts.ts`
 - Web uses env-overridable addresses in:
-  - `v2/web/src/lib/contracts.ts`
+  - `web/src/lib/contracts.ts`
 
 ## Explorer Links
 

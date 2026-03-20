@@ -3,11 +3,9 @@
 ## Monorepo Layout
 
 ```text
-v2/
-  contracts/   # Solidity contracts + Foundry scripts/tests
-  extension/   # Chrome extension (content script + popup + background)
-  indexer/     # Ponder event indexer (onchain -> queryable tables)
-  web/         # Next.js app + API routes + feed UI
+web/            # Next.js 16 app + API routes + feed UI (pooter.world)
+contracts/      # Solidity 0.8.24 contracts + Foundry scripts/tests
+docs/           # Documentation
 ```
 
 ## System Overview
@@ -22,7 +20,7 @@ Browser (web or extension UI)
   -> Public API endpoints expose feed/governance/indexed activity
 ```
 
-## Contracts Layer (`v2/contracts/src`)
+## Contracts Layer (`contracts/src`)
 
 - `MoralityRegistry.sol`: universal entity registration and ownership claim flow.
 - `MoralityRatings.sol`: entity ratings, plus `rateWithReason` and reason retrieval.
@@ -32,19 +30,19 @@ Browser (web or extension UI)
 - `MoralityPredictionMarket.sol`: binary prediction markets on proposal outcomes.
 - `MoralityProposalVoting.sol`: proposal/voting contract (optional deployment depending on token config).
 
-Deploy script: `v2/contracts/script/DeployAll.s.sol`
+Deploy script: `contracts/script/DeployAll.s.sol`
 
-## Web App Layer (`v2/web`)
+## Web App Layer (`web`)
 
 - Framework: Next.js App Router.
 - Primary surfaces:
   - Feed (`/`): newspaper-style mixed feed.
   - Proposals (`/proposals`): DAO/government/corporate governance stream.
   - Leaderboard (`/leaderboard`): entity ranking + scoring.
-- API routes under `v2/web/src/app/api` provide feed, governance, auth, and AI-score handlers.
+- API routes under `web/src/app/api` provide feed, governance, auth, and AI-score handlers.
 - `src/worker/index.ts` runs the always-on scanner/swarm/trader loops outside the Vercel request lifecycle.
 
-## Extension Layer (`v2/extension`)
+## Extension Layer (`extension`)
 
 - `src/content`: page detection/highlight, tooltip, side panel, overlay.
 - `src/background`: wallet and contract action handlers.
@@ -52,7 +50,7 @@ Deploy script: `v2/contracts/script/DeployAll.s.sol`
 - `src/shared`: contracts ABIs, hashing, typing, known entities, RPC helpers.
 - Operational status: deferred from the first-wave launch path.
 
-## Indexer Layer (`v2/indexer`)
+## Indexer Layer (`indexer`)
 
 - Ponder schema (`ponder.schema.ts`) tracks:
   - `entity`, `rating`, `comment`, `tip`, `feed_item`, `comment_vote`
@@ -85,7 +83,7 @@ Polis interoperability maps to this model as:
 
 ## Runtime Config Hotspots
 
-- Web contract config: `v2/web/src/lib/contracts.ts`
-- Worker runtime config: `v2/web/.env.example` and `v2/docs/LAUNCH_HARDENING.md`
-- Extension contract config: `v2/extension/src/shared/contracts.ts`
-- Foundry deploy env: `v2/contracts/.env` (`PRIVATE_KEY`, `BASE_SEPOLIA_RPC_URL`, optional oracle/token addresses)
+- Web contract config: `web/src/lib/contracts.ts`
+- Worker runtime config: `web/.env.example` and `docs/LAUNCH_HARDENING.md`
+- Extension contract config: `extension/src/shared/contracts.ts`
+- Foundry deploy env: `contracts/.env` (`PRIVATE_KEY`, `BASE_SEPOLIA_RPC_URL`, optional oracle/token addresses)

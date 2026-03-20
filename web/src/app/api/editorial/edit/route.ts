@@ -9,7 +9,15 @@ export const maxDuration = 30;
 /**
  * God mode addresses — these wallets can edit any editorial.
  * Edits are persisted to the editorial archive (Redis + file).
+ *
+ * Security:
+ *   1. Bearer token (GOD_MODE_SECRET) — prevents unauthenticated requests
+ *   2. Wallet allowlist (GOD_MODE_ADDRESSES) — limits to specific addresses
+ *
+ * The wallet address in the body is NOT trusted for auth — it's only used
+ * for audit logging AFTER the Bearer token is verified.
  */
+const GOD_MODE_SECRET = process.env.GOD_MODE_SECRET?.trim() || "";
 const GOD_MODE_ADDRESSES = new Set(
   (process.env.GOD_MODE_ADDRESSES || "")
     .split(",")
@@ -33,6 +41,20 @@ interface EditRequestBody {
 }
 
 export async function POST(request: NextRequest) {
+  // Auth layer 1: Bearer token (blocks spoofed requests)
+  if (process.env.NODE_ENV === "production") {
+    if (!GOD_MODE_SECRET) {
+      return NextResponse.json(
+        { error: "God mode not configured" },
+        { status: 503 },
+      );
+    }
+    const auth = request.headers.get("authorization")?.trim();
+    if (auth !== `Bearer ${GOD_MODE_SECRET}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   let body: EditRequestBody;
   try {
     body = await request.json();
@@ -45,7 +67,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing hash, wallet, or edits" }, { status: 400 });
   }
 
-  // Verify god mode
+  // Auth layer 2: Wallet allowlist (limits which addresses can edit)
   if (!GOD_MODE_ADDRESSES.has(wallet.toLowerCase())) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }

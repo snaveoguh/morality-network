@@ -22,6 +22,9 @@ contract MoralityAgentVaultTest is Test {
         );
         vault = MoralityAgentVault(payable(address(proxy)));
 
+        // Raise allocation cap to 80% for test coverage (default is 50%)
+        vault.setMaxAllocationBps(8000);
+
         vm.deal(alice, 100 ether);
         vm.deal(bob, 100 ether);
         vm.deal(manager, 100 ether);
@@ -86,8 +89,9 @@ contract MoralityAgentVaultTest is Test {
 
         (,, uint256 deposited,, int256 pnl, int256 pnlBps) = vault.getFunderSnapshot(alice);
         assertEq(deposited, 5 ether);
-        assertEq(pnl, -1 ether);
-        assertEq(pnlBps, -2000); // -20.00%
+        // Virtual offset introduces tiny rounding (<1000 wei) — use approx comparison
+        assertApproxEqAbs(pnl, -1 ether, 1000);
+        assertApproxEqAbs(pnlBps, -2000, 1); // -20.00% (±0.01%)
     }
 
     function test_withdrawRequiresLiquidity() public {

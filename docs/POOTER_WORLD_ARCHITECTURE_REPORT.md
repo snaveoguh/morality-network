@@ -5,11 +5,11 @@
 Prepared for co-operative members  
 Date: March 12, 2026
 
-This report is based on direct inspection of the active `v2/` codebase and official vendor pricing pages checked on March 12, 2026.
+This report is based on direct inspection of the active `` codebase and official vendor pricing pages checked on March 12, 2026.
 
 ## Executive Summary
 
-- The live launch stack is the `v2/` system, not the legacy repo root. The active production surfaces are `v2/web`, `v2/indexer`, and `v2/contracts`, with `v2/extension` as an optional adjacent client.
+- The live launch stack is the `` system, not the legacy repo root. The active production surfaces are `web`, `indexer`, and `contracts`, with `extension` as an optional adjacent client.
 - pooter world is a hybrid system: onchain state lives on Base and Ethereum mainnet, while the user-facing product, ingestion, AI pipelines, and query acceleration live offchain in TypeScript services.
 - Base mainnet is the operational social layer: registry, ratings, comments, tipping, leaderboard, agent vault, and NFT editions all default there. Ethereum mainnet is reserved for the trust-minimized Nouns and Lil Nouns prediction market.
 - The web application is not only a frontend. It is also an API layer, cron runner, metadata host for editions, feed aggregator, AI orchestration layer, and part of the data persistence path.
@@ -22,10 +22,10 @@ This report is based on direct inspection of the active `v2/` codebase and offic
 
 ### Included
 
-- `v2/web`: Next.js application, API routes, feeds, miniapps, AI workflows, edition metadata, cron entrypoints
-- `v2/indexer`: Ponder event indexer, query API, scanner persistence, Postgres or PGlite storage
-- `v2/contracts`: Solidity contracts, Foundry scripts, Base and Ethereum deployments
-- `v2/extension`: optional Chrome extension surface for inline onchain interactions
+- `web`: Next.js application, API routes, feeds, miniapps, AI workflows, edition metadata, cron entrypoints
+- `indexer`: Ponder event indexer, query API, scanner persistence, Postgres or PGlite storage
+- `contracts`: Solidity contracts, Foundry scripts, Base and Ethereum deployments
+- `extension`: optional Chrome extension surface for inline onchain interactions
 
 ### Excluded From Production Scope
 
@@ -50,7 +50,7 @@ flowchart LR
     Users["Readers, traders, creators, moderators, co-op members"]
     Wallets["Wallets / SIWE\nMetaMask, Coinbase, injected wallets,\noptional WalletConnect"]
 
-    subgraph Vercel["Vercel-hosted Next.js application (`v2/web`)"]
+    subgraph Vercel["Vercel-hosted Next.js application (`web`)"]
         WebUI["UI routes\n/, /leaderboard, /discuss,\n/proposals, /predictions,\n/markets, /signals, /sentiment,\n/stumble, /bots, /archive"]
         Api["API routes\n/auth, /ai/score, /trading/execute,\n/agents/*, /edition/*, /health/*"]
         Cron["Vercel Cron\n`/api/trading/execute`\n00:00 UTC daily"]
@@ -58,7 +58,7 @@ flowchart LR
         MemoryStore["In-memory agent state\nscanner, coordinator, bus"]
     end
 
-    subgraph Indexer["Indexer service (`v2/indexer`)"]
+    subgraph Indexer["Indexer service (`indexer`)"]
         Ponder["Ponder event ingestion"]
         Hono["Public API / GraphQL / health / scanner routes"]
         Pg["Postgres or PGlite\nindexer database"]
@@ -189,7 +189,7 @@ flowchart TB
 
 ### Important Note
 
-The checked-in deploy scripts and broadcast artifacts show active Base mainnet and Ethereum mainnet deployments, but `v2/indexer/ponder.config.ts` still defaults to Base Sepolia addresses. Production indexer configuration should be reconciled before presenting this architecture as fully aligned.
+The checked-in deploy scripts and broadcast artifacts show active Base mainnet and Ethereum mainnet deployments, but `indexer/ponder.config.ts` still defaults to Base Sepolia addresses. Production indexer configuration should be reconciled before presenting this architecture as fully aligned.
 
 ## Miniapp and Product Surface Inventory
 
@@ -212,10 +212,10 @@ The checked-in deploy scripts and broadcast artifacts show active Base mainnet a
 
 | Component | Languages | Frameworks and libraries | Runtime notes |
 | --- | --- | --- | --- |
-| `v2/web` | TypeScript, CSS, a small amount of shell and Node scripts | Next.js 16.1.6, React 19.2.3, Tailwind 4, wagmi, viem, RainbowKit, Anthropic SDK | Runs as a server-rendered web app plus API layer |
-| `v2/indexer` | TypeScript | Ponder, Hono, viem | Long-running or semi-persistent Node service, better suited to always-on hosting |
-| `v2/contracts` | Solidity 0.8.24 | Foundry, OpenZeppelin upgradeable UUPS stack | Deployed on EVM chains |
-| `v2/extension` | TypeScript, browser APIs | Chrome extension runtime | Optional client surface, not required for launch |
+| `web` | TypeScript, CSS, a small amount of shell and Node scripts | Next.js 16.1.6, React 19.2.3, Tailwind 4, wagmi, viem, RainbowKit, Anthropic SDK | Runs as a server-rendered web app plus API layer |
+| `indexer` | TypeScript | Ponder, Hono, viem | Long-running or semi-persistent Node service, better suited to always-on hosting |
+| `contracts` | Solidity 0.8.24 | Foundry, OpenZeppelin upgradeable UUPS stack | Deployed on EVM chains |
+| `extension` | TypeScript, browser APIs | Chrome extension runtime | Optional client surface, not required for launch |
 | Legacy root | C# | .NET 4.5.2 | Historical prototype only |
 
 ## Data Stores and Persistence Boundaries
@@ -233,18 +233,18 @@ The checked-in deploy scripts and broadcast artifacts show active Base mainnet a
 
 | Provider or dependency | Status in architecture | Evidence in code | Notes |
 | --- | --- | --- | --- |
-| Vercel | confirmed | `v2/web/vercel.json` | Hosts the Next.js app and runs a daily cron hitting `/api/trading/execute` |
-| Postgres | confirmed as supported | `v2/indexer/docker-compose.yml`, `v2/indexer/ponder.config.ts` | Local compose included; production host is not explicitly documented |
-| PGlite | confirmed fallback | `v2/indexer/ponder.config.ts` | Useful for local development, not ideal for serious production analytics |
-| Base public RPC | confirmed | `v2/web/src/lib/server/onchain-clients.ts` | Default fallback is `https://mainnet.base.org` |
-| Ethereum public RPC | confirmed | `v2/web/src/lib/server/onchain-clients.ts` | Default fallback is `https://mainnet.rpc.buidlguidl.com` |
-| Anthropic | confirmed | `v2/web/src/app/api/ai/score/route.ts`, `v2/web/src/lib/claude-editorial.ts`, `v2/web/src/lib/daily-edition.ts` | Used for scoring, editorials, daily editions, and digesting |
-| Cloudflare Browser Rendering | confirmed optional | `v2/web/src/lib/cloudflare-crawl.ts` | Used as an optional crawl and extraction backend |
-| Neynar / Farcaster | confirmed optional | `v2/web/src/lib/farcaster.ts` | Farcaster feed ingestion depends on API access |
-| Snapshot and Tally | confirmed | `v2/web/src/lib/governance.ts`, `v2/web/src/app/api/health/sources/route.ts` | Governance aggregation depends on these APIs |
-| DexScreener and CoinGecko | confirmed | `v2/indexer/src/api/routes.ts`, `v2/web/src/app/api/markets/route.ts` | Market pricing and token-launch enrichment |
-| Hyperliquid APIs and Telegram mirror | confirmed | `v2/web/src/lib/governance.ts`, trading engine | Used for markets and governance-style feeds |
-| Railway-hosted auxiliary API | confirmed for Nouns description fallback | `v2/web/src/lib/nouns.ts` | The code references a Railway-hosted Ponder API for Nouns descriptions |
+| Vercel | confirmed | `web/vercel.json` | Hosts the Next.js app and runs a daily cron hitting `/api/trading/execute` |
+| Postgres | confirmed as supported | `indexer/docker-compose.yml`, `indexer/ponder.config.ts` | Local compose included; production host is not explicitly documented |
+| PGlite | confirmed fallback | `indexer/ponder.config.ts` | Useful for local development, not ideal for serious production analytics |
+| Base public RPC | confirmed | `web/src/lib/server/onchain-clients.ts` | Default fallback is `https://mainnet.base.org` |
+| Ethereum public RPC | confirmed | `web/src/lib/server/onchain-clients.ts` | Default fallback is `https://mainnet.rpc.buidlguidl.com` |
+| Anthropic | confirmed | `web/src/app/api/ai/score/route.ts`, `web/src/lib/claude-editorial.ts`, `web/src/lib/daily-edition.ts` | Used for scoring, editorials, daily editions, and digesting |
+| Cloudflare Browser Rendering | confirmed optional | `web/src/lib/cloudflare-crawl.ts` | Used as an optional crawl and extraction backend |
+| Neynar / Farcaster | confirmed optional | `web/src/lib/farcaster.ts` | Farcaster feed ingestion depends on API access |
+| Snapshot and Tally | confirmed | `web/src/lib/governance.ts`, `web/src/app/api/health/sources/route.ts` | Governance aggregation depends on these APIs |
+| DexScreener and CoinGecko | confirmed | `indexer/src/api/routes.ts`, `web/src/app/api/markets/route.ts` | Market pricing and token-launch enrichment |
+| Hyperliquid APIs and Telegram mirror | confirmed | `web/src/lib/governance.ts`, trading engine | Used for markets and governance-style feeds |
+| Railway-hosted auxiliary API | confirmed for Nouns description fallback | `web/src/lib/nouns.ts` | The code references a Railway-hosted Ponder API for Nouns descriptions |
 
 ## Architecture Observations
 
@@ -268,7 +268,7 @@ The checked-in deploy scripts and broadcast artifacts show active Base mainnet a
 
 | Line item | Pricing input | Why it matters here |
 | --- | --- | --- |
-| Vercel Pro | starts at `$20/user/month` | likely host for `v2/web`, server rendering, API routes, cron |
+| Vercel Pro | starts at `$20/user/month` | likely host for `web`, server rendering, API routes, cron |
 | Railway | Hobby `$5/month`; Pro `$20/seat/month`; usage-based CPU, RAM, and volume billing | plausible managed host for always-on indexer or auxiliary APIs |
 | Railway usage rates | `$0.0000134/vCPU-second`, `$0.00000386/GB-second`, `$0.00000006/GB-second` for volume | useful for modeling an always-on indexer and database |
 | Anthropic API | Sonnet 4/4.5 and 3.7: `$3/MTok input`, `$15/MTok output`; Haiku 4.5: `$1/MTok input`, `$5/MTok output` | editorials, scoring, daily edition generation, digesting |
@@ -317,8 +317,8 @@ At approximately `0.5 vCPU`, `1 GB RAM`, and `10 GB` of volume, the same service
 
 ### Priority 0
 
-- Rotate any secrets present in `v2/web/.env.local` and remove them from tracked or shared environments.
-- Rotate the deployer key referenced by `v2/contracts/.env` and move deployment secrets into a proper secret manager.
+- Rotate any secrets present in `web/.env.local` and remove them from tracked or shared environments.
+- Rotate the deployer key referenced by `contracts/.env` and move deployment secrets into a proper secret manager.
 
 ### Priority 1
 
@@ -353,35 +353,35 @@ Once those are addressed, the system becomes easier to explain, cheaper to opera
 
 Primary code locations inspected for this report:
 
-- `v2/web/package.json`
-- `v2/web/vercel.json`
-- `v2/web/src/lib/contracts.ts`
-- `v2/web/src/lib/server/onchain-clients.ts`
-- `v2/web/src/app/api/auth/verify/route.ts`
-- `v2/web/src/lib/session.ts`
-- `v2/web/src/lib/archive.ts`
-- `v2/web/src/lib/editorial-archive.ts`
-- `v2/web/src/app/api/agents/scanner/route.ts`
-- `v2/web/src/app/api/trading/execute/route.ts`
-- `v2/web/src/lib/governance.ts`
-- `v2/web/src/lib/farcaster.ts`
-- `v2/web/src/lib/cloudflare-crawl.ts`
-- `v2/web/src/lib/nouns.ts`
-- `v2/indexer/ponder.config.ts`
-- `v2/indexer/ponder.schema.ts`
-- `v2/indexer/src/api/routes.ts`
-- `v2/indexer/docker-compose.yml`
-- `v2/contracts/src/*.sol`
-- `v2/contracts/script/DeployAll.s.sol`
-- `v2/contracts/script/DeployPredictionMarketL1.s.sol`
-- `v2/contracts/broadcast/DeployAll.s.sol/8453/run-latest.json`
-- `v2/contracts/broadcast/DeployPredictionMarketL1.s.sol/1/run-latest.json`
+- `web/package.json`
+- `web/vercel.json`
+- `web/src/lib/contracts.ts`
+- `web/src/lib/server/onchain-clients.ts`
+- `web/src/app/api/auth/verify/route.ts`
+- `web/src/lib/session.ts`
+- `web/src/lib/archive.ts`
+- `web/src/lib/editorial-archive.ts`
+- `web/src/app/api/agents/scanner/route.ts`
+- `web/src/app/api/trading/execute/route.ts`
+- `web/src/lib/governance.ts`
+- `web/src/lib/farcaster.ts`
+- `web/src/lib/cloudflare-crawl.ts`
+- `web/src/lib/nouns.ts`
+- `indexer/ponder.config.ts`
+- `indexer/ponder.schema.ts`
+- `indexer/src/api/routes.ts`
+- `indexer/docker-compose.yml`
+- `contracts/src/*.sol`
+- `contracts/script/DeployAll.s.sol`
+- `contracts/script/DeployPredictionMarketL1.s.sol`
+- `contracts/broadcast/DeployAll.s.sol/8453/run-latest.json`
+- `contracts/broadcast/DeployPredictionMarketL1.s.sol/1/run-latest.json`
 
 ## Appendix B: Reusable Technical Prompt
 
 Use the following prompt if a refreshed architecture report is needed later:
 
-> Produce a board-grade technical architecture report for Morality Co-operative Limited covering the live pooter world production system. Inspect the active `v2/` codebase only unless explicitly told otherwise, and distinguish clearly between confirmed production architecture, staging configuration, legacy code, and inferred components. Include:
+> Produce a board-grade technical architecture report for Morality Co-operative Limited covering the live pooter world production system. Inspect the active `` codebase only unless explicitly told otherwise, and distinguish clearly between confirmed production architecture, staging configuration, legacy code, and inferred components. Include:
 >
 > 1. an executive summary written for technically literate non-engineers,
 > 2. a full system context diagram showing users, browser clients, wallets, web app, API routes, cron jobs, indexer services, databases, smart contracts, RPC endpoints, AI providers, governance providers, market-data providers, and any auxiliary worker services,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSourceBias } from "@/lib/bias";
 import { generateTextForTask } from "@/lib/ai-provider";
 import { hasAIProviderForTask } from "@/lib/ai-models";
+import { rateLimit } from "@/lib/rate-limit";
 
 // ============================================================================
 // AI ENTITY SCORING — Claude-powered credibility & quality analysis
@@ -212,6 +213,10 @@ function validateScoreResult(data: unknown): ScoreResult {
 }
 
 export async function POST(request: Request) {
+  // Rate limit: 20 scoring requests per minute per IP
+  const limited = rateLimit(request, { maxRequests: 20, windowMs: 60_000 });
+  if (limited) return limited;
+
   try {
     const body: ScoreRequest = await request.json();
 

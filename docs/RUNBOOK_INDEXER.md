@@ -23,7 +23,7 @@ Run indexer continuously with:
 
 ## Required Environment
 
-From `v2/indexer/.env.example`:
+From `indexer/.env.example`:
 
 - `PONDER_RPC_URL_1`
 - `PONDER_RPC_URL_2` (optional)

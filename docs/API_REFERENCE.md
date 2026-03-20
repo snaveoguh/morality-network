@@ -17,7 +17,7 @@ When running indexer locally:
 
 `http://localhost:42069`
 
-## Live Endpoints (`v2/web/src/app/api`)
+## Live Endpoints (`web/src/app/api`)
 
 ### `GET /api/feed` (`live`)
 
@@ -112,7 +112,7 @@ Response:
 
 ## Indexer Endpoints (`live`)
 
-Implemented in: `v2/indexer/src/api/routes.ts`
+Implemented in: `indexer/src/api/routes.ts`
 
 ### `GET /api/v1/health` (`live`)
 
