@@ -49,9 +49,66 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  // Check archive/Redis FIRST (instant) — only fetch live feeds as fallback
-  const archivedPrimary = await getArchivedFeedItemByHash(hash as `0x${string}`).catch(() => null);
+  // ─── FAST PATH: check article archive + editorial archive in PARALLEL ───
+  // For pooter daily editions, only the editorial archive has the data.
+  // Running both checks concurrently avoids the 20-30s sequential waterfall
+  // that was causing Vercel function timeouts.
+  const [archivedPrimary, earlyEditorial] = await Promise.all([
+    getArchivedFeedItemByHash(hash as `0x${string}`).catch(() => null),
+    getArchivedEditorial(hash).catch(() => null),
+  ]);
 
+  // If we have an editorial with its primary, skip the slow feed/registry paths
+  if (!archivedPrimary && earlyEditorial) {
+    const hydratedEditorial = await enrichArticleEmbeds(
+      earlyEditorial.primary,
+      earlyEditorial,
+    );
+    if (hydratedEditorial !== earlyEditorial) {
+      withTimeout(
+        saveEditorial(hash, hydratedEditorial, earlyEditorial.generatedBy).catch((err) => {
+          console.warn("[article] cached editorial refresh failed:", err);
+        }),
+        10000,
+        undefined,
+      ).catch(() => {});
+    }
+
+    const dateline = formatDateline(hydratedEditorial.primary.pubDate);
+    const readTime = estimateReadingTime([
+      ...hydratedEditorial.editorialBody,
+      hydratedEditorial.wireSummary || "",
+    ]);
+
+    const EARLY_EPOCH_MS = 1741651200 * 1000;
+    let earlyEditionNumber: number | undefined;
+    if (hydratedEditorial.isDailyEdition) {
+      const earlyDate = new Date(hydratedEditorial.generatedAt).getTime();
+      const daysSinceEpoch = Math.floor((earlyDate - EARLY_EPOCH_MS) / 86400000);
+      if (daysSinceEpoch >= 0) {
+        earlyEditionNumber = daysSinceEpoch + 1;
+      }
+    }
+
+    return (
+      <ArticleTemplate
+        article={hydratedEditorial}
+        dateline={dateline}
+        readTime={readTime}
+        entityHash={hash}
+        archivedRelated={[]}
+        editionNumber={earlyEditionNumber}
+        archiveStatus={{
+          generatedBy: hydratedEditorial.generatedBy,
+          generatedAt: hydratedEditorial.generatedAt,
+          contentHash: hydratedEditorial.contentHash,
+          onchainTxHash: hydratedEditorial.onchainTxHash,
+        }}
+      />
+    );
+  }
+
+  // ─── SLOW PATH: article found in article archive, or need to search feeds ───
   let livePrimary: Awaited<ReturnType<typeof fetchAllFeeds>>[number] | null = null;
   let allItems: Awaited<ReturnType<typeof fetchAllFeeds>> = [];
 
@@ -84,58 +141,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   }
 
   if (!primary) {
-    // Check if we have a previously generated editorial in the deep archive
-    const cachedEditorial = await getArchivedEditorial(hash).catch(() => null);
-    if (cachedEditorial) {
-      const hydratedEditorial = await enrichArticleEmbeds(
-        cachedEditorial.primary,
-        cachedEditorial,
-      );
-      if (hydratedEditorial !== cachedEditorial) {
-        await withTimeout(
-          saveEditorial(hash, hydratedEditorial, cachedEditorial.generatedBy).catch((err) => {
-            console.warn("[article] cached editorial refresh failed:", err);
-          }),
-          10000,
-          undefined,
-        );
-      }
-
-      // We have the full editorial — render it even without a live/archived feed item
-      const dateline = formatDateline(hydratedEditorial.primary.pubDate);
-      const readTime = estimateReadingTime([
-        ...hydratedEditorial.editorialBody,
-        hydratedEditorial.wireSummary || "",
-      ]);
-
-      // Compute edition number for daily editions
-      const CACHED_EPOCH_MS = 1741651200 * 1000;
-      let cachedEditionNumber: number | undefined;
-      if (hydratedEditorial.isDailyEdition) {
-        const cachedDate = new Date(hydratedEditorial.generatedAt).getTime();
-        const daysSinceEpoch = Math.floor((cachedDate - CACHED_EPOCH_MS) / 86400000);
-        if (daysSinceEpoch >= 0) {
-          cachedEditionNumber = daysSinceEpoch + 1;
-        }
-      }
-
-      return (
-        <ArticleTemplate
-          article={hydratedEditorial}
-          dateline={dateline}
-          readTime={readTime}
-          entityHash={hash}
-          archivedRelated={[]}
-          editionNumber={cachedEditionNumber}
-          archiveStatus={{
-            generatedBy: hydratedEditorial.generatedBy,
-            generatedAt: hydratedEditorial.generatedAt,
-            contentHash: hydratedEditorial.contentHash,
-            onchainTxHash: hydratedEditorial.onchainTxHash,
-          }}
-        />
-      );
-    }
+    // Editorial was already checked in parallel above — no need to re-fetch
 
     return (
       <section className="mx-auto max-w-4xl py-10">
@@ -198,9 +204,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   // ═══ CACHE-ONLY: no AI generation on click. Editorials are pre-generated
   // by the newsroom cron. If no editorial exists yet, show raw feed data. ═══
-  const cachedEditorial = await getArchivedEditorial(hash).catch(() => null);
-  let article = cachedEditorial
-    ? await enrichArticleEmbeds(cachedEditorial.primary, cachedEditorial)
+  // Re-use earlyEditorial from the parallel fetch above (no duplicate request)
+  let article = earlyEditorial
+    ? await enrichArticleEmbeds(earlyEditorial.primary, earlyEditorial)
     : null;
 
   // No cached editorial — render raw feed data with "editorial pending" badge
@@ -252,15 +258,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     article.wireSummary || "",
   ]);
 
-  // Get archive status for the UI
-  const archivedEditorial = await getArchivedEditorial(hash).catch(() => null);
-
+  // Re-use earlyEditorial from parallel fetch (no duplicate request)
   // Compute edition number for daily editions (days since March 11 2026 epoch)
   const EDITION_EPOCH_MS = 1741651200 * 1000; // March 11 2026 00:00 UTC
   let editionNumber: number | undefined;
   if (article.isDailyEdition) {
-    const editorialDate = archivedEditorial?.generatedAt
-      ? new Date(archivedEditorial.generatedAt).getTime()
+    const editorialDate = earlyEditorial?.generatedAt
+      ? new Date(earlyEditorial.generatedAt).getTime()
       : Date.now();
     const daysSinceEpoch = Math.floor((editorialDate - EDITION_EPOCH_MS) / 86400000);
     if (daysSinceEpoch >= 0) {
@@ -276,15 +280,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       entityHash={hash}
       archivedRelated={archivedRelated}
       editionNumber={editionNumber}
-      archiveStatus={archivedEditorial ? {
-        generatedBy: archivedEditorial.generatedBy,
-        generatedAt: archivedEditorial.generatedAt,
-        contentHash: archivedEditorial.contentHash,
-        onchainTxHash: archivedEditorial.onchainTxHash,
-      } : cachedEditorial ? {
-        generatedBy: cachedEditorial.generatedBy,
-        generatedAt: cachedEditorial.generatedAt,
-        contentHash: cachedEditorial.contentHash,
+      archiveStatus={earlyEditorial ? {
+        generatedBy: earlyEditorial.generatedBy,
+        generatedAt: earlyEditorial.generatedAt,
+        contentHash: earlyEditorial.contentHash,
+        onchainTxHash: earlyEditorial.onchainTxHash,
       } : undefined}
     />
   );
