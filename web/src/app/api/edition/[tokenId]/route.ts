@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { computeEntityHash } from "@/lib/entity";
-import { getArchivedEditorial } from "@/lib/editorial-archive";
 import { BRAND_NAME, SITE_URL } from "@/lib/brand";
+import { getEditionContext } from "@/lib/server/edition-context";
 
 // ============================================================================
 // /api/edition/[tokenId] — OpenSea-standard ERC-721 metadata
@@ -25,42 +24,72 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Invalid tokenId" }, { status: 400 });
   }
 
-  // Compute the date for this edition
-  const editionTimestamp = EPOCH + (tokenId - 1) * SECONDS_PER_DAY;
-  const editionDate = new Date(editionTimestamp * 1000);
-  const dateStr = editionDate.toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const {
+    editorial,
+    editorialHash,
+    dateStr,
+    officialTitle,
+    officialContentHash,
+    auctionExists,
+    communityTitle,
+    communityContentHash,
+  } = await getEditionContext(tokenId);
 
-  // Compute the daily edition hash for this date
-  const year = editionDate.getUTCFullYear();
-  const month = String(editionDate.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(editionDate.getUTCDate()).padStart(2, "0");
-  const dailyId = `pooter-daily-${year}-${month}-${day}`;
-  const hash = computeEntityHash(dailyId);
+  const isCommunityEdition = auctionExists;
+  const displayTitle = isCommunityEdition
+    ? communityTitle ?? `COMMUNITY EDITION #${tokenId}`
+    : officialTitle ?? `Edition #${tokenId}`;
 
-  // Look up the editorial archive
-  const editorial = await getArchivedEditorial(hash).catch(() => null);
+  const name = isCommunityEdition
+    ? `${BRAND_NAME} — Community Edition #${tokenId}: ${displayTitle}`
+    : `${BRAND_NAME} — Edition #${tokenId}: ${displayTitle}`;
 
-  const name = editorial
-    ? `${BRAND_NAME} — Edition #${tokenId}: ${editorial.dailyTitle || editorial.primary.title}`
-    : `${BRAND_NAME} — Edition #${tokenId}`;
-
-  const description = editorial
-    ? editorial.subheadline
-    : `Daily edition #${tokenId} of ${BRAND_NAME} (${dateStr}).`;
+  const description = isCommunityEdition
+    ? editorial
+      ? `Community-created historical edition for ${BRAND_NAME} dated ${dateStr}. The title and content hash are user-supplied auction metadata, not an official ${BRAND_NAME} editorial record. Reference article: ${officialTitle ?? editorial.primary.title}.`
+      : `Community-created historical edition for ${BRAND_NAME} dated ${dateStr}. The title and content hash are user-supplied auction metadata, not an official ${BRAND_NAME} editorial record.`
+    : editorial
+      ? editorial.subheadline
+      : `Daily edition #${tokenId} of ${BRAND_NAME} (${dateStr}).`;
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || SITE_URL;
 
   const attributes: Array<{ trait_type: string; value: string | number }> = [
     { trait_type: "Edition", value: tokenId },
     { trait_type: "Date", value: dateStr },
+    {
+      trait_type: "Edition Type",
+      value: isCommunityEdition ? "Community Auction Edition" : "Editorial Edition",
+    },
   ];
 
-  if (editorial) {
+  if (isCommunityEdition) {
+    attributes.push({
+      trait_type: "Metadata Source",
+      value: "User-generated auction submission",
+    });
+    if (communityTitle) {
+      attributes.push({ trait_type: "Community Title", value: communityTitle });
+    }
+    if (communityContentHash) {
+      attributes.push({
+        trait_type: "Community Content Hash",
+        value: communityContentHash,
+      });
+    }
+    if (officialTitle) {
+      attributes.push({
+        trait_type: "Reference Article",
+        value: officialTitle,
+      });
+    }
+    if (officialContentHash) {
+      attributes.push({
+        trait_type: "Reference Article Hash",
+        value: officialContentHash,
+      });
+    }
+  } else if (editorial) {
     if (editorial.dailyTitle) {
       attributes.push({ trait_type: "Daily Title", value: editorial.dailyTitle });
     }
@@ -92,17 +121,23 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   // Use DALL-E illustration as primary image if available, newspaper SVG as fallback
   const hasIllustration = editorial?.hasIllustration || !!editorial?.illustrationBase64;
-  const image = hasIllustration
-    ? `${baseUrl}/api/edition/${tokenId}/illustration`
-    : `${baseUrl}/api/edition/${tokenId}/image`;
+  const image = isCommunityEdition
+    ? `${baseUrl}/api/edition/${tokenId}/image`
+    : hasIllustration
+      ? `${baseUrl}/api/edition/${tokenId}/illustration`
+      : `${baseUrl}/api/edition/${tokenId}/image`;
 
   const metadata = {
     name,
     description,
-    external_url: `${baseUrl}/article/${hash}`,
+    external_url: editorial
+      ? `${baseUrl}/article/${editorialHash}`
+      : `${baseUrl}/appendix`,
     image,
     // Keep the SVG newspaper as animation_url so OpenSea shows both
-    ...(hasIllustration ? { animation_url: `${baseUrl}/api/edition/${tokenId}/image` } : {}),
+    ...(!isCommunityEdition && hasIllustration
+      ? { animation_url: `${baseUrl}/api/edition/${tokenId}/image` }
+      : {}),
     attributes,
   };
 

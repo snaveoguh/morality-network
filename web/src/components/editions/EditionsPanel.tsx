@@ -19,7 +19,7 @@ import {
 import { AuctionCard } from "./AuctionCard";
 
 // ============================================================================
-// EDITIONS PANEL — Modal showing all editions with auction controls
+// EDITIONS PANEL — Modal showing historical community-edition auctions
 //
 // Triggered from Masthead dateline click on "EDITION N".
 // Shows paginated list of editions newest-first with status + bid UI.
@@ -105,7 +105,7 @@ export function EditionsPanel({ currentEdition, onClose }: EditionsPanelProps) {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--rule)] px-4 py-3">
           <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
-            Editions
+            Community Editions
           </h2>
           <button
             onClick={onClose}
@@ -134,7 +134,11 @@ export function EditionsPanel({ currentEdition, onClose }: EditionsPanelProps) {
         {/* Info bar */}
         <div className="border-b border-[var(--rule-light)] px-4 py-2">
           <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-            {totalPastEditions} past edition{totalPastEditions !== 1 ? "s" : ""} · Current: #{currentEdition} · Proceeds to Nouns small grants
+            {totalPastEditions} past date{totalPastEditions !== 1 ? "s" : ""} · current: #{currentEdition} · proceeds to nouns small grants
+          </p>
+          <p className="mt-1 font-mono text-[8px] leading-relaxed text-[var(--ink-light)]">
+            Community members can auction unminted past dates and set the onchain title/hash for those NFTs.
+            These are user-generated historical claims, not official newsroom editions.
           </p>
         </div>
 
