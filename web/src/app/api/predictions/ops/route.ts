@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildPredictionMarketOpsSnapshot } from "@/lib/prediction-market-ops";
+import { verifyOperatorAuth } from "@/lib/operator-auth";
 
 export const revalidate = 60;
 export const dynamic = "force-dynamic";
@@ -13,6 +14,9 @@ function parseLimit(value: string | null): number | undefined {
 
 export async function GET(request: NextRequest) {
   try {
+    const unauthorized = await verifyOperatorAuth(request);
+    if (unauthorized) return unauthorized;
+
     const limit = parseLimit(request.nextUrl.searchParams.get("limit"));
     const snapshot = await buildPredictionMarketOpsSnapshot({ limit });
     return NextResponse.json(snapshot);
