@@ -205,10 +205,12 @@ export function computeKelly(args: {
   const stopDist = Math.max(0.005, stopDistancePct); // min 0.5% stop distance
   const positionNotionalUsd = riskBudgetUsd / stopDist;
 
-  // Derive leverage
+  // Derive leverage — use at least the default leverage (never go below it)
   const maxLeverage = config.risk.maxLeverage;
+  const minLeverage = config.hyperliquid?.defaultLeverage ?? 10;
+  const kellyLeverage = Math.floor(positionNotionalUsd / accountValueUsd);
   const leverage = Math.min(
-    Math.max(1, Math.floor(positionNotionalUsd / accountValueUsd)),
+    Math.max(minLeverage, kellyLeverage),
     maxLeverage,
   );
 
