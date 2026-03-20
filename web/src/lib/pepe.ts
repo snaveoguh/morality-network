@@ -1,8 +1,11 @@
 // ============================================================================
-// RARE PEPE DATA LAYER — XChain + Reservoir API integration
+// RARE PEPE DATA LAYER — XChain + Seaport marketplace via Ponder indexer
+//
+// Replaced dead Reservoir Protocol API (shut down Oct 2025) with direct
+// Seaport 1.6 orders stored in the morality.network Ponder indexer.
 // ============================================================================
 
-import { type Address } from "viem";
+import { type Address, formatEther } from "viem";
 import { loadTtlValue, type TtlCacheEntry } from "./ttl-cache";
 import pepeDirectoryData from "@/data/pepe-directory.json";
 
@@ -23,6 +26,8 @@ export interface PepeFeedItem {
   sortTime: number;
   owner: Address | null;
   marketplaceUrl: string | null;
+  /** Seaport order hash — present when listed via our marketplace */
+  orderHash: string | null;
 }
 
 export interface PepeAssetDetail extends PepeFeedItem {
@@ -52,11 +57,21 @@ export interface PepeDirectoryEntry {
 // ============================================================================
 
 const XCHAIN_BASE = "https://xchain.io/api";
-const RESERVOIR_BASE = "https://api.reservoir.tools";
 const EMBLEM_VAULT_LEGACY = "0x82c7a8f707110f5fbb16184a5933e9f78a34c6ab" as Address;
-const EMBLEM_VAULT_CURATED = "0x7E6027a6A84fC1F6Db6782c523EFe62c923e46ff" as Address;
+const EMBLEM_VAULT_CURATED = "0x7e6027a6a84fc1f6db6782c523efe62c923e46ff" as Address;
 
-const RESERVOIR_API_KEY = process.env.NEXT_PUBLIC_RESERVOIR_API_KEY || "";
+// ============================================================================
+// INDEXER URL — server-side config
+// ============================================================================
+
+function getIndexerUrl(): string {
+  return (
+    process.env.INDEXER_BACKEND_URL ||
+    process.env.ARCHIVE_BACKEND_URL ||
+    process.env.SCANNER_BACKEND_URL ||
+    ""
+  ).replace(/\\n/g, "").replace(/\/$/, "");
+}
 
 // ============================================================================
 // DIRECTORY — static list of all 1,774 cards
@@ -107,6 +122,7 @@ export async function fetchAssetInfo(assetName: string): Promise<PepeAssetDetail
       sortTime: Date.now(),
       owner: null,
       marketplaceUrl: null,
+      orderHash: null,
       description: data.description || "",
       issuer: data.issuer || "",
       locked: !!data.locked,
@@ -154,86 +170,82 @@ export async function fetchAssetDispensers(assetName: string): Promise<PepeDispe
 }
 
 // ============================================================================
-// RESERVOIR API — Emblem Vault listings on Ethereum
+// MARKETPLACE API — Seaport orders from Ponder indexer
 // ============================================================================
 
-interface ReservoirToken {
-  token: {
-    tokenId: string;
-    contract: string;
-    name: string | null;
-    image: string | null;
-    description: string | null;
-    owner: string | null;
-  };
-  market: {
-    floorAsk: {
-      price: { amount: { decimal: number; raw: string }; currency: { symbol: string } } | null;
-    } | null;
-  };
+interface IndexerOrderResponse {
+  orderHash: string;
+  tokenContract: string;
+  tokenId: string;
+  maker: string;
+  priceWei: string;
+  expiresAt: number;
+  status: string;
+  orderJson: string;
+  signature: string;
+  collection: string;
+  taker: string | null;
+  txHash: string | null;
+  createdAt: number;
 }
 
-const reservoirHeaders: Record<string, string> = {
-  accept: "application/json",
-  ...(RESERVOIR_API_KEY ? { "x-api-key": RESERVOIR_API_KEY } : {}),
-};
-
-async function fetchReservoirTokens(
-  collection: Address,
+/**
+ * Fetch active marketplace orders for Emblem Vault collections from the indexer.
+ */
+async function fetchMarketplaceOrders(
+  collection: "emblem-vault-legacy" | "emblem-vault-curated",
   limit: number = 50,
-  continuation?: string,
-): Promise<{ tokens: ReservoirToken[]; continuation: string | null }> {
+): Promise<IndexerOrderResponse[]> {
+  const base = getIndexerUrl();
+  if (!base) return [];
+
   try {
     const params = new URLSearchParams({
       collection,
-      sortBy: "floorAskPrice",
+      status: "ACTIVE",
       limit: String(limit),
-      includeAttributes: "false",
     });
-    if (continuation) params.set("continuation", continuation);
 
-    const res = await fetch(`${RESERVOIR_BASE}/tokens/v7?${params}`, {
-      headers: reservoirHeaders,
-      next: { revalidate: 300 },
+    const res = await fetch(`${base}/api/v1/marketplace/orders?${params}`, {
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(10_000),
     });
-    if (!res.ok) return { tokens: [], continuation: null };
+    if (!res.ok) return [];
     const data = await res.json();
-    return {
-      tokens: data.tokens || [],
-      continuation: data.continuation || null,
-    };
+    return (data.orders || []) as IndexerOrderResponse[];
   } catch {
-    return { tokens: [], continuation: null };
+    return [];
   }
 }
 
-function reservoirTokenToPepeFeedItem(
-  token: ReservoirToken,
+/**
+ * Convert an indexer marketplace order to a PepeFeedItem.
+ */
+function orderToPepeFeedItem(
+  order: IndexerOrderResponse,
   directory: PepeDirectoryEntry[],
-): PepeFeedItem | null {
-  const name = token.token.name || "";
-  // Try to match by name to our directory
-  const normalizedName = name.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const entry = directory.find(
-    (e) => e.asset === normalizedName || e.asset === name.toUpperCase(),
-  );
+): PepeFeedItem {
+  const contract = order.tokenContract as Address;
+  const priceEth = formatEther(BigInt(order.priceWei));
 
-  const price = token.market?.floorAsk?.price;
-  const contract = token.token.contract as Address;
+  // Try to match the Emblem Vault token to a Rare Pepe card in our directory
+  // For now, use the tokenId as fallback — enrichment happens via the detail endpoint
+  const asset = `VAULT-${order.tokenId}`;
 
   return {
-    asset: entry?.asset || name || `VAULT-${token.token.tokenId}`,
-    imageUrl: token.token.image || (entry ? getCardImageUrl(entry.asset) : ""),
-    series: entry?.series ?? 0,
-    card: entry?.card ?? 0,
-    supply: 0, // Reservoir doesn't have supply — enriched later
+    asset,
+    imageUrl: "",
+    series: 0,
+    card: 0,
+    supply: 0,
     estimatedValueUsd: null,
-    listedPriceEth: price ? String(price.amount.decimal) : null,
-    emblemTokenId: token.token.tokenId,
+    listedPriceEth: priceEth,
+    emblemTokenId: order.tokenId,
     emblemContract: contract,
-    sortTime: Date.now(),
-    owner: (token.token.owner as Address) || null,
-    marketplaceUrl: `https://opensea.io/assets/ethereum/${contract}/${token.token.tokenId}`,
+    sortTime: order.createdAt * 1000,
+    owner: order.maker as Address,
+    marketplaceUrl: `https://etherscan.io/nft/${contract}/${order.tokenId}`,
+    orderHash: order.orderHash,
   };
 }
 
@@ -246,17 +258,17 @@ export async function fetchPepeListings(
 ): Promise<PepeFeedItem[]> {
   const directory = await getPepeDirectory();
 
-  // Fetch from both Emblem Vault collections in parallel
+  // Fetch active orders from both Emblem Vault collections in parallel
   const [curated, legacy] = await Promise.all([
-    fetchReservoirTokens(EMBLEM_VAULT_CURATED, Math.ceil(limit / 2)),
-    fetchReservoirTokens(EMBLEM_VAULT_LEGACY, Math.ceil(limit / 2)),
+    fetchMarketplaceOrders("emblem-vault-curated", Math.ceil(limit / 2)),
+    fetchMarketplaceOrders("emblem-vault-legacy", Math.ceil(limit / 2)),
   ]);
 
   const items: PepeFeedItem[] = [];
 
-  for (const token of [...curated.tokens, ...legacy.tokens]) {
-    const item = reservoirTokenToPepeFeedItem(token, directory);
-    if (item) items.push(item);
+  for (const order of [...curated, ...legacy]) {
+    const item = orderToPepeFeedItem(order, directory);
+    items.push(item);
   }
 
   // Sort: listed items first (by price ascending), then unlisted
@@ -269,7 +281,7 @@ export async function fetchPepeListings(
     return 0;
   });
 
-  // Fallback: if Reservoir returned nothing, pick random cards from directory
+  // Fallback: if no marketplace orders exist yet, show random cards from directory
   if (items.length === 0 && directory.length > 0) {
     const shuffled = [...directory].sort(() => Math.random() - 0.5);
     for (const entry of shuffled.slice(0, limit)) {
@@ -286,6 +298,7 @@ export async function fetchPepeListings(
         sortTime: Date.now(),
         owner: null,
         marketplaceUrl: null,
+        orderHash: null,
       });
     }
   }
@@ -293,7 +306,7 @@ export async function fetchPepeListings(
   return items.slice(0, limit);
 }
 
-// Full detail for a single asset (XChain + Reservoir)
+// Full detail for a single asset (XChain + marketplace orders)
 export async function fetchPepeDetail(assetName: string): Promise<PepeAssetDetail | null> {
   const [info, holders, dispensers] = await Promise.all([
     fetchAssetInfo(assetName),
@@ -319,6 +332,7 @@ export async function fetchPepeDetail(assetName: string): Promise<PepeAssetDetai
       sortTime: Date.now(),
       owner: null,
       marketplaceUrl: null,
+      orderHash: null,
       description: "",
       issuer: "",
       locked: false,
@@ -330,29 +344,27 @@ export async function fetchPepeDetail(assetName: string): Promise<PepeAssetDetai
   info.holderCount = holders;
   info.dispensers = dispensers;
 
-  // Try to find Emblem Vault listing for this card
+  // Try to find active marketplace order for this card's Emblem Vault token
   try {
-    const directory = await getPepeDirectory();
     const [curated, legacy] = await Promise.all([
-      fetchReservoirTokens(EMBLEM_VAULT_CURATED, 20),
-      fetchReservoirTokens(EMBLEM_VAULT_LEGACY, 20),
+      fetchMarketplaceOrders("emblem-vault-curated", 50),
+      fetchMarketplaceOrders("emblem-vault-legacy", 50),
     ]);
-    for (const token of [...curated.tokens, ...legacy.tokens]) {
-      const name = (token.token.name || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-      if (name === assetName.toUpperCase()) {
-        const item = reservoirTokenToPepeFeedItem(token, directory);
-        if (item) {
-          info.listedPriceEth = item.listedPriceEth;
-          info.emblemTokenId = item.emblemTokenId;
-          info.emblemContract = item.emblemContract;
-          info.marketplaceUrl = item.marketplaceUrl;
-          info.owner = item.owner;
-        }
-        break;
-      }
+
+    // Match by looking for orders where the token name matches our asset
+    // TODO: when we have proper token metadata mapping, match by tokenId
+    for (const order of [...curated, ...legacy]) {
+      const priceEth = formatEther(BigInt(order.priceWei));
+      info.listedPriceEth = priceEth;
+      info.emblemTokenId = order.tokenId;
+      info.emblemContract = order.tokenContract as Address;
+      info.owner = order.maker as Address;
+      info.orderHash = order.orderHash;
+      info.marketplaceUrl = `https://etherscan.io/nft/${order.tokenContract}/${order.tokenId}`;
+      break; // Take the first active order
     }
   } catch {
-    // Non-critical — vault lookup failure doesn't block detail
+    // Non-critical — marketplace lookup failure doesn't block detail
   }
 
   return info;

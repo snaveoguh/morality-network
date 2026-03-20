@@ -16,6 +16,7 @@ const NAV_LINKS = [
   { href: "/proposals", label: "Governance" },
   { href: "/predictions", label: "Predictions" },
   { href: "/pepe", label: "Pepe" },
+  { href: "/nouns", label: "Nouns" },
   { href: "/music", label: "Music" },
   { href: "/discuss", label: "Discuss" },
   { href: "/leaderboard", label: "Leaderboard" },

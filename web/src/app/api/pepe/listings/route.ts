@@ -13,7 +13,7 @@ export async function GET(req: Request) {
 
     let listings = await fetchPepeListings(limit);
 
-    // If no Reservoir results, fall back to directory cards with images
+    // If no marketplace orders exist, fall back to directory cards with images
     if (listings.length === 0) {
       const directory = await getPepeDirectory();
       listings = directory.slice(0, limit).map((entry) => ({
@@ -29,6 +29,7 @@ export async function GET(req: Request) {
         sortTime: Date.now(),
         owner: null,
         marketplaceUrl: null,
+        orderHash: null,
       }));
     }
 

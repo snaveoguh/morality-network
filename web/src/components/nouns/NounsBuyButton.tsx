@@ -1,15 +1,14 @@
 "use client";
 
 import { useAccount } from "wagmi";
-import type { Address } from "viem";
 import { useFulfillOrder } from "@/hooks/useSeaport";
 
-interface BuyButtonProps {
+interface NounsBuyButtonProps {
   orderHash: string;
   priceEth: string;
 }
 
-export function BuyButton({ orderHash, priceEth }: BuyButtonProps) {
+export function NounsBuyButton({ orderHash, priceEth }: NounsBuyButtonProps) {
   const { address } = useAccount();
   const { buy, status, error, reset } = useFulfillOrder(orderHash);
 
