@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyEvidence, normalizeUrl } from "@/lib/evidence-verify";
+import { getOperatorAuthState, getSessionAddress } from "@/lib/operator-auth";
 import {
   getCachedVerification,
   setCachedVerification,
@@ -16,6 +17,19 @@ import {
  * Responses are cached server-side for 6 hours.
  */
 export async function GET(request: Request) {
+  if (process.env.NODE_ENV === "production") {
+    const [operatorAuth, sessionAddress] = await Promise.all([
+      getOperatorAuthState(request),
+      getSessionAddress(),
+    ]);
+    if (!operatorAuth.authorized && !sessionAddress) {
+      return NextResponse.json(
+        { error: "Authentication required for evidence verification" },
+        { status: 401 },
+      );
+    }
+  }
+
   const { searchParams } = new URL(request.url);
   const rawUrl = searchParams.get("url");
 

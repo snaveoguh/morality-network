@@ -3,6 +3,7 @@ import { fetchAllFeeds, type FeedItem } from "@/lib/rss";
 import { computeEntityHash } from "@/lib/entity";
 import { findRelatedArticles } from "@/lib/article";
 import { getAllEditorialHashes } from "@/lib/editorial-archive";
+import { verifyOperatorAuth } from "@/lib/operator-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -18,6 +19,9 @@ export const maxDuration = 30;
  *   ?limit=N  (default 5, max 10)
  */
 export async function GET(request: Request) {
+  const unauthorized = await verifyOperatorAuth(request);
+  if (unauthorized) return unauthorized;
+
   const url = new URL(request.url);
   const limit = Math.min(
     Math.max(1, parseInt(url.searchParams.get("limit") || "5", 10) || 5),

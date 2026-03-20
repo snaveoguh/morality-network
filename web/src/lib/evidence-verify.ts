@@ -12,6 +12,7 @@ import {
   type EvidenceSourceType,
   type EvidenceQualityTier,
 } from "./evidence";
+import { validateExternalUrlWithDns } from "./url-validator";
 
 // ============================================================================
 // TYPES
@@ -166,31 +167,53 @@ export async function hardenedFetch(
   url: URL,
   method: "HEAD" | "GET" = "HEAD"
 ): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  let currentUrl = url;
+  let currentMethod = method;
 
-  try {
-    const res = await fetch(url.toString(), {
-      method,
-      signal: controller.signal,
-      redirect: "follow",
-      headers: {
-        "User-Agent": "pooter-world-evidence-verifier/1.0",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      },
-    });
+  for (let redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
-    // Check redirect count via response URL differing from request URL
-    // (fetch API follows redirects automatically, we check the final URL)
-    const finalUrl = new URL(res.url);
-    if (isPrivateHost(finalUrl.hostname)) {
-      throw new Error("Redirect landed on a private/local network target.");
+    try {
+      const res = await fetch(currentUrl.toString(), {
+        method: currentMethod,
+        signal: controller.signal,
+        redirect: "manual",
+        headers: {
+          "User-Agent": "pooter-world-evidence-verifier/1.0",
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        },
+      });
+
+      if (![301, 302, 303, 307, 308].includes(res.status)) {
+        return res;
+      }
+
+      if (redirectCount >= MAX_REDIRECTS) {
+        throw new Error("Too many redirects.");
+      }
+
+      const location = res.headers.get("location");
+      if (!location) {
+        throw new Error(`Redirect response missing Location header (HTTP ${res.status}).`);
+      }
+
+      const nextUrl = new URL(location, currentUrl);
+      const validation = await validateExternalUrlWithDns(nextUrl.toString());
+      if (!validation.valid || !validation.url) {
+        throw new Error(validation.error || "Redirect target blocked.");
+      }
+
+      currentUrl = validation.url;
+      if (res.status === 303 && currentMethod !== "HEAD") {
+        currentMethod = "GET";
+      }
+    } finally {
+      clearTimeout(timeout);
     }
-
-    return res;
-  } finally {
-    clearTimeout(timeout);
   }
+
+  throw new Error("Too many redirects.");
 }
 
 /** Fetch with retries and HEAD→GET fallback */
@@ -315,12 +338,12 @@ export function isAcceptableContentType(contentType: string): boolean {
 
 export async function verifyEvidence(rawUrl: string): Promise<VerificationResult | VerificationError> {
   // 1. Validate URL
-  const validation = validateUrl(rawUrl);
+  const validation = await validateExternalUrlWithDns(normalizeUrl(rawUrl));
   if (!validation.valid || !validation.url) {
     return {
-      error: validation.reasons[0] || "Invalid URL.",
+      error: validation.error || "Invalid URL.",
       safe: false,
-      reasons: validation.reasons,
+      reasons: [validation.error || "Invalid URL."],
     };
   }
 
