@@ -30,6 +30,7 @@ interface AuctionCardProps {
 
 const EPOCH = 1741651200;
 const SECONDS_PER_DAY = 86400;
+const ZERO_CONTENT_HASH = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 function formatEditionDate(editionNumber: number): string {
   const ts = (EPOCH + (editionNumber - 1) * SECONDS_PER_DAY) * 1000;
@@ -69,6 +70,8 @@ type EditionStatus = "minted" | "auctioning" | "settling" | "available";
 export function AuctionCard({ editionNumber }: AuctionCardProps) {
   const { isConnected } = useAccount();
   const [bidAmount, setBidAmount] = useState("");
+  const [communityTitle, setCommunityTitle] = useState(`COMMUNITY EDITION #${editionNumber}`);
+  const [communityHash, setCommunityHash] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const auctionsDeployed = POOTER_AUCTIONS_ADDRESS !== ZERO_ADDRESS;
 
@@ -77,6 +80,15 @@ export function AuctionCard({ editionNumber }: AuctionCardProps) {
     address: POOTER_EDITIONS_ADDRESS,
     abi: POOTER_EDITIONS_ABI,
     functionName: "ownerOf",
+    args: [BigInt(editionNumber)],
+    chainId: CONTRACTS_CHAIN_ID,
+    query: { enabled: POOTER_EDITIONS_ADDRESS !== ZERO_ADDRESS },
+  });
+
+  const { data: editionData } = useReadContract({
+    address: POOTER_EDITIONS_ADDRESS,
+    abi: POOTER_EDITIONS_ABI,
+    functionName: "getEdition",
     args: [BigInt(editionNumber)],
     chainId: CONTRACTS_CHAIN_ID,
     query: { enabled: POOTER_EDITIONS_ADDRESS !== ZERO_ADDRESS },
@@ -94,6 +106,7 @@ export function AuctionCard({ editionNumber }: AuctionCardProps) {
 
   // Determine status
   const isMinted = ownerData !== undefined && ownerData !== null;
+  const edition = editionData as [string, bigint, string] | undefined;
   const auction = auctionData as
     | [bigint, bigint, string, bigint, string, string, boolean]
     | undefined;
@@ -110,6 +123,19 @@ export function AuctionCard({ editionNumber }: AuctionCardProps) {
 
   const highestBid = hasAuction ? auction[3] : BigInt(0);
   const highestBidder = hasAuction ? auction[2] : "";
+  const auctionContentHash = hasAuction ? auction[4] : ZERO_CONTENT_HASH;
+  const auctionTitle = hasAuction ? auction[5].trim() : "";
+  const mintedContentHash = edition ? edition[0] : ZERO_CONTENT_HASH;
+  const mintedTitle = edition?.[2]?.trim() || "";
+  const detailTitle = isMinted ? mintedTitle : auctionTitle;
+  const detailHash = isMinted ? mintedContentHash : auctionContentHash;
+  const hasDetailHash = !/^0x0{64}$/i.test(detailHash);
+  const normalizedCommunityTitle = communityTitle.trim();
+  const normalizedCommunityHash = communityHash.trim();
+  const isCommunityHashValid =
+    !normalizedCommunityHash || /^0x[a-fA-F0-9]{64}$/.test(normalizedCommunityHash);
+  const submittedCommunityHash = (normalizedCommunityHash ||
+    ZERO_CONTENT_HASH) as `0x${string}`;
 
   const countdown = useCountdown(auctionEndTime);
 
@@ -144,15 +170,13 @@ export function AuctionCard({ editionNumber }: AuctionCardProps) {
   const minBidEth = formatEther(minBidWei > MIN_BID_WEI ? minBidWei : MIN_BID_WEI);
 
   const handleCreateAuction = () => {
-    if (!bidAmount) return;
+    if (!bidAmount || !normalizedCommunityTitle || !isCommunityHashValid) return;
     reset();
-    // Use a default contentHash and title — the edition metadata API handles the rest
-    const contentHash = "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
     writeContract({
       address: POOTER_AUCTIONS_ADDRESS,
       abi: POOTER_AUCTIONS_ABI,
       functionName: "createAuction",
-      args: [BigInt(editionNumber), contentHash, `EDITION ${editionNumber}`],
+      args: [BigInt(editionNumber), submittedCommunityHash, normalizedCommunityTitle],
       value: parseEther(bidAmount),
       chainId: CONTRACTS_CHAIN_ID,
     });
@@ -223,17 +247,24 @@ export function AuctionCard({ editionNumber }: AuctionCardProps) {
       {showPreview && (
         <div className="mt-2 space-y-2">
           {/* DALL-E illustration (if available) */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`/api/edition/${editionNumber}/illustration`}
-            alt={`Edition #${editionNumber} illustration`}
-            className="w-full h-auto border border-[var(--rule)] bg-[#FAF8F3]"
-            loading="lazy"
-            onError={(e) => {
-              // Hide if no illustration exists (404)
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
+          {!hasAuction && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/edition/${editionNumber}/illustration`}
+                alt={`Edition #${editionNumber} illustration`}
+                className="h-auto w-full border border-[var(--rule)] bg-[#FAF8F3]"
+                loading="lazy"
+                onError={(e) => {
+                  // Hide if no illustration exists (404)
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+              <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+                Reference article art
+              </p>
+            </>
+          )}
           {/* Newspaper SVG */}
           <div className="overflow-hidden border border-[var(--rule)] bg-[#FAF8F3]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -244,6 +275,33 @@ export function AuctionCard({ editionNumber }: AuctionCardProps) {
               loading="lazy"
             />
           </div>
+          {hasAuction && (
+            <p className="font-mono text-[8px] leading-relaxed text-[var(--ink-light)]">
+              This preview reflects the community-claimed edition, not an official newsroom issue.
+            </p>
+          )}
+        </div>
+      )}
+
+      {(detailTitle || hasAuction) && (
+        <div className="mt-2 space-y-1 border-t border-[var(--rule-light)] pt-2">
+          <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+            {hasAuction ? "Community title" : "Onchain title"}
+          </p>
+          <p className="font-mono text-[10px] text-[var(--ink)]">
+            {detailTitle || `COMMUNITY EDITION #${editionNumber}`}
+          </p>
+          <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+            Content hash
+          </p>
+          <p className="break-all font-mono text-[9px] text-[var(--ink-light)]">
+            {hasDetailHash ? detailHash : "None committed"}
+          </p>
+          {hasAuction && (
+            <p className="font-mono text-[8px] leading-relaxed text-[var(--ink-light)]">
+              User-generated metadata becomes the NFT record when this auction settles.
+            </p>
+          )}
         </div>
       )}
 
@@ -340,23 +398,49 @@ export function AuctionCard({ editionNumber }: AuctionCardProps) {
 
       {/* Available state */}
       {status === "available" && isConnected && auctionsDeployed && (
-        <div className="mt-2 flex gap-1.5">
+        <div className="mt-2 space-y-1.5">
           <input
-            type="number"
-            step="0.001"
-            min="0"
-            value={bidAmount}
-            onChange={(e) => setBidAmount(e.target.value)}
-            placeholder="0.001"
-            className="flex-1 border border-[var(--rule)] bg-[var(--paper)] px-2 py-1 font-mono text-[10px] text-[var(--ink)] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            type="text"
+            value={communityTitle}
+            onChange={(e) => setCommunityTitle(e.target.value)}
+            placeholder={`COMMUNITY EDITION #${editionNumber}`}
+            maxLength={72}
+            className="w-full border border-[var(--rule)] bg-[var(--paper)] px-2 py-1 font-mono text-[10px] uppercase text-[var(--ink)] outline-none"
           />
-          <button
-            onClick={handleCreateAuction}
-            disabled={!bidAmount || isBusy}
-            className="border border-[var(--ink)] px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--ink)] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)] disabled:opacity-40"
-          >
-            {isBusy ? "..." : "Start Auction"}
-          </button>
+          <input
+            type="text"
+            value={communityHash}
+            onChange={(e) => setCommunityHash(e.target.value)}
+            placeholder="Optional 0x... content hash"
+            className="w-full border border-[var(--rule)] bg-[var(--paper)] px-2 py-1 font-mono text-[10px] text-[var(--ink)] outline-none"
+          />
+          <div className="flex gap-1.5">
+            <input
+              type="number"
+              step="0.001"
+              min="0"
+              value={bidAmount}
+              onChange={(e) => setBidAmount(e.target.value)}
+              placeholder="0.001"
+              className="flex-1 border border-[var(--rule)] bg-[var(--paper)] px-2 py-1 font-mono text-[10px] text-[var(--ink)] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <button
+              onClick={handleCreateAuction}
+              disabled={!bidAmount || !normalizedCommunityTitle || !isCommunityHashValid || isBusy}
+              className="border border-[var(--ink)] px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--ink)] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)] disabled:opacity-40"
+            >
+              {isBusy ? "..." : "Start Auction"}
+            </button>
+          </div>
+          {!isCommunityHashValid && (
+            <p className="font-mono text-[8px] text-[var(--accent-red)]">
+              Content hash must be 0x followed by 64 hex characters.
+            </p>
+          )}
+          <p className="font-mono text-[8px] leading-relaxed text-[var(--ink-light)]">
+            Community-created title/hash become the onchain metadata for this historical claim once the
+            auction settles.
+          </p>
         </div>
       )}
 

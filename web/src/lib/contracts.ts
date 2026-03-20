@@ -648,7 +648,7 @@ export const LEADERBOARD_ABI = [
 ] as const;
 
 // ============================================================================
-// POOTER EDITIONS — 1/1 Daily Edition ERC-721 NFTs
+// POOTER EDITIONS — historical edition ERC-721s (editorial + community claims)
 // ============================================================================
 
 export const POOTER_EDITIONS_ADDRESS = readAddressEnv(
@@ -732,7 +732,7 @@ export const POOTER_EDITIONS_ABI = [
 ] as const;
 
 // ============================================================================
-// POOTER AUCTIONS — On-demand 24hr edition auctions
+// POOTER AUCTIONS — On-demand 24hr community auctions for past editions
 // ============================================================================
 
 export const POOTER_AUCTIONS_ADDRESS = readAddressEnv(
