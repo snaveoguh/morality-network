@@ -33,7 +33,7 @@ Scanner integration (optional):
 - `SCANNER_BACKEND_URL` — legacy alias still supported for scanner and archive proxying.
 - `AGENT_RUNTIME_MODE=worker` — disables local agent bootstrapping and expects persisted worker state in the indexer.
 - `TRADER_EXECUTION_MODE=worker` — disables request-time trader execution and expects persisted trader state in the indexer.
-- `INDEXER_WORKER_SECRET` — optional bearer secret for worker writes into the indexer state endpoints.
+- `INDEXER_WORKER_SECRET` — **required** bearer secret for worker writes and memory reads into the indexer. The indexer rejects all protected requests if this is unset.
 - `/api/agents/events/stream` — SSE feed on top of the durable `agent_event` log for UI and remote consumers.
 - `AGENT_BRIDGE_URL` + `AGENT_BRIDGE_SECRET` — optional remote agent relay target (for example `noun.wtf`).
 - `AGENT_BRIDGE_PRIVATE_KEY` — dedicated signer key used to cryptographically sign relayed swarm messages.

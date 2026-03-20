@@ -7,6 +7,7 @@
 import { NextResponse } from "next/server";
 import { fetchMusicDiscovery } from "@/lib/music-discovery";
 import type { DiscoveryRequest } from "@/lib/music-types";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,10 @@ const DEFAULT_VECTORS = {
 };
 
 export async function POST(request: Request) {
+  // Rate limit: 20 discovery requests per minute per IP
+  const limited = rateLimit(request, { maxRequests: 20, windowMs: 60_000 });
+  if (limited) return limited;
+
   try {
     const body = (await request.json()) as Partial<DiscoveryRequest>;
 
@@ -47,7 +52,11 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Rate limit: 20 discovery requests per minute per IP
+  const limited = rateLimit(request, { maxRequests: 20, windowMs: 60_000 });
+  if (limited) return limited;
+
   try {
     const result = await fetchMusicDiscovery({
       vectors: DEFAULT_VECTORS,
