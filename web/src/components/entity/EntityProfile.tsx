@@ -71,17 +71,19 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
     const type = searchParams.get("type")?.trim() || "link";
     const description = searchParams.get("description")?.trim() || "";
 
-    if (url) {
+    if (url || title || source || description) {
       const entry: StumbleContextEntry = {
         hash: entityHash,
-        url,
+        url: url || undefined,
         title: title || url,
         source: source || "stumble",
         type,
         description: description || undefined,
         savedAt: new Date().toISOString(),
       };
-      saveStumbleContext(entry);
+      if (url) {
+        saveStumbleContext(entry);
+      }
       setStumbleContext(entry);
       return;
     }

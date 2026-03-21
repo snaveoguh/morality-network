@@ -6,6 +6,7 @@ import { EntityBadge } from "@/components/shared/EntityBadge";
 import { AddressDisplay } from "@/components/shared/AddressDisplay";
 import { StarRating } from "@/components/shared/StarRating";
 import Link from "next/link";
+import { entityTypeLabel } from "@/lib/entity";
 
 interface LeaderboardEntry {
   rank: number;
@@ -120,7 +121,7 @@ export function LeaderboardTable({ entries }: LeaderboardTableProps) {
                 {/* Entity */}
                 <td className="px-3 py-2.5">
                   <Link
-                    href={`/entity/${entry.entityHash}`}
+                    href={buildEntityHref(entry)}
                     className="group flex items-center gap-2"
                   >
                     {entry.logo && (
@@ -218,4 +219,24 @@ export function LeaderboardTable({ entries }: LeaderboardTableProps) {
       </div>
     </div>
   );
+}
+
+function buildEntityHref(entry: LeaderboardEntry): string {
+  const params = new URLSearchParams({
+    title: entry.identifier,
+    source: "Universal Ledger",
+    type: entityTypeLabel(entry.entityType).toLowerCase(),
+  });
+
+  const descriptionParts = [
+    entry.categories?.length ? entry.categories.slice(0, 3).join(", ") : null,
+    entry.biasRating ? `bias: ${entry.biasRating}` : null,
+    entry.factuality ? `factuality: ${entry.factuality}` : null,
+  ].filter(Boolean);
+
+  if (descriptionParts.length > 0) {
+    params.set("description", descriptionParts.join(" · "));
+  }
+
+  return `/entity/${entry.entityHash}?${params.toString()}`;
 }
