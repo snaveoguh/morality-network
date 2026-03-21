@@ -1,6 +1,29 @@
 import { type Address } from "viem";
 import { base, mainnet } from "viem/chains";
 
+const PUBLIC_ENV = {
+  NEXT_PUBLIC_MO_TOKEN_ADDRESS: process.env.NEXT_PUBLIC_MO_TOKEN_ADDRESS,
+  NEXT_PUBLIC_CONTRACTS_CHAIN_ID: process.env.NEXT_PUBLIC_CONTRACTS_CHAIN_ID,
+  NEXT_PUBLIC_PREDICTION_MARKET_CHAIN_ID:
+    process.env.NEXT_PUBLIC_PREDICTION_MARKET_CHAIN_ID,
+  NEXT_PUBLIC_AGENT_VAULT_CHAIN_ID: process.env.NEXT_PUBLIC_AGENT_VAULT_CHAIN_ID,
+  NEXT_PUBLIC_AGENT_VAULT_ADDRESS: process.env.NEXT_PUBLIC_AGENT_VAULT_ADDRESS,
+  NEXT_PUBLIC_REGISTRY_ADDRESS: process.env.NEXT_PUBLIC_REGISTRY_ADDRESS,
+  NEXT_PUBLIC_RATINGS_ADDRESS: process.env.NEXT_PUBLIC_RATINGS_ADDRESS,
+  NEXT_PUBLIC_COMMENTS_ADDRESS: process.env.NEXT_PUBLIC_COMMENTS_ADDRESS,
+  NEXT_PUBLIC_TIPPING_ADDRESS: process.env.NEXT_PUBLIC_TIPPING_ADDRESS,
+  NEXT_PUBLIC_LEADERBOARD_ADDRESS: process.env.NEXT_PUBLIC_LEADERBOARD_ADDRESS,
+  NEXT_PUBLIC_POOTER_EDITIONS_ADDRESS:
+    process.env.NEXT_PUBLIC_POOTER_EDITIONS_ADDRESS,
+  NEXT_PUBLIC_POOTER_AUCTIONS_ADDRESS:
+    process.env.NEXT_PUBLIC_POOTER_AUCTIONS_ADDRESS,
+  NEXT_PUBLIC_NOUNS_TOKEN_ADDRESS: process.env.NEXT_PUBLIC_NOUNS_TOKEN_ADDRESS,
+  NEXT_PUBLIC_PROPOSAL_VOTING_ADDRESS:
+    process.env.NEXT_PUBLIC_PROPOSAL_VOTING_ADDRESS,
+  NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS:
+    process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS,
+} as const;
+
 // MO Token on Base
 export const MO_TOKEN = {
   address: readAddressEnv(
@@ -56,13 +79,13 @@ export const ERC20_ABI = [
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
 
 function readAddressEnv(name: string, fallback: Address): Address {
-  const rawValue = process.env[name];
+  const rawValue = PUBLIC_ENV[name as keyof typeof PUBLIC_ENV] ?? process.env[name];
   const trimmed = rawValue?.trim();
   return (trimmed && trimmed.length > 0 ? trimmed : fallback) as Address;
 }
 
 function readChainIdEnv(name: string, fallback: number): number {
-  const rawValue = process.env[name];
+  const rawValue = PUBLIC_ENV[name as keyof typeof PUBLIC_ENV] ?? process.env[name];
   const trimmed = rawValue?.trim();
   const parsed = trimmed ? Number(trimmed) : fallback;
   return Number.isFinite(parsed) && parsed > 0 ? Math.trunc(parsed) : fallback;
