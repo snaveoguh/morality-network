@@ -2023,6 +2023,16 @@ const RESOLVED_STATUSES = new Set<Proposal["status"]>([
   "queued",
 ]);
 
+function compareResolvedPredictionRecency(a: Proposal, b: Proposal): number {
+  const endDelta = (b.endTime ?? 0) - (a.endTime ?? 0);
+  if (endDelta !== 0) return endDelta;
+
+  const startDelta = (b.startTime ?? 0) - (a.startTime ?? 0);
+  if (startDelta !== 0) return startDelta;
+
+  return Number(b.proposalNumber ?? 0) - Number(a.proposalNumber ?? 0);
+}
+
 export async function fetchResolvedPredictionProposals(): Promise<Proposal[]> {
   // Wrap in a 15s timeout so static builds don't hang on slow RPCs
   const result = await Promise.race([
@@ -2042,12 +2052,12 @@ async function _fetchResolvedPredictionProposalsInner(): Promise<Proposal[]> {
       fetchLilNounsProposals(25),
     ]);
 
-    // Only check the 10 most recent resolved proposals to stay within build timeouts
+    // Check recent resolved proposals from each DAO independently so Lil Nouns
+    // markets are not drowned out by higher-numbered Nouns proposal ids.
     const resolved = [...nounsRaw, ...lilNounsRaw]
       .map((p) => convertNounsToProposal(p, anchor))
       .filter((p) => RESOLVED_STATUSES.has(p.status))
-      .sort((a, b) => Number(b.proposalNumber ?? 0) - Number(a.proposalNumber ?? 0))
-      .slice(0, 10);
+      .sort(compareResolvedPredictionRecency);
 
     // Only include proposals that have an onchain market (skip "Not Open" noise)
     const withMarkets = await Promise.all(
@@ -2069,7 +2079,18 @@ async function _fetchResolvedPredictionProposalsInner(): Promise<Proposal[]> {
       }),
     );
 
-    return withMarkets.filter((p): p is Proposal => p !== null);
+    const visible = withMarkets
+      .filter((p): p is Proposal => p !== null)
+      .reduce<Record<string, Proposal[]>>((acc, proposal) => {
+        const daoKey = getDaoPredictionKey(proposal.dao);
+        (acc[daoKey] ||= []).push(proposal);
+        return acc;
+      }, {});
+
+    return Object.values(visible)
+      .flatMap((group) => group.sort(compareResolvedPredictionRecency).slice(0, 5))
+      .sort(compareResolvedPredictionRecency)
+      .slice(0, 10);
   } catch (error) {
     console.error("[Predictions] Resolved governance fetch failed:", error);
     return [];
