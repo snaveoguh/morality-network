@@ -2,6 +2,8 @@
 // MASTHEAD SKELETON — instant lofi placeholder while daily edition loads
 // ============================================================================
 
+import { CONTRACTS_CHAIN_ID } from "@/lib/contracts";
+
 export function MastheadSkeleton() {
   // Static dateline — no data dependency
   const today = new Date();
@@ -17,7 +19,8 @@ export function MastheadSkeleton() {
       year: "numeric",
     })
     .toUpperCase();
-  const dateline = `${dateStr} · EDITION ${editionNumber} · BASE L2`;
+  const chainTag = CONTRACTS_CHAIN_ID === 84532 ? "BASE SEPOLIA" : "BASE L2";
+  const dateline = `${dateStr} · EDITION ${editionNumber} · ${chainTag}`;
 
   return (
     <div className="border-y border-[var(--rule)]">
