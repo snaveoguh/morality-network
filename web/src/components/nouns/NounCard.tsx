@@ -37,7 +37,7 @@ export function NounCard({ noun }: { noun: NounMarketItem }) {
         <div className="relative aspect-square overflow-hidden bg-[var(--paper-dark)]">
           {svgHtml ? (
             <div
-              className="h-full w-full [image-rendering:pixelated] transition-transform duration-300 group-hover:scale-[1.03]"
+              className="h-full w-full [image-rendering:pixelated] transition-transform duration-300 group-hover:scale-[1.03] [&_svg]:block [&_svg]:h-full [&_svg]:w-full"
               dangerouslySetInnerHTML={{ __html: svgHtml }}
             />
           ) : (

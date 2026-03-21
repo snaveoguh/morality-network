@@ -86,7 +86,7 @@ export function NounDetailView({ nounId }: { nounId: number }) {
           >
             {svgHtml ? (
               <div
-                className="h-auto w-full [image-rendering:pixelated]"
+                className="w-full [image-rendering:pixelated] [&_svg]:block [&_svg]:h-auto [&_svg]:w-full"
                 dangerouslySetInnerHTML={{ __html: svgHtml }}
               />
             ) : (

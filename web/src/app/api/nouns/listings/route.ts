@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
-import { fetchNounsMarketItems, type NounMarketItem } from "@/lib/nouns-marketplace";
+import { fetchListedNouns, type NounMarketItem } from "@/lib/nouns-marketplace";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const limit = Math.min(Number(searchParams.get("limit") || "100"), 200);
-    const sort = searchParams.get("sort") || "price-asc";
+    const sort = searchParams.get("sort") || "id-desc";
     const status = searchParams.get("status") || "all";
 
-    let items = await fetchNounsMarketItems(limit);
+    let items = await fetchListedNouns();
 
-    // Filter by listing status
+    // Filter by listing status (all items from fetchListedNouns are listed,
+    // but keep the filter for forward compatibility when "Your Nouns" are added)
     if (status === "listed") {
       items = items.filter((i) => i.listedPriceEth !== null);
     }
@@ -20,10 +20,15 @@ export async function GET(req: Request) {
     // Sort
     items = sortItems(items, sort);
 
-    return NextResponse.json({ items, total: items.length });
+    return NextResponse.json({
+      items,
+      total: items.length,
+      hasMore: false,
+      count: items.length,
+    });
   } catch (err) {
     console.error("[nouns/listings]", err);
-    return NextResponse.json({ items: [], total: 0 });
+    return NextResponse.json({ items: [], total: 0, hasMore: false, count: 0 });
   }
 }
 
