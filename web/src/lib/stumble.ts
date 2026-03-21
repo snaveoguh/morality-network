@@ -219,6 +219,42 @@ export function getEmbeddableUrl(rawUrl: string): string {
   return normalized;
 }
 
+const INLINE_EMBED_HOSTS = [
+  "youtube.com",
+  "youtu.be",
+  "vimeo.com",
+  "soundcloud.com",
+  "musiclab.chromeexperiments.com",
+  "neal.fun",
+  "window-swap.com",
+  "patatap.com",
+  "earth.nullschool.net",
+  "radio.garden",
+  "thispersondoesnotexist.com",
+  "asoftmurmur.com",
+  "pointerpointer.com",
+  "nts.live",
+];
+
+export function canRenderStumbleInline(rawUrl: string): boolean {
+  const normalized = normalizeStumbleUrl(rawUrl);
+  try {
+    const u = new URL(normalized);
+    const host = u.hostname.toLowerCase().replace(/^www\./, "");
+
+    return INLINE_EMBED_HOSTS.some(
+      (candidate) => host === candidate || host.endsWith(`.${candidate}`),
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function isDirectImageUrl(rawUrl: string): boolean {
+  const normalized = normalizeStumbleUrl(rawUrl);
+  return /\.(avif|gif|jpe?g|png|webp|svg)(?:\?.*)?$/i.test(normalized);
+}
+
 function buildCuratedItems(): StumbleItem[] {
   return shuffle(CURATED_SEEDS).map((seed, idx) => ({
     id: `curated-${idx}-${Math.random().toString(36).slice(2, 8)}`,

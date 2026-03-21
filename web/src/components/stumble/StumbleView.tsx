@@ -4,12 +4,16 @@ import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { StumbleItem } from "@/lib/stumble";
-import { getEmbeddableUrl, normalizeStumbleUrl } from "@/lib/stumble";
+import {
+  canRenderStumbleInline,
+  getEmbeddableUrl,
+  isDirectImageUrl,
+  normalizeStumbleUrl,
+} from "@/lib/stumble";
 import { computeEntityHash } from "@/lib/entity";
 import { saveStumbleContext } from "@/lib/stumble-context";
 import { RatingWidget } from "@/components/entity/RatingWidget";
 import { TipButton } from "@/components/entity/TipButton";
-import { CommentThread } from "@/components/entity/CommentThread";
 
 interface StumbleViewProps {
   initialItems: StumbleItem[];
@@ -42,6 +46,16 @@ export function StumbleView({ initialItems }: StumbleViewProps) {
     () => (canonicalUrl ? getEmbeddableUrl(canonicalUrl) : ""),
     [canonicalUrl],
   );
+  const renderMode = useMemo(() => {
+    if (!canonicalUrl) return "preview" as const;
+    if (currentItem?.type === "image" && (isDirectImageUrl(canonicalUrl) || !!currentItem.imageUrl)) {
+      return "image" as const;
+    }
+    if (canRenderStumbleInline(canonicalUrl)) {
+      return "embed" as const;
+    }
+    return "preview" as const;
+  }, [canonicalUrl, currentItem]);
   const entityHash = useMemo(
     () => (canonicalUrl ? computeEntityHash(canonicalUrl) : null),
     [canonicalUrl],
@@ -125,15 +139,85 @@ export function StumbleView({ initialItems }: StumbleViewProps) {
 
   return (
     <div className="stumble-page relative overflow-hidden bg-[var(--paper-dark)]">
-      <iframe
-        key={embedUrl}
-        src={embedUrl}
-        title={currentItem.title}
-        className="h-[calc(100vh-3rem)] w-full border-0 bg-white"
-        loading="eager"
-        referrerPolicy="no-referrer"
-        allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
-      />
+      {renderMode === "embed" ? (
+        <iframe
+          key={embedUrl}
+          src={embedUrl}
+          title={currentItem.title}
+          className="h-[calc(100vh-3rem)] w-full border-0 bg-white"
+          loading="eager"
+          referrerPolicy="no-referrer"
+          allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
+        />
+      ) : renderMode === "image" ? (
+        <div className="relative h-[calc(100vh-3rem)] w-full bg-[var(--paper-dark)]">
+          <img
+            src={currentItem.imageUrl || canonicalUrl}
+            alt={currentItem.title}
+            className="h-full w-full object-contain"
+            loading="eager"
+          />
+        </div>
+      ) : (
+        <div className="relative flex h-[calc(100vh-3rem)] w-full items-center justify-center overflow-hidden bg-[var(--paper-dark)] px-4 py-8 sm:px-8">
+          {currentItem.imageUrl ? (
+            <>
+              <img
+                src={currentItem.imageUrl}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover opacity-20 blur-sm"
+                loading="eager"
+              />
+              <div className="absolute inset-0 bg-[var(--paper-dark)]/80" />
+            </>
+          ) : (
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.14),_transparent_45%),linear-gradient(135deg,_rgba(255,255,255,0.06),_transparent_55%)]" />
+          )}
+
+          <div className="relative z-10 w-full max-w-3xl border-2 border-[var(--rule)] bg-[var(--paper)]/92 p-5 shadow-2xl sm:p-8">
+            <div className="mb-4 flex flex-wrap items-center gap-2 font-mono text-[9px] uppercase tracking-[0.22em] text-[var(--ink-faint)]">
+              <span>Stumble Preview</span>
+              <span>&bull;</span>
+              <span>{typeLabel}</span>
+              <span>&bull;</span>
+              <span>{currentItem.source}</span>
+            </div>
+
+            <h1 className="font-headline-serif text-3xl leading-tight text-[var(--ink)] sm:text-4xl">
+              {currentItem.title}
+            </h1>
+
+            {currentItem.description && (
+              <p className="mt-4 max-w-2xl font-body-serif text-base leading-relaxed text-[var(--ink-light)] sm:text-lg">
+                {currentItem.description}
+              </p>
+            )}
+
+            <p className="mt-5 max-w-2xl font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+              This site blocks in-app embeds, so Stumble is showing a preview instead.
+            </p>
+
+            <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-[var(--rule-light)] pt-4">
+              <a
+                href={canonicalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border border-[var(--rule)] bg-[var(--ink)] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)]"
+              >
+                Open Original
+              </a>
+              {entityContextHref && (
+                <Link
+                  href={entityContextHref}
+                  className="border border-[var(--rule)] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--ink)] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)]"
+                >
+                  Discuss On MO
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="pointer-events-none absolute inset-0 p-3 sm:p-4">
         <div className="pointer-events-auto flex items-start justify-between gap-3">
