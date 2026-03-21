@@ -101,7 +101,7 @@ export function SearchBar() {
           value={query}
           onChange={(e) => handleInput(e.target.value)}
           onFocus={() => { if (results.length > 0) setIsOpen(true); }}
-          placeholder="Search..."
+          placeholder="Tag search..."
           className="w-24 border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-1 font-mono text-[10px] text-[var(--ink)] placeholder-[var(--ink-faint)] transition-all focus:w-40 focus:border-[var(--rule)] focus:outline-none"
         />
         {loading && (

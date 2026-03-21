@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ChainSwitcher } from "@/components/shared/ChainSwitcher";
+import { SearchBar } from "@/components/layout/SearchBar";
 import { BRAND_NAME } from "@/lib/brand";
 
 const NAV_LINKS = [
@@ -69,6 +70,9 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-1.5">
+          <div className="hidden md:block">
+            <SearchBar />
+          </div>
           <ChainSwitcher />
           <MiniWalletButton />
         </div>
