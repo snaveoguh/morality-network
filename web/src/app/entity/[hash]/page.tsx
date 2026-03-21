@@ -1,11 +1,12 @@
-"use client";
-
-import { useParams } from "next/navigation";
 import { EntityProfile } from "@/components/entity/EntityProfile";
+import { findUniversalLedgerContext } from "@/lib/universal-ledger";
 
-export default function EntityPage() {
-  const params = useParams();
-  const hash = params.hash as string;
+interface EntityPageProps {
+  params: Promise<{ hash: string }>;
+}
+
+export default async function EntityPage({ params }: EntityPageProps) {
+  const { hash } = await params;
 
   if (!hash || !hash.startsWith("0x")) {
     return (
@@ -15,5 +16,12 @@ export default function EntityPage() {
     );
   }
 
-  return <EntityProfile entityHash={hash as `0x${string}`} />;
+  const initialContext = await findUniversalLedgerContext(hash as `0x${string}`);
+
+  return (
+    <EntityProfile
+      entityHash={hash as `0x${string}`}
+      initialContext={initialContext}
+    />
+  );
 }

@@ -25,9 +25,10 @@ import {
 
 interface EntityProfileProps {
   entityHash: `0x${string}`;
+  initialContext?: StumbleContextEntry | null;
 }
 
-export function EntityProfile({ entityHash }: EntityProfileProps) {
+export function EntityProfile({ entityHash, initialContext = null }: EntityProfileProps) {
   const { isConnected } = useAccount();
   const searchParams = useSearchParams();
   const [stumbleContext, setStumbleContext] = useState<StumbleContextEntry | null>(null);
@@ -88,10 +89,11 @@ export function EntityProfile({ entityHash }: EntityProfileProps) {
       return;
     }
 
-    setStumbleContext(getStumbleContext(entityHash));
-  }, [entityHash, searchParams]);
+    setStumbleContext(getStumbleContext(entityHash) ?? initialContext);
+  }, [entityHash, initialContext, searchParams]);
 
-  const resolvedIdentifier = entity?.identifier || stumbleContext?.url || entityHash;
+  const resolvedIdentifier =
+    entity?.identifier || stumbleContext?.url || stumbleContext?.title || entityHash;
   const resolvedTitle = stumbleContext?.title || entity?.identifier || entityHash;
   const hasContext = !!(entity?.identifier || stumbleContext);
   const directTipAddress =
