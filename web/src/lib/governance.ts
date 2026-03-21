@@ -4,6 +4,7 @@
 import {
   fetchLilNounsDelegationEvents,
   fetchLilNounsProposals,
+  mainnetPublicClient,
   fetchNounsDelegationEvents,
   fetchNounsProposals,
   type NounsDelegationEvent,
@@ -498,10 +499,7 @@ let _blockAnchor: { block: number; time: number } | null = null;
 async function getBlockAnchor(): Promise<{ block: number; time: number }> {
   if (_blockAnchor) return _blockAnchor;
   try {
-    const { createPublicClient, http } = await import("viem");
-    const { mainnet } = await import("viem/chains");
-    const c = createPublicClient({ chain: mainnet, transport: http("https://mainnet.rpc.buidlguidl.com") });
-    const block = await c.getBlock({ blockTag: "latest" });
+    const block = await mainnetPublicClient.getBlock({ blockTag: "latest" });
     _blockAnchor = { block: Number(block.number), time: Number(block.timestamp) };
     return _blockAnchor;
   } catch {
@@ -2031,18 +2029,7 @@ export async function fetchResolvedPredictionProposals(): Promise<Proposal[]> {
 async function _fetchResolvedPredictionProposalsInner(): Promise<Proposal[]> {
   const anchor = await getBlockAnchor();
   try {
-    const { createPublicClient, http } = await import("viem");
-    const { mainnet } = await import("viem/chains");
     const { PREDICTION_MARKET_ABI, PREDICTION_MARKET_ADDRESS } = await import("./contracts");
-
-    const rpcUrl =
-      process.env.ETHEREUM_MAINNET_RPC_URL ||
-      process.env.NEXT_PUBLIC_ETHEREUM_MAINNET_RPC_URL ||
-      "https://mainnet.rpc.buidlguidl.com";
-    const client = createPublicClient({
-      chain: mainnet,
-      transport: http(rpcUrl, { timeout: 5_000 }),
-    });
 
     const [nounsRaw, lilNounsRaw] = await Promise.all([
       fetchNounsProposals(25),
@@ -2062,7 +2049,7 @@ async function _fetchResolvedPredictionProposalsInner(): Promise<Proposal[]> {
         const daoKey = getDaoPredictionKey(p.dao);
         const proposalId = p.proposalNumber?.toString() ?? p.id;
         try {
-          const raw = await client.readContract({
+          const raw = await mainnetPublicClient.readContract({
             address: PREDICTION_MARKET_ADDRESS,
             abi: PREDICTION_MARKET_ABI,
             functionName: "getMarket",

@@ -12,10 +12,33 @@ import { mainnet } from "viem/chains";
 // PUBLIC CLIENT — Ethereum mainnet
 // ============================================================================
 
-const client = createPublicClient({
+function firstDefined(...values: Array<string | undefined>): string | undefined {
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (trimmed) return trimmed;
+  }
+  return undefined;
+}
+
+export function getEthereumMainnetRpcUrl(): string {
+  return (
+    firstDefined(
+      process.env.ETHEREUM_MAINNET_RPC_URL,
+      process.env.NEXT_PUBLIC_ETHEREUM_MAINNET_RPC_URL,
+      process.env.ETHEREUM_RPC_URL,
+      process.env.NEXT_PUBLIC_ETHEREUM_RPC_URL,
+      process.env.MAINNET_RPC_URL,
+      process.env.NEXT_PUBLIC_MAINNET_RPC_URL,
+    ) ?? "https://eth.llamarpc.com"
+  );
+}
+
+export const mainnetPublicClient = createPublicClient({
   chain: mainnet,
-  transport: http("https://mainnet.rpc.buidlguidl.com"),
+  transport: http(getEthereumMainnetRpcUrl(), { timeout: 10_000 }),
 });
+
+const client = mainnetPublicClient;
 
 // ============================================================================
 // CONTRACT ADDRESSES
