@@ -88,7 +88,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     ? await getIllustration(editorialHash).catch(() => null)
     : null;
   const hasImage = !isCommunityEdition && !!illustration?.base64;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || SITE_URL;
+  const requestBaseUrl =
+    request.headers.get("x-forwarded-host") && request.headers.get("x-forwarded-proto")
+      ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get("x-forwarded-host")}`
+      : request.nextUrl.origin;
+  const baseUrl = requestBaseUrl || process.env.NEXT_PUBLIC_BASE_URL || SITE_URL;
 
   // Build SVG
   const W = 800;
