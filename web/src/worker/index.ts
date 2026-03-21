@@ -10,10 +10,11 @@ import {
   redactedConfigSummary,
   runTraderCycles,
 } from "../lib/trading/engine";
-import { getTraderConfig, getScalperConfig } from "../lib/trading/config";
+import { getParallelBaseConfig, getTraderConfig, getScalperConfig } from "../lib/trading/config";
 import { ScalperManager } from "../lib/trading/scalper";
+import { runVaultRailKeeper } from "../lib/trading/vault-rail";
 
-type WorkerTaskName = "scanner" | "swarm" | "trader" | "bridge";
+type WorkerTaskName = "scanner" | "swarm" | "trader" | "bridge" | "vault";
 type PersistedAgentEvent = {
   id: string;
   from: string;
@@ -25,7 +26,7 @@ type PersistedAgentEvent = {
 };
 
 const DEFAULT_TASKS: WorkerTaskName[] = ["scanner", "swarm"];
-const VALID_TASKS = new Set<WorkerTaskName>(["scanner", "swarm", "trader", "bridge"]);
+const VALID_TASKS = new Set<WorkerTaskName>(["scanner", "swarm", "trader", "bridge", "vault"]);
 const runningTasks = new Set<WorkerTaskName>();
 
 function log(message: string, meta?: unknown): void {
@@ -81,6 +82,9 @@ function getEnabledTasks(): WorkerTaskName[] {
     const defaults = [...DEFAULT_TASKS];
     if (process.env.AGENT_BRIDGE_URL?.trim()) {
       defaults.push("bridge");
+    }
+    if (boolFromEnv("TRADER_VAULT_RAIL_ENABLED", false) || boolFromEnv("TRADER_BASE_PARALLEL_VAULT_RAIL_ENABLED", false)) {
+      defaults.push("vault");
     }
     return defaults;
   }
@@ -350,6 +354,33 @@ async function runTraderTask(): Promise<void> {
   }
 }
 
+async function runVaultTask(): Promise<void> {
+  const primary = getTraderConfig();
+  const parallel = getParallelBaseConfig();
+  const configs = [primary, parallel].filter((config): config is typeof primary => Boolean(config && config.vaultRail?.enabled));
+
+  if (configs.length === 0) {
+    log("vault rail task skipped because no runner has vault rail enabled");
+    return;
+  }
+
+  for (const config of configs) {
+    const report = await runVaultRailKeeper(config);
+    log("vault rail keeper completed", {
+      venue: config.executionVenue,
+      action: report.action,
+      reason: report.reason ?? null,
+      strategyEquityUsd: report.strategyEquityUsd ?? null,
+      ethPriceUsd: report.ethPriceUsd ?? null,
+      strategyAssetsEth: report.strategyAssetsEthWei ? report.strategyAssetsEthWei.toString() : null,
+      txHash: report.txHash ?? null,
+      liquidEth: report.snapshot?.liquidEthWei.toString() ?? null,
+      pendingBridgeEth: report.snapshot?.pendingBridgeEthWei.toString() ?? null,
+      hlStrategyEth: report.snapshot?.hlStrategyEthWei.toString() ?? null,
+    });
+  }
+}
+
 async function runBridgeTask(): Promise<void> {
   const bridgeBaseUrl = getBridgeBaseUrl();
   if (!bridgeBaseUrl) {
@@ -425,6 +456,8 @@ async function executeTask(name: WorkerTaskName): Promise<boolean> {
       await runSwarmTask();
     } else if (name === "trader") {
       await runTraderTask();
+    } else if (name === "vault") {
+      await runVaultTask();
     } else {
       await runBridgeTask();
     }
@@ -484,7 +517,9 @@ async function main(): Promise<void> {
           ? parseIntegerEnv("WORKER_SWARM_INTERVAL_MS", 300_000)
           : task === "trader"
             ? parseIntegerEnv("WORKER_TRADER_INTERVAL_MS", 120_000)
-            : parseIntegerEnv("WORKER_BRIDGE_INTERVAL_MS", 10_000);
+            : task === "vault"
+              ? parseIntegerEnv("WORKER_VAULT_INTERVAL_MS", 300_000)
+              : parseIntegerEnv("WORKER_BRIDGE_INTERVAL_MS", 10_000);
     timers.push(scheduleTask(task, intervalMs));
     log(`${task} scheduled`, { intervalMs });
   }

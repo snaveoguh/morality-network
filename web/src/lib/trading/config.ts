@@ -3,6 +3,7 @@ import type {
   ExecutionVenue,
   ScalperConfig,
   TraderExecutionConfig,
+  VaultRailConfig,
   VaultStrategyConfig,
 } from "./types";
 
@@ -16,6 +17,8 @@ const AERODROME_FACTORY_BASE = "0x420DD381b31aEf6683db6B902084cB0FFECe40Da";
 const WETH_ETHEREUM = "0xC02aaA39b223FE8D0A0E5C4F27eAD9083C756Cc2";
 const USDC_ETHEREUM = "0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 const UNISWAP_V3_ROUTER_ETHEREUM = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
+const ARBITRUM_ONE_RPC = "https://arb1.arbitrum.io/rpc";
+const ARBITRUM_SEPOLIA_RPC = "https://sepolia-rollup.arbitrum.io/rpc";
 
 function defaultRpcForVenue(venue: ExecutionVenue): string {
   if (venue === "ethereum-spot") {
@@ -93,6 +96,15 @@ function optionalAddressFromEnv(key: string): Address | undefined {
   return isAddress(trimmed) ? (trimmed as Address) : undefined;
 }
 
+function requiredAddressFromEnv(key: string): Address {
+  const raw = process.env[key];
+  const trimmed = raw?.trim();
+  if (!trimmed || !isAddress(trimmed)) {
+    throw new Error(`Missing or invalid ${key}`);
+  }
+  return trimmed as Address;
+}
+
 function executionVenueFromEnv(): ExecutionVenue {
   const raw = stringFromEnv("TRADER_EXECUTION_VENUE", "base-spot").toLowerCase();
   if (raw === "base-spot" || raw === "ethereum-spot" || raw === "hyperliquid-perp") {
@@ -159,6 +171,40 @@ function buildVaultStrategyConfig(prefix: string): VaultStrategyConfig | null {
       stringFromEnv(`${prefix}_VAULT_STRATEGY_MIN_RESERVE_ETH`, "0.002"),
       18
     ),
+  };
+}
+
+function buildVaultRailConfig(prefix: string, defaultBaseRpcUrl: string): VaultRailConfig | null {
+  if (!boolFromEnv(`${prefix}_VAULT_RAIL_ENABLED`, false)) {
+    return null;
+  }
+
+  const arbChainId = Math.trunc(numberFromEnv(`${prefix}_VAULT_RAIL_ARB_CHAIN_ID`, 421614));
+  const baseChainId = Math.trunc(numberFromEnv(`${prefix}_VAULT_RAIL_BASE_CHAIN_ID`, 8453));
+  const defaultArbRpcUrl = arbChainId === 42161 ? ARBITRUM_ONE_RPC : ARBITRUM_SEPOLIA_RPC;
+
+  return {
+    enabled: true,
+    baseVaultAddress: requiredAddressFromEnv(`${prefix}_VAULT_RAIL_BASE_VAULT_ADDRESS`),
+    reserveAllocatorAddress: optionalAddressFromEnv(`${prefix}_VAULT_RAIL_RESERVE_ALLOCATOR_ADDRESS`),
+    bridgeRouterAddress: requiredAddressFromEnv(`${prefix}_VAULT_RAIL_BRIDGE_ROUTER_ADDRESS`),
+    navReporterAddress: requiredAddressFromEnv(`${prefix}_VAULT_RAIL_NAV_REPORTER_ADDRESS`),
+    assetConverterAddress: optionalAddressFromEnv(`${prefix}_VAULT_RAIL_ASSET_CONVERTER_ADDRESS`),
+    bridgeAdapterAddress: optionalAddressFromEnv(`${prefix}_VAULT_RAIL_BRIDGE_ADAPTER_ADDRESS`),
+    arbTransitEscrowAddress: optionalAddressFromEnv(`${prefix}_VAULT_RAIL_ARB_TRANSIT_ESCROW_ADDRESS`),
+    hlStrategyManagerAddress: optionalAddressFromEnv(`${prefix}_VAULT_RAIL_HL_STRATEGY_MANAGER_ADDRESS`),
+    bridgeAssetAddress: requiredAddressFromEnv(`${prefix}_VAULT_RAIL_BRIDGE_ASSET_ADDRESS`),
+    baseChainId,
+    baseRpcUrl: stringFromEnv(`${prefix}_VAULT_RAIL_BASE_RPC_URL`, defaultBaseRpcUrl),
+    arbRpcUrl: stringFromEnv(`${prefix}_VAULT_RAIL_ARB_RPC_URL`, defaultArbRpcUrl),
+    arbChainId,
+    autoReportNav: boolFromEnv(`${prefix}_VAULT_RAIL_AUTO_REPORT_NAV`, true),
+    minNavIntervalMs: numberFromEnv(`${prefix}_VAULT_RAIL_MIN_NAV_INTERVAL_MS`, 86_400_000),
+    navFeeEthRaw: parseAmountToRaw(stringFromEnv(`${prefix}_VAULT_RAIL_NAV_FEE_ETH`, "0"), 18),
+    navEthPriceUsdOverride: (() => {
+      const parsed = Number(process.env[`${prefix}_VAULT_RAIL_ETH_PRICE_USD`] || "");
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+    })(),
   };
 }
 
@@ -259,6 +305,7 @@ export function getTraderConfig(): TraderExecutionConfig {
       watchMarkets: stringFromEnv("HYPERLIQUID_WATCH_MARKETS", "BTC,ETH,SOL").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean),
     },
     vaultStrategy: buildVaultStrategyConfig("TRADER"),
+    vaultRail: buildVaultRailConfig("TRADER", rpcUrl),
   };
 }
 
@@ -373,6 +420,10 @@ export function getParallelBaseConfig(): TraderExecutionConfig | null {
       ),
     },
     vaultStrategy: buildVaultStrategyConfig("TRADER_BASE_PARALLEL"),
+    vaultRail: buildVaultRailConfig(
+      "TRADER_BASE_PARALLEL",
+      stringFromEnv("TRADER_BASE_PARALLEL_RPC_URL", stringFromEnv("BASE_MAINNET_RPC_URL", "https://mainnet.base.org"))
+    ),
   };
 
   return next;

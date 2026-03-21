@@ -5,6 +5,7 @@ interface IBaseCapitalVault {
     function asset() external view returns (address);
     function bridgeOutToRouter(uint256 assets, bytes32 routeId, address receiver) external;
     function markBridgeReturned(uint256 assets, bytes32 routeId) external;
+    function settleBridgeReturn(uint256 pendingReduction, uint256 liquidIncrease, bytes32 routeId) external;
     function markBridgeDeliveredToStrategy(uint256 assets, bytes32 settlementId) external;
     function markStrategyReturnPending(uint256 assets, bytes32 settlementId) external;
     function settleDailyNav(

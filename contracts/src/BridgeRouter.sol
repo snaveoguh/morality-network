@@ -7,7 +7,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {IAssetConverter} from "./interfaces/IAssetConverter.sol";
 import {IBaseCapitalVault} from "./interfaces/IBaseCapitalVault.sol";
+import {IBridgeAdapter} from "./interfaces/IBridgeAdapter.sol";
 import {IBridgeRouter} from "./interfaces/IBridgeRouter.sol";
 
 contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, PausableUpgradeable, IBridgeRouter {
@@ -23,7 +25,9 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
 
     struct Route {
         uint256 outboundAssets;
+        uint256 bridgeOutboundAssets;
         uint256 returnAssets;
+        uint256 bridgeReturnAssets;
         uint64 createdAt;
         uint64 updatedAt;
         bytes32 intentId;
@@ -32,9 +36,12 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
 
     address public vault;
     address public asset;
+    address public bridgeAsset;
     address public operator;
     address public bridgeExecutor;
     address public arbEscrow;
+    address public assetConverter;
+    address public bridgeAdapter;
     uint256 public totalPendingAssets;
     uint256 public nextRouteNonce;
 
@@ -43,12 +50,16 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
     event OperatorUpdated(address indexed previousOperator, address indexed nextOperator);
     event BridgeExecutorUpdated(address indexed previousExecutor, address indexed nextExecutor);
     event ArbEscrowUpdated(address indexed previousEscrow, address indexed nextEscrow);
+    event BridgeAssetUpdated(address indexed previousAsset, address indexed nextAsset);
+    event AssetConverterUpdated(address indexed previousConverter, address indexed nextConverter);
+    event BridgeAdapterUpdated(address indexed previousAdapter, address indexed nextAdapter);
     event RouteCreated(bytes32 indexed routeId, bytes32 indexed intentId, uint256 assets);
     event RouteReceivedOnArb(bytes32 indexed routeId);
-    event RouteDeployedToHl(bytes32 indexed routeId, bytes32 indexed settlementId, uint256 assets);
+    event RouteDeployedToHl(bytes32 indexed routeId, bytes32 indexed settlementId, uint256 assets, uint256 bridgeAssets);
     event RouteReturnPending(bytes32 indexed routeId, bytes32 indexed settlementId, uint256 assets);
-    event RouteReturned(bytes32 indexed routeId, bytes32 indexed completionId, uint256 assets);
-    event RouteFailed(bytes32 indexed routeId, bytes32 indexed completionId, uint256 assets);
+    event RouteReturnBridgeAssetsUpdated(bytes32 indexed routeId, uint256 bridgeAssets);
+    event RouteReturned(bytes32 indexed routeId, bytes32 indexed completionId, uint256 assets, uint256 bridgeAssets);
+    event RouteFailed(bytes32 indexed routeId, bytes32 indexed completionId, uint256 assets, uint256 bridgeAssets);
 
     modifier onlyOperator() {
         require(msg.sender == operator, "Not operator");
@@ -84,6 +95,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
 
         vault = vault_;
         asset = asset_;
+        bridgeAsset = asset_;
         operator = operator_;
         bridgeExecutor = bridgeExecutor_;
         arbEscrow = arbEscrow_;
@@ -101,7 +113,9 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
 
         routes[routeId] = Route({
             outboundAssets: assets,
+            bridgeOutboundAssets: 0,
             returnAssets: 0,
+            bridgeReturnAssets: 0,
             createdAt: uint64(block.timestamp),
             updatedAt: uint64(block.timestamp),
             intentId: intentId,
@@ -109,7 +123,9 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         });
 
         IBaseCapitalVault(vault).bridgeOutToRouter(assets, routeId, address(this));
-        require(IERC20(asset).transfer(bridgeExecutor, assets), "Transfer failed");
+        uint256 bridgeAmount = _convertToBridgeAsset(assets, routeId);
+        routes[routeId].bridgeOutboundAssets = bridgeAmount;
+        _bridgeOut(routeId, bridgeAmount);
         totalPendingAssets += assets;
 
         emit RouteCreated(routeId, intentId, assets);
@@ -132,7 +148,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         totalPendingAssets -= route.outboundAssets;
         IBaseCapitalVault(vault).markBridgeDeliveredToStrategy(route.outboundAssets, settlementId);
 
-        emit RouteDeployedToHl(routeId, settlementId, route.outboundAssets);
+        emit RouteDeployedToHl(routeId, settlementId, route.outboundAssets, route.bridgeOutboundAssets);
     }
 
     function beginReturnFromStrategy(
@@ -153,35 +169,44 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         emit RouteReturnPending(routeId, settlementId, assets);
     }
 
+    function setReturnBridgeAssets(bytes32 routeId, uint256 bridgeAssets_) external onlyBridgeExecutor whenNotPaused {
+        Route storage route = routes[routeId];
+        require(route.status == RouteStatus.ReturnPending, "Bad route state");
+        require(bridgeAssets_ > 0, "Zero assets");
+        route.bridgeReturnAssets = bridgeAssets_;
+        route.updatedAt = uint64(block.timestamp);
+        emit RouteReturnBridgeAssetsUpdated(routeId, bridgeAssets_);
+    }
+
     function finalizeReturnToBase(bytes32 routeId, bytes32 completionId) external onlyBridgeExecutor whenNotPaused {
         Route storage route = routes[routeId];
         require(route.status == RouteStatus.ReturnPending, "Bad route state");
         require(route.returnAssets > 0, "No return assets");
 
-        uint256 assets = route.returnAssets;
-        require(IERC20(asset).transferFrom(msg.sender, vault, assets), "Transfer failed");
+        uint256 bridgeAssets = route.bridgeReturnAssets > 0 ? route.bridgeReturnAssets : route.bridgeOutboundAssets;
+        uint256 assetsOut = _completeInbound(routeId, bridgeAssets, completionId);
 
         route.status = RouteStatus.Returned;
         route.updatedAt = uint64(block.timestamp);
-        totalPendingAssets -= assets;
-        IBaseCapitalVault(vault).markBridgeReturned(assets, completionId);
+        totalPendingAssets -= route.returnAssets;
+        IBaseCapitalVault(vault).settleBridgeReturn(route.returnAssets, assetsOut, completionId);
 
-        emit RouteReturned(routeId, completionId, assets);
+        emit RouteReturned(routeId, completionId, assetsOut, bridgeAssets);
     }
 
     function markFailedRoute(bytes32 routeId, bytes32 completionId) external onlyBridgeExecutor whenNotPaused {
         Route storage route = routes[routeId];
         require(route.status == RouteStatus.Pending || route.status == RouteStatus.ReceivedOnArb, "Bad route state");
 
-        uint256 assets = route.outboundAssets;
-        require(IERC20(asset).transferFrom(msg.sender, vault, assets), "Transfer failed");
+        uint256 bridgeAssets = route.bridgeOutboundAssets > 0 ? route.bridgeOutboundAssets : route.outboundAssets;
+        uint256 assetsOut = _completeInbound(routeId, bridgeAssets, completionId);
 
         route.status = RouteStatus.Failed;
         route.updatedAt = uint64(block.timestamp);
-        totalPendingAssets -= assets;
-        IBaseCapitalVault(vault).markBridgeReturned(assets, completionId);
+        totalPendingAssets -= route.outboundAssets;
+        IBaseCapitalVault(vault).settleBridgeReturn(route.outboundAssets, assetsOut, completionId);
 
-        emit RouteFailed(routeId, completionId, assets);
+        emit RouteFailed(routeId, completionId, assetsOut, bridgeAssets);
     }
 
     function getRoute(bytes32 routeId)
@@ -224,11 +249,69 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         arbEscrow = nextEscrow;
     }
 
+    function setBridgeAsset(address nextAsset) external onlyOwner {
+        require(nextAsset != address(0), "Zero asset");
+        emit BridgeAssetUpdated(bridgeAsset, nextAsset);
+        bridgeAsset = nextAsset;
+    }
+
+    function setAssetConverter(address nextConverter) external onlyOwner {
+        emit AssetConverterUpdated(assetConverter, nextConverter);
+        assetConverter = nextConverter;
+    }
+
+    function setBridgeAdapter(address nextAdapter) external onlyOwner {
+        emit BridgeAdapterUpdated(bridgeAdapter, nextAdapter);
+        bridgeAdapter = nextAdapter;
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
 
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    function _bridgeOut(bytes32 routeId, uint256 amount) internal {
+        if (bridgeAdapter != address(0)) {
+            require(IERC20(bridgeAsset).approve(bridgeAdapter, 0), "Approve reset failed");
+            require(IERC20(bridgeAsset).approve(bridgeAdapter, amount), "Approve failed");
+            IBridgeAdapter(bridgeAdapter).bridgeOut(routeId, amount, bridgeExecutor, routeId);
+            return;
+        }
+
+        require(IERC20(bridgeAsset).transfer(bridgeExecutor, amount), "Transfer failed");
+    }
+
+    function _convertToBridgeAsset(uint256 amount, bytes32 routeId) internal returns (uint256 bridgeAmount) {
+        if (assetConverter == address(0) || bridgeAsset == asset) {
+            return amount;
+        }
+
+        require(IERC20(asset).approve(assetConverter, 0), "Approve reset failed");
+        require(IERC20(asset).approve(assetConverter, amount), "Approve failed");
+        return IAssetConverter(assetConverter).convertToBridgeAsset(amount, address(this), routeId);
+    }
+
+    function _completeInbound(bytes32 routeId, uint256 bridgeAssets, bytes32 completionId) internal returns (uint256 assetsOut) {
+        uint256 bridgeAmountOut = bridgeAssets;
+        if (bridgeAdapter != address(0)) {
+            bridgeAmountOut = IBridgeAdapter(bridgeAdapter).completeInbound(routeId, bridgeAssets, address(this), completionId);
+        } else {
+            require(IERC20(bridgeAsset).transferFrom(msg.sender, address(this), bridgeAssets), "Transfer failed");
+        }
+
+        routes[routeId].bridgeReturnAssets = bridgeAmountOut;
+
+        if (assetConverter != address(0) && bridgeAsset != asset) {
+            require(IERC20(bridgeAsset).approve(assetConverter, 0), "Approve reset failed");
+            require(IERC20(bridgeAsset).approve(assetConverter, bridgeAmountOut), "Approve failed");
+            assetsOut = IAssetConverter(assetConverter).convertToVaultAsset(bridgeAmountOut, address(this), completionId);
+        } else {
+            assetsOut = bridgeAmountOut;
+        }
+
+        require(IERC20(asset).transfer(vault, assetsOut), "Transfer failed");
     }
 }

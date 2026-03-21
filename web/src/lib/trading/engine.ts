@@ -1495,6 +1495,26 @@ function redactedConfigFrom(config: TraderExecutionConfig) {
           minReserveEthRaw: config.vaultStrategy.minReserveEthRaw.toString(),
         }
       : null,
+    vaultRail: config.vaultRail
+      ? {
+          enabled: config.vaultRail.enabled,
+          baseVaultAddress: config.vaultRail.baseVaultAddress,
+          reserveAllocatorAddress: config.vaultRail.reserveAllocatorAddress ?? null,
+          bridgeRouterAddress: config.vaultRail.bridgeRouterAddress,
+          navReporterAddress: config.vaultRail.navReporterAddress,
+          assetConverterAddress: config.vaultRail.assetConverterAddress ?? null,
+          bridgeAdapterAddress: config.vaultRail.bridgeAdapterAddress ?? null,
+          arbTransitEscrowAddress: config.vaultRail.arbTransitEscrowAddress ?? null,
+          hlStrategyManagerAddress: config.vaultRail.hlStrategyManagerAddress ?? null,
+          bridgeAssetAddress: config.vaultRail.bridgeAssetAddress,
+          baseChainId: config.vaultRail.baseChainId,
+          arbChainId: config.vaultRail.arbChainId,
+          autoReportNav: config.vaultRail.autoReportNav,
+          minNavIntervalMs: config.vaultRail.minNavIntervalMs,
+          navFeeEthRaw: config.vaultRail.navFeeEthRaw.toString(),
+          navEthPriceUsdOverride: config.vaultRail.navEthPriceUsdOverride ?? null,
+        }
+      : null,
     gasMultiplierBps: config.gasMultiplierBps,
     maxPriorityFeePerGas: config.maxPriorityFeePerGas.toString(),
   };
