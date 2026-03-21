@@ -67,6 +67,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
     event StrategyIncreaseMarked(bytes32 indexed settlementId, uint256 assets);
     event StrategyDecreaseMarked(bytes32 indexed settlementId, uint256 assets);
     event StrategyReturnPending(bytes32 indexed settlementId, uint256 assets);
+    event BridgeReturnSettled(bytes32 indexed routeId, uint256 pendingReduction, uint256 liquidIncrease);
     event DailyNavSettled(
         uint256 reserveAssetsEth,
         uint256 pendingBridgeEth,
@@ -305,6 +306,18 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         pendingBridgeAssetsStored -= assets;
         liquidAssetsStored += assets;
         emit BridgeInMarked(routeId, assets);
+    }
+
+    function settleBridgeReturn(
+        uint256 pendingReduction,
+        uint256 liquidIncrease,
+        bytes32 routeId
+    ) external onlyBridgeRouter {
+        require(pendingReduction > 0, "Zero reduction");
+        require(pendingReduction <= pendingBridgeAssetsStored, "Bridge underflow");
+        pendingBridgeAssetsStored -= pendingReduction;
+        liquidAssetsStored += liquidIncrease;
+        emit BridgeReturnSettled(routeId, pendingReduction, liquidIncrease);
     }
 
     function markStrategyIncrease(uint256 assets, bytes32 settlementId) external onlyAllocator {

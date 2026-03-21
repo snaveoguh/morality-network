@@ -68,6 +68,82 @@ Optional, depending on what you deploy for governance testing:
 If you do not deploy a testnet `NOUNS_TOKEN`, keep `PROPOSAL_VOTING` disabled on dev or use a
 mock token strictly for UI/integration testing.
 
+## Vault Rail Testnet Rollout
+
+The Base -> Arbitrum -> Hyperliquid vault rail is deployed as two coordinated stacks:
+
+- Base side: `contracts/script/DeployVaultRailBase.s.sol`
+- Arbitrum side: `contracts/script/DeployVaultRailArb.s.sol`
+
+Deploy the Arbitrum side first so the Base router can be pointed at a live escrow/manager pair.
+
+### Base-side Contracts
+
+- `BaseCapitalVault`
+- `WithdrawalQueue`
+- `MorphoReserveAllocator`
+- `BridgeRouter`
+- `NavReporter`
+- `ExecutorAssetConverter`
+- `ExecutorBridgeAdapter`
+
+### Arbitrum-side Contracts
+
+- `ArbTransitEscrow`
+- `HLStrategyManager`
+
+### Required Foundry Env
+
+- `VAULT_RAIL_OWNER`
+- `VAULT_RAIL_WETH`
+- `VAULT_RAIL_BRIDGE_ASSET`
+- `VAULT_RAIL_MORPHO_TARGET`
+- `VAULT_RAIL_ROUTER_OPERATOR`
+- `VAULT_RAIL_BRIDGE_EXECUTOR`
+- `VAULT_RAIL_REPORTER`
+- `VAULT_RAIL_HL_OPERATOR`
+- `VAULT_RAIL_STRATEGY_WALLET`
+- `VAULT_RAIL_BRIDGE_ASSET_LP`
+- `VAULT_RAIL_VAULT_ASSET_LP`
+- `VAULT_RAIL_ASSET_IN_SINK`
+- `VAULT_RAIL_BRIDGE_ASSET_SINK`
+- `VAULT_RAIL_TO_BRIDGE_RATE_E18`
+- `VAULT_RAIL_TO_VAULT_RATE_E18`
+
+Optional:
+
+- `VAULT_RAIL_ARB_ESCROW`
+- `VAULT_RAIL_DEPOSIT_CAP`
+- `VAULT_RAIL_MIN_LIQUID_BPS`
+- `VAULT_RAIL_RESERVE_TARGET_BPS`
+- `VAULT_RAIL_HL_TARGET_BPS`
+- `VAULT_RAIL_PERFORMANCE_FEE_BPS`
+
+### Worker / App Env
+
+To wire the keeper/service layer after the contracts are deployed, set:
+
+- `TRADER_VAULT_RAIL_ENABLED=true`
+- `TRADER_VAULT_RAIL_BASE_VAULT_ADDRESS=<BaseCapitalVault>`
+- `TRADER_VAULT_RAIL_RESERVE_ALLOCATOR_ADDRESS=<MorphoReserveAllocator>`
+- `TRADER_VAULT_RAIL_BRIDGE_ROUTER_ADDRESS=<BridgeRouter>`
+- `TRADER_VAULT_RAIL_NAV_REPORTER_ADDRESS=<NavReporter>`
+- `TRADER_VAULT_RAIL_ASSET_CONVERTER_ADDRESS=<ExecutorAssetConverter>`
+- `TRADER_VAULT_RAIL_BRIDGE_ADAPTER_ADDRESS=<ExecutorBridgeAdapter>`
+- `TRADER_VAULT_RAIL_ARB_TRANSIT_ESCROW_ADDRESS=<ArbTransitEscrow>`
+- `TRADER_VAULT_RAIL_HL_STRATEGY_MANAGER_ADDRESS=<HLStrategyManager>`
+- `TRADER_VAULT_RAIL_BRIDGE_ASSET_ADDRESS=<USDC or bridge asset>`
+- `TRADER_VAULT_RAIL_BASE_CHAIN_ID=<84532 or 8453>`
+- `TRADER_VAULT_RAIL_BASE_RPC_URL=<Base RPC>`
+- `TRADER_VAULT_RAIL_ARB_CHAIN_ID=<421614 or 42161>`
+- `TRADER_VAULT_RAIL_ARB_RPC_URL=<Arbitrum RPC>`
+- `TRADER_VAULT_RAIL_AUTO_REPORT_NAV=true`
+- `TRADER_VAULT_RAIL_MIN_NAV_INTERVAL_MS=86400000`
+- `TRADER_VAULT_RAIL_NAV_FEE_ETH=0`
+
+If you run a separate Base parallel sleeve, the same keys can be set with the
+`TRADER_BASE_PARALLEL_` prefix.
+
 ## Where Config Is Read
 
 - Extension currently points to deployed Base Sepolia addresses in:

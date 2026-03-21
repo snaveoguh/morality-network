@@ -115,6 +115,27 @@ export interface VaultStrategyConfig {
   minReserveEthRaw: bigint;
 }
 
+export interface VaultRailConfig {
+  enabled: boolean;
+  baseVaultAddress: Address;
+  reserveAllocatorAddress?: Address;
+  bridgeRouterAddress: Address;
+  navReporterAddress: Address;
+  assetConverterAddress?: Address;
+  bridgeAdapterAddress?: Address;
+  arbTransitEscrowAddress?: Address;
+  hlStrategyManagerAddress?: Address;
+  bridgeAssetAddress: Address;
+  baseChainId: number;
+  baseRpcUrl: string;
+  arbRpcUrl: string;
+  arbChainId: number;
+  autoReportNav: boolean;
+  minNavIntervalMs: number;
+  navFeeEthRaw: bigint;
+  navEthPriceUsdOverride?: number;
+}
+
 export interface SignalWeights {
   technical: number;
   pattern: number;
@@ -179,6 +200,7 @@ export interface TraderExecutionConfig {
   safety: TraderSafetyConfig;
   hyperliquid: HyperliquidConfig;
   vaultStrategy?: VaultStrategyConfig | null;
+  vaultRail?: VaultRailConfig | null;
 }
 
 export interface SwapResult {
