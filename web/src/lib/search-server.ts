@@ -1,10 +1,12 @@
 import "server-only";
 
+import { getAllArchivedFeedItems } from "@/lib/archive";
 import { computeEntityHash } from "@/lib/entity";
 import { getRecentPooterOriginals } from "@/lib/editorial-archive";
 import { fetchAllProposals } from "@/lib/governance";
 import { fetchMusicDiscovery } from "@/lib/music-discovery";
 import type { DiscoveryRequest } from "@/lib/music-types";
+import type { FeedItem } from "@/lib/rss";
 import { DEFAULT_FEEDS, fetchAllFeeds } from "@/lib/rss";
 import type { SearchGroup, SearchResult, SearchResponse, SearchSection } from "@/lib/search";
 import { SEARCH_SECTION_META, SEARCH_SECTION_ORDER } from "@/lib/search";
@@ -34,6 +36,21 @@ const DEFAULT_DISCOVERY_REQUEST: DiscoveryRequest = {
 
 let corpusCache: { records: SearchRecord[]; expiresAt: number } | null = null;
 let corpusPromise: Promise<SearchRecord[]> | null = null;
+
+async function withTimeoutFallback<T>(
+  promise: Promise<T>,
+  ms: number,
+  fallback: T,
+): Promise<T> {
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+    ]);
+  } catch {
+    return fallback;
+  }
+}
 
 function normalizeSearchText(input: string): string {
   return input
@@ -122,18 +139,48 @@ function scoreRecord(record: SearchRecord, query: string, terms: string[]): numb
 }
 
 async function buildCorpus(): Promise<SearchRecord[]> {
-  const [feedsResult, originalsResult, videosResult, musicResult, governanceResult] =
-    await Promise.allSettled([
-      fetchAllFeeds(DEFAULT_FEEDS),
+  const [
+    liveFeeds,
+    archivedFeeds,
+    originals,
+    videos,
+    musicTracks,
+    governance,
+  ] = await Promise.all([
+    withTimeoutFallback(fetchAllFeeds(DEFAULT_FEEDS), 4_000, [] as FeedItem[]),
+    withTimeoutFallback(getAllArchivedFeedItems(), 2_500, [] as FeedItem[]),
+    withTimeoutFallback(
       getRecentPooterOriginals(false, 120),
-      fetchDailyVideos(32),
-      fetchMusicDiscovery(DEFAULT_DISCOVERY_REQUEST),
-      fetchAllProposals(),
-    ]);
+      3_500,
+      [] as Awaited<ReturnType<typeof getRecentPooterOriginals>>,
+    ),
+    withTimeoutFallback(fetchDailyVideos(32), 3_500, [] as Awaited<ReturnType<typeof fetchDailyVideos>>),
+    withTimeoutFallback(
+      fetchMusicDiscovery(DEFAULT_DISCOVERY_REQUEST).then((result) => result.tracks),
+      3_500,
+      [] as Awaited<ReturnType<typeof fetchMusicDiscovery>>["tracks"],
+    ),
+    withTimeoutFallback(fetchAllProposals(), 4_000, [] as Awaited<ReturnType<typeof fetchAllProposals>>),
+  ]);
+
+  const mergedFeedMap = new Map<string, FeedItem>();
+  for (const item of archivedFeeds) {
+    const key = item.link || item.id || item.title;
+    if (!key) continue;
+    mergedFeedMap.set(key, item);
+  }
+  for (const item of liveFeeds) {
+    const key = item.link || item.id || item.title;
+    if (!key) continue;
+    mergedFeedMap.set(key, item);
+  }
+  const mergedFeeds = [...mergedFeedMap.values()].sort(
+    (a, b) => toTimestamp(b.pubDate) - toTimestamp(a.pubDate),
+  );
 
   const feedRecords: SearchRecord[] =
-    feedsResult.status === "fulfilled"
-      ? feedsResult.value.map((item) => ({
+    mergedFeeds.length > 0
+      ? mergedFeeds.map((item) => ({
           id: item.id,
           section: "breaking-news" as const,
           kind: "rss" as const,
@@ -151,8 +198,8 @@ async function buildCorpus(): Promise<SearchRecord[]> {
       : [];
 
   const originalRecords: SearchRecord[] =
-    originalsResult.status === "fulfilled"
-      ? originalsResult.value.map((item) => ({
+    originals.length > 0
+      ? originals.map((item) => ({
           id: item.hash,
           section: "pooter-og" as const,
           kind: "pooter-original" as const,
@@ -170,8 +217,8 @@ async function buildCorpus(): Promise<SearchRecord[]> {
       : [];
 
   const videoRecords: SearchRecord[] =
-    videosResult.status === "fulfilled"
-      ? videosResult.value.map((item) => ({
+    videos.length > 0
+      ? videos.map((item) => ({
           id: item.id,
           section: "videos" as const,
           kind: "video" as const,
@@ -189,8 +236,8 @@ async function buildCorpus(): Promise<SearchRecord[]> {
       : [];
 
   const musicRecords: SearchRecord[] =
-    musicResult.status === "fulfilled"
-      ? musicResult.value.tracks.map((item) => ({
+    musicTracks.length > 0
+      ? musicTracks.map((item) => ({
           id: item.id,
           section: "music" as const,
           kind: "music" as const,
@@ -210,8 +257,8 @@ async function buildCorpus(): Promise<SearchRecord[]> {
       : [];
 
   const governanceRecords: SearchRecord[] =
-    governanceResult.status === "fulfilled"
-      ? governanceResult.value.map((item) => ({
+    governance.length > 0
+      ? governance.map((item) => ({
           id: item.id,
           section: "governance" as const,
           kind: "governance" as const,
