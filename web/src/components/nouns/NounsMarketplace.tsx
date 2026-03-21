@@ -3,38 +3,33 @@
 import { useState, useEffect, useCallback } from "react";
 import type { NounMarketItem } from "@/lib/nouns-marketplace";
 import { NounCard } from "./NounCard";
+import { YourNouns } from "./YourNouns";
 
 const SORT_OPTIONS = [
-  { value: "price-asc", label: "Price ↑" },
-  { value: "price-desc", label: "Price ↓" },
   { value: "id-desc", label: "Newest" },
   { value: "id-asc", label: "Oldest" },
-];
-
-const STATUS_OPTIONS = [
-  { value: "all", label: "All" },
-  { value: "listed", label: "Listed" },
+  { value: "price-asc", label: "Price ↑" },
+  { value: "price-desc", label: "Price ↓" },
 ];
 
 export function NounsMarketplace() {
   const [items, setItems] = useState<NounMarketItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("price-asc");
-  const [status, setStatus] = useState("all");
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ limit: "100", sort, status });
+      const params = new URLSearchParams({ sort });
       const res = await fetch(`/api/nouns/listings?${params}`);
       const data = await res.json();
-      setItems(data.items || []);
+      setItems((data.items || []) as NounMarketItem[]);
     } catch {
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, [sort, status]);
+  }, [sort]);
 
   useEffect(() => {
     fetchItems();
@@ -53,28 +48,18 @@ export function NounsMarketplace() {
         </p>
       </div>
 
-      {/* ── Filters ── */}
+      {/* ── Your Nouns (wallet-connected) ── */}
+      <YourNouns />
+
+      {/* ── Listed Nouns ── */}
+      <div className="mb-2 border-b border-[var(--rule-light)] pb-2">
+        <h2 className="font-headline text-xl text-[var(--ink)]">
+          Listed for Sale
+        </h2>
+      </div>
+
+      {/* ── Sort / Count ── */}
       <div className="mb-4 flex flex-wrap items-center gap-0 border-b border-[var(--rule-light)] pb-3 font-mono text-[10px] uppercase tracking-wider">
-        {/* Status */}
-        {STATUS_OPTIONS.map((opt, i) => (
-          <span key={opt.value} className="flex shrink-0 items-center">
-            {i > 0 && <span className="mx-1 text-[var(--rule-light)]">|</span>}
-            <button
-              onClick={() => setStatus(opt.value)}
-              className={`transition-colors ${
-                status === opt.value
-                  ? "font-bold text-[var(--ink)] underline underline-offset-4"
-                  : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
-              }`}
-            >
-              {opt.label}
-            </button>
-          </span>
-        ))}
-
-        <span className="mx-3 shrink-0 text-[var(--rule-light)]">&middot;</span>
-
-        {/* Sort */}
         {SORT_OPTIONS.map((opt, i) => (
           <span key={opt.value} className="flex shrink-0 items-center">
             {i > 0 && <span className="mx-1 text-[var(--rule-light)]">|</span>}
@@ -92,14 +77,14 @@ export function NounsMarketplace() {
         ))}
 
         <span className="ml-auto shrink-0 text-[var(--ink-faint)]">
-          {items.length} items
+          {items.length} listed
         </span>
       </div>
 
       {/* ── Grid ── */}
       {loading ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {Array.from({ length: 20 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <div
               key={i}
               className="aspect-square animate-pulse border border-[var(--rule-light)] bg-[var(--paper-dark)]"
@@ -108,7 +93,11 @@ export function NounsMarketplace() {
         </div>
       ) : items.length === 0 ? (
         <div className="py-16 text-center font-body-serif text-sm italic text-[var(--ink-faint)]">
-          No Nouns match the current filters.
+          No Nouns are currently listed for sale.
+          <br />
+          <span className="text-[8px] font-mono uppercase tracking-wider mt-2 block">
+            Connect your wallet and visit a Noun&rsquo;s detail page to list it.
+          </span>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
