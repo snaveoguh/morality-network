@@ -96,13 +96,15 @@ function optionalAddressFromEnv(key: string): Address | undefined {
   return isAddress(trimmed) ? (trimmed as Address) : undefined;
 }
 
-function requiredAddressFromEnv(key: string): Address {
-  const raw = process.env[key];
-  const trimmed = raw?.trim();
-  if (!trimmed || !isAddress(trimmed)) {
-    throw new Error(`Missing or invalid ${key}`);
+function requiredAddressFromEnv(...keys: string[]): Address {
+  for (const key of keys) {
+    const raw = process.env[key];
+    const trimmed = raw?.trim();
+    if (trimmed && isAddress(trimmed)) {
+      return trimmed as Address;
+    }
   }
-  return trimmed as Address;
+  throw new Error(`Missing or invalid ${keys.join(" / ")}`);
 }
 
 function executionVenueFromEnv(): ExecutionVenue {
@@ -193,7 +195,14 @@ function buildVaultRailConfig(prefix: string, defaultBaseRpcUrl: string): VaultR
     bridgeAdapterAddress: optionalAddressFromEnv(`${prefix}_VAULT_RAIL_BRIDGE_ADAPTER_ADDRESS`),
     arbTransitEscrowAddress: optionalAddressFromEnv(`${prefix}_VAULT_RAIL_ARB_TRANSIT_ESCROW_ADDRESS`),
     hlStrategyManagerAddress: optionalAddressFromEnv(`${prefix}_VAULT_RAIL_HL_STRATEGY_MANAGER_ADDRESS`),
-    bridgeAssetAddress: requiredAddressFromEnv(`${prefix}_VAULT_RAIL_BRIDGE_ASSET_ADDRESS`),
+    baseBridgeAssetAddress: requiredAddressFromEnv(
+      `${prefix}_VAULT_RAIL_BASE_BRIDGE_ASSET_ADDRESS`,
+      `${prefix}_VAULT_RAIL_BRIDGE_ASSET_ADDRESS`
+    ),
+    arbBridgeAssetAddress: requiredAddressFromEnv(
+      `${prefix}_VAULT_RAIL_ARB_BRIDGE_ASSET_ADDRESS`,
+      `${prefix}_VAULT_RAIL_BRIDGE_ASSET_ADDRESS`
+    ),
     baseChainId,
     baseRpcUrl: stringFromEnv(`${prefix}_VAULT_RAIL_BASE_RPC_URL`, defaultBaseRpcUrl),
     arbRpcUrl: stringFromEnv(`${prefix}_VAULT_RAIL_ARB_RPC_URL`, defaultArbRpcUrl),
