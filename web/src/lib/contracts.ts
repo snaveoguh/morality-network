@@ -3,7 +3,10 @@ import { base, mainnet } from "viem/chains";
 
 // MO Token on Base
 export const MO_TOKEN = {
-  address: "0x8729c70061739140ee6bE00A3875Cbf6d09A746C" as Address,
+  address: readAddressEnv(
+    "NEXT_PUBLIC_MO_TOKEN_ADDRESS",
+    "0x8729c70061739140ee6bE00A3875Cbf6d09A746C" as Address,
+  ),
   symbol: "MO",
   name: "mo",
   decimals: 18,
@@ -50,10 +53,6 @@ export const ERC20_ABI = [
   },
 ] as const;
 
-// Base chain for registry/comments/tipping/leaderboard writes.
-export const CONTRACTS_CHAIN_ID = base.id;
-// Ethereum mainnet chain for trustless Nouns/Lil Nouns prediction markets.
-export const PREDICTION_MARKET_CHAIN_ID = mainnet.id;
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
 
 function readAddressEnv(name: string, fallback: Address): Address {
@@ -62,14 +61,27 @@ function readAddressEnv(name: string, fallback: Address): Address {
   return (trimmed && trimmed.length > 0 ? trimmed : fallback) as Address;
 }
 
-const parsedVaultChainId = Number(
-  process.env.NEXT_PUBLIC_AGENT_VAULT_CHAIN_ID ?? `${base.id}`
-);
+function readChainIdEnv(name: string, fallback: number): number {
+  const rawValue = process.env[name];
+  const trimmed = rawValue?.trim();
+  const parsed = trimmed ? Number(trimmed) : fallback;
+  return Number.isFinite(parsed) && parsed > 0 ? Math.trunc(parsed) : fallback;
+}
 
-export const AGENT_VAULT_CHAIN_ID =
-  Number.isFinite(parsedVaultChainId) && parsedVaultChainId > 0
-    ? Math.trunc(parsedVaultChainId)
-    : base.id;
+// Base by default, but env-overridable so dev can point at Base Sepolia.
+export const CONTRACTS_CHAIN_ID = readChainIdEnv(
+  "NEXT_PUBLIC_CONTRACTS_CHAIN_ID",
+  base.id,
+);
+// Ethereum mainnet by default for trustless Nouns/Lil Nouns resolution.
+export const PREDICTION_MARKET_CHAIN_ID = readChainIdEnv(
+  "NEXT_PUBLIC_PREDICTION_MARKET_CHAIN_ID",
+  mainnet.id,
+);
+export const AGENT_VAULT_CHAIN_ID = readChainIdEnv(
+  "NEXT_PUBLIC_AGENT_VAULT_CHAIN_ID",
+  base.id,
+);
 export const AGENT_VAULT_ADDRESS = readAddressEnv(
   "NEXT_PUBLIC_AGENT_VAULT_ADDRESS",
   ZERO_ADDRESS,
@@ -873,14 +885,20 @@ export enum EntityType {
 // NOUNS TOKEN (Ethereum mainnet)
 // ============================================================================
 
-export const NOUNS_TOKEN_ADDRESS = "0x9C8fF314C9Bc7F6e59A9d9225Fb22946427eDC03" as Address;
+export const NOUNS_TOKEN_ADDRESS = readAddressEnv(
+  "NEXT_PUBLIC_NOUNS_TOKEN_ADDRESS",
+  "0x9C8fF314C9Bc7F6e59A9d9225Fb22946427eDC03" as Address,
+);
 
 // ============================================================================
 // PROPOSAL VOTING — Signal votes on DAO proposals
 // Update after deployment
 // ============================================================================
 
-export const PROPOSAL_VOTING_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
+export const PROPOSAL_VOTING_ADDRESS = readAddressEnv(
+  "NEXT_PUBLIC_PROPOSAL_VOTING_ADDRESS",
+  ZERO_ADDRESS,
+);
 
 export const PROPOSAL_VOTING_ABI = [
   {
@@ -1099,8 +1117,10 @@ export const AGENT_VAULT_ABI = [
 // Lives on Ethereum mainnet so Nouns/Lil Nouns resolve trustlessly onchain.
 // ============================================================================
 
-export const PREDICTION_MARKET_ADDRESS =
-  "0x2ea7502C4db5B8cfB329d8a9866EB6705b036608" as Address;
+export const PREDICTION_MARKET_ADDRESS = readAddressEnv(
+  "NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS",
+  "0x2ea7502C4db5B8cfB329d8a9866EB6705b036608" as Address,
+);
 
 export const PREDICTION_MARKET_ABI = [
   {

@@ -34,6 +34,38 @@ Deployment script: `contracts/script/DeployAll.s.sol`
 | PooterEditions | `0x45b375c82b4f1662d27a0b75b078b81f0e7b2bf4` |
 | MoralityProposalVoting | Not deployed (requires `NOUNS_TOKEN`) |
 
+### Auctions + Community Editions
+
+`DeployAll.s.sol` does not deploy `PooterAuctions`. To get the full editions stack on
+Base Sepolia, run `contracts/script/DeployAuctions.s.sol` after `PooterEditions` exists and
+set `POOTER_EDITIONS_PROXY` plus `TREASURY`.
+
+### Dev Site Wiring
+
+To point `dev.pooter.world` at Base Sepolia without touching production defaults, set:
+
+- `NEXT_PUBLIC_CONTRACTS_CHAIN_ID=84532`
+- `NEXT_PUBLIC_AGENT_VAULT_CHAIN_ID=84532`
+- `NEXT_PUBLIC_PREDICTION_MARKET_CHAIN_ID=84532`
+- `NEXT_PUBLIC_REGISTRY_ADDRESS=<Base Sepolia registry>`
+- `NEXT_PUBLIC_RATINGS_ADDRESS=<Base Sepolia ratings>`
+- `NEXT_PUBLIC_COMMENTS_ADDRESS=<Base Sepolia comments>`
+- `NEXT_PUBLIC_TIPPING_ADDRESS=<Base Sepolia tipping>`
+- `NEXT_PUBLIC_LEADERBOARD_ADDRESS=<Base Sepolia leaderboard>`
+- `NEXT_PUBLIC_AGENT_VAULT_ADDRESS=<Base Sepolia vault>`
+- `NEXT_PUBLIC_POOTER_EDITIONS_ADDRESS=<Base Sepolia editions>`
+- `NEXT_PUBLIC_POOTER_AUCTIONS_ADDRESS=<Base Sepolia auctions>`
+- `NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS=<Base Sepolia prediction market>`
+
+Optional, depending on what you deploy for governance testing:
+
+- `NEXT_PUBLIC_PROPOSAL_VOTING_ADDRESS=<Base Sepolia proposal voting>`
+- `NEXT_PUBLIC_NOUNS_TOKEN_ADDRESS=<test token or mock nouns token>`
+- `NEXT_PUBLIC_MO_TOKEN_ADDRESS=<test MO token if holder-gating on Sepolia>`
+
+If you do not deploy a testnet `NOUNS_TOKEN`, keep `PROPOSAL_VOTING` disabled on dev or use a
+mock token strictly for UI/integration testing.
+
 ## Where Config Is Read
 
 - Extension currently points to deployed Base Sepolia addresses in:

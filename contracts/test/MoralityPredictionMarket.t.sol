@@ -67,6 +67,46 @@ contract MoralityPredictionMarketTest is Test {
         market.initialize();
     }
 
+    function test_setProtocolFeeBoundsAndWithdrawFees() public {
+        address ownerReceiver = makeAddr("ownerReceiver");
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        market.setProtocolFee(500);
+
+        vm.expectRevert("Fee too high");
+        market.setProtocolFee(1_001);
+
+        market.setProtocolFee(500);
+        assertEq(market.protocolFeeBps(), 500);
+
+        market.createMarket(DAO, PROPOSAL_ID);
+
+        vm.prank(alice);
+        market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
+
+        vm.prank(bob);
+        market.stake{value: 1 ether}(DAO, PROPOSAL_ID, false);
+
+        market.ownerResolve(DAO, PROPOSAL_ID, MoralityPredictionMarket.Outcome.FOR);
+
+        vm.prank(alice);
+        market.claim(DAO, PROPOSAL_ID);
+
+        assertEq(market.totalFeesCollected(), 0.05 ether);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        market.withdrawFees();
+
+        market.transferOwnership(ownerReceiver);
+
+        vm.prank(ownerReceiver);
+        market.withdrawFees();
+        assertEq(market.totalFeesCollected(), 0);
+        assertEq(address(market).balance, 0);
+    }
+
     // ========================================================================
     // MARKET CREATION — owner only
     // ========================================================================
@@ -159,6 +199,24 @@ contract MoralityPredictionMarketTest is Test {
         vm.prank(bob);
         vm.expectRevert("Market resolved");
         market.stake{value: 1 ether}(DAO, PROPOSAL_ID, false);
+    }
+
+    function test_pauseBlocksStake() public {
+        market.createMarket(DAO, PROPOSAL_ID);
+        market.pause();
+
+        vm.prank(alice);
+        vm.expectRevert();
+        market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
+
+        market.unpause();
+
+        vm.prank(alice);
+        market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
+
+        (uint256 forPool,,,,,, , bool exists) = market.getMarket(DAO, PROPOSAL_ID);
+        assertTrue(exists);
+        assertEq(forPool, 1 ether);
     }
 
     // ========================================================================
@@ -279,6 +337,32 @@ contract MoralityPredictionMarketTest is Test {
 
         vm.expectRevert("Proposal not final");
         market.resolve(DAO, PROPOSAL_ID);
+    }
+
+    function test_resolveOnchainGovernorVoidStateRefundsAll() public {
+        market.setDaoResolver(DAO, address(governorA), true);
+        governorA.setProposalState(100, 1, true); // Active
+        market.createMarket(DAO, PROPOSAL_ID);
+
+        vm.prank(alice);
+        market.stake{value: 0.7 ether}(DAO, PROPOSAL_ID, true);
+
+        vm.prank(bob);
+        market.stake{value: 0.3 ether}(DAO, PROPOSAL_ID, false);
+
+        governorA.setProposalState(100, 2, true); // Canceled -> VOID
+        market.resolve(DAO, PROPOSAL_ID);
+
+        uint256 aliceBefore = alice.balance;
+        uint256 bobBefore = bob.balance;
+
+        vm.prank(alice);
+        market.claim(DAO, PROPOSAL_ID);
+        vm.prank(bob);
+        market.claim(DAO, PROPOSAL_ID);
+
+        assertEq(alice.balance, aliceBefore + 0.7 ether);
+        assertEq(bob.balance, bobBefore + 0.3 ether);
     }
 
     function test_existingMarketUsesLockedGovernorAfterResolverChange() public {
