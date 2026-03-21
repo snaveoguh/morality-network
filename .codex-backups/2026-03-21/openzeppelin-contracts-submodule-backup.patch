@@ -1,0 +1,35 @@
+From 3d3be4b072a127d6a858b0811b780fa300238a37 Mon Sep 17 00:00:00 2001
+From: hugo <hugo@hugos-MacBook-Air-2.local>
+Date: Sat, 21 Mar 2026 11:47:19 -0600
+Subject: [PATCH] checkpoint: preserve nested submodule state
+
+---
+ lib/erc4626-tests     | 2 +-
+ lib/forge-std         | 2 +-
+ lib/halmos-cheatcodes | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/lib/erc4626-tests b/lib/erc4626-tests
+index 232ff9ba..ac485460 160000
+--- a/lib/erc4626-tests
++++ b/lib/erc4626-tests
+@@ -1 +1 @@
+-Subproject commit 232ff9ba8194e406967f52ecc5cb52ed764209e9
++Subproject commit ac485460e014f22807c1ff687e0b4dc3af96ee40
+diff --git a/lib/forge-std b/lib/forge-std
+index 3b20d60d..f5495c9b 160000
+--- a/lib/forge-std
++++ b/lib/forge-std
+@@ -1 +1 @@
+-Subproject commit 3b20d60d14b343ee4f908cb8079495c07f5e8981
++Subproject commit f5495c9b993bfc6e79dd52adfdcb7dac0a1da918
+diff --git a/lib/halmos-cheatcodes b/lib/halmos-cheatcodes
+index 7328abe1..6da4e692 160000
+--- a/lib/halmos-cheatcodes
++++ b/lib/halmos-cheatcodes
+@@ -1 +1 @@
+-Subproject commit 7328abe100445fc53885c21d0e713b95293cf14c
++Subproject commit 6da4e692c357ba6d641a2e677a28298cac9f76ab
+-- 
+2.50.1 (Apple Git-155)
+
