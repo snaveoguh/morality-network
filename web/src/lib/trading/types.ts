@@ -125,7 +125,8 @@ export interface VaultRailConfig {
   bridgeAdapterAddress?: Address;
   arbTransitEscrowAddress?: Address;
   hlStrategyManagerAddress?: Address;
-  bridgeAssetAddress: Address;
+  baseBridgeAssetAddress: Address;
+  arbBridgeAssetAddress: Address;
   baseChainId: number;
   baseRpcUrl: string;
   arbRpcUrl: string;

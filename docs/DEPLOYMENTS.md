@@ -96,7 +96,8 @@ Deploy the Arbitrum side first so the Base router can be pointed at a live escro
 
 - `VAULT_RAIL_OWNER`
 - `VAULT_RAIL_WETH`
-- `VAULT_RAIL_BRIDGE_ASSET`
+- `VAULT_RAIL_BASE_BRIDGE_ASSET`
+- `VAULT_RAIL_ARB_BRIDGE_ASSET`
 - `VAULT_RAIL_MORPHO_TARGET`
 - `VAULT_RAIL_ROUTER_OPERATOR`
 - `VAULT_RAIL_BRIDGE_EXECUTOR`
@@ -112,12 +113,15 @@ Deploy the Arbitrum side first so the Base router can be pointed at a live escro
 
 Optional:
 
+- `VAULT_RAIL_BRIDGE_ASSET`
 - `VAULT_RAIL_ARB_ESCROW`
 - `VAULT_RAIL_DEPOSIT_CAP`
 - `VAULT_RAIL_MIN_LIQUID_BPS`
 - `VAULT_RAIL_RESERVE_TARGET_BPS`
 - `VAULT_RAIL_HL_TARGET_BPS`
 - `VAULT_RAIL_PERFORMANCE_FEE_BPS`
+- `VAULT_RAIL_DEPLOY_DEV_RESERVE=true`
+- `VAULT_RAIL_DEPLOY_DEV_BRIDGE_ASSET=true`
 
 ### Worker / App Env
 
@@ -132,7 +136,8 @@ To wire the keeper/service layer after the contracts are deployed, set:
 - `TRADER_VAULT_RAIL_BRIDGE_ADAPTER_ADDRESS=<ExecutorBridgeAdapter>`
 - `TRADER_VAULT_RAIL_ARB_TRANSIT_ESCROW_ADDRESS=<ArbTransitEscrow>`
 - `TRADER_VAULT_RAIL_HL_STRATEGY_MANAGER_ADDRESS=<HLStrategyManager>`
-- `TRADER_VAULT_RAIL_BRIDGE_ASSET_ADDRESS=<USDC or bridge asset>`
+- `TRADER_VAULT_RAIL_BASE_BRIDGE_ASSET_ADDRESS=<Base bridge asset>`
+- `TRADER_VAULT_RAIL_ARB_BRIDGE_ASSET_ADDRESS=<Arbitrum bridge asset>`
 - `TRADER_VAULT_RAIL_BASE_CHAIN_ID=<84532 or 8453>`
 - `TRADER_VAULT_RAIL_BASE_RPC_URL=<Base RPC>`
 - `TRADER_VAULT_RAIL_ARB_CHAIN_ID=<421614 or 42161>`
@@ -143,6 +148,11 @@ To wire the keeper/service layer after the contracts are deployed, set:
 
 If you run a separate Base parallel sleeve, the same keys can be set with the
 `TRADER_BASE_PARALLEL_` prefix.
+
+For pure dev/testnet rollouts, the Foundry scripts can deploy:
+
+- `DevReserveVault` when `VAULT_RAIL_MORPHO_TARGET` is omitted or `VAULT_RAIL_DEPLOY_DEV_RESERVE=true`
+- `DevUSDC` when bridge-asset envs are omitted or `VAULT_RAIL_DEPLOY_DEV_BRIDGE_ASSET=true`
 
 ## Where Config Is Read
 
