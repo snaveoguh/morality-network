@@ -49,7 +49,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       ? editorial.subheadline
       : `Daily edition #${tokenId} of ${BRAND_NAME} (${dateStr}).`;
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || SITE_URL;
+  const requestBaseUrl =
+    request.headers.get("x-forwarded-host") && request.headers.get("x-forwarded-proto")
+      ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get("x-forwarded-host")}`
+      : request.nextUrl.origin;
+  const baseUrl = requestBaseUrl || process.env.NEXT_PUBLIC_BASE_URL || SITE_URL;
 
   const attributes: Array<{ trait_type: string; value: string | number }> = [
     { trait_type: "Edition", value: tokenId },

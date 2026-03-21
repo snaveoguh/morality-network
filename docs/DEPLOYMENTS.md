@@ -25,13 +25,15 @@ Deployment script: `contracts/script/DeployAll.s.sol`
 
 | Contract | Address |
 |---|---|
-| MoralityRegistry | `0x1c73efffeb89ad8699770921dbd860bb5da5b15a` |
-| MoralityRatings | `0x29f0235d74e09536f0b7df9c6529de17b8af5fc6` |
-| MoralityComments | `0x14a361454edcb477644eb82bf540a26e1cead72a` |
-| MoralityTipping | `0x71b2e273727385c617fe254f4fb14a36a679b12a` |
-| MoralityLeaderboard | `0x4b48d35e019129bb5a16920adc4cb7f445ec8ca5` |
-| MoralityPredictionMarket | `0x98855cc7c85d563194d8e42b57d9cf35d5446286` |
-| PooterEditions | `0x45b375c82b4f1662d27a0b75b078b81f0e7b2bf4` |
+| MoralityRegistry | `0x661674e3Bf03B644a755c0438E3F2168a4d6aa13` |
+| MoralityRatings | `0x527e2D6Ae259E3531e4d38A5f634Fd1F788Fc71f` |
+| MoralityComments | `0xd17E13507f8005048a3fcf9850F2dF65c56e3005` |
+| MoralityTipping | `0x8b632dF91E59Fb14C828E65E3e1f6eea2180721e` |
+| MoralityLeaderboard | `0xf7294B25396E77Fcf6af3f38A3116737df229080` |
+| MoralityPredictionMarket | `0x57bB5C8a19385bCBD366EEcDCFDfA59f47744058` |
+| MoralityAgentVault | `0x781A6904a00b8B1a03ba358011A9BF9720eeC531` |
+| PooterEditions | `0x7Ec524d8804cA86562F6892de58CCDc22260CA42` |
+| PooterAuctions | `0xe1D407E486b5943d773FAC9A145a5308b14cC225` |
 | MoralityProposalVoting | Not deployed (requires `NOUNS_TOKEN`) |
 
 ### Auctions + Community Editions
