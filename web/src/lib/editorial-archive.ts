@@ -456,23 +456,27 @@ function filterOriginal(item: ArchivedEditorial, cutoff: number): boolean {
   return true;
 }
 
-export async function getRecentPooterOriginals(maxAge48h = true): Promise<PooterOriginal[]> {
+export async function getRecentPooterOriginals(
+  maxAge48h = true,
+  limit = 20,
+): Promise<PooterOriginal[]> {
   const cutoff = maxAge48h ? Date.now() - 48 * 60 * 60 * 1000 : 0;
+  const safeLimit = Math.max(1, limit);
 
   // Try remote indexer first — has fresh data from crons
   if (getIndexerBackendUrl()) {
     try {
-      const hashes = await fetchRemoteEditorialHashes(30);
+      const hashes = await fetchRemoteEditorialHashes(Math.max(safeLimit * 2, 30));
       if (hashes.size > 0) {
         const resolved = await Promise.all(
-          Array.from(hashes).slice(0, 30).map((h) =>
+          Array.from(hashes).slice(0, Math.max(safeLimit * 2, 30)).map((h) =>
             getArchivedEditorial(h).catch(() => null),
           ),
         );
         const originals = resolved
           .filter((item): item is ArchivedEditorial => item !== null && filterOriginal(item, cutoff))
           .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())
-          .slice(0, 20)
+          .slice(0, safeLimit)
           .map(archivedToOriginal);
         if (originals.length > 0) return originals;
       }
@@ -486,7 +490,7 @@ export async function getRecentPooterOriginals(maxAge48h = true): Promise<Pooter
   return Object.values(archive.items)
     .filter((item) => filterOriginal(item, cutoff))
     .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())
-    .slice(0, 20)
+    .slice(0, safeLimit)
     .map(archivedToOriginal);
 }
 

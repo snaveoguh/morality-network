@@ -43,9 +43,6 @@ export interface NounDetailItem extends NounMarketItem {
 
 export const NOUNS_CONTRACT = NOUNS_TOKEN_ADDRESS;
 
-/** Total historical Nouns minted (approximate, fetched dynamically) */
-const NOUNS_TOTAL_SUPPLY_ESTIMATE = 1350;
-
 // ============================================================================
 // INDEXER URL — server-side config
 // ============================================================================
@@ -142,7 +139,7 @@ export async function fetchNounOrderByTokenId(
 // ONCHAIN DATA — NounsToken contract reads
 // ============================================================================
 
-/** NounsToken minimal ABI for marketplace reads */
+/** NounsToken minimal ABI for marketplace reads (ERC721Enumerable) */
 export const NOUNS_TOKEN_ABI = [
   {
     type: "function",
@@ -171,6 +168,23 @@ export const NOUNS_TOKEN_ABI = [
     outputs: [{ name: "", type: "uint256" }],
     stateMutability: "view",
   },
+  {
+    type: "function",
+    name: "balanceOf",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "tokenOfOwnerByIndex",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "index", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
 ] as const;
 
 // ============================================================================
@@ -196,47 +210,23 @@ export function getTraitNames(seed: NounSeed): NounTraits {
 // ============================================================================
 
 /**
- * Build the Nouns marketplace grid data.
- * Returns all listed Nouns + optionally browse unlisted Nouns.
+ * Fetch all Nouns with active marketplace listings.
+ * Only returns listed Nouns — no filler.
  */
-export async function fetchNounsMarketItems(
-  limit: number = 100,
-): Promise<NounMarketItem[]> {
-  const orders = await fetchNounsOrders(limit);
+export async function fetchListedNouns(): Promise<NounMarketItem[]> {
+  const orders = await fetchNounsOrders(500);
 
-  // Convert orders to market items
-  const items: NounMarketItem[] = orders.map((order) => {
+  return orders.map((order) => {
     const priceEth = formatEther(BigInt(order.priceWei));
     return {
       nounId: Number(order.tokenId),
       owner: order.maker as Address,
-      seed: null, // Enriched on the client side via contract read
+      seed: null,
       traits: null,
       listedPriceEth: priceEth,
       orderHash: order.orderHash,
     };
   });
-
-  // If we have fewer than the limit, fill with recent unlisted Nouns
-  if (items.length < limit) {
-    const listedIds = new Set(items.map((i) => i.nounId));
-    const remaining = limit - items.length;
-    // Show recent Nouns that aren't listed
-    for (let id = NOUNS_TOTAL_SUPPLY_ESTIMATE; id >= 0 && items.length < limit; id--) {
-      if (listedIds.has(id)) continue;
-      items.push({
-        nounId: id,
-        owner: null,
-        seed: null,
-        traits: null,
-        listedPriceEth: null,
-        orderHash: null,
-      });
-      if (items.length - orders.length >= remaining) break;
-    }
-  }
-
-  return items;
 }
 
 /**

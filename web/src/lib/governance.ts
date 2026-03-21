@@ -2049,12 +2049,12 @@ async function _fetchResolvedPredictionProposalsInner(): Promise<Proposal[]> {
       fetchLilNounsProposals(25),
     ]);
 
-    // Only check the 10 most recent resolved proposals to stay within build timeouts
+    // Include all resolved proposals — the onchain market existence check below
+    // filters out proposals without wager markets (the 15s timeout handles slow RPCs)
     const resolved = [...nounsRaw, ...lilNounsRaw]
       .map((p) => convertNounsToProposal(p, anchor))
       .filter((p) => RESOLVED_STATUSES.has(p.status))
-      .sort((a, b) => Number(b.proposalNumber ?? 0) - Number(a.proposalNumber ?? 0))
-      .slice(0, 10);
+      .sort((a, b) => Number(b.proposalNumber ?? 0) - Number(a.proposalNumber ?? 0));
 
     // Only include proposals that have an onchain market (skip "Not Open" noise)
     const withMarkets = await Promise.all(
