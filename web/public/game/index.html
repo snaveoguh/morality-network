@@ -55,17 +55,20 @@ canvas{display:block}
   <h1>GOCHILLA</h1>
   <h2>RISE FROM THE DEEP</h2>
   <div class="sub">START AS A LARVA ON THE OCEAN FLOOR<br>EAT EVERYTHING — GROW INTO A LEVIATHAN<br>SURFACE AND DESTROY THE CITY</div>
-  <div class="start" id="start-text">LOADING...</div>
-  <div id="load-status">Loading 3D engine...</div>
+  <button id="start-btn" style="margin-top:30px;padding:18px 50px;font-size:18px;font-family:'Russo One',sans-serif;background:rgba(0,255,255,.15);border:2px solid #0ff;color:#0ff;border-radius:8px;letter-spacing:4px;cursor:pointer;pointer-events:all;-webkit-tap-highlight-color:rgba(0,255,255,.3);touch-action:manipulation" disabled>LOADING...</button>
+  <div id="load-status" style="margin-top:10px;font-size:10px;color:rgba(255,255,255,.4)">Loading 3D engine...</div>
 </div>
 
 <script src="three.min.js" onerror="document.getElementById('load-status').textContent='ERROR: three.js failed to load'"></script>
 <script>
 try{
 if(typeof THREE==='undefined'){document.getElementById('load-status').textContent='ERROR: THREE not defined';throw new Error('no THREE');}
-document.getElementById('start-text').textContent='TAP TO BEGIN';
-document.getElementById('start-text').classList.add('ready');
+var startBtn=document.getElementById('start-btn');
+startBtn.textContent='START GAME';
+startBtn.disabled=false;
 document.getElementById('load-status').textContent='Ready!';
+startBtn.addEventListener('click',function(){if(window._startGame)window._startGame();});
+startBtn.addEventListener('touchend',function(e){e.preventDefault();if(window._startGame)window._startGame();});
 window.onerror=function(msg){document.getElementById('load-status').textContent='JS Error: '+msg;};
 
 const OCEAN_FLOOR_Y=-80,WATER_SURFACE_Y=0,CITY_Z=900,MAX_SCALE=40;
@@ -134,7 +137,7 @@ function proceduralCreature(sizeClass){
     case 1:{const geo=new THREE.SphereGeometry(baseSize,10,8,0,Math.PI*2,0,Math.PI*.6);bodyMesh=new THREE.Mesh(geo,glowM);const tC=6+Math.floor(Math.random()*12);for(let i=0;i<tC;i++){const angle=i/tC*Math.PI*2,tLen=baseSize*2+Math.random()*baseSize*3,segs=4+Math.floor(Math.random()*4);for(let s=0;s<segs;s++){const t=s/segs,seg=new THREE.Mesh(new THREE.SphereGeometry(.03+baseSize*.08*(1-t),4,4),Math.random()>.5?accentMat:glowM);seg.position.set(Math.cos(angle)*baseSize*.6,-(t*tLen)-baseSize*.3,Math.sin(angle)*baseSize*.6);seg.name='tent';g.add(seg);}}break;}
     case 2:{const segs=8+Math.floor(Math.random()*12),length=baseSize*6+Math.random()*baseSize*4;for(let i=0;i<segs;i++){const t=i/segs,r=baseSize*(.8-t*.5)*(.5+Math.random()*.3),seg=new THREE.Mesh(new THREE.SphereGeometry(r,6,4),i%3===0?accentMat:mainMat);seg.position.z=-t*length;seg.name='sseg_'+i;g.add(seg);}bodyMesh=null;break;}
     case 3:{const geo=new THREE.SphereGeometry(baseSize,8,6);geo.scale(1.3,.5,1);bodyMesh=new THREE.Mesh(geo,mainMat);const lC=4+Math.floor(Math.random()*4);for(let s of[-1,1])for(let i=0;i<lC;i++){const leg=new THREE.Mesh(new THREE.CylinderGeometry(baseSize*.06,baseSize*.04,baseSize*1.5,4),accentMat);leg.position.set(s*(baseSize+.1),- baseSize*.3,-baseSize+i*baseSize*.5);leg.rotation.z=s*.8;leg.name='leg';g.add(leg);}for(let s of[-1,1]){const claw=new THREE.Mesh(new THREE.BoxGeometry(baseSize*.4,baseSize*.2,baseSize*.3),accentMat);claw.position.set(s*(baseSize*1.2),0,baseSize*.5);claw.name='claw';g.add(claw);}break;}
-    case 4:{const geo=new THREE.SphereGeometry(baseSize,10,6);geo.scale(2+Math.random(),.2+Math.random()*.15,1+Math.random()*.5);bodyMesh=new THREE.Mesh(geo,mainMat);for(let s of[-1,1]){const w=new THREE.Mesh(new THREE.SphereGeometry(baseSize*.8,6,4),accentMat);w.scale.set(1.5,.15,1);w.position.set(s*baseSize*1.8,0,0);w.name='wing';g.add(w);}g.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(baseSize*.05,.01,baseSize*3,4),mainMat),{rotation:{x:Math.PI/2,y:0,z:0},position:{x:0,y:0,z:-baseSize*2}}));break;}
+    case 4:{const geo=new THREE.SphereGeometry(baseSize,10,6);geo.scale(2+Math.random(),.2+Math.random()*.15,1+Math.random()*.5);bodyMesh=new THREE.Mesh(geo,mainMat);for(let s of[-1,1]){const w=new THREE.Mesh(new THREE.SphereGeometry(baseSize*.8,6,4),accentMat);w.scale.set(1.5,.15,1);w.position.set(s*baseSize*1.8,0,0);w.name='wing';g.add(w);}var _tail=new THREE.Mesh(new THREE.CylinderGeometry(baseSize*.05,.01,baseSize*3,4),mainMat);_tail.rotation.x=Math.PI/2;_tail.position.set(0,0,-baseSize*2);g.add(_tail);break;}
     default:{const geo=new THREE.SphereGeometry(baseSize,8,8);geo.scale(.8+Math.random()*.4,1+Math.random()*.5,.8+Math.random()*.4);bodyMesh=new THREE.Mesh(geo,glowM);const aC=4+Math.floor(Math.random()*6);for(let i=0;i<aC;i++){const angle=i/aC*Math.PI*2,aSegs=4+Math.floor(Math.random()*4),aLen=baseSize*1.5+Math.random()*baseSize;for(let s=0;s<aSegs;s++){const t=s/aSegs,seg=new THREE.Mesh(new THREE.SphereGeometry(baseSize*.15*(1-t*.6),5,4),s%2===0?mainMat:accentMat);seg.position.set(Math.cos(angle)*(baseSize*.5+t*aLen),-baseSize*.3-t*aLen*.3,Math.sin(angle)*(baseSize*.5+t*aLen));seg.name='arm_'+i+'_'+s;g.add(seg);}}}
   }
   if(bodyMesh){bodyMesh.castShadow=true;g.add(bodyMesh);}
@@ -152,7 +155,7 @@ function proceduralCreature(sizeClass){
   // Bioluminescent spots
   if(Math.random()>.4){const sC=3+Math.floor(Math.random()*8);const sc=new THREE.Color().setHSL(Math.random(),.9,.7);const sMat=new THREE.MeshStandardMaterial({color:sc,emissive:sc,emissiveIntensity:1.5,transparent:true,opacity:.8});for(let i=0;i<sC;i++){const spot=new THREE.Mesh(new THREE.SphereGeometry(baseSize*.04+Math.random()*baseSize*.06,4,4),sMat);spot.position.set((Math.random()-.5)*baseSize*1.5,(Math.random()-.5)*baseSize,(Math.random()-.5)*baseSize*1.5);spot.name='glow';g.add(spot);}}
   // Lure
-  if(Math.random()>.6){const lc=new THREE.Color().setHSL(Math.random(),1,.7);const lure=new THREE.Mesh(new THREE.SphereGeometry(baseSize*.08,6,4),new THREE.MeshStandardMaterial({color:lc,emissive:lc,emissiveIntensity:3}));lure.position.set(baseSize*.2,baseSize*1.2,baseSize*.3);lure.name='lure';g.add(lure);g.add(Object.assign(new THREE.PointLight(lc,.8,baseSize*8),{position:lure.position.clone()}));}
+  if(Math.random()>.6){const lc=new THREE.Color().setHSL(Math.random(),1,.7);const lure=new THREE.Mesh(new THREE.SphereGeometry(baseSize*.08,6,4),new THREE.MeshStandardMaterial({color:lc,emissive:lc,emissiveIntensity:3}));lure.position.set(baseSize*.2,baseSize*1.2,baseSize*.3);lure.name='lure';g.add(lure);var _ll=new THREE.PointLight(lc,.8,baseSize*8);_ll.position.copy(lure.position);g.add(_ll);}
 
   return{group:g,points:[1,2,3,5,8,15][sizeClass]||1,minScale:[-1,0,2,5,10,18][sizeClass]!=null?[-1,0,2,5,10,18][sizeClass]:-1,name:randomName(),sizeClass,baseSize};
 }
@@ -162,18 +165,18 @@ const playerGroup=new THREE.Group();scene.add(playerGroup);
 function buildGochilla(){
   while(playerGroup.children.length)playerGroup.remove(playerGroup.children[0]);
   const M={body:new THREE.MeshStandardMaterial({color:0x1a2a1a,roughness:.7,metalness:.2}),dark:new THREE.MeshStandardMaterial({color:0x0a1a0a,roughness:.8}),belly:new THREE.MeshStandardMaterial({color:0x2a3a2a,roughness:.6}),spine:new THREE.MeshStandardMaterial({color:0x8800ff,roughness:.3,emissive:0x440088,emissiveIntensity:.5}),eye:new THREE.MeshStandardMaterial({color:0xff0040,emissive:0xff0040,emissiveIntensity:2}),teeth:new THREE.MeshStandardMaterial({color:0xffffff,roughness:.3}),claw:new THREE.MeshStandardMaterial({color:0x111111,roughness:.5})};
-  playerGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(.8,2.2,8,12),M.body));
-  const b=new THREE.Mesh(new THREE.CylinderGeometry(.65,1.8,6,10),M.belly);b.position.z=.15;playerGroup.add(b);
+  var bodyGeo=new THREE.SphereGeometry(.8,12,8);bodyGeo.scale(1,1.8,0.8);playerGroup.add(new THREE.Mesh(bodyGeo,M.body));
+  var bellyGeo=new THREE.SphereGeometry(.65,10,8);bellyGeo.scale(1,1.5,0.7);var b=new THREE.Mesh(bellyGeo,M.belly);b.position.z=.15;playerGroup.add(b);
   const hg=new THREE.SphereGeometry(.65,10,8);hg.scale(1.2,.9,1);const h=new THREE.Mesh(hg,M.body);h.position.y=1.7;playerGroup.add(h);
-  playerGroup.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(.5,.35,.7),M.body),{position:new THREE.Vector3(0,1.55,.55)}));
-  playerGroup.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(.45,.15,.6),M.dark),{position:new THREE.Vector3(0,1.35,.5)}));
+  var snout=new THREE.Mesh(new THREE.BoxGeometry(.5,.35,.7),M.body);snout.position.set(0,1.55,.55);playerGroup.add(snout);
+  var jaw=new THREE.Mesh(new THREE.BoxGeometry(.45,.15,.6),M.dark);jaw.position.set(0,1.35,.5);playerGroup.add(jaw);
   for(let i=0;i<6;i++){const t=new THREE.Mesh(new THREE.ConeGeometry(.04,.12,4),M.teeth);t.position.set(-.15+i*.06,1.4,.75);t.rotation.x=Math.PI;playerGroup.add(t);}
   for(let i=0;i<5;i++){const t=new THREE.Mesh(new THREE.ConeGeometry(.03,.1,4),M.teeth);t.position.set(-.12+i*.06,1.35,.72);playerGroup.add(t);}
-  for(let s of[-1,1]){playerGroup.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),M.eye),{position:new THREE.Vector3(s*.4,1.85,.35)}));playerGroup.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(.06,6,4),M.claw),{position:new THREE.Vector3(s*.4,1.85,.45)}));}
+  for(let s of[-1,1]){var _e=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),M.eye);_e.position.set(s*.4,1.85,.35);playerGroup.add(_e);var _p=new THREE.Mesh(new THREE.SphereGeometry(.06,6,4),M.claw);_p.position.set(s*.4,1.85,.45);playerGroup.add(_p);}
   for(let i=0;i<12;i++){const t=i/11,sh=.2+Math.sin(t*Math.PI)*.5;const sp=new THREE.Mesh(new THREE.ConeGeometry(.08,sh,4),M.spine);sp.position.set(0,1.8-t*3.6,-.3-Math.sin(t*Math.PI)*.15);sp.rotation.x=-.2;playerGroup.add(sp);}
   for(let s of[-1,1]){
-    const arm=new THREE.Mesh(new THREE.CylinderGeometry(.18,.8,4,6),M.body);arm.position.set(s*.7,.6,.2);arm.rotation.z=s*.3;arm.name=s>0?'armR':'armL';playerGroup.add(arm);
-    const leg=new THREE.Mesh(new THREE.CylinderGeometry(.25,1,4,6),M.body);leg.position.set(s*.5,-1.3,0);leg.name=s>0?'legR':'legL';playerGroup.add(leg);
+    var arm=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.8,6),M.body);arm.position.set(s*.7,.6,.2);arm.rotation.z=s*.3;arm.name=s>0?'armR':'armL';playerGroup.add(arm);
+    var leg=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,1,6),M.body);leg.position.set(s*.5,-1.3,0);leg.name=s>0?'legR':'legL';playerGroup.add(leg);
     const foot=new THREE.Mesh(new THREE.BoxGeometry(.4,.15,.5),M.dark);foot.position.set(s*.5,-2,.1);foot.name=s>0?'footR':'footL';playerGroup.add(foot);
   }
   for(let i=0;i<8;i++){const t=i/8,r=.35*(1-t*.7);const seg=new THREE.Mesh(new THREE.SphereGeometry(r,6,4),M.body);seg.position.set(0,-.5-t*.3,-1.2-t*2.5);seg.name='tail_'+i;playerGroup.add(seg);if(i%2===0){const ts=new THREE.Mesh(new THREE.ConeGeometry(.05,.25*(1-t),4),M.spine);ts.position.set(0,-.2-t*.2,-1.2-t*2.5);playerGroup.add(ts);}}
@@ -235,7 +238,7 @@ const buildingData=[];
   for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const w=12+Math.random()*18,d=12+Math.random()*18,ht=15+Math.random()*80;const bld=new THREE.Mesh(new THREE.BoxGeometry(w,ht,d),bM[Math.floor(Math.random()*bM.length)].clone());bld.position.set(-300+30+c*60,ht/2,-80+r*40);bld.castShadow=true;cityGroup.add(bld);const wR=Math.floor(ht/5),wC=Math.floor(w/4);for(let wr=0;wr<wR;wr++)for(let wc=0;wc<wC;wc++){const win=new THREE.Mesh(new THREE.PlaneGeometry(1.5,2),Math.random()>.3?wM:wO);win.position.set(-w/2+2+wc*(w/wC),-ht/2+3+wr*5,d/2+.1);bld.add(win);}buildingData.push({mesh:bld,origPos:bld.position.clone(),width:w,height:ht,depth:d,destroyed:false,health:ht*2});}
   const cC=[0xcc2222,0x2222cc,0xeeeeee,0x222222,0xcccc22,0x22cc22];
   for(let i=0;i<40;i++){const cg=new THREE.Group();cg.add(new THREE.Mesh(new THREE.BoxGeometry(2,1.2,4),new THREE.MeshStandardMaterial({color:cC[Math.floor(Math.random()*cC.length)],roughness:.4,metalness:.6})));const rf=new THREE.Mesh(new THREE.BoxGeometry(1.6,.8,2),new THREE.MeshStandardMaterial({color:0x88bbcc,roughness:.1,metalness:.8,transparent:true,opacity:.6}));rf.position.y=.9;cg.add(rf);cg.position.set(-300+Math.random()*600,.8,-100+Math.random()*200);cg.rotation.y=Math.random()*Math.PI;cg.userData={vel:new THREE.Vector3(),fleeing:false};cg.name='car';cityGroup.add(cg);}
-  for(let i=0;i<60;i++){const pg=new THREE.Group();const bc=[0x2244aa,0xaa2222,0x22aa22,0xaa8822,0x882288,0xaaaa22][Math.floor(Math.random()*6)];pg.add(new THREE.Mesh(new THREE.CylinderGeometry(.15,.5,4,6),new THREE.MeshStandardMaterial({color:bc})));const ph=new THREE.Mesh(new THREE.SphereGeometry(.12,6,4),new THREE.MeshStandardMaterial({color:0xddaa88}));ph.position.y=.45;pg.add(ph);pg.position.set(-300+Math.random()*600,.4,-100+Math.random()*200);pg.userData={vel:new THREE.Vector3(),fleeing:false,speed:.5+Math.random()*.5};pg.name='person';cityGroup.add(pg);}
+  for(let i=0;i<60;i++){const pg=new THREE.Group();const bc=[0x2244aa,0xaa2222,0x22aa22,0xaa8822,0x882288,0xaaaa22][Math.floor(Math.random()*6)];pg.add(new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,.5,6),new THREE.MeshStandardMaterial({color:bc})));const ph=new THREE.Mesh(new THREE.SphereGeometry(.12,6,4),new THREE.MeshStandardMaterial({color:0xddaa88}));ph.position.y=.45;pg.add(ph);pg.position.set(-300+Math.random()*600,.4,-100+Math.random()*200);pg.userData={vel:new THREE.Vector3(),fleeing:false,speed:.5+Math.random()*.5};pg.name='person';cityGroup.add(pg);}
 })();
 
 const bubbles=[],debrisList=[];
