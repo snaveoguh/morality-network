@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getAllArchivedFeedItems } from "@/lib/archive";
+import { getLocalArchivedFeedItems } from "@/lib/archive";
 import { computeEntityHash } from "@/lib/entity";
 import { getRecentPooterOriginals } from "@/lib/editorial-archive";
 import { fetchAllProposals } from "@/lib/governance";
@@ -148,7 +148,7 @@ async function buildCorpus(): Promise<SearchRecord[]> {
     governance,
   ] = await Promise.all([
     withTimeoutFallback(fetchAllFeeds(DEFAULT_FEEDS), 4_000, [] as FeedItem[]),
-    withTimeoutFallback(getAllArchivedFeedItems(), 2_500, [] as FeedItem[]),
+    withTimeoutFallback(getLocalArchivedFeedItems(), 2_500, [] as FeedItem[]),
     withTimeoutFallback(
       getRecentPooterOriginals(false, 120),
       3_500,

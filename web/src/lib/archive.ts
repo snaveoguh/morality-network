@@ -338,6 +338,16 @@ export async function getAllArchivedFeedItems(): Promise<FeedItem[]> {
 }
 
 /**
+ * Return archived feed items from the local JSON snapshot only.
+ * Useful for fast, deterministic read paths like site search where
+ * remote archive fetches may exceed serverless time budgets.
+ */
+export async function getLocalArchivedFeedItems(): Promise<FeedItem[]> {
+  const archive = await loadArchive();
+  return Object.values(archive.items).map(toFeedItem);
+}
+
+/**
  * Return all archived items with their hashes for archive browsing.
  */
 export async function getAllArchivedItemsWithHashes(): Promise<
