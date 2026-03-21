@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { BRAND_NAME } from "@/lib/brand";
+import { CONTRACTS_CHAIN_ID } from "@/lib/contracts";
 import { EditionsPanel } from "@/components/editions/EditionsPanel";
 
 // ============================================================================
@@ -68,7 +69,7 @@ export function Masthead({
         >
           EDITION {editionNumber}
         </button>
-        {" "}&middot; BASE L2
+        {" "}&middot; {CONTRACTS_CHAIN_ID === 84532 ? "BASE SEPOLIA" : "BASE L2"}
       </div>
 
       {showEditions && (

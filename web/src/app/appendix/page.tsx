@@ -11,7 +11,7 @@ interface ContractEntry {
   name: string;
   address: string;
   type: string;
-  explorer: "base" | "eth";
+  explorer: "base" | "eth" | "base-sepolia";
 }
 
 const BASE_CONTRACTS: ContractEntry[] = [
@@ -25,6 +25,19 @@ const BASE_CONTRACTS: ContractEntry[] = [
   { name: "PooterAuctions", address: "0x527e2D6Ae259E3531e4d38A5f634Fd1F788Fc71f", type: "Immutable", explorer: "base" },
   { name: "MO Token", address: "0x8729c70061739140ee6bE00A3875Cbf6d09A746C", type: "ERC-20", explorer: "base" },
   { name: "MoralityProposalVoting", address: "pending deploy", type: "UUPS Proxy", explorer: "base" },
+];
+
+const BASE_SEPOLIA_CONTRACTS: ContractEntry[] = [
+  { name: "MoralityRegistry", address: "0x661674e3Bf03B644a755c0438E3F2168a4d6aa13", type: "UUPS Proxy", explorer: "base-sepolia" },
+  { name: "MoralityRatings", address: "0x527e2D6Ae259E3531e4d38A5f634Fd1F788Fc71f", type: "UUPS Proxy", explorer: "base-sepolia" },
+  { name: "MoralityComments", address: "0xd17E13507f8005048a3fcf9850F2dF65c56e3005", type: "UUPS Proxy", explorer: "base-sepolia" },
+  { name: "MoralityTipping", address: "0x8b632dF91E59Fb14C828E65E3e1f6eea2180721e", type: "UUPS Proxy", explorer: "base-sepolia" },
+  { name: "MoralityLeaderboard", address: "0xf7294B25396E77Fcf6af3f38A3116737df229080", type: "UUPS Proxy", explorer: "base-sepolia" },
+  { name: "MoralityPredictionMarket", address: "0x57bB5C8a19385bCBD366EEcDCFDfA59f47744058", type: "UUPS Proxy", explorer: "base-sepolia" },
+  { name: "MoralityAgentVault", address: "0x781A6904a00b8B1a03ba358011A9BF9720eeC531", type: "UUPS Proxy", explorer: "base-sepolia" },
+  { name: "PooterEditions", address: "0x7Ec524d8804cA86562F6892de58CCDc22260CA42", type: "UUPS Proxy · ERC-721", explorer: "base-sepolia" },
+  { name: "PooterAuctions", address: "0xe1D407E486b5943d773FAC9A145a5308b14cC225", type: "Immutable", explorer: "base-sepolia" },
+  { name: "MoralityProposalVoting", address: "not deployed", type: "Requires NOUNS_TOKEN", explorer: "base-sepolia" },
 ];
 
 const ETH_CONTRACTS: ContractEntry[] = [
@@ -204,7 +217,8 @@ const API_ENDPOINTS: { category: string; endpoints: ApiEntry[] }[] = [
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-function explorerUrl(address: string, explorer: "base" | "eth"): string {
+function explorerUrl(address: string, explorer: "base" | "eth" | "base-sepolia"): string {
+  if (explorer === "base-sepolia") return `https://sepolia.basescan.org/address/${address}`;
   return explorer === "base"
     ? `https://basescan.org/address/${address}`
     : `https://etherscan.io/address/${address}`;
@@ -229,7 +243,7 @@ export default function AppendixPage() {
         <div className="mt-3 flex items-center gap-3 font-mono text-[8px] uppercase tracking-[0.25em] text-[var(--ink-faint)]">
           <span>Solidity 0.8.24</span>
           <span>&middot;</span>
-          <span>Base L2 + Ethereum L1</span>
+          <span>Base L2 + Base Sepolia + Ethereum L1</span>
           <span>&middot;</span>
           <span>UUPS Upgradeable</span>
         </div>
@@ -245,8 +259,21 @@ export default function AppendixPage() {
         <ContractTable contracts={BASE_CONTRACTS} />
       </Section>
 
+      {/* ══════════════ BASE SEPOLIA ══════════════ */}
+      <Section title="II. Smart Contracts &mdash; Base Sepolia (Testnet)">
+        <p className="mb-4 font-body-serif text-sm text-[var(--ink-light)]">
+          Testnet deployments on Base Sepolia (chain ID 84532). Used by <code className="bg-[var(--paper-dark)] px-1 font-mono text-[10px]">dev.pooter.world</code>.
+          Same contract source as mainnet &mdash; different addresses.
+          MoralityProposalVoting not deployed (requires NOUNS_TOKEN mock).
+        </p>
+        <ContractTable contracts={BASE_SEPOLIA_CONTRACTS} />
+        <div className="mt-2 font-mono text-[8px] text-[var(--ink-faint)]">
+          Treasury: 0xae4705dC0816ee6d8a13F1C72780Ec5021915Fed &middot; Editions minter: 0xe1D407E486b5943d773FAC9A145a5308b14cC225
+        </div>
+      </Section>
+
       {/* ══════════════ ETHEREUM MAINNET ══════════════ */}
-      <Section title="II. Smart Contracts &mdash; Ethereum Mainnet">
+      <Section title="III. Smart Contracts &mdash; Ethereum Mainnet">
         <p className="mb-4 font-body-serif text-sm text-[var(--ink-light)]">
           Prediction market lives on Ethereum L1 for trustless resolution via
           native <code className="bg-[var(--paper-dark)] px-1 font-mono text-[10px]">governor.state()</code> calls.
@@ -256,7 +283,7 @@ export default function AppendixPage() {
       </Section>
 
       {/* ══════════════ NOUNS ECOSYSTEM ══════════════ */}
-      <Section title="III. Nouns Ecosystem &mdash; Ethereum Mainnet">
+      <Section title="IV. Nouns Ecosystem &mdash; Ethereum Mainnet">
         <p className="mb-4 font-body-serif text-sm text-[var(--ink-light)]">
           External Nouns DAO contracts referenced by the prediction market and governance modules.
           These are not owned by {BRAND_NAME} &mdash; they are read-only integrations.
@@ -265,7 +292,7 @@ export default function AppendixPage() {
       </Section>
 
       {/* ══════════════ LEGACY ══════════════ */}
-      <Section title="IV. Legacy Contracts (Deprecated)">
+      <Section title="V. Legacy Contracts (Deprecated)">
         <p className="mb-3 font-body-serif text-sm text-[var(--ink-light)]">
           Solidity 0.5.x contracts from the original morality.network prototype. Not deployed
           on any current network. Preserved in <code className="bg-[var(--paper-dark)] px-1 font-mono text-[10px]">morality.network.contracts-master/</code> for
@@ -284,7 +311,7 @@ export default function AppendixPage() {
       </Section>
 
       {/* ══════════════ API ENDPOINTS ══════════════ */}
-      <Section title="V. API Endpoints">
+      <Section title="VI. API Endpoints">
         <p className="mb-4 font-body-serif text-sm text-[var(--ink-light)]">
           Next.js API routes. <span className="font-mono text-[10px] font-bold text-[var(--ink)]">PUBLIC</span> endpoints
           require no authentication. <span className="font-mono text-[10px] font-bold text-[var(--ink)]">AUTH</span> endpoints
