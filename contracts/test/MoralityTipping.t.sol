@@ -6,6 +6,7 @@ import "../src/MoralityRegistry.sol";
 import "../src/MoralityComments.sol";
 import "../src/MoralityTipping.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract MoralityTippingTest is Test {
     MoralityRegistry internal registry;
@@ -196,6 +197,47 @@ contract MoralityTippingTest is Test {
         assertEq(second[0].amount, 0.2 ether);
 
         assertEq(tipping.getEntityTipCount(entityHash), 2);
+    }
+
+    function test_pauseBlocksTipsAndEscrowClaims() public {
+        bytes32 entityHash = _registerEntityAs(alice);
+
+        vm.prank(bob);
+        tipping.tipEntity{value: 0.25 ether}(entityHash);
+
+        registry.approveOwnershipClaim(entityHash, alice);
+        vm.prank(alice);
+        registry.claimOwnership(entityHash);
+
+        tipping.pause();
+
+        vm.prank(charlie);
+        vm.expectRevert();
+        tipping.tipEntity{value: 0.1 ether}(entityHash);
+
+        vm.prank(alice);
+        vm.expectRevert();
+        tipping.claimEscrow(entityHash);
+
+        tipping.unpause();
+
+        vm.prank(alice);
+        tipping.claimEscrow(entityHash);
+
+        assertEq(tipping.escrow(entityHash), 0);
+        assertEq(tipping.balances(alice), 0.25 ether);
+    }
+
+    function test_rescueEthOnlyOwnerAndRejectsZeroAddress() public {
+        vm.prank(bob);
+        tipping.tipEntity{value: 0.1 ether}(UNREGISTERED_ENTITY);
+
+        vm.prank(bob);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, bob));
+        tipping.rescueETH(payable(bob));
+
+        vm.expectRevert("Zero address");
+        tipping.rescueETH(payable(address(0)));
     }
 
     function _registerEntityAs(address registrant) internal returns (bytes32 entityHash) {

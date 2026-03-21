@@ -154,6 +154,47 @@ contract MoralityAgentVaultTest is Test {
         vault.setPerformanceFeeBps(2_001);
     }
 
+    function test_adminSettersAndPauseControls() public {
+        address newManager = makeAddr("newManager");
+        address newFeeRecipient = makeAddr("newFeeRecipient");
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        vault.setManager(newManager);
+
+        vault.setManager(newManager);
+        vault.setFeeRecipient(newFeeRecipient);
+        vault.setMaxAllocationBps(9000);
+
+        assertEq(vault.manager(), newManager);
+        assertEq(vault.feeRecipient(), newFeeRecipient);
+        assertEq(vault.maxAllocationBps(), 9000);
+
+        vm.prank(alice);
+        vault.deposit{value: 2 ether}();
+
+        vault.pause();
+
+        vm.prank(bob);
+        vm.expectRevert();
+        vault.deposit{value: 1 ether}();
+
+        vm.prank(newManager);
+        vm.expectRevert();
+        vault.allocateToStrategy(payable(newManager), 1 ether);
+
+        vault.unpause();
+
+        vm.prank(newManager);
+        vault.allocateToStrategy(payable(newManager), 1 ether);
+        assertEq(vault.deployedCapital(), 1 ether);
+    }
+
+    function test_setMaxAllocationBpsRejectsValuesAbove100Percent() public {
+        vm.expectRevert("Max 100%");
+        vault.setMaxAllocationBps(10_001);
+    }
+
     function test_cannotReinitialize() public {
         vm.expectRevert();
         vault.initialize(manager, feeRecipient, 500);

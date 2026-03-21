@@ -125,6 +125,50 @@ contract MoralityProposalVotingTest is Test {
         assertLt(address(voting).balance, contractBefore);
     }
 
+    function test_setMaxRefundOnlyOwner() public {
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        voting.setMaxRefund(0.02 ether);
+
+        voting.setMaxRefund(0.02 ether);
+        assertEq(voting.maxRefund(), 0.02 ether);
+    }
+
+    function test_pauseBlocksVoting() public {
+        voting.pause();
+
+        vm.prank(alice);
+        vm.expectRevert();
+        voting.castVote("nouns", "1", MoralityProposalVoting.VoteType.FOR, "paused");
+
+        voting.unpause();
+
+        vm.prank(alice);
+        voting.castVote("nouns", "1", MoralityProposalVoting.VoteType.FOR, "unpaused");
+
+        (,,, uint256 totalVoters) = voting.getProposalVotes("nouns", "1");
+        assertEq(totalVoters, 1);
+    }
+
+    function test_withdrawOnlyOwner() public {
+        address ownerReceiver = makeAddr("ownerReceiver");
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        voting.withdraw();
+
+        voting.transferOwnership(ownerReceiver);
+
+        uint256 ownerBefore = ownerReceiver.balance;
+        uint256 contractBefore = address(voting).balance;
+
+        vm.prank(ownerReceiver);
+        voting.withdraw();
+
+        assertEq(address(voting).balance, 0);
+        assertEq(ownerReceiver.balance, ownerBefore + contractBefore);
+    }
+
     function test_reasonLengthValidation() public {
         string memory tooLong = new string(501);
         vm.prank(alice);
