@@ -31,7 +31,7 @@ interface EntityProfileProps {
 export function EntityProfile({ entityHash, initialContext = null }: EntityProfileProps) {
   const { isConnected } = useAccount();
   const searchParams = useSearchParams();
-  const [stumbleContext, setStumbleContext] = useState<StumbleContextEntry | null>(null);
+  const [stumbleContext, setStumbleContext] = useState<StumbleContextEntry | null>(initialContext);
 
   const { data: entity } = useReadContract({
     address: CONTRACTS.registry,
