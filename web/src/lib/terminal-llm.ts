@@ -37,9 +37,10 @@ const STREAM_TIMEOUT_MS = 30_000;
 
 export function buildTerminalSystemPrompt(ctx: TerminalTradingContext): string {
   const positionLines = ctx.positions.length > 0
-    ? ctx.positions.map((p) =>
-        `  ${p.symbol}: entry $${p.entryPrice.toFixed(4)}, current ${p.currentPrice !== null ? `$${p.currentPrice.toFixed(4)}` : "n/a"}, unrealized ${p.unrealizedPnl !== null ? `$${p.unrealizedPnl.toFixed(2)}` : "n/a"}, size $${p.size.toFixed(2)}`
-      ).join("\n")
+    ? ctx.positions.map((p) => {
+        const venueTag = p.venue ? ` [${p.venue}]` : "";
+        return `  ${p.symbol}${venueTag}: entry $${p.entryPrice.toFixed(4)}, current ${p.currentPrice !== null ? `$${p.currentPrice.toFixed(4)}` : "n/a"}, unrealized ${p.unrealizedPnl !== null ? `$${p.unrealizedPnl.toFixed(2)}` : "n/a"}, size $${p.size.toFixed(2)}`;
+      }).join("\n")
     : "  (no open positions)";
 
   const vaultBlock = ctx.vault
@@ -117,9 +118,10 @@ export async function buildTerminalSystemPromptWithMemory(
 
 export function buildVeniceRiskPrompt(ctx: TerminalTradingContext): string {
   const positionLines = ctx.positions.length > 0
-    ? ctx.positions.map((p) =>
-        `  ${p.symbol}: entry $${p.entryPrice.toFixed(4)}, current ${p.currentPrice !== null ? `$${p.currentPrice.toFixed(4)}` : "n/a"}, unrealized ${p.unrealizedPnl !== null ? `$${p.unrealizedPnl.toFixed(2)}` : "n/a"}, size $${p.size.toFixed(2)}`
-      ).join("\n")
+    ? ctx.positions.map((p) => {
+        const venueTag = p.venue ? ` [${p.venue}]` : "";
+        return `  ${p.symbol}${venueTag}: entry $${p.entryPrice.toFixed(4)}, current ${p.currentPrice !== null ? `$${p.currentPrice.toFixed(4)}` : "n/a"}, unrealized ${p.unrealizedPnl !== null ? `$${p.unrealizedPnl.toFixed(2)}` : "n/a"}, size $${p.size.toFixed(2)}`;
+      }).join("\n")
     : "  (no open positions)";
 
   const totalDeployed = ctx.deployedUsd;
