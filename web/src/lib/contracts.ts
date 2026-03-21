@@ -1114,6 +1114,33 @@ export const AGENT_VAULT_ABI = [
     stateMutability: "view",
   },
   {
+    type: "function",
+    name: "allocateToStrategy",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "returnFromStrategy",
+    inputs: [],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "reportStrategyLoss",
+    inputs: [
+      { name: "amount", type: "uint256" },
+      { name: "reason", type: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
     type: "event",
     name: "Deposited",
     inputs: [

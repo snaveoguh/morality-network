@@ -21,6 +21,11 @@ import { checkMoralGate, checkCircuitBreaker, logMoralGateDecision } from "./mor
 import { AGENT_VAULT_ABI, AGENT_VAULT_ADDRESS } from "../contracts";
 import { computeKelly, consecutiveLosses } from "./kelly";
 import { positionsToJournal } from "./trade-journal";
+import {
+  computeVaultSettlementPlan,
+  computeVaultTopUpPlan,
+  formatVaultEth,
+} from "./vault-strategy";
 import type {
   Position,
   ScannerLaunch,
@@ -33,6 +38,12 @@ import type {
 } from "./types";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
+
+interface VaultStateSnapshot {
+  liquidAssetsWei: bigint;
+  deployedCapitalWei: bigint;
+  manager: Address;
+}
 
 // Hyperliquid taker fee: 0.035% per side → 0.07% round-trip (entry + exit)
 // Applied as estimated exchange cost on notional position value
@@ -790,11 +801,13 @@ class TraderEngine {
     );
     await waitForSuccess(this.clients.publicClient, txHash);
 
-    return this.store.close(position.id, {
+    const closed = await this.store.close(position.id, {
       exitReason: reason,
       exitPriceUsd,
       exitTxHash: txHash,
     });
+    await this.settleVaultStrategyIfFlat();
+    return closed;
   }
 
   private async closeHyperliquidPosition(
@@ -894,40 +907,36 @@ class TraderEngine {
     }
   }
 
-  /**
-   * Pull ETH from the onchain vault → wrap to WETH so the spot engine can trade.
-   * Only works when the agent wallet is the vault manager on Base.
-   */
-  private async topUpWethFromVault(requiredWeth: bigint, currentWeth: bigint): Promise<void> {
-    if (!AGENT_VAULT_ADDRESS || AGENT_VAULT_ADDRESS === ZERO_ADDRESS) {
-      throw new Error("No vault address configured");
-    }
+  private isVaultStrategyEnabled(): boolean {
+    return this.config.executionVenue === "base-spot" && this.config.vaultStrategy?.enabled === true;
+  }
 
-    // How much more WETH do we need? Add 20% buffer
-    const deficit = requiredWeth - currentWeth;
-    const withdrawAmount = (deficit * BigInt(120)) / BigInt(100);
-
-    // Check vault liquid assets
-    const vaultBalance = await this.clients.publicClient.getBalance({
-      address: AGENT_VAULT_ADDRESS,
-    });
-    if (vaultBalance < withdrawAmount) {
-      throw new Error(`Vault only has ${formatUnits(vaultBalance, 18)} ETH, need ${formatUnits(withdrawAmount, 18)}`);
-    }
-
-    console.log(`[trader] Withdrawing ${formatUnits(withdrawAmount, 18)} ETH from vault ${AGENT_VAULT_ADDRESS}`);
-
-    // Vault.withdraw(assets) → sends ETH to caller (manager)
-    const withdrawHash = await this.clients.walletClient.writeContract({
+  private async readVaultState(): Promise<VaultStateSnapshot> {
+    const state = await this.clients.publicClient.readContract({
       address: AGENT_VAULT_ADDRESS,
       abi: AGENT_VAULT_ABI,
-      functionName: "withdraw",
-      args: [withdrawAmount],
+      functionName: "getVaultState",
     });
-    await waitForSuccess(this.clients.publicClient, withdrawHash);
-    console.log(`[trader] Vault withdrawal confirmed: ${withdrawHash}`);
 
-    // Wrap ETH → WETH via WETH contract deposit()
+    const [
+      ,
+      liquidAssetsWei,
+      deployedCapitalWei,
+      ,
+      ,
+      ,
+      manager,
+    ] = state;
+
+    return {
+      liquidAssetsWei: liquidAssetsWei as bigint,
+      deployedCapitalWei: deployedCapitalWei as bigint,
+      manager: manager as Address,
+    };
+  }
+
+  private async wrapEthToWeth(amountWei: bigint): Promise<void> {
+    if (amountWei <= BigInt(0)) return;
     const wethAddress = this.config.quoteTokens.WETH;
     if (!wethAddress) throw new Error("WETH address not configured");
 
@@ -935,10 +944,154 @@ class TraderEngine {
       address: wethAddress,
       abi: [{ type: "function", name: "deposit", inputs: [], outputs: [], stateMutability: "payable" }],
       functionName: "deposit",
-      value: withdrawAmount,
+      value: amountWei,
     });
     await waitForSuccess(this.clients.publicClient, wrapHash);
-    console.log(`[trader] Wrapped ${formatUnits(withdrawAmount, 18)} ETH → WETH: ${wrapHash}`);
+    console.log(`[trader] wrapped ${formatVaultEth(amountWei)} ETH -> WETH: ${wrapHash}`);
+  }
+
+  private async unwrapWethToEth(amountWei: bigint): Promise<void> {
+    if (amountWei <= BigInt(0)) return;
+    const wethAddress = this.config.quoteTokens.WETH;
+    if (!wethAddress) throw new Error("WETH address not configured");
+
+    const unwrapHash = await this.clients.walletClient.writeContract({
+      address: wethAddress,
+      abi: [{ type: "function", name: "withdraw", inputs: [{ name: "wad", type: "uint256" }], outputs: [], stateMutability: "nonpayable" }],
+      functionName: "withdraw",
+      args: [amountWei],
+    });
+    await waitForSuccess(this.clients.publicClient, unwrapHash);
+    console.log(`[trader] unwrapped ${formatVaultEth(amountWei)} WETH -> ETH: ${unwrapHash}`);
+  }
+
+  private async topUpWethFromVault(requiredWeth: bigint, currentWeth: bigint): Promise<void> {
+    if (!AGENT_VAULT_ADDRESS || AGENT_VAULT_ADDRESS === ZERO_ADDRESS) {
+      throw new Error("No vault address configured");
+    }
+
+    const reserveWei = this.config.vaultStrategy?.minReserveEthRaw ?? BigInt(0);
+    const nativeEthWei = await this.clients.publicClient.getBalance({
+      address: this.clients.address,
+    });
+    const plan = computeVaultTopUpPlan({
+      requiredWethWei: requiredWeth,
+      currentWethWei: currentWeth,
+      currentNativeEthWei: nativeEthWei,
+      reserveEthWei: reserveWei,
+      allocateBufferBps: this.config.vaultStrategy?.allocateBufferBps ?? 12_000,
+    });
+
+    if (plan.wrapNativeWei > BigInt(0)) {
+      await this.wrapEthToWeth(plan.wrapNativeWei);
+    }
+
+    if (plan.allocateWei <= BigInt(0)) {
+      return;
+    }
+
+    if (!this.isVaultStrategyEnabled()) {
+      throw new Error("vault strategy funding is disabled for this runner");
+    }
+
+    const vault = await this.readVaultState();
+    if (vault.manager.toLowerCase() !== this.clients.address.toLowerCase()) {
+      throw new Error(`strategy wallet ${this.clients.address} is not the vault manager`);
+    }
+    if (vault.liquidAssetsWei < plan.allocateWei) {
+      throw new Error(
+        `vault only has ${formatVaultEth(vault.liquidAssetsWei)} ETH liquid, need ${formatVaultEth(plan.allocateWei)}`
+      );
+    }
+
+    console.log(`[trader] Allocating ${formatVaultEth(plan.allocateWei)} ETH from vault ${AGENT_VAULT_ADDRESS} -> strategy ${this.clients.address}`);
+    const allocateHash = await this.clients.walletClient.writeContract({
+      address: AGENT_VAULT_ADDRESS,
+      abi: AGENT_VAULT_ABI,
+      functionName: "allocateToStrategy",
+      args: [this.clients.address, plan.allocateWei],
+    });
+    await waitForSuccess(this.clients.publicClient, allocateHash);
+    console.log(`[trader] Vault allocation confirmed: ${allocateHash}`);
+
+    await this.wrapEthToWeth(plan.allocateWei);
+  }
+
+  private async settleVaultStrategyIfFlat(): Promise<void> {
+    if (!this.isVaultStrategyEnabled() || this.config.dryRun) {
+      return;
+    }
+    if (this.store.getOpen().some((position) => position.venue === "base-spot")) {
+      return;
+    }
+
+    const quoteTokensToCheck = Object.entries(this.config.quoteTokens).filter(
+      ([symbol]) => symbol !== "WETH"
+    );
+    for (const [symbol, tokenAddress] of quoteTokensToCheck) {
+      const balance = await this.clients.publicClient.readContract({
+        address: tokenAddress,
+        abi: ERC20_TRADE_ABI,
+        functionName: "balanceOf",
+        args: [this.clients.address],
+      });
+      if (balance > BigInt(0)) {
+        console.warn(`[trader] vault settlement skipped: residual ${symbol} balance ${balance.toString()} still in strategy wallet`);
+        return;
+      }
+    }
+
+    const vault = await this.readVaultState();
+    if (vault.manager.toLowerCase() !== this.clients.address.toLowerCase()) {
+      console.warn(`[trader] vault settlement skipped: ${this.clients.address} is not vault manager`);
+      return;
+    }
+
+    const wethAddress = this.config.quoteTokens.WETH;
+    const wethWei = wethAddress
+      ? await this.clients.publicClient.readContract({
+          address: wethAddress,
+          abi: ERC20_TRADE_ABI,
+          functionName: "balanceOf",
+          args: [this.clients.address],
+        })
+      : BigInt(0);
+    const nativeEthWei = await this.clients.publicClient.getBalance({
+      address: this.clients.address,
+    });
+    const reserveWei = this.config.vaultStrategy?.minReserveEthRaw ?? BigInt(0);
+    const plan = computeVaultSettlementPlan({
+      deployedCapitalWei: vault.deployedCapitalWei,
+      currentWethWei: wethWei,
+      currentNativeEthWei: nativeEthWei,
+      reserveEthWei: reserveWei,
+    });
+
+    if (plan.unwrapWethWei > BigInt(0)) {
+      await this.unwrapWethToEth(plan.unwrapWethWei);
+    }
+
+    if (plan.returnWei > BigInt(0)) {
+      const returnHash = await this.clients.walletClient.writeContract({
+        address: AGENT_VAULT_ADDRESS,
+        abi: AGENT_VAULT_ABI,
+        functionName: "returnFromStrategy",
+        value: plan.returnWei,
+      });
+      await waitForSuccess(this.clients.publicClient, returnHash);
+      console.log(`[trader] returned ${formatVaultEth(plan.returnWei)} ETH back to vault: ${returnHash}`);
+    }
+
+    if (plan.reportLossWei > BigInt(0) && this.config.vaultStrategy?.autoReportLossWhenFlat) {
+      const lossHash = await this.clients.walletClient.writeContract({
+        address: AGENT_VAULT_ADDRESS,
+        abi: AGENT_VAULT_ABI,
+        functionName: "reportStrategyLoss",
+        args: [plan.reportLossWei, "flat base strategy settlement shortfall"],
+      });
+      await waitForSuccess(this.clients.publicClient, lossHash);
+      console.log(`[trader] reported ${formatVaultEth(plan.reportLossWei)} ETH strategy loss to vault: ${lossHash}`);
+    }
   }
 
   private async tryOpenPosition(
@@ -1179,6 +1332,10 @@ class TraderEngine {
     if (!quoteToken || quoteDecimals === undefined || amountIn === undefined || amountIn <= BigInt(0)) {
       return null;
     }
+    if (this.isVaultStrategyEnabled() && quoteSymbol !== "WETH") {
+      console.log(`[trader] skipping ${candidate.tokenAddress}: vault-funded spot strategy currently supports WETH-quoted launches only`);
+      return null;
+    }
 
     const quoteMarket = await fetchTokenMarketSnapshot(quoteToken, {
       chainId,
@@ -1329,6 +1486,15 @@ function redactedConfigFrom(config: TraderExecutionConfig) {
       entryNotionalUsd: config.hyperliquid.entryNotionalUsd,
       minAccountValueUsd: config.hyperliquid.minAccountValueUsd,
     },
+    vaultStrategy: config.vaultStrategy
+      ? {
+          enabled: config.vaultStrategy.enabled,
+          allocateBufferBps: config.vaultStrategy.allocateBufferBps,
+          autoSettleWhenFlat: config.vaultStrategy.autoSettleWhenFlat,
+          autoReportLossWhenFlat: config.vaultStrategy.autoReportLossWhenFlat,
+          minReserveEthRaw: config.vaultStrategy.minReserveEthRaw.toString(),
+        }
+      : null,
     gasMultiplierBps: config.gasMultiplierBps,
     maxPriorityFeePerGas: config.maxPriorityFeePerGas.toString(),
   };

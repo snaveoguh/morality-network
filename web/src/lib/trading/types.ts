@@ -107,6 +107,14 @@ export interface HyperliquidConfig {
   watchMarkets: string[];
 }
 
+export interface VaultStrategyConfig {
+  enabled: boolean;
+  allocateBufferBps: number;
+  autoSettleWhenFlat: boolean;
+  autoReportLossWhenFlat: boolean;
+  minReserveEthRaw: bigint;
+}
+
 export interface SignalWeights {
   technical: number;
   pattern: number;
@@ -170,6 +178,7 @@ export interface TraderExecutionConfig {
   risk: TraderRiskConfig;
   safety: TraderSafetyConfig;
   hyperliquid: HyperliquidConfig;
+  vaultStrategy?: VaultStrategyConfig | null;
 }
 
 export interface SwapResult {

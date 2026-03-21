@@ -1,5 +1,10 @@
 import { isAddress, parseGwei, type Address } from "viem";
-import type { ExecutionVenue, ScalperConfig, TraderExecutionConfig } from "./types";
+import type {
+  ExecutionVenue,
+  ScalperConfig,
+  TraderExecutionConfig,
+  VaultStrategyConfig,
+} from "./types";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -140,6 +145,23 @@ function parseAmountToRaw(value: string, decimals: number): bigint {
   return BigInt(units);
 }
 
+function buildVaultStrategyConfig(prefix: string): VaultStrategyConfig | null {
+  if (!boolFromEnv(`${prefix}_VAULT_STRATEGY_ENABLED`, false)) {
+    return null;
+  }
+
+  return {
+    enabled: true,
+    allocateBufferBps: numberFromEnv(`${prefix}_VAULT_STRATEGY_ALLOCATE_BUFFER_BPS`, 12_000),
+    autoSettleWhenFlat: boolFromEnv(`${prefix}_VAULT_STRATEGY_AUTO_SETTLE_WHEN_FLAT`, true),
+    autoReportLossWhenFlat: boolFromEnv(`${prefix}_VAULT_STRATEGY_AUTO_REPORT_LOSS_WHEN_FLAT`, true),
+    minReserveEthRaw: parseAmountToRaw(
+      stringFromEnv(`${prefix}_VAULT_STRATEGY_MIN_RESERVE_ETH`, "0.002"),
+      18
+    ),
+  };
+}
+
 export function getTraderConfig(): TraderExecutionConfig {
   const executionVenue = executionVenueFromEnv();
   const rpcUrl = defaultRpcForVenue(executionVenue);
@@ -236,6 +258,7 @@ export function getTraderConfig(): TraderExecutionConfig {
       minAccountValueUsd: numberFromEnv("HYPERLIQUID_MIN_ACCOUNT_VALUE_USD", 100),
       watchMarkets: stringFromEnv("HYPERLIQUID_WATCH_MARKETS", "BTC,ETH,SOL").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean),
     },
+    vaultStrategy: buildVaultStrategyConfig("TRADER"),
   };
 }
 
@@ -349,6 +372,7 @@ export function getParallelBaseConfig(): TraderExecutionConfig | null {
         primary.safety.minBaseEthForGas
       ),
     },
+    vaultStrategy: buildVaultStrategyConfig("TRADER_BASE_PARALLEL"),
   };
 
   return next;
