@@ -26,6 +26,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
     address public navReporter;
     address public reserveAllocator;
     address public withdrawalQueue;
+    address public bridgeRouter;
 
     bytes32 public trancheId;
     uint16 public performanceFeeBps;
@@ -58,12 +59,14 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
     event WithdrawalQueueUpdated(address indexed previousQueue, address indexed nextQueue);
     event AllocatorUpdated(address indexed previousAllocator, address indexed nextAllocator);
     event NavReporterUpdated(address indexed previousReporter, address indexed nextReporter);
+    event BridgeRouterUpdated(address indexed previousRouter, address indexed nextRouter);
     event ReserveAllocated(uint256 assets);
     event ReserveDeallocated(uint256 requestedAssets, uint256 assetsReturned);
     event BridgeOutMarked(bytes32 indexed routeId, uint256 assets);
     event BridgeInMarked(bytes32 indexed routeId, uint256 assets);
     event StrategyIncreaseMarked(bytes32 indexed settlementId, uint256 assets);
     event StrategyDecreaseMarked(bytes32 indexed settlementId, uint256 assets);
+    event StrategyReturnPending(bytes32 indexed settlementId, uint256 assets);
     event DailyNavSettled(
         uint256 reserveAssetsEth,
         uint256 pendingBridgeEth,
@@ -79,6 +82,11 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
 
     modifier onlyNavReporter() {
         require(msg.sender == navReporter, "Not nav reporter");
+        _;
+    }
+
+    modifier onlyBridgeRouter() {
+        require(msg.sender == bridgeRouter, "Not bridge router");
         _;
     }
 
@@ -259,6 +267,22 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         emit ReserveDeallocated(assets, assetsOut);
     }
 
+    function bridgeOutToRouter(
+        uint256 assets,
+        bytes32 routeId,
+        address receiver
+    ) external nonReentrant whenNotPaused onlyBridgeRouter {
+        require(receiver != address(0), "Zero receiver");
+        require(assets > 0, "Zero assets");
+        require(assets <= liquidAssetsStored, "Insufficient liquid assets");
+
+        liquidAssetsStored -= assets;
+        pendingBridgeAssetsStored += assets;
+        require(IERC20(weth).transfer(receiver, assets), "Transfer failed");
+
+        emit BridgeOutMarked(routeId, assets);
+    }
+
     function markBridgeOut(uint256 assets, bytes32 routeId) external onlyAllocator {
         require(assets > 0, "Zero assets");
         require(assets <= liquidAssetsStored, "Insufficient liquid assets");
@@ -275,7 +299,23 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         emit BridgeInMarked(routeId, assets);
     }
 
+    function markBridgeReturned(uint256 assets, bytes32 routeId) external onlyBridgeRouter {
+        require(assets > 0, "Zero assets");
+        require(assets <= pendingBridgeAssetsStored, "Bridge underflow");
+        pendingBridgeAssetsStored -= assets;
+        liquidAssetsStored += assets;
+        emit BridgeInMarked(routeId, assets);
+    }
+
     function markStrategyIncrease(uint256 assets, bytes32 settlementId) external onlyAllocator {
+        require(assets > 0, "Zero assets");
+        require(assets <= pendingBridgeAssetsStored, "Strategy underflow");
+        pendingBridgeAssetsStored -= assets;
+        hlStrategyAssetsStored += assets;
+        emit StrategyIncreaseMarked(settlementId, assets);
+    }
+
+    function markBridgeDeliveredToStrategy(uint256 assets, bytes32 settlementId) external onlyBridgeRouter {
         require(assets > 0, "Zero assets");
         require(assets <= pendingBridgeAssetsStored, "Strategy underflow");
         pendingBridgeAssetsStored -= assets;
@@ -289,6 +329,14 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         hlStrategyAssetsStored -= assets;
         liquidAssetsStored += assets;
         emit StrategyDecreaseMarked(settlementId, assets);
+    }
+
+    function markStrategyReturnPending(uint256 assets, bytes32 settlementId) external onlyBridgeRouter {
+        require(assets > 0, "Zero assets");
+        require(assets <= hlStrategyAssetsStored, "Strategy underflow");
+        hlStrategyAssetsStored -= assets;
+        pendingBridgeAssetsStored += assets;
+        emit StrategyReturnPending(settlementId, assets);
     }
 
     function settleDailyNav(
@@ -326,6 +374,11 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
     function setWithdrawalQueue(address nextQueue) external onlyOwner {
         emit WithdrawalQueueUpdated(withdrawalQueue, nextQueue);
         withdrawalQueue = nextQueue;
+    }
+
+    function setBridgeRouter(address nextRouter) external onlyOwner {
+        emit BridgeRouterUpdated(bridgeRouter, nextRouter);
+        bridgeRouter = nextRouter;
     }
 
     function pause() external onlyOwner {
