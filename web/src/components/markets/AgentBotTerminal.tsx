@@ -79,6 +79,9 @@ function getFundingSummary(
       executionVenue === "hyperliquid-perp"
         ? "That still does not automatically top up Hyperliquid margin."
         : "Your address is remembered because the vault tracks shares onchain.",
+      executionVenue === "hyperliquid-perp"
+        ? "Today the vault share ledger and the live Hyperliquid bankroll are still separate systems."
+        : "When the strategy deploys vault capital, your exposure comes through vault shares.",
     ].join("\n");
   }
 
@@ -88,6 +91,9 @@ function getFundingSummary(
     executionVenue === "hyperliquid-perp"
       ? "It also does not automatically top up Hyperliquid collateral."
       : `Funds go to ${fundingAddress}.`,
+    executionVenue === "hyperliquid-perp"
+      ? "So direct Hyperliquid funding is operator bankroll, not your personal vault position."
+      : "This is a strategy top-up, not a share-tracked deposit.",
   ].join("\n");
 }
 
@@ -101,7 +107,7 @@ function makeSession(title: string, intro?: string): TerminalSession {
       makeAssistantMessage(
         [
           "gm. desk is live — dual-engine: bankr (strategy) + venice (private risk).",
-          "Quick commands: `fund 0.01`, `withdraw 0.01`, `status`, `fees`.",
+          "Quick commands: `fund 0.01`, `withdraw 0.01`, `status`, `capital`, `fees`.",
           intro ?? "",
         ].join("\n")
       ),
@@ -586,12 +592,32 @@ export function AgentBotTerminal({
         return;
       }
 
+      if (lower === "capital" || lower === "/capital") {
+        appendMessage("assistant", [
+          canWithdraw
+            ? "Ownership: vault deposits mint onchain shares to your wallet."
+            : "Ownership: direct funding does not mint shares or track a personal balance for you.",
+          executionVenue === "hyperliquid-perp"
+            ? (canWithdraw
+              ? "Hyperliquid margin is still a separate rail today, so vault shares do not automatically become HL collateral."
+              : "If you fund the HL bot directly, that capital is operator-controlled bankroll.")
+            : (canWithdraw
+              ? "If strategy capital is deployed, your exposure is through vault shares rather than a personal trading account."
+              : `Funds route to ${fundingAddress}.`),
+          openPositions > 0
+            ? `Current state: ${openPositions} live position${openPositions === 1 ? "" : "s"} open.`
+            : "Current state: live but flat right now with 0 open positions.",
+        ].join("\n"));
+        return;
+      }
+
       if (lower === "help" || lower === "/help") {
         appendMessage("assistant", [
           "Commands:",
           "- fund 0.01",
           canWithdraw ? "- withdraw 0.01" : "- withdraw (vault-only)",
           "- status",
+          "- capital",
           "- fees",
           "",
           "Or ask me anything about your positions, risk, strategy, or market conditions.",
