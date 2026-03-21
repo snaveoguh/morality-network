@@ -14,7 +14,6 @@ import { predictionMarketPublicClient } from "./server/onchain-clients";
 
 type PredictionDaoKey = "nouns" | "lil-nouns";
 type PredictionOpsAction =
-  | "create-market"
   | "resolve-market"
   | "watch-market"
   | "resolved"
@@ -52,7 +51,6 @@ export interface PredictionMarketOpsSnapshot {
   marketAddress: Address;
   totals: {
     proposalsScanned: number;
-    createMarket: number;
     resolveMarket: number;
     watchMarket: number;
     resolved: number;
@@ -103,14 +101,12 @@ function actionPriority(action: PredictionOpsAction): number {
   switch (action) {
     case "resolve-market":
       return 0;
-    case "create-market":
-      return 1;
     case "watch-market":
-      return 2;
+      return 1;
     case "resolved":
-      return 3;
+      return 2;
     default:
-      return 4;
+      return 3;
   }
 }
 
@@ -158,8 +154,8 @@ function summarizeAction(params: {
   if (!marketExists) {
     if (STAKEABLE_STATUSES.has(status)) {
       return {
-        operatorAction: "create-market",
-        note: "Proposal is live and needs createMarket() before users can stake.",
+        operatorAction: "watch-market",
+        note: "Proposal is live. Market auto-creates on first wager.",
       };
     }
 
@@ -264,9 +260,6 @@ export async function buildPredictionMarketOpsSnapshot(options?: {
   const totals = entries.reduce(
     (acc, entry) => {
       switch (entry.operatorAction) {
-        case "create-market":
-          acc.createMarket += 1;
-          break;
         case "resolve-market":
           acc.resolveMarket += 1;
           break;
@@ -284,7 +277,6 @@ export async function buildPredictionMarketOpsSnapshot(options?: {
     },
     {
       proposalsScanned: entries.length,
-      createMarket: 0,
       resolveMarket: 0,
       watchMarket: 0,
       resolved: 0,
