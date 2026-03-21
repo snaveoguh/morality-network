@@ -44,11 +44,16 @@ Recommended environment:
 ```bash
 INDEXER_BACKEND_URL=https://<indexer-host>
 INDEXER_WORKER_SECRET=<shared-write-secret>
+CRON_SECRET=<shared-service-secret>
+SESSION_SECRET=<long-random-session-secret>
+OPERATOR_ADDRESSES=0xabc...,0xdef...
 AGENT_RUNTIME_MODE=worker
 TRADER_EXECUTION_MODE=worker
 WORKER_TASKS=scanner,swarm
 # Add trader only when funded, keyed, and explicitly enabled:
 # WORKER_TASKS=scanner,swarm,trader
+# Optional: change the holder gate for terminal access (defaults to 100000 MO)
+# TERMINAL_FULL_ACCESS_MIN_MO=100000
 ```
 
 Key intervals:
@@ -68,6 +73,8 @@ Required operator actions:
 3. Rotate `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` if the prior value was shared too broadly.
 4. Create a new deployer key, fund it minimally, and update `contracts/.env`.
 5. Set `INDEXER_WORKER_SECRET` for worker writes into the indexer.
+6. Set `CRON_SECRET` for cron and service-to-service mutation routes.
+7. Set `OPERATOR_ADDRESSES` and/or `GOD_MODE_ADDRESSES` so operator dashboards work through SIWE without falling back to bearer secrets.
 
 ## Paid RPC Decision
 

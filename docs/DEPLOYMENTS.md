@@ -13,6 +13,10 @@ Runtime mode flags:
 - `TRADER_EXECUTION_MODE=worker`
 - `INDEXER_BACKEND_URL=<indexer-url>`
 - `INDEXER_WORKER_SECRET=<shared-write-secret>`
+- `CRON_SECRET=<shared-service-secret>`
+- `SESSION_SECRET=<long-random-session-secret>`
+- `OPERATOR_ADDRESSES=<comma-separated-operator-wallets>`
+- `TERMINAL_FULL_ACCESS_MIN_MO=100000` (default holder gate for full terminal access)
 
 ## Base Sepolia (Chain ID: 84532)
 
