@@ -1,10 +1,25 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { CONTRACTS, COMMENTS_ABI } from "@/lib/contracts";
 import { baseContractsPublicClient } from "@/lib/server/onchain-clients";
+import { rateLimit } from "@/lib/rate-limit";
+
+const POLL_INTERVAL_MS = 5_000;
+const STREAM_TTL_MS = 60_000;
+const ENTITY_HASH_PATTERN = /^0x[a-fA-F0-9]{64}$/;
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, { maxRequests: 20, windowMs: 60_000 });
+  if (limited) return limited;
+
   const entityHash = req.nextUrl.searchParams.get("entityHash");
-  const normalizedEntityHash = entityHash?.toLowerCase();
+  if (!entityHash || !ENTITY_HASH_PATTERN.test(entityHash)) {
+    return NextResponse.json(
+      { error: "entityHash query parameter is required" },
+      { status: 400 },
+    );
+  }
+
+  const normalizedEntityHash = entityHash.toLowerCase();
 
   const encoder = new TextEncoder();
   let lastKnownId = BigInt(0);
@@ -26,6 +41,22 @@ export async function GET(req: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      let interval: ReturnType<typeof setInterval> | null = null;
+      const closeStream = (reason: string) => {
+        if (closed) return;
+        closed = true;
+        if (interval) clearInterval(interval);
+        clearTimeout(ttlTimer);
+        try {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "closing", reason })}\n\n`)
+          );
+        } catch {}
+        try {
+          controller.close();
+        } catch {}
+      };
+
       // Send initial connected event
       controller.enqueue(
         encoder.encode(
@@ -36,72 +67,71 @@ export async function GET(req: NextRequest) {
       // Backfill recent comments for this entity using getEntityComments if available,
       // otherwise fall back to scanning recent global IDs.
       try {
-        if (normalizedEntityHash) {
-          // Use the efficient entity-scoped query
-          try {
-            const entityCount = await client.readContract({
+        // Use the efficient entity-scoped query
+        try {
+          const entityCount = await client.readContract({
+            address: CONTRACTS.comments,
+            abi: COMMENTS_ABI,
+            functionName: "getEntityCommentCount",
+            args: [normalizedEntityHash as `0x${string}`],
+          });
+
+          const count = Number(entityCount);
+          if (count > 0) {
+            const offset = count > 50 ? BigInt(count - 50) : BigInt(0);
+            const ids = await client.readContract({
               address: CONTRACTS.comments,
               abi: COMMENTS_ABI,
-              functionName: "getEntityCommentCount",
-              args: [normalizedEntityHash as `0x${string}`],
+              functionName: "getEntityComments",
+              args: [normalizedEntityHash as `0x${string}`, offset, BigInt(50)],
             });
 
-            const count = Number(entityCount);
-            if (count > 0) {
-              const offset = count > 50 ? BigInt(count - 50) : BigInt(0);
-              const ids = await client.readContract({
-                address: CONTRACTS.comments,
-                abi: COMMENTS_ABI,
-                functionName: "getEntityComments",
-                args: [normalizedEntityHash as `0x${string}`, offset, BigInt(50)],
-              });
+            for (const id of ids) {
+              try {
+                const comment = await client.readContract({
+                  address: CONTRACTS.comments,
+                  abi: COMMENTS_ABI,
+                  functionName: "getComment",
+                  args: [id],
+                });
+                if (!comment.exists) continue;
 
-              for (const id of ids) {
-                try {
-                  const comment = await client.readContract({
-                    address: CONTRACTS.comments,
-                    abi: COMMENTS_ABI,
-                    functionName: "getComment",
-                    args: [id],
-                  });
-                  if (!comment.exists) continue;
+                const payload = {
+                  type: "comment",
+                  id: comment.id.toString(),
+                  entityHash: comment.entityHash,
+                  author: comment.author,
+                  content: comment.content,
+                  parentId: comment.parentId.toString(),
+                  score: comment.score.toString(),
+                  tipTotal: comment.tipTotal.toString(),
+                  timestamp: comment.timestamp.toString(),
+                };
 
-                  const payload = {
-                    type: "comment",
-                    id: comment.id.toString(),
-                    entityHash: comment.entityHash,
-                    author: comment.author,
-                    content: comment.content,
-                    parentId: comment.parentId.toString(),
-                    score: comment.score.toString(),
-                    tipTotal: comment.tipTotal.toString(),
-                    timestamp: comment.timestamp.toString(),
-                  };
-
-                  controller.enqueue(
-                    encoder.encode(`data: ${JSON.stringify(payload)}\n\n`)
-                  );
-                } catch {
-                  // Skip individual comment errors
-                }
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify(payload)}\n\n`)
+                );
+              } catch {
+                // Skip individual comment errors
               }
             }
-          } catch {
-            // Fall through to global scan if entity query fails
-            await backfillGlobal(client, lastKnownId, normalizedEntityHash, controller, encoder);
           }
-        } else {
-          // No entity filter — scan recent global comments
-          await backfillGlobal(client, lastKnownId, null, controller, encoder);
+        } catch {
+          // Fall through to global scan if entity query fails
+          await backfillGlobal(client, lastKnownId, normalizedEntityHash, controller, encoder);
         }
       } catch {
         // Skip backfill if RPC read fails
       }
 
+      const ttlTimer = setTimeout(() => {
+        closeStream("reconnect");
+      }, STREAM_TTL_MS);
+
       // Poll loop
-      const interval = setInterval(async () => {
+      interval = setInterval(async () => {
         if (closed) {
-          clearInterval(interval);
+          if (interval) clearInterval(interval);
           return;
         }
 
@@ -123,13 +153,7 @@ export async function GET(req: NextRequest) {
                   args: [id],
                 });
 
-                if (!comment.exists) continue;
-
-                // Filter by entityHash if specified
-                if (
-                  normalizedEntityHash &&
-                  comment.entityHash.toLowerCase() !== normalizedEntityHash
-                ) {
+                if (!comment.exists || comment.entityHash.toLowerCase() !== normalizedEntityHash) {
                   continue;
                 }
 
@@ -168,13 +192,11 @@ export async function GET(req: NextRequest) {
             )
           );
         }
-      }, 5000); // Poll every 5 seconds
+      }, POLL_INTERVAL_MS);
 
       // Cleanup on close
       req.signal.addEventListener("abort", () => {
-        closed = true;
-        clearInterval(interval);
-        controller.close();
+        closeStream("client-abort");
       });
     },
   });

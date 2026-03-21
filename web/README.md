@@ -42,6 +42,10 @@ Scanner integration (optional):
 - `AGENT_BRIDGE_MAX_SKEW_MS` — replay-window tolerance for bridge signatures.
 - `AGENT_BRIDGE_TOPICS` — comma-separated durable swarm topics forwarded to the remote bridge by the worker.
 - `WORKER_BRIDGE_CONSUMER_ID` — durable relay cursor name stored in the indexer.
+- `CRON_SECRET` — required for cron/service routes such as newsroom, editorial generation, and live trading mutations.
+- `SESSION_SECRET` — required in production for SIWE session integrity.
+- `OPERATOR_ADDRESSES` / `GOD_MODE_ADDRESSES` — comma-separated wallet allowlists for operator-only dashboards and telemetry routes.
+- `TERMINAL_FULL_ACCESS_MIN_MO` — MO balance required for full terminal access; defaults to `100000`.
 - `AI_FAST_PROVIDER_ORDER` / `AI_PREMIUM_PROVIDER_ORDER` — provider routing for AI tasks.
 - `OPENAI_API_KEY`, `VENICE_API_KEY`, `OLLAMA_BASE_URL` — optional secondary/local inference providers in addition to Anthropic.
 - `AI_BUDGET_*` — optional rolling spend caps used to block providers before they exceed budget.
