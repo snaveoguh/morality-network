@@ -55,7 +55,7 @@ interface ApiEntry {
   method: string;
   path: string;
   description: string;
-  auth: "PUBLIC" | "AUTH";
+  auth: "PUBLIC" | "AUTH" | "HOLDER" | "PUBLIC / HOLDER-FULL";
 }
 
 const API_ENDPOINTS: { category: string; endpoints: ApiEntry[] }[] = [
@@ -116,8 +116,9 @@ const API_ENDPOINTS: { category: string; endpoints: ApiEntry[] }[] = [
     category: "Trading",
     endpoints: [
       { method: "GET", path: "/api/trading/signals", description: "Trading signals", auth: "PUBLIC" },
+      { method: "GET", path: "/api/trading/signals/live", description: "Live composite signals", auth: "HOLDER" },
       { method: "POST", path: "/api/trading/execute", description: "Execute trades", auth: "AUTH" },
-      { method: "GET", path: "/api/trading/metrics", description: "Trading metrics", auth: "PUBLIC" },
+      { method: "GET", path: "/api/trading/metrics", description: "Trading metrics", auth: "PUBLIC / HOLDER-FULL" },
       { method: "GET", path: "/api/trading/positions", description: "Trading positions", auth: "AUTH" },
       { method: "GET", path: "/api/trading/readiness", description: "Trading readiness", auth: "AUTH" },
       { method: "GET", path: "/api/trading/candles", description: "OHLCV candlestick data", auth: "PUBLIC" },
@@ -173,9 +174,9 @@ const API_ENDPOINTS: { category: string; endpoints: ApiEntry[] }[] = [
   {
     category: "Terminal & Music",
     endpoints: [
-      { method: "POST", path: "/api/terminal/chat", description: "Terminal chat (AI)", auth: "AUTH" },
+      { method: "POST", path: "/api/terminal/chat", description: "Terminal chat (AI)", auth: "HOLDER" },
       { method: "GET", path: "/api/terminal/subscription/status", description: "Subscription status", auth: "PUBLIC" },
-      { method: "POST", path: "/api/terminal/risk", description: "Risk assessment", auth: "AUTH" },
+      { method: "POST", path: "/api/terminal/risk", description: "Risk assessment", auth: "HOLDER" },
       { method: "GET", path: "/api/music/discover", description: "Music discovery", auth: "PUBLIC" },
     ],
   },

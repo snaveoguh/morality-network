@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAddress, type Address } from "viem";
-import { getSession } from "@/lib/session";
+import { getMoHolderAccessState } from "@/lib/holder-access";
 import { getTerminalFreeAccessSnapshot } from "@/lib/terminal-access";
 import { getTerminalSubscriptionStatus } from "@/lib/terminal-subscription";
 
@@ -9,7 +9,7 @@ export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {
-    const session = await getSession();
+    const holderAccess = await getMoHolderAccessState(request);
     const { searchParams } = new URL(request.url);
     const rawAddress = searchParams.get("address");
     const forceRefresh = (() => {
@@ -21,17 +21,36 @@ export async function GET(request: Request) {
     const address =
       rawAddress && isAddress(rawAddress)
         ? (rawAddress as Address)
-        : session.address && isAddress(session.address)
-          ? (session.address as Address)
+        : holderAccess.sessionAddress
+          ? holderAccess.sessionAddress
           : undefined;
 
     const status = await getTerminalSubscriptionStatus(address, { forceRefresh });
     const freeAccess = await getTerminalFreeAccessSnapshot();
-    return NextResponse.json({ ...status, freeAccess }, {
-      headers: {
-        "cache-control": "no-store, max-age=0",
+    const sessionMatchesAccount =
+      Boolean(address) &&
+      Boolean(holderAccess.sessionAddress) &&
+      address?.toLowerCase() === holderAccess.sessionAddress?.toLowerCase();
+
+    return NextResponse.json(
+      {
+        ...status,
+        freeAccess,
+        fullAccess: holderAccess.fullAccess,
+        holderVerified: holderAccess.holder,
+        operator: holderAccess.operator,
+        session: {
+          authenticated: Boolean(holderAccess.sessionAddress),
+          address: holderAccess.sessionAddress,
+          matchesAccount: sessionMatchesAccount,
+        },
       },
-    });
+      {
+        headers: {
+          "cache-control": "no-store, max-age=0",
+        },
+      }
+    );
   } catch (error) {
     return NextResponse.json(
       {
