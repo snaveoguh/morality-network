@@ -17,13 +17,14 @@ export interface TerminalTradingContext {
   unrealizedPnlUsd: number;
   realizedPnlUsd: number;
   deployedUsd: number;
-  // Open position details
+  // Open position details (from all active venues)
   positions: Array<{
     symbol: string;
     entryPrice: number;
     currentPrice: number | null;
     unrealizedPnl: number | null;
     size: number;
+    venue?: string;
   }>;
   // Vault state (if applicable)
   vault?: {
