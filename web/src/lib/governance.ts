@@ -1,6 +1,7 @@
 // DAO Governance Fetcher
 // Pulls live proposals from: Snapshot, Nouns, Tally, UK/US/EU/Canada/Australia Parliaments, SEC
 
+import { createPublicClient, http } from "viem";
 import {
   fetchLilNounsDelegationEvents,
   fetchLilNounsProposals,
@@ -22,6 +23,7 @@ import {
 } from "./farcaster";
 import { fetchAllDivisions, type ParliamentDivision } from "./parliament";
 import { getDaoPredictionKey } from "./proposal-entity";
+import { getPredictionMarketChain, getPredictionMarketRpcUrl } from "./rpc-urls";
 import { loadTtlValue, type TtlCacheEntry } from "./ttl-cache";
 
 // ============================================================================
@@ -44,6 +46,10 @@ const governanceSocialCache = new Map<
   string,
   TtlCacheEntry<GovernanceSocialSignal[]>
 >();
+const predictionMarketPublicClient = createPublicClient({
+  chain: getPredictionMarketChain(),
+  transport: http(getPredictionMarketRpcUrl(), { timeout: 10_000 }),
+});
 
 async function fetchWithRetry(
   url: string,
@@ -2049,7 +2055,7 @@ async function _fetchResolvedPredictionProposalsInner(): Promise<Proposal[]> {
         const daoKey = getDaoPredictionKey(p.dao);
         const proposalId = p.proposalNumber?.toString() ?? p.id;
         try {
-          const raw = await mainnetPublicClient.readContract({
+          const raw = await predictionMarketPublicClient.readContract({
             address: PREDICTION_MARKET_ADDRESS,
             abi: PREDICTION_MARKET_ABI,
             functionName: "getMarket",
