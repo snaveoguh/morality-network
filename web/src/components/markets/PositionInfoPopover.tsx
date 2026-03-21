@@ -71,7 +71,7 @@ const SLIDES: readonly { title: string; art: string; body: string }[] = [
   GET /positions ──▶ open trades
   GET /signals/live ──▶ real-time
   GET /performance ──▶ track record`,
-    body: "You can mirror the engine's trades via the authenticated API. Send a Bearer token in the Authorization header. Fetch open positions from /api/trading/positions?openOnly=1 to see current entries with side, size, and entry price. Poll /api/trading/signals/live for the same composite signals the engine acts on, including per-component breakdowns. Use /api/trading/performance for win rate, PnL, and Sharpe ratio to evaluate before committing capital.",
+    body: "You can mirror the engine's trades through two access tiers. Operator routes like /api/trading/positions and /api/trading/performance still require bearer auth. Premium market intelligence routes on /markets, including /api/trading/signals/live and the full metrics feed, unlock for SIWE-authenticated wallets holding at least 100,000 MO.",
   },
   {
     title: "API reference",
@@ -84,7 +84,7 @@ const SLIDES: readonly { title: string; art: string; body: string }[] = [
     ├── candles      OHLCV data
     ├── indicators   tech readings
     └── readiness    status gate`,
-    body: "All endpoints are on pooter.world. Trading endpoints (positions, performance, readiness) require a Bearer token for authentication. GET /candles?coin=BTC&interval=15m&count=200 returns OHLCV data. GET /indicators?coin=BTC returns RSI, MACD, Ichimoku, EMA, Bollinger, and VWAP readings. GET /signals/live returns composite signals with component scores and human-readable reasons. GET /readiness checks scanner count, gas balance, collateral, and returns a liveReady boolean.",
+    body: "All endpoints are on pooter.world. Operator routes (positions, performance, readiness) require bearer auth. Market-data primitives like /candles and /indicators stay public. Premium desk routes like /api/trading/metrics full detail, /api/trading/signals/live, and the /markets terminal require a verified wallet session holding 100,000 MO.",
   },
   {
     title: "PnL and fees",

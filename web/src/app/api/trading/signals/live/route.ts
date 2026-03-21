@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireMoHolderAccess } from "@/lib/holder-access";
 import { reportWarn } from "@/lib/report-error";
 import { getTraderConfig } from "@/lib/trading/config";
 import { fetchTechnicalSignal } from "@/lib/trading/technical";
@@ -6,8 +7,13 @@ import { detectPatterns } from "@/lib/trading/pattern-detector";
 import { computeCompositeSignal } from "@/lib/trading/composite-signal";
 import { getAggregatedMarketSignals } from "@/lib/trading/signals";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const access = await requireMoHolderAccess(request);
+    if (access instanceof NextResponse) {
+      return access;
+    }
+
     const config = getTraderConfig();
     const watchMarkets = config.hyperliquid.watchMarkets;
 
@@ -71,7 +77,7 @@ export async function GET() {
         timestamp: Date.now(),
         markets: results,
       },
-      { headers: { "Cache-Control": "public, max-age=30, s-maxage=30" } },
+      { headers: { "Cache-Control": "no-store, max-age=0" } },
     );
   } catch (error) {
     return NextResponse.json(

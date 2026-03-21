@@ -48,7 +48,7 @@ export interface AgentBotTerminalProps {
 }
 
 const STORAGE_KEY = "pooter-markets-terminal-v1";
-const FREE_MONTHLY_MESSAGES = 30;
+const FREE_MONTHLY_MESSAGES = 0;
 
 function monthKeyNow(): string {
   const now = new Date();
@@ -254,7 +254,8 @@ export function AgentBotTerminal({
   const monthUsage = usage.monthKey === monthKeyNow() ? usage.used : 0;
   const freeRemaining = freeRemainingServer ?? Math.max(0, FREE_MONTHLY_MESSAGES - monthUsage);
   const freeLimit = freeAccess?.limit ?? FREE_MONTHLY_MESSAGES;
-  const locked = !isUnlocked && freeRemaining <= 0;
+  const freeTierEnabled = freeLimit > 0;
+  const locked = !isUnlocked && (!freeTierEnabled || freeRemaining <= 0);
 
   function updateActiveSession(mutator: (session: TerminalSession) => TerminalSession) {
     if (!activeSession) return;
@@ -529,7 +530,7 @@ export function AgentBotTerminal({
     if (locked) {
       appendMessage(
         "system",
-        "Free monthly usage reached. Hold 100,000 MO in the connected wallet for full terminal access.",
+        "Hold 100,000 MO in a verified wallet to unlock the terminal.",
       );
       setInput("");
       return;
@@ -614,7 +615,7 @@ export function AgentBotTerminal({
     if (!onUnlockPlan) {
       appendMessage(
         "assistant",
-        "Full terminal access unlocks automatically for wallets holding 100,000 MO.",
+        "Full terminal access unlocks for wallets holding 100,000 MO after wallet verification.",
       );
       return;
     }
@@ -729,7 +730,7 @@ export function AgentBotTerminal({
             {isUnlocked
               ? `Unlocked${unlockSummary ? ` — ${unlockSummary}` : ""}`
               : locked
-              ? "Usage cap reached"
+              ? unlockSummary || "Hold 100k MO and verify the wallet to unlock the terminal"
               : `${freeRemaining} free messages left this month (${freeLimit} total)`}
           </p>
           <button
@@ -751,7 +752,7 @@ export function AgentBotTerminal({
                 void handleSend();
               }
             }}
-            placeholder={locked ? "Hold 100k MO to continue..." : "ask about positions, risk, strategy..."}
+            placeholder={locked ? "Hold 100k MO and verify wallet to continue..." : "ask about positions, risk, strategy..."}
             className="w-full border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-2 font-mono text-[12px] text-[var(--ink)] outline-none focus:border-[var(--rule)]"
           />
           <button

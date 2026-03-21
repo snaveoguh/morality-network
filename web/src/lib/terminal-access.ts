@@ -1,15 +1,12 @@
 import "server-only";
 
 import { NextResponse } from "next/server";
-import { isAddress, type Address } from "viem";
-import { getOperatorAuthState } from "@/lib/operator-auth";
+import { type Address } from "viem";
 import { getSession } from "@/lib/session";
-import {
-  type TerminalSubscriptionStatus,
-  getTerminalSubscriptionStatus,
-} from "@/lib/terminal-subscription";
+import { getMoHolderAccessState } from "@/lib/holder-access";
+import { type TerminalSubscriptionStatus } from "@/lib/terminal-subscription";
 
-const DEFAULT_FREE_MONTHLY_MESSAGES = 30;
+const DEFAULT_FREE_MONTHLY_MESSAGES = 0;
 
 export interface TerminalFreeAccessSnapshot {
   monthKey: string;
@@ -62,7 +59,7 @@ export async function requireTerminalAccess(
   request: Request,
   options?: { consume?: boolean },
 ): Promise<NextResponse | TerminalAccessState> {
-  const operatorAuth = await getOperatorAuthState(request);
+  const holderAccess = await getMoHolderAccessState(request);
   const session = await getSession();
   const monthKey = currentMonthKey();
   const freeLimit = getFreeMonthlyMessages();
@@ -71,31 +68,13 @@ export async function requireTerminalAccess(
       ? Math.max(0, Math.floor(session.terminalUsageCount ?? 0))
       : 0;
 
-  const sessionAddress =
-    typeof session.address === "string" &&
-    session.address.trim().length > 0 &&
-    isAddress(session.address)
-      ? (session.address as Address)
-      : null;
+  const sessionAddress = holderAccess.sessionAddress;
+  const subscription: TerminalSubscriptionStatus | null = holderAccess.subscription;
+  const requiredMoBalance = holderAccess.requiredMoBalance;
 
-  let subscription: TerminalSubscriptionStatus | null = null;
-  let requiredMoBalance =
-    process.env.NEXT_PUBLIC_TERMINAL_FULL_ACCESS_MIN_MO?.trim() ||
-    process.env.TERMINAL_FULL_ACCESS_MIN_MO?.trim() ||
-    "100000";
-
-  if (sessionAddress) {
-    try {
-      subscription = await getTerminalSubscriptionStatus(sessionAddress);
-      requiredMoBalance = subscription.requiredMoBalance ?? requiredMoBalance;
-    } catch {
-      subscription = null;
-    }
-  }
-
-  if (operatorAuth.authorized || subscription?.account?.unlocked) {
+  if (holderAccess.fullAccess) {
     return {
-      operator: operatorAuth.authorized,
+      operator: holderAccess.operator,
       unlocked: true,
       sessionAddress,
       requiredMoBalance,
@@ -109,10 +88,10 @@ export async function requireTerminalAccess(
     };
   }
 
-  if (existingUsed >= freeLimit) {
+  if (freeLimit <= 0 || existingUsed >= freeLimit) {
     return NextResponse.json(
       {
-        error: `Free monthly usage reached. Hold ${requiredMoBalance} MO in the connected wallet for full terminal access.`,
+        error: `Hold ${requiredMoBalance} MO in a verified wallet for full terminal access.`,
         requiredMoBalance,
         authenticated: Boolean(sessionAddress),
         address: sessionAddress,

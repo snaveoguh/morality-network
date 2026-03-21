@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatEther, parseEther, type Address } from "viem";
+import { SiweMessage } from "siwe";
 import {
   useAccount,
   useChainId,
   useSendTransaction,
+  useSignMessage,
   useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
@@ -132,6 +134,8 @@ interface MetricsResponse {
   vault?: VaultOverview | null;
   access?: {
     operator: boolean;
+    holder?: boolean;
+    fullAccess?: boolean;
     via?: string | null;
     accountMatched?: boolean;
   };
@@ -173,6 +177,14 @@ interface SubscriptionStatus {
     limit: number;
     used: number;
     remaining: number;
+  };
+  fullAccess?: boolean;
+  holderVerified?: boolean;
+  operator?: boolean;
+  session?: {
+    authenticated: boolean;
+    address: Address | null;
+    matchesAccount: boolean;
   };
   reason?: string;
 }
@@ -371,6 +383,7 @@ export function AgentMarketDashboard() {
     isPending: isVaultWritePending,
     error: vaultWriteError,
   } = useWriteContract();
+  const { signMessageAsync } = useSignMessage();
   const { switchChainAsync } = useSwitchChain();
   const { isLoading: isTxConfirming, isSuccess: txSuccess } =
     useWaitForTransactionReceipt({
@@ -395,7 +408,7 @@ export function AgentMarketDashboard() {
       setData(payload.performance);
       setParallelRunners(payload.parallel ?? []);
       setVault(payload.vault ?? null);
-      setMetricsAccess(payload.access ?? { operator: false });
+      setMetricsAccess(payload.access ?? { operator: false, holder: false, fullAccess: false });
 
       // Extract ETH/USD price for vault conversion
       try {
@@ -457,6 +470,7 @@ export function AgentMarketDashboard() {
     [vault]
   );
   const isOperatorView = metricsAccess?.operator === true;
+  const hasFullMarketAccess = metricsAccess?.fullAccess === true;
 
   // ── Merge parallel runner positions into unified views ──────────────
   // All positions from all runners (primary + parallel) in one table.
@@ -612,7 +626,7 @@ export function AgentMarketDashboard() {
           throw new Error("Funding destination unavailable");
         }
         if (!data.fundingAddress) {
-          throw new Error("Direct funding is restricted to operator view");
+          throw new Error("Direct funding is restricted to verified 100k MO holders");
         }
         const expectedChainId = fundingChainIdForVenue(data.executionVenue);
         if (connectedChainId !== expectedChainId) {
@@ -672,12 +686,85 @@ export function AgentMarketDashboard() {
     if (!connectedAddress) {
       throw new Error("Connect a wallet holding 100,000 MO for full terminal access");
     }
-    const requiredBalance = subscription?.requiredMoBalance || "100,000";
-    const currentBalance = subscription?.account?.balanceMo;
-    return currentBalance
-      ? `Current wallet balance: ${currentBalance} MO. Hold ${requiredBalance} MO for full terminal access.`
-      : `Full terminal access unlocks automatically for wallets holding ${requiredBalance} MO.`;
-  }, [connectedAddress, subscription?.account?.balanceMo, subscription?.requiredMoBalance]);
+
+    const query = new URLSearchParams({
+      address: connectedAddress,
+      refresh: "1",
+    });
+    const statusRes = await fetch(`/api/terminal/subscription/status?${query.toString()}`, {
+      cache: "no-store",
+    });
+    const liveSubscription = (await statusRes.json().catch(() => null)) as SubscriptionStatus | null;
+    if (statusRes.ok && liveSubscription) {
+      setSubscription(liveSubscription);
+    }
+    const effectiveSubscription = statusRes.ok && liveSubscription ? liveSubscription : subscription;
+
+    const requiredBalance = effectiveSubscription?.requiredMoBalance || "100000";
+    const currentBalance = effectiveSubscription?.account?.balanceMo;
+    const walletQualifies = effectiveSubscription?.account?.unlocked === true;
+    const sessionMatchesWallet = effectiveSubscription?.session?.matchesAccount === true;
+
+    if (!walletQualifies) {
+      return currentBalance
+        ? `Current wallet balance: ${currentBalance} MO. Hold ${requiredBalance} MO for full terminal access.`
+        : `Hold ${requiredBalance} MO in the connected wallet for full terminal access.`;
+    }
+
+    if (effectiveSubscription?.fullAccess && sessionMatchesWallet) {
+      return `${currentBalance || requiredBalance} MO holder verified. Full terminal access is already unlocked.`;
+    }
+
+    const nonceRes = await fetch("/api/auth/nonce", {
+      method: "GET",
+      cache: "no-store",
+    });
+    const noncePayload = (await nonceRes.json().catch(() => ({}))) as {
+      nonce?: string;
+      error?: string;
+    };
+    if (!nonceRes.ok || !noncePayload.nonce) {
+      throw new Error(noncePayload.error || "Failed to prepare wallet verification");
+    }
+
+    const chainId = connectedChainId || 1;
+    const message = new SiweMessage({
+      domain: window.location.host,
+      address: connectedAddress,
+      statement: "Verify wallet ownership to unlock pooter world holder access.",
+      uri: window.location.origin,
+      version: "1",
+      chainId,
+      nonce: noncePayload.nonce,
+    }).prepareMessage();
+
+    const signature = await signMessageAsync({ message });
+    const verifyRes = await fetch("/api/auth/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, signature }),
+    });
+    const verifyPayload = (await verifyRes.json().catch(() => ({}))) as {
+      error?: string;
+    };
+    if (!verifyRes.ok) {
+      throw new Error(verifyPayload.error || "Wallet verification failed");
+    }
+
+    await Promise.all([refreshSubscription(), refresh()]);
+    return `${requiredBalance} MO holder verified. Full terminal access unlocked for ${shortHex(connectedAddress)}.`;
+  }, [
+    connectedAddress,
+    connectedChainId,
+    refresh,
+    refreshSubscription,
+    signMessageAsync,
+    subscription?.account?.balanceMo,
+    subscription?.account?.unlocked,
+    subscription?.fullAccess,
+    subscription?.requiredMoBalance,
+    subscription?.session?.matchesAccount,
+  ]);
 
   if (loading && !data) {
     return (
@@ -700,9 +787,10 @@ export function AgentMarketDashboard() {
     );
   }
 
-  const balances = isOperatorView ? data.readiness.balances.slice(0, 6) : [];
+  const balances = hasFullMarketAccess ? data.readiness.balances.slice(0, 6) : [];
   const CLOSED_PAGE_SIZE = 15;
-  const subscriptionUnlocked = subscription?.account?.unlocked === true;
+  const subscriptionUnlocked = subscription?.fullAccess === true;
+  const holderWalletQualified = subscription?.account?.unlocked === true;
   const expectedFundingChainId = fundingChainIdForVenue(data.executionVenue);
   const fundingFacts = isVaultEnabled
     ? [
@@ -722,6 +810,10 @@ export function AgentMarketDashboard() {
   const unlockSummary = subscription
     ? subscriptionUnlocked
       ? `${subscription.account?.balanceMo || subscription.requiredMoBalance || "100000"} MO holder verified`
+      : holderWalletQualified
+        ? subscription.session?.authenticated
+          ? `Connected wallet qualifies — sign with this wallet to refresh full access`
+          : `Wallet holds enough MO — verify this wallet to unlock full access`
       : subscription.account?.balanceMo
         ? `${subscription.account.balanceMo} MO held • ${subscription.requiredMoBalance || "100000"} MO required`
         : `Hold ${subscription.requiredMoBalance || "100000"} MO in the connected wallet for full access`
@@ -809,7 +901,7 @@ export function AgentMarketDashboard() {
             {isOperatorView && data.account ? ` | ${shortHex(data.account)}` : ""}
           </p>
 
-          {isOperatorView ? (
+          {hasFullMarketAccess ? (
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {balances.map((balance) => (
                 <div
@@ -838,7 +930,7 @@ export function AgentMarketDashboard() {
             </div>
           ) : (
             <p className="mt-3 font-body-serif text-sm text-[var(--ink-faint)]">
-              Detailed balances and live readiness checks are restricted to operator view.
+              Detailed balances and live readiness checks unlock for verified 100k MO holders.
             </p>
           )}
 
@@ -869,7 +961,7 @@ export function AgentMarketDashboard() {
           <p className="mt-1 break-all font-mono text-[9px] text-[var(--ink-faint)]">
             {isVaultEnabled
               ? vault!.address
-              : data.fundingAddress ?? "Operator view required"}
+              : data.fundingAddress ?? "Holder access required"}
           </p>
           <p className="mt-2 font-body-serif text-xs text-[var(--ink-light)]">
             {isVaultEnabled
@@ -1067,9 +1159,9 @@ export function AgentMarketDashboard() {
         <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
           Open Positions ({combinedTotals?.openPositions ?? 0})
         </h2>
-        {!isOperatorView ? (
+        {!hasFullMarketAccess ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
-            Detailed open-position telemetry is restricted to operator view.
+            Detailed open-position telemetry unlocks for verified 100k MO holders.
           </p>
         ) : allOpen.length === 0 ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
@@ -1141,9 +1233,9 @@ export function AgentMarketDashboard() {
         <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
           Closed Positions ({combinedTotals?.closedPositions ?? 0})
         </h2>
-        {!isOperatorView ? (
+        {!hasFullMarketAccess ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
-            Detailed trade history is restricted to operator view.
+            Detailed trade history unlocks for verified 100k MO holders.
           </p>
         ) : allClosed.length === 0 ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
@@ -1268,7 +1360,7 @@ export function AgentMarketDashboard() {
             executionVenue: activeVenues,
             dryRun: data.dryRun,
             feePct,
-            fundingAddress: safeVault ? safeVault.address : data.fundingAddress ?? "operator-only",
+            fundingAddress: safeVault ? safeVault.address : data.fundingAddress ?? "holder-only",
             canWithdraw: isVaultEnabled,
             openPositions: combinedTotals?.openPositions ?? 0,
             closedPositions: combinedTotals?.closedPositions ?? 0,

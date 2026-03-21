@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import {
   getOperatorAuthState,
-  sessionMatchesAddress,
 } from "@/lib/operator-auth";
+import { getMoHolderAccessState } from "@/lib/holder-access";
 import { getTraderPerformanceByRunner, redactedConfigSummary } from "@/lib/trading/engine";
 import { isWorkerTraderRuntime } from "@/lib/runtime-mode";
 import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
@@ -110,9 +110,14 @@ export async function GET(request: Request) {
         ? (accountParam as Address)
         : null;
     const authState = await getOperatorAuthState(request);
-    const accountMatched = account ? await sessionMatchesAddress(account) : false;
+    const holderAccess = await getMoHolderAccessState(request);
+    const accountMatched =
+      Boolean(account) &&
+      Boolean(holderAccess.sessionAddress) &&
+      account!.toLowerCase() === holderAccess.sessionAddress!.toLowerCase();
     const includeAccount = authState.authorized || accountMatched;
     const includeFunders = authState.authorized;
+    const fullAccess = holderAccess.fullAccess;
 
     if (isWorkerTraderRuntime()) {
       const backendUrl = getIndexerBackendUrl();
@@ -136,10 +141,10 @@ export async function GET(request: Request) {
       return NextResponse.json(
         {
           performance:
-            state.performance && !authState.authorized
+            state.performance && !fullAccess
               ? sanitizePerformance(state.performance)
               : state.performance,
-          parallel: authState.authorized
+          parallel: fullAccess
             ? state.parallelPerformance
             : state.parallelPerformance.map((runner) => ({
                 ...runner,
@@ -153,6 +158,8 @@ export async function GET(request: Request) {
           backend: "indexer",
           access: {
             operator: authState.authorized,
+            holder: holderAccess.holder,
+            fullAccess,
             via: authState.via,
             accountMatched,
           },
@@ -177,10 +184,10 @@ export async function GET(request: Request) {
 
     return NextResponse.json(
       {
-        performance: authState.authorized
+        performance: fullAccess
           ? performanceByRunner.primary
           : sanitizePerformance(performanceByRunner.primary),
-        parallel: authState.authorized
+        parallel: fullAccess
           ? performanceByRunner.parallel
           : performanceByRunner.parallel.map((runner) => ({
               ...runner,
@@ -192,6 +199,8 @@ export async function GET(request: Request) {
           : publicConfigSummary(redactedConfigSummary()),
         access: {
           operator: authState.authorized,
+          holder: holderAccess.holder,
+          fullAccess,
           via: authState.via,
           accountMatched,
         },
