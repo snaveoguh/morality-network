@@ -1,0 +1,25 @@
+{
+  "deployer": "0x38501DEB0984E651fE5275359904C76e6F7f764d",
+  "owner": "0x38501DEB0984E651fE5275359904C76e6F7f764d",
+  "base": {
+    "chainId": 84532,
+    "rpcUrl": "https://sepolia.base.org",
+    "weth": "0x4200000000000000000000000000000000000006",
+    "devUsdc": "0x0729754d0876a68bfb6d7da94bee6da0c56d9ebb",
+    "reserveVault": "0x86ba69488b4ebea67b5842e15aa55887560574ab",
+    "vault": "0x3bb95125f2a8d8af94dd7ba0ce5b0b8b5eef7d81",
+    "withdrawalQueue": "0x834952e34566feee95fc1cb6a1f6d851be183ebc",
+    "reserveAllocator": "0xcf85a88125ad622bae3978a2dc7f7fc2dc8fb821",
+    "bridgeRouter": "0x55865854f9d58ad7c6d2cfa7a304419e23817133",
+    "navReporter": "0xfa33f4dfe3bec32ae3cb78dbcf508597f74dc528",
+    "assetConverter": "0xf4d307a237b22e39d2000cf54b53b9116a7b3669",
+    "bridgeAdapter": "0x692cb562919809d4e850e05c00f389b92b5e298c"
+  },
+  "arbitrum": {
+    "chainId": 421614,
+    "rpcUrl": "https://sepolia-rollup.arbitrum.io/rpc",
+    "devUsdc": "0x3c2e1c9e1aa2947c324633dcc65a652091ecca8e",
+    "transitEscrow": "0x14a361454edcb477644eb82bf540a26e1cead72a",
+    "hlStrategyManager": "0x71b2e273727385c617fe254f4fb14a36a679b12a"
+  }
+}
