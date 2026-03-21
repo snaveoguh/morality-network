@@ -236,6 +236,15 @@ function formatEthFromWei(value: string | null | undefined): string {
   }
 }
 
+function parseWeiOrZero(value: string | null | undefined): bigint {
+  if (!value) return BigInt(0);
+  try {
+    return BigInt(value);
+  } catch {
+    return BigInt(0);
+  }
+}
+
 function shortHex(value: string): string {
   if (!value || value.length < 12) return value;
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
@@ -792,6 +801,15 @@ export function AgentMarketDashboard() {
   const subscriptionUnlocked = subscription?.fullAccess === true;
   const holderWalletQualified = subscription?.account?.unlocked === true;
   const expectedFundingChainId = fundingChainIdForVenue(data.executionVenue);
+  const vaultAumWei = safeVault ? parseWeiOrZero(safeVault.totalManagedAssetsWei) : BigInt(0);
+  const vaultDeployedWei = safeVault ? parseWeiOrZero(safeVault.deployedCapitalWei) : BigInt(0);
+  const vaultIdle = isVaultEnabled && vaultDeployedWei === BigInt(0);
+  const vaultAumLabel = safeVault ? formatEthFromWei(safeVault.totalManagedAssetsWei) : "--";
+  const vaultDeployedLabel = safeVault ? formatEthFromWei(safeVault.deployedCapitalWei) : "--";
+  const baseParallelRunner = parallelRunners.find(
+    (runner) => runner.performance.executionVenue === "base-spot"
+  );
+  const baseParallelOpenPositions = baseParallelRunner?.performance.totals.openPositions ?? 0;
   const fundingFacts = isVaultEnabled
     ? [
         "Deposit mints vault shares to your wallet, so your position is tracked by address.",
@@ -799,6 +817,9 @@ export function AgentMarketDashboard() {
         data.executionVenue === "hyperliquid-perp"
           ? "Vault deposits do not automatically become Hyperliquid margin. Hyperliquid only sees funds after a separate allocation and transfer flow."
           : `Vault deposits fund the pooled strategy on ${chainLabel(expectedFundingChainId)}, not a personal trading account.`,
+        data.executionVenue === "hyperliquid-perp"
+          ? "Today the Hyperliquid bot trades separate margin. Vault shares and Hyperliquid bankroll are still different systems."
+          : "If the Base runner is enabled, deployed vault capital is what funds those spot positions.",
       ]
     : [
         `This sends native ETH directly to the agent funding wallet on ${chainLabel(expectedFundingChainId)}.`,
@@ -806,6 +827,9 @@ export function AgentMarketDashboard() {
         data.executionVenue === "hyperliquid-perp"
           ? "Sending ETH here does not automatically top up Hyperliquid collateral. It only funds the bot wallet."
           : "This is a strategy wallet top-up, not a deposit into a personal account.",
+        data.executionVenue === "hyperliquid-perp"
+          ? "That means direct Hyperliquid funding is operator-controlled bankroll, not a vault share position."
+          : "This does not buy you into a pooled vault share class.",
       ];
   const unlockSummary = subscription
     ? subscriptionUnlocked
@@ -832,6 +856,70 @@ export function AgentMarketDashboard() {
           Venue: {activeVenues} | {data.dryRun ? "Dry Run" : "Live"} |
           Updated {new Date(data.timestamp).toLocaleTimeString()}
         </p>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        <div className="border border-[var(--rule-light)] p-4">
+          <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+            Base Vault
+          </h2>
+          <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+            {isVaultEnabled ? "Share-tracked pool" : "Vault not enabled"}
+          </p>
+          <p className="mt-2 font-body-serif text-sm text-[var(--ink-light)]">
+            {isVaultEnabled
+              ? `AUM ${vaultAumLabel} with ${vaultDeployedLabel} deployed.`
+              : "This market view is not currently using the onchain vault flow."}
+          </p>
+          {isVaultEnabled ? (
+            <p className="mt-2 font-body-serif text-xs text-[var(--ink-light)]">
+              {vaultIdle
+                ? "Right now none of the vault's capital is allocated out to a live strategy wallet, so deposits are sitting idle in the vault."
+                : "Some vault capital is allocated out to a strategy wallet and is counted in deployed capital."}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="border border-[var(--rule-light)] p-4">
+          <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+            Live Executor
+          </h2>
+          <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+            {data.executionVenue === "hyperliquid-perp" ? "Hyperliquid perp" : chainLabel(expectedFundingChainId)}
+          </p>
+          <p className="mt-2 font-body-serif text-sm text-[var(--ink-light)]">
+            {data.executionVenue === "hyperliquid-perp"
+              ? `The live trader is the Hyperliquid account ${isOperatorView && data.account ? shortHex(data.account) : "behind operator access"}.`
+              : `The active trader is using ${chainLabel(expectedFundingChainId)} spot execution.`}
+          </p>
+          <p className="mt-2 font-body-serif text-xs text-[var(--ink-light)]">
+            {data.executionVenue === "hyperliquid-perp"
+              ? combinedTotals?.openPositions
+                ? `It currently has ${combinedTotals.openPositions} open position${combinedTotals.openPositions === 1 ? "" : "s"} and is live.`
+                : "It is live and watching for entries right now, but currently flat with 0 open positions."
+              : baseParallelRunner
+                ? `Base parallel runner is enabled with ${baseParallelOpenPositions} open position${baseParallelOpenPositions === 1 ? "" : "s"}.`
+                : "No separate Base launch-sniping runner is active right now."}
+          </p>
+        </div>
+
+        <div className="border border-[var(--rule-light)] p-4">
+          <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+            Ownership Model
+          </h2>
+          <p className="mt-2 font-body-serif text-sm text-[var(--ink-light)]">
+            {isVaultEnabled
+              ? "Vault deposits mint onchain shares to your wallet on Base."
+              : "Direct funding does not mint shares or track a personal balance for you."}
+          </p>
+          <p className="mt-2 font-body-serif text-xs text-[var(--ink-light)]">
+            {isVaultEnabled && data.executionVenue === "hyperliquid-perp"
+              ? "Important: those Base vault shares do not automatically become Hyperliquid margin today. Hyperliquid bankroll is still a separate capital rail."
+              : isVaultEnabled
+                ? "If the vault deploys capital into a strategy wallet, your exposure is through vault shares rather than a personal trading account."
+                : "If you fund the bot directly, that capital is operator-controlled strategy capital until a proper vault bridge/accounting rail exists."}
+          </p>
+        </div>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
