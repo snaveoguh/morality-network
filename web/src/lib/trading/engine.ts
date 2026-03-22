@@ -1196,10 +1196,20 @@ class TraderEngine {
     let bestMarket: Awaited<ReturnType<typeof fetchHyperliquidMarketBySymbol>> = null;
     let bestNewsSignal: AggregatedMarketSignal | null = null;
 
+    // Per-symbol cooldown: don't re-enter a market within 10 minutes of closing
+    const recentlyClosed = this.store.getClosed().filter(
+      (p) => p.venue === "hyperliquid-perp" && p.closedAt && (Date.now() - p.closedAt) < 600_000,
+    );
+    const cooldownSymbols = new Set(recentlyClosed.map((p) => p.marketSymbol?.toUpperCase()).filter(Boolean));
+
     for (const symbol of watchMarkets) {
       if (HL_SIGNAL_BLOCKLIST.has(symbol.toUpperCase())) continue;
       if (openPositions.some((p) => p.marketSymbol === symbol)) {
         skippedReasons.push(`${symbol}: already have open position`);
+        continue;
+      }
+      if (cooldownSymbols.has(symbol.toUpperCase())) {
+        skippedReasons.push(`${symbol}: cooldown (closed <10min ago)`);
         continue;
       }
 
