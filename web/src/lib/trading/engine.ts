@@ -21,6 +21,9 @@ import { checkMoralGate, checkCircuitBreaker, logMoralGateDecision } from "./mor
 import { AGENT_VAULT_ABI, AGENT_VAULT_ADDRESS } from "../contracts";
 import { computeKelly, consecutiveLosses } from "./kelly";
 import { positionsToJournal } from "./trade-journal";
+import { fetchTechnicalSignal } from "./technical";
+import { detectPatterns } from "./pattern-detector";
+import { computeCompositeSignal, type CompositeSignal } from "./composite-signal";
 import {
   computeVaultSettlementPlan,
   computeVaultTopUpPlan,
@@ -1156,60 +1159,116 @@ class TraderEngine {
       return null;
     }
 
-    let selectedSignal: AggregatedMarketSignal | null = null;
-    let market = null;
-
-    // News-first routing: pick strongest directional signal (bullish OR bearish)
-    // that exists on Hyperliquid. Skip conflicted signals (sources disagree).
-    // Blocklist: symbols whose HL ticker maps to a different asset than the
-    // newsdesk intends (e.g. newsdesk "SPX" = S&P 500, HL "SPX" = SPX6900 memecoin).
     const HL_SIGNAL_BLOCKLIST = new Set(
       (process.env.TRADER_HL_SIGNAL_BLOCKLIST || "SPX,DJI,NDX,VIX,RUT,IXIC")
         .split(",")
         .map((s) => s.trim().toUpperCase())
         .filter(Boolean),
     );
+
+    // ═══ COMPOSITE SIGNAL ROUTING ═══
+    // Scan watch markets with technical + pattern + news signals.
+    // Technical (40%) + Pattern (30%) + News (30%). Requires 2-of-3 agreement.
+    const watchMarkets = this.config.hyperliquid.watchMarkets ?? ["BTC", "ETH", "SOL"];
     const skippedReasons: string[] = [];
+
+    // Build news signal lookup (filtered by blocklist)
+    const newsSignalMap = new Map<string, AggregatedMarketSignal>();
     for (const signal of marketSignals) {
       if (HL_SIGNAL_BLOCKLIST.has(signal.symbol.toUpperCase())) {
-        console.log(
-          `[trader] skipping blocklisted signal: ${signal.symbol} (HL ticker maps to different asset)`,
-        );
         skippedReasons.push(`${signal.symbol}: blocklisted (HL ticker mismatch)`);
         continue;
       }
       if (signal.contradictionPenalty > 0.7) {
-        console.log(
-          `[trader] skipping conflicted signal: ${signal.symbol} contradiction=${signal.contradictionPenalty.toFixed(2)}`,
-        );
         skippedReasons.push(`${signal.symbol}: conflicted (${(signal.contradictionPenalty * 100).toFixed(0)}% contradiction)`);
         continue;
       }
-      const signaledMarket = await fetchHyperliquidMarketBySymbol(this.config, signal.symbol);
-      if (!signaledMarket) continue;
-      selectedSignal = signal;
-      market = signaledMarket;
+      if (!newsSignalMap.has(signal.symbol)) {
+        newsSignalMap.set(signal.symbol, signal);
+      }
+    }
+
+    let bestComposite: CompositeSignal | null = null;
+    let bestMarket: Awaited<ReturnType<typeof fetchHyperliquidMarketBySymbol>> = null;
+    let bestNewsSignal: AggregatedMarketSignal | null = null;
+
+    for (const symbol of watchMarkets) {
+      if (HL_SIGNAL_BLOCKLIST.has(symbol.toUpperCase())) continue;
+      if (openPositions.some((p) => p.marketSymbol === symbol)) {
+        skippedReasons.push(`${symbol}: already have open position`);
+        continue;
+      }
+
+      const market = await fetchHyperliquidMarketBySymbol(this.config, symbol);
+      if (!market || !market.priceUsd || market.priceUsd <= 0) continue;
+
+      // 1. Technical signal (pure math, fast)
+      let technicalSignal = null;
+      try {
+        technicalSignal = await fetchTechnicalSignal(this.config, symbol, { interval: "15m", count: 100 });
+      } catch (err) {
+        console.warn(`[trader] technical signal failed for ${symbol}:`, err instanceof Error ? err.message : err);
+      }
+
+      const newsSignal = newsSignalMap.get(symbol) ?? null;
+
+      // Skip LLM pattern call if technical is neutral AND no news — save cost
+      if ((!technicalSignal || technicalSignal.direction === "neutral") && !newsSignal) {
+        skippedReasons.push(`${symbol}: technical neutral + no news signal`);
+        continue;
+      }
+
+      // 2. Pattern detection (LLM — only if technical is directional)
+      let patternResult = null;
+      if (technicalSignal && technicalSignal.direction !== "neutral") {
+        try {
+          patternResult = await detectPatterns(this.config, symbol, technicalSignal);
+        } catch (err) {
+          console.warn(`[trader] pattern detection failed for ${symbol}:`, err instanceof Error ? err.message : err);
+        }
+      }
+
+      // 3. Composite signal
+      const composite = computeCompositeSignal({
+        symbol,
+        technical: technicalSignal,
+        pattern: patternResult,
+        newsSignal,
+        minConfidence: this.config.risk.minSignalConfidence,
+      });
+
       console.log(
-        `[trader] signal-route: ${signal.symbol} ${signal.direction} score=${signal.score.toFixed(3)} contradiction=${signal.contradictionPenalty.toFixed(2)} obs=${signal.observations}`,
+        `[trader] composite ${symbol}: ${composite.direction} conf=${composite.confidence.toFixed(2)} agreement=${composite.agreementMet} | ` +
+        `tech=${technicalSignal?.direction ?? "n/a"} pat=${patternResult?.overallDirection ?? "n/a"} news=${newsSignal?.direction ?? "n/a"}`,
       );
-      break;
+
+      if (composite.direction === "neutral") {
+        skippedReasons.push(`${symbol}: composite neutral (${composite.reasons.join("; ")})`);
+        continue;
+      }
+
+      // Pick the strongest composite signal across all watch markets
+      if (!bestComposite || composite.confidence > bestComposite.confidence) {
+        bestComposite = composite;
+        bestMarket = market;
+        bestNewsSignal = newsSignal;
+      }
     }
 
-    if (!market) {
-      console.log("[trader] no qualifying signal, falling back to scanner candidate");
-      market = await resolveHyperliquidMarketForLaunch(this.config, candidate);
-    }
-    if (!market || !market.priceUsd || market.priceUsd <= 0) {
-      return null;
-    }
-    if (openPositions.some((position) => position.marketSymbol === market.symbol)) {
+    if (!bestComposite || !bestMarket) {
+      if (skippedReasons.length > 0) {
+        console.log(`[trader] no qualifying composite signal. Skipped: ${skippedReasons.join(", ")}`);
+      }
       return null;
     }
 
-    // Determine trade direction from signal: bearish → short (sell), bullish → long (buy)
-    const isBearish = selectedSignal?.direction === "bearish";
-    const side: "buy" | "sell" = isBearish ? "sell" : "buy";
-    const direction: "long" | "short" = isBearish ? "short" : "long";
+    const market = bestMarket;
+    const composite = bestComposite;
+    const selectedSignal = bestNewsSignal;
+
+    // Direction from composite (not raw news)
+    const direction = composite.direction as "long" | "short";
+    const side: "buy" | "sell" = direction === "short" ? "sell" : "buy";
 
     // ═══ SOUL.md MORAL GATE — log-only until real onchain ratings exist ═══
     const moralGateResult = await checkMoralGate(market.symbol, direction);
@@ -1218,14 +1277,11 @@ class TraderEngine {
       console.log(`[trader] SOUL.md ADVISORY (not blocking): ${market.symbol} ${direction} — ${moralGateResult.justification}`);
     }
 
-    // ═══ SOUL.md KELLY CRITERION — position sizing via bankroll math ═══
+    // ═══ KELLY CRITERION — position sizing using composite confidence ═══
     const journal = positionsToJournal(this.store.getAll());
-    const compositeConfidence = selectedSignal
-      ? Math.min(1, Math.max(0.1, Math.abs(selectedSignal.score)))
-      : 0.5;
+    const compositeConfidence = Math.min(1, Math.max(0.1, composite.confidence));
 
-    // Get account value for Kelly sizing
-    let accountValueUsd = this.config.risk.maxPortfolioUsd; // fallback
+    let accountValueUsd = this.config.risk.maxPortfolioUsd;
     if (!this.config.dryRun) {
       try {
         const accountAddress = resolveHyperliquidAccountAddress(this.config, this.clients.address);
@@ -1250,14 +1306,9 @@ class TraderEngine {
       return null;
     }
 
-    // Use Kelly-derived position size, bounded by config limits
-    const rawConviction = selectedSignal ? selectedSignal.score : 1;
-    const convictionMultiplier = Number.isFinite(rawConviction)
-      ? Math.min(1.5, Math.max(0.75, rawConviction))
-      : 1;
+    const convictionMultiplier = Math.min(1.5, Math.max(0.75, composite.confidence));
     const kellyNotionalUsd = kelly.positionNotionalUsd;
     const convictionNotionalUsd = this.config.hyperliquid.entryNotionalUsd * convictionMultiplier;
-    // Take the smaller of Kelly-derived and conviction-derived (conservative)
     const requestedNotionalUsd = Math.min(
       kellyNotionalUsd,
       convictionNotionalUsd,
@@ -1266,7 +1317,7 @@ class TraderEngine {
     if (!Number.isFinite(requestedNotionalUsd) || requestedNotionalUsd <= 0) {
       return null;
     }
-    const exchangeMinNotionalUsd = computeHyperliquidMinOrderNotionalUsd(market.priceUsd, market.szDecimals);
+    const exchangeMinNotionalUsd = computeHyperliquidMinOrderNotionalUsd(market.priceUsd ?? 0, market.szDecimals);
     if (!Number.isFinite(exchangeMinNotionalUsd) || exchangeMinNotionalUsd <= 0) {
       return null;
     }
@@ -1279,12 +1330,9 @@ class TraderEngine {
 
     console.log(
       `[trader] opening ${direction} ${market.symbol} notional=$${notionalUsd.toFixed(2)} side=${side} | ` +
-      `moral=${moralGateResult.moralScore}/100 kelly=${kelly.fraction.toFixed(3)} (${kelly.phase})`,
+      `composite=${composite.confidence.toFixed(2)} moral=${moralGateResult.moralScore}/100 kelly=${kelly.fraction.toFixed(3)} (${kelly.phase})`,
     );
 
-    // Use Kelly-derived leverage (capped by maxLeverage), fall back to default.
-    // If Kelly returns ≤ 1 (cold start / small account), use the configured default
-    // so we actually apply leverage instead of always trading at 1x.
     const orderLeverage = kelly.leverage > 1 ? kelly.leverage : this.config.hyperliquid.defaultLeverage;
 
     const order = this.config.dryRun
@@ -1310,10 +1358,8 @@ class TraderEngine {
     const quoteDecimals = this.config.quoteTokenDecimals.USDC ?? 6;
     const quoteSpentRaw = Math.max(1, Math.floor(order.notionalUsd * 10 ** quoteDecimals)).toString();
 
-    // Use deterministic ID matching HL sync format so positions stay consistent
     const positionId = `hl:${market.symbol}:${market.marketId}`;
 
-    // Archive any closed position at this ID before creating the new one
     const closedAtId = this.store.getAll().find((p) => p.id === positionId && p.status === "closed");
     if (closedAtId) {
       const archiveId = `${positionId}:closed:${closedAtId.closedAt ?? Date.now()}`;
@@ -1344,13 +1390,13 @@ class TraderEngine {
       status: "open",
       direction,
       trailingStopPct: this.config.risk.trailingStopPct,
-      signalSource: selectedSignal ? `${selectedSignal.symbol}:${selectedSignal.direction}` : undefined,
-      signalConfidence: selectedSignal ? Math.abs(selectedSignal.score) : undefined,
+      signalSource: `composite:${composite.direction}`,
+      signalConfidence: composite.confidence,
       kellyFraction: kelly.fraction,
       moralScore: moralGateResult.moralScore ?? undefined,
       moralJustification: moralGateResult.justification,
       entryRationale: {
-        signalSymbol: selectedSignal?.symbol,
+        signalSymbol: selectedSignal?.symbol ?? market.symbol,
         signalDirection: selectedSignal?.direction,
         signalScore: selectedSignal?.score,
         signalObservations: selectedSignal?.observations,
@@ -1360,6 +1406,14 @@ class TraderEngine {
         kellyPhase: kelly.phase,
         kellySizeUsd: kelly.positionNotionalUsd,
         actualSizeUsd: notionalUsd,
+        compositeDirection: composite.direction,
+        compositeConfidence: composite.confidence,
+        compositeReasons: composite.reasons,
+        technicalDirection: composite.components.technical?.direction,
+        technicalStrength: composite.components.technical?.strength,
+        patternDirection: composite.components.pattern?.direction,
+        patternNames: composite.components.pattern?.patterns,
+        agreementMet: composite.agreementMet,
       },
     };
 

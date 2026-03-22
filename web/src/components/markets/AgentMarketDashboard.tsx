@@ -48,6 +48,14 @@ interface EntryRationale {
   kellyPhase?: string;
   kellySizeUsd?: number;
   actualSizeUsd?: number;
+  compositeDirection?: string;
+  compositeConfidence?: number;
+  compositeReasons?: string[];
+  technicalDirection?: string;
+  technicalStrength?: number;
+  patternDirection?: string;
+  patternNames?: string[];
+  agreementMet?: boolean;
 }
 
 interface ExitRationale {
@@ -481,6 +489,38 @@ function RationalePanel({ position }: { position: Position }) {
           {er.skippedSignals && er.skippedSignals.length > 0 && (
             <div className="mt-0.5 text-[var(--ink-faint)] pl-2">
               Skipped: {er.skippedSignals.join(", ")}
+            </div>
+          )}
+        </div>
+      )}
+      {er?.compositeDirection && (
+        <div className="mb-1">
+          <span className="font-bold text-[var(--ink)] uppercase tracking-wider">Composite: </span>
+          <span className={er.compositeDirection === "long" ? "text-emerald-700" : er.compositeDirection === "short" ? "text-red-700" : "text-[var(--ink-faint)]"}>
+            {er.compositeDirection.toUpperCase()}
+          </span>
+          <span className="text-[var(--ink-faint)]"> conf={((er.compositeConfidence ?? 0) * 100).toFixed(0)}%</span>
+          {er.agreementMet != null && (
+            <span className={er.agreementMet ? "text-emerald-700" : "text-red-700"}>
+              {" "}| {er.agreementMet ? "2/3 agree" : "no agreement"}
+            </span>
+          )}
+          <div className="mt-0.5 pl-2 text-[var(--ink-faint)]">
+            {er.technicalDirection && (
+              <span className="mr-2">Tech: <span className={er.technicalDirection === "long" ? "text-emerald-700" : er.technicalDirection === "short" ? "text-red-700" : ""}>{er.technicalDirection}</span>{er.technicalStrength != null ? ` (${(er.technicalStrength * 100).toFixed(0)}%)` : ""}</span>
+            )}
+            {er.patternDirection && (
+              <span className="mr-2">Pattern: <span className={er.patternDirection === "long" ? "text-emerald-700" : er.patternDirection === "short" ? "text-red-700" : ""}>{er.patternDirection}</span>{er.patternNames?.length ? ` [${er.patternNames.join(", ")}]` : ""}</span>
+            )}
+            {er.signalDirection && (
+              <span>News: <span className={er.signalDirection === "bullish" ? "text-emerald-700" : er.signalDirection === "bearish" ? "text-red-700" : ""}>{er.signalDirection}</span></span>
+            )}
+          </div>
+          {er.compositeReasons && er.compositeReasons.length > 0 && (
+            <div className="mt-0.5 pl-2 text-[var(--ink-faint)]">
+              {er.compositeReasons.map((r, i) => (
+                <div key={i}>— {r}</div>
+              ))}
             </div>
           )}
         </div>
