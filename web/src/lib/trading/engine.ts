@@ -1119,7 +1119,21 @@ class TraderEngine {
 
     // News-first routing: pick strongest directional signal (bullish OR bearish)
     // that exists on Hyperliquid. Skip conflicted signals (sources disagree).
+    // Blocklist: symbols whose HL ticker maps to a different asset than the
+    // newsdesk intends (e.g. newsdesk "SPX" = S&P 500, HL "SPX" = SPX6900 memecoin).
+    const HL_SIGNAL_BLOCKLIST = new Set(
+      (process.env.TRADER_HL_SIGNAL_BLOCKLIST || "SPX,DJI,NDX,VIX,RUT,IXIC")
+        .split(",")
+        .map((s) => s.trim().toUpperCase())
+        .filter(Boolean),
+    );
     for (const signal of marketSignals) {
+      if (HL_SIGNAL_BLOCKLIST.has(signal.symbol.toUpperCase())) {
+        console.log(
+          `[trader] skipping blocklisted signal: ${signal.symbol} (HL ticker maps to different asset)`,
+        );
+        continue;
+      }
       if (signal.contradictionPenalty > 0.7) {
         console.log(
           `[trader] skipping conflicted signal: ${signal.symbol} contradiction=${signal.contradictionPenalty.toFixed(2)}`,
