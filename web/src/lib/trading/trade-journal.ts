@@ -50,6 +50,10 @@ export function positionToJournalEntry(p: Position): TradeJournalEntry | null {
     compositeConfidence: p.signalConfidence ?? 0.5,
     kellyFraction: p.kellyFraction ?? 0.1,
     exitReason: p.exitReason,
+    entryRationale: p.entryRationale,
+    exitRationale: p.exitRationale,
+    moralScore: p.moralScore,
+    moralJustification: p.moralJustification,
   };
 }
 

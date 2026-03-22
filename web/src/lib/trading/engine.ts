@@ -317,6 +317,7 @@ class TraderEngine {
         exitReason: "manual",
         exitPriceUsd,
         closedAt: Date.now(),
+        exitRationale: this.buildExitRationale(stored, "manual (disappeared from HL)", exitPriceUsd),
       });
     }
 
@@ -746,6 +747,19 @@ class TraderEngine {
     return market.priceUsd;
   }
 
+  private buildExitRationale(position: Position, reason: string, exitPriceUsd: number): Position["exitRationale"] {
+    const hwm = position.highWaterMark;
+    return {
+      trigger: reason,
+      priceAtTrigger: exitPriceUsd,
+      highWaterMark: hwm,
+      drawdownFromPeak: hwm && hwm > 0 && exitPriceUsd < hwm
+        ? (hwm - exitPriceUsd) / hwm
+        : undefined,
+      holdDurationMs: Date.now() - position.openedAt,
+    };
+  }
+
   private async closePosition(
     position: Position,
     reason: NonNullable<Position["exitReason"]>,
@@ -760,6 +774,7 @@ class TraderEngine {
         exitReason: reason,
         exitPriceUsd,
         exitTxHash: syntheticHash(),
+        exitRationale: this.buildExitRationale(position, reason, exitPriceUsd),
       });
     }
 
@@ -805,6 +820,7 @@ class TraderEngine {
       exitReason: reason,
       exitPriceUsd,
       exitTxHash: txHash,
+      exitRationale: this.buildExitRationale(position, reason, exitPriceUsd),
     });
     await this.settleVaultStrategyIfFlat();
     return closed;
@@ -831,6 +847,7 @@ class TraderEngine {
         exitReason: reason,
         exitPriceUsd,
         exitTxHash: syntheticHash(),
+        exitRationale: this.buildExitRationale(position, reason, exitPriceUsd),
       });
     }
 
@@ -848,6 +865,7 @@ class TraderEngine {
       exitReason: reason,
       exitPriceUsd: execution.fillPriceUsd,
       exitTxHash: execution.txHash,
+      exitRationale: this.buildExitRationale(position, reason, execution.fillPriceUsd),
     });
   }
 
@@ -898,6 +916,7 @@ class TraderEngine {
         await this.store.close(position.id, {
           exitReason: "take-profit",
           exitPriceUsd: currentPriceUsd,
+          exitRationale: this.buildExitRationale(position, "take-profit (partial close completed)", currentPriceUsd),
         });
       }
       return true;
@@ -1127,17 +1146,20 @@ class TraderEngine {
         .map((s) => s.trim().toUpperCase())
         .filter(Boolean),
     );
+    const skippedReasons: string[] = [];
     for (const signal of marketSignals) {
       if (HL_SIGNAL_BLOCKLIST.has(signal.symbol.toUpperCase())) {
         console.log(
           `[trader] skipping blocklisted signal: ${signal.symbol} (HL ticker maps to different asset)`,
         );
+        skippedReasons.push(`${signal.symbol}: blocklisted (HL ticker mismatch)`);
         continue;
       }
       if (signal.contradictionPenalty > 0.7) {
         console.log(
           `[trader] skipping conflicted signal: ${signal.symbol} contradiction=${signal.contradictionPenalty.toFixed(2)}`,
         );
+        skippedReasons.push(`${signal.symbol}: conflicted (${(signal.contradictionPenalty * 100).toFixed(0)}% contradiction)`);
         continue;
       }
       const signaledMarket = await fetchHyperliquidMarketBySymbol(this.config, signal.symbol);
@@ -1304,6 +1326,18 @@ class TraderEngine {
       kellyFraction: kelly.fraction,
       moralScore: moralGateResult.moralScore ?? undefined,
       moralJustification: moralGateResult.justification,
+      entryRationale: {
+        signalSymbol: selectedSignal?.symbol,
+        signalDirection: selectedSignal?.direction,
+        signalScore: selectedSignal?.score,
+        signalObservations: selectedSignal?.observations,
+        contradictionPenalty: selectedSignal?.contradictionPenalty,
+        supportingClaims: selectedSignal?.supportingClaims?.slice(0, 3),
+        skippedSignals: skippedReasons.length > 0 ? skippedReasons : undefined,
+        kellyPhase: kelly.phase,
+        kellySizeUsd: kelly.positionNotionalUsd,
+        actualSizeUsd: notionalUsd,
+      },
     };
 
     await this.store.upsert(opened);
