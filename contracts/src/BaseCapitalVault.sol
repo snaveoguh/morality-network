@@ -18,6 +18,7 @@ import {IWETHLike} from "./interfaces/IWETHLike.sol";
 contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable, UUPSUpgradeable, PausableUpgradeable {
     uint256 public constant BPS_DENOMINATOR = 10_000;
     uint256 public constant MAX_PERFORMANCE_FEE_BPS = 2_000;
+    uint256 public constant MAX_NAV_DELTA_BPS_CEILING = 5_000;
     uint256 private constant VIRTUAL_SHARES = 1e3;
     uint256 private constant VIRTUAL_ASSETS = 1e3;
 
@@ -44,6 +45,9 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
     bytes32 public lastNavHash;
 
     uint256 private reentrancyLock;
+
+    uint16 public maxNavDeltaBps;
+    uint256 public maxTotalAssets;
 
     event DepositETH(address indexed caller, address indexed receiver, uint256 assets, uint256 shares);
     event InstantRedeem(address indexed caller, address indexed receiver, uint256 shares, uint256 assetsOut);
@@ -125,7 +129,6 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         __ERC20_init(name_, symbol_);
         __Ownable_init(owner_);
         __Pausable_init();
-
         weth = weth_;
         trancheId = trancheId_;
         performanceFeeBps = performanceFeeBps_;
@@ -133,9 +136,12 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         liquidTargetBps = liquidTargetBps_;
         hlTargetBps = hlTargetBps_;
         reentrancyLock = 1;
+        maxNavDeltaBps = 1_000; // 10% default
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        require(newImplementation.code.length > 0, "Not a contract");
+    }
 
     function totalAssets() public view returns (uint256) {
         uint256 gross = liquidAssetsStored + reserveAssetsStored + pendingBridgeAssetsStored + hlStrategyAssetsStored;
@@ -172,6 +178,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
     function depositETH(address receiver) external payable nonReentrant whenNotPaused returns (uint256 shares) {
         require(receiver != address(0), "Zero receiver");
         require(msg.value > 0, "Zero deposit");
+        require(maxTotalAssets == 0 || totalAssets() + msg.value <= maxTotalAssets, "Deposit cap");
 
         shares = convertToShares(msg.value);
         require(shares > 0, "Deposit too small");
@@ -205,8 +212,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
 
         liquidAssetsStored -= assetsOut;
         _burn(msg.sender, shares);
-        IWETHLike(weth).withdraw(assetsOut);
-        _sendEth(receiver, assetsOut);
+        require(IERC20(weth).transfer(receiver, assetsOut), "WETH transfer failed");
 
         emit InstantRedeem(msg.sender, receiver, shares, assetsOut);
     }
@@ -232,9 +238,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         liquidAssetsStored -= assetsOut;
         _burn(withdrawalQueue, shares);
         IWithdrawalQueue(withdrawalQueue).markFulfilled(requestId, assetsOut);
-
-        IWETHLike(weth).withdraw(assetsOut);
-        _sendEth(receiver, assetsOut);
+        require(IERC20(weth).transfer(receiver, assetsOut), "WETH transfer failed");
 
         emit WithdrawFulfilled(requestId, receiver, shares, assetsOut);
     }
@@ -264,6 +268,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         } else {
             reserveAssetsStored -= assetsOut;
         }
+        _checkLiquidInvariant();
 
         emit ReserveDeallocated(assets, assetsOut);
     }
@@ -297,6 +302,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         require(assets <= pendingBridgeAssetsStored, "Bridge underflow");
         pendingBridgeAssetsStored -= assets;
         liquidAssetsStored += assets;
+        _checkLiquidInvariant();
         emit BridgeInMarked(routeId, assets);
     }
 
@@ -305,6 +311,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         require(assets <= pendingBridgeAssetsStored, "Bridge underflow");
         pendingBridgeAssetsStored -= assets;
         liquidAssetsStored += assets;
+        _checkLiquidInvariant();
         emit BridgeInMarked(routeId, assets);
     }
 
@@ -317,6 +324,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         require(pendingReduction <= pendingBridgeAssetsStored, "Bridge underflow");
         pendingBridgeAssetsStored -= pendingReduction;
         liquidAssetsStored += liquidIncrease;
+        _checkLiquidInvariant();
         emit BridgeReturnSettled(routeId, pendingReduction, liquidIncrease);
     }
 
@@ -341,6 +349,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         require(assets <= hlStrategyAssetsStored, "Strategy underflow");
         hlStrategyAssetsStored -= assets;
         liquidAssetsStored += assets;
+        _checkLiquidInvariant();
         emit StrategyDecreaseMarked(settlementId, assets);
     }
 
@@ -359,6 +368,11 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         uint256 feesEth,
         bytes32 navHash
     ) external onlyNavReporter {
+        if (lastNavTimestamp > 0 && maxNavDeltaBps > 0) {
+            _checkNavDelta(hlStrategyAssetsStored, strategyAssetsEth, "Strategy delta too large");
+            _checkNavDelta(accruedFeesEth, feesEth, "Fee delta too large");
+        }
+
         hlStrategyAssetsStored = strategyAssetsEth;
         reserveAssetsStored = reserveAssetsEth;
         pendingBridgeAssetsStored = pendingBridgeEth;
@@ -394,6 +408,15 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         bridgeRouter = nextRouter;
     }
 
+    function setMaxNavDeltaBps(uint16 nextDelta) external onlyOwner {
+        require(nextDelta <= MAX_NAV_DELTA_BPS_CEILING, "Delta too high");
+        maxNavDeltaBps = nextDelta;
+    }
+
+    function setMaxTotalAssets(uint256 nextMax) external onlyOwner {
+        maxTotalAssets = nextMax;
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
@@ -402,10 +425,24 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         _unpause();
     }
 
-    function _sendEth(address receiver, uint256 amount) internal {
-        (bool ok, ) = payable(receiver).call{value: amount}("");
-        require(ok, "ETH transfer failed");
+    function _checkLiquidInvariant() internal view {
+        require(
+            IERC20(weth).balanceOf(address(this)) >= liquidAssetsStored,
+            "Liquid invariant violated"
+        );
     }
 
-    receive() external payable {}
+    function _checkNavDelta(uint256 oldValue, uint256 newValue, string memory errMsg) internal view {
+        if (oldValue == 0 && newValue == 0) return;
+        uint256 basis = oldValue > newValue ? oldValue : newValue;
+        if (basis == 0) basis = 1;
+        uint256 delta = oldValue > newValue ? oldValue - newValue : newValue - oldValue;
+        require(delta <= (basis * maxNavDeltaBps) / BPS_DENOMINATOR, errMsg);
+    }
+
+    receive() external payable {
+        require(msg.sender == weth, "No direct ETH");
+    }
+
+    uint256[40] private __gap;
 }

@@ -145,7 +145,8 @@ contract BaseCapitalVaultPhase1Test is Test {
         assertTrue(finalizedAfter);
         assertEq(vault.balanceOf(address(queue)), 0);
         assertEq(vault.liquidAssetsStored(), 3 ether);
-        assertEq(alice.balance, 97 ether);
+        assertEq(alice.balance, 95 ether);
+        assertEq(weth.balanceOf(alice), 2 ether);
     }
 
     function test_allocateToReserveAndDeallocateWithYield() public {

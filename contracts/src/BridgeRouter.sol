@@ -13,6 +13,8 @@ import {IBridgeAdapter} from "./interfaces/IBridgeAdapter.sol";
 import {IBridgeRouter} from "./interfaces/IBridgeRouter.sol";
 
 contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, PausableUpgradeable, IBridgeRouter {
+    uint256 public constant BPS_DENOMINATOR = 10_000;
+
     enum RouteStatus {
         None,
         Pending,
@@ -44,6 +46,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
     address public bridgeAdapter;
     uint256 public totalPendingAssets;
     uint256 public nextRouteNonce;
+    uint16 public minReturnBps;
 
     mapping(bytes32 => Route) private routes;
 
@@ -92,7 +95,6 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
 
         __Ownable_init(owner_);
         __Pausable_init();
-
         vault = vault_;
         asset = asset_;
         bridgeAsset = asset_;
@@ -100,15 +102,18 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         bridgeExecutor = bridgeExecutor_;
         arbEscrow = arbEscrow_;
         nextRouteNonce = 1;
+        minReturnBps = 9_500; // 95% default
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        require(newImplementation.code.length > 0, "Not a contract");
+    }
 
     function bridgeToArbitrum(uint256 assets, bytes32 intentId) external onlyOperator whenNotPaused returns (bytes32 routeId) {
         require(assets > 0, "Zero assets");
 
         uint256 nonce = nextRouteNonce++;
-        routeId = keccak256(abi.encodePacked(address(this), block.chainid, nonce, intentId));
+        routeId = keccak256(abi.encode(address(this), block.chainid, nonce, intentId));
         require(routes[routeId].status == RouteStatus.None, "Route exists");
 
         routes[routeId] = Route({
@@ -265,6 +270,11 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         bridgeAdapter = nextAdapter;
     }
 
+    function setMinReturnBps(uint16 nextMinReturn) external onlyOwner {
+        require(nextMinReturn <= BPS_DENOMINATOR, "Bad bps");
+        minReturnBps = nextMinReturn;
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
@@ -312,6 +322,12 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
             assetsOut = bridgeAmountOut;
         }
 
+        if (minReturnBps > 0 && bridgeAssets > 0) {
+            require(assetsOut >= (bridgeAssets * minReturnBps) / BPS_DENOMINATOR, "Slippage too high");
+        }
+
         require(IERC20(asset).transfer(vault, assetsOut), "Transfer failed");
     }
+
+    uint256[40] private __gap;
 }

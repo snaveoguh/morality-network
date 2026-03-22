@@ -60,14 +60,15 @@ contract HLStrategyManager is Initializable, OwnableUpgradeable, UUPSUpgradeable
 
         __Ownable_init(owner_);
         __Pausable_init();
-
         asset = asset_;
         transitEscrow = transitEscrow_;
         operator = operator_;
         strategyHotWallet = strategyHotWallet_;
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        require(newImplementation.code.length > 0, "Not a contract");
+    }
 
     function releaseRouteToHotWallet(bytes32 routeId, uint256 assets) external onlyOperator whenNotPaused {
         require(assets > 0, "Zero assets");
@@ -168,4 +169,6 @@ contract HLStrategyManager is Initializable, OwnableUpgradeable, UUPSUpgradeable
     function unpause() external onlyOwner {
         _unpause();
     }
+
+    uint256[40] private __gap;
 }
