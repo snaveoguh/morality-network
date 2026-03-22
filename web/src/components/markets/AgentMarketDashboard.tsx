@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { formatEther, parseEther, type Address } from "viem";
 import { SiweMessage } from "siwe";
 import {
@@ -37,6 +37,27 @@ const BASE_CAPITAL_VAULT_ABI = [
   },
 ] as const;
 
+interface EntryRationale {
+  signalSymbol?: string;
+  signalDirection?: string;
+  signalScore?: number;
+  signalObservations?: number;
+  contradictionPenalty?: number;
+  supportingClaims?: string[];
+  skippedSignals?: string[];
+  kellyPhase?: string;
+  kellySizeUsd?: number;
+  actualSizeUsd?: number;
+}
+
+interface ExitRationale {
+  trigger: string;
+  priceAtTrigger?: number;
+  highWaterMark?: number;
+  drawdownFromPeak?: number;
+  holdDurationMs?: number;
+}
+
 interface Position {
   id: string;
   venue?: "base-spot" | "ethereum-spot" | "hyperliquid-perp";
@@ -49,9 +70,17 @@ interface Position {
   openedAt: number;
   closedAt?: number;
   exitPriceUsd?: number;
+  exitReason?: string;
   status: "open" | "closed";
   txHash?: `0x${string}`;
   exitTxHash?: `0x${string}`;
+  signalSource?: string;
+  signalConfidence?: number;
+  kellyFraction?: number;
+  moralScore?: number;
+  moralJustification?: string;
+  entryRationale?: EntryRationale;
+  exitRationale?: ExitRationale;
 }
 
 interface OpenPositionMetric {
@@ -398,6 +427,113 @@ function pnlClass(value: number | null | undefined): string {
   return "text-[var(--ink-faint)]";
 }
 
+function formatDuration(ms: number | undefined): string {
+  if (!ms) return "--";
+  const mins = Math.floor(ms / 60_000);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+  if (days > 0) return `${days}d ${hours % 24}h`;
+  if (hours > 0) return `${hours}h ${mins % 60}m`;
+  return `${mins}m`;
+}
+
+function RationalePanel({ position }: { position: Position }) {
+  const er = position.entryRationale;
+  const xr = position.exitRationale;
+  const hasSomething = er || xr || position.signalSource || position.moralScore;
+  if (!hasSomething) {
+    return (
+      <div className="px-3 py-2 bg-[var(--paper-tint)] font-mono text-[9px] text-[var(--ink-faint)]">
+        No rationale recorded for this trade (opened before tracking was enabled).
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-3 py-2 bg-[var(--paper-tint)] border-t border-[var(--rule-light)] font-mono text-[9px] leading-relaxed">
+      {er && (
+        <div className="mb-1">
+          <span className="font-bold text-[var(--ink)] uppercase tracking-wider">Entry: </span>
+          {er.signalSymbol && (
+            <span className="text-[var(--ink-light)]">
+              {er.signalSymbol} {er.signalDirection} (score {er.signalScore?.toFixed(2) ?? "?"}, {er.signalObservations ?? 0} sources
+              {er.contradictionPenalty != null && er.contradictionPenalty > 0
+                ? `, ${(er.contradictionPenalty * 100).toFixed(0)}% contradiction`
+                : ", unanimous"}
+              )
+            </span>
+          )}
+          {er.kellyPhase && (
+            <span className="text-[var(--ink-faint)] ml-1">
+              | Kelly: {er.kellyPhase} ${er.kellySizeUsd?.toFixed(0) ?? "?"}
+              {er.actualSizeUsd && er.kellySizeUsd && Math.abs(er.actualSizeUsd - er.kellySizeUsd) > 1
+                ? ` → $${er.actualSizeUsd.toFixed(0)} (capped)`
+                : ""}
+            </span>
+          )}
+          {er.supportingClaims && er.supportingClaims.length > 0 && (
+            <div className="mt-0.5 text-[var(--ink-faint)] pl-2">
+              {er.supportingClaims.map((c, i) => (
+                <div key={i}>— {c}</div>
+              ))}
+            </div>
+          )}
+          {er.skippedSignals && er.skippedSignals.length > 0 && (
+            <div className="mt-0.5 text-[var(--ink-faint)] pl-2">
+              Skipped: {er.skippedSignals.join(", ")}
+            </div>
+          )}
+        </div>
+      )}
+      {!er && position.signalSource && (
+        <div className="mb-1">
+          <span className="font-bold text-[var(--ink)] uppercase tracking-wider">Signal: </span>
+          <span className="text-[var(--ink-light)]">{position.signalSource}</span>
+          {position.signalConfidence != null && (
+            <span className="text-[var(--ink-faint)]"> (confidence {(position.signalConfidence * 100).toFixed(0)}%)</span>
+          )}
+        </div>
+      )}
+      {position.moralScore != null && (
+        <div className="mb-1">
+          <span className="font-bold text-[var(--ink)] uppercase tracking-wider">Moral: </span>
+          <span className="text-[var(--ink-light)]">{position.moralScore}/100</span>
+          {position.moralJustification && (
+            <span className="text-[var(--ink-faint)] ml-1">— {position.moralJustification}</span>
+          )}
+        </div>
+      )}
+      {position.kellyFraction != null && (
+        <div className="mb-1">
+          <span className="font-bold text-[var(--ink)] uppercase tracking-wider">Kelly f: </span>
+          <span className="text-[var(--ink-light)]">{(position.kellyFraction * 100).toFixed(1)}%</span>
+        </div>
+      )}
+      {xr && (
+        <div>
+          <span className="font-bold text-[var(--ink)] uppercase tracking-wider">Exit: </span>
+          <span className="text-[var(--ink-light)]">{xr.trigger}</span>
+          {xr.highWaterMark != null && (
+            <span className="text-[var(--ink-faint)]"> | HWM ${xr.highWaterMark.toFixed(4)}</span>
+          )}
+          {xr.drawdownFromPeak != null && (
+            <span className="text-red-700"> | -{(xr.drawdownFromPeak * 100).toFixed(1)}% from peak</span>
+          )}
+          {xr.holdDurationMs != null && (
+            <span className="text-[var(--ink-faint)]"> | held {formatDuration(xr.holdDurationMs)}</span>
+          )}
+        </div>
+      )}
+      {!xr && position.exitReason && (
+        <div>
+          <span className="font-bold text-[var(--ink)] uppercase tracking-wider">Exit: </span>
+          <span className="text-[var(--ink-light)]">{position.exitReason}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function pnlWeiClass(value: string): string {
   try {
     const parsed = BigInt(value);
@@ -466,6 +602,7 @@ export function AgentMarketDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [closedPage, setClosedPage] = useState(0);
+  const [expandedPositionId, setExpandedPositionId] = useState<string | null>(null);
   const [depositAmount, setDepositAmount] = useState("0.01");
   const [withdrawAmount, setWithdrawAmount] = useState("0.01");
   const [actionError, setActionError] = useState<string | null>(null);
@@ -1628,45 +1765,54 @@ export function AgentMarketDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {allOpen.map((row) => (
-                  <tr
-                    key={row.position.id}
-                    className="border-b border-[var(--rule-light)] last:border-0"
-                  >
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
-                      {symbolForPosition(row.position)}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-[9px] text-[var(--ink-faint)]">
-                      {venueLabel(row.position.venue)}
-                    </td>
-                    <td className={`py-2 pr-3 font-mono text-[10px] ${row.position.direction === "short" ? "text-red-700" : "text-emerald-700"}`}>
-                      {row.position.direction === "short" ? "SHORT" : "LONG"}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
-                      {row.position.leverage ? `${row.position.leverage}x` : "--"}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
-                      {formatUsd(row.position.entryPriceUsd)}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
-                      {formatUsd(row.currentPriceUsd)}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
-                      {formatUsd(row.position.entryNotionalUsd)}
-                    </td>
-                    <td
-                      className={`py-2 pr-3 font-mono text-[10px] ${pnlClass(
-                        row.unrealizedPnlUsd
-                      )}`}
-                    >
-                      {formatUsd(row.unrealizedPnlUsd)} (
-                      {formatPct(row.unrealizedPnlPct)})
-                    </td>
-                    <td className="py-2 pr-0 font-mono text-[10px] text-[var(--ink-faint)]">
-                      {new Date(row.position.openedAt).toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
+                {allOpen.map((row) => {
+                  const isExpanded = expandedPositionId === row.position.id;
+                  return (
+                    <Fragment key={row.position.id}>
+                      <tr
+                        className="border-b border-[var(--rule-light)] last:border-0 cursor-pointer hover:bg-[var(--paper-tint)]"
+                        onClick={() => setExpandedPositionId(isExpanded ? null : row.position.id)}
+                      >
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
+                          {symbolForPosition(row.position)}
+                          <span className="text-[8px] text-[var(--ink-faint)] ml-1">{isExpanded ? "▾" : "▸"}</span>
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[9px] text-[var(--ink-faint)]">
+                          {venueLabel(row.position.venue)}
+                        </td>
+                        <td className={`py-2 pr-3 font-mono text-[10px] ${row.position.direction === "short" ? "text-red-700" : "text-emerald-700"}`}>
+                          {row.position.direction === "short" ? "SHORT" : "LONG"}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                          {row.position.leverage ? `${row.position.leverage}x` : "--"}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                          {formatUsd(row.position.entryPriceUsd)}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                          {formatUsd(row.currentPriceUsd)}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                          {formatUsd(row.position.entryNotionalUsd)}
+                        </td>
+                        <td
+                          className={`py-2 pr-3 font-mono text-[10px] ${pnlClass(
+                            row.unrealizedPnlUsd
+                          )}`}
+                        >
+                          {formatUsd(row.unrealizedPnlUsd)} (
+                          {formatPct(row.unrealizedPnlPct)})
+                        </td>
+                        <td className="py-2 pr-0 font-mono text-[10px] text-[var(--ink-faint)]">
+                          {new Date(row.position.openedAt).toLocaleString()}
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr><td colSpan={9} className="p-0"><RationalePanel position={row.position} /></td></tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -1703,50 +1849,59 @@ export function AgentMarketDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {allClosed.slice(closedPage * CLOSED_PAGE_SIZE, (closedPage + 1) * CLOSED_PAGE_SIZE).map((row) => (
-                  <tr
-                    key={row.position.id}
-                    className="border-b border-[var(--rule-light)] last:border-0"
-                  >
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
-                      {symbolForPosition(row.position)}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-[9px] text-[var(--ink-faint)]">
-                      {venueLabel(row.position.venue)}
-                    </td>
-                    <td className={`py-2 pr-3 font-mono text-[10px] ${row.position.direction === "short" ? "text-red-700" : "text-emerald-700"}`}>
-                      {row.position.direction === "short" ? "SHORT" : "LONG"}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
-                      {row.position.leverage ? `${row.position.leverage}x` : "--"}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
-                      {formatUsd(row.position.entryNotionalUsd)}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
-                      {formatUsd(row.position.entryPriceUsd)}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
-                      {formatUsd(row.position.exitPriceUsd)}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-[10px] text-[var(--accent-red)]">
-                      {row.estimatedFeesUsd ? `-${formatUsd(row.estimatedFeesUsd)}` : "--"}
-                    </td>
-                    <td
-                      className={`py-2 pr-3 font-mono text-[10px] ${pnlClass(
-                        row.realizedPnlUsd
-                      )}`}
-                    >
-                      {formatUsd(row.realizedPnlUsd)} (
-                      {formatPct(row.realizedPnlPct)})
-                    </td>
-                    <td className="py-2 pr-0 font-mono text-[10px] text-[var(--ink-faint)]">
-                      {row.position.closedAt
-                        ? new Date(row.position.closedAt).toLocaleString()
-                        : "--"}
-                    </td>
-                  </tr>
-                ))}
+                {allClosed.slice(closedPage * CLOSED_PAGE_SIZE, (closedPage + 1) * CLOSED_PAGE_SIZE).map((row) => {
+                  const isExpanded = expandedPositionId === row.position.id;
+                  return (
+                    <Fragment key={row.position.id}>
+                      <tr
+                        className="border-b border-[var(--rule-light)] last:border-0 cursor-pointer hover:bg-[var(--paper-tint)]"
+                        onClick={() => setExpandedPositionId(isExpanded ? null : row.position.id)}
+                      >
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
+                          {symbolForPosition(row.position)}
+                          <span className="text-[8px] text-[var(--ink-faint)] ml-1">{isExpanded ? "▾" : "▸"}</span>
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[9px] text-[var(--ink-faint)]">
+                          {venueLabel(row.position.venue)}
+                        </td>
+                        <td className={`py-2 pr-3 font-mono text-[10px] ${row.position.direction === "short" ? "text-red-700" : "text-emerald-700"}`}>
+                          {row.position.direction === "short" ? "SHORT" : "LONG"}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                          {row.position.leverage ? `${row.position.leverage}x` : "--"}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink)]">
+                          {formatUsd(row.position.entryNotionalUsd)}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                          {formatUsd(row.position.entryPriceUsd)}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-light)]">
+                          {formatUsd(row.position.exitPriceUsd)}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--accent-red)]">
+                          {row.estimatedFeesUsd ? `-${formatUsd(row.estimatedFeesUsd)}` : "--"}
+                        </td>
+                        <td
+                          className={`py-2 pr-3 font-mono text-[10px] ${pnlClass(
+                            row.realizedPnlUsd
+                          )}`}
+                        >
+                          {formatUsd(row.realizedPnlUsd)} (
+                          {formatPct(row.realizedPnlPct)})
+                        </td>
+                        <td className="py-2 pr-0 font-mono text-[10px] text-[var(--ink-faint)]">
+                          {row.position.closedAt
+                            ? new Date(row.position.closedAt).toLocaleString()
+                            : "--"}
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr><td colSpan={10} className="p-0"><RationalePanel position={row.position} /></td></tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
             {allClosed.length > CLOSED_PAGE_SIZE && (

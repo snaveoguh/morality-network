@@ -70,6 +70,31 @@ export interface Position {
   moralScore?: number;
   /** Human-readable moral justification for the trade. SOUL.md §Trading Constraints. */
   moralJustification?: string;
+  /** Structured entry rationale — why the trade was opened */
+  entryRationale?: EntryRationale;
+  /** Structured exit rationale — what triggered the close */
+  exitRationale?: ExitRationale;
+}
+
+export interface EntryRationale {
+  signalSymbol?: string;
+  signalDirection?: string;
+  signalScore?: number;
+  signalObservations?: number;
+  contradictionPenalty?: number;
+  supportingClaims?: string[];
+  skippedSignals?: string[];
+  kellyPhase?: string;
+  kellySizeUsd?: number;
+  actualSizeUsd?: number;
+}
+
+export interface ExitRationale {
+  trigger: string;
+  priceAtTrigger?: number;
+  highWaterMark?: number;
+  drawdownFromPeak?: number;
+  holdDurationMs?: number;
 }
 
 export interface TraderRiskConfig {
@@ -160,6 +185,10 @@ export interface TradeJournalEntry {
   compositeConfidence: number;
   kellyFraction: number;
   exitReason?: string;
+  entryRationale?: EntryRationale;
+  exitRationale?: ExitRationale;
+  moralScore?: number;
+  moralJustification?: string;
 }
 
 export interface ScalperConfig {
