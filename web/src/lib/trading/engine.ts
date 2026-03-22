@@ -630,18 +630,28 @@ class TraderEngine {
           continue;
         }
 
-        // ── Signal reversal: close if newsdesk signal flipped direction ──
+        // ── Signal reversal: close only on STRONG reversals ──
+        // Require: signal flipped direction, low contradiction, high absolute score,
+        // AND position must have been open long enough to avoid whipsaw
         if (position.signalSource && position.marketSymbol && marketSignals.length > 0) {
           const currentSignal = marketSignals.find(
             (s) => s.symbol === position.marketSymbol,
           );
-          if (currentSignal && currentSignal.contradictionPenalty <= 0.5) {
+          const positionAgeForReversal = Date.now() - position.openedAt;
+          const minAgeForReversal = 600_000; // 10 min minimum — ignore early flip-flops
+          const minReversalScore = 0.5; // signal must be strongly directional
+          if (
+            currentSignal &&
+            currentSignal.contradictionPenalty <= 0.3 && // strong consensus (was 0.5)
+            Math.abs(currentSignal.score) >= minReversalScore &&
+            positionAgeForReversal >= minAgeForReversal
+          ) {
             const positionIsBullish = position.direction === "long";
             const signalIsBullish = currentSignal.direction === "bullish";
             if (positionIsBullish !== signalIsBullish) {
               const currentPrice = await this.resolvePositionPriceUsd(position);
               console.log(
-                `[trader] signal-reversal: ${position.marketSymbol} was ${position.direction}, signal now ${currentSignal.direction} (score=${currentSignal.score.toFixed(2)})`,
+                `[trader] signal-reversal: ${position.marketSymbol} was ${position.direction}, signal now ${currentSignal.direction} (score=${currentSignal.score.toFixed(2)}, age=${(positionAgeForReversal / 60_000).toFixed(0)}min)`,
               );
               const closed = await this.closePosition(position, "signal-reversal", currentPrice ?? position.entryPriceUsd);
               if (closed) report.exits.push(closed);
@@ -658,14 +668,19 @@ class TraderEngine {
         }
 
         const isShort = position.direction === "short";
-        const pnlPct = isShort
+        const lev = position.leverage ?? 1;
+        const pricePct = isShort
           ? (position.entryPriceUsd - currentPriceUsd) / position.entryPriceUsd
           : (currentPriceUsd - position.entryPriceUsd) / position.entryPriceUsd;
+        // Leverage-adjusted PnL % (what the trader actually experiences)
+        const pnlPct = pricePct * lev;
 
-        // ── Stop-loss: full close ──
+        // ── Stop-loss: full close (threshold is leverage-adjusted) ──
+        // stopLossPct=0.2 at 40x means close at 0.5% adverse price move
+        const stopPriceMove = position.stopLossPct / lev;
         const stopPrice = isShort
-          ? position.entryPriceUsd * (1 + position.stopLossPct)
-          : position.entryPriceUsd * (1 - position.stopLossPct);
+          ? position.entryPriceUsd * (1 + stopPriceMove)
+          : position.entryPriceUsd * (1 - stopPriceMove);
         const hitStop = isShort ? currentPriceUsd >= stopPrice : currentPriceUsd <= stopPrice;
         if (hitStop) {
           const closed = await this.closePosition(position, "stop-loss", currentPriceUsd);
@@ -674,15 +689,21 @@ class TraderEngine {
         }
 
         // ── Trailing stop: update high/low water mark, close if retraced ──
+        // Both trailingPct and activationPct are leverage-adjusted thresholds.
+        // At 40x, trailingPct=0.05 means 0.125% price retrace triggers stop.
+        // activationPct=0.02 means 0.05% favorable price move activates trailing.
         const trailingPct = position.trailingStopPct ?? this.config.risk.trailingStopPct ?? 0;
         const activationPct = this.config.risk.trailingStopActivationPct ?? 0.03;
-        if (trailingPct > 0 && pnlPct >= activationPct) {
+        // Convert to price-space: divide by leverage so trailing tracks price not leveraged PnL
+        const trailingPricePct = lev > 1 ? trailingPct / lev : trailingPct;
+        const activationPricePct = lev > 1 ? activationPct / lev : activationPct;
+        if (trailingPct > 0 && pricePct >= activationPricePct) {
           const hwm = position.highWaterMark ?? position.entryPriceUsd;
           const lwm = position.lowWaterMark ?? position.entryPriceUsd;
           if (isShort) {
             const newLwm = Math.min(lwm, currentPriceUsd);
             if (newLwm < lwm) await this.store.upsert({ ...position, lowWaterMark: newLwm });
-            const trailPrice = newLwm * (1 + trailingPct);
+            const trailPrice = newLwm * (1 + trailingPricePct);
             if (currentPriceUsd >= trailPrice) {
               const closed = await this.closePosition(position, "trailing-stop", currentPriceUsd);
               if (closed) report.exits.push(closed);
@@ -691,7 +712,7 @@ class TraderEngine {
           } else {
             const newHwm = Math.max(hwm, currentPriceUsd);
             if (newHwm > hwm) await this.store.upsert({ ...position, highWaterMark: newHwm });
-            const trailPrice = newHwm * (1 - trailingPct);
+            const trailPrice = newHwm * (1 - trailingPricePct);
             if (currentPriceUsd <= trailPrice) {
               const closed = await this.closePosition(position, "trailing-stop", currentPriceUsd);
               if (closed) report.exits.push(closed);
