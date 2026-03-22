@@ -408,8 +408,8 @@ export default function TradingChart({
     <div className="w-full border border-[var(--rule-light)] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--rule-light)]">
-        {/* Market tabs */}
-        <div className="flex gap-0.5">
+        {/* Market tabs — scrollable for many markets */}
+        <div className="flex gap-0.5 overflow-x-auto max-w-[60%] scrollbar-hide">
           {watchMarkets.map((m) => (
             <button
               key={m}
