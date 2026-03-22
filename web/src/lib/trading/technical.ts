@@ -311,29 +311,49 @@ function scoreIndicators(
     votes.push({ name: "RSI", weight: 0.15, vote: 0, reason: `RSI ${rsi.toFixed(1)} neutral` });
   }
 
-  // Ichimoku Cloud (25%)
+  // Ichimoku Cloud (25%) — uses cloud color, TK cross, and price position
+  // Cloud color is forward-looking: red cloud = bearish structure even if price is still above
   {
     let vote = 0;
     let reason = "";
-    if (ichimoku.priceVsCloud === "above" && ichimoku.tenkanSen > ichimoku.kijunSen) {
+    const tkBullish = ichimoku.tenkanSen > ichimoku.kijunSen;
+    const tkBearish = ichimoku.tenkanSen < ichimoku.kijunSen;
+    const redCloud = ichimoku.cloudColor === "red";
+    const greenCloud = ichimoku.cloudColor === "green";
+
+    if (ichimoku.priceVsCloud === "above" && tkBullish && greenCloud) {
       vote = 1;
-      reason = "Price above cloud, TK cross bullish → long";
-    } else if (ichimoku.priceVsCloud === "below" && ichimoku.tenkanSen < ichimoku.kijunSen) {
+      reason = "Price above green cloud, TK bullish → strong long";
+    } else if (ichimoku.priceVsCloud === "below" && tkBearish && redCloud) {
       vote = -1;
-      reason = "Price below cloud, TK cross bearish → short";
-    } else if (ichimoku.priceVsCloud === "above") {
-      vote = 0.5;
-      reason = "Price above cloud but TK not aligned";
+      reason = "Price below red cloud, TK bearish → strong short";
+    } else if (ichimoku.priceVsCloud === "above" && tkBullish && redCloud) {
+      // Price above cloud but cloud turning red = weakening bullish
+      vote = 0.25;
+      reason = "Price above cloud but cloud turning red → weakening";
+    } else if (ichimoku.priceVsCloud === "above" && tkBearish) {
+      // Price above cloud but TK bearish cross = bearish divergence
+      vote = -0.25;
+      reason = "Price above cloud but TK bearish → divergence, caution";
+    } else if (ichimoku.priceVsCloud === "below" && tkBullish) {
+      // Price below cloud but TK turning bullish = potential reversal
+      vote = 0.25;
+      reason = "Price below cloud but TK bullish → potential reversal";
     } else if (ichimoku.priceVsCloud === "below") {
       vote = -0.5;
-      reason = "Price below cloud but TK not aligned";
+      reason = `Price below ${redCloud ? "red" : "green"} cloud → bearish`;
+    } else if (ichimoku.priceVsCloud === "above") {
+      vote = 0.25;
+      reason = `Price above cloud, TK neutral`;
     } else {
-      reason = "Price inside cloud → neutral";
+      // Inside cloud = uncertainty
+      vote = 0;
+      reason = "Price inside cloud → no conviction";
     }
-    votes.push({ name: "Ichimoku", weight: 0.25, vote, reason });
+    votes.push({ name: "Ichimoku", weight: 0.20, vote, reason });
   }
 
-  // MACD (20%)
+  // MACD (22.5%) — primary trend-following indicator
   {
     let vote = 0;
     let reason = "";
@@ -346,10 +366,10 @@ function scoreIndicators(
     } else {
       reason = "MACD neutral";
     }
-    votes.push({ name: "MACD", weight: 0.20, vote, reason });
+    votes.push({ name: "MACD", weight: 0.225, vote, reason });
   }
 
-  // EMA crossovers (20%)
+  // EMA crossovers (22.5%) — trend direction from moving average structure
   {
     let vote = 0;
     let reason = "";
@@ -362,7 +382,7 @@ function scoreIndicators(
     } else {
       reason = "EMA mixed";
     }
-    votes.push({ name: "EMA", weight: 0.20, vote, reason });
+    votes.push({ name: "EMA", weight: 0.225, vote, reason });
   }
 
   // Bollinger Bands (10%)
