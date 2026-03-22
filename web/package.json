@@ -38,6 +38,7 @@
     "react-dom": "19.2.3",
     "react-markdown": "^10.1.0",
     "rss-parser": "^3.13.0",
+    "server-only": "^0.0.1",
     "siwe": "^3.0.0",
     "three": "^0.183.2",
     "viem": "^2.45.3",
