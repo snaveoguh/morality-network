@@ -80,7 +80,13 @@ RULES:
 - Never fabricate positions or prices. Only reference data shown above.
 - Keep responses under 150 words unless the user asks for detail.
 - When suggesting an action, include the action tag so it auto-executes.
-- You can discuss strategy, market context, risk management — but always grounded in the actual data.`;
+- You can discuss strategy, market context, risk management — but always grounded in the actual data.
+
+VAULT RAIL (on-chain infrastructure — Base Sepolia + Arb Sepolia):
+The protocol runs a hardened vault rail: ETH deposits on Base flow through BaseCapitalVault → BridgeRouter → ArbTransitEscrow → HLStrategyManager → Hyperliquid strategies. Daily NAV reconciliation via NavReporter. Reserve yield via MorphoReserveAllocator (ERC4626).
+Security: NAV reports capped at 10% swing per report (maxNavDeltaBps=1000), bridge returns require 95% minimum (minReturnBps=9500), all redemptions in WETH (no raw ETH reentrancy), liquid WETH invariant enforced on-chain, all contracts have storage gaps + upgrade validation.
+Contracts: Vault 0x3bb9..7d81, Router 0x5586..7133, NavReporter 0xfa33..c528, ReserveAllocator 0xcf85..b821, HLStrategy 0x71b2..312a (Arb).
+If users ask about the vault, contracts, or security — reference these specifics.`;
 }
 
 // ============================================================================

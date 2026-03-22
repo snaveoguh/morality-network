@@ -48,6 +48,36 @@ const APPENDIX = {
         editionsMinter: "0xe1D407E486b5943d773FAC9A145a5308b14cC225",
       },
     },
+    vaultRailBaseSepolia: {
+      chainId: 84532,
+      explorer: "https://sepolia.basescan.org",
+      note: "ETH-denominated vault rail: deposits on Base, bridges to Arbitrum, deploys to Hyperliquid strategies.",
+      contracts: [
+        { name: "BaseCapitalVault", address: "0x3bb95125f2a8d8af94dd7ba0ce5b0b8b5eef7d81", type: "UUPS Proxy", implementation: "0x78c8e591f3471ab7d379361dc07c43d1897921e7", security: "NAV delta bounds (10%), deposit cap, WETH-only redemptions, liquid invariant check" },
+        { name: "WithdrawalQueue", address: "0x834952e34566feee95fc1cb6a1f6d851be183ebc", type: "UUPS Proxy", implementation: "0x206138ab44dc7190307eb9f4e407a674656f562e", security: "Reentrancy guard" },
+        { name: "MorphoReserveAllocator", address: "0xcf85a88125ad622bae3978a2dc7f7fc2dc8fb821", type: "UUPS Proxy", implementation: "0x3abadce58e94ae31fd527f6f6b7d2db195549b7e", security: "Balance-diff withdrawal verification" },
+        { name: "BridgeRouter", address: "0x55865854f9d58ad7c6d2cfa7a304419e23817133", type: "UUPS Proxy", implementation: "0xe8cd12085ce417421cca7bc24cf9aef875a33e55", security: "95% min return slippage protection" },
+        { name: "NavReporter", address: "0xfa33f4dfe3bec32ae3cb78dbcf508597f74dc528", type: "UUPS Proxy", implementation: "0x24a96f0a0ee5616affd4986032539239a004d4c1", security: "Bounded strategy/fee deltas (10% max per report)" },
+        { name: "ExecutorAssetConverter", address: "0xf4d307a237b22e39d2000cf54b53b9116a7b3669", type: "UUPS Proxy" },
+        { name: "ExecutorBridgeAdapter", address: "0x692cb562919809d4e850e05c00f389b92b5e298c", type: "UUPS Proxy" },
+      ],
+      hardeningParams: {
+        maxNavDeltaBps: 1000,
+        maxStrategyDeltaBps: 1000,
+        maxFeeDeltaBps: 1000,
+        minReturnBps: 9500,
+        maxTotalAssets: 0,
+      },
+    },
+    vaultRailArbSepolia: {
+      chainId: 421614,
+      explorer: "https://sepolia.arbiscan.io",
+      note: "Arbitrum-side vault rail contracts (transit escrow + Hyperliquid strategy manager).",
+      contracts: [
+        { name: "ArbTransitEscrow", address: "0x14a361454edcb477644eb82bf540a26e1cead72a", type: "UUPS Proxy", implementation: "0x0fe56bda80240da39b7bbc6112269647544dedd6" },
+        { name: "HLStrategyManager", address: "0x71b2e273727385c617fe254f4fb14a36a679b12a", type: "UUPS Proxy", implementation: "0x05feabc8611558110aaaea396fae6d3426e05202" },
+      ],
+    },
     ethereumMainnet: {
       chainId: 1,
       explorer: "https://etherscan.io",
