@@ -41,13 +41,14 @@ contract MorphoReserveAllocator is Initializable, OwnableUpgradeable, UUPSUpgrad
 
         __Ownable_init(owner_);
         __Pausable_init();
-
         vault = vault_;
         asset = asset_;
         targetVault = targetVault_;
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        require(newImplementation.code.length > 0, "Not a contract");
+    }
 
     function deposit(uint256 assets) external onlyVault whenNotPaused returns (uint256 sharesOut) {
         require(assets > 0, "Zero assets");
@@ -70,13 +71,15 @@ contract MorphoReserveAllocator is Initializable, OwnableUpgradeable, UUPSUpgrad
             require(IERC20(asset).transfer(receiver, assets), "Transfer failed");
             assetsOut = assets;
         } else {
+            uint256 balBefore = IERC20(asset).balanceOf(receiver);
             if (idle > 0) {
                 require(IERC20(asset).transfer(receiver, idle), "Transfer failed");
             }
 
             uint256 remaining = assets - idle;
             IERC4626(targetVault).withdraw(remaining, receiver, address(this));
-            assetsOut = assets;
+            uint256 balAfter = IERC20(asset).balanceOf(receiver);
+            assetsOut = balAfter - balBefore;
         }
 
         uint256 principalReduction = assetsOut > totalPrincipal ? totalPrincipal : assetsOut;
@@ -119,4 +122,6 @@ contract MorphoReserveAllocator is Initializable, OwnableUpgradeable, UUPSUpgrad
     function unpause() external onlyOwner {
         _unpause();
     }
+
+    uint256[40] private __gap;
 }

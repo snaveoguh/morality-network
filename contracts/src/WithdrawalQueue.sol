@@ -19,6 +19,7 @@ contract WithdrawalQueue is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
     address public vault;
     uint256 public nextRequestId;
+    uint256 private reentrancyLock;
 
     mapping(uint256 => WithdrawRequest) private requests;
 
@@ -38,6 +39,13 @@ contract WithdrawalQueue is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         _;
     }
 
+    modifier nonReentrant() {
+        require(reentrancyLock == 1, "Reentrancy");
+        reentrancyLock = 2;
+        _;
+        reentrancyLock = 1;
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -49,19 +57,21 @@ contract WithdrawalQueue is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         __Ownable_init(owner_);
         __Pausable_init();
-
         vault = vault_;
         nextRequestId = 1;
+        reentrancyLock = 1;
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        require(newImplementation.code.length > 0, "Not a contract");
+    }
 
     function enqueue(
         address owner,
         address receiver,
         uint256 shares,
         uint256 assetsRequested
-    ) external onlyVault whenNotPaused returns (uint256 requestId) {
+    ) external onlyVault whenNotPaused nonReentrant returns (uint256 requestId) {
         require(owner != address(0), "Zero owner");
         require(receiver != address(0), "Zero receiver");
         require(shares > 0, "Zero shares");
@@ -80,7 +90,7 @@ contract WithdrawalQueue is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         emit WithdrawEnqueued(requestId, owner, receiver, shares, assetsRequested);
     }
 
-    function markFulfilled(uint256 requestId, uint256 assetsOut) external onlyVault {
+    function markFulfilled(uint256 requestId, uint256 assetsOut) external onlyVault nonReentrant {
         WithdrawRequest storage request = requests[requestId];
         require(request.owner != address(0), "Unknown request");
         require(!request.finalized, "Already finalized");
@@ -91,7 +101,7 @@ contract WithdrawalQueue is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         emit WithdrawFulfilled(requestId, assetsOut);
     }
 
-    function cancel(uint256 requestId) external onlyVault {
+    function cancel(uint256 requestId) external onlyVault nonReentrant {
         WithdrawRequest storage request = requests[requestId];
         require(request.owner != address(0), "Unknown request");
         require(!request.finalized, "Already finalized");
@@ -138,4 +148,6 @@ contract WithdrawalQueue is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     function unpause() external onlyOwner {
         _unpause();
     }
+
+    uint256[40] private __gap;
 }
