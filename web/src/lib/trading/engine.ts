@@ -378,10 +378,11 @@ class TraderEngine {
         continue;
       }
 
-      const priceRatio = currentPriceUsd / position.entryPriceUsd;
-      const marketValueUsd = position.direction === "short"
-        ? position.entryNotionalUsd * (2 - priceRatio)
-        : position.entryNotionalUsd * priceRatio;
+      const lev = position.leverage ?? 1;
+      const priceMove = position.direction === "short"
+        ? (position.entryPriceUsd - currentPriceUsd) / position.entryPriceUsd
+        : (currentPriceUsd - position.entryPriceUsd) / position.entryPriceUsd;
+      const marketValueUsd = position.entryNotionalUsd * (1 + priceMove * lev);
       // PnL includes estimated round-trip exchange fees
       const grossPnl = marketValueUsd - position.entryNotionalUsd;
       const pnlUsd = grossPnl - estFees;
@@ -414,11 +415,12 @@ class TraderEngine {
         continue;
       }
 
+      const lev = position.leverage ?? 1;
       const priceMove = position.direction === "short"
         ? (position.entryPriceUsd - position.exitPriceUsd) / position.entryPriceUsd
         : (position.exitPriceUsd - position.entryPriceUsd) / position.entryPriceUsd;
-      // PnL includes estimated round-trip exchange fees
-      const grossPnl = position.entryNotionalUsd * priceMove;
+      // PnL includes leverage + estimated round-trip exchange fees
+      const grossPnl = position.entryNotionalUsd * priceMove * lev;
       const pnlUsd = grossPnl - estFees;
       const pnlPct = position.entryNotionalUsd > 0 ? pnlUsd / position.entryNotionalUsd : 0;
 

@@ -18,19 +18,16 @@ export function positionToJournalEntry(p: Position): TradeJournalEntry | null {
   const exitPrice = p.exitPriceUsd;
   const notionalUsd = p.entryNotionalUsd;
 
-  const pnlUsd =
-    entryPrice > 0
-      ? direction === "short"
-        ? notionalUsd * ((entryPrice - exitPrice) / entryPrice)
-        : notionalUsd * ((exitPrice - entryPrice) / entryPrice)
-      : 0;
-
-  const pnlPct =
+  const leverage = p.leverage ?? 1;
+  const priceMove =
     entryPrice > 0
       ? direction === "short"
         ? (entryPrice - exitPrice) / entryPrice
         : (exitPrice - entryPrice) / entryPrice
       : 0;
+
+  const pnlUsd = notionalUsd * priceMove * leverage;
+  const pnlPct = priceMove * leverage;
 
   return {
     id: p.id,
