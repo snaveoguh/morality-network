@@ -7,6 +7,8 @@ import { getTraderPerformanceByRunner, redactedConfigSummary } from "@/lib/tradi
 import { isWorkerTraderRuntime } from "@/lib/runtime-mode";
 import { getIndexerBackendUrl } from "@/lib/server/indexer-backend";
 import { fetchPersistedTraderState } from "@/lib/server/runtime-backend";
+import { getParallelBaseConfig, getTraderConfig } from "@/lib/trading/config";
+import { fetchVaultRailOverview } from "@/lib/trading/vault-rail";
 import { fetchVaultOverview } from "@/lib/vault";
 import { isAddress, type Address } from "viem";
 
@@ -101,6 +103,38 @@ function sanitizeVault(
   };
 }
 
+async function fetchVaultRails(options: {
+  account?: Address | null;
+  includeAccount: boolean;
+}) {
+  try {
+    const primary = getTraderConfig();
+    const parallel = getParallelBaseConfig();
+    const runners = [
+      { runnerId: "primary", label: "primary", config: primary },
+      ...(parallel ? [{ runnerId: "base-parallel", label: "base-parallel", config: parallel }] : []),
+    ];
+
+    const rails = await Promise.all(
+      runners
+        .filter((runner) => runner.config.vaultRail?.enabled)
+        .map((runner) =>
+          fetchVaultRailOverview(runner.config, {
+            runnerId: runner.runnerId,
+            label: runner.label,
+            executionVenue: runner.config.executionVenue,
+            account: options.includeAccount ? options.account ?? null : null,
+            includeAccount: options.includeAccount,
+          }).catch(() => null)
+        )
+    );
+
+    return rails.filter((rail): rail is NonNullable<typeof rail> => rail !== null);
+  } catch {
+    return [];
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -128,12 +162,16 @@ export async function GET(request: Request) {
         );
       }
 
-      const [state, vault] = await Promise.all([
+      const [state, vault, vaultRails] = await Promise.all([
         fetchPersistedTraderState(),
         fetchVaultOverview({
           limit: 50,
           account: includeAccount ? account : null,
           includeFunders,
+          includeAccount,
+        }),
+        fetchVaultRails({
+          account,
           includeAccount,
         }),
       ]);
@@ -150,6 +188,7 @@ export async function GET(request: Request) {
                 ...runner,
                 performance: sanitizePerformance(runner.performance),
               })),
+          vaultRails,
           vault: sanitizeVault(vault, { includeAccount, includeFunders }),
           config: authState.authorized
             ? state.config
@@ -172,12 +211,16 @@ export async function GET(request: Request) {
       );
     }
 
-    const [performanceByRunner, vault] = await Promise.all([
+    const [performanceByRunner, vault, vaultRails] = await Promise.all([
       getTraderPerformanceByRunner(),
       fetchVaultOverview({
         limit: 50,
         account: includeAccount ? account : null,
         includeFunders,
+        includeAccount,
+      }),
+      fetchVaultRails({
+        account,
         includeAccount,
       }),
     ]);
@@ -193,6 +236,7 @@ export async function GET(request: Request) {
               ...runner,
               performance: sanitizePerformance(runner.performance),
             })),
+        vaultRails,
         vault: sanitizeVault(vault, { includeAccount, includeFunders }),
         config: authState.authorized
           ? redactedConfigSummary()

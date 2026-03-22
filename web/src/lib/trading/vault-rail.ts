@@ -9,13 +9,14 @@ import {
   parseUnits,
   toBytes,
   type Address,
+  type Hash,
 } from "viem";
 import { arbitrum, arbitrumSepolia, base, baseSepolia, type Chain } from "viem/chains";
 
 import { fetchTokenMarketSnapshot } from "./market";
 import { waitForSuccess } from "./swap";
 import { fetchHyperliquidAccountValueUsd, resolveHyperliquidAccountAddress } from "./hyperliquid";
-import type { TraderExecutionConfig, VaultRailConfig } from "./types";
+import type { ExecutionVenue, TraderExecutionConfig, VaultRailConfig } from "./types";
 
 const BASE_VAULT_ABI = [
   { type: "function", name: "liquidAssetsStored", inputs: [], outputs: [{ type: "uint256" }], stateMutability: "view" },
@@ -56,6 +57,19 @@ const HL_STRATEGY_MANAGER_ABI = [
   { type: "function", name: "totalDeployedAssets", inputs: [], outputs: [{ type: "uint256" }], stateMutability: "view" },
 ] as const;
 
+const BASE_VAULT_DETAIL_ABI = [
+  { type: "function", name: "performanceFeeBps", inputs: [], outputs: [{ type: "uint16" }], stateMutability: "view" },
+  { type: "function", name: "reserveTargetBps", inputs: [], outputs: [{ type: "uint16" }], stateMutability: "view" },
+  { type: "function", name: "liquidTargetBps", inputs: [], outputs: [{ type: "uint16" }], stateMutability: "view" },
+  { type: "function", name: "hlTargetBps", inputs: [], outputs: [{ type: "uint16" }], stateMutability: "view" },
+  { type: "function", name: "lastNavTimestamp", inputs: [], outputs: [{ type: "uint256" }], stateMutability: "view" },
+  { type: "function", name: "lastNavHash", inputs: [], outputs: [{ type: "bytes32" }], stateMutability: "view" },
+  { type: "function", name: "totalSupply", inputs: [], outputs: [{ type: "uint256" }], stateMutability: "view" },
+  { type: "function", name: "paused", inputs: [], outputs: [{ type: "bool" }], stateMutability: "view" },
+  { type: "function", name: "balanceOf", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }], stateMutability: "view" },
+  { type: "function", name: "previewRedeem", inputs: [{ type: "uint256" }], outputs: [{ type: "uint256" }], stateMutability: "view" },
+] as const;
+
 export interface VaultRailSnapshot {
   liquidEthWei: bigint;
   reserveEthWei: bigint;
@@ -70,6 +84,55 @@ export interface VaultRailSnapshot {
   strategyBridgeAssetRaw: bigint;
   navLastReportedAt: number;
   navMinIntervalMs: number;
+}
+
+export interface VaultRailAccountSnapshot {
+  address: Address;
+  shares: string;
+  assetsEthWei: string;
+  shareOfSupplyBps: string;
+}
+
+export interface VaultRailOverview {
+  enabled: true;
+  runnerId: string;
+  label: string;
+  executionVenue: ExecutionVenue;
+  baseChainId: number;
+  arbChainId: number;
+  baseVaultAddress: Address;
+  reserveAllocatorAddress: Address | null;
+  bridgeRouterAddress: Address;
+  navReporterAddress: Address;
+  assetConverterAddress: Address | null;
+  bridgeAdapterAddress: Address | null;
+  arbTransitEscrowAddress: Address | null;
+  hlStrategyManagerAddress: Address | null;
+  baseBridgeAssetAddress: Address;
+  arbBridgeAssetAddress: Address;
+  autoReportNav: boolean;
+  performanceFeeBps: number;
+  totalShares: string;
+  sharePriceE18: string;
+  totalAssetsEthWei: string;
+  liquidEthWei: string;
+  reserveEthWei: string;
+  pendingBridgeEthWei: string;
+  hlStrategyEthWei: string;
+  accruedFeesEthWei: string;
+  routerPendingEthWei: string;
+  reserveManagedEthWei: string;
+  arbEscrowBridgeAssetRaw: string;
+  strategyBridgeAssetRaw: string;
+  targetLiquidBps: number;
+  targetReserveBps: number;
+  targetHlBps: number;
+  navLastReportedAt: number;
+  navMinIntervalMs: number;
+  lastNavTimestamp: number;
+  lastNavHash: Hash;
+  paused: boolean;
+  account: VaultRailAccountSnapshot | null;
 }
 
 export interface VaultRailKeeperReport {
@@ -102,21 +165,14 @@ function getVaultRailConfig(config: TraderExecutionConfig): VaultRailConfig {
 function createVaultRailClients(config: TraderExecutionConfig) {
   const rail = getVaultRailConfig(config);
   const account = privateKeyToAccount(config.privateKey);
+  const { basePublicClient, arbPublicClient } = createVaultRailPublicClients(rail);
   const baseChain = getBaseChain(rail.baseChainId);
   const arbChain = getArbChain(rail.arbChainId);
 
-  const basePublicClient = createPublicClient({
-    chain: baseChain,
-    transport: http(rail.baseRpcUrl, { timeout: 12_000 }),
-  });
   const baseWalletClient = createWalletClient({
     chain: baseChain,
     account,
     transport: http(rail.baseRpcUrl, { timeout: 12_000 }),
-  });
-  const arbPublicClient = createPublicClient({
-    chain: arbChain,
-    transport: http(rail.arbRpcUrl, { timeout: 12_000 }),
   });
   const arbWalletClient = createWalletClient({
     chain: arbChain,
@@ -134,8 +190,27 @@ function createVaultRailClients(config: TraderExecutionConfig) {
   };
 }
 
-export async function readVaultRailSnapshot(config: TraderExecutionConfig): Promise<VaultRailSnapshot> {
-  const { rail, basePublicClient, arbPublicClient } = createVaultRailClients(config);
+function createVaultRailPublicClients(rail: VaultRailConfig) {
+  const baseChain = getBaseChain(rail.baseChainId);
+  const arbChain = getArbChain(rail.arbChainId);
+
+  const basePublicClient = createPublicClient({
+    chain: baseChain,
+    transport: http(rail.baseRpcUrl, { timeout: 12_000 }),
+  });
+  const arbPublicClient = createPublicClient({
+    chain: arbChain,
+    transport: http(rail.arbRpcUrl, { timeout: 12_000 }),
+  });
+
+  return {
+    basePublicClient,
+    arbPublicClient,
+  };
+}
+
+async function readVaultRailSnapshotFromRailConfig(rail: VaultRailConfig): Promise<VaultRailSnapshot> {
+  const { basePublicClient, arbPublicClient } = createVaultRailPublicClients(rail);
 
   const [
     liquidEthWei,
@@ -187,6 +262,124 @@ export async function readVaultRailSnapshot(config: TraderExecutionConfig): Prom
     strategyBridgeAssetRaw,
     navLastReportedAt: Number(navLastReportedAt),
     navMinIntervalMs: Number(navMinIntervalMs) * 1000,
+  };
+}
+
+export async function readVaultRailSnapshot(config: TraderExecutionConfig): Promise<VaultRailSnapshot> {
+  const rail = getVaultRailConfig(config);
+  return readVaultRailSnapshotFromRailConfig(rail);
+}
+
+export async function fetchVaultRailOverview(
+  config: TraderExecutionConfig,
+  options?: {
+    runnerId?: string;
+    label?: string;
+    executionVenue?: ExecutionVenue;
+    account?: Address | null;
+    includeAccount?: boolean;
+  }
+): Promise<VaultRailOverview | null> {
+  if (!config.vaultRail?.enabled) {
+    return null;
+  }
+
+  const rail = config.vaultRail;
+  const { basePublicClient } = createVaultRailPublicClients(rail);
+  const snapshot = await readVaultRailSnapshotFromRailConfig(rail);
+  const includeAccount = options?.includeAccount ?? true;
+  const account = includeAccount ? options?.account ?? null : null;
+
+  const [
+    performanceFeeBps,
+    targetReserveBps,
+    targetLiquidBps,
+    targetHlBps,
+    lastNavTimestamp,
+    lastNavHash,
+    totalShares,
+    paused,
+  ] = await Promise.all([
+    basePublicClient.readContract({ address: rail.baseVaultAddress, abi: BASE_VAULT_DETAIL_ABI, functionName: "performanceFeeBps" }),
+    basePublicClient.readContract({ address: rail.baseVaultAddress, abi: BASE_VAULT_DETAIL_ABI, functionName: "reserveTargetBps" }),
+    basePublicClient.readContract({ address: rail.baseVaultAddress, abi: BASE_VAULT_DETAIL_ABI, functionName: "liquidTargetBps" }),
+    basePublicClient.readContract({ address: rail.baseVaultAddress, abi: BASE_VAULT_DETAIL_ABI, functionName: "hlTargetBps" }),
+    basePublicClient.readContract({ address: rail.baseVaultAddress, abi: BASE_VAULT_DETAIL_ABI, functionName: "lastNavTimestamp" }),
+    basePublicClient.readContract({ address: rail.baseVaultAddress, abi: BASE_VAULT_DETAIL_ABI, functionName: "lastNavHash" }),
+    basePublicClient.readContract({ address: rail.baseVaultAddress, abi: BASE_VAULT_DETAIL_ABI, functionName: "totalSupply" }),
+    basePublicClient.readContract({ address: rail.baseVaultAddress, abi: BASE_VAULT_DETAIL_ABI, functionName: "paused" }),
+  ]);
+
+  const accountSnapshot = account
+    ? await (async (): Promise<VaultRailAccountSnapshot> => {
+        const shares = await basePublicClient.readContract({
+          address: rail.baseVaultAddress,
+          abi: BASE_VAULT_DETAIL_ABI,
+          functionName: "balanceOf",
+          args: [account],
+        });
+        const assetsEthWei = shares > BigInt(0)
+          ? await basePublicClient.readContract({
+              address: rail.baseVaultAddress,
+              abi: BASE_VAULT_DETAIL_ABI,
+              functionName: "previewRedeem",
+              args: [shares],
+            })
+          : BigInt(0);
+        const shareOfSupplyBps =
+          totalShares > BigInt(0)
+            ? ((shares * BigInt(10_000)) / totalShares).toString()
+            : "0";
+
+        return {
+          address: account,
+          shares: shares.toString(),
+          assetsEthWei: assetsEthWei.toString(),
+          shareOfSupplyBps,
+        };
+      })()
+    : null;
+
+  return {
+    enabled: true,
+    runnerId: options?.runnerId ?? "primary",
+    label: options?.label ?? "primary",
+    executionVenue: options?.executionVenue ?? config.executionVenue,
+    baseChainId: rail.baseChainId,
+    arbChainId: rail.arbChainId,
+    baseVaultAddress: rail.baseVaultAddress,
+    reserveAllocatorAddress: rail.reserveAllocatorAddress ?? null,
+    bridgeRouterAddress: rail.bridgeRouterAddress,
+    navReporterAddress: rail.navReporterAddress,
+    assetConverterAddress: rail.assetConverterAddress ?? null,
+    bridgeAdapterAddress: rail.bridgeAdapterAddress ?? null,
+    arbTransitEscrowAddress: rail.arbTransitEscrowAddress ?? null,
+    hlStrategyManagerAddress: rail.hlStrategyManagerAddress ?? null,
+    baseBridgeAssetAddress: rail.baseBridgeAssetAddress,
+    arbBridgeAssetAddress: rail.arbBridgeAssetAddress,
+    autoReportNav: rail.autoReportNav,
+    performanceFeeBps: Number(performanceFeeBps),
+    totalShares: totalShares.toString(),
+    sharePriceE18: snapshot.sharePriceE18.toString(),
+    totalAssetsEthWei: snapshot.totalAssetsEthWei.toString(),
+    liquidEthWei: snapshot.liquidEthWei.toString(),
+    reserveEthWei: snapshot.reserveEthWei.toString(),
+    pendingBridgeEthWei: snapshot.pendingBridgeEthWei.toString(),
+    hlStrategyEthWei: snapshot.hlStrategyEthWei.toString(),
+    accruedFeesEthWei: snapshot.accruedFeesEthWei.toString(),
+    routerPendingEthWei: snapshot.routerPendingEthWei.toString(),
+    reserveManagedEthWei: snapshot.reserveManagedEthWei.toString(),
+    arbEscrowBridgeAssetRaw: snapshot.arbEscrowBridgeAssetRaw.toString(),
+    strategyBridgeAssetRaw: snapshot.strategyBridgeAssetRaw.toString(),
+    targetLiquidBps: Number(targetLiquidBps),
+    targetReserveBps: Number(targetReserveBps),
+    targetHlBps: Number(targetHlBps),
+    navLastReportedAt: snapshot.navLastReportedAt,
+    navMinIntervalMs: snapshot.navMinIntervalMs,
+    lastNavTimestamp: Number(lastNavTimestamp),
+    lastNavHash,
+    paused,
+    account: accountSnapshot,
   };
 }
 
