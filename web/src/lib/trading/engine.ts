@@ -283,6 +283,10 @@ class TraderEngine {
         kellyFraction: existing?.kellyFraction,
         highWaterMark: existing?.highWaterMark,
         lowWaterMark: existing?.lowWaterMark,
+        moralScore: existing?.moralScore,
+        moralJustification: existing?.moralJustification,
+        entryRationale: existing?.entryRationale,
+        exitRationale: existing?.exitRationale,
       };
 
       // Persist to store (→ Redis) so positions survive cold starts
