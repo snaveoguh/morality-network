@@ -17,6 +17,26 @@ import { AgentBotTerminal } from "@/components/markets/AgentBotTerminal";
 import TradingChart from "@/components/markets/TradingChart";
 import type { TerminalTradingContext } from "@/lib/terminal-types";
 
+const BASE_CAPITAL_VAULT_ABI = [
+  {
+    type: "function",
+    name: "depositETH",
+    stateMutability: "payable",
+    inputs: [{ name: "receiver", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "requestWithdraw",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "shares", type: "uint256" },
+      { name: "receiver", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
+] as const;
+
 interface Position {
   id: string;
   venue?: "base-spot" | "ethereum-spot" | "hyperliquid-perp";
@@ -122,6 +142,55 @@ interface VaultOverview {
   account?: VaultFunderSnapshot | null;
 }
 
+interface VaultRailAccountSnapshot {
+  address: `0x${string}`;
+  shares: string;
+  assetsEthWei: string;
+  shareOfSupplyBps: string;
+}
+
+interface VaultRailOverview {
+  enabled: true;
+  runnerId: string;
+  label: string;
+  executionVenue: "base-spot" | "ethereum-spot" | "hyperliquid-perp";
+  baseChainId: number;
+  arbChainId: number;
+  baseVaultAddress: `0x${string}`;
+  reserveAllocatorAddress: `0x${string}` | null;
+  bridgeRouterAddress: `0x${string}`;
+  navReporterAddress: `0x${string}`;
+  assetConverterAddress: `0x${string}` | null;
+  bridgeAdapterAddress: `0x${string}` | null;
+  arbTransitEscrowAddress: `0x${string}` | null;
+  hlStrategyManagerAddress: `0x${string}` | null;
+  baseBridgeAssetAddress: `0x${string}`;
+  arbBridgeAssetAddress: `0x${string}`;
+  autoReportNav: boolean;
+  performanceFeeBps: number;
+  totalShares: string;
+  sharePriceE18: string;
+  totalAssetsEthWei: string;
+  liquidEthWei: string;
+  reserveEthWei: string;
+  pendingBridgeEthWei: string;
+  hlStrategyEthWei: string;
+  accruedFeesEthWei: string;
+  routerPendingEthWei: string;
+  reserveManagedEthWei: string;
+  arbEscrowBridgeAssetRaw: string;
+  strategyBridgeAssetRaw: string;
+  targetLiquidBps: number;
+  targetReserveBps: number;
+  targetHlBps: number;
+  navLastReportedAt: number;
+  navMinIntervalMs: number;
+  lastNavTimestamp: number;
+  lastNavHash: `0x${string}`;
+  paused: boolean;
+  account: VaultRailAccountSnapshot | null;
+}
+
 interface ParallelRunnerEntry {
   runnerId: string;
   label: string;
@@ -132,6 +201,7 @@ interface MetricsResponse {
   performance?: TraderPerformanceReport;
   parallel?: ParallelRunnerEntry[];
   vault?: VaultOverview | null;
+  vaultRails?: VaultRailOverview[];
   access?: {
     operator: boolean;
     holder?: boolean;
@@ -216,11 +286,30 @@ function formatSignedPctBps(value: string): string {
   }
 }
 
+function formatUnsignedPctBps(value: string | number): string {
+  const numeric = typeof value === "string" ? Number(value) : value;
+  if (!Number.isFinite(numeric)) return "--";
+  return `${(numeric / 100).toFixed(2)}%`;
+}
+
 function trimDecimal(raw: string, maxFractionDigits = 4): string {
   if (!raw.includes(".")) return raw;
   const [whole, frac] = raw.split(".");
   const trimmed = frac.slice(0, maxFractionDigits).replace(/0+$/, "");
   return trimmed.length > 0 ? `${whole}.${trimmed}` : whole;
+}
+
+function quoteVaultRailSharesForAssets(
+  assetsWei: bigint,
+  totalAssetsWei: bigint,
+  totalShares: bigint
+): bigint {
+  const virtualShares = BigInt(1000);
+  const virtualAssets = BigInt(1000);
+  const numerator = assetsWei * (totalShares + virtualShares);
+  const denominator = totalAssetsWei + virtualAssets;
+  if (denominator === BigInt(0)) return BigInt(0);
+  return (numerator + denominator - BigInt(1)) / denominator;
 }
 
 function formatEthFromWei(value: string | null | undefined): string {
@@ -368,6 +457,7 @@ export function AgentMarketDashboard() {
   const [data, setData] = useState<TraderPerformanceReport | null>(null);
   const [parallelRunners, setParallelRunners] = useState<ParallelRunnerEntry[]>([]);
   const [vault, setVault] = useState<VaultOverview | null>(null);
+  const [vaultRails, setVaultRails] = useState<VaultRailOverview[]>([]);
   const [metricsAccess, setMetricsAccess] = useState<MetricsResponse["access"] | null>(null);
   const [ethPriceUsd, setEthPriceUsd] = useState<number>(0);
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(
@@ -417,6 +507,7 @@ export function AgentMarketDashboard() {
       setData(payload.performance);
       setParallelRunners(payload.parallel ?? []);
       setVault(payload.vault ?? null);
+      setVaultRails(payload.vaultRails ?? []);
       setMetricsAccess(payload.access ?? { operator: false, holder: false, fullAccess: false });
 
       // Extract ETH/USD price for vault conversion
@@ -468,11 +559,13 @@ export function AgentMarketDashboard() {
     return () => clearInterval(interval);
   }, [refreshSubscription]);
 
+  const activeVaultRail = useMemo(() => vaultRails[0] ?? null, [vaultRails]);
   const feePct = useMemo(() => {
+    if (activeVaultRail?.enabled) return activeVaultRail.performanceFeeBps / 100;
     if (vault?.enabled) return vault.performanceFeeBps / 100;
     if (!data) return 5;
     return data.performanceFeeBps / 100;
-  }, [data, vault]);
+  }, [activeVaultRail, data, vault]);
 
   const funderRows = useMemo(
     () => (vault?.funders ? sortFundersByEquity(vault.funders) : []),
@@ -536,6 +629,7 @@ export function AgentMarketDashboard() {
   // Use a type guard so TS narrows `vault` in branches checking `isVaultEnabled`
   const isVaultEnabled = vault?.enabled === true;
   const safeVault = isVaultEnabled ? vault : null;
+  const isVaultRailEnabled = activeVaultRail?.enabled === true;
   const isActionPending =
     isDirectFundingPending || isVaultWritePending || isTxConfirming;
 
@@ -583,6 +677,50 @@ export function AgentMarketDashboard() {
     [connectedAddress, connectedChainId, isVaultEnabled, refresh, switchChainAsync, vault, writeContractAsync]
   );
 
+  const submitVaultRailDeposit = useCallback(
+    async (amountRaw: string): Promise<string> => {
+      try {
+        setActionError(null);
+        if (!activeVaultRail) {
+          throw new Error("Vault rail is not enabled");
+        }
+        if (!connectedAddress) {
+          throw new Error("Connect wallet to deposit");
+        }
+        const amount = normalizeAmountInput(amountRaw);
+        setDepositAmount(amount);
+
+        if (connectedChainId !== activeVaultRail.baseChainId) {
+          await switchChainAsync({ chainId: activeVaultRail.baseChainId });
+        }
+
+        const txHash = await writeContractAsync({
+          address: activeVaultRail.baseVaultAddress,
+          abi: BASE_CAPITAL_VAULT_ABI,
+          functionName: "depositETH",
+          args: [connectedAddress],
+          value: parseEther(amount),
+          chainId: activeVaultRail.baseChainId,
+        });
+
+        setLastTxHash(txHash);
+        setLastTxChainId(activeVaultRail.baseChainId);
+        setTimeout(() => {
+          refresh().catch(() => {
+            // ignored, polling fallback covers this
+          });
+        }, 2_000);
+
+        return `Vault rail deposit submitted: ${shortHex(txHash)}`;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Deposit failed";
+        setActionError(message);
+        throw new Error(message);
+      }
+    },
+    [activeVaultRail, connectedAddress, connectedChainId, refresh, switchChainAsync, writeContractAsync]
+  );
+
   const submitVaultWithdraw = useCallback(
     async (amountRaw: string): Promise<string> => {
       try {
@@ -625,6 +763,64 @@ export function AgentMarketDashboard() {
       }
     },
     [connectedAddress, connectedChainId, isVaultEnabled, refresh, switchChainAsync, vault, writeContractAsync]
+  );
+
+  const submitVaultRailWithdraw = useCallback(
+    async (amountRaw: string): Promise<string> => {
+      try {
+        setActionError(null);
+        if (!activeVaultRail) {
+          throw new Error("Vault rail is not enabled");
+        }
+        if (!connectedAddress) {
+          throw new Error("Connect wallet to request a withdrawal");
+        }
+        const amount = normalizeAmountInput(amountRaw);
+        setWithdrawAmount(amount);
+
+        const totalAssetsWei = parseWeiOrZero(activeVaultRail.totalAssetsEthWei);
+        const totalShares = parseWeiOrZero(activeVaultRail.totalShares);
+        const assetsWei = parseEther(amount);
+        const shares = quoteVaultRailSharesForAssets(assetsWei, totalAssetsWei, totalShares);
+        if (shares <= BigInt(0)) {
+          throw new Error("Requested withdrawal is too small");
+        }
+        if (
+          activeVaultRail.account &&
+          parseWeiOrZero(activeVaultRail.account.shares) > BigInt(0) &&
+          shares > parseWeiOrZero(activeVaultRail.account.shares)
+        ) {
+          throw new Error("Requested withdrawal exceeds your current vault rail shares");
+        }
+
+        if (connectedChainId !== activeVaultRail.baseChainId) {
+          await switchChainAsync({ chainId: activeVaultRail.baseChainId });
+        }
+
+        const txHash = await writeContractAsync({
+          address: activeVaultRail.baseVaultAddress,
+          abi: BASE_CAPITAL_VAULT_ABI,
+          functionName: "requestWithdraw",
+          args: [shares, connectedAddress],
+          chainId: activeVaultRail.baseChainId,
+        });
+
+        setLastTxHash(txHash);
+        setLastTxChainId(activeVaultRail.baseChainId);
+        setTimeout(() => {
+          refresh().catch(() => {
+            // ignored, polling fallback covers this
+          });
+        }, 2_000);
+
+        return `Vault rail withdrawal request submitted: ${shortHex(txHash)}`;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Withdrawal failed";
+        setActionError(message);
+        throw new Error(message);
+      }
+    },
+    [activeVaultRail, connectedAddress, connectedChainId, refresh, switchChainAsync, writeContractAsync]
   );
 
   const submitDirectFund = useCallback(
@@ -673,6 +869,10 @@ export function AgentMarketDashboard() {
 
   const handleDeposit = useCallback(async () => {
     try {
+      if (isVaultRailEnabled) {
+        await submitVaultRailDeposit(depositAmount);
+        return;
+      }
       if (isVaultEnabled) {
         await submitVaultDeposit(depositAmount);
         return;
@@ -681,15 +881,19 @@ export function AgentMarketDashboard() {
     } catch {
       // errors are already pushed into actionError by submit helpers
     }
-  }, [depositAmount, isVaultEnabled, submitDirectFund, submitVaultDeposit]);
+  }, [depositAmount, isVaultEnabled, isVaultRailEnabled, submitDirectFund, submitVaultDeposit, submitVaultRailDeposit]);
 
   const handleWithdraw = useCallback(async () => {
     try {
+      if (isVaultRailEnabled) {
+        await submitVaultRailWithdraw(withdrawAmount);
+        return;
+      }
       await submitVaultWithdraw(withdrawAmount);
     } catch {
       // errors are already pushed into actionError by submit helpers
     }
-  }, [submitVaultWithdraw, withdrawAmount]);
+  }, [isVaultRailEnabled, submitVaultRailWithdraw, submitVaultWithdraw, withdrawAmount]);
 
   const handleUnlockPlan = useCallback(async (): Promise<string> => {
     if (!connectedAddress) {
@@ -800,17 +1004,39 @@ export function AgentMarketDashboard() {
   const CLOSED_PAGE_SIZE = 15;
   const subscriptionUnlocked = subscription?.fullAccess === true;
   const holderWalletQualified = subscription?.account?.unlocked === true;
-  const expectedFundingChainId = fundingChainIdForVenue(data.executionVenue);
+  const railFundingChainId = activeVaultRail?.baseChainId ?? null;
+  const expectedFundingChainId = railFundingChainId ?? fundingChainIdForVenue(data.executionVenue);
   const vaultAumWei = safeVault ? parseWeiOrZero(safeVault.totalManagedAssetsWei) : BigInt(0);
   const vaultDeployedWei = safeVault ? parseWeiOrZero(safeVault.deployedCapitalWei) : BigInt(0);
   const vaultIdle = isVaultEnabled && vaultDeployedWei === BigInt(0);
   const vaultAumLabel = safeVault ? formatEthFromWei(safeVault.totalManagedAssetsWei) : "--";
   const vaultDeployedLabel = safeVault ? formatEthFromWei(safeVault.deployedCapitalWei) : "--";
+  const railLiquidWei = activeVaultRail ? parseWeiOrZero(activeVaultRail.liquidEthWei) : BigInt(0);
+  const railReserveWei = activeVaultRail ? parseWeiOrZero(activeVaultRail.reserveEthWei) : BigInt(0);
+  const railPendingWei = activeVaultRail ? parseWeiOrZero(activeVaultRail.pendingBridgeEthWei) : BigInt(0);
+  const railStrategyWei = activeVaultRail ? parseWeiOrZero(activeVaultRail.hlStrategyEthWei) : BigInt(0);
+  const railIdle = activeVaultRail ? railReserveWei === BigInt(0) && railPendingWei === BigInt(0) && railStrategyWei === BigInt(0) : false;
+  const railDeployedWei = railReserveWei + railPendingWei + railStrategyWei;
+  const railAumLabel = activeVaultRail ? formatEthFromWei(activeVaultRail.totalAssetsEthWei) : "--";
+  const railDeployedLabel = activeVaultRail ? formatEthFromWei(railDeployedWei.toString()) : "--";
+  const railLastReportLabel = activeVaultRail?.navLastReportedAt
+    ? new Date(activeVaultRail.navLastReportedAt * 1000).toLocaleString()
+    : "Never";
+  const railNavSettlementLabel = activeVaultRail?.lastNavTimestamp
+    ? new Date(activeVaultRail.lastNavTimestamp * 1000).toLocaleString()
+    : "Never";
   const baseParallelRunner = parallelRunners.find(
     (runner) => runner.performance.executionVenue === "base-spot"
   );
   const baseParallelOpenPositions = baseParallelRunner?.performance.totals.openPositions ?? 0;
-  const fundingFacts = isVaultEnabled
+  const fundingFacts = isVaultRailEnabled
+    ? [
+        "Deposit mints BaseCapitalVault shares to your wallet on Base, so your ownership stays onchain by address.",
+        "Capital is bucketed across liquid ETH, reserve yield, pending bridge, and the Hyperliquid strategy sleeve.",
+        "BridgeRouter handles the Base -> Arbitrum transit leg before the HL strategy manager deploys capital into the trading account.",
+        "Withdrawals come out of liquid ETH immediately when possible; otherwise they queue until bridge / strategy capital settles back.",
+      ]
+    : isVaultEnabled
     ? [
         "Deposit mints vault shares to your wallet, so your position is tracked by address.",
         "The ETH stays in the vault until the manager allocates capital out to a strategy wallet.",
@@ -821,7 +1047,7 @@ export function AgentMarketDashboard() {
           ? "Today the Hyperliquid bot trades separate margin. Vault shares and Hyperliquid bankroll are still different systems."
           : "If the Base runner is enabled, deployed vault capital is what funds those spot positions.",
       ]
-    : [
+      : [
         `This sends native ETH directly to the agent funding wallet on ${chainLabel(expectedFundingChainId)}.`,
         "Direct-fund mode does not create shares, a per-user balance, or an onchain refund ledger for you.",
         data.executionVenue === "hyperliquid-perp"
@@ -861,17 +1087,29 @@ export function AgentMarketDashboard() {
       <section className="grid gap-4 lg:grid-cols-3">
         <div className="border border-[var(--rule-light)] p-4">
           <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-            Base Vault
+            {isVaultRailEnabled ? "BaseCapitalVault" : "Base Vault"}
           </h2>
           <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
-            {isVaultEnabled ? "Share-tracked pool" : "Vault not enabled"}
+            {isVaultRailEnabled
+              ? `Rail-backed vault • ${chainLabel(activeVaultRail.baseChainId)}`
+              : isVaultEnabled
+                ? "Share-tracked pool"
+                : "Vault not enabled"}
           </p>
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-light)]">
-            {isVaultEnabled
+            {isVaultRailEnabled
+              ? `AUM ${railAumLabel} with ${railDeployedLabel} allocated across reserve, bridge, and HL sleeves.`
+              : isVaultEnabled
               ? `AUM ${vaultAumLabel} with ${vaultDeployedLabel} deployed.`
               : "This market view is not currently using the onchain vault flow."}
           </p>
-          {isVaultEnabled ? (
+          {isVaultRailEnabled ? (
+            <p className="mt-2 font-body-serif text-xs text-[var(--ink-light)]">
+              {railIdle
+                ? "The rail is deployed and readable, but capital is still sitting entirely liquid on Base right now."
+                : "The rail is active: some capital is already off the liquid Base bucket and tracked across reserve, bridge, or HL strategy sleeves."}
+            </p>
+          ) : isVaultEnabled ? (
             <p className="mt-2 font-body-serif text-xs text-[var(--ink-light)]">
               {vaultIdle
                 ? "Right now none of the vault's capital is allocated out to a live strategy wallet, so deposits are sitting idle in the vault."
@@ -882,18 +1120,24 @@ export function AgentMarketDashboard() {
 
         <div className="border border-[var(--rule-light)] p-4">
           <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-            Live Executor
+            {isVaultRailEnabled ? "Bridge & Settlement" : "Live Executor"}
           </h2>
           <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
-            {data.executionVenue === "hyperliquid-perp" ? "Hyperliquid perp" : chainLabel(expectedFundingChainId)}
+            {isVaultRailEnabled
+              ? `${chainLabel(activeVaultRail.baseChainId)} -> ${chainLabel(activeVaultRail.arbChainId)} -> Hyperliquid`
+              : data.executionVenue === "hyperliquid-perp" ? "Hyperliquid perp" : chainLabel(expectedFundingChainId)}
           </p>
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-light)]">
-            {data.executionVenue === "hyperliquid-perp"
+            {isVaultRailEnabled
+              ? `BridgeRouter ${shortHex(activeVaultRail.bridgeRouterAddress)} settles into HL manager ${activeVaultRail.hlStrategyManagerAddress ? shortHex(activeVaultRail.hlStrategyManagerAddress) : "not configured"}.`
+              : data.executionVenue === "hyperliquid-perp"
               ? `The live trader is the Hyperliquid account ${isOperatorView && data.account ? shortHex(data.account) : "behind operator access"}.`
               : `The active trader is using ${chainLabel(expectedFundingChainId)} spot execution.`}
           </p>
           <p className="mt-2 font-body-serif text-xs text-[var(--ink-light)]">
-            {data.executionVenue === "hyperliquid-perp"
+            {isVaultRailEnabled
+              ? `Last NAV report: ${railLastReportLabel}. Last vault settlement: ${railNavSettlementLabel}.`
+              : data.executionVenue === "hyperliquid-perp"
               ? combinedTotals?.openPositions
                 ? `It currently has ${combinedTotals.openPositions} open position${combinedTotals.openPositions === 1 ? "" : "s"} and is live.`
                 : "It is live and watching for entries right now, but currently flat with 0 open positions."
@@ -908,12 +1152,16 @@ export function AgentMarketDashboard() {
             Ownership Model
           </h2>
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-light)]">
-            {isVaultEnabled
+            {isVaultRailEnabled
+              ? "Deposits mint BaseCapitalVault shares, while bridge and HL deployment stay accounted for under the same share supply."
+              : isVaultEnabled
               ? "Vault deposits mint onchain shares to your wallet on Base."
               : "Direct funding does not mint shares or track a personal balance for you."}
           </p>
           <p className="mt-2 font-body-serif text-xs text-[var(--ink-light)]">
-            {isVaultEnabled && data.executionVenue === "hyperliquid-perp"
+            {isVaultRailEnabled
+              ? "That means Base depositors still own the pooled capital even when it is parked in reserve yield, moving across the bridge, or deployed into the HL execution sleeve."
+              : isVaultEnabled && data.executionVenue === "hyperliquid-perp"
               ? "Important: those Base vault shares do not automatically become Hyperliquid margin today. Hyperliquid bankroll is still a separate capital rail."
               : isVaultEnabled
                 ? "If the vault deploys capital into a strategy wallet, your exposure is through vault shares rather than a personal trading account."
@@ -954,7 +1202,34 @@ export function AgentMarketDashboard() {
         />
       </section>
 
-      {vault?.enabled ? (
+      {isVaultRailEnabled ? (
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          <MetricCard
+            label="Rail AUM"
+            value={formatEthFromWei(activeVaultRail.totalAssetsEthWei)}
+          />
+          <MetricCard
+            label="Liquid ETH"
+            value={formatEthFromWei(activeVaultRail.liquidEthWei)}
+          />
+          <MetricCard
+            label="Reserve Bucket"
+            value={formatEthFromWei(activeVaultRail.reserveEthWei)}
+          />
+          <MetricCard
+            label="Pending Bridge"
+            value={formatEthFromWei(activeVaultRail.pendingBridgeEthWei)}
+          />
+          <MetricCard
+            label="HL Sleeve"
+            value={formatEthFromWei(activeVaultRail.hlStrategyEthWei)}
+          />
+          <MetricCard
+            label="Share Price"
+            value={`${trimDecimal(formatEther(BigInt(activeVaultRail.sharePriceE18)), 6)} ETH`}
+          />
+        </section>
+      ) : vault?.enabled ? (
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Vault AUM"
@@ -1044,15 +1319,21 @@ export function AgentMarketDashboard() {
 
         <div className="border border-[var(--rule-light)] p-4">
           <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-            {isVaultEnabled ? "Fund Vault" : "Fund Agent"}
+            {isVaultRailEnabled ? "Fund Vault Rail" : isVaultEnabled ? "Fund Vault" : "Fund Agent"}
           </h2>
           <p className="mt-1 break-all font-mono text-[9px] text-[var(--ink-faint)]">
-            {isVaultEnabled
-              ? vault!.address
+            {isVaultRailEnabled
+              ? activeVaultRail.baseVaultAddress
+              : isVaultEnabled
+                ? vault!.address
               : data.fundingAddress ?? "Holder access required"}
           </p>
           <p className="mt-2 font-body-serif text-xs text-[var(--ink-light)]">
-            {isVaultEnabled
+            {isVaultRailEnabled
+              ? `Deposit ETH into BaseCapitalVault on ${chainLabel(activeVaultRail.baseChainId)}. Share accounting continues across reserve, bridge, and HL settlement. Performance fee target is ${(activeVaultRail.performanceFeeBps / 100).toFixed(
+                  2
+                )}%.`
+              : isVaultEnabled
               ? `Deposit ETH into the vault and receive shares. Withdrawals are limited by liquid capital. Performance fee is ${feePct.toFixed(
                   2
                 )}% on realized strategy profit.`
@@ -1087,11 +1368,11 @@ export function AgentMarketDashboard() {
                 disabled={isActionPending}
                 className="border border-[var(--ink)] bg-[var(--ink)] px-3 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)] disabled:opacity-50"
               >
-                {isActionPending ? "Pending..." : isVaultEnabled ? "Deposit" : "Fund"}
+                {isActionPending ? "Pending..." : isVaultRailEnabled || isVaultEnabled ? "Deposit" : "Fund"}
               </button>
             </div>
 
-            {isVaultEnabled ? (
+            {isVaultRailEnabled || isVaultEnabled ? (
               <div className="flex gap-2">
                 <input
                   value={withdrawAmount}
@@ -1104,7 +1385,7 @@ export function AgentMarketDashboard() {
                   disabled={isActionPending}
                   className="border border-[var(--rule)] bg-[var(--paper)] px-3 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--ink)] transition-colors hover:bg-[var(--paper-dark)] disabled:opacity-50"
                 >
-                  {isActionPending ? "Pending..." : "Withdraw"}
+                  {isActionPending ? "Pending..." : isVaultRailEnabled ? "Request Withdraw" : "Withdraw"}
                 </button>
               </div>
             ) : null}
@@ -1141,7 +1422,71 @@ export function AgentMarketDashboard() {
         </div>
       </section>
 
-      {vault?.enabled ? (
+      {isVaultRailEnabled ? (
+        <section className="grid gap-4 lg:grid-cols-3">
+          <div className="border border-[var(--rule-light)] p-4 lg:col-span-1">
+            <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+              My Vault Rail Position
+            </h2>
+            {connectedAddress ? (
+              activeVaultRail.account ? (
+                <div className="mt-2 space-y-1 font-mono text-[10px] text-[var(--ink-light)]">
+                  <p>Address: {shortHex(connectedAddress)}</p>
+                  <p>Shares: {trimDecimal(formatEther(BigInt(activeVaultRail.account.shares)), 6)}</p>
+                  <p>Claim Value: {formatEthFromWei(activeVaultRail.account.assetsEthWei)}</p>
+                  <p>Share of Vault: {formatUnsignedPctBps(activeVaultRail.account.shareOfSupplyBps)}</p>
+                  <p>NAV Report: {railLastReportLabel}</p>
+                </div>
+              ) : (
+                <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+                  No vault rail position yet.
+                </p>
+              )
+            ) : (
+              <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+                Connect wallet to view your vault rail position.
+              </p>
+            )}
+          </div>
+
+          <div className="border border-[var(--rule-light)] p-4 lg:col-span-2">
+            <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+              Rail Topology
+            </h2>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="border border-[var(--rule-light)] p-3">
+                <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+                  Contracts
+                </p>
+                <div className="mt-2 space-y-1 break-all font-mono text-[9px] text-[var(--ink-light)]">
+                  <p>Vault: {activeVaultRail.baseVaultAddress}</p>
+                  <p>BridgeRouter: {activeVaultRail.bridgeRouterAddress}</p>
+                  <p>NavReporter: {activeVaultRail.navReporterAddress}</p>
+                  {activeVaultRail.reserveAllocatorAddress ? (
+                    <p>ReserveAllocator: {activeVaultRail.reserveAllocatorAddress}</p>
+                  ) : null}
+                  {activeVaultRail.hlStrategyManagerAddress ? (
+                    <p>HLStrategyManager: {activeVaultRail.hlStrategyManagerAddress}</p>
+                  ) : null}
+                </div>
+              </div>
+              <div className="border border-[var(--rule-light)] p-3">
+                <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+                  Targets & Status
+                </p>
+                <div className="mt-2 space-y-1 font-mono text-[9px] text-[var(--ink-light)]">
+                  <p>Liquid target: {formatUnsignedPctBps(activeVaultRail.targetLiquidBps)}</p>
+                  <p>Reserve target: {formatUnsignedPctBps(activeVaultRail.targetReserveBps)}</p>
+                  <p>HL target: {formatUnsignedPctBps(activeVaultRail.targetHlBps)}</p>
+                  <p>Auto NAV: {activeVaultRail.autoReportNav ? "enabled" : "disabled"}</p>
+                  <p>Min NAV interval: {Math.round(activeVaultRail.navMinIntervalMs / 60_000)} min</p>
+                  <p>Status: {activeVaultRail.paused ? "paused" : "live"}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : vault?.enabled ? (
         <section className="grid gap-4 lg:grid-cols-3">
           <div className="border border-[var(--rule-light)] p-4 lg:col-span-1">
             <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
@@ -1240,6 +1585,17 @@ export function AgentMarketDashboard() {
               </p>
             </div>
           )}
+        </section>
+      ) : null}
+
+      {isVaultRailEnabled && safeVault ? (
+        <section className="border border-[var(--rule-light)] p-4">
+          <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+            Legacy Agent Vault
+          </h2>
+          <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
+            The older agent vault is still configured at {shortHex(safeVault.address)}, but `/markets` is now prioritizing the new BaseCapitalVault rail as the canonical share-backed flow.
+          </p>
         </section>
       ) : null}
 
@@ -1432,24 +1788,26 @@ export function AgentMarketDashboard() {
           openPositions={combinedTotals?.openPositions ?? 0}
           grossPnlUsd={combinedTotals?.grossPnlUsd ?? 0}
           netPnlUsd={combinedTotals?.netPnlAfterFeeUsd ?? 0}
-          fundingAddress={safeVault ? safeVault.address : data.fundingAddress ?? "operator-only"}
+          fundingAddress={activeVaultRail ? activeVaultRail.baseVaultAddress : safeVault ? safeVault.address : data.fundingAddress ?? "operator-only"}
           isUnlocked={subscriptionUnlocked}
           unlockSummary={unlockSummary}
-          canWithdraw={isVaultEnabled}
+          canWithdraw={isVaultRailEnabled || isVaultEnabled}
           freeAccess={subscription?.freeAccess ?? null}
           onFundAmount={async (amount) =>
-            isVaultEnabled
+            isVaultRailEnabled
+              ? submitVaultRailDeposit(amount)
+              : isVaultEnabled
               ? submitVaultDeposit(amount)
               : submitDirectFund(amount)
           }
-          onWithdrawAmount={isVaultEnabled ? submitVaultWithdraw : undefined}
+          onWithdrawAmount={isVaultRailEnabled ? submitVaultRailWithdraw : isVaultEnabled ? submitVaultWithdraw : undefined}
           onUnlockPlan={handleUnlockPlan}
           tradingContext={{
             executionVenue: activeVenues,
             dryRun: data.dryRun,
             feePct,
-            fundingAddress: safeVault ? safeVault.address : data.fundingAddress ?? "holder-only",
-            canWithdraw: isVaultEnabled,
+            fundingAddress: activeVaultRail ? activeVaultRail.baseVaultAddress : safeVault ? safeVault.address : data.fundingAddress ?? "holder-only",
+            canWithdraw: isVaultRailEnabled || isVaultEnabled,
             openPositions: combinedTotals?.openPositions ?? 0,
             closedPositions: combinedTotals?.closedPositions ?? 0,
             grossPnlUsd: combinedTotals?.grossPnlUsd ?? 0,
@@ -1465,7 +1823,13 @@ export function AgentMarketDashboard() {
               size: o.position.entryNotionalUsd,
               venue: o.position.venue,
             })),
-            vault: safeVault ? {
+            vault: activeVaultRail ? {
+              aumUsd: Number(formatEther(BigInt(activeVaultRail.totalAssetsEthWei))) * ethPriceUsd,
+              liquidUsd: Number(formatEther(BigInt(activeVaultRail.liquidEthWei))) * ethPriceUsd,
+              deployedUsd: Number(formatEther(railDeployedWei)) * ethPriceUsd,
+              totalFunders: safeVault?.funderCount ?? 0,
+              feePct: activeVaultRail.performanceFeeBps / 100,
+            } : safeVault ? {
               aumUsd: Number(formatEther(BigInt(safeVault.totalManagedAssetsWei))) * ethPriceUsd,
               liquidUsd: Number(formatEther(BigInt(safeVault.liquidAssetsWei))) * ethPriceUsd,
               deployedUsd: Number(formatEther(BigInt(safeVault.deployedCapitalWei))) * ethPriceUsd,
