@@ -87,6 +87,14 @@ export interface EntryRationale {
   kellyPhase?: string;
   kellySizeUsd?: number;
   actualSizeUsd?: number;
+  compositeDirection?: string;
+  compositeConfidence?: number;
+  compositeReasons?: string[];
+  technicalDirection?: string;
+  technicalStrength?: number;
+  patternDirection?: string;
+  patternNames?: string[];
+  agreementMet?: boolean;
 }
 
 export interface ExitRationale {
