@@ -49,6 +49,55 @@ Explorer: `https://sepolia.basescan.org/address/<ADDRESS>`
 
 ---
 
+## Vault Rail — Base Sepolia (Chain ID: 84532) + Arb Sepolia (Chain ID: 421614)
+
+ETH-denominated capital vault system. Deposits on Base, bridges to Arbitrum, deploys to Hyperliquid strategies. All UUPS upgradeable, Solidity 0.8.24.
+
+### Base Sepolia
+
+| Contract | Proxy Address | Impl | Security Features |
+|---|---|---|---|
+| BaseCapitalVault | `0x3bb95125f2a8d8af94dd7ba0ce5b0b8b5eef7d81` | `0x78c8e591f3471ab7d379361dc07c43d1897921e7` | NAV delta bounds (10%), deposit cap, WETH-only redemptions, liquid invariant check |
+| WithdrawalQueue | `0x834952e34566feee95fc1cb6a1f6d851be183ebc` | `0x206138ab44dc7190307eb9f4e407a674656f562e` | Reentrancy guard, upgrade validation |
+| MorphoReserveAllocator | `0xcf85a88125ad622bae3978a2dc7f7fc2dc8fb821` | `0x3abadce58e94ae31fd527f6f6b7d2db195549b7e` | Balance-diff withdrawal verification |
+| BridgeRouter | `0x55865854f9d58ad7c6d2cfa7a304419e23817133` | `0xe8cd12085ce417421cca7bc24cf9aef875a33e55` | 95% min return slippage protection |
+| NavReporter | `0xfa33f4dfe3bec32ae3cb78dbcf508597f74dc528` | `0x24a96f0a0ee5616affd4986032539239a004d4c1` | Bounded strategy/fee deltas (10% max per report) |
+| ExecutorAssetConverter | `0xf4d307a237b22e39d2000cf54b53b9116a7b3669` | — | WETH ↔ USDC rate conversion |
+| ExecutorBridgeAdapter | `0x692cb562919809d4e850e05c00f389b92b5e298c` | — | Bridge execution layer |
+
+Supporting: DevUSDC `0x0729754d0876a68bfb6d7da94bee6da0c56d9ebb` · DevReserveVault `0x86ba69488b4ebea67b5842e15aa55887560574ab`
+
+### Arb Sepolia
+
+| Contract | Proxy Address | Impl | Security Features |
+|---|---|---|---|
+| ArbTransitEscrow | `0x14a361454edcb477644eb82bf540a26e1cead72a` | `0x0fe56bda80240da39b7bbc6112269647544dedd6` | Route-scoped balances, upgrade validation |
+| HLStrategyManager | `0x71b2e273727385c617fe254f4fb14a36a679b12a` | `0x05feabc8611558110aaaea396fae6d3426e05202` | Deployment caps, upgrade validation |
+
+Supporting: DevUSDC `0x3c2e1c9e1aa2947c324633dcc65a652091ecca8e`
+
+### Vault Rail Architecture
+
+```
+User ETH → BaseCapitalVault (Base) → BridgeRouter → ArbTransitEscrow (Arb) → HLStrategyManager → Hyperliquid
+                 ↕
+          MorphoReserveAllocator         NavReporter reconciles daily NAV
+```
+
+### Hardening Parameters (configured on-chain)
+
+| Parameter | Value | Contract |
+|---|---|---|
+| maxNavDeltaBps | 1000 (10%) | BaseCapitalVault |
+| maxStrategyDeltaBps | 1000 (10%) | NavReporter |
+| maxFeeDeltaBps | 1000 (10%) | NavReporter |
+| minReturnBps | 9500 (95%) | BridgeRouter |
+| maxTotalAssets | 0 (unlimited) | BaseCapitalVault |
+
+All contracts include `uint256[40] private __gap` storage gaps and `_authorizeUpgrade` code validation for safe future upgrades.
+
+---
+
 ## Smart Contracts — Ethereum Mainnet (Chain ID: 1)
 
 | Contract | Address | Type |
