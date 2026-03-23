@@ -1,10 +1,6 @@
 {
   "crons": [
     {
-      "path": "/api/trading/execute",
-      "schedule": "0 * * * *"
-    },
-    {
       "path": "/api/moral-compass/crawl",
       "schedule": "0 3 * * *"
     },
@@ -18,7 +14,7 @@
     },
     {
       "path": "/api/cron/daily-edition",
-      "schedule": "30 5,11,17,23 * * *"
+      "schedule": "30 5 * * *"
     },
     {
       "path": "/api/newsroom",
@@ -26,7 +22,7 @@
     },
     {
       "path": "/api/cron/daily-illustration",
-      "schedule": "45 5,11,17,23 * * *"
+      "schedule": "45 5 * * *"
     }
   ]
 }

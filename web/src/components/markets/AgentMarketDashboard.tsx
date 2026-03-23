@@ -530,7 +530,7 @@ function RationalePanel({ position }: { position: Position }) {
           <span className="font-bold text-[var(--ink)] uppercase tracking-wider">Signal: </span>
           <span className="text-[var(--ink-light)]">{position.signalSource}</span>
           {position.signalConfidence != null && (
-            <span className="text-[var(--ink-faint)]"> (confidence {(position.signalConfidence * 100).toFixed(0)}%)</span>
+            <span className="text-[var(--ink-faint)]"> (confidence {(Math.min(position.signalConfidence, 1) * 100).toFixed(0)}%)</span>
           )}
         </div>
       )}

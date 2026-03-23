@@ -509,6 +509,47 @@ export async function fetchHyperliquidAccountValueUsd(
   return perpAccountValue;
 }
 
+/**
+ * Fetch recent fills for a specific coin and return the actual close price + PnL.
+ * Used when a position "disappears" from HL to get the real exit data instead
+ * of relying on stale cached market prices.
+ */
+export async function fetchRecentCloseFill(
+  config: TraderExecutionConfig,
+  address: Address,
+  symbol: string,
+): Promise<{ exitPriceUsd: number; closedPnlUsd: number } | null> {
+  try {
+    const clients = getHyperliquidClients(config);
+    // HL API: userFillsByTime returns fills for the last N ms
+    // Look back 10 minutes — if a position disappeared, the close fill is recent
+    const startTime = Date.now() - 10 * 60 * 1000;
+    const response = await clients.infoClient.userFillsByTime({
+      user: address as `0x${string}`,
+      startTime,
+    });
+    const fills = Array.isArray(response) ? response : [];
+
+    // Find the most recent closing fill for this coin (has non-zero closedPnl)
+    // Walk backwards (newest first)
+    const hlCoin = symbol.replace(/-PERP$/i, "").toUpperCase();
+    for (let i = fills.length - 1; i >= 0; i--) {
+      const fill = fills[i] as Record<string, unknown>;
+      const coin = String(fill.coin ?? "").toUpperCase();
+      const closedPnl = parseFloat(String(fill.closedPnl ?? "0"));
+      if (coin === hlCoin && closedPnl !== 0) {
+        const px = parseFloat(String(fill.px ?? "0"));
+        if (px > 0) {
+          return { exitPriceUsd: px, closedPnlUsd: closedPnl };
+        }
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 async function ensureLeverage(
   config: TraderExecutionConfig,
   market: HyperliquidMarketSnapshot,

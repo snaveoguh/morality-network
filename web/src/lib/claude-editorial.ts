@@ -123,7 +123,8 @@ RULES:
 - If page scraping fails, still write the editorial from the title, RSS description, source metadata, and any usable related coverage.
 - If only the primary article is usable, write a narrower primary-source editorial rather than refusing.
 - Never answer with an explanation of why you cannot write, why the sources are insufficient, or what additional material you would need.
-- Never pad with generalities. Every sentence should carry information.`;
+- Never pad with generalities. Every sentence should carry information.
+- NEVER invent, guess, or hallucinate financial prices, market caps, or trading volumes. If CURRENT MARKET DATA is provided below the source material, use ONLY those figures for any price references. If no market data is provided and no price appears in the source material, do not mention specific prices at all.`;
 
 // ============================================================================
 // PASS 2 — EXTRACTOR PROMPT
@@ -405,6 +406,48 @@ async function buildUserMessage(primary: FeedItem, related: FeedItem[]): Promise
     });
   } else {
     lines.push("\n(No related articles available — write editorial from primary source only)");
+  }
+
+  // ── Inject live market data so the LLM never hallucinates prices ──
+  try {
+    const marketsRes = await fetch(
+      new URL("/api/markets", "https://pooter.world").toString(),
+      { cache: "no-store" },
+    );
+    if (marketsRes.ok) {
+      const markets = await marketsRes.json() as {
+        coingecko?: Record<string, { usd?: number; usd_24h_change?: number }>;
+      };
+      if (markets.coingecko && Object.keys(markets.coingecko).length > 0) {
+        const LABEL: Record<string, string> = {
+          bitcoin: "BTC",
+          ethereum: "ETH",
+          solana: "SOL",
+          "pax-gold": "GOLD (PAXG)",
+          zcash: "ZEC",
+          dogecoin: "DOGE",
+          pepe: "PEPE",
+          "mog-coin": "MOG",
+        };
+        const priceLines = Object.entries(markets.coingecko)
+          .filter(([, v]) => v?.usd != null)
+          .map(([id, v]) => {
+            const label = LABEL[id] || id.toUpperCase();
+            const change = v.usd_24h_change != null
+              ? ` (${v.usd_24h_change >= 0 ? "+" : ""}${v.usd_24h_change.toFixed(1)}% 24h)`
+              : "";
+            return `${label}: $${v.usd!.toLocaleString("en-US", { maximumFractionDigits: 2 })}${change}`;
+          });
+        if (priceLines.length > 0) {
+          lines.push("\n=== CURRENT MARKET DATA (live, use these prices) ===");
+          lines.push(`Snapshot: ${new Date().toISOString()}`);
+          lines.push(priceLines.join("\n"));
+        }
+      }
+    }
+  } catch {
+    // Non-fatal — editorial still generates, just without live prices
+    console.warn("[editorial] failed to fetch live market data for prompt context");
   }
 
   return lines.join("\n");
