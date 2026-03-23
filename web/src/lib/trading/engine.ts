@@ -25,6 +25,8 @@ import { positionsToJournal } from "./trade-journal";
 import { fetchTechnicalSignal } from "./technical";
 import { detectPatterns } from "./pattern-detector";
 import { computeCompositeSignal, type CompositeSignal } from "./composite-signal";
+import { fetchMarketDataSignals } from "./market-signals";
+import { fetchCouncilSignal } from "./council-signal";
 import {
   computeVaultSettlementPlan,
   computeVaultTopUpPlan,
@@ -1274,22 +1276,67 @@ class TraderEngine {
         }
       }
 
+      // 2b. Market data signals (fear/greed + funding + OI — parallel with pattern)
+      let marketDataBundle = null;
+      try {
+        marketDataBundle = await fetchMarketDataSignals(this.config, symbol);
+      } catch (err) {
+        console.warn(`[trader] market data signals failed for ${symbol}:`, err instanceof Error ? err.message : err);
+      }
+
       // 3. Composite signal
       const composite = computeCompositeSignal({
         symbol,
         technical: technicalSignal,
         pattern: patternResult,
         newsSignal,
+        marketData: marketDataBundle,
         minConfidence: this.config.risk.minSignalConfidence,
       });
 
+      const mktDir = composite.components.marketData?.direction ?? "n/a";
       console.log(
         `[trader] composite ${symbol}: ${composite.direction} conf=${composite.confidence.toFixed(2)} agreement=${composite.agreementMet} | ` +
-        `tech=${technicalSignal?.direction ?? "n/a"} pat=${patternResult?.overallDirection ?? "n/a"} news=${newsSignal?.direction ?? "n/a"}`,
+        `tech=${technicalSignal?.direction ?? "n/a"} pat=${patternResult?.overallDirection ?? "n/a"} news=${newsSignal?.direction ?? "n/a"} mkt=${mktDir}`,
       );
 
       if (composite.direction === "neutral") {
         skippedReasons.push(`${symbol}: composite neutral (${composite.reasons.join("; ")})`);
+        continue;
+      }
+
+      // 4. Council signal (LLM multi-agent debate) — adjusts confidence
+      try {
+        const council = await fetchCouncilSignal({
+          symbol,
+          price: market.priceUsd,
+          technical: technicalSignal,
+          marketData: marketDataBundle,
+          newsSignal,
+        });
+        if (council && council.direction !== "neutral") {
+          if (council.direction === composite.direction) {
+            // Council agrees — boost confidence by up to 15%
+            composite.confidence = Math.min(1, composite.confidence + council.confidence * 0.15);
+            composite.reasons.push(`Council confirms ${council.direction} (${council.votes.filter(v => v.vote === (council.direction === "long" ? "BUY" : "SELL")).length}/4 votes)`);
+          } else {
+            // Council disagrees — dampen confidence by up to 20%
+            composite.confidence = Math.max(0, composite.confidence - council.confidence * 0.20);
+            composite.reasons.push(`Council disagrees: ${council.direction} vs composite ${composite.direction} — dampening confidence`);
+            // If confidence drops below threshold, force neutral
+            if (composite.confidence < this.config.risk.minSignalConfidence) {
+              composite.direction = "neutral";
+              composite.reasons.push("Council disagreement pushed confidence below threshold");
+            }
+          }
+        }
+      } catch (err) {
+        // Council is non-fatal — composite signal stands on its own
+        console.warn(`[trader] council signal failed for ${symbol}:`, err instanceof Error ? err.message : err);
+      }
+
+      if (composite.direction === "neutral") {
+        skippedReasons.push(`${symbol}: council disagreement forced neutral`);
         continue;
       }
 

@@ -11,6 +11,7 @@
 import type { TechnicalSignal } from "./technical";
 import type { PatternDetectionResult } from "./pattern-detector";
 import type { AggregatedMarketSignal } from "./signals";
+import type { MarketDataBundle } from "./market-signals";
 import type { SignalWeights } from "./types";
 
 /* ═══════════════════════════  Types  ═══════════════════════════ */
@@ -39,23 +40,32 @@ export interface CompositeSignal {
       score: number;
       weight: number;
     } | null;
+    marketData: {
+      direction: "long" | "short" | "neutral";
+      strength: number;
+      confidence: number;
+      weight: number;
+      sources: string[];
+    } | null;
   };
-  /** 2-of-3 agreement check passed */
+  /** 2-of-3 agreement check passed (now 2-of-4 with market data) */
   agreementMet: boolean;
   reasons: string[];
 }
 
 /* ═══════════════════  Default Weights  ═══════════════════ */
 
-function getWeights(): SignalWeights {
-  const t = parseFloat(process.env.SIGNAL_WEIGHT_TECHNICAL || "0.4");
-  const p = parseFloat(process.env.SIGNAL_WEIGHT_PATTERN || "0.3");
-  const n = parseFloat(process.env.SIGNAL_WEIGHT_NEWS || "0.3");
-  const total = t + p + n;
+function getWeights(): Required<SignalWeights> {
+  const t = parseFloat(process.env.SIGNAL_WEIGHT_TECHNICAL || "0.35");
+  const p = parseFloat(process.env.SIGNAL_WEIGHT_PATTERN || "0.25");
+  const n = parseFloat(process.env.SIGNAL_WEIGHT_NEWS || "0.25");
+  const m = parseFloat(process.env.SIGNAL_WEIGHT_MARKET_DATA || "0.15");
+  const total = t + p + n + m;
   return {
     technical: t / total,
     pattern: p / total,
     news: n / total,
+    marketData: m / total,
   };
 }
 
@@ -80,28 +90,35 @@ export function computeCompositeSignal(args: {
   technical: TechnicalSignal | null;
   pattern: PatternDetectionResult | null;
   newsSignal: AggregatedMarketSignal | null;
+  marketData?: MarketDataBundle | null;
   minConfidence: number;
   /** Override weights from self-learning module */
   overrideWeights?: SignalWeights;
 }): CompositeSignal {
-  const { symbol, technical, pattern, newsSignal, minConfidence, overrideWeights } = args;
-  const baseWeights = overrideWeights ?? getWeights();
+  const { symbol, technical, pattern, newsSignal, marketData, minConfidence, overrideWeights } = args;
+  const baseWeights = overrideWeights ? { ...overrideWeights, marketData: overrideWeights.marketData ?? 0.15 } : getWeights();
+
+  // Combine market data sub-signals into a single direction + strength
+  const marketDataCombined = combineMarketData(marketData ?? null);
 
   // Determine which sources are available
   const hasTechnical = technical !== null && technical.direction !== "neutral";
   const hasPattern = pattern !== null && pattern.overallDirection !== "neutral";
   const hasNews = newsSignal !== null;
+  const hasMarketData = marketDataCombined !== null && marketDataCombined.direction !== "neutral";
 
   // Redistribute weights if sources are missing
   let wTech = hasTechnical ? baseWeights.technical : 0;
   let wPat = hasPattern ? baseWeights.pattern : 0;
   let wNews = hasNews ? baseWeights.news : 0;
-  const totalWeight = wTech + wPat + wNews;
+  let wMkt = hasMarketData ? baseWeights.marketData : 0;
+  const totalWeight = wTech + wPat + wNews + wMkt;
 
   if (totalWeight > 0) {
     wTech /= totalWeight;
     wPat /= totalWeight;
     wNews /= totalWeight;
+    wMkt /= totalWeight;
   }
 
   // Compute weighted directional score (-1 to +1)
@@ -133,6 +150,13 @@ export function computeCompositeSignal(args: {
     reasons.push(`News: ${newsSignal.direction} (score ${newsSignal.score.toFixed(2)})`);
   }
 
+  if (hasMarketData && marketDataCombined) {
+    const mktScore = directionScore(marketDataCombined.direction) * marketDataCombined.strength;
+    weightedScore += mktScore * wMkt;
+    weightedConfidence += marketDataCombined.confidence * wMkt;
+    reasons.push(...marketDataCombined.reasons);
+  }
+
   // Determine direction from weighted score
   let direction: Direction = "neutral";
   if (weightedScore > 0.05) direction = "long";
@@ -141,11 +165,12 @@ export function computeCompositeSignal(args: {
   // Confidence = weighted confidence + boost from agreement
   const confidence = Math.min(1, weightedConfidence);
 
-  // 2-of-3 agreement check
+  // Agreement check: require 2+ sources to agree on direction
   const directions: Direction[] = [];
   if (hasTechnical && technical) directions.push(technical.direction);
   if (hasPattern && pattern) directions.push(pattern.overallDirection);
   if (hasNews && newsSignal) directions.push(newsToDirection(newsSignal.direction));
+  if (hasMarketData && marketDataCombined) directions.push(marketDataCombined.direction);
 
   const longVotes = directions.filter((d) => d === "long").length;
   const shortVotes = directions.filter((d) => d === "short").length;
@@ -156,7 +181,7 @@ export function computeCompositeSignal(args: {
 
   // If no agreement, downgrade to neutral
   if (!agreementMet) {
-    reasons.push("Direction disagreement — 2-of-3 agreement not met, forcing neutral");
+    reasons.push(`Direction disagreement — 2-of-${directions.length} agreement not met, forcing neutral`);
     direction = "neutral";
   }
 
@@ -181,8 +206,62 @@ export function computeCompositeSignal(args: {
       news: hasNews && newsSignal
         ? { direction: newsToDirection(newsSignal.direction), score: newsSignal.score, weight: wNews }
         : null,
+      marketData: hasMarketData && marketDataCombined
+        ? { direction: marketDataCombined.direction, strength: marketDataCombined.strength, confidence: marketDataCombined.confidence, weight: wMkt, sources: marketDataCombined.sources }
+        : null,
     },
     agreementMet,
     reasons,
   };
+}
+
+/* ═══════════════════  Market Data Combiner  ═══════════════════ */
+
+interface CombinedMarketData {
+  direction: Direction;
+  strength: number;
+  confidence: number;
+  reasons: string[];
+  sources: string[];
+}
+
+/**
+ * Combine fear/greed, funding, and OI signals into a single market data signal.
+ * Uses majority vote with weighted strength.
+ */
+function combineMarketData(bundle: MarketDataBundle | null): CombinedMarketData | null {
+  if (!bundle) return null;
+
+  const { fearGreed, funding, openInterest } = bundle;
+  const signals = [fearGreed, funding, openInterest].filter(
+    (s) => s.direction !== "neutral" && s.strength > 0,
+  );
+
+  if (signals.length === 0) return null;
+
+  // Weighted vote
+  let longScore = 0;
+  let shortScore = 0;
+  let totalWeight = 0;
+  const reasons: string[] = [];
+  const sources: string[] = [];
+
+  for (const s of [fearGreed, funding, openInterest]) {
+    if (s.direction === "neutral" || s.strength === 0) continue;
+    const w = s.confidence * s.strength;
+    if (s.direction === "long") longScore += w;
+    else shortScore += w;
+    totalWeight += w;
+    reasons.push(...s.reasons);
+    sources.push(s.source);
+  }
+
+  if (totalWeight === 0) return null;
+
+  const direction: Direction = longScore > shortScore ? "long" : shortScore > longScore ? "short" : "neutral";
+  const dominantScore = Math.max(longScore, shortScore);
+  const strength = Math.min(1, dominantScore / totalWeight);
+  const confidence = Math.min(1, signals.length / 3); // more sources = more confident
+
+  return { direction, strength, confidence, reasons, sources };
 }
