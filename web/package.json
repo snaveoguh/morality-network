@@ -14,7 +14,12 @@
     "editorial:generate": "node ./scripts/generate-editorials.mjs",
     "redteam:local": "node ./scripts/red-team-local.mjs",
     "smoke:prod": "bash ./scripts/smoke-check.sh https://pooter.world",
-    "smoke:local": "bash ./scripts/smoke-check.sh http://localhost:3000"
+    "smoke:local": "bash ./scripts/smoke-check.sh http://localhost:3000",
+    "prepare": "cd .. && git config core.hooksPath .husky || true",
+    "typecheck": "tsc --noEmit --pretty",
+    "knip": "knip",
+    "jscpd": "jscpd src --min-lines 10 --min-tokens 50 --threshold 5",
+    "precommit": "npm run typecheck && npm run lint"
   },
   "dependencies": {
     "@a16z/helios": "^0.11.1",
@@ -51,6 +56,10 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "husky": "^9.1.7",
+    "jscpd": "^4.0.8",
+    "knip": "^6.0.4",
+    "lint-staged": "^16.4.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.0.18"

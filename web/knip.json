@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": [
+    "src/app/**/page.tsx",
+    "src/app/**/layout.tsx",
+    "src/app/**/route.ts",
+    "src/worker/index.ts"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}"
+  ],
+  "ignore": [
+    "src/data/**",
+    "src/**/*.test.ts",
+    "src/**/__tests__/**"
+  ],
+  "ignoreDependencies": [
+    "@rainbow-me/rainbowkit",
+    "ethers",
+    "siwe"
+  ]
+}

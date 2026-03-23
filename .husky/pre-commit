@@ -1,0 +1,66 @@
+#!/bin/sh
+
+echo "========================================"
+echo "  PRE-COMMIT CHECKS"
+echo "========================================"
+
+# Navigate to web directory for JS/TS checks
+cd "$(git rev-parse --show-toplevel)/web" || exit 1
+
+# 1. TypeScript strict check
+echo ""
+echo "[1/4] TypeScript strict check..."
+npx tsc --noEmit --pretty 2>&1
+if [ $? -ne 0 ]; then
+  echo "FAIL: TypeScript errors found. Fix them before committing."
+  exit 1
+fi
+echo "  PASS"
+
+# 2. ESLint on staged files
+echo ""
+echo "[2/4] ESLint..."
+STAGED_TS=$(git diff --cached --name-only --diff-filter=ACMR -- '*.ts' '*.tsx' | head -20)
+if [ -n "$STAGED_TS" ]; then
+  npx eslint $STAGED_TS --max-warnings=0 2>&1
+  if [ $? -ne 0 ]; then
+    echo "FAIL: ESLint errors found. Fix them before committing."
+    exit 1
+  fi
+  echo "  PASS"
+else
+  echo "  SKIP (no staged .ts/.tsx files)"
+fi
+
+# 3. Solidity compilation (only if contracts changed)
+echo ""
+echo "[3/4] Solidity build check..."
+STAGED_SOL=$(git diff --cached --name-only --diff-filter=ACMR -- 'contracts/src/*.sol' 'contracts/test/*.sol')
+if [ -n "$STAGED_SOL" ]; then
+  cd "$(git rev-parse --show-toplevel)/contracts" || exit 1
+  forge build 2>&1 | tail -5
+  if [ $? -ne 0 ]; then
+    echo "FAIL: Solidity compilation failed. Fix errors before committing."
+    exit 1
+  fi
+  echo "  PASS"
+  cd "$(git rev-parse --show-toplevel)/web" || exit 1
+else
+  echo "  SKIP (no staged .sol files)"
+fi
+
+# 4. Copy-paste detection on staged files
+echo ""
+echo "[4/4] Copy-paste detection..."
+STAGED_ALL=$(git diff --cached --name-only --diff-filter=ACMR -- '*.ts' '*.tsx' '*.sol' | head -30)
+if [ -n "$STAGED_ALL" ]; then
+  npx jscpd --min-lines 10 --min-tokens 50 --threshold 5 --reporters console $STAGED_ALL 2>&1 | tail -10
+  # jscpd returns non-zero if duplicates found above threshold
+  # Don't block on this — just warn
+  echo "  DONE (advisory — review duplicates above)"
+fi
+
+echo ""
+echo "========================================"
+echo "  ALL CHECKS PASSED"
+echo "========================================"
