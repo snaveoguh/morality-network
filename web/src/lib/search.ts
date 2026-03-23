@@ -3,14 +3,16 @@ export type SearchSection =
   | "pooter-og"
   | "videos"
   | "music"
-  | "governance";
+  | "governance"
+  | "archive";
 
 export type SearchResultKind =
   | "rss"
   | "pooter-original"
   | "video"
   | "music"
-  | "governance";
+  | "governance"
+  | "archive";
 
 export interface SearchResult {
   id: string;
@@ -50,6 +52,7 @@ export const SEARCH_SECTION_META: Record<
   videos: { label: "Videos", shortLabel: "Video" },
   music: { label: "Music", shortLabel: "Music" },
   governance: { label: "Governance", shortLabel: "Gov" },
+  archive: { label: "From the Archive", shortLabel: "Archive" },
 };
 
 export const SEARCH_SECTION_ORDER: SearchSection[] = [
@@ -58,4 +61,5 @@ export const SEARCH_SECTION_ORDER: SearchSection[] = [
   "videos",
   "music",
   "governance",
+  "archive",
 ];

@@ -166,6 +166,9 @@ function scoreRecord(record: SearchRecord, query: string, terms: string[]): numb
     score += ageHours < 72 ? 7 : 2;
   } else if (record.section === "music") {
     score += ageHours < 168 ? 4 : 1;
+  } else if (record.section === "archive") {
+    // Archive gets a flat small boost — relevance matters more than recency here
+    score += 1;
   }
 
   return score;
@@ -183,7 +186,7 @@ async function buildCorpus(): Promise<SearchRecord[]> {
     withTimeoutFallback(fetchAllFeeds(DEFAULT_FEEDS), 4_000, [] as FeedItem[]),
     Promise.resolve(getBundledArchivedFeedItems()),
     withTimeoutFallback(
-      getRecentPooterOriginals(false, 120),
+      getRecentPooterOriginals(false, 500),
       3_500,
       [] as Awaited<ReturnType<typeof getRecentPooterOriginals>>,
     ),
@@ -211,43 +214,63 @@ async function buildCorpus(): Promise<SearchRecord[]> {
     (a, b) => toTimestamp(b.pubDate) - toTimestamp(a.pubDate),
   );
 
-  const feedRecords: SearchRecord[] =
-    mergedFeeds.length > 0
-      ? mergedFeeds.map((item) => ({
-          id: item.id,
-          section: "breaking-news" as const,
-          kind: "rss" as const,
-          title: item.title,
-          subtitle: toSnippet(item.canonicalClaim || item.description, 132),
-          source: item.source,
-          category: item.category,
-          href: `/article/${computeEntityHash(item.link)}`,
-          external: false,
-          pubDate: item.pubDate,
-          tags: item.tags ?? [],
-          sortTime: toTimestamp(item.pubDate),
-          searchable: "",
-        }))
-      : [];
+  // Split items into live (< 7 days) and archive (older) sections
+  const ARCHIVE_CUTOFF_MS = 7 * 24 * 60 * 60 * 1000;
+  const archiveCutoff = Date.now() - ARCHIVE_CUTOFF_MS;
 
-  const originalRecords: SearchRecord[] =
-    originals.length > 0
-      ? originals.map((item) => ({
-          id: item.hash,
-          section: "pooter-og" as const,
-          kind: "pooter-original" as const,
-          title: item.dailyTitle || item.title,
-          subtitle: toSnippet(item.subheadline, 128),
-          source: item.source,
-          category: item.isDailyEdition ? "Daily Edition" : item.category,
-          href: `/article/${item.hash}`,
-          external: false,
-          pubDate: item.generatedAt,
-          tags: item.tags ?? [],
-          sortTime: toTimestamp(item.generatedAt),
-          searchable: "",
-        }))
-      : [];
+  const feedRecords: SearchRecord[] = [];
+  const archiveFeedRecords: SearchRecord[] = [];
+  for (const item of mergedFeeds) {
+    const ts = toTimestamp(item.pubDate);
+    const isArchive = ts > 0 && ts < archiveCutoff;
+    const record: SearchRecord = {
+      id: item.id,
+      section: isArchive ? "archive" : "breaking-news",
+      kind: isArchive ? "archive" : "rss",
+      title: item.title,
+      subtitle: toSnippet(item.canonicalClaim || item.description, 132),
+      source: item.source,
+      category: item.category,
+      href: `/article/${computeEntityHash(item.link)}`,
+      external: false,
+      pubDate: item.pubDate,
+      tags: item.tags ?? [],
+      sortTime: ts,
+      searchable: "",
+    };
+    if (isArchive) {
+      archiveFeedRecords.push(record);
+    } else {
+      feedRecords.push(record);
+    }
+  }
+
+  const originalRecords: SearchRecord[] = [];
+  const archiveOriginalRecords: SearchRecord[] = [];
+  for (const item of originals) {
+    const ts = toTimestamp(item.generatedAt);
+    const isArchive = ts > 0 && ts < archiveCutoff;
+    const record: SearchRecord = {
+      id: item.hash,
+      section: isArchive ? "archive" : "pooter-og",
+      kind: isArchive ? "archive" : "pooter-original",
+      title: item.dailyTitle || item.title,
+      subtitle: toSnippet(item.subheadline, 128),
+      source: item.source,
+      category: item.isDailyEdition ? "Daily Edition" : item.category,
+      href: `/article/${item.hash}`,
+      external: false,
+      pubDate: item.generatedAt,
+      tags: item.tags ?? [],
+      sortTime: ts,
+      searchable: "",
+    };
+    if (isArchive) {
+      archiveOriginalRecords.push(record);
+    } else {
+      originalRecords.push(record);
+    }
+  }
 
   const videoRecords: SearchRecord[] =
     videos.length > 0
@@ -314,6 +337,8 @@ async function buildCorpus(): Promise<SearchRecord[]> {
     ...videoRecords,
     ...musicRecords,
     ...governanceRecords,
+    ...archiveFeedRecords,
+    ...archiveOriginalRecords,
   ].map((record) => ({
     ...record,
     searchable: buildSearchableText(record),
