@@ -11,6 +11,7 @@ import {
   resolveHyperliquidAccountAddress,
   resolveHyperliquidMarketForLaunch,
   simulateHyperliquidOrder,
+  fetchRecentCloseFill,
 } from "./hyperliquid";
 import { fetchTokenMarketSnapshot, normalizeQuoteSymbol, type DexScreenerChainId } from "./market";
 import { PositionStore } from "./position-store";
@@ -287,6 +288,8 @@ class TraderEngine {
         moralJustification: existing?.moralJustification,
         entryRationale: existing?.entryRationale,
         exitRationale: existing?.exitRationale,
+        // Carry HL's authoritative unrealized PnL (includes funding rates + actual fees)
+        hlUnrealizedPnlUsd: live.unrealizedPnlUsd,
       };
 
       // Persist to store (→ Redis) so positions survive cold starts
@@ -310,21 +313,35 @@ class TraderEngine {
         continue;
       }
 
-      // Position gone from HL — fetch current market price for accurate exit PnL
+      // Position gone from HL — try to get ACTUAL exit price from HL fills
+      // instead of stale cached market price (which was wildly inaccurate at high leverage)
       let exitPriceUsd = stored.entryPriceUsd; // fallback
+      let closedPnlFromHl: number | undefined;
       try {
-        const currentPrice = await this.resolvePositionPriceUsd(stored);
-        if (currentPrice && Number.isFinite(currentPrice) && currentPrice > 0) {
-          exitPriceUsd = currentPrice;
+        const closeFill = stored.marketSymbol
+          ? await fetchRecentCloseFill(this.config, accountAddress, stored.marketSymbol)
+          : null;
+        if (closeFill) {
+          exitPriceUsd = closeFill.exitPriceUsd;
+          closedPnlFromHl = closeFill.closedPnlUsd;
+        } else {
+          // No recent fill found — fall back to market price (less accurate but better than entry)
+          const currentPrice = await this.resolvePositionPriceUsd(stored);
+          if (currentPrice && Number.isFinite(currentPrice) && currentPrice > 0) {
+            exitPriceUsd = currentPrice;
+          }
         }
       } catch {
         // keep fallback
       }
+      const exitNote = closedPnlFromHl !== undefined
+        ? `manual (disappeared from HL, actual fill PnL: $${closedPnlFromHl.toFixed(4)})`
+        : "manual (disappeared from HL)";
       await this.store.close(stored.id, {
         exitReason: "manual",
         exitPriceUsd,
         closedAt: Date.now(),
-        exitRationale: this.buildExitRationale(stored, "manual (disappeared from HL)", exitPriceUsd),
+        exitRationale: this.buildExitRationale(stored, exitNote, exitPriceUsd),
       });
     }
 
@@ -385,14 +402,29 @@ class TraderEngine {
         continue;
       }
 
-      const lev = position.leverage ?? 1;
-      const priceMove = position.direction === "short"
-        ? (position.entryPriceUsd - currentPriceUsd) / position.entryPriceUsd
-        : (currentPriceUsd - position.entryPriceUsd) / position.entryPriceUsd;
-      const marketValueUsd = position.entryNotionalUsd * (1 + priceMove * lev);
-      // PnL includes estimated round-trip exchange fees
-      const grossPnl = marketValueUsd - position.entryNotionalUsd;
-      const pnlUsd = grossPnl - estFees;
+      // For HL positions, prefer HL's authoritative unrealized PnL which includes
+      // funding rates, actual fees, and liquidation math — our recalculation was
+      // drifting from reality because of stale cached prices and missing funding.
+      const hasHlPnl = position.venue === "hyperliquid-perp"
+        && position.hlUnrealizedPnlUsd !== undefined
+        && Number.isFinite(position.hlUnrealizedPnlUsd);
+
+      let pnlUsd: number;
+      let marketValueUsd: number;
+      if (hasHlPnl) {
+        // HL's number is the truth — includes funding, actual maker/taker fees, etc.
+        pnlUsd = position.hlUnrealizedPnlUsd!;
+        marketValueUsd = position.entryNotionalUsd + pnlUsd;
+      } else {
+        // Fallback: manual calculation for non-HL venues or missing HL data
+        const lev = position.leverage ?? 1;
+        const priceMove = position.direction === "short"
+          ? (position.entryPriceUsd - currentPriceUsd) / position.entryPriceUsd
+          : (currentPriceUsd - position.entryPriceUsd) / position.entryPriceUsd;
+        marketValueUsd = position.entryNotionalUsd * (1 + priceMove * lev);
+        const grossPnl = marketValueUsd - position.entryNotionalUsd;
+        pnlUsd = grossPnl - estFees;
+      }
       const pnlPct = position.entryNotionalUsd > 0 ? pnlUsd / position.entryNotionalUsd : 0;
 
       openMarketValueUsd += marketValueUsd;
@@ -403,7 +435,7 @@ class TraderEngine {
         marketValueUsd,
         unrealizedPnlUsd: pnlUsd,
         unrealizedPnlPct: pnlPct,
-        estimatedFeesUsd: estFees,
+        estimatedFeesUsd: hasHlPnl ? 0 : estFees, // HL PnL already accounts for fees
       });
     }
 
@@ -1349,6 +1381,67 @@ class TraderEngine {
 
     const orderLeverage = kelly.leverage > 1 ? kelly.leverage : this.config.hyperliquid.defaultLeverage;
 
+    const quoteTokenAddress = this.config.quoteTokens.USDC ?? candidate.tokenAddress;
+    const quoteDecimals = this.config.quoteTokenDecimals.USDC ?? 6;
+    const positionId = `hl:${market.symbol}:${market.marketId}`;
+
+    // Archive any existing closed position at this ID before we overwrite
+    const closedAtId = this.store.getAll().find((p) => p.id === positionId && p.status === "closed");
+    if (closedAtId) {
+      const archiveId = `${positionId}:closed:${closedAtId.closedAt ?? Date.now()}`;
+      await this.store.upsert({ ...closedAtId, id: archiveId });
+    }
+
+    // ─── PRE-PERSIST rationale BEFORE placing the order ───
+    // This ensures the rationale survives even if the order succeeds but the
+    // post-order store write is interrupted (cold start, timeout, crash).
+    // We store a "pending" position with the rationale, then update with fill data.
+    const entryRationale: Position["entryRationale"] = {
+      signalSymbol: selectedSignal?.symbol ?? market.symbol,
+      signalDirection: selectedSignal?.direction,
+      signalScore: selectedSignal?.score,
+      signalObservations: selectedSignal?.observations,
+      contradictionPenalty: selectedSignal?.contradictionPenalty,
+      supportingClaims: selectedSignal?.supportingClaims?.slice(0, 3),
+      skippedSignals: skippedReasons.length > 0 ? skippedReasons : undefined,
+      kellyPhase: kelly.phase,
+      kellySizeUsd: kelly.positionNotionalUsd,
+      actualSizeUsd: notionalUsd,
+    };
+
+    const prePosition: Position = {
+      id: positionId,
+      venue: "hyperliquid-perp",
+      tokenAddress: quoteTokenAddress,
+      tokenDecimals: market.szDecimals,
+      quoteTokenAddress,
+      quoteSymbol: "USD",
+      quoteTokenDecimals: quoteDecimals,
+      dex: candidate.dex,
+      marketSymbol: market.symbol,
+      marketId: market.marketId,
+      leverage: orderLeverage,
+      poolAddress: candidate.poolAddress,
+      entryPriceUsd: market.priceUsd ?? 0, // best estimate pre-fill
+      quantityTokenRaw: "0",
+      quoteSpentRaw: "0",
+      entryNotionalUsd: notionalUsd,
+      stopLossPct: this.config.risk.stopLossPct,
+      takeProfitPct: this.config.risk.takeProfitPct,
+      openedAt: Date.now(),
+      status: "open",
+      direction,
+      trailingStopPct: this.config.risk.trailingStopPct,
+      signalSource: `composite:${composite.direction}`,
+      signalConfidence: Math.min(1, composite.confidence),
+      kellyFraction: kelly.fraction,
+      moralScore: moralGateResult.moralScore ?? undefined,
+      moralJustification: moralGateResult.justification,
+      entryRationale,
+    };
+    await this.store.upsert(prePosition);
+
+    // ─── Now place the actual order ───
     const order = this.config.dryRun
       ? await simulateHyperliquidOrder({
           config: this.config,
@@ -1368,60 +1461,21 @@ class TraderEngine {
           notionalUsd,
         });
 
-    const quoteTokenAddress = this.config.quoteTokens.USDC ?? candidate.tokenAddress;
-    const quoteDecimals = this.config.quoteTokenDecimals.USDC ?? 6;
     const quoteSpentRaw = Math.max(1, Math.floor(order.notionalUsd * 10 ** quoteDecimals)).toString();
 
-    const positionId = `hl:${market.symbol}:${market.marketId}`;
-
-    const closedAtId = this.store.getAll().find((p) => p.id === positionId && p.status === "closed");
-    if (closedAtId) {
-      const archiveId = `${positionId}:closed:${closedAtId.closedAt ?? Date.now()}`;
-      await this.store.upsert({ ...closedAtId, id: archiveId });
-    }
-
+    // ─── Update with actual fill data (rationale already persisted above) ───
     const opened: Position = {
-      id: positionId,
-      venue: "hyperliquid-perp",
-      tokenAddress: quoteTokenAddress,
-      tokenDecimals: market.szDecimals,
-      quoteTokenAddress,
-      quoteSymbol: "USD",
-      quoteTokenDecimals: quoteDecimals,
-      dex: candidate.dex,
-      marketSymbol: market.symbol,
-      marketId: market.marketId,
+      ...prePosition,
       leverage: order.leverage,
-      poolAddress: candidate.poolAddress,
       entryPriceUsd: order.fillPriceUsd,
       quantityTokenRaw: order.sizeRaw,
       quoteSpentRaw,
       entryNotionalUsd: order.notionalUsd,
-      stopLossPct: this.config.risk.stopLossPct,
-      takeProfitPct: this.config.risk.takeProfitPct,
-      openedAt: Date.now(),
       txHash: order.txHash,
-      status: "open",
-      direction,
-      trailingStopPct: this.config.risk.trailingStopPct,
-      signalSource: `composite:${composite.direction}`,
-      signalConfidence: composite.confidence,
-      kellyFraction: kelly.fraction,
-      moralScore: moralGateResult.moralScore ?? undefined,
-      moralJustification: moralGateResult.justification,
       entryRationale: {
-        signalSymbol: selectedSignal?.symbol ?? market.symbol,
-        signalDirection: selectedSignal?.direction,
-        signalScore: selectedSignal?.score,
-        signalObservations: selectedSignal?.observations,
-        contradictionPenalty: selectedSignal?.contradictionPenalty,
-        supportingClaims: selectedSignal?.supportingClaims?.slice(0, 3),
-        skippedSignals: skippedReasons.length > 0 ? skippedReasons : undefined,
-        kellyPhase: kelly.phase,
-        kellySizeUsd: kelly.positionNotionalUsd,
-        actualSizeUsd: notionalUsd,
+        ...entryRationale,
         compositeDirection: composite.direction,
-        compositeConfidence: composite.confidence,
+        compositeConfidence: Math.min(1, composite.confidence),
         compositeReasons: composite.reasons,
         technicalDirection: composite.components.technical?.direction,
         technicalStrength: composite.components.technical?.strength,

@@ -74,6 +74,8 @@ export interface Position {
   entryRationale?: EntryRationale;
   /** Structured exit rationale — what triggered the close */
   exitRationale?: ExitRationale;
+  /** HyperLiquid's own unrealized PnL (includes funding, fees) — authoritative for open HL positions */
+  hlUnrealizedPnlUsd?: number;
 }
 
 export interface EntryRationale {
