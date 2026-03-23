@@ -1363,12 +1363,9 @@ class TraderEngine {
     const direction = composite.direction as "long" | "short";
     const side: "buy" | "sell" = direction === "short" ? "sell" : "buy";
 
-    // ═══ SOUL.md MORAL GATE — log-only until real onchain ratings exist ═══
-    const moralGateResult = await checkMoralGate(market.symbol, direction);
-    logMoralGateDecision(moralGateResult);
-    if (!moralGateResult.allowed) {
-      console.log(`[trader] SOUL.md ADVISORY (not blocking): ${market.symbol} ${direction} — ${moralGateResult.justification}`);
-    }
+    // ═══ SOUL.md MORAL GATE — disabled for now, re-enable when onchain ratings exist ═══
+    // const moralGateResult = await checkMoralGate(market.symbol, direction);
+    // logMoralGateDecision(moralGateResult);
 
     // ═══ KELLY CRITERION — position sizing using composite confidence ═══
     const journal = positionsToJournal(this.store.getAll());
@@ -1423,7 +1420,7 @@ class TraderEngine {
 
     console.log(
       `[trader] opening ${direction} ${market.symbol} notional=$${notionalUsd.toFixed(2)} side=${side} | ` +
-      `composite=${composite.confidence.toFixed(2)} moral=${moralGateResult.moralScore}/100 kelly=${kelly.fraction.toFixed(3)} (${kelly.phase})`,
+      `composite=${composite.confidence.toFixed(2)} kelly=${kelly.fraction.toFixed(3)} (${kelly.phase})`,
     );
 
     const orderLeverage = kelly.leverage > 1 ? kelly.leverage : this.config.hyperliquid.defaultLeverage;
@@ -1482,8 +1479,8 @@ class TraderEngine {
       signalSource: `composite:${composite.direction}`,
       signalConfidence: Math.min(1, composite.confidence),
       kellyFraction: kelly.fraction,
-      moralScore: moralGateResult.moralScore ?? undefined,
-      moralJustification: moralGateResult.justification,
+      moralScore: undefined,
+      moralJustification: undefined,
       entryRationale,
     };
     await this.store.upsert(prePosition);
@@ -1543,12 +1540,10 @@ class TraderEngine {
     }
 
     // ═══ SOUL.md MORAL GATE — log-only until real onchain ratings exist ═══
-    const entityId = candidate.tokenMeta?.symbol ?? candidate.tokenAddress;
-    const moralGateResult = await checkMoralGate(entityId, "long");
-    logMoralGateDecision(moralGateResult);
-    if (!moralGateResult.allowed) {
-      console.log(`[trader] SOUL.md ADVISORY (not blocking) spot: ${entityId} — ${moralGateResult.justification}`);
-    }
+    // ═══ SOUL.md MORAL GATE — disabled for now, re-enable when onchain ratings exist ═══
+    // const entityId = candidate.tokenMeta?.symbol ?? candidate.tokenAddress;
+    // const moralGateResult = await checkMoralGate(entityId, "long");
+    // logMoralGateDecision(moralGateResult);
 
     const chainId = dexScreenerChainForVenue(this.config.executionVenue);
     const tokenCode = await this.clients.publicClient.getBytecode({
@@ -1679,8 +1674,8 @@ class TraderEngine {
       openedAt: Date.now(),
       txHash,
       status: "open",
-      moralScore: moralGateResult.moralScore ?? undefined,
-      moralJustification: moralGateResult.justification,
+      moralScore: undefined,
+      moralJustification: undefined,
     };
 
     await this.store.upsert(opened);
