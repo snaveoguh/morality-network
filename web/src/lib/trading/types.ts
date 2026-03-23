@@ -176,6 +176,8 @@ export interface SignalWeights {
   technical: number;
   pattern: number;
   news: number;
+  /** Market data signals: fear/greed + funding + OI (combined). Default 0.15 */
+  marketData?: number;
 }
 
 export interface TradeJournalEntry {
