@@ -286,7 +286,7 @@ async function mergeCurrentFeedIntoArchive(
 
     return Array.from(merged.values());
   } catch (err) {
-    console.warn("[archive] live feed merge failed:", err);
+    reportWarn("archive:merge", err);
     return records;
   }
 }
@@ -307,7 +307,7 @@ export async function getArchivedFeedItemByHash(
         return toFeedItem(record);
       }
     } catch (err) {
-      console.warn("[archive] remote hash lookup failed, falling back to local:", err);
+      reportWarn("archive:remote-lookup", err);
     }
   }
 
@@ -329,7 +329,7 @@ export async function getAllArchivedFeedItems(): Promise<FeedItem[]> {
       const records = await fetchRemoteArchivedItems();
       return records.map(toFeedItem);
     } catch (err) {
-      console.warn("[archive] remote archive list failed, falling back to local:", err);
+      reportWarn("archive:remote-list", err);
     }
   }
 
@@ -359,7 +359,7 @@ export async function getAllArchivedItemsWithHashes(): Promise<
     try {
       records = await fetchRemoteArchivedItems();
     } catch (err) {
-      console.warn("[archive] remote archive+hash list failed, falling back to local:", err);
+      reportWarn("archive:remote-list", err);
       const archive = await loadArchive();
       records = Object.values(archive.items);
     }
@@ -407,7 +407,7 @@ export async function autoArchiveBatch(items: FeedItem[]): Promise<void> {
           await upsertRemoteArchivedItems(items);
           return;
         } catch (err) {
-          console.warn("[archive] remote upsert failed, falling back to local:", err);
+          reportWarn("archive:remote-upsert", err);
           // Fall through to local file write
         }
       }
@@ -488,12 +488,10 @@ export async function autoArchiveBatch(items: FeedItem[]): Promise<void> {
         const dir = path.dirname(ARCHIVE_FILE_PATH);
         await mkdir(dir, { recursive: true });
         await writeFile(ARCHIVE_FILE_PATH, JSON.stringify(archive, null, 2), "utf8");
-        console.log(
-          `[archive] +${newCount} new, +${updatedCount} updated (${Object.keys(archive.items).length} total)`
-        );
+        reportWarn("archive", `+${newCount} new, +${updatedCount} updated (${Object.keys(archive.items).length} total)`);
       }
     } catch (err) {
-      console.warn("[archive] auto-save failed:", err);
+      reportWarn("archive:auto-save", err);
     } finally {
       saveInFlight = null;
     }
@@ -554,7 +552,7 @@ export async function archiveUrlAsFeedItem(
 
   const verification = await verifyEvidence(normalizedInput);
   if (!verification.safe) {
-    console.warn("[archive] URL recovery blocked:", verification.reasons?.join("; "));
+    reportWarn("archive:url-recovery", `URL recovery blocked: ${verification.reasons?.join("; ")}`);
     return null;
   }
 

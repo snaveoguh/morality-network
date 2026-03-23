@@ -19,6 +19,7 @@ import { hasAIProviderForTask } from "./ai-models";
 import { extractEntities, enrichEntities } from "./entity-extract";
 import { extractCanonicalClaim } from "./claim-extract";
 import { fetchMarkdown, isCloudflareAvailable } from "./cloudflare-crawl";
+import { reportError, reportWarn } from "./report-error";
 
 // ============================================================================
 // TWO-PASS CLAUDE EDITORIAL ENGINE
@@ -208,7 +209,7 @@ async function scrapeArticleContent(url: string): Promise<string | null> {
     try {
       const markdown = await fetchMarkdown(url);
       if (markdown && markdown.length > 100) {
-        console.log(`[editorial] CF markdown for ${new URL(url).hostname}: ${markdown.length} chars`);
+        reportWarn("editorial:scrape", `CF markdown for ${new URL(url).hostname}: ${markdown.length} chars`);
         return markdown;
       }
     } catch {
@@ -447,7 +448,7 @@ async function buildUserMessage(primary: FeedItem, related: FeedItem[]): Promise
     }
   } catch {
     // Non-fatal — editorial still generates, just without live prices
-    console.warn("[editorial] failed to fetch live market data for prompt context");
+    reportWarn("editorial:markets", "failed to fetch live market data for prompt context");
   }
 
   return lines.join("\n");
@@ -865,19 +866,19 @@ export async function generateAIEditorial(
   const userMessage = await buildUserMessage(primary, related);
 
   // PASS 1: Writer — natural prose, no JSON
-  console.log(`[editorial] Pass 1 (writer) starting for "${primary.title.slice(0, 60)}..."`);
+  reportWarn("editorial:writer", `Pass 1 (writer) starting for "${primary.title.slice(0, 60)}..."`);
   const writerOutput = await runWriterPass(userMessage);
-  console.log(`[editorial] Pass 1 complete — ${writerOutput.editorialBody.length} paragraphs`);
+  reportWarn("editorial:writer", `Pass 1 complete — ${writerOutput.editorialBody.length} paragraphs`);
 
   // PASS 2: Extractor — structured metadata from the prose
-  console.log(`[editorial] Pass 2 (extractor) starting...`);
+  reportWarn("editorial:extractor", "Pass 2 (extractor) starting...");
   let extractorOutput: ExtractorOutput;
   try {
     extractorOutput = await runExtractorPass(writerOutput, primary, related);
-    console.log(`[editorial] Pass 2 complete — ${extractorOutput.tags.length} tags, ${extractorOutput.contextSnippets.length} snippets`);
+    reportWarn("editorial:extractor", `Pass 2 complete — ${extractorOutput.tags.length} tags, ${extractorOutput.contextSnippets.length} snippets`);
   } catch (err) {
     // Extractor failure is non-fatal — we have the editorial, just use defaults
-    console.warn("[editorial] Extractor pass failed, using defaults:", err instanceof Error ? err.message : err);
+    reportWarn("editorial:extractor", err);
     extractorOutput = {
       tags: [primary.category.toLowerCase()],
       claim: extractCanonicalClaim({
@@ -933,7 +934,7 @@ export async function generateAIEditorial(
     ?? null;
 
   if (marketImpact) {
-    console.log(`[editorial] Market impact: significance=${marketImpact.significance}, ${marketImpact.affectedMarkets.length} markets`);
+    reportWarn("editorial:market", `Market impact: significance=${marketImpact.significance}, ${marketImpact.affectedMarkets.length} markets`);
   }
 
   return {
