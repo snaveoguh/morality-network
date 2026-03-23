@@ -61,7 +61,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   return new NextResponse(buffer, {
     headers: {
       "Content-Type": "image/png",
-      "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+      "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=600",
       "Content-Length": String(buffer.length),
     },
   });

@@ -148,6 +148,17 @@ export async function POST(request: NextRequest) {
   // Bust ISR cache so edits are visible to all visitors immediately
   try {
     revalidatePath(`/article/${hash}`);
+    // Also revalidate the illustration endpoint if an image was uploaded
+    if (edits.illustrationBase64 && existing.isDailyEdition) {
+      const genDate = new Date(existing.generatedAt);
+      const EPOCH = 1741651200;
+      const SECONDS_PER_DAY = 86400;
+      const editionTs = Math.floor(genDate.getTime() / 1000);
+      const tokenId = Math.floor((editionTs - EPOCH) / SECONDS_PER_DAY) + 1;
+      if (tokenId > 0) {
+        revalidatePath(`/api/edition/${tokenId}/illustration`);
+      }
+    }
   } catch {
     // Non-fatal — page will still refresh on next ISR cycle
   }
