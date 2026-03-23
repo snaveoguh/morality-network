@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
 import { getArchivedEditorial, saveEditorial } from "@/lib/editorial-archive";
 import { saveIllustration } from "@/lib/illustration-store";
+import { computeEntityHash } from "@/lib/entity";
 import type { ArticleContent } from "@/lib/article";
 
 export const runtime = "nodejs";
@@ -111,11 +113,28 @@ export async function POST(request: NextRequest) {
   // Handle illustration upload — save to illustration store
   if (edits.illustrationBase64) {
     try {
-      await saveIllustration(hash, {
+      const illustrationData = {
         base64: edits.illustrationBase64,
         prompt: `Uploaded by ${wallet.toLowerCase()} via god mode`,
         revisedPrompt: null,
-      });
+      };
+      // Save under entity hash
+      await saveIllustration(hash, illustrationData);
+
+      // For daily editions, also save under the daily-edition hash
+      // (the illustration route looks up by daily hash, not entity hash)
+      if (existing.isDailyEdition) {
+        const genDate = new Date(existing.generatedAt);
+        const y = genDate.getUTCFullYear();
+        const m = String(genDate.getUTCMonth() + 1).padStart(2, "0");
+        const d = String(genDate.getUTCDate()).padStart(2, "0");
+        const dailyHash = computeEntityHash(`pooter-daily-${y}-${m}-${d}`);
+        if (dailyHash !== hash) {
+          await saveIllustration(dailyHash, illustrationData);
+          console.log(`[editorial/edit] Also saved illustration under daily hash ${dailyHash.slice(0, 14)}`);
+        }
+      }
+
       updated.hasIllustration = true;
       console.log(`[editorial/edit] Illustration uploaded for ${hash.slice(0, 14)} by ${wallet.slice(0, 10)}`);
     } catch (err) {
@@ -125,6 +144,13 @@ export async function POST(request: NextRequest) {
 
   // Save back — this persists to Redis + file + remote indexer
   await saveEditorial(hash, updated, existing.generatedBy);
+
+  // Bust ISR cache so edits are visible to all visitors immediately
+  try {
+    revalidatePath(`/article/${hash}`);
+  } catch {
+    // Non-fatal — page will still refresh on next ISR cycle
+  }
 
   return NextResponse.json({
     success: true,

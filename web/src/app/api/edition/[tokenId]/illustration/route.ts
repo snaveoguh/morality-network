@@ -38,10 +38,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const illustration = await getIllustration(hash).catch(() => null);
   let base64 = illustration?.base64 ?? null;
 
-  // Backward compat: check inline illustrationBase64 on the editorial
+  // Backward compat: check inline illustrationBase64 on the editorial,
+  // and also check illustrations saved under the editorial's entityHash
+  // (god mode edits save under entityHash, not the daily-edition hash)
   if (!base64) {
     const editorial = await getArchivedEditorial(hash).catch(() => null);
     base64 = editorial?.illustrationBase64 ?? null;
+
+    // If the editorial's entityHash differs from the daily hash, check that too
+    if (!base64 && editorial?.entityHash && editorial.entityHash !== hash) {
+      const altIllus = await getIllustration(editorial.entityHash).catch(() => null);
+      base64 = altIllus?.base64 ?? null;
+    }
   }
 
   if (!base64) {
@@ -53,7 +61,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   return new NextResponse(buffer, {
     headers: {
       "Content-Type": "image/png",
-      "Cache-Control": "public, max-age=86400, s-maxage=86400",
+      "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
       "Content-Length": String(buffer.length),
     },
   });

@@ -37,12 +37,14 @@ export async function POST(request: Request) {
   let hash: string;
   let primary: FeedItem;
   let related: FeedItem[];
+  let force = false;
 
   try {
     const body = await request.json();
     hash = body.hash;
     primary = body.primary;
     related = body.related || [];
+    force = body.force === true;
 
     if (!hash || !primary?.link || !primary?.title) {
       return NextResponse.json(
@@ -57,19 +59,21 @@ export async function POST(request: Request) {
     );
   }
 
-  // Skip if already generated (race condition guard)
-  try {
-    const existing = await getArchivedEditorial(hash);
-    if (existing) {
-      return NextResponse.json({
-        status: "skipped",
-        hash,
-        title: primary.title,
-        reason: "already exists",
-      });
+  // Skip if already generated (race condition guard) — unless force=true
+  if (!force) {
+    try {
+      const existing = await getArchivedEditorial(hash);
+      if (existing) {
+        return NextResponse.json({
+          status: "skipped",
+          hash,
+          title: primary.title,
+          reason: "already exists",
+        });
+      }
+    } catch {
+      // Continue to generation
     }
-  } catch {
-    // Continue to generation
   }
 
   try {
