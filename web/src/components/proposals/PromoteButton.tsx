@@ -60,9 +60,10 @@ export function PromoteButton({ candidate }: PromoteButtonProps) {
 
       setTxHash(hash);
       setStatus("done");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setErrorMsg(err?.shortMessage || err?.message || "Promotion failed");
+      const e = err as Record<string, string>;
+      setErrorMsg(e?.shortMessage || e?.message || "Promotion failed");
     }
   };
 

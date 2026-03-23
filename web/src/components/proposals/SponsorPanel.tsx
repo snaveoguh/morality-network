@@ -114,9 +114,10 @@ export function SponsorPanel({ candidate }: SponsorPanelProps) {
       });
 
       setStatus("done");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setErrorMsg(err?.shortMessage || err?.message || "Sponsorship failed");
+      const e = err as Record<string, string>;
+      setErrorMsg(e?.shortMessage || e?.message || "Sponsorship failed");
     }
   };
 
