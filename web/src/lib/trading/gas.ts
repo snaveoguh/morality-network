@@ -6,6 +6,7 @@ export interface FeeOverrides {
 }
 
 export async function fastFeeOverrides(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- viem PublicClient generics incompatible across chains
   publicClient: any,
   config: TraderExecutionConfig
 ): Promise<FeeOverrides> {

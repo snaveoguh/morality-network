@@ -3,69 +3,7 @@
 // Commons: https://commonsvotes-api.parliament.uk
 // Lords: https://lordsvotes-api.parliament.uk
 
-// ============================================================================
-// FETCH WITH RETRY + TIMEOUT — Exponential backoff with AbortController
-// ============================================================================
-
-const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
-const FETCH_TIMEOUT_MS = 10_000; // 10 seconds
-
-async function fetchWithRetry(
-  url: string,
-  options?: RequestInit & { next?: { revalidate: number } },
-  maxRetries: number = 3
-): Promise<Response> {
-  const backoffMs = [500, 1000, 2000];
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-    try {
-      const res = await fetch(url, {
-        ...options,
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      if (res.ok || !RETRYABLE_STATUS_CODES.has(res.status)) {
-        return res;
-      }
-
-      // Retryable HTTP status — fall through to retry logic
-      if (attempt < maxRetries) {
-        const delay = backoffMs[attempt] || 2000;
-        console.warn(
-          `[Parliament fetchWithRetry] ${url} returned ${res.status}, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`
-        );
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      } else {
-        return res; // Return the failed response after all retries exhausted
-      }
-    } catch (error) {
-      clearTimeout(timeoutId);
-
-      if (attempt < maxRetries) {
-        const delay = backoffMs[attempt] || 2000;
-        const reason =
-          error instanceof DOMException && error.name === "AbortError"
-            ? "request timed out"
-            : error instanceof Error
-              ? error.message
-              : String(error);
-        console.warn(
-          `[Parliament fetchWithRetry] ${url} failed (${reason}), retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`
-        );
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      } else {
-        throw error; // Re-throw after all retries exhausted
-      }
-    }
-  }
-
-  // Should not reach here, but TypeScript needs a return
-  throw new Error(`[Parliament fetchWithRetry] All ${maxRetries} retries exhausted for ${url}`);
-}
+import { fetchWithRetry } from "./fetch-utils";
 
 // ============================================================================
 // TYPES
