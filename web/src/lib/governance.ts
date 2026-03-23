@@ -25,12 +25,12 @@ import { fetchAllDivisions, type ParliamentDivision } from "./parliament";
 import { getDaoPredictionKey } from "./proposal-entity";
 import { getPredictionMarketChain, getPredictionMarketRpcUrl } from "./rpc-urls";
 import { loadTtlValue, type TtlCacheEntry } from "./ttl-cache";
+import { fetchWithRetry } from "./fetch-utils";
 
 // ============================================================================
-// FETCH WITH RETRY — Exponential backoff for all external API calls
+// CONSTANTS
 // ============================================================================
 
-const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
 const PROPOSAL_CACHE_TTL_MS = 60_000;
 const GOVERNANCE_SOCIAL_CACHE_TTL_MS = 120_000;
 const RECENT_GOVERNANCE_ACTIVITY_WINDOW_SECONDS = 72 * 60 * 60;
@@ -50,49 +50,6 @@ const predictionMarketPublicClient = createPublicClient({
   chain: getPredictionMarketChain(),
   transport: http(getPredictionMarketRpcUrl(), { timeout: 10_000 }),
 });
-
-async function fetchWithRetry(
-  url: string,
-  options?: RequestInit & { next?: { revalidate: number } },
-  maxRetries: number = 1
-): Promise<Response> {
-  const backoffMs = [500, 1000];
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const res = await fetch(url, options);
-
-      if (res.ok || !RETRYABLE_STATUS_CODES.has(res.status)) {
-        return res;
-      }
-
-      // Retryable HTTP status — fall through to retry logic
-      if (attempt < maxRetries) {
-        const delay = backoffMs[attempt] || 2000;
-        console.warn(
-          `[fetchWithRetry] ${url} returned ${res.status}, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`
-        );
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      } else {
-        return res; // Return the failed response after all retries exhausted
-      }
-    } catch (error) {
-      if (attempt < maxRetries) {
-        const delay = backoffMs[attempt] || 2000;
-        console.warn(
-          `[fetchWithRetry] ${url} fetch error, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries}):`,
-          error instanceof Error ? error.message : error
-        );
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      } else {
-        throw error; // Re-throw after all retries exhausted
-      }
-    }
-  }
-
-  // Should not reach here, but TypeScript needs a return
-  throw new Error(`[fetchWithRetry] All ${maxRetries} retries exhausted for ${url}`);
-}
 
 // ============================================================================
 // TYPES
@@ -1159,17 +1116,8 @@ async function fetchAustraliaVotes(): Promise<Proposal[]> {
 }
 
 async function fetchAustraliaDivisionsPublic(): Promise<Proposal[]> {
-  try {
-    const res = await fetchWithRetry(
-      "https://theyvoteforyou.org.au/divisions?sort=date",
-      { next: { revalidate: 600 } }
-    );
-    if (!res.ok) return [];
-    // This returns HTML — we just return empty for now without API key
-    return [];
-  } catch {
-    return [];
-  }
+  // TODO: theyvoteforyou.org.au returns HTML, not JSON. Needs scraping or API key.
+  return [];
 }
 
 // ============================================================================

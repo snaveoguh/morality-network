@@ -9,7 +9,9 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const decimalsCache = new Map<string, number>();
 
 export interface SwapContext {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- viem PublicClient generics are incompatible across chains
   publicClient: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- viem WalletClient generics vary by transport/chain
   walletClient: any;
   accountAddress: Address;
   config: TraderExecutionConfig;
@@ -24,6 +26,7 @@ export interface SwapParams {
 }
 
 export async function readTokenDecimals(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   publicClient: any,
   token: Address
 ): Promise<number> {
@@ -146,6 +149,7 @@ async function swapAerodrome(ctx: SwapContext, params: SwapParams): Promise<Hash
   return txHash;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function waitForSuccess(publicClient: any, txHash: Hash): Promise<void> {
   const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
   if (receipt.status !== "success") {
