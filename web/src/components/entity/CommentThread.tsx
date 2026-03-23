@@ -17,6 +17,7 @@ import {
   deriveArgumentTypeFromContent,
   normalizeArgumentMeta,
   stripArgumentPrefix,
+  parseLegacyEvidenceLines,
 } from "@/lib/comment-arguments";
 
 interface CommentThreadProps {
@@ -375,9 +376,16 @@ function FlatCommentItem({
   const argumentType = normalizedMeta.exists
     ? normalizedMeta.argumentType
     : fallbackArgumentType;
-  const renderedContent = normalizedMeta.exists
+  const strippedContent = normalizedMeta.exists
     ? comment.content
     : stripArgumentPrefix(comment.content);
+
+  const legacy = parseLegacyEvidenceLines(strippedContent);
+  const renderedContent = legacy.cleanContent || strippedContent;
+  const evidenceUrl = legacy.evidenceUrl;
+  const refCommentId = normalizedMeta.exists && normalizedMeta.referenceCommentId > BigInt(0)
+    ? normalizedMeta.referenceCommentId.toString()
+    : legacy.referenceId;
 
   function handleVote(v: 1 | -1) {
     voteOnComment({
@@ -410,8 +418,31 @@ function FlatCommentItem({
       </div>
 
       <p className="mb-2 font-body-serif text-sm leading-relaxed text-[var(--ink-light)]">
-        {renderedContent}
+        <LinkifyText text={renderedContent} />
       </p>
+
+      {/* Evidence / Reference metadata */}
+      {(evidenceUrl || refCommentId) && (
+        <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-l-2 border-[var(--rule)] pl-2 font-mono text-[9px] text-[var(--ink-faint)]">
+          {evidenceUrl && (
+            <a
+              href={evidenceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-[var(--ink-light)] underline underline-offset-2 transition-colors hover:text-[var(--ink)]"
+            >
+              <span className="text-[8px] uppercase tracking-wider">Evidence</span>
+              <span className="max-w-[200px] truncate">{evidenceUrl.replace(/^https?:\/\//, "")}</span>
+              <span>↗</span>
+            </a>
+          )}
+          {refCommentId && (
+            <span className="text-[var(--ink-faint)]">
+              Re: <span className="font-bold">#{refCommentId}</span>
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center gap-3 font-mono text-[9px] text-[var(--ink-faint)]">
         <div className="flex items-center gap-0.5">
@@ -469,4 +500,40 @@ function FlatCommentItem({
       </div>
     </div>
   );
+}
+
+// ── Linkify URLs in comment text ──
+
+const URL_RE = /https?:\/\/[^\s<>"')\]]+/g;
+
+function LinkifyText({ text }: { text: string }) {
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  URL_RE.lastIndex = 0;
+  while ((match = URL_RE.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    const url = match[0];
+    parts.push(
+      <a
+        key={match.index}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-[var(--ink)] underline underline-offset-2 transition-colors hover:text-[var(--accent-red)]"
+      >
+        {url.replace(/^https?:\/\//, "").slice(0, 60)}{url.replace(/^https?:\/\//, "").length > 60 ? "…" : ""}
+      </a>,
+    );
+    lastIndex = match.index + url.length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return <>{parts}</>;
 }
