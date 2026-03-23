@@ -160,6 +160,7 @@ contract PooterAuctions is Ownable, ReentrancyGuard {
 
     // ── Admin ─────────────────────────────────────────────────────────────
     function setTreasury(address _treasury) external onlyOwner {
+        require(_treasury != address(0), "Zero address");
         treasury = _treasury;
         emit TreasuryUpdated(_treasury);
     }

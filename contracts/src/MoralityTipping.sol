@@ -7,9 +7,16 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+contract MoralityTipping is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
+    uint256 private reentrancyLock;
 
-contract MoralityTipping is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable, ReentrancyGuard {
+    modifier nonReentrant() {
+        require(reentrancyLock == 1, "Reentrant");
+        reentrancyLock = 2;
+        _;
+        reentrancyLock = 1;
+    }
+
     MoralityRegistry public registry;
     MoralityComments public commentsContract;
 
@@ -31,6 +38,8 @@ contract MoralityTipping is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
     mapping(address => uint256) public totalTipsGiven;
     // address => total tips received
     mapping(address => uint256) public totalTipsReceived;
+    // Total ETH held in escrow + balances (for rescueETH safety)
+    uint256 public totalEscrowed;
 
     event TipSent(bytes32 indexed entityHash, address indexed tipper, address indexed recipient, uint256 amount);
     event TipEscrowed(bytes32 indexed entityHash, address indexed tipper, uint256 amount);
@@ -46,6 +55,7 @@ contract MoralityTipping is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
     function initialize(address _registry, address _comments) public initializer {
         __Ownable_init(msg.sender);
         __Pausable_init();
+        reentrancyLock = 1;
         registry = MoralityRegistry(_registry);
         commentsContract = MoralityComments(_comments);
     }
@@ -69,14 +79,17 @@ contract MoralityTipping is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
             if (entity.claimedOwner != address(0)) {
                 balances[entity.claimedOwner] += msg.value;
                 totalTipsReceived[entity.claimedOwner] += msg.value;
+                totalEscrowed += msg.value;
                 emit TipSent(entityHash, msg.sender, entity.claimedOwner, msg.value);
             } else {
                 escrow[entityHash] += msg.value;
+                totalEscrowed += msg.value;
                 emit TipEscrowed(entityHash, msg.sender, msg.value);
             }
         } catch {
             // Entity not registered yet — escrow it
             escrow[entityHash] += msg.value;
+            totalEscrowed += msg.value;
             emit TipEscrowed(entityHash, msg.sender, msg.value);
         }
     }
@@ -91,6 +104,7 @@ contract MoralityTipping is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         balances[c.author] += msg.value;
         totalTipsGiven[msg.sender] += msg.value;
         totalTipsReceived[c.author] += msg.value;
+        totalEscrowed += msg.value;
 
         // Update comment tip total
         commentsContract.addTipToComment(commentId, msg.value);
@@ -118,6 +132,7 @@ contract MoralityTipping is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         require(amount > 0, "No balance");
 
         balances[msg.sender] = 0;
+        totalEscrowed -= amount;
         (bool success,) = msg.sender.call{value: amount}("");
         require(success, "Transfer failed");
 
@@ -160,7 +175,9 @@ contract MoralityTipping is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
     /// Only callable by owner to prevent permanent fund lock.
     function rescueETH(address payable to) external onlyOwner {
         require(to != address(0), "Zero address");
-        (bool ok,) = to.call{value: address(this).balance}("");
+        require(address(this).balance > totalEscrowed, "No rescuable ETH");
+        uint256 rescuable = address(this).balance - totalEscrowed;
+        (bool ok,) = to.call{value: rescuable}("");
         require(ok, "Transfer failed");
     }
 
@@ -168,5 +185,5 @@ contract MoralityTipping is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
     // tracked in accounting and would be permanently stuck. Use tipEntity()
     // or tipComment() to send tips properly.
 
-    uint256[50] private __gap;
+    uint256[48] private __gap;
 }
