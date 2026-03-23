@@ -21,6 +21,7 @@ const NAV_LINKS = [
   { href: "/music", label: "Music" },
   { href: "/discuss", label: "Discuss" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/vault", label: "Vault" },
   { href: "/bots", label: "Agents" },
   { href: "/appendix", label: "Appendix" },
 ];
