@@ -5,8 +5,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-
 /// @title MoralityPredictionMarket
 /// @notice Prediction markets on DAO proposal outcomes.
 ///         Two resolution paths:
@@ -17,12 +15,18 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 ///         Stake ETH on FOR or AGAINST — winners split the pot proportionally.
 /// @dev Parimutuel pool model: total pot split among winners proportional to stake.
 
-/// @notice Governor-like interface (Governor Bravo/DAOs with `state(uint256)`).
-interface IProposalState {
-    function state(uint256 proposalId) external view returns (uint8);
-}
+import "./interfaces/IProposalState.sol";
 
-contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable, ReentrancyGuard {
+contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
+    uint256 private reentrancyLock;
+
+    modifier nonReentrant() {
+        require(reentrancyLock == 1, "Reentrant");
+        reentrancyLock = 2;
+        _;
+        reentrancyLock = 1;
+    }
+
     enum Outcome { UNRESOLVED, FOR, AGAINST, VOID }
 
     struct DaoResolverConfig {
@@ -52,6 +56,7 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
 
     uint256 public protocolFeeBps;
     uint256 public totalFeesCollected;
+    uint256 public totalStaked;
 
     // dao key hash => resolver config
     mapping(bytes32 => DaoResolverConfig) public daoResolverConfigs;
@@ -78,6 +83,7 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
     function initialize() public initializer {
         __Ownable_init(msg.sender);
         __Pausable_init();
+        reentrancyLock = 1;
         protocolFeeBps = 200; // 2% fee on winnings
     }
 
@@ -168,6 +174,7 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
             pos.againstStake += msg.value;
             m.againstPool += msg.value;
         }
+        totalStaked += msg.value;
 
         emit StakePlaced(key, msg.sender, isFor, msg.value);
     }
@@ -278,6 +285,7 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
 
         require(payout > 0, "Nothing to claim");
 
+        totalStaked -= payout;
         (bool ok, ) = payable(msg.sender).call{value: payout}("");
         require(ok, "Transfer failed");
 
@@ -419,12 +427,14 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
     /// @notice Rescue ETH accidentally sent directly to contract.
     function rescueETH(address payable to) external onlyOwner {
         require(to != address(0), "Zero address");
-        (bool ok, ) = to.call{value: address(this).balance}("");
+        require(address(this).balance > totalStaked, "No rescuable ETH");
+        uint256 rescuable = address(this).balance - totalStaked;
+        (bool ok, ) = to.call{value: rescuable}("");
         require(ok, "Rescue failed");
     }
 
     // NOTE: receive() intentionally omitted — ETH should enter only via
     // stake(). Direct sends are not tracked and would be permanently stuck.
 
-    uint256[50] private __gap;
+    uint256[48] private __gap;
 }

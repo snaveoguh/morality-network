@@ -14,9 +14,7 @@ interface INounsToken {
     function balanceOf(address owner) external view returns (uint256);
 }
 
-interface IProposalState {
-    function state(uint256 proposalId) external view returns (uint8);
-}
+import "./interfaces/IProposalState.sol";
 
 contract MoralityProposalVoting is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
     enum VoteType { AGAINST, FOR, ABSTAIN }
