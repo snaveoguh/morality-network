@@ -478,6 +478,25 @@ export class ScalperManager {
       if (scalp.symbol === market && scalp.status === "open") return;
     }
 
+    // ── Cross-system awareness: check if trader engine has a position on this market ──
+    if (this.store) {
+      const traderPositions = this.store.getOpen();
+      const traderHasMarket = traderPositions.some(
+        (p) => p.marketSymbol?.toUpperCase() === market.toUpperCase() && !p.id.startsWith("scalp:"),
+      );
+      if (traderHasMarket) {
+        log(`SKIP ${market}: trader engine has open position — deferring`);
+        return;
+      }
+      // Also check total open positions across both systems
+      const totalOpen = this.openScalps.size + traderPositions.filter((p) => !p.id.startsWith("scalp:")).length;
+      const globalMaxPositions = this.scalperConfig.maxOpenScalps + 3; // scalper limit + trader headroom
+      if (totalOpen >= globalMaxPositions) {
+        log(`SKIP ${market}: global position limit reached (${totalOpen}/${globalMaxPositions})`);
+        return;
+      }
+    }
+
     // Already executing on this market?
     if (this.executingMarkets.has(market)) return;
 
@@ -489,6 +508,17 @@ export class ScalperManager {
 
     const signal = detectScalpSignal(buffer, this.scalperConfig, midPrice);
     if (!signal) return;
+
+    // ── Direction conflict check: don't fight the trader engine's position ──
+    if (this.store) {
+      const traderPos = this.store.getOpen().find(
+        (p) => p.marketSymbol?.toUpperCase() === market.toUpperCase() && !p.id.startsWith("scalp:"),
+      );
+      if (traderPos && traderPos.direction && traderPos.direction !== signal.direction) {
+        log(`SKIP ${market} ${signal.direction}: conflicts with trader engine's ${traderPos.direction} position`);
+        return;
+      }
+    }
 
     log(`SIGNAL: ${signal.direction} ${market} | trigger=${signal.trigger} conf=${signal.confidence.toFixed(2)} | ${signal.reasons.join("; ")}`);
 

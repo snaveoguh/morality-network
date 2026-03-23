@@ -1236,10 +1236,23 @@ class TraderEngine {
     );
     const cooldownSymbols = new Set(recentlyClosed.map((p) => p.marketSymbol?.toUpperCase()).filter(Boolean));
 
+    // ── Cross-system awareness: include scalper positions from the store ──
+    const storeOpen = this.store.getOpen();
+    const scalperSymbols = new Set(
+      storeOpen
+        .filter((p) => p.id.startsWith("scalp:") || p.id.startsWith("hl:"))
+        .map((p) => p.marketSymbol?.toUpperCase())
+        .filter(Boolean),
+    );
+
     for (const symbol of watchMarkets) {
       if (HL_SIGNAL_BLOCKLIST.has(symbol.toUpperCase())) continue;
       if (openPositions.some((p) => p.marketSymbol === symbol)) {
-        skippedReasons.push(`${symbol}: already have open position`);
+        skippedReasons.push(`${symbol}: already have open position (engine)`);
+        continue;
+      }
+      if (scalperSymbols.has(symbol.toUpperCase())) {
+        skippedReasons.push(`${symbol}: already have open position (scalper)`);
         continue;
       }
       if (cooldownSymbols.has(symbol.toUpperCase())) {
