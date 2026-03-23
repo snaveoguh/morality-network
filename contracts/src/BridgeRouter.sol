@@ -47,8 +47,16 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
     uint256 public totalPendingAssets;
     uint256 public nextRouteNonce;
     uint16 public minReturnBps;
+    uint256 private _reentrancyLock;
 
     mapping(bytes32 => Route) private routes;
+
+    modifier nonReentrant() {
+        require(_reentrancyLock == 1, "Reentrancy");
+        _reentrancyLock = 2;
+        _;
+        _reentrancyLock = 1;
+    }
 
     event OperatorUpdated(address indexed previousOperator, address indexed nextOperator);
     event BridgeExecutorUpdated(address indexed previousExecutor, address indexed nextExecutor);
@@ -95,6 +103,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
 
         __Ownable_init(owner_);
         __Pausable_init();
+        _reentrancyLock = 1;
         vault = vault_;
         asset = asset_;
         bridgeAsset = asset_;
@@ -109,7 +118,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         require(newImplementation.code.length > 0, "Not a contract");
     }
 
-    function bridgeToArbitrum(uint256 assets, bytes32 intentId) external onlyOperator whenNotPaused returns (bytes32 routeId) {
+    function bridgeToArbitrum(uint256 assets, bytes32 intentId) external onlyOperator whenNotPaused nonReentrant returns (bytes32 routeId) {
         require(assets > 0, "Zero assets");
 
         uint256 nonce = nextRouteNonce++;
@@ -136,7 +145,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         emit RouteCreated(routeId, intentId, assets);
     }
 
-    function markReceivedOnArbitrum(bytes32 routeId) external onlyBridgeExecutor whenNotPaused {
+    function markReceivedOnArbitrum(bytes32 routeId) external onlyBridgeExecutor whenNotPaused nonReentrant {
         Route storage route = routes[routeId];
         require(route.status == RouteStatus.Pending, "Bad route state");
         route.status = RouteStatus.ReceivedOnArb;
@@ -144,7 +153,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         emit RouteReceivedOnArb(routeId);
     }
 
-    function markStrategyFunded(bytes32 routeId, bytes32 settlementId) external onlyBridgeExecutor whenNotPaused {
+    function markStrategyFunded(bytes32 routeId, bytes32 settlementId) external onlyBridgeExecutor whenNotPaused nonReentrant {
         Route storage route = routes[routeId];
         require(route.status == RouteStatus.ReceivedOnArb, "Bad route state");
 
@@ -160,7 +169,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         bytes32 routeId,
         uint256 assets,
         bytes32 settlementId
-    ) external onlyBridgeExecutor whenNotPaused {
+    ) external onlyBridgeExecutor whenNotPaused nonReentrant {
         Route storage route = routes[routeId];
         require(route.status == RouteStatus.DeployedToHl, "Bad route state");
         require(assets > 0, "Zero assets");
@@ -174,7 +183,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         emit RouteReturnPending(routeId, settlementId, assets);
     }
 
-    function setReturnBridgeAssets(bytes32 routeId, uint256 bridgeAssets_) external onlyBridgeExecutor whenNotPaused {
+    function setReturnBridgeAssets(bytes32 routeId, uint256 bridgeAssets_) external onlyBridgeExecutor whenNotPaused nonReentrant {
         Route storage route = routes[routeId];
         require(route.status == RouteStatus.ReturnPending, "Bad route state");
         require(bridgeAssets_ > 0, "Zero assets");
@@ -183,7 +192,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         emit RouteReturnBridgeAssetsUpdated(routeId, bridgeAssets_);
     }
 
-    function finalizeReturnToBase(bytes32 routeId, bytes32 completionId) external onlyBridgeExecutor whenNotPaused {
+    function finalizeReturnToBase(bytes32 routeId, bytes32 completionId) external onlyBridgeExecutor whenNotPaused nonReentrant {
         Route storage route = routes[routeId];
         require(route.status == RouteStatus.ReturnPending, "Bad route state");
         require(route.returnAssets > 0, "No return assets");
@@ -199,7 +208,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         emit RouteReturned(routeId, completionId, assetsOut, bridgeAssets);
     }
 
-    function markFailedRoute(bytes32 routeId, bytes32 completionId) external onlyBridgeExecutor whenNotPaused {
+    function markFailedRoute(bytes32 routeId, bytes32 completionId) external onlyBridgeExecutor whenNotPaused nonReentrant {
         Route storage route = routes[routeId];
         require(route.status == RouteStatus.Pending || route.status == RouteStatus.ReceivedOnArb, "Bad route state");
 
@@ -212,6 +221,28 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         IBaseCapitalVault(vault).settleBridgeReturn(route.outboundAssets, assetsOut, completionId);
 
         emit RouteFailed(routeId, completionId, assetsOut, bridgeAssets);
+    }
+
+    uint256 public constant STUCK_ROUTE_GRACE_PERIOD = 7 days;
+
+    function emergencyFailRoute(bytes32 routeId) external onlyOwner {
+        Route storage route = routes[routeId];
+        require(
+            route.status == RouteStatus.DeployedToHl || route.status == RouteStatus.ReturnPending,
+            "Route not stuck-eligible"
+        );
+        require(
+            block.timestamp >= route.updatedAt + STUCK_ROUTE_GRACE_PERIOD,
+            "Grace period not elapsed"
+        );
+
+        if (route.status == RouteStatus.ReturnPending) {
+            totalPendingAssets -= route.returnAssets;
+        }
+        route.status = RouteStatus.Failed;
+        route.updatedAt = uint64(block.timestamp);
+
+        emit RouteFailed(routeId, bytes32(0), 0, 0);
     }
 
     function getRoute(bytes32 routeId)
@@ -250,6 +281,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
     }
 
     function setArbEscrow(address nextEscrow) external onlyOwner {
+        require(nextEscrow != address(0), "Zero escrow");
         emit ArbEscrowUpdated(arbEscrow, nextEscrow);
         arbEscrow = nextEscrow;
     }
@@ -271,7 +303,7 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
     }
 
     function setMinReturnBps(uint16 nextMinReturn) external onlyOwner {
-        require(nextMinReturn <= BPS_DENOMINATOR, "Bad bps");
+        require(nextMinReturn >= 5_000 && nextMinReturn <= BPS_DENOMINATOR, "Bad bps");
         minReturnBps = nextMinReturn;
     }
 
@@ -329,5 +361,5 @@ contract BridgeRouter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pau
         require(IERC20(asset).transfer(vault, assetsOut), "Transfer failed");
     }
 
-    uint256[40] private __gap;
+    uint256[38] private __gap;
 }

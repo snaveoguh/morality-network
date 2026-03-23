@@ -22,8 +22,8 @@ contract MoralityAgentVaultTest is Test {
         );
         vault = MoralityAgentVault(payable(address(proxy)));
 
-        // Raise allocation cap to 80% for test coverage (default is 50%)
-        vault.setMaxAllocationBps(8000);
+        // Raise allocation cap to 75% for test coverage (default is 50%, max is 75%)
+        vault.setMaxAllocationBps(7500);
 
         vm.deal(alice, 100 ether);
         vm.deal(bob, 100 ether);
@@ -96,19 +96,19 @@ contract MoralityAgentVaultTest is Test {
 
     function test_withdrawRequiresLiquidity() public {
         vm.prank(alice);
-        vault.deposit{value: 5 ether}();
+        vault.deposit{value: 8 ether}();
 
         vm.prank(manager);
-        vault.allocateToStrategy(payable(manager), 4 ether);
+        vault.allocateToStrategy(payable(manager), 6 ether); // 75% of 8 ether
 
-        assertEq(vault.maxWithdraw(alice), 1 ether);
+        assertEq(vault.maxWithdraw(alice), 2 ether);
 
         vm.prank(alice);
         vm.expectRevert("Insufficient liquid assets");
-        vault.withdraw(2 ether);
+        vault.withdraw(3 ether);
 
         vm.prank(alice);
-        vault.withdraw(1 ether);
+        vault.withdraw(2 ether);
         assertEq(address(vault).balance, 0);
     }
 
@@ -164,11 +164,11 @@ contract MoralityAgentVaultTest is Test {
 
         vault.setManager(newManager);
         vault.setFeeRecipient(newFeeRecipient);
-        vault.setMaxAllocationBps(9000);
+        vault.setMaxAllocationBps(7500);
 
         assertEq(vault.manager(), newManager);
         assertEq(vault.feeRecipient(), newFeeRecipient);
-        assertEq(vault.maxAllocationBps(), 9000);
+        assertEq(vault.maxAllocationBps(), 7500);
 
         vm.prank(alice);
         vault.deposit{value: 2 ether}();
@@ -190,9 +190,9 @@ contract MoralityAgentVaultTest is Test {
         assertEq(vault.deployedCapital(), 1 ether);
     }
 
-    function test_setMaxAllocationBpsRejectsValuesAbove100Percent() public {
-        vm.expectRevert("Max 100%");
-        vault.setMaxAllocationBps(10_001);
+    function test_setMaxAllocationBpsRejectsValuesAbove75Percent() public {
+        vm.expectRevert("Max 75%");
+        vault.setMaxAllocationBps(7_501);
     }
 
     function test_cannotReinitialize() public {

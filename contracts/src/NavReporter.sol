@@ -12,6 +12,7 @@ import {IReserveAllocator} from "./interfaces/IReserveAllocator.sol";
 
 contract NavReporter is Initializable, OwnableUpgradeable, UUPSUpgradeable, PausableUpgradeable {
     uint256 public constant BPS_DENOMINATOR = 10_000;
+    uint64 public constant MIN_REPORT_INTERVAL_FLOOR = 3600; // 1 hour minimum
 
     address public vault;
     address public reserveAllocator;
@@ -80,6 +81,8 @@ contract NavReporter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Paus
             require(block.timestamp >= lastReportTimestamp + minReportInterval, "Report too soon");
         }
 
+        // L-8: Delta check only applies after first report. The very first report is
+        // unchecked as a known limitation — there is no prior baseline to compare against.
         if (lastReportTimestamp > 0) {
             _checkDelta(lastStrategyAssetsEth, strategyAssetsEth, maxStrategyDeltaBps, "Strategy delta too large");
             _checkDelta(lastFeesEth, feesEth, maxFeeDeltaBps, "Fee delta too large");
@@ -117,6 +120,7 @@ contract NavReporter is Initializable, OwnableUpgradeable, UUPSUpgradeable, Paus
     }
 
     function setMinReportInterval(uint64 nextInterval) external onlyOwner {
+        require(nextInterval >= MIN_REPORT_INTERVAL_FLOOR, "Interval too short");
         emit MinReportIntervalUpdated(minReportInterval, nextInterval);
         minReportInterval = nextInterval;
     }

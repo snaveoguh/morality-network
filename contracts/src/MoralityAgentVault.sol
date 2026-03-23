@@ -37,6 +37,9 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
     mapping(address => uint256) public cumulativeWithdrawals; // slot 10
 
     mapping(address => bool) private isKnownFunder; // slot 11
+    /// @dev NOTE: funders array grows unboundedly — one entry per unique depositor.
+    ///      Not iterated on-chain in any state-changing function, so gas is safe.
+    ///      Do NOT add removal logic; storage layout must be preserved for upgradeability.
     address[] private funders;                      // slot 12
 
     uint256 private reentrancyLock;      // slot 13
@@ -47,6 +50,7 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
     /// @dev APPENDED after reentrancyLock to preserve storage layout compatibility.
     uint256 public maxAllocationBps;     // slot 14 (new — uses first __gap slot)
 
+    event MaxAllocationBpsUpdated(uint256 previousBps, uint256 newBps);
     event ManagerUpdated(address indexed previousManager, address indexed newManager);
     event FeeRecipientUpdated(address indexed previousFeeRecipient, address indexed newFeeRecipient);
     event PerformanceFeeUpdated(uint256 previousFeeBps, uint256 newFeeBps);
@@ -82,6 +86,12 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
         _disableInitializers();
     }
 
+    /// @dev Reject direct ETH transfers to prevent forced balance manipulation.
+    ///      All deposits must go through deposit() to mint shares correctly.
+    receive() external payable {
+        revert("Use deposit()");
+    }
+
     function initialize(address _manager, address _feeRecipient, uint256 _performanceFeeBps) public initializer {
         require(_manager != address(0), "Zero manager");
         require(_feeRecipient != address(0), "Zero fee recipient");
@@ -101,7 +111,9 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
         emit PerformanceFeeUpdated(0, _performanceFeeBps);
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        require(newImplementation.code.length > 0, "Not a contract");
+    }
 
     // =========================================================================
     // VIEW
@@ -385,9 +397,10 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
         performanceFeeBps = newFeeBps;
     }
 
-    /// @notice Set max allocation percentage (in BPS). 5000 = 50%, 10000 = 100%.
+    /// @notice Set max allocation percentage (in BPS). 5000 = 50%, max 7500 = 75%.
     function setMaxAllocationBps(uint256 newMaxBps) external onlyOwner {
-        require(newMaxBps <= BPS_DENOMINATOR, "Max 100%");
+        require(newMaxBps <= 7_500, "Max 75%");
+        emit MaxAllocationBpsUpdated(maxAllocationBps, newMaxBps);
         maxAllocationBps = newMaxBps;
     }
 

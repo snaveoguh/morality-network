@@ -34,6 +34,7 @@ contract HLStrategyManager is Initializable, OwnableUpgradeable, UUPSUpgradeable
     event HyperliquidDeploymentRecorded(bytes32 indexed routeId, uint256 assets, bytes32 indexed externalRef);
     event RouteReturnedToEscrow(bytes32 indexed routeId, uint256 assets, bytes32 indexed externalRef);
     event ReturnSignaled(bytes32 indexed routeId, uint256 assets, bytes32 indexed settlementId);
+    event DeployedAssetsUnderflow(bytes32 indexed routeId, uint256 returnedAssets, uint256 previousDeployed);
 
     modifier onlyOperator() {
         require(msg.sender == operator, "Not operator");
@@ -79,6 +80,16 @@ contract HLStrategyManager is Initializable, OwnableUpgradeable, UUPSUpgradeable
         emit RouteReleasedToHotWallet(routeId, assets);
     }
 
+    /// @notice Records an off-chain Hyperliquid deployment for bookkeeping purposes.
+    /// @dev M-18: This is pure bookkeeping — no actual token transfer or on-chain verification
+    ///      occurs. The operator attests that `assets` have been deployed to Hyperliquid off-chain.
+    ///      The only on-chain invariant enforced is that cumulative deployedAssets cannot exceed
+    ///      releasedAssets for the route. There is no verification that tokens were actually
+    ///      deposited into a Hyperliquid vault or that `externalRef` corresponds to a real
+    ///      Hyperliquid transaction. Accuracy depends entirely on the trusted operator.
+    /// @param routeId The route identifier for this deployment
+    /// @param assets The amount of assets attested as deployed to Hyperliquid
+    /// @param externalRef An off-chain reference (e.g. Hyperliquid deposit tx hash)
     function recordHyperliquidDeployment(bytes32 routeId, uint256 assets, bytes32 externalRef) external onlyOperator whenNotPaused {
         require(assets > 0, "Zero assets");
         StrategyRouteState storage state = routeStates[routeId];
@@ -103,6 +114,7 @@ contract HLStrategyManager is Initializable, OwnableUpgradeable, UUPSUpgradeable
         state.lastExternalRef = externalRef;
         state.returnSignaled = false;
         if (assets >= totalDeployedAssets) {
+            emit DeployedAssetsUnderflow(routeId, assets, totalDeployedAssets);
             totalDeployedAssets = 0;
         } else {
             totalDeployedAssets -= assets;

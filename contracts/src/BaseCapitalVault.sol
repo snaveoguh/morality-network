@@ -19,6 +19,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
     uint256 public constant BPS_DENOMINATOR = 10_000;
     uint256 public constant MAX_PERFORMANCE_FEE_BPS = 2_000;
     uint256 public constant MAX_NAV_DELTA_BPS_CEILING = 5_000;
+    uint256 public constant MAX_NAV_AGE = 2 days;
     uint256 private constant VIRTUAL_SHARES = 1e3;
     uint256 private constant VIRTUAL_ASSETS = 1e3;
 
@@ -48,6 +49,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
 
     uint16 public maxNavDeltaBps;
     uint256 public maxTotalAssets;
+    uint256 public maxNavAge;  // Maximum seconds since last NAV report (0 = disabled)
 
     event DepositETH(address indexed caller, address indexed receiver, uint256 assets, uint256 shares);
     event InstantRedeem(address indexed caller, address indexed receiver, uint256 shares, uint256 assetsOut);
@@ -175,12 +177,15 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         return weth;
     }
 
-    function depositETH(address receiver) external payable nonReentrant whenNotPaused returns (uint256 shares) {
+    function depositETH(address receiver, uint256 minSharesOut) external payable nonReentrant whenNotPaused returns (uint256 shares) {
         require(receiver != address(0), "Zero receiver");
         require(msg.value > 0, "Zero deposit");
+        require(lastNavTimestamp == 0 || block.timestamp - lastNavTimestamp <= MAX_NAV_AGE, "NAV stale");
+        require(maxNavAge == 0 || lastNavTimestamp == 0 || block.timestamp <= lastNavTimestamp + maxNavAge, "NAV stale (configurable)");
         require(maxTotalAssets == 0 || totalAssets() + msg.value <= maxTotalAssets, "Deposit cap");
 
         shares = convertToShares(msg.value);
+        require(shares >= minSharesOut, "Slippage: insufficient shares");
         require(shares > 0, "Deposit too small");
 
         IWETHLike(weth).deposit{value: msg.value}();
@@ -202,11 +207,14 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         emit WithdrawRequested(msg.sender, receiver, requestId, shares, assetsEstimate);
     }
 
-    function redeemInstant(uint256 shares, address receiver) external nonReentrant whenNotPaused returns (uint256 assetsOut) {
+    function redeemInstant(uint256 shares, address receiver, uint256 minAssetsOut) external nonReentrant whenNotPaused returns (uint256 assetsOut) {
         require(receiver != address(0), "Zero receiver");
         require(shares > 0, "Zero shares");
+        require(lastNavTimestamp == 0 || block.timestamp - lastNavTimestamp <= MAX_NAV_AGE, "NAV stale");
+        require(maxNavAge == 0 || lastNavTimestamp == 0 || block.timestamp <= lastNavTimestamp + maxNavAge, "NAV stale (configurable)");
 
         assetsOut = previewRedeem(shares);
+        require(assetsOut >= minAssetsOut, "Slippage: insufficient assets");
         require(assetsOut > 0, "Redeem too small");
         require(assetsOut <= liquidAssetsStored, "Insufficient liquid assets");
 
@@ -289,6 +297,8 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         emit BridgeOutMarked(routeId, assets);
     }
 
+    /// @dev Trusted-role operation: the allocator can manipulate accounting by moving
+    ///      assets between liquid and pending-bridge buckets without an actual token transfer.
     function markBridgeOut(uint256 assets, bytes32 routeId) external onlyAllocator {
         require(assets > 0, "Zero assets");
         require(assets <= liquidAssetsStored, "Insufficient liquid assets");
@@ -297,6 +307,8 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         emit BridgeOutMarked(routeId, assets);
     }
 
+    /// @dev Trusted-role operation: the allocator can manipulate accounting by moving
+    ///      assets from pending-bridge back to liquid without an actual token transfer.
     function markBridgeIn(uint256 assets, bytes32 routeId) external onlyAllocator {
         require(assets > 0, "Zero assets");
         require(assets <= pendingBridgeAssetsStored, "Bridge underflow");
@@ -321,6 +333,7 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         bytes32 routeId
     ) external onlyBridgeRouter {
         require(pendingReduction > 0, "Zero reduction");
+        require(liquidIncrease <= pendingReduction, "Liquid increase exceeds pending reduction");
         require(pendingReduction <= pendingBridgeAssetsStored, "Bridge underflow");
         pendingBridgeAssetsStored -= pendingReduction;
         liquidAssetsStored += liquidIncrease;
@@ -328,6 +341,8 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         emit BridgeReturnSettled(routeId, pendingReduction, liquidIncrease);
     }
 
+    /// @dev Trusted-role operation: the allocator can manipulate accounting by moving
+    ///      assets from pending-bridge to HL strategy without an actual token transfer.
     function markStrategyIncrease(uint256 assets, bytes32 settlementId) external onlyAllocator {
         require(assets > 0, "Zero assets");
         require(assets <= pendingBridgeAssetsStored, "Strategy underflow");
@@ -344,6 +359,8 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         emit StrategyIncreaseMarked(settlementId, assets);
     }
 
+    /// @dev Trusted-role operation: the allocator can manipulate accounting by moving
+    ///      assets from HL strategy back to liquid without an actual token transfer.
     function markStrategyDecrease(uint256 assets, bytes32 settlementId) external onlyAllocator {
         require(assets > 0, "Zero assets");
         require(assets <= hlStrategyAssetsStored, "Strategy underflow");
@@ -371,6 +388,8 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         if (lastNavTimestamp > 0 && maxNavDeltaBps > 0) {
             _checkNavDelta(hlStrategyAssetsStored, strategyAssetsEth, "Strategy delta too large");
             _checkNavDelta(accruedFeesEth, feesEth, "Fee delta too large");
+            _checkNavDelta(reserveAssetsStored, reserveAssetsEth, "Reserve delta too large");
+            _checkNavDelta(pendingBridgeAssetsStored, pendingBridgeEth, "Bridge delta too large");
         }
 
         hlStrategyAssetsStored = strategyAssetsEth;
@@ -384,26 +403,31 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
     }
 
     function setAllocator(address nextAllocator) external onlyOwner {
+        require(nextAllocator != address(0), "Zero address");
         emit AllocatorUpdated(allocator, nextAllocator);
         allocator = nextAllocator;
     }
 
     function setNavReporter(address nextReporter) external onlyOwner {
+        require(nextReporter != address(0), "Zero address");
         emit NavReporterUpdated(navReporter, nextReporter);
         navReporter = nextReporter;
     }
 
     function setReserveAllocator(address nextAllocator) external onlyOwner {
+        require(nextAllocator != address(0), "Zero address");
         emit ReserveAllocatorUpdated(reserveAllocator, nextAllocator);
         reserveAllocator = nextAllocator;
     }
 
     function setWithdrawalQueue(address nextQueue) external onlyOwner {
+        require(nextQueue != address(0), "Zero address");
         emit WithdrawalQueueUpdated(withdrawalQueue, nextQueue);
         withdrawalQueue = nextQueue;
     }
 
     function setBridgeRouter(address nextRouter) external onlyOwner {
+        require(nextRouter != address(0), "Zero address");
         emit BridgeRouterUpdated(bridgeRouter, nextRouter);
         bridgeRouter = nextRouter;
     }
@@ -415,6 +439,10 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
 
     function setMaxTotalAssets(uint256 nextMax) external onlyOwner {
         maxTotalAssets = nextMax;
+    }
+
+    function setMaxNavAge(uint256 nextMaxNavAge) external onlyOwner {
+        maxNavAge = nextMaxNavAge;
     }
 
     function pause() external onlyOwner {
@@ -440,9 +468,39 @@ contract BaseCapitalVault is Initializable, ERC20Upgradeable, OwnableUpgradeable
         require(delta <= (basis * maxNavDeltaBps) / BPS_DENOMINATOR, errMsg);
     }
 
+    event FeesClaimed(address indexed recipient, uint256 amount);
+
+    function claimFees(address recipient, uint256 amount) external onlyOwner nonReentrant {
+        require(recipient != address(0), "Zero recipient");
+        require(amount > 0, "Zero amount");
+        require(amount <= accruedFeesEth, "Exceeds accrued fees");
+        require(amount <= liquidAssetsStored, "Insufficient liquid assets");
+        accruedFeesEth -= amount;
+        liquidAssetsStored -= amount;
+        require(IERC20(weth).transfer(recipient, amount), "Transfer failed");
+        emit FeesClaimed(recipient, amount);
+    }
+
+    function cancelWithdrawRequest(uint256 requestId) external nonReentrant {
+        require(withdrawalQueue != address(0), "Queue not set");
+        (
+            address requestOwner,
+            ,
+            uint256 shares,
+            ,
+            ,
+            ,
+            bool finalized
+        ) = IWithdrawalQueue(withdrawalQueue).getRequest(requestId);
+        require(!finalized, "Already finalized");
+        require(msg.sender == requestOwner, "Not request owner");
+        IWithdrawalQueue(withdrawalQueue).cancel(requestId);
+        // Shares are returned by the queue's cancel function
+    }
+
     receive() external payable {
         require(msg.sender == weth, "No direct ETH");
     }
 
-    uint256[40] private __gap;
+    uint256[39] private __gap;
 }

@@ -54,7 +54,9 @@ contract ExecutorBridgeAdapter is Initializable, OwnableUpgradeable, UUPSUpgrade
         bridgeExecutor = bridgeExecutor_;
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        require(newImplementation.code.length > 0, "Not a contract");
+    }
 
     function bridgeOut(bytes32 routeId, uint256 amount, address receiver, bytes32 bridgeRef)
         external
@@ -84,6 +86,7 @@ contract ExecutorBridgeAdapter is Initializable, OwnableUpgradeable, UUPSUpgrade
     {
         require(receiver != address(0), "Zero receiver");
         require(amount > 0, "Zero amount");
+        require(!routes[routeId].inboundComplete, "Already completed inbound");
         require(IERC20(bridgeAsset).transferFrom(bridgeExecutor, receiver, amount), "Transfer failed");
 
         RouteTransfer storage route = routes[routeId];
@@ -138,4 +141,6 @@ contract ExecutorBridgeAdapter is Initializable, OwnableUpgradeable, UUPSUpgrade
     function unpause() external onlyOwner {
         _unpause();
     }
+
+    uint256[40] private __gap;
 }

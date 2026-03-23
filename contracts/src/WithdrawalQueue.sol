@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract WithdrawalQueue is Initializable, OwnableUpgradeable, UUPSUpgradeable, PausableUpgradeable {
     struct WithdrawRequest {
@@ -107,6 +108,7 @@ contract WithdrawalQueue is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         require(!request.finalized, "Already finalized");
 
         request.finalized = true;
+        IERC20(vault).transfer(request.owner, request.shares);
         emit WithdrawCancelled(requestId);
     }
 

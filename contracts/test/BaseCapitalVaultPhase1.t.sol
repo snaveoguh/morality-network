@@ -101,7 +101,7 @@ contract BaseCapitalVaultPhase1Test is Test {
 
     function test_depositEthMintsSharesAndTracksLiquidAssets() public {
         vm.prank(alice);
-        uint256 shares = vault.depositETH{value: 5 ether}(alice);
+        uint256 shares = vault.depositETH{value: 5 ether}(alice, 0);
 
         assertEq(shares, 5 ether);
         assertEq(vault.balanceOf(alice), 5 ether);
@@ -113,7 +113,7 @@ contract BaseCapitalVaultPhase1Test is Test {
 
     function test_requestAndFulfillQueuedWithdrawal() public {
         vm.prank(alice);
-        vault.depositETH{value: 5 ether}(alice);
+        vault.depositETH{value: 5 ether}(alice, 0);
 
         vm.prank(alice);
         uint256 requestId = vault.requestWithdraw(2 ether, alice);
@@ -151,7 +151,7 @@ contract BaseCapitalVaultPhase1Test is Test {
 
     function test_allocateToReserveAndDeallocateWithYield() public {
         vm.prank(alice);
-        vault.depositETH{value: 10 ether}(alice);
+        vault.depositETH{value: 10 ether}(alice, 0);
 
         vm.prank(allocator);
         vault.allocateToReserve(4 ether);
@@ -178,7 +178,7 @@ contract BaseCapitalVaultPhase1Test is Test {
 
     function test_bridgeAndNavBucketAccounting() public {
         vm.prank(alice);
-        vault.depositETH{value: 10 ether}(alice);
+        vault.depositETH{value: 10 ether}(alice, 0);
 
         vm.prank(allocator);
         vault.markBridgeOut(2 ether, keccak256("route-1"));
@@ -203,7 +203,7 @@ contract BaseCapitalVaultPhase1Test is Test {
 
     function test_onlyConfiguredRolesCanMutateStrategyState() public {
         vm.prank(alice);
-        vault.depositETH{value: 1 ether}(alice);
+        vault.depositETH{value: 1 ether}(alice, 0);
 
         vm.prank(alice);
         vm.expectRevert("Not allocator");
