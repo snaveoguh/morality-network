@@ -22,7 +22,8 @@ import {
 } from "./hyperliquid";
 import { computeRSI, computeEMAs, computeBollinger } from "./technical";
 import { checkMoralGate, logMoralGateDecision } from "./moral-gate";
-import type { ScalperConfig, ScalpSignal, ScalpPosition, TraderExecutionConfig } from "./types";
+import type { ScalperConfig, ScalpSignal, ScalpPosition, TraderExecutionConfig, EntryRationale } from "./types";
+import { PositionStore } from "./position-store";
 
 const BUFFER_SIZE = 60; // 1 hour of 1m candles
 
@@ -242,6 +243,7 @@ interface ActiveSubscription {
 export class ScalperManager {
   private readonly traderConfig: TraderExecutionConfig;
   private readonly scalperConfig: ScalperConfig;
+  private store: PositionStore | null = null;
 
   private buffers = new Map<string, CandleBuffer>();
   private midPrices = new Map<string, number>();
@@ -258,6 +260,11 @@ export class ScalperManager {
   constructor(traderConfig: TraderExecutionConfig, scalperConfig: ScalperConfig) {
     this.traderConfig = traderConfig;
     this.scalperConfig = scalperConfig;
+  }
+
+  /** Attach a position store so scalper can pre-persist rationale for the dashboard */
+  setStore(store: PositionStore): void {
+    this.store = store;
   }
 
   async start(): Promise<void> {
@@ -578,6 +585,43 @@ export class ScalperManager {
       `| SL=$${scalp.stopLossPriceUsd.toFixed(2)} TP=$${scalp.takeProfitPriceUsd.toFixed(2)} ` +
       `| expires ${Math.round(this.scalperConfig.maxHoldMs / 1000)}s`,
     );
+
+    // Pre-persist rationale so the dashboard shows why this trade was opened
+    if (this.store) {
+      const rationale: EntryRationale = {
+        compositeDirection: signal.direction,
+        compositeConfidence: signal.confidence,
+        compositeReasons: [`Scalper: ${signal.trigger} — ${signal.reasons.join("; ")}`],
+        kellyPhase: "scalper",
+        signalDirection: signal.direction,
+        signalScore: signal.confidence,
+      };
+      const hlId = `hl:${market.toUpperCase()}`;
+      try {
+        // Find existing position in the open list
+        const existingList = this.store.getOpen().filter((p) => p.id === hlId);
+        const existing = existingList[0];
+        if (existing) {
+          await this.store.upsert({ ...existing, entryRationale: rationale });
+        } else {
+          await this.store.upsert({
+            id: hlId,
+            venue: "hyperliquid-perp",
+            chainId: 42161,
+            marketSymbol: market.toUpperCase(),
+            direction: signal.direction,
+            entryPriceUsd: order.fillPriceUsd,
+            entryNotionalUsd: order.notionalUsd,
+            leverage: order.leverage,
+            openedAt: Date.now(),
+            status: "open",
+            entryRationale: rationale,
+          } as unknown as Parameters<typeof this.store.upsert>[0]);
+        }
+      } catch (err) {
+        log(`rationale pre-persist failed: ${err instanceof Error ? err.message : err}`);
+      }
+    }
   }
 
   /* ── Exit monitoring ── */
