@@ -153,7 +153,7 @@ contract BaseCapitalVaultPhase2Test is Test {
 
     function test_bridge_route_round_trip_updates_vault_buckets() public {
         vm.prank(alice);
-        vault.depositETH{value: 10 ether}(alice);
+        vault.depositETH{value: 10 ether}(alice, 0);
 
         vm.prank(routerOperator);
         bytes32 routeId = bridgeRouter.bridgeToArbitrum(3 ether, bytes32("hl-route-1"));
@@ -216,7 +216,7 @@ contract BaseCapitalVaultPhase2Test is Test {
 
     function test_nav_reporter_derives_reserve_and_pending_balances() public {
         vm.prank(alice);
-        vault.depositETH{value: 10 ether}(alice);
+        vault.depositETH{value: 10 ether}(alice, 0);
 
         vm.prank(allocator);
         vault.allocateToReserve(4 ether);

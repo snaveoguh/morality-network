@@ -114,5 +114,20 @@ contract ArbTransitEscrow is Initializable, OwnableUpgradeable, UUPSUpgradeable,
         _unpause();
     }
 
+    event EmergencyWithdraw(address indexed token, uint256 amount, address indexed receiver);
+
+    function emergencyWithdraw(address token, uint256 amount, address receiver) external onlyOwner whenPaused {
+        require(receiver != address(0), "Zero receiver");
+        require(amount > 0, "Zero amount");
+        require(IERC20(token).transfer(receiver, amount), "Transfer failed");
+        // Reset totalEscrowed if withdrawing the primary asset
+        if (token == asset && amount >= totalEscrowed) {
+            totalEscrowed = 0;
+        } else if (token == asset) {
+            totalEscrowed -= amount;
+        }
+        emit EmergencyWithdraw(token, amount, receiver);
+    }
+
     uint256[40] private __gap;
 }

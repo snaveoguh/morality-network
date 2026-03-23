@@ -215,7 +215,7 @@ contract BaseCapitalVaultPhase3Test is Test {
 
     function test_usdc_conversion_route_round_trip() public {
         vm.prank(alice);
-        vault.depositETH{value: 10 ether}(alice);
+        vault.depositETH{value: 10 ether}(alice, 0);
 
         vm.prank(routerOperator);
         bytes32 routeId = bridgeRouter.bridgeToArbitrum(3 ether, bytes32("phase3-route"));
@@ -272,7 +272,7 @@ contract BaseCapitalVaultPhase3Test is Test {
 
     function test_failed_route_converts_usdc_back_to_vault_asset() public {
         vm.prank(alice);
-        vault.depositETH{value: 5 ether}(alice);
+        vault.depositETH{value: 5 ether}(alice, 0);
 
         vm.prank(routerOperator);
         bytes32 routeId = bridgeRouter.bridgeToArbitrum(2 ether, bytes32("phase3-fail"));

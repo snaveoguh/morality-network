@@ -22,6 +22,7 @@ contract MorphoReserveAllocator is Initializable, OwnableUpgradeable, UUPSUpgrad
     event TargetVaultUpdated(address indexed previousTarget, address indexed nextTarget);
     event DepositedToReserve(uint256 assets, uint256 sharesOut);
     event WithdrawnFromReserve(uint256 requestedAssets, uint256 assetsOut, address indexed receiver);
+    event PartialWithdrawal(uint256 requested, uint256 received, address indexed receiver);
 
     modifier onlyVault() {
         require(msg.sender == vault, "Not vault");
@@ -89,6 +90,10 @@ contract MorphoReserveAllocator is Initializable, OwnableUpgradeable, UUPSUpgrad
             totalPrincipal -= principalReduction;
         }
 
+        if (assetsOut < assets) {
+            emit PartialWithdrawal(assets, assetsOut, receiver);
+        }
+
         emit WithdrawnFromReserve(assets, assetsOut, receiver);
     }
 
@@ -111,6 +116,9 @@ contract MorphoReserveAllocator is Initializable, OwnableUpgradeable, UUPSUpgrad
 
     function setTargetVault(address nextTarget) external onlyOwner {
         require(nextTarget != address(0), "Zero target");
+        // Prevent orphaning funds in old vault
+        uint256 oldShares = IERC20(targetVault).balanceOf(address(this));
+        require(oldShares == 0, "Withdraw from old vault first");
         emit TargetVaultUpdated(targetVault, nextTarget);
         targetVault = nextTarget;
     }

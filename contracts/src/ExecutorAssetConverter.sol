@@ -82,7 +82,9 @@ contract ExecutorAssetConverter is Initializable, OwnableUpgradeable, UUPSUpgrad
         toVaultRateE18 = params.toVaultRateE18;
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        require(newImplementation.code.length > 0, "Not a contract");
+    }
 
     function previewToBridgeAsset(uint256 amountIn) public view returns (uint256 amountOut) {
         return _convertAmount(amountIn, assetInDecimals, bridgeAssetDecimals, toBridgeRateE18);
@@ -153,6 +155,9 @@ contract ExecutorAssetConverter is Initializable, OwnableUpgradeable, UUPSUpgrad
     function setRates(uint256 nextToBridgeRateE18, uint256 nextToVaultRateE18) external onlyOwner {
         require(nextToBridgeRateE18 > 0, "Zero bridge rate");
         require(nextToVaultRateE18 > 0, "Zero vault rate");
+        // Rate bounds: 0.5x to 2x (prevent extreme manipulation)
+        require(nextToBridgeRateE18 >= 5e17 && nextToBridgeRateE18 <= 2e18, "Bridge rate out of bounds");
+        require(nextToVaultRateE18 >= 5e17 && nextToVaultRateE18 <= 2e18, "Vault rate out of bounds");
         emit RatesUpdated(toBridgeRateE18, nextToBridgeRateE18, toVaultRateE18, nextToVaultRateE18);
         toBridgeRateE18 = nextToBridgeRateE18;
         toVaultRateE18 = nextToVaultRateE18;
@@ -174,4 +179,6 @@ contract ExecutorAssetConverter is Initializable, OwnableUpgradeable, UUPSUpgrad
     ) internal pure returns (uint256) {
         return (amountIn * rateE18 * (10 ** uint256(decimalsOut))) / ((10 ** uint256(decimalsIn)) * 1e18);
     }
+
+    uint256[40] private __gap;
 }
