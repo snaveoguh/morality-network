@@ -12,6 +12,7 @@ import {
 } from "../lib/trading/engine";
 import { getParallelBaseConfig, getTraderConfig, getScalperConfig } from "../lib/trading/config";
 import { ScalperManager } from "../lib/trading/scalper";
+import { PositionStore } from "../lib/trading/position-store";
 import { runVaultRailKeeper } from "../lib/trading/vault-rail";
 
 type WorkerTaskName = "scanner" | "swarm" | "trader" | "bridge" | "vault";
@@ -532,6 +533,10 @@ async function main(): Promise<void> {
       const traderConfig = getTraderConfig();
       if (traderConfig.executionVenue === "hyperliquid-perp") {
         scalper = new ScalperManager(traderConfig, scalperConfig);
+        // Share position store so scalper can pre-persist rationale for dashboard
+        const scalperStore = new PositionStore(traderConfig.positionStorePath);
+        await scalperStore.load();
+        scalper.setStore(scalperStore);
         await scalper.start();
         log("scalper started", { markets: scalperConfig.markets, dryRun: scalperConfig.dryRun });
       } else {
