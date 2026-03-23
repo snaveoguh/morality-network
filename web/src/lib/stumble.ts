@@ -378,7 +378,7 @@ async function fetchHNStories(): Promise<StumbleItem[]> {
     );
 
     return stories
-      .filter((s): s is any => s && s.title && !s.dead && !s.deleted)
+      .filter((s): s is NonNullable<typeof s> => !!s && !!s.title && !s.dead && !s.deleted)
       .map((s) => ({
         id: `hn-${s.id}`,
         type: "discussion" as const,
