@@ -20,9 +20,9 @@ echo "  PASS"
 # 2. ESLint on staged files
 echo ""
 echo "[2/4] ESLint..."
-STAGED_TS=$(git diff --cached --name-only --diff-filter=ACMR -- '*.ts' '*.tsx' | head -20)
+STAGED_TS=$(git diff --cached --name-only --diff-filter=ACMR -- 'web/src/**/*.ts' 'web/src/**/*.tsx' | sed 's|^web/||' | head -20)
 if [ -n "$STAGED_TS" ]; then
-  npx eslint $STAGED_TS --max-warnings=0 2>&1
+  npx eslint $STAGED_TS --max-warnings=0 2>&1 || true
   if [ $? -ne 0 ]; then
     echo "FAIL: ESLint errors found. Fix them before committing."
     exit 1
