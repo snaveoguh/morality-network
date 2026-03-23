@@ -151,8 +151,9 @@ contract MoralityTipping is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         uint256 size = end - offset;
 
         TipRecord[] memory result = new TipRecord[](size);
-        for (uint256 i = 0; i < size; i++) {
+        for (uint256 i = 0; i < size;) {
             result[i] = allTips[offset + i];
+            unchecked { ++i; }
         }
         return result;
     }

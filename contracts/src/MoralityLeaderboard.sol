@@ -66,11 +66,12 @@ contract MoralityLeaderboard is Initializable, UUPSUpgradeable, OwnableUpgradeab
     /// @notice Batch update AI scores
     function batchUpdateAIScores(bytes32[] calldata entityHashes, uint256[] calldata scores) external onlyOracle {
         require(entityHashes.length == scores.length, "Length mismatch");
-        for (uint256 i = 0; i < entityHashes.length; i++) {
+        for (uint256 i = 0; i < entityHashes.length;) {
             require(scores[i] <= 10000, "Score max 10000");
             aiScores[entityHashes[i]] = scores[i];
             aiScoreUpdatedAt[entityHashes[i]] = block.timestamp;
             emit AIScoreUpdated(entityHashes[i], scores[i], block.timestamp);
+            unchecked { ++i; }
         }
     }
 

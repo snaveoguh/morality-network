@@ -178,8 +178,9 @@ contract MoralityAgentVault is Initializable, UUPSUpgradeable, OwnableUpgradeabl
         uint256 size = end - offset;
 
         address[] memory result = new address[](size);
-        for (uint256 i = 0; i < size; i++) {
+        for (uint256 i = 0; i < size;) {
             result[i] = funders[offset + i];
+            unchecked { ++i; }
         }
         return result;
     }
