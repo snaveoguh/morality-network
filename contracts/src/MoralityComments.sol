@@ -186,8 +186,9 @@ contract MoralityComments is Initializable, UUPSUpgradeable, OwnableUpgradeable 
         uint256 size = end - offset;
 
         uint256[] memory result = new uint256[](size);
-        for (uint256 i = 0; i < size; i++) {
+        for (uint256 i = 0; i < size;) {
             result[i] = allIds[offset + i];
+            unchecked { ++i; }
         }
         return result;
     }

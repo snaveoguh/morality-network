@@ -248,8 +248,9 @@ contract MoralityRatings is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint256 size = end - offset;
 
         address[] memory result = new address[](size);
-        for (uint256 i = 0; i < size; i++) {
+        for (uint256 i = 0; i < size;) {
             result[i] = allRaters[offset + i];
+            unchecked { ++i; }
         }
         return result;
     }
