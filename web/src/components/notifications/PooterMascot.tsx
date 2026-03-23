@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, type ReactNode } from "react";
+import { Component, type ReactNode, useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useNotification } from "@/providers/NotificationProvider";
 
@@ -43,21 +43,53 @@ function Pooter2D() {
 }
 
 // ---------------------------------------------------------------------------
+// Speech bubble
+// ---------------------------------------------------------------------------
+function SpeechBubble({ message, visible }: { message: string; visible: boolean }) {
+  if (!visible || !message) return null;
+  return (
+    <div
+      className="absolute -left-2 bottom-full mb-2 w-max max-w-[160px] -translate-x-full animate-[fadeIn_0.3s_ease-out] rounded border border-[var(--rule)] bg-[var(--paper)] px-2 py-1 font-serif text-[10px] italic text-[var(--ink)] shadow-md"
+      style={{ animationFillMode: "forwards" }}
+    >
+      {message}
+      {/* Triangle pointer */}
+      <div className="absolute -bottom-1 right-3 h-2 w-2 rotate-45 border-b border-r border-[var(--rule)] bg-[var(--paper)]" />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main mascot — fixed bottom-right
 // ---------------------------------------------------------------------------
 
 /**
  * Pooter mascot — fixed bottom-right corner.
- * Desktop (≥1024px): 96×96 Three.js Canvas with 3D printer bot.
+ * Desktop (≥1024px): 48×48 Three.js Canvas with kawaii 3D printer bot.
  * Mobile  (<1024px): 48×48 2D fallback.
- * If Three.js fails to load or crashes, 2D fallback on all viewports.
+ * Occasionally shows sassy messages telling you to go outside.
  */
 export function PooterMascot() {
   const { pooterMood, panelOpen, setPanelOpen, notifications } = useNotification();
   const unreadCount = notifications.length;
+  const [sassyMessage, setSassyMessage] = useState("");
+  const [bubbleVisible, setBubbleVisible] = useState(false);
+
+  const handleSassyMessage = useCallback((msg: string) => {
+    setSassyMessage(msg);
+    setBubbleVisible(true);
+  }, []);
+
+  // Auto-hide speech bubble after 5 seconds
+  useEffect(() => {
+    if (!bubbleVisible) return;
+    const timer = setTimeout(() => setBubbleVisible(false), 5000);
+    return () => clearTimeout(timer);
+  }, [bubbleVisible, sassyMessage]);
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
+      <SpeechBubble message={sassyMessage} visible={bubbleVisible} />
       <button
         onClick={() => setPanelOpen(!panelOpen)}
         className="relative block cursor-pointer"
@@ -67,7 +99,7 @@ export function PooterMascot() {
         {/* Desktop: Three.js 3D Canvas (lazy loaded, with error boundary) */}
         <div className="hidden lg:block">
           <ThreeErrorBoundary fallback={<Pooter2D />}>
-            <Pooter3DCanvas mood={pooterMood} />
+            <Pooter3DCanvas mood={pooterMood} onSassyMessage={handleSassyMessage} />
           </ThreeErrorBoundary>
         </div>
 
