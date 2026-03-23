@@ -40,6 +40,11 @@ const SECTION_STYLES: Record<
     chipBg: "#5E5A2E",
     chipText: "#F5F0E8",
   },
+  archive: {
+    border: "#6B5E4A",
+    chipBg: "#6B5E4A",
+    chipText: "#F5F0E8",
+  },
 };
 
 function formatRelativeTime(pubDate?: string): string | null {
@@ -191,7 +196,7 @@ export function SearchBar() {
           }}
           placeholder="news, OG, video, music"
           className="h-7 w-40 border-2 border-[var(--rule)] bg-[var(--paper)] pl-14 pr-7 font-mono text-[10px] text-[var(--ink)] placeholder-[var(--ink-faint)] transition-[width,border-color,box-shadow] duration-150 focus:w-[24rem] focus:border-[var(--ink)] focus:outline-none focus:shadow-[4px_4px_0_rgba(26,26,26,0.08)]"
-          aria-label="Search across breaking news, pooter originals, videos, music, and governance"
+          aria-label="Search across breaking news, pooter originals, videos, music, governance, and archive"
         />
         {loading && (
           <span className="absolute right-2 h-2.5 w-2.5 animate-spin rounded-full border border-[var(--ink)] border-t-transparent" />
@@ -274,7 +279,7 @@ export function SearchBar() {
                   >
                     Breaking news
                     <br />
-                    OG + video + music
+                    OG + video + archive
                   </div>
                 </div>
 
