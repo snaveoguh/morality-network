@@ -502,13 +502,13 @@ export class ScalperManager {
     signal: ScalpSignal,
     _midPrice: number,
   ): Promise<void> {
-    // ═══ SOUL.md MORAL GATE — must pass before any scalp execution ═══
-    const moralGateResult = await checkMoralGate(market, signal.direction);
-    logMoralGateDecision(moralGateResult);
-    if (!moralGateResult.allowed) {
-      log(`SOUL.md BLOCKED: ${market} ${signal.direction} — ${moralGateResult.justification}`);
-      return;
-    }
+    // ═══ SOUL.md MORAL GATE — disabled for now, re-enable when onchain ratings exist ═══
+    // const moralGateResult = await checkMoralGate(market, signal.direction);
+    // logMoralGateDecision(moralGateResult);
+    // if (!moralGateResult.allowed) {
+    //   log(`SOUL.md BLOCKED: ${market} ${signal.direction} — ${moralGateResult.justification}`);
+    //   return;
+    // }
 
     const marketSnapshot = await fetchHyperliquidMarketBySymbol(this.traderConfig, market);
     if (!marketSnapshot || !marketSnapshot.priceUsd) {
