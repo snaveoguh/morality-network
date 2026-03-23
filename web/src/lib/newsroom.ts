@@ -9,6 +9,7 @@ import { hasAIProviderForTask } from "./ai-models";
 import { computeEntityHash } from "./entity";
 import { TOPIC_TAXONOMY, matchesTopicDefinition } from "./sentiment";
 import { biasToPosition } from "./bias";
+import { reportError, reportWarn } from "./report-error";
 import {
   type NewsroomEdition,
   type NewsroomStory,
@@ -375,12 +376,12 @@ export async function runNewsroom(
   const minStories = options?.minStories ?? 5;
   const maxStories = options?.maxStories ?? DEFAULT_MAX_STORIES;
 
-  console.log(`[newsroom] Starting for ${today} (${minStories}-${maxStories} stories)`);
+  reportWarn("newsroom", `Starting for ${today} (${minStories}-${maxStories} stories)`);
 
   // 1. Fetch all feeds
   const items = await fetchAllFeeds();
   if (items.length === 0) {
-    console.warn("[newsroom] No feed items available");
+    reportWarn("newsroom", "No feed items available");
     return {
       edition: {
         date: today,
@@ -395,17 +396,15 @@ export async function runNewsroom(
     };
   }
 
-  console.log(`[newsroom] ${items.length} feed items loaded`);
+  reportWarn("newsroom", `${items.length} feed items loaded`);
 
   // 2. Cluster stories
   const clusters = clusterStories(items);
-  console.log(`[newsroom] ${clusters.length} story clusters identified`);
+  reportWarn("newsroom", `${clusters.length} story clusters identified`);
 
   // 3. Select stories for publication
   const selected = selectStories(clusters, { min: minStories, max: maxStories });
-  console.log(
-    `[newsroom] ${selected.length} stories selected (${selected.filter((s) => s.signals.isBreaking).length} breaking)`,
-  );
+  reportWarn("newsroom", `${selected.length} stories selected (${selected.filter((s) => s.signals.isBreaking).length} breaking)`);
 
   // 4. Check existing edition (idempotent — skip already-generated)
   const existingEdition = await getNewsroomEdition(today);
@@ -475,9 +474,7 @@ export async function runNewsroom(
     }
 
     try {
-      console.log(
-        `[newsroom] Generating editorial for "${cluster.primary.title.slice(0, 60)}..." (score: ${cluster.score}, sources: ${cluster.signals.sourceCount})`,
-      );
+      reportWarn("newsroom", `Generating editorial for "${cluster.primary.title.slice(0, 60)}..." (score: ${cluster.score}, sources: ${cluster.signals.sourceCount})`);
 
       const editorial = await generateAIEditorial(
         cluster.primary,
@@ -501,9 +498,7 @@ export async function runNewsroom(
       details.push({ hash, title: cluster.primary.title, status: "generated" });
       generated++;
 
-      console.log(
-        `[newsroom] ✓ Generated ${generated}/${selected.length}: "${cluster.primary.title.slice(0, 50)}..."`,
-      );
+      reportWarn("newsroom", `Generated ${generated}/${selected.length}: "${cluster.primary.title.slice(0, 50)}..."`);
 
       // Rate limit between generations
       if (generated < selected.length) {
@@ -514,9 +509,7 @@ export async function runNewsroom(
     } catch (err) {
       const message =
         err instanceof Error ? err.message : String(err);
-      console.error(
-        `[newsroom] ✗ Failed: "${cluster.primary.title.slice(0, 50)}..." — ${message}`,
-      );
+      reportError("newsroom", `Failed: "${cluster.primary.title.slice(0, 50)}..." — ${message}`, { severity: "error" });
       details.push({
         hash,
         title: cluster.primary.title,
@@ -535,9 +528,7 @@ export async function runNewsroom(
     stories: [],
   };
 
-  console.log(
-    `[newsroom] Complete: ${generated} generated, ${skipped} skipped, ${errors} errors. Edition has ${finalEdition.stories.length} stories.`,
-  );
+  reportWarn("newsroom", `Complete: ${generated} generated, ${skipped} skipped, ${errors} errors. Edition has ${finalEdition.stories.length} stories.`);
 
   return {
     edition: finalEdition,

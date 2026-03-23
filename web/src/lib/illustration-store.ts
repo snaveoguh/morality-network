@@ -2,6 +2,7 @@ import "server-only";
 
 import path from "node:path";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { reportWarn } from "./report-error";
 
 // ============================================================================
 // ILLUSTRATION STORE — Separate persistence for DALL-E cover art
@@ -70,7 +71,7 @@ async function redisSetIllustration(hash: string, data: IllustrationRecord): Pro
     // Use Upstash pipeline format (same as editorial-archive.ts) —
     // the /set/key endpoint doesn't accept large values in the body.
     const serialized = JSON.stringify(data);
-    console.log(`[illustration-store] Redis SET ${hash.slice(0, 14)}... (${Math.round(serialized.length / 1024)}KB)`);
+    reportWarn("illustration-store:redis", `Redis SET ${hash.slice(0, 14)}... (${Math.round(serialized.length / 1024)}KB)`);
     const res = await fetch(`${UPSTASH_URL}/pipeline`, {
       method: "POST",
       headers: {
@@ -82,14 +83,14 @@ async function redisSetIllustration(hash: string, data: IllustrationRecord): Pro
     });
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      console.warn(`[illustration-store] Redis SET failed: HTTP ${res.status} — ${body.slice(0, 200)}`);
+      reportWarn("illustration-store:redis", `Redis SET failed: HTTP ${res.status} — ${body.slice(0, 200)}`);
       return false;
     }
     const body = await res.json().catch(() => null);
-    console.log(`[illustration-store] Redis SET response:`, JSON.stringify(body)?.slice(0, 200));
+    reportWarn("illustration-store:redis", `Redis SET response: ${JSON.stringify(body)?.slice(0, 200)}`);
     return true;
   } catch (err) {
-    console.warn("[illustration-store] Redis SET error:", err instanceof Error ? err.message : err);
+    reportWarn("illustration-store:redis", err);
     return false;
   }
 }
@@ -182,19 +183,14 @@ export async function saveIllustration(
   try {
     await persistStore(store);
     persisted = true;
-    console.log(
-      `[illustration-store] saved ${hash.slice(0, 10)}... (${Math.round(data.base64.length / 1024)}KB)`,
-    );
+    reportWarn("illustration-store", `saved ${hash.slice(0, 10)}... (${Math.round(data.base64.length / 1024)}KB)`);
   } catch (err) {
     // Vercel serverless has a read-only filesystem
-    console.warn(
-      "[illustration-store] persist failed (read-only fs?):",
-      err instanceof Error ? err.message : err,
-    );
+    reportWarn("illustration-store:persist", err);
   }
 
   if (!persisted) {
-    console.warn("[illustration-store] WARNING: illustration not persisted to any store");
+    reportWarn("illustration-store", "WARNING: illustration not persisted to any store");
   }
 
   return persisted;

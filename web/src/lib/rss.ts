@@ -2,6 +2,7 @@ import Parser from "rss-parser";
 import { getSourceBias, type SourceBias } from "./bias";
 import { fetchRedditFeeds, fetchChanFeeds } from "./scrapers";
 import { extractCanonicalClaim } from "./claim-extract";
+import { reportError, reportWarn } from "./report-error";
 
 const parser = new Parser({
   timeout: 5000,
@@ -276,10 +277,7 @@ export async function fetchFeed(source: FeedSource): Promise<FeedItem[]> {
       return feedItem;
     });
   } catch (error) {
-    console.error(
-      `[RSS:${source.name}] Failed to fetch feed:`,
-      error instanceof Error ? error.message : error
-    );
+    reportError(`RSS:${source.name}`, error, { severity: "error" });
     return [];
   }
 }
@@ -312,7 +310,7 @@ export async function fetchAllFeeds(
 ): Promise<FeedItem[]> {
   // Return cached if fresh
   if (feedCache && Date.now() - feedCache.ts < FEED_CACHE_TTL_MS) {
-    console.log(`[RSS] Serving ${feedCache.items.length} items from cache`);
+    reportWarn("RSS", `Serving ${feedCache.items.length} items from cache`);
     return feedCache.items;
   }
 
@@ -324,11 +322,11 @@ export async function fetchAllFeeds(
       15,
     ),
     fetchRedditFeeds().catch((err) => {
-      console.error("[Scrapers] Reddit fetch failed:", err);
+      reportError("Scrapers:reddit", err, { severity: "error" });
       return [] as FeedItem[];
     }),
     fetchChanFeeds().catch((err) => {
-      console.error("[Scrapers] 4chan fetch failed:", err);
+      reportError("Scrapers:4chan", err, { severity: "error" });
       return [] as FeedItem[];
     }),
   ]);
@@ -535,9 +533,7 @@ async function fetchXmlFromUrl(
       }
 
       const delay = RETRY_BACKOFF_MS[attempt] ?? 2000;
-      console.warn(
-        `[RSS:${sourceName}] ${res.status}, retrying in ${delay}ms (${attempt + 1}/${maxRetries})`
-      );
+      reportWarn(`RSS:${sourceName}`, `${res.status}, retrying in ${delay}ms (${attempt + 1}/${maxRetries})`);
       await new Promise((resolve) => setTimeout(resolve, delay));
     } catch (error) {
       // Let FallbackError propagate immediately — no retry
@@ -550,10 +546,7 @@ async function fetchXmlFromUrl(
         throw error;
       }
       const delay = RETRY_BACKOFF_MS[attempt] ?? 2000;
-      console.warn(
-        `[RSS:${sourceName}] fetch error, retrying in ${delay}ms (${attempt + 1}/${maxRetries})`,
-        error instanceof Error ? error.message : error
-      );
+      reportWarn(`RSS:${sourceName}`, `fetch error, retrying in ${delay}ms (${attempt + 1}/${maxRetries})`);
       await new Promise((resolve) => setTimeout(resolve, delay));
     } finally {
       clearTimeout(timeout);
@@ -581,20 +574,13 @@ async function fetchFeedXmlWithRetry(
   } catch (error) {
     // If the primary URL returned 403/404 and we have a fallback, try it
     if (error instanceof FallbackError && source.fallbackUrl) {
-      console.warn(
-        `[RSS:${source.name}] Primary URL returned ${error.statusCode}, trying fallback: ${source.fallbackUrl}`
-      );
+      reportWarn(`RSS:${source.name}`, `Primary URL returned ${error.statusCode}, trying fallback: ${source.fallbackUrl}`);
       try {
         const xml = await fetchXmlFromUrl(source.fallbackUrl, `${source.name}:fallback`, maxRetries);
-        console.log(
-          `[RSS:${source.name}] Fallback URL succeeded: ${source.fallbackUrl}`
-        );
+        reportWarn(`RSS:${source.name}`, `Fallback URL succeeded: ${source.fallbackUrl}`);
         return xml;
       } catch (fallbackError) {
-        console.error(
-          `[RSS:${source.name}] Fallback URL also failed:`,
-          fallbackError instanceof Error ? fallbackError.message : fallbackError
-        );
+        reportError(`RSS:${source.name}`, fallbackError, { severity: "error" });
         // Re-throw the original error for clarity
         throw error;
       }
