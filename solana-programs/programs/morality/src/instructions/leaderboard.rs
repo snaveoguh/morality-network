@@ -1,6 +1,9 @@
 use anchor_lang::prelude::*;
 use crate::state::*;
 use crate::errors::MoralityError;
+use crate::events;
+
+const AI_SCORE_COOLDOWN_SECS: i64 = 300; // 5 minutes
 
 // ── Update AI Score ───────────────────────────────────────────────────
 
@@ -26,8 +29,14 @@ pub struct UpdateAIScore<'info> {
 pub fn update_ai_score(ctx: Context<UpdateAIScore>, score: u64) -> Result<()> {
     let config = &ctx.accounts.config;
     let oracle = &ctx.accounts.oracle;
+    let now = Clock::get()?.unix_timestamp;
 
     require!(!config.paused, MoralityError::Paused);
+    // Oracle must be configured (M-3 fix)
+    require!(
+        config.ai_oracle != Pubkey::default() || oracle.key() == config.authority,
+        MoralityError::OracleNotSet
+    );
     // Must be oracle or authority
     require!(
         oracle.key() == config.ai_oracle || oracle.key() == config.authority,
@@ -36,10 +45,26 @@ pub fn update_ai_score(ctx: Context<UpdateAIScore>, score: u64) -> Result<()> {
     require!(score <= 10000, MoralityError::InvalidAIScore);
 
     let ai_score = &mut ctx.accounts.ai_score;
+
+    // Cooldown: 5 min between updates per entity (H-1 fix)
+    // Skip cooldown check on first update (updated_at == 0)
+    if ai_score.updated_at > 0 {
+        require!(
+            now - ai_score.updated_at >= AI_SCORE_COOLDOWN_SECS,
+            MoralityError::TooFrequent
+        );
+    }
+
     ai_score.entity_hash = ctx.accounts.entity.entity_hash;
     ai_score.score = score;
-    ai_score.updated_at = Clock::get()?.unix_timestamp;
+    ai_score.updated_at = now;
     ai_score.bump = ctx.bumps.ai_score;
+
+    emit!(events::AIScoreUpdated {
+        entity_hash: ctx.accounts.entity.entity_hash,
+        score,
+        timestamp: now,
+    });
 
     Ok(())
 }
@@ -59,19 +84,17 @@ pub struct SetAIOracle<'info> {
 }
 
 pub fn set_ai_oracle(ctx: Context<SetAIOracle>, oracle: Pubkey) -> Result<()> {
+    let old_oracle = ctx.accounts.config.ai_oracle;
     ctx.accounts.config.ai_oracle = oracle;
+
+    emit!(events::OracleUpdated {
+        old_oracle,
+        new_oracle: oracle,
+    });
+
     Ok(())
 }
 
-/// Compute composite score off-chain (view-equivalent).
-/// On Solana, this is typically computed client-side from the PDAs.
-/// The formula matches the Solidity version:
+/// Composite score is computed client-side from PDAs (same formula as Solidity):
 ///   score = (rating_component * 40 + ai_component * 30 + tip_component * 20 + engagement_component * 10) / 100
-///
-/// Rating component: ((avg_rating - 100) * 10000) / 400 where avg = totalScore * 100 / count
-/// AI component: ai_score (already 0-10000)
-/// Tip component: logarithmic tiers based on SOL amount
-/// Engagement component: logarithmic tiers based on comment count
-///
-/// This is exposed as a client-side helper in the SDK, not as an on-chain instruction,
-/// because Solana programs can't easily read multiple PDAs in a view function.
+/// See SDK for implementation.

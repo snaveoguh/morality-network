@@ -54,4 +54,10 @@ pub enum MoralityError {
     NotOracle,
     #[msg("Protocol is paused")]
     Paused,
+    #[msg("AI oracle not configured")]
+    OracleNotSet,
+    #[msg("AI score update too frequent (5min cooldown)")]
+    TooFrequent,
+    #[msg("Comment ID overflow")]
+    CommentIdOverflow,
 }

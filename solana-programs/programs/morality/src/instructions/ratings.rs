@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use crate::state::*;
 use crate::errors::MoralityError;
+use crate::events;
 
 // ── Rate (1-5 stars) ──────────────────────────────────────────────────
 
@@ -52,10 +53,18 @@ pub fn rate(ctx: Context<Rate>, score: u8) -> Result<()> {
         user_rating.bump = ctx.bumps.user_rating;
     }
 
+    let is_update = user_rating.score > 0;
     user_rating.score = score;
     user_rating.timestamp = now;
     stats.last_updated = now;
     stats.bump = ctx.bumps.stats;
+
+    emit!(events::Rated {
+        entity_hash: ctx.accounts.entity.entity_hash,
+        rater: ctx.accounts.rater.key(),
+        score,
+        is_update,
+    });
 
     Ok(())
 }
@@ -109,11 +118,20 @@ pub fn rate_with_reason(ctx: Context<RateWithReason>, score: u8, reason: String)
         user_rating.bump = ctx.bumps.user_rating;
     }
 
+    let is_update = user_rating.score > 0;
     user_rating.score = score;
-    user_rating.reason = reason;
+    user_rating.reason = reason.clone();
     user_rating.timestamp = now;
     stats.last_updated = now;
     stats.bump = ctx.bumps.stats;
+
+    emit!(events::RatedWithReason {
+        entity_hash: ctx.accounts.entity.entity_hash,
+        rater: ctx.accounts.rater.key(),
+        score,
+        reason,
+        is_update,
+    });
 
     Ok(())
 }
@@ -189,10 +207,20 @@ pub fn rate_interpretation(
     user_rating.moral_impact = moral_impact;
     user_rating.has_interpretation = true;
     user_rating.timestamp = now;
+    let is_update = user_rating.has_interpretation;
     if !reason.is_empty() {
         user_rating.reason = reason;
     }
     stats.last_updated = now;
+
+    emit!(events::InterpretationRated {
+        entity_hash: ctx.accounts.entity.entity_hash,
+        rater: ctx.accounts.rater.key(),
+        truth,
+        importance,
+        moral_impact,
+        is_update,
+    });
 
     Ok(())
 }
