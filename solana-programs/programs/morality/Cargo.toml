@@ -1,0 +1,19 @@
+[package]
+name = "morality"
+version = "0.1.0"
+description = "Pooter.world onchain reputation protocol — Solana edition"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "morality"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.30.1"
