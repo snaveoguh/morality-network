@@ -1,5 +1,5 @@
 import { NounDetailView } from "@/components/nouns/NounDetailView";
-import { withBrand } from "@/lib/brand";
+import { withBrand, BRAND_NAME } from "@/lib/brand";
 import type { Metadata } from "next";
 
 interface Props {
@@ -8,9 +8,25 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { nounId } = await params;
+  const imageUrl = `https://noun.pics/${nounId}`;
+  const title = `Noun ${nounId}`;
+  const description = `View and trade Noun #${nounId} — 0% marketplace fees via Seaport 1.6.`;
   return {
-    title: withBrand(`Noun ${nounId}`),
-    description: `View and trade Noun #${nounId} — 0% marketplace fees via Seaport 1.6.`,
+    title: withBrand(title),
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: imageUrl, width: 320, height: 320, alt: title }],
+      type: "website",
+      siteName: BRAND_NAME,
+      locale: "en_US",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      images: [imageUrl],
+    },
   };
 }
 

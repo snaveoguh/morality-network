@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ asset: st
   };
 }
 
-export const revalidate = 60; // 1 min ISR
+export const revalidate = 3600; // 1 hour ISR
 
 export default async function PepeDetailPage({
   params,

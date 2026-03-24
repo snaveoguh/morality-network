@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { buildPredictionMarketOpsSnapshot } from "@/lib/prediction-market-ops";
 import { verifyOperatorAuth } from "@/lib/operator-auth";
 
-export const revalidate = 60;
+export const revalidate = 3600; // 1 hour ISR
 export const dynamic = "force-dynamic";
 
 function parseLimit(value: string | null): number | undefined {

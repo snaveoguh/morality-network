@@ -5,7 +5,7 @@ import {
 import { DivisionDetail } from "@/components/proposals/DivisionDetail";
 import Link from "next/link";
 
-export const revalidate = 60; // 1 min ISR
+export const revalidate = 3600; // 1 hour ISR
 export const maxDuration = 55;
 
 /** Race a promise against a timeout — returns fallback on timeout */
