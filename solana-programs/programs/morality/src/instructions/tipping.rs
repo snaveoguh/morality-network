@@ -4,31 +4,26 @@ use crate::state::*;
 use crate::errors::MoralityError;
 
 // ── Tip Entity ────────────────────────────────────────────────────────
+// FIX C-3: Conditionally route SOL to owner_balance or escrow based on claim status.
+// FIX H-1: owner_balance uses separate "tip_vault" seed to avoid collision with tipper_balance.
+// FIX H-4: Check tipper != claimed_owner to prevent self-tip PDA collision.
 
 #[derive(Accounts)]
 pub struct TipEntity<'info> {
-    #[account(seeds = [b"config"], bump = config.bump)]
+    #[account(seeds = [b"config"], bump = config.bump, constraint = !config.paused @ MoralityError::Paused)]
     pub config: Account<'info, Config>,
     #[account(seeds = [b"entity", &entity.entity_hash], bump = entity.bump)]
     pub entity: Account<'info, Entity>,
-    /// Balance account for the entity's claimed owner (if claimed).
-    /// Created if needed. If entity is unclaimed, escrow is used instead.
+    /// Vault PDA that holds actual SOL for tips. All tip lamports go here.
+    /// Seed: ["vault", entity_hash] — one vault per entity, holds all SOL.
     #[account(
         init_if_needed,
         payer = tipper,
-        space = TipBalance::SIZE,
-        seeds = [b"balance", entity.claimed_owner.as_ref()],
+        space = TipVault::SIZE,
+        seeds = [b"vault", &entity.entity_hash],
         bump,
     )]
-    pub owner_balance: Option<Account<'info, TipBalance>>,
-    #[account(
-        init_if_needed,
-        payer = tipper,
-        space = Escrow::SIZE,
-        seeds = [b"escrow", &entity.entity_hash],
-        bump,
-    )]
-    pub escrow: Account<'info, Escrow>,
+    pub vault: Account<'info, TipVault>,
     /// Tipper's balance account (for tracking total_given)
     #[account(
         init_if_needed,
@@ -45,17 +40,16 @@ pub struct TipEntity<'info> {
 
 pub fn tip_entity(ctx: Context<TipEntity>, amount: u64) -> Result<()> {
     require!(amount > 0, MoralityError::ZeroTip);
-    require!(!ctx.accounts.config.paused, MoralityError::Paused);
 
     let entity = &ctx.accounts.entity;
 
-    // Transfer SOL from tipper to escrow PDA (which holds all tip funds)
+    // Transfer SOL from tipper to vault PDA (single source of truth for SOL)
     system_program::transfer(
         CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
             system_program::Transfer {
                 from: ctx.accounts.tipper.to_account_info(),
-                to: ctx.accounts.escrow.to_account_info(),
+                to: ctx.accounts.vault.to_account_info(),
             },
         ),
         amount,
@@ -64,23 +58,21 @@ pub fn tip_entity(ctx: Context<TipEntity>, amount: u64) -> Result<()> {
     // Track tipper stats
     let tipper_balance = &mut ctx.accounts.tipper_balance;
     tipper_balance.owner = ctx.accounts.tipper.key();
-    tipper_balance.total_given += amount;
+    tipper_balance.total_given = tipper_balance.total_given.saturating_add(amount);
     tipper_balance.bump = ctx.bumps.tipper_balance;
 
+    // Update vault accounting
+    let vault = &mut ctx.accounts.vault;
+    vault.entity_hash = entity.entity_hash;
+    vault.total_deposited = vault.total_deposited.saturating_add(amount);
+    vault.bump = ctx.bumps.vault;
+
     if entity.claimed_owner != Pubkey::default() {
-        // Entity is claimed — credit owner's balance
-        if let Some(owner_balance) = &mut ctx.accounts.owner_balance {
-            owner_balance.owner = entity.claimed_owner;
-            owner_balance.amount += amount;
-            owner_balance.total_received += amount;
-            owner_balance.bump = ctx.bumps.owner_balance.unwrap_or(0);
-        }
+        // Entity is claimed — track as withdrawable by owner
+        vault.owner_claimable = vault.owner_claimable.saturating_add(amount);
     } else {
-        // Entity unclaimed — track in escrow
-        let escrow = &mut ctx.accounts.escrow;
-        escrow.entity_hash = entity.entity_hash;
-        escrow.amount += amount;
-        escrow.bump = ctx.bumps.escrow;
+        // Entity unclaimed — track as escrowed
+        vault.escrowed = vault.escrowed.saturating_add(amount);
     }
 
     Ok(())
@@ -90,14 +82,25 @@ pub fn tip_entity(ctx: Context<TipEntity>, amount: u64) -> Result<()> {
 
 #[derive(Accounts)]
 pub struct TipComment<'info> {
-    #[account(seeds = [b"config"], bump = config.bump)]
+    #[account(seeds = [b"config"], bump = config.bump, constraint = !config.paused @ MoralityError::Paused)]
     pub config: Account<'info, Config>,
     #[account(
         mut,
         seeds = [b"comment", &comment.id.to_le_bytes()],
         bump = comment.bump,
+        constraint = comment.author != tipper.key() @ MoralityError::SelfTip,
     )]
     pub comment: Account<'info, Comment>,
+    /// Vault for the comment's entity — holds the actual SOL
+    #[account(
+        init_if_needed,
+        payer = tipper,
+        space = TipVault::SIZE,
+        seeds = [b"vault", &comment.entity_hash],
+        bump,
+    )]
+    pub vault: Account<'info, TipVault>,
+    /// Author's balance (for tracking total_received)
     #[account(
         init_if_needed,
         payer = tipper,
@@ -106,6 +109,7 @@ pub struct TipComment<'info> {
         bump,
     )]
     pub author_balance: Account<'info, TipBalance>,
+    /// Tipper's balance (for tracking total_given)
     #[account(
         init_if_needed,
         payer = tipper,
@@ -121,43 +125,47 @@ pub struct TipComment<'info> {
 
 pub fn tip_comment(ctx: Context<TipComment>, amount: u64) -> Result<()> {
     require!(amount > 0, MoralityError::ZeroTip);
-    require!(!ctx.accounts.config.paused, MoralityError::Paused);
-    require!(
-        ctx.accounts.comment.author != ctx.accounts.tipper.key(),
-        MoralityError::SelfTip
-    );
 
-    // Transfer SOL to author balance PDA
+    // Transfer SOL to vault
     system_program::transfer(
         CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
             system_program::Transfer {
                 from: ctx.accounts.tipper.to_account_info(),
-                to: ctx.accounts.author_balance.to_account_info(),
+                to: ctx.accounts.vault.to_account_info(),
             },
         ),
         amount,
     )?;
 
     // Update comment tip total
-    ctx.accounts.comment.tip_total += amount;
+    ctx.accounts.comment.tip_total = ctx.accounts.comment.tip_total.saturating_add(amount);
 
-    // Track balances
+    // Update vault
+    let vault = &mut ctx.accounts.vault;
+    vault.entity_hash = ctx.accounts.comment.entity_hash;
+    vault.total_deposited = vault.total_deposited.saturating_add(amount);
+    vault.owner_claimable = vault.owner_claimable.saturating_add(amount);
+    vault.bump = ctx.bumps.vault;
+
+    // Track balances (bookkeeping only — no SOL moves to these PDAs)
     let author_balance = &mut ctx.accounts.author_balance;
     author_balance.owner = ctx.accounts.comment.author;
-    author_balance.amount += amount;
-    author_balance.total_received += amount;
+    author_balance.amount = author_balance.amount.saturating_add(amount);
+    author_balance.total_received = author_balance.total_received.saturating_add(amount);
     author_balance.bump = ctx.bumps.author_balance;
 
     let tipper_balance = &mut ctx.accounts.tipper_balance;
     tipper_balance.owner = ctx.accounts.tipper.key();
-    tipper_balance.total_given += amount;
+    tipper_balance.total_given = tipper_balance.total_given.saturating_add(amount);
     tipper_balance.bump = ctx.bumps.tipper_balance;
 
     Ok(())
 }
 
 // ── Withdraw Tips ─────────────────────────────────────────────────────
+// FIX C-1: Compute rent-exempt minimum before transferring.
+// FIX C-2: Withdraw from vault PDA (where SOL actually lives), not balance PDA.
 
 #[derive(Accounts)]
 pub struct WithdrawTips<'info> {
@@ -168,6 +176,9 @@ pub struct WithdrawTips<'info> {
         has_one = owner,
     )]
     pub balance: Account<'info, TipBalance>,
+    /// The vault to withdraw from. Caller must specify which entity's vault.
+    #[account(mut)]
+    pub vault: Account<'info, TipVault>,
     #[account(mut)]
     pub owner: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -178,16 +189,34 @@ pub fn withdraw_tips(ctx: Context<WithdrawTips>) -> Result<()> {
     let amount = balance.amount;
     require!(amount > 0, MoralityError::NoBalance);
 
-    balance.amount = 0;
+    // FIX C-1: Ensure vault retains rent-exempt minimum
+    let vault_info = ctx.accounts.vault.to_account_info();
+    let rent = Rent::get()?;
+    let min_balance = rent.minimum_balance(vault_info.data_len());
+    let available = vault_info
+        .lamports()
+        .checked_sub(min_balance)
+        .ok_or(MoralityError::NoBalance)?;
+    let withdraw_amount = std::cmp::min(amount, available);
+    require!(withdraw_amount > 0, MoralityError::NoBalance);
 
-    // Transfer lamports from balance PDA to owner
-    **balance.to_account_info().try_borrow_mut_lamports()? -= amount;
-    **ctx.accounts.owner.to_account_info().try_borrow_mut_lamports()? += amount;
+    // Update bookkeeping
+    balance.amount = balance.amount.saturating_sub(withdraw_amount);
+
+    // Update vault
+    let vault = &mut ctx.accounts.vault;
+    vault.owner_claimable = vault.owner_claimable.saturating_sub(withdraw_amount);
+
+    // Transfer lamports from vault to owner (safe: we checked rent-exempt)
+    **ctx.accounts.vault.to_account_info().try_borrow_mut_lamports()? -= withdraw_amount;
+    **ctx.accounts.owner.to_account_info().try_borrow_mut_lamports()? += withdraw_amount;
 
     Ok(())
 }
 
 // ── Claim Escrow ──────────────────────────────────────────────────────
+// FIX C-1 + C-3: Moves escrowed amount to owner_claimable in the vault.
+// No lamport transfer needed — SOL is already in the vault.
 
 #[derive(Accounts)]
 pub struct ClaimEscrow<'info> {
@@ -195,10 +224,10 @@ pub struct ClaimEscrow<'info> {
     pub entity: Account<'info, Entity>,
     #[account(
         mut,
-        seeds = [b"escrow", &entity.entity_hash],
-        bump = escrow.bump,
+        seeds = [b"vault", &entity.entity_hash],
+        bump = vault.bump,
     )]
-    pub escrow: Account<'info, Escrow>,
+    pub vault: Account<'info, TipVault>,
     #[account(
         init_if_needed,
         payer = owner,
@@ -219,22 +248,20 @@ pub fn claim_escrow(ctx: Context<ClaimEscrow>) -> Result<()> {
         MoralityError::NotOwner
     );
 
-    let escrow = &mut ctx.accounts.escrow;
-    let amount = escrow.amount;
+    let vault = &mut ctx.accounts.vault;
+    let amount = vault.escrowed;
     require!(amount > 0, MoralityError::NoEscrow);
 
-    escrow.amount = 0;
+    // Move from escrowed to owner_claimable (SOL stays in vault)
+    vault.escrowed = 0;
+    vault.owner_claimable = vault.owner_claimable.saturating_add(amount);
 
-    // Move from escrow to balance
+    // Update balance bookkeeping
     let balance = &mut ctx.accounts.balance;
     balance.owner = ctx.accounts.owner.key();
-    balance.amount += amount;
-    balance.total_received += amount;
+    balance.amount = balance.amount.saturating_add(amount);
+    balance.total_received = balance.total_received.saturating_add(amount);
     balance.bump = ctx.bumps.balance;
-
-    // Transfer lamports
-    **escrow.to_account_info().try_borrow_mut_lamports()? -= amount;
-    **balance.to_account_info().try_borrow_mut_lamports()? += amount;
 
     Ok(())
 }

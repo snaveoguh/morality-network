@@ -6,7 +6,7 @@ use crate::errors::MoralityError;
 
 #[derive(Accounts)]
 pub struct PostComment<'info> {
-    #[account(mut, seeds = [b"config"], bump = config.bump)]
+    #[account(mut, seeds = [b"config"], bump = config.bump, constraint = !config.paused @ MoralityError::Paused)]
     pub config: Account<'info, Config>,
     #[account(seeds = [b"entity", &entity.entity_hash], bump = entity.bump)]
     pub entity: Account<'info, Entity>,
@@ -53,6 +53,8 @@ pub fn post_comment(
 
 #[derive(Accounts)]
 pub struct VoteComment<'info> {
+    #[account(seeds = [b"config"], bump = config.bump, constraint = !config.paused @ MoralityError::Paused)]
+    pub config: Account<'info, Config>,
     #[account(
         mut,
         seeds = [b"comment", &comment.id.to_le_bytes()],
