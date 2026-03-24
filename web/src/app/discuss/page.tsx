@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { RoomList } from "@/components/discuss/RoomList";
 import { withBrand } from "@/lib/brand";
 
-export const revalidate = 30;
+export const revalidate = 3600; // 1 hour ISR
 
 export const metadata = {
   title: withBrand("Discussion Rooms"),

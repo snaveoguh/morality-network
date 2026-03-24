@@ -1,8 +1,6 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "fs/promises";
 import { join } from "path";
-import { fetchAllFeeds } from "@/lib/rss";
-import { computeEntityHash } from "@/lib/entity";
 import { getArchivedFeedItemByHash } from "@/lib/archive";
 import { getArchivedEditorial } from "@/lib/editorial-archive";
 import { formatDateline } from "@/lib/article";
@@ -10,7 +8,7 @@ import { BRAND_DOMAIN, BRAND_NAME } from "@/lib/brand";
 
 // 24h revalidation — the image is deterministic per article hash.
 export const revalidate = 86400;
-export const maxDuration = 55;
+export const maxDuration = 15; // reduced — no more feed fetching fallback
 
 export const alt = `${BRAND_NAME} article`;
 export const size = { width: 1200, height: 630 };
@@ -116,22 +114,9 @@ async function resolveArticle(hash: string): Promise<OGArticle | null> {
     };
   }
 
-  const allItems = await withTimeout(fetchAllFeeds(), 20000, []);
-  const liveItem = allItems.find((i) => computeEntityHash(i.link) === hash);
-  if (liveItem) {
-    return {
-      title: liveItem.title,
-      description: liveItem.description || null,
-      source: liveItem.source,
-      category: liveItem.category || "World",
-      dateline: formatDateline(liveItem.pubDate),
-      imageUrl: liveItem.imageUrl || null,
-      tags: liveItem.tags || [],
-      dailyTitle: null,
-      isDailyEdition: false,
-    };
-  }
-
+  // Removed fetchAllFeeds() fallback — it was fetching 100+ RSS sources
+  // just for OG images, costing ~$50+/mo in function duration. If the article
+  // isn't in the archive, just return the generic fallback image.
   return null;
 }
 

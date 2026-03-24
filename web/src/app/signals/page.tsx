@@ -4,7 +4,7 @@ import {
 } from "@/lib/trading/signals";
 import { SignalDashboard } from "@/components/trading/SignalDashboard";
 
-export const revalidate = 60; // 1 min ISR
+export const revalidate = 3600; // 1 hour ISR
 
 export default async function SignalsPage() {
   const signals = await getAggregatedMarketSignals({

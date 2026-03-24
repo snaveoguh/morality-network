@@ -2,7 +2,7 @@ import { fetchAllProposals, fetchGovernanceSocialSignals } from "@/lib/governanc
 import { GovernanceSocialList } from "@/components/proposals/GovernanceSocialList";
 import { ProposalsList } from "@/components/proposals/ProposalsList";
 
-export const revalidate = 60; // 1 min ISR
+export const revalidate = 3600; // 1 hour ISR
 export const maxDuration = 55;
 
 /** Race a promise against a timeout — returns fallback on timeout */

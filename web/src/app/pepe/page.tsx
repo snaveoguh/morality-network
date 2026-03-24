@@ -7,7 +7,7 @@ export const metadata = {
     "Browse, buy, and list Rare Pepe NFTs via Emblem Vault on Ethereum. 1,774 certified cards from the original Counterparty collection.",
 };
 
-export const revalidate = 60; // 1 min ISR
+export const revalidate = 3600; // 1 hour ISR
 
 export default function PepePage() {
   return (

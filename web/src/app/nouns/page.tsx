@@ -7,7 +7,7 @@ export const metadata = {
     "Buy and sell Nouns NFTs with 0% marketplace fees via Seaport 1.6. Direct peer-to-peer trading on Ethereum.",
 };
 
-export const revalidate = 30;
+export const revalidate = 3600; // 1 hour ISR
 
 export default function NounsPage() {
   return (

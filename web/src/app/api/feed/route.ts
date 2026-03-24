@@ -4,7 +4,7 @@ import { fetchAllFeeds, DEFAULT_FEEDS } from "@/lib/rss";
 // Cache feed results for 5 minutes
 let cachedItems: Awaited<ReturnType<typeof fetchAllFeeds>> | null = null;
 let cacheTime = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 min
+const CACHE_DURATION = 15 * 60 * 1000; // 15 min (was 5 — cost savings)
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

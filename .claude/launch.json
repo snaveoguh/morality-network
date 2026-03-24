@@ -43,6 +43,12 @@
       "runtimeExecutable": "/bin/bash",
       "runtimeArgs": ["-c", "cd /Users/hugo/agent-hub && npx tsx watch --env-file=.env src/index.ts"],
       "port": 3100
+    },
+    {
+      "name": "iea-site",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "3456", "--directory", "/Users/hugo/Downloads/iea-site"],
+      "port": 3456
     }
   ]
 }

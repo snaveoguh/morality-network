@@ -9,7 +9,7 @@ import { getDailyEditionHash } from "@/lib/daily-edition";
 import { getArchivedEditorial, getRecentPooterOriginals } from "@/lib/editorial-archive";
 import { SITE_URL, withBrand } from "@/lib/brand";
 
-export const revalidate = 60; // 1 min ISR
+export const revalidate = 900; // 15 min ISR (was 60s — $70+/mo savings)
 export const maxDuration = 30;
 
 // ============================================================================

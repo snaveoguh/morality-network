@@ -6,7 +6,7 @@ import { MarketCard } from "@/components/predictions/MarketCard";
 import { OperatorPanel } from "@/components/predictions/OperatorPanel";
 import { withBrand } from "@/lib/brand";
 
-export const revalidate = 60; // 1 min ISR
+export const revalidate = 3600; // 1 hour ISR
 
 export const metadata = {
   title: withBrand("Nouns + Lil Nouns Predictions"),
