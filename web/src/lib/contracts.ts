@@ -22,6 +22,8 @@ const PUBLIC_ENV = {
     process.env.NEXT_PUBLIC_PROPOSAL_VOTING_ADDRESS,
   NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS:
     process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS,
+  NEXT_PUBLIC_POOTER_IMAGE_VAULT_ADDRESS:
+    process.env.NEXT_PUBLIC_POOTER_IMAGE_VAULT_ADDRESS,
 } as const;
 
 // MO Token on Base
@@ -1264,6 +1266,65 @@ export const PREDICTION_MARKET_ABI = [
       { name: "proposalKey", type: "bytes32", indexed: true },
       { name: "staker", type: "address", indexed: true },
       { name: "payout", type: "uint256", indexed: false },
+    ],
+  },
+] as const;
+
+// ============================================================================
+// POOTER IMAGE VAULT — IPFS-backed on-chain image registry
+// ============================================================================
+
+export const POOTER_IMAGE_VAULT_ADDRESS = readAddressEnv(
+  "NEXT_PUBLIC_POOTER_IMAGE_VAULT_ADDRESS",
+  ZERO_ADDRESS,
+);
+
+export const POOTER_IMAGE_VAULT_ABI = [
+  {
+    type: "function",
+    name: "mint",
+    inputs: [
+      { name: "ipfsCID", type: "string" },
+      { name: "contentHash", type: "bytes32" },
+      { name: "editionNumber", type: "uint256" },
+    ],
+    outputs: [{ name: "tokenId", type: "uint256" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "getImageByEdition",
+    inputs: [{ name: "editionNumber", type: "uint256" }],
+    outputs: [{ name: "ipfsCID", type: "string" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getImage",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [
+      { name: "ipfsCID", type: "string" },
+      { name: "contentHash", type: "bytes32" },
+      { name: "editionNumber", type: "uint256" },
+      { name: "mintedAt", type: "uint256" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "nextTokenId",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "event",
+    name: "ImageMinted",
+    inputs: [
+      { name: "tokenId", type: "uint256", indexed: true },
+      { name: "ipfsCID", type: "string", indexed: false },
+      { name: "contentHash", type: "bytes32", indexed: false },
+      { name: "editionNumber", type: "uint256", indexed: true },
     ],
   },
 ] as const;
