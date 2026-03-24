@@ -6,6 +6,8 @@ use crate::errors::MoralityError;
 
 #[derive(Accounts)]
 pub struct Rate<'info> {
+    #[account(seeds = [b"config"], bump = config.bump, constraint = !config.paused @ MoralityError::Paused)]
+    pub config: Account<'info, Config>,
     #[account(seeds = [b"entity", &entity.entity_hash], bump = entity.bump)]
     pub entity: Account<'info, Entity>,
     #[account(
@@ -39,7 +41,7 @@ pub fn rate(ctx: Context<Rate>, score: u8) -> Result<()> {
     if user_rating.score > 0 {
         // Update existing rating
         let old_score = user_rating.score;
-        stats.total_score = stats.total_score - old_score as u64 + score as u64;
+        stats.total_score = stats.total_score.saturating_sub(old_score as u64).saturating_add(score as u64);
     } else {
         // New rating
         stats.entity_hash = ctx.accounts.entity.entity_hash;
@@ -62,6 +64,8 @@ pub fn rate(ctx: Context<Rate>, score: u8) -> Result<()> {
 
 #[derive(Accounts)]
 pub struct RateWithReason<'info> {
+    #[account(seeds = [b"config"], bump = config.bump, constraint = !config.paused @ MoralityError::Paused)]
+    pub config: Account<'info, Config>,
     #[account(seeds = [b"entity", &entity.entity_hash], bump = entity.bump)]
     pub entity: Account<'info, Entity>,
     #[account(
@@ -95,7 +99,7 @@ pub fn rate_with_reason(ctx: Context<RateWithReason>, score: u8, reason: String)
 
     if user_rating.score > 0 {
         let old_score = user_rating.score;
-        stats.total_score = stats.total_score - old_score as u64 + score as u64;
+        stats.total_score = stats.total_score.saturating_sub(old_score as u64).saturating_add(score as u64);
     } else {
         stats.entity_hash = ctx.accounts.entity.entity_hash;
         stats.total_score += score as u64;
@@ -118,6 +122,8 @@ pub fn rate_with_reason(ctx: Context<RateWithReason>, score: u8, reason: String)
 
 #[derive(Accounts)]
 pub struct RateInterpretation<'info> {
+    #[account(seeds = [b"config"], bump = config.bump, constraint = !config.paused @ MoralityError::Paused)]
+    pub config: Account<'info, Config>,
     #[account(seeds = [b"entity", &entity.entity_hash], bump = entity.bump)]
     pub entity: Account<'info, Entity>,
     #[account(
@@ -168,9 +174,9 @@ pub fn rate_interpretation(
 
     if user_rating.has_interpretation {
         // Update: subtract old, add new
-        stats.total_truth = stats.total_truth - user_rating.truth as u64 + truth as u64;
-        stats.total_importance = stats.total_importance - user_rating.importance as u64 + importance as u64;
-        stats.total_moral_impact = stats.total_moral_impact - user_rating.moral_impact as u64 + moral_impact as u64;
+        stats.total_truth = stats.total_truth.saturating_sub(user_rating.truth as u64).saturating_add(truth as u64);
+        stats.total_importance = stats.total_importance.saturating_sub(user_rating.importance as u64).saturating_add(importance as u64);
+        stats.total_moral_impact = stats.total_moral_impact.saturating_sub(user_rating.moral_impact as u64).saturating_add(moral_impact as u64);
     } else {
         stats.total_truth += truth as u64;
         stats.total_importance += importance as u64;

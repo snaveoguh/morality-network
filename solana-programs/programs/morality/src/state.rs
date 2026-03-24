@@ -134,16 +134,20 @@ impl TipBalance {
     pub const SIZE: usize = 8 + 32 + 8 + 8 + 8 + 1;
 }
 
-/// Escrow for unclaimed entity tips — PDA seed: ["escrow", entity_hash]
+/// Tip vault — single PDA per entity that holds ALL tip SOL.
+/// Fixes C-1/C-2/C-3: SOL lives here, bookkeeping is separate.
+/// PDA seed: ["vault", entity_hash]
 #[account]
-pub struct Escrow {
+pub struct TipVault {
     pub entity_hash: [u8; 32],
-    pub amount: u64,
+    pub total_deposited: u64,    // Lifetime total SOL deposited
+    pub owner_claimable: u64,    // SOL withdrawable by claimed owner
+    pub escrowed: u64,           // SOL waiting for ownership claim
     pub bump: u8,
 }
 
-impl Escrow {
-    pub const SIZE: usize = 8 + 32 + 8 + 1;
+impl TipVault {
+    pub const SIZE: usize = 8 + 32 + 8 + 8 + 8 + 1;
 }
 
 /// AI score for an entity — PDA seed: ["ai_score", entity_hash]

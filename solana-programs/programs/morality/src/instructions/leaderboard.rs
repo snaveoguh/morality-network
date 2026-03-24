@@ -27,6 +27,7 @@ pub fn update_ai_score(ctx: Context<UpdateAIScore>, score: u64) -> Result<()> {
     let config = &ctx.accounts.config;
     let oracle = &ctx.accounts.oracle;
 
+    require!(!config.paused, MoralityError::Paused);
     // Must be oracle or authority
     require!(
         oracle.key() == config.ai_oracle || oracle.key() == config.authority,

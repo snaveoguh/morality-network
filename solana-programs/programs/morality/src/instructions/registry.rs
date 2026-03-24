@@ -72,7 +72,7 @@ pub fn register_entity(
     entity.bump = ctx.bumps.entity;
 
     let config = &mut ctx.accounts.config;
-    config.entity_count += 1;
+    config.entity_count = config.entity_count.checked_add(1).unwrap();
 
     Ok(())
 }
@@ -162,11 +162,13 @@ pub fn set_canonical_claim(
     let signer = &ctx.accounts.signer;
     let config = &ctx.accounts.config;
 
-    // Authorization: owner, claimed owner, or registrar
+    // Authorization: protocol authority, claimed owner, or registrar (only if unclaimed)
+    // FIX H-5: registrar loses write access once entity has a claimed owner
     let authorized = signer.key() == config.authority
         || (entity.claimed_owner != Pubkey::default()
             && entity.claimed_owner == signer.key())
-        || entity.registered_by == signer.key();
+        || (entity.claimed_owner == Pubkey::default()
+            && entity.registered_by == signer.key());
     require!(authorized, MoralityError::NotAuthorized);
 
     require!(!claim_text.is_empty(), MoralityError::ClaimRequired);
