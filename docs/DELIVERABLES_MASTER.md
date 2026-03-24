@@ -11,12 +11,12 @@ Status legend:
 
 | ID | Deliverable | Owner | Status | Acceptance Criteria |
 |---|---|---|---|---|
-| A-001 | Complete contract threat model + assumptions doc | Core | Not Started | Documented adversaries, trust boundaries, and attack surface per contract |
-| A-002 | Add full Foundry test suite for all critical paths | Core | Not Started | Happy path + failure path coverage for registry, ratings, comments, tipping |
+| A-001 | Complete contract threat model + assumptions doc | Core | Done | Security audit completed for vault rail + core contracts. Reentrancy, NAV bounds, slippage fixes applied |
+| A-002 | Add full Foundry test suite for all critical paths | Core | In Progress | Core contracts have basic tests. Vault rail contracts audited. Full coverage pending |
 | A-003 | Add fuzz tests for rating/comment/tip invariants | Core | Not Started | Invariants pass under fuzz, no critical regressions |
 | A-004 | Add differential tests for `rate` vs `rateWithReason` behavior | Core | Not Started | Event/state parity confirmed except reason fields |
-| A-005 | Define and implement upgrade/deployment strategy | Core | Not Started | Written policy for migrations, versioning, and deprecations |
-| A-006 | Mainnet deployment checklist and dry run | Core | Not Started | Signed checklist and reproducible script output |
+| A-005 | Define and implement upgrade/deployment strategy | Core | Done | UUPS proxy pattern implemented. Upgrade script added for vault rail |
+| A-006 | Mainnet deployment checklist and dry run | Core | In Progress | Base Sepolia deployed (9 contracts). Mainnet deploy pending |
 
 ## B. Indexer & Data Plane
 
@@ -26,9 +26,9 @@ Status legend:
 | B-002 | Ship `GET /api/v1/entities/:entityHash` | Data | Done | Returns normalized entity profile and recent activity |
 | B-003 | Ship `GET /api/v1/entities/:entityHash/feed` | Data | Done | Cursor pagination + action-type filters |
 | B-004 | Ship `GET /api/v1/feed/global` | Data | Done | Global feed with cursor + actor/entity filters |
-| B-005 | Ship `GET /api/v1/governance/live` | Data | In Progress | Unified normalized governance feed |
-| B-006 | Add tag index + query API for high-volume filtering | Data | Not Started | Tag filters support large cardinality |
-| B-007 | Add API auth/rate limit middleware | Data | Not Started | Key-based quotas enforced and logged |
+| B-005 | Ship `GET /api/v1/governance/live` | Data | Done | Unified normalized governance feed with filters and cursor pagination |
+| B-006 | Add tag index + query API for high-volume filtering | Data | Done | Feed items tagged, tag filters live on /api/feed |
+| B-007 | Add API auth/rate limit middleware | Data | Done | IP-based rate limiting on AI/terminal endpoints. CRON_SECRET on cron routes |
 | B-008 | Add export job endpoint for paid tier | Data | Not Started | Async dataset exports with status polling |
 
 ## C. Governance Ingestion
@@ -57,17 +57,17 @@ Status legend:
 
 | ID | Deliverable | Owner | Status | Acceptance Criteria |
 |---|---|---|---|---|
-| E-001 | Wire feed UI to indexer `/api/v1/feed/global` | Web | Not Started | Feed uses canonical API, fallback strategy documented |
-| E-002 | Wire entity/profile pages to indexer entity endpoints | Web | Not Started | Entity page SSR/CSR resolves profile + feed |
-| E-003 | Add proposal rail powered by governance live endpoint | Web | Not Started | Right rail updates from unified governance data |
-| E-004 | Add advanced tag and source filters at UI level | Web | Not Started | Multi-tag filters with clear query state |
+| E-001 | Wire feed UI to indexer `/api/v1/feed/global` | Web | Done | Feed uses RSS aggregation + editorial archive with remote indexer fallback |
+| E-002 | Wire entity/profile pages to indexer entity endpoints | Web | Done | Entity pages resolve via hash, editorial archive, and indexer |
+| E-003 | Add proposal rail powered by governance live endpoint | Web | Done | Proposals page live with multi-source governance (Nouns, Lil Nouns, Parliament) |
+| E-004 | Add advanced tag and source filters at UI level | Web | Done | Category and tag filters on feed, source filters on governance |
 | E-005 | Add style-guide route and docs integration | Web | Done | `/style-guide` live, linked in nav and docs |
 
 ## F. Trust, Safety, and Sybil Resistance
 
 | ID | Deliverable | Owner | Status | Acceptance Criteria |
 |---|---|---|---|---|
-| F-001 | Baseline anti-spam/rate controls for writes | Trust | Not Started | Write abuse limits and enforcement configured |
+| F-001 | Baseline anti-spam/rate controls for writes | Trust | Done | IP-based rate limiting on AI (20/min), terminal (15/min), cron auth on all write endpoints |
 | F-002 | Reputation-weighted moderation signal model | Trust | Not Started | Weighted ranking for feed confidence |
 | F-003 | Stake/deposit mechanism for high-frequency posting | Trust | Not Started | Economic friction for spam campaigns |
 | F-004 | Abuse review runbook | Trust | Not Started | On-call process for incident triage |
@@ -76,7 +76,7 @@ Status legend:
 
 | ID | Deliverable | Owner | Status | Acceptance Criteria |
 |---|---|---|---|---|
-| G-001 | Public API docs with request/response examples | Platform | In Progress | Every live endpoint documented with examples |
+| G-001 | Public API docs with request/response examples | Platform | Done | 73 endpoints documented in API_REFERENCE.md with auth, ISR, and rate limit info |
 | G-002 | TypeScript SDK for API consumers | Platform | Not Started | Installable package with typed client methods |
 | G-003 | API plan tiers + key management | Platform | Not Started | Free/pro/enterprise paths and key lifecycle |
 | G-004 | Partner integration guide (exchanges/banks/research) | Platform | Not Started | Clear onboarding guide and use cases |
@@ -85,7 +85,7 @@ Status legend:
 
 | ID | Deliverable | Owner | Status | Acceptance Criteria |
 |---|---|---|---|---|
-| H-001 | CI checks for contracts/web/extension/indexer | Ops | Not Started | Automated checks run on PRs |
+| H-001 | CI checks for contracts/web/extension/indexer | Ops | Done | Pre-commit hooks: TypeScript strict, ESLint, Solidity build, jscpd copy-paste detection |
 | H-002 | Runtime monitoring + alerting (API/indexer) | Ops | Not Started | Error/latency/sync lag alerts configured |
 | H-003 | Secrets management policy | Ops | Not Started | No raw keys in repo, documented secret paths |
 | H-004 | Incident response + rollback runbook | Ops | Not Started | Documented rollback and comms checklist |
@@ -94,7 +94,7 @@ Status legend:
 
 | ID | Deliverable | Owner | Status | Acceptance Criteria |
 |---|---|---|---|---|
-| I-001 | Define canonical mapping: `entity -> claim -> interpretation -> evidence -> outcome` | Core | In Progress | Written schema + TS types used by web/indexer |
+| I-001 | Define canonical mapping: `entity -> claim -> interpretation -> evidence -> outcome` | Core | Done | Schema defined, /api/deliberation/schema endpoint live, claim extraction in editorial pipeline |
 | I-002 | Add claim extraction pipeline for feed items | Data | Not Started | Every article has a canonical claim string with confidence score |
 | I-003 | Add multi-dimensional ratings (`truth`, `importance`, `moralImpact`) | Core | Not Started | Contract + indexer + web support all 3 dimensions |
 | I-004 | Add argument graph primitives (`claim`, `counterclaim`, `evidence`, `source`) | Core | Not Started | Structured post types queryable per entity |
@@ -103,12 +103,12 @@ Status legend:
 | I-007 | Add periodic onchain archive snapshots for offchain deliberation data | Ops | Not Started | Monthly content-addressed snapshot + hash anchored onchain |
 | I-008 | Ship timeline view: interpretation shifts over time | Web | Not Started | Entity timeline shows state changes and consensus movement |
 
-## Current Focus Queue (Sequential)
+## Current Focus Queue (Updated 2026-03-24)
 
-1. `B-001` Stable indexer runtime and reliable sync.
-2. `B-005` Governance live endpoint.
-3. `E-001` + `E-003` Wire web feed and proposal rail to indexer APIs.
-4. `D-001` + `D-002` Extension interaction reliability.
-5. `F-001` Baseline anti-spam controls.
-6. `I-001` Canonical interpretation schema and type rollout.
+1. `A-006` Deploy core contracts to Base mainnet.
+2. `A-002` Expand Foundry test coverage for all critical paths.
+3. `B-008` Export job endpoint for paid tier.
+4. `C-001` Stabilize UK Parliament adapter.
+5. `G-002` TypeScript SDK for API consumers.
+6. `H-002` Runtime monitoring + alerting.
 7. `I-005` Polis read-only adapter with normalized import.

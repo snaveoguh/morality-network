@@ -1,184 +1,377 @@
 # API Reference
 
-This document tracks both implemented and planned API endpoints.
-
-## Status Legend
-
-- `live`: implemented in current codebase
-- `planned`: spec-ready, implementation pending
+Complete reference for all live API endpoints. Last updated: 2026-03-24.
 
 ## Base URL
 
-When running web locally:
+- **Local:** `http://localhost:3000/api`
+- **Production:** `https://pooter.world/api`
+- **Dev:** `https://dev.pooter.world/api`
 
-`http://localhost:3000/api`
+---
 
-When running indexer locally:
+## Feed & Content
 
-`http://localhost:42069`
+### `GET /api/feed`
+Returns merged RSS feed items from 100+ sources. Server-side cached (15 min TTL).
 
-## Live Endpoints (`web/src/app/api`)
+Query params: `category`, `tag`
 
-### `GET /api/feed` (`live`)
+Response: `{ items: FeedItem[], total: number }`
 
-Returns merged RSS feed items.
+### `GET /api/feed/sources`
+Returns configured RSS source list.
 
-Query params:
-- `category` (optional)
+Response: `{ sources: FeedSource[] }`
 
-Response:
-- `{ items: FeedItem[], total: number }`
+### `GET /api/search`
+Full-text search across feed items and editorials.
 
-### `GET /api/feed/sources` (`live`)
+### `GET /api/stumble`
+Returns random content for discovery. Query: `mode=single` for one item.
 
-Returns configured RSS sources.
+### `GET /api/appendix`
+Static reference data. ISR: 1 day.
 
-Response:
-- `{ sources: FeedSource[] }`
+---
 
-### `GET /api/governance` (`live`)
+## Editorial & Newsroom
 
-Returns governance proposals from configured providers.
+### `GET /api/daily-edition`
+Returns the current daily newspaper edition.
 
-Query params:
-- `filter` (`live`, `controversial`, or omitted for all)
+### `GET /api/cron/daily-edition` (cron)
+Generates daily newspaper edition. Auth: `CRON_SECRET`. Schedule: daily 5:30 AM UTC. maxDuration: 55s.
 
-Response:
-- `{ proposals: Proposal[], total: number, timestamp: number }`
+### `GET /api/cron/daily-illustration` (cron)
+Generates DALL-E 3 cover art for daily edition. Auth: `CRON_SECRET`. Schedule: daily 5:45 AM UTC.
 
-### `GET /api/governance/:id` (`live`)
+### `GET /api/newsroom` (cron)
+Generates Pooter Originals for top stories. Auth: `CRON_SECRET`. Schedule: 3x daily (6 AM, 2 PM, 10 PM UTC). maxDuration: 55s.
 
-Returns one governance proposal by id, with fallback logic.
+### `POST /api/newsroom`
+Manual newsroom trigger. Auth: `CRON_SECRET`. Body: `{ forceRegenerate?, maxStories?, minStories? }`
 
-Response:
-- `{ proposal: Proposal, timestamp: number }`
-- `404` if not found
+### `GET /api/editorial/pregenerate` (cron)
+Pre-generates editorials for top feed items. Auth: `CRON_SECRET`. Schedule: daily 5 AM UTC.
 
-### `GET /api/v1/governance/live` (`live`)
+### `POST /api/editorial/generate-one`
+Generate editorial for a single article. Auth: `CRON_SECRET`.
 
-Normalized governance stream API for product and partner consumers.
+### `POST /api/editorial/edit`
+Edit an existing editorial. Auth: `GOD_MODE_SECRET`.
 
-Query params:
-- `scope` (`live` default, `all`)
-- `source` (comma-separated source ids)
-- `sourceKind` (comma-separated: `dao`, `government`, `corporate`)
-- `status` (comma-separated proposal statuses)
-- `tag` (comma-separated tags)
-- `cursor` (unix seconds)
-- `limit` (max `500`)
+### `POST /api/editorial/mark-onchain`
+Mark an editorial as minted onchain. Auth: `GOD_MODE_SECRET`.
 
-Response:
-- `{ data: GovernanceItem[], meta: { totalFiltered, nextCursor, generatedAt, ... } }`
+### `POST /api/editorial/backfill-illustrations`
+Backfill DALL-E illustrations for editorials missing them. Auth: `CRON_SECRET`.
 
-### `GET /api/auth/nonce` (`live`)
+### `GET /api/editorial/discover`
+Discover feed items that don't yet have editorials. maxDuration: 30s.
 
-Returns SIWE nonce.
+---
 
-Response:
-- `{ nonce: string }`
+## Editions (NFT)
 
-### `POST /api/auth/verify` (`live`)
+### `GET /api/edition/:tokenId`
+Returns edition metadata for a given token ID.
 
-Verifies SIWE message + signature.
+### `GET /api/edition/:tokenId/image`
+Returns edition cover image.
 
-Body:
-- `{ message: SiweMessage, signature: string }`
+### `GET /api/edition/:tokenId/illustration`
+Returns edition DALL-E illustration.
 
-Response:
-- `{ address: string, chainId: number }`
+---
 
-### `POST /api/ai/score` (`live`)
+## Governance
 
-AI scoring interface (currently placeholder scoring logic).
+### `GET /api/governance`
+Returns governance proposals from all configured providers (Nouns, Lil Nouns, UK Parliament, EU, etc.).
 
-Body:
-- `identifier: string`
-- `entityType: "URL" | "DOMAIN" | "ADDRESS" | "CONTRACT"`
-- `content?: string`
+Query params: `filter` (`live`, `controversial`, or omitted for all)
 
-Response:
-- `{ identifier, entityType, score, compositeAIScore, timestamp }`
+Response: `{ proposals: Proposal[], total: number, timestamp: number }`
 
-### `GET /api/stumble` (`live`)
+### `GET /api/governance/:id`
+Returns one governance proposal by ID with fallback logic.
 
-Returns stumble content batch or a single random item.
+### `GET /api/v1/governance/live`
+Normalized governance stream for product/partner consumers. Supports extensive filtering.
 
-Query params:
-- `mode=single` for one item
+Query params: `scope`, `source`, `sourceKind`, `status`, `tag`, `cursor`, `limit` (max 500)
 
-Response:
-- `StumbleItem[]` (default)
-- `StumbleItem` (`mode=single`)
+Response: `{ data: GovernanceItem[], meta: { totalFiltered, nextCursor, generatedAt } }`
 
-## Indexer Endpoints (`live`)
+---
 
-Implemented in: `indexer/src/api/routes.ts`
+## AI & Scoring
 
-### `GET /api/v1/health` (`live`)
+### `POST /api/ai/score`
+AI scoring for entities. In-memory cache (30 min TTL). Rate limited: 20 req/min per IP.
 
-Health check for indexer API server.
+Body: `{ identifier, entityType: "URL"|"DOMAIN"|"ADDRESS"|"CONTRACT", content? }`
 
-Response:
-- `{ ok: boolean, timestamp: number }`
+Response: `{ identifier, entityType, score, compositeAIScore, timestamp }`
 
-### `GET /api/v1/entities/:entityHash` (`live`)
+### `GET /api/moral-compass/crawl` (cron)
+Crawls ethics/philosophy sources. Auth: `CRON_SECRET`. Schedule: daily 3 AM UTC.
 
-Returns one indexed entity with aggregate stats and recent activity.
+### `GET /api/moral-compass/status`
+Returns moral compass crawl status.
 
-Response:
-- `{ data: { entity, recentActivity[] }, meta }`
+### `GET /api/moral-commentary/generate` (cron)
+Generates AI moral commentary. Auth: `CRON_SECRET`. Schedule: daily 4 AM UTC.
 
-### `GET /api/v1/entities/:entityHash/feed` (`live`)
+---
 
-Returns per-entity activity feed.
+## Sentiment
 
-Query params:
-- `limit`
-- `cursor` (unix seconds)
-- `actionTypes` (comma-separated `0..4`)
+### `GET /api/sentiment`
+Returns current AI-generated market sentiment scores. ISR: 5 min.
 
-### `GET /api/v1/feed/global` (`live`)
+### `GET /api/sentiment/history`
+Returns historical sentiment data. ISR: 5 min.
 
-Returns global activity feed across entities.
+---
 
-Query params:
-- `limit`
-- `cursor` (unix seconds)
-- `from` (unix seconds)
-- `to` (unix seconds)
-- `actionTypes` (comma-separated `0..4`)
-- `actor` (0x address)
-- `entityType` (`0..3`)
+## Trading
 
-## Planned Public Indexer API (`planned`)
+### `GET /api/trading/signals`
+Returns aggregated trading signals from editorial analysis.
 
-### `GET /api/v1/sentiment/tags/:tag`
+### `GET /api/trading/signals/live`
+Live streaming trading signals.
 
-Aggregate fear/greed/trust/distrust signals from ratings/comments metadata.
+### `POST /api/trading/execute`
+Execute a trading signal cycle. Auth required.
 
-### `POST /api/v1/exports/query`
+### `GET /api/trading/positions`
+Returns current open positions.
 
-Async dataset export for enterprise customers.
+### `POST /api/trading/close-position`
+Close a specific position. Auth required.
 
-Body:
-- filters + dimensions + metrics
+### `GET /api/trading/metrics`
+Returns trading performance metrics.
 
-## Suggested Response Envelope (planned)
+### `GET /api/trading/performance`
+Returns detailed performance analytics.
 
-```json
-{
-  "data": {},
-  "meta": {
-    "cursor": "...",
-    "nextCursor": "...",
-    "generatedAt": 0
-  },
-  "error": null
-}
-```
+### `GET /api/trading/journal`
+Returns trade journal entries.
 
-## Recommended Next Implementation Order
+### `GET /api/trading/learning`
+Returns trading learning/adaptation data.
 
-1. `GET /api/v1/governance/live`
-2. `GET /api/v1/sentiment/tags/:tag`
-3. `POST /api/v1/exports/query`
+### `GET /api/trading/candles`
+Returns OHLCV candle data for charting.
+
+### `GET /api/trading/indicators`
+Returns technical indicator values.
+
+### `GET /api/trading/readiness`
+Returns trading system readiness status.
+
+### `GET /api/trading/risk-advisor`
+Returns AI risk assessment for current positions.
+
+### `POST /api/trading/transfer-to-perp`
+Transfer funds to perpetual exchange. Auth required.
+
+---
+
+## Markets
+
+### `GET /api/markets`
+Returns crypto market prices (BTC, ETH, SOL, PEPE, DOGE, etc.) via CoinGecko + DexScreener. ISR: 30s.
+
+---
+
+## Predictions
+
+### `GET /api/predictions/ops`
+Returns prediction market operations snapshot. Auth: operator. ISR: 1 hour.
+
+---
+
+## Agents
+
+### `GET /api/agents`
+Returns registered agent list and status.
+
+### `POST /api/agents/coordinator`
+Agent bus coordinator endpoint. Dispatches tasks to agents.
+
+### `GET /api/agents/scanner`
+Returns launch scanner results.
+
+### `GET /api/agents/scanner/:token`
+Returns scanner data for a specific token.
+
+### `POST /api/agents/swarm`
+Triggers research swarm execution.
+
+### `POST /api/agents/bus`
+Agent bus messaging endpoint.
+
+### `POST /api/agents/bus/relay`
+Relay messages between agent bridges.
+
+### `GET /api/agents/events/stream`
+SSE stream of agent events.
+
+### `GET /api/agents/console`
+Returns agent console output/logs.
+
+### `POST /api/agents/memory/learn`
+Submit learning data to agent memory.
+
+### `POST /api/agents/memory/self-learn`
+Agent self-learning trigger.
+
+### `GET /api/agents/memory/stats`
+Returns agent memory statistics.
+
+---
+
+## Analysts
+
+### `GET /api/analysts/interpretations`
+Returns analyst interpretations of current events.
+
+### `GET /api/analysts/reputation`
+Returns analyst reputation scores.
+
+---
+
+## Terminal
+
+### `POST /api/terminal/chat`
+LLM-powered chat endpoint. Streams responses via SSE. Rate limited: 15 req/min per IP. maxDuration: 30s.
+
+### `GET /api/terminal/risk`
+Returns risk assessment data for terminal display.
+
+### `GET /api/terminal/subscription/status`
+Returns terminal subscription/access status (MO token gated).
+
+---
+
+## Discussion
+
+### `GET /api/discuss/stream`
+SSE stream of discussion room messages.
+
+---
+
+## Deliberation
+
+### `GET /api/deliberation/schema`
+Returns the canonical deliberation graph schema (entity -> claim -> interpretation -> evidence -> outcome).
+
+---
+
+## Evidence
+
+### `POST /api/evidence/verify`
+Verify evidence claims against source material.
+
+---
+
+## Marketplaces
+
+### `GET /api/pepe/:asset`
+Returns Rare Pepe card details.
+
+### `GET /api/pepe/img/:asset`
+Returns Rare Pepe card image.
+
+### `GET /api/pepe/listings`
+Returns active Rare Pepe marketplace listings via Emblem Vault.
+
+### `GET /api/nouns/:nounId`
+Returns Noun NFT details.
+
+### `GET /api/nouns/listings`
+Returns active Nouns marketplace listings via Seaport.
+
+---
+
+## Music
+
+### `GET /api/music/discover`
+Returns music discovery results.
+
+---
+
+## Protocol
+
+### `GET /api/protocol-wire`
+Returns protocol wire data/announcements.
+
+---
+
+## Auth (SIWE)
+
+### `GET /api/auth/nonce`
+Returns a fresh SIWE nonce.
+
+### `POST /api/auth/verify`
+Verifies SIWE message + signature. Body: `{ message: SiweMessage, signature: string }`
+
+Response: `{ address: string, chainId: number }`
+
+### `GET /api/auth/session`
+Returns current session state.
+
+---
+
+## Health
+
+### `GET /api/health/sources`
+Returns health status of RSS feed sources. ISR: 5 min.
+
+---
+
+## Indexer Endpoints
+
+Separate service (Railway). Base URL: `INDEXER_BACKEND_URL`
+
+### `GET /api/v1/health`
+Health check. Response: `{ ok: boolean, timestamp: number }`
+
+### `GET /api/v1/entities/:entityHash`
+Returns indexed entity profile with aggregate stats and recent activity.
+
+### `GET /api/v1/entities/:entityHash/feed`
+Per-entity activity feed. Query: `limit`, `cursor`, `actionTypes`
+
+### `GET /api/v1/feed/global`
+Global activity feed. Query: `limit`, `cursor`, `from`, `to`, `actionTypes`, `actor`, `entityType`
+
+---
+
+## ISR Revalidation Summary
+
+| Route | Interval |
+|-------|----------|
+| Homepage (`/`) | 15 min |
+| Signals, Proposals, Predictions, Pepe, Discuss, Nouns | 1 hour |
+| Archive | 5 min |
+| Article detail | 1 hour |
+| Sentiment | 5 min |
+| Markets API | 30s |
+| Appendix | 1 day |
+| OG images | 1 day |
+
+---
+
+## Authentication
+
+- **Cron endpoints:** Require `Authorization: Bearer <CRON_SECRET>` header (sent automatically by Vercel cron)
+- **Editorial edit:** Requires `Authorization: Bearer <GOD_MODE_SECRET>`
+- **Operator endpoints:** Require wallet signature from `OPERATOR_ADDRESSES`
+- **Terminal:** Rate limited per IP, full access gated by MO token balance
+- **User auth:** SIWE (Sign-In With Ethereum)

@@ -1,11 +1,35 @@
 # Deployments
 
+Last updated: 2026-03-24.
+
 ## Launch Runtime Topology
 
-- Web: `web` on Vercel or equivalent
-- Indexer API + Postgres: `indexer`
-- Always-on worker: `web` via `npm run worker:start`
-- Extension: deferred from the first-wave launch path
+| Service | Platform | URL |
+|---------|----------|-----|
+| Web (prod) | Vercel | https://pooter.world |
+| Web (dev) | Vercel | https://dev.pooter.world |
+| Indexer API | Railway | `INDEXER_BACKEND_URL` |
+| Agent Hub | Railway | `AGENT_HUB_URL` |
+| Extension | Chrome Web Store | Deferred |
+
+Vercel team: `mshrmstudio`
+
+### Deploy Commands
+
+```bash
+# Deploy to dev (preview + alias)
+cd web && npx vercel && npx vercel alias <url> dev.pooter.world
+
+# Deploy to production
+cd web && npx vercel --prod
+```
+
+## Current Chain Status
+
+> **Note:** Core contracts are currently deployed on **Base Sepolia (testnet)**.
+> The web app defaults to **Base mainnet** addresses in `web/src/lib/contracts.ts`.
+> Mainnet deployment of core contracts is pending.
+> The vault rail contracts have not yet been deployed to any network.
 
 Runtime mode flags:
 
@@ -161,15 +185,21 @@ For pure dev/testnet rollouts, the Foundry scripts can deploy:
 - Web uses env-overridable addresses in:
   - `web/src/lib/contracts.ts`
 
+## Cron Schedule (vercel.json)
+
+| Endpoint | Schedule | Purpose |
+|----------|----------|---------|
+| `/api/moral-compass/crawl` | Daily 3 AM UTC | Crawl ethics/philosophy sources |
+| `/api/moral-commentary/generate` | Daily 4 AM UTC | Generate moral commentary |
+| `/api/editorial/pregenerate` | Daily 5 AM UTC | Pre-generate editorials |
+| `/api/cron/daily-edition` | Daily 5:30 AM UTC | Generate daily edition |
+| `/api/cron/daily-illustration` | Daily 5:45 AM UTC | DALL-E cover art |
+| `/api/newsroom` | 3x daily (6am, 2pm, 10pm UTC) | Pooter Originals |
+
 ## Explorer Links
 
-Use Base Sepolia explorer format:
-
-`https://sepolia.basescan.org/address/<CONTRACT_ADDRESS>`
-
-Example:
-
-`https://sepolia.basescan.org/address/0x14a361454edcb477644eb82bf540a26e1cead72a`
+- **Base Sepolia:** `https://sepolia.basescan.org/address/<ADDRESS>`
+- **Base Mainnet:** `https://basescan.org/address/<ADDRESS>`
 
 ## Notes
 
