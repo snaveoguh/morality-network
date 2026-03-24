@@ -56,3 +56,18 @@ if (dateline) {
 
 // Load initial tab
 loadTab('entity');
+
+// Pooter eye cursor tracking
+const pupilL = document.getElementById('pupil-l');
+const pupilR = document.getElementById('pupil-r');
+if (pupilL && pupilR) {
+  document.addEventListener('mousemove', (e: MouseEvent) => {
+    // Normalize to popup dimensions (360x480)
+    const nx = (e.clientX / 360) * 2 - 1; // -1 to 1
+    const ny = (e.clientY / 480) * 2 - 1;
+    const tx = nx * 1.5; // px offset
+    const ty = ny * 1;
+    pupilL.style.transform = `translate(${tx}px, ${ty}px)`;
+    pupilR.style.transform = `translate(${tx}px, ${ty}px)`;
+  });
+}

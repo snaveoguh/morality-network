@@ -56,6 +56,78 @@ body {
   border-bottom: 1px solid var(--rule);
 }
 
+/* Pooter face — CSS-only kawaii printer bot */
+.pooter-face {
+  width: 32px;
+  height: 24px;
+  background: #D4D0C8;
+  border: 1.5px solid var(--rule-light);
+  border-radius: 4px;
+  position: relative;
+  margin-bottom: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.pooter-eye {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background: white;
+  border-radius: 50%;
+  top: 6px;
+  overflow: hidden;
+  animation: pooterBlink 4s infinite;
+}
+
+.pooter-eye-l { left: 7px; }
+.pooter-eye-r { right: 7px; }
+
+.pooter-pupil {
+  width: 4px;
+  height: 4px;
+  background: var(--ink);
+  border-radius: 50%;
+  position: absolute;
+  top: 1.5px;
+  left: 1.5px;
+  transition: transform 0.15s ease-out;
+}
+
+.pooter-mouth {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 3px;
+  border-bottom: 1.5px solid var(--ink);
+  border-radius: 0 0 50% 50%;
+}
+
+/* Blink */
+@keyframes pooterBlink {
+  0%, 96%, 100% { transform: scaleY(1); }
+  98% { transform: scaleY(0.1); }
+}
+
+/* Blush on hover */
+.pooter-face::before,
+.pooter-face::after {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 3px;
+  background: #FFB7B7;
+  border-radius: 50%;
+  top: 13px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.pooter-face::before { left: 3px; }
+.pooter-face::after { right: 3px; }
+.pooter-face:hover::before,
+.pooter-face:hover::after { opacity: 0.6; }
+
 .logo {
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 22px;
