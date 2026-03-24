@@ -4,9 +4,21 @@ import { getArchivedEditorial, saveEditorial } from "@/lib/editorial-archive";
 import { generateIllustration } from "@/lib/image-generation";
 import { getIllustration, saveIllustration } from "@/lib/illustration-store";
 import { verifyCronAuth } from "@/lib/cron-auth";
+import { isImageVaultEnabled, mintImage } from "@/lib/server/image-vault";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55;
+
+/** PooterEditions epoch: March 11 2026 00:00 UTC */
+const EDITIONS_EPOCH = 1741651200;
+const SECONDS_PER_DAY = 86400;
+
+/** Compute today's edition number (matches PooterEditions.currentEditionNumber) */
+function computeEditionNumber(): number {
+  const now = Math.floor(Date.now() / 1000);
+  if (now < EDITIONS_EPOCH) return 0;
+  return Math.floor((now - EDITIONS_EPOCH) / SECONDS_PER_DAY) + 1;
+}
 
 /**
  * GET /api/cron/daily-illustration — generate today's cover illustration
@@ -17,9 +29,10 @@ export const maxDuration = 55;
  * Separate from daily-edition generation because DALL-E takes 10-30s and
  * the editorial writer+extractor already use most of Vercel's 55s limit.
  *
- * Storage strategy: illustration-store (Redis + local file) is primary,
- * but as a fallback also stores base64 inline on the editorial itself.
- * The illustration endpoint checks both locations.
+ * Storage strategy (layered, most durable first):
+ *   1. IPFS + PooterImageVault on-chain (permanent, if PINATA_JWT configured)
+ *   2. Upstash Redis via illustration-store (30-day TTL)
+ *   3. Inline base64 on the editorial record (fallback)
  *
  * Auth: Requires CRON_SECRET Bearer token (sent automatically by Vercel cron).
  */
@@ -87,18 +100,50 @@ export async function GET(request: NextRequest) {
     const sizeKB = Math.round(illustration.base64.length / 1024);
     console.log(`[cron/daily-illustration] Generated (${sizeKB}KB)`);
 
-    // Save illustration to store (Redis + local file)
+    // ── IPFS + On-chain mint (if configured) ──────────────────────────
+    // This is the primary storage path — permanent, content-addressed.
+    // Falls through to Redis/inline if not configured.
+    let ipfsCID: string | null = null;
+    let mintTokenId: string | null = null;
+    let mintTxHash: string | null = null;
+
+    if (isImageVaultEnabled()) {
+      const editionNumber = computeEditionNumber();
+      try {
+        const mintResult = await mintImage(
+          illustration.base64,
+          `pooter-edition-${editionNumber}-${today}`,
+          editionNumber > 0 ? editionNumber : undefined,
+        );
+        ipfsCID = mintResult.cid;
+        mintTokenId = mintResult.tokenId.toString();
+        mintTxHash = mintResult.txHash;
+        console.log(
+          `[cron/daily-illustration] IPFS+mint success: cid=${ipfsCID}, tokenId=${mintTokenId}`,
+        );
+      } catch (err) {
+        // Non-fatal — fall through to Redis/inline storage
+        console.warn(
+          "[cron/daily-illustration] IPFS+mint failed (falling back to Redis):",
+          err instanceof Error ? err.message : err,
+        );
+      }
+    }
+
+    // ── Redis + local file storage (existing fallback) ────────────────
     const storePersisted = await saveIllustration(hash, {
       base64: illustration.base64,
       prompt: illustration.prompt,
       revisedPrompt: illustration.revisedPrompt,
     });
 
-    // FALLBACK: also save base64 inline on the editorial itself
-    // This ensures the illustration endpoint can always find it,
-    // even if Redis is unavailable and Vercel FS is read-only.
+    // ── Inline fallback on editorial ──────────────────────────────────
     editorial.hasIllustration = true;
     editorial.illustrationBase64 = illustration.base64;
+    // Store IPFS CID on editorial if available (tiny string vs 1MB base64)
+    if (ipfsCID) {
+      (editorial as Record<string, unknown>).illustrationIPFS = `ipfs://${ipfsCID}`;
+    }
     try {
       await saveEditorial(hash, editorial, editorial.generatedBy || "claude-ai");
       console.log("[cron/daily-illustration] Saved illustration inline on editorial (fallback)");
@@ -113,6 +158,10 @@ export async function GET(request: NextRequest) {
       size: `${sizeKB}KB`,
       storePersisted,
       revisedPrompt: illustration.revisedPrompt?.slice(0, 200),
+      // IPFS fields (null if not configured)
+      ipfsCID,
+      mintTokenId,
+      mintTxHash,
     });
   } catch (err) {
     console.error("[cron/daily-illustration] Failed:", err);
