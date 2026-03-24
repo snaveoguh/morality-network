@@ -106,10 +106,9 @@ forge test
 | `/api/moral-compass/crawl` | Daily 3 AM UTC | Crawl ethics/philosophy sources |
 | `/api/moral-commentary/generate` | Daily 4 AM UTC | Generate moral commentary |
 | `/api/editorial/pregenerate` | Daily 5 AM UTC | Pre-generate editorials for feed items |
-| `/api/cron/daily-edition` | Every 6h (5:30, 11:30, 17:30, 23:30 UTC) | Generate daily newspaper edition |
-| `/api/cron/daily-illustration` | Every 6h (5:45, 11:45, 17:45, 23:45 UTC) | Generate DALL-E cover art |
-| `/api/newsroom` | Every 2h | Generate Pooter Originals for top stories |
-| `/api/trading/execute` | Every 10 min | Execute trading signal cycle |
+| `/api/cron/daily-edition` | Daily 5:30 AM UTC | Generate daily newspaper edition |
+| `/api/cron/daily-illustration` | Daily 5:45 AM UTC | Generate DALL-E cover art |
+| `/api/newsroom` | 3x daily (6 AM, 2 PM, 10 PM UTC) | Generate Pooter Originals for top stories |
 
 All cron endpoints require `CRON_SECRET` Bearer token authentication.
 
