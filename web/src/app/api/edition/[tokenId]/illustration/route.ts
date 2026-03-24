@@ -2,16 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { computeEntityHash } from "@/lib/entity";
 import { getIllustration } from "@/lib/illustration-store";
 import { getArchivedEditorial } from "@/lib/editorial-archive";
+import { getEditionImageCID } from "@/lib/server/image-vault";
 
 // ============================================================================
 // /api/edition/[tokenId]/illustration — Serves the DALL-E illustration as PNG
 //
-// Reads from the separate illustration store first (Redis, then local file).
-// Falls back to inline illustrationBase64 on the editorial for backward compat.
+// Resolution order (most durable first):
+//   1. PooterImageVault on-chain → IPFS gateway redirect (permanent)
+//   2. Illustration store (Redis → local file) → serve base64 as PNG
+//   3. Inline illustrationBase64 on editorial → serve as PNG
 // ============================================================================
 
-const EPOCH = 1741651200; // March 11 2025 00:00 UTC (edition #1)
+const EPOCH = 1741651200; // March 11 2026 00:00 UTC (edition #1)
 const SECONDS_PER_DAY = 86400;
+
+const IPFS_GATEWAY =
+  process.env.PINATA_GATEWAY_URL?.trim() || "https://gateway.pinata.cloud";
 
 interface RouteParams {
   params: Promise<{ tokenId: string }>;
@@ -25,7 +31,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return new NextResponse("Invalid tokenId", { status: 400 });
   }
 
-  // Compute edition date → hash
+  // ── 1. Check on-chain ImageVault for IPFS CID ────────────────────────
+  // If the image was minted to IPFS, redirect to the gateway.
+  // This is the fastest path and doesn't require base64 decode.
+  const ipfsCID = await getEditionImageCID(tokenId).catch(() => null);
+  if (ipfsCID) {
+    return NextResponse.redirect(`${IPFS_GATEWAY}/ipfs/${ipfsCID}`, {
+      status: 302,
+      headers: {
+        "Cache-Control": "public, max-age=86400, s-maxage=86400",
+      },
+    });
+  }
+
+  // ── 2. Fallback: illustration store (Redis → local file) ─────────────
   const editionTimestamp = EPOCH + (tokenId - 1) * SECONDS_PER_DAY;
   const editionDate = new Date(editionTimestamp * 1000);
   const year = editionDate.getUTCFullYear();
@@ -34,11 +53,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const dailyId = `pooter-daily-${year}-${month}-${day}`;
   const hash = computeEntityHash(dailyId);
 
-  // Try the separate illustration store first (Redis → local file)
   const illustration = await getIllustration(hash).catch(() => null);
   let base64 = illustration?.base64 ?? null;
 
-  // Backward compat: check inline illustrationBase64 on the editorial
+  // ── 3. Fallback: inline illustrationBase64 on editorial ──────────────
   if (!base64) {
     const editorial = await getArchivedEditorial(hash).catch(() => null);
     base64 = editorial?.illustrationBase64 ?? null;
