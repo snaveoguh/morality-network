@@ -2,6 +2,21 @@
 
 > Replace self-hosted illustration storage (Redis + JSON) with on-chain minting on Base, using the mint flow to pin images to IPFS permanently.
 
+## Implementation Status
+
+| Component | Status | File |
+|-----------|--------|------|
+| PooterImageVault contract | Done | `contracts/src/PooterImageVault.sol` |
+| Deploy script | Done | `contracts/script/DeployImageVault.s.sol` |
+| IPFS upload helper (Pinata) | Done | `web/src/lib/ipfs-upload.ts` |
+| On-chain mint helper | Done | `web/src/lib/server/image-vault.ts` |
+| Contract ABI + address wiring | Done | `web/src/lib/contracts.ts` |
+| Daily illustration cron update | Done | `web/src/app/api/cron/daily-illustration/route.ts` |
+| Illustration endpoint (IPFS-first) | Done | `web/src/app/api/edition/[tokenId]/illustration/route.ts` |
+| **Deploy contract to Base Sepolia** | TODO | Run `DeployImageVault.s.sol` with `forge script` |
+| **Set env vars on dev.pooter.world** | TODO | `PINATA_JWT`, `AGENT_PRIVATE_KEY`, `POOTER_IMAGE_VAULT_ADDRESS` |
+| **Backfill existing illustrations** | TODO | One-time script to upload Redis images to IPFS |
+
 ## Problem
 
 The current illustration pipeline has durability and scalability issues:
@@ -215,8 +230,23 @@ This creates a provenance-tracked, on-chain image corpus that can be:
 
 | Approach | Pros | Cons |
 |----------|------|------|
-| **Zora 1155** | They handle IPFS + Arweave pinning | Zora mint fee ($0.000777), SDK complexity, vendor lock-in |
-| **Pinata + custom ERC721** (chosen) | Full control, simple, cheapest | Must manage Pinata account |
+| **Zora 1155** | Zora marketplace visibility, creator rewards | Zora mint fee ($0.000777/mint), no built-in IPFS pinning (must bring your own Pinata), SDK complexity |
+| **thirdweb + Engine** | Auto IPFS pinning (built-in), no mint fee, simple server-side DX | Separate from Zora ecosystem, vendor dependency on thirdweb infra |
+| **Pinata + custom ERC721** (chosen) | Full control, simple HTTP API (no SDK), cheapest, no vendor lock-in | Must manage Pinata account (free tier: 500 files, 1GB) |
 | **web3.storage / nft.storage** | Free Filecoin storage | Unreliable availability, services have shut down before |
 | **Arweave direct** | Truly permanent | More expensive, different ecosystem |
 | **Keep current Redis** | No work | Images expire, not permanent, repo bloat |
+
+### Research Notes (Zora vs thirdweb)
+
+**Zora Protocol SDK** (`@zoralabs/protocol-sdk`): Does NOT pin to IPFS for you — you must
+bring your own Pinata/Infura. Charges 0.000777 ETH per mint (~$1.50-2.00). Main benefit is
+appearing on zora.co marketplace. SDK uses `create1155()` with viem walletClient.
+
+**thirdweb v5** (`thirdweb`): Auto-uploads and pins media+metadata to IPFS via built-in
+storage infra. No per-mint protocol fee. `Engine.serverWallet()` for server-side minting.
+But adds a large SDK dependency and ties you to thirdweb's infra.
+
+**Decision**: Pinata + custom ERC-721. Since we need our own Pinata anyway even with Zora,
+and thirdweb adds unnecessary vendor coupling, the simplest path is direct Pinata HTTP API
+calls + our own UUPS-upgradeable contract. Zero new npm dependencies.
