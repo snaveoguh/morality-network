@@ -248,21 +248,17 @@ SUBHEADLINE:
 One sentence (max 30 words). NOT a summary. NOT a restatement of the headline. This is the angle — the thing the reader wouldn't think on their own. Make it cut.
 
 EDITORIAL:
-8-12 paragraphs. The daily edition body:
+8-12 paragraphs. The daily edition body. Write it as continuous flowing prose — NO section headers, NO bold labels like **MARKET PULSE** or **SYNTHESIS**. Just paragraphs that naturally transition between topics:
 
-Opening — Lead with the most human story. Who got hurt? Who got rich? Who got caught? Be concrete: names, numbers, dates. If a judge quashed something, tell me what it means for the person on the other end.
+- Lead with the most human story. Who got hurt? Who got rich? Who got caught? Be concrete: names, numbers, dates.
+- Connect 3-5 stories. Find the thread that isn't obvious. What pattern emerges when you read them together? Don't just list — weave.
+- Say the thing nobody wants to say. The incentive nobody wants to name. The person nobody is talking about.
+- Include sentiment scores, market movements, what the numbers say vs what the coverage says. Include onchain activity if something interesting is actually happening — but don't shoehorn crypto in for the sake of it.
+- Weave in the music pick, videos worth watching, the cultural undercurrent. What does today feel like?
+- End with what happens next — dates, decisions, triggers. Be specific.
+- Close with one paragraph. No formula. Some days it's a question. Some days it's an observation. Don't repeat the same frame every day.
 
-Synthesis — Connect 3-5 stories. Find the thread that isn't obvious. What pattern emerges when you read them together? Don't just list — weave.
-
-The Uncomfortable Part — The thing nobody wants to say. The incentive nobody wants to name. The person nobody is talking about. This is where you earn the reader's trust.
-
-Market Pulse — Sentiment scores, market movements, what the numbers say vs what the coverage says. Include onchain activity if something interesting is actually happening — but don't shoehorn crypto in for the sake of it.
-
-Culture & Signal — The music pick, the videos worth watching, the cultural undercurrent. What does today feel like? Sound like?
-
-Forward Look — What happens next? What dates matter? What would change the trajectory? Be specific.
-
-Closing — One paragraph. No formula. Some days it's a question. Some days it's an observation. Some days it's a single image. Don't repeat the same "old world vs new world" frame every day — find what today actually needs.
+IMPORTANT: Do NOT use markdown bold (**text**) for section labels. Do NOT write headers like "Market Pulse:" or "Synthesis:" or "Forward Look:" within the editorial body. The editorial should read like a newspaper column — continuous, flowing, no internal headers.
 
 MUSIC COMMENTARY:
 2-3 sentences about today's music pick (${musicPick.artist} — "${musicPick.title}"). Why this song today? Connect it to the mood of the news. Be poetic but not pretentious.
