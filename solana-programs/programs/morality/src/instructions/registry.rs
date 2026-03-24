@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::keccak;
 use crate::state::*;
 use crate::errors::MoralityError;
+use crate::events;
 
 // ── Initialize ────────────────────────────────────────────────────────
 
@@ -64,7 +65,7 @@ pub fn register_entity(
     let entity = &mut ctx.accounts.entity;
     entity.entity_hash = entity_hash;
     entity.entity_type = entity_type;
-    entity.identifier = identifier;
+    entity.identifier = identifier.clone();
     entity.registered_by = ctx.accounts.registrar.key();
     entity.claimed_owner = Pubkey::default();
     entity.approved_claimant = Pubkey::default();
@@ -73,6 +74,13 @@ pub fn register_entity(
 
     let config = &mut ctx.accounts.config;
     config.entity_count = config.entity_count.checked_add(1).unwrap();
+
+    emit!(events::EntityRegistered {
+        entity_hash,
+        entity_type,
+        identifier,
+        registered_by: ctx.accounts.registrar.key(),
+    });
 
     Ok(())
 }
@@ -102,6 +110,12 @@ pub fn approve_ownership_claim(
         MoralityError::AlreadyClaimed
     );
     entity.approved_claimant = claimer;
+
+    emit!(events::OwnershipClaimApproved {
+        entity_hash: entity.entity_hash,
+        claimer,
+    });
+
     Ok(())
 }
 
@@ -130,6 +144,12 @@ pub fn claim_ownership(ctx: Context<ClaimOwnership>) -> Result<()> {
     );
     entity.claimed_owner = ctx.accounts.claimer.key();
     entity.approved_claimant = Pubkey::default();
+
+    emit!(events::OwnershipClaimed {
+        entity_hash: entity.entity_hash,
+        claimed_owner: ctx.accounts.claimer.key(),
+    });
+
     Ok(())
 }
 
@@ -163,7 +183,6 @@ pub fn set_canonical_claim(
     let config = &ctx.accounts.config;
 
     // Authorization: protocol authority, claimed owner, or registrar (only if unclaimed)
-    // FIX H-5: registrar loses write access once entity has a claimed owner
     let authorized = signer.key() == config.authority
         || (entity.claimed_owner != Pubkey::default()
             && entity.claimed_owner == signer.key())
@@ -179,7 +198,6 @@ pub fn set_canonical_claim(
 
     let claim = &mut ctx.accounts.claim;
     if claim.version == 0 {
-        // First claim
         claim.entity_hash = entity.entity_hash;
         claim.created_at = now;
     }
@@ -189,6 +207,13 @@ pub fn set_canonical_claim(
     claim.updated_at = now;
     claim.version += 1;
     claim.bump = ctx.bumps.claim;
+
+    emit!(events::CanonicalClaimSet {
+        entity_hash: entity.entity_hash,
+        claim_hash,
+        set_by: signer.key(),
+        version: claim.version,
+    });
 
     Ok(())
 }

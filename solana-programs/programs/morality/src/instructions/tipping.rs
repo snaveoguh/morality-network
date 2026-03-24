@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 use crate::state::*;
 use crate::errors::MoralityError;
+use crate::events;
 
 // ── Tip Entity ────────────────────────────────────────────────────────
 // FIX C-3: Conditionally route SOL to owner_balance or escrow based on claim status.
@@ -67,13 +68,19 @@ pub fn tip_entity(ctx: Context<TipEntity>, amount: u64) -> Result<()> {
     vault.total_deposited = vault.total_deposited.saturating_add(amount);
     vault.bump = ctx.bumps.vault;
 
-    if entity.claimed_owner != Pubkey::default() {
-        // Entity is claimed — track as withdrawable by owner
+    let is_escrowed = entity.claimed_owner == Pubkey::default();
+    if !is_escrowed {
         vault.owner_claimable = vault.owner_claimable.saturating_add(amount);
     } else {
-        // Entity unclaimed — track as escrowed
         vault.escrowed = vault.escrowed.saturating_add(amount);
     }
+
+    emit!(events::EntityTipped {
+        entity_hash: entity.entity_hash,
+        tipper: ctx.accounts.tipper.key(),
+        amount,
+        is_escrowed,
+    });
 
     Ok(())
 }
@@ -160,6 +167,14 @@ pub fn tip_comment(ctx: Context<TipComment>, amount: u64) -> Result<()> {
     tipper_balance.total_given = tipper_balance.total_given.saturating_add(amount);
     tipper_balance.bump = ctx.bumps.tipper_balance;
 
+    emit!(events::CommentTipped {
+        comment_id: ctx.accounts.comment.id,
+        entity_hash: ctx.accounts.comment.entity_hash,
+        tipper: ctx.accounts.tipper.key(),
+        author: ctx.accounts.comment.author,
+        amount,
+    });
+
     Ok(())
 }
 
@@ -210,6 +225,11 @@ pub fn withdraw_tips(ctx: Context<WithdrawTips>) -> Result<()> {
     // Transfer lamports from vault to owner (safe: we checked rent-exempt)
     **ctx.accounts.vault.to_account_info().try_borrow_mut_lamports()? -= withdraw_amount;
     **ctx.accounts.owner.to_account_info().try_borrow_mut_lamports()? += withdraw_amount;
+
+    emit!(events::TipsWithdrawn {
+        owner: ctx.accounts.owner.key(),
+        amount: withdraw_amount,
+    });
 
     Ok(())
 }
@@ -262,6 +282,12 @@ pub fn claim_escrow(ctx: Context<ClaimEscrow>) -> Result<()> {
     balance.amount = balance.amount.saturating_add(amount);
     balance.total_received = balance.total_received.saturating_add(amount);
     balance.bump = ctx.bumps.balance;
+
+    emit!(events::EscrowClaimed {
+        entity_hash: entity.entity_hash,
+        owner: ctx.accounts.owner.key(),
+        amount,
+    });
 
     Ok(())
 }
