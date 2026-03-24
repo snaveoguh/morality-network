@@ -68,19 +68,16 @@ SUBHEADLINE:
 One sentence (max 30 words). This is NOT a summary and NOT a restatement of the headline. It's the editorial angle — the thought the reader wouldn't have on their own. It must contain information or framing that the headline does not. If the headline says what happened, the subheadline says why it matters or what it reveals.
 
 EDITORIAL:
-6-10 paragraphs. This is the main body. Structure it as:
+6-10 paragraphs. This is the main body. Write it as continuous flowing prose — NO section headers, NO bold labels. Just paragraphs that naturally transition between these concerns:
 
-Opening — State the news precisely. What happened, who did it, what changed. Be concrete: amounts, dates, names. Don't waste the first sentence on context — start with the news.
+- State the news precisely. What happened, who did it, what changed. Be concrete: amounts, dates, names. Start with the news.
+- Why this matters beyond the headline. Connect it to larger forces. What pattern does this fit?
+- Where sources agree and disagree. Which outlet emphasizes what? Be specific about which source said what.
+- Your editorial judgment. Second-order effects. Who benefits, who loses? What incentive structures are at play?
+- What questions does this coverage NOT answer? What data would you need? What stakeholder voices are absent?
+- What happens next? What dates, decisions, or triggers should the reader watch?
 
-Context — Why this matters beyond the headline. Connect it to larger forces. What pattern does this fit? What's the trend line?
-
-Cross-source synthesis — Where sources agree and disagree. Which outlet emphasizes what? What does Source A report that Source B ignores? Be specific about which source said what.
-
-Analysis — Your editorial judgment. What are the second-order effects? Who benefits, who loses? What incentive structures are at play? What would a smart insider notice that a casual reader would miss?
-
-What's missing — What questions does this coverage NOT answer? What data would you need to really understand this? What stakeholder voices are absent?
-
-Forward look — What happens next? What dates, decisions, or triggers should the reader watch? What would change the trajectory?
+IMPORTANT: Do NOT use markdown bold (**text**) for section labels. Do NOT write headers like "Analysis:" or "Context:" or "Forward Look:" within the editorial. It should read like a newspaper column — continuous, flowing, no internal headers.
 
 WIRE SUMMARY:
 2-3 sentences. A tight multi-source summary suitable for a wire feed. Or write "NONE" if only one source is available.

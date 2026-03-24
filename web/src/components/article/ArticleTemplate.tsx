@@ -50,11 +50,26 @@ interface ArticleTemplateProps {
   editionNumber?: number;
 }
 
+/**
+ * Strip AI section header artifacts from editorial paragraphs.
+ * Removes patterns like "**MARKET PULSE** —", "**Synthesis:** ", etc.
+ * that the LLM sometimes inserts despite prompt instructions.
+ */
+function stripSectionHeaders(text: string): string {
+  // Remove **HEADER** — or **HEADER:** at the start of a paragraph
+  let cleaned = text.replace(/^\*{1,2}[A-Z][A-Za-z &/']+\*{1,2}\s*[—–:\-]\s*/u, "");
+  // Remove any remaining bold markdown wrapping (** or __)
+  cleaned = cleaned.replace(/\*{2}([^*]+)\*{2}/g, "$1");
+  cleaned = cleaned.replace(/_{2}([^_]+)_{2}/g, "$1");
+  return cleaned;
+}
+
 function renderParagraphWithEntities(
   paragraph: string,
   paragraphIndex: number,
   entities: EntityMention[],
 ): React.ReactNode {
+  paragraph = stripSectionHeaders(paragraph);
   // Find all occurrences in this paragraph, sorted by startChar
   const occurrences: Array<{ entity: EntityMention; start: number; end: number }> = [];
   for (const entity of entities) {
