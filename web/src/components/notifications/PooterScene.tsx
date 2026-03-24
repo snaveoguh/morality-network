@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useState, useEffect } from "react";
+import { useRef, useMemo, useState, useEffect, type RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox, QuadraticBezierLine } from "@react-three/drei";
 import * as THREE from "three";
@@ -66,7 +66,9 @@ interface AnimState {
   blinkTimer: number;
   blinkPhase: number; // 0=open, 1=closing, 2=opening
   pupilX: number;
+  pupilY: number;
   pupilTargetX: number;
+  pupilTargetY: number;
   pupilChangeTimer: number;
   globalTime: number;
 }
@@ -78,9 +80,11 @@ interface AnimState {
 interface Props {
   mood: PooterMood;
   onSassyMessage?: (msg: string) => void;
+  /** Ref to normalized mouse position — read in useFrame for zero re-renders */
+  mousePosRef?: RefObject<{ x: number; y: number }>;
 }
 
-export function PooterScene({ mood, onSassyMessage }: Props) {
+export function PooterScene({ mood, onSassyMessage, mousePosRef }: Props) {
   const groupRef = useRef<THREE.Group>(null);
   const leftEyeRef = useRef<THREE.Mesh>(null);
   const rightEyeRef = useRef<THREE.Mesh>(null);
@@ -117,7 +121,9 @@ export function PooterScene({ mood, onSassyMessage }: Props) {
     blinkTimer: 3,
     blinkPhase: 0,
     pupilX: 0,
+    pupilY: 0,
     pupilTargetX: 0,
+    pupilTargetY: 0,
     pupilChangeTimer: 2,
     globalTime: 0,
   });
@@ -154,13 +160,23 @@ export function PooterScene({ mood, onSassyMessage }: Props) {
     if (a.blinkPhase === 1) blinkScale = Math.max(0.05, a.blinkTimer / 0.08);
     else if (a.blinkPhase === 2) blinkScale = 1 - Math.max(0, a.blinkTimer / 0.1);
 
-    // ---- Pupil wandering ----
-    a.pupilChangeTimer -= delta;
-    if (a.pupilChangeTimer <= 0) {
-      a.pupilTargetX = (Math.random() - 0.5) * 0.08;
-      a.pupilChangeTimer = 1.5 + Math.random() * 3;
+    // ---- Pupil tracking (cursor or random wander) ----
+    const mp = mousePosRef?.current;
+    if (mp && (mp.x !== 0 || mp.y !== 0)) {
+      // Cursor tracking: map normalized mouse [-1,1] to pupil offset
+      a.pupilTargetX = mp.x * 0.06;
+      a.pupilTargetY = mp.y * -0.04; // invert Y (screen Y is flipped)
+    } else {
+      // Fallback: random wander when no cursor data
+      a.pupilChangeTimer -= delta;
+      if (a.pupilChangeTimer <= 0) {
+        a.pupilTargetX = (Math.random() - 0.5) * 0.08;
+        a.pupilTargetY = 0;
+        a.pupilChangeTimer = 1.5 + Math.random() * 3;
+      }
     }
-    a.pupilX += (a.pupilTargetX - a.pupilX) * 0.05;
+    a.pupilX += (a.pupilTargetX - a.pupilX) * 0.12;
+    a.pupilY += (a.pupilTargetY - a.pupilY) * 0.12;
 
     // ---- Target values per mood ----
     let targetEyeY = 1;
@@ -220,14 +236,16 @@ export function PooterScene({ mood, onSassyMessage }: Props) {
     if (leftEyeRef.current) leftEyeRef.current.scale.y = a.eyeScaleY;
     if (rightEyeRef.current) rightEyeRef.current.scale.y = a.eyeScaleY;
 
-    // Pupils (move X for look direction, hide during blink)
+    // Pupils (move X+Y for look direction, hide during blink)
     const pupilVisible = a.eyeScaleY > 0.3;
     if (leftPupilRef.current) {
       leftPupilRef.current.position.x = -0.35 + a.pupilX;
+      leftPupilRef.current.position.y = 0.13 + a.pupilY;
       leftPupilRef.current.visible = pupilVisible;
     }
     if (rightPupilRef.current) {
       rightPupilRef.current.position.x = 0.35 + a.pupilX;
+      rightPupilRef.current.position.y = 0.13 + a.pupilY;
       rightPupilRef.current.visible = pupilVisible;
     }
 
