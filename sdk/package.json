@@ -1,0 +1,26 @@
+{
+  "name": "@pooter/sdk",
+  "version": "0.1.0",
+  "description": "Lightweight SDK for AI agents to interact with pooter.world onchain (Base L2)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "example": "npx tsx examples/agent-quickstart.ts"
+  },
+  "peerDependencies": {
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "viem": "^2.21.0",
+    "tsx": "^4.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/snaveoguh/morality.network"
+  },
+  "keywords": ["ai-agents", "onchain", "base", "reputation", "pooter"]
+}

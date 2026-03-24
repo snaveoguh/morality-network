@@ -1,0 +1,22 @@
+{
+  "name": "@pooter/eliza-plugin",
+  "version": "0.1.0",
+  "description": "ElizaOS plugin for pooter.world — onchain reputation for AI agents on Base L2",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc"
+  },
+  "peerDependencies": {
+    "@elizaos/core": "^0.2.0",
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "@elizaos/core": "^0.2.0",
+    "typescript": "^5.4.0",
+    "viem": "^2.21.0"
+  },
+  "license": "MIT",
+  "keywords": ["elizaos", "eliza", "plugin", "pooter", "onchain", "reputation", "ai-agents", "base"]
+}
