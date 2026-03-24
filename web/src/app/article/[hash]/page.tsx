@@ -24,7 +24,7 @@ import {
   getRegistryEntityByHash,
   isHttpIdentifier,
 } from "@/lib/entity-registry";
-import { BRAND_NAME, withBrand } from "@/lib/brand";
+import { BRAND_NAME, SITE_URL, withBrand } from "@/lib/brand";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -325,33 +325,56 @@ async function recoverPrimaryFromRegistry(
 }
 
 // Generate metadata for SEO
+// Edition epoch: March 11 2025 00:00 UTC (edition #1)
+const EDITION_EPOCH_MS = 1741651200 * 1000;
+
+/** Compute the edition illustration URL if the editorial is a daily edition with an illustration. */
+function resolveEditionIllustrationUrl(editorial: Awaited<ReturnType<typeof getArchivedEditorial>> | null): string | null {
+  if (!editorial?.isDailyEdition || !editorial.hasIllustration) return null;
+  const editorialDate = editorial.generatedAt
+    ? new Date(editorial.generatedAt).getTime()
+    : Date.now();
+  const daysSinceEpoch = Math.floor((editorialDate - EDITION_EPOCH_MS) / 86400000);
+  if (daysSinceEpoch < 0) return null;
+  const editionNumber = daysSinceEpoch + 1;
+  return `${SITE_URL}/api/edition/${editionNumber}/illustration`;
+}
+
+/** Pick the best OG image: edition illustration > article imageUrl > editorial imageUrl > empty. */
+function resolveOgImages(
+  imageUrl: string | undefined,
+  editorial: Awaited<ReturnType<typeof getArchivedEditorial>> | null,
+): Array<{ url: string }> {
+  const illustrationUrl = resolveEditionIllustrationUrl(editorial);
+  if (illustrationUrl) return [{ url: illustrationUrl }];
+  if (imageUrl) return [{ url: imageUrl }];
+  if (editorial?.primary?.imageUrl) return [{ url: editorial.primary.imageUrl }];
+  return [];
+}
+
 export async function generateMetadata({ params }: ArticlePageProps) {
   const { hash } = await params;
   if (!/^0x[a-fA-F0-9]{64}$/.test(hash)) {
     return { title: "Article Not Found" };
   }
 
-  // Skip heavy fetchAllFeeds() — check archive + editorial only (instant)
-  const archivedItem = await withTimeout(
-    getArchivedFeedItemByHash(hash as `0x${string}`),
-    5000,
-    null,
-  );
+  // Fetch archive + editorial in parallel
+  const [archivedItem, editorial] = await Promise.all([
+    withTimeout(getArchivedFeedItemByHash(hash as `0x${string}`), 5000, null),
+    getArchivedEditorial(hash).catch(() => null),
+  ]);
   const item = archivedItem;
 
   if (!item) {
-    // Check editorial archive as last resort for OG tags
-    const editorial = await getArchivedEditorial(hash).catch(() => null);
     if (editorial?.primary?.title) {
+      const images = resolveOgImages(undefined, editorial);
       return {
         title: withBrand(editorial.primary.title),
         description: editorial.subheadline,
         openGraph: {
           title: editorial.primary.title,
           description: editorial.subheadline,
-          images: editorial.primary.imageUrl
-            ? [{ url: editorial.primary.imageUrl }]
-            : [],
+          images,
           type: "article" as const,
           siteName: BRAND_NAME,
           locale: "en_US",
@@ -360,6 +383,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
           card: "summary_large_image" as const,
           title: editorial.primary.title,
           description: editorial.subheadline,
+          images: images.map((i) => i.url),
         },
       };
     }
@@ -389,6 +413,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   const sourceInfo = item.bias
     ? `${item.source} (${item.bias.bias}) — ${item.category}`
     : `${item.source} — ${item.category}`;
+  const images = resolveOgImages(item.imageUrl, editorial);
 
   return {
     title: withBrand(item.title),
@@ -396,7 +421,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     openGraph: {
       title: item.title,
       description: `${sourceInfo}. ${description}`,
-      images: item.imageUrl ? [{ url: item.imageUrl }] : [],
+      images,
       type: "article" as const,
       siteName: BRAND_NAME,
       locale: "en_US",
@@ -405,6 +430,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
       card: "summary_large_image" as const,
       title: item.title,
       description,
+      images: images.map((i) => i.url),
     },
   };
 }
