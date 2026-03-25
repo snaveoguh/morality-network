@@ -473,44 +473,14 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
     return map;
   }, [rssItems, casts, proposals]);
 
-  const tagOptions = useMemo(() => {
-    const counts = new Map<string, number>();
-
-    for (const item of rssItems) {
-      for (const tag of item.tags || []) {
-        const normalized = tag.toLowerCase();
-        counts.set(normalized, (counts.get(normalized) || 0) + 1);
-      }
-    }
-
-    for (const proposal of proposals) {
-      for (const tag of proposal.tags || []) {
-        const normalized = tag.toLowerCase();
-        counts.set(normalized, (counts.get(normalized) || 0) + 1);
-      }
-    }
-
-    for (const original of pooterOriginals) {
-      for (const tag of original.tags || []) {
-        const normalized = tag.toLowerCase();
-        counts.set(normalized, (counts.get(normalized) || 0) + 1);
-      }
-    }
-
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-      .slice(0, 12)
-      .map(([tag]) => tag);
-  }, [rssItems, proposals, pooterOriginals]);
-
-  const filtered = useMemo(() => {
+  // Items filtered by category/country/bias (before tag filter) — used to
+  // compute which tags are actually available given the other active filters.
+  const preTagFiltered = useMemo(() => {
     let result = items;
     if (filter !== "all") {
       if (filter === "pooter-og") {
-        // Show only Pooter Originals (AI-generated editorials + moral commentary)
         result = result.filter((item) => item.type === "pooter-original");
       } else if (filter === "news") {
-        // "News" matches all general news categories (world, politics, business)
         result = result.filter((item) => NEWS_CATEGORIES.has(item.category));
       } else {
         result = result.filter((item) => item.category === filter);
@@ -534,22 +504,52 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
         return bias.bias === biasFilter;
       });
     }
-    if (tagFilter !== "all") {
-      result = result.filter((item) => {
-        if (item.type === "rss") {
-          return (item.data.tags || []).some((tag) => tag.toLowerCase() === tagFilter);
-        }
-        if (item.type === "governance") {
-          return (item.data.tags || []).some((tag) => tag.toLowerCase() === tagFilter);
-        }
-        if (item.type === "pooter-original") {
-          return (item.data.tags || []).some((tag) => tag.toLowerCase() === tagFilter);
-        }
-        return false;
-      });
-    }
     return result;
-  }, [items, filter, countryFilter, biasFilter, tagFilter]);
+  }, [items, filter, countryFilter, biasFilter]);
+
+  const tagOptions = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    for (const item of preTagFiltered) {
+      const tags: string[] =
+        item.type === "rss" ? (item.data.tags || []) :
+        item.type === "governance" ? (item.data.tags || []) :
+        item.type === "pooter-original" ? (item.data.tags || []) :
+        [];
+      for (const tag of tags) {
+        const normalized = tag.toLowerCase();
+        counts.set(normalized, (counts.get(normalized) || 0) + 1);
+      }
+    }
+
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 12)
+      .map(([tag]) => tag);
+  }, [preTagFiltered]);
+
+  // Reset tag filter when other filters change and the selected tag no longer exists
+  useEffect(() => {
+    if (tagFilter !== "all" && !tagOptions.includes(tagFilter)) {
+      setTagFilter("all");
+    }
+  }, [tagFilter, tagOptions]);
+
+  const filtered = useMemo(() => {
+    if (tagFilter === "all") return preTagFiltered;
+    return preTagFiltered.filter((item) => {
+      if (item.type === "rss") {
+        return (item.data.tags || []).some((tag) => tag.toLowerCase() === tagFilter);
+      }
+      if (item.type === "governance") {
+        return (item.data.tags || []).some((tag) => tag.toLowerCase() === tagFilter);
+      }
+      if (item.type === "pooter-original") {
+        return (item.data.tags || []).some((tag) => tag.toLowerCase() === tagFilter);
+      }
+      return false;
+    });
+  }, [preTagFiltered, tagFilter]);
 
   // Track hero count to prevent multiple heroes
   let heroCount = 0;
@@ -667,6 +667,17 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
       >
         <div className="min-w-0 w-full shrink-0 snap-start overflow-hidden border-r-2 border-[var(--rule)] pr-0 lg:w-auto lg:shrink lg:flex-1 lg:overflow-visible lg:pr-4">
           {/* ── NEWSPAPER GRID ── */}
+          {filtered.length === 0 && (
+            <div className="py-16 text-center font-mono text-xs uppercase tracking-wider text-[var(--ink-faint)]">
+              No stories match these filters.{" "}
+              <button
+                onClick={() => { setFilter("all"); setCountryFilter("all"); setBiasFilter("all"); setTagFilter("all"); }}
+                className="underline underline-offset-2 hover:text-[var(--ink)]"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
           <div className="newspaper-grid">
             {filtered.flatMap((item, i) => {
               const elements: React.ReactNode[] = [];
