@@ -113,4 +113,34 @@ pub mod morality {
     pub fn set_ai_oracle(ctx: Context<SetAIOracle>, oracle: Pubkey) -> Result<()> {
         instructions::leaderboard::set_ai_oracle(ctx, oracle)
     }
+
+    // ── ZK Password Recovery ─────────────────────────────────────────
+
+    pub fn register_zk_commitment(
+        ctx: Context<RegisterZkCommitment>,
+        commitment: [u8; 32],
+        circuit_type: u8,
+    ) -> Result<()> {
+        instructions::zk_recovery::register_zk_commitment(ctx, commitment, circuit_type)
+    }
+
+    pub fn initiate_zk_recovery(
+        ctx: Context<InitiateZkRecovery>,
+        new_address: Pubkey,
+        proof_data: Vec<u8>,
+    ) -> Result<()> {
+        instructions::zk_recovery::initiate_zk_recovery(ctx, new_address, proof_data)
+    }
+
+    pub fn cancel_zk_recovery(ctx: Context<CancelZkRecovery>) -> Result<()> {
+        instructions::zk_recovery::cancel_zk_recovery(ctx)
+    }
+
+    pub fn execute_zk_recovery(ctx: Context<ExecuteZkRecovery>) -> Result<()> {
+        instructions::zk_recovery::execute_zk_recovery(ctx)
+    }
+
+    pub fn revoke_zk_commitment(ctx: Context<RevokeZkCommitment>) -> Result<()> {
+        instructions::zk_recovery::revoke_zk_commitment(ctx)
+    }
 }

@@ -60,4 +60,21 @@ pub enum MoralityError {
     TooFrequent,
     #[msg("Comment ID overflow")]
     CommentIdOverflow,
+    // ── ZK Recovery ──────────────────────────────────────────────
+    #[msg("Invalid commitment (cannot be zero)")]
+    InvalidCommitment,
+    #[msg("Invalid circuit type")]
+    InvalidCircuitType,
+    #[msg("Invalid recovery address")]
+    InvalidRecoveryAddress,
+    #[msg("Account locked after too many failed attempts")]
+    RecoveryLocked,
+    #[msg("Recovery cooldown — wait before retrying")]
+    RecoveryCooldown,
+    #[msg("Invalid ZK proof data")]
+    InvalidProofData,
+    #[msg("Invalid ZK proof — verification failed")]
+    InvalidProof,
+    #[msg("Timelock has not expired yet")]
+    TimelockNotExpired,
 }
