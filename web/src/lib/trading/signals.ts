@@ -294,9 +294,12 @@ async function getFallbackFeedSignals(): Promise<AggregatedMarketSignal[]> {
               .slice(0, 3)
           : [];
 
+        // Skip perfectly balanced scores — no directional signal
+        if (signedScore === 0) return null;
+
         return {
           symbol,
-          direction: signedScore >= 0 ? "bullish" : "bearish",
+          direction: signedScore > 0 ? "bullish" : "bearish",
           score: Math.abs(signedScore),
           observations: topic.articleCount,
           latestGeneratedAt: snapshot.generatedAt,
@@ -310,7 +313,7 @@ async function getFallbackFeedSignals(): Promise<AggregatedMarketSignal[]> {
           rawScore: signedScore,
         } satisfies AggregatedMarketSignal;
       })
-      .filter((signal) => signal.observations > 0 && signal.score > 0);
+      .filter((signal): signal is AggregatedMarketSignal => signal !== null && signal.observations > 0 && signal.score > 0);
 
     signals.sort((a, b) => b.score - a.score);
     return signals;
@@ -451,10 +454,15 @@ export async function getAggregatedMarketSignals(options?: {
     `[signals] aggregated ${records.length} records, ${totalProcessed} markets (${totalMapped} mapped, ${totalUnmapped} unmapped), ${bySymbol.size} tickers`,
   );
 
+  // Require at least 2 directional observations per symbol before emitting
+  // a signal — a single editorial shouldn't determine trade direction.
+  const MIN_DIRECTIONAL_OBSERVATIONS = 2;
+
   const signals = Array.from(bySymbol.entries())
     .map(([symbol, acc]) => {
       const totalWeight = acc.bullishWeight + acc.bearishWeight;
       if (totalWeight <= 0) return null;
+      if (acc.observations < MIN_DIRECTIONAL_OBSERVATIONS) return null;
 
       // Contradiction: 0 = all same direction, 1 = perfectly split
       const maxWeight = Math.max(acc.bullishWeight, acc.bearishWeight);
@@ -467,8 +475,12 @@ export async function getAggregatedMarketSignals(options?: {
       // Dampen by contradiction — 50% dampening at perfect contradiction
       const dampedScore = rawScore * (1 - contradictionPenalty * 0.5);
 
+      // Tie-breaking: dampedScore === 0 means perfectly balanced — treat as
+      // non-directional instead of defaulting to bullish.
+      if (dampedScore === 0) return null;
+
       const direction: AggregatedMarketSignal["direction"] =
-        dampedScore >= 0 ? "bullish" : "bearish";
+        dampedScore > 0 ? "bullish" : "bearish";
       const score = Math.abs(dampedScore);
 
       return {
@@ -487,6 +499,56 @@ export async function getAggregatedMarketSignals(options?: {
     })
     .filter((s): s is AggregatedMarketSignal => s !== null && s.score >= minAbsScore)
     .sort((a, b) => b.score - a.score);
+
+  // ── Macro sentiment relay ──────────────────────────────────────────────
+  // SPX is blocklisted on HL (spx6900 memecoin ≠ S&P 500), so equity index
+  // signals would be discarded.  Instead, relay them as dampened macro
+  // risk-on/risk-off sentiment to BTC and ETH.
+  //   SPX bearish → risk-off → bearish BTC/ETH (same direction)
+  //   DXY bullish (strong dollar) → risk-off → bearish BTC/ETH (inverted)
+  const MACRO_DAMPEN = 0.5; // half-weight — it's an indirect relationship
+
+  for (const macro of signals.filter((s) => s.symbol === "SPX" || s.symbol === "DXY")) {
+    // SPX: same direction pass-through.  DXY: inverted (strong dollar = risk-off).
+    const relayDirection: AggregatedMarketSignal["direction"] =
+      macro.symbol === "DXY"
+        ? (macro.direction === "bullish" ? "bearish" : "bullish")
+        : macro.direction;
+
+    for (const target of ["BTC", "ETH"]) {
+      const existing = signals.find((s) => s.symbol === target);
+      if (existing) {
+        // Blend: nudge existing signal toward macro direction
+        const macroSigned = relayDirection === "bullish" ? 1 : -1;
+        const existingSigned = existing.direction === "bullish" ? existing.score : -existing.score;
+        const blended = existingSigned + macroSigned * macro.score * MACRO_DAMPEN;
+        if (blended === 0) continue;
+        existing.direction = blended > 0 ? "bullish" : "bearish";
+        existing.score = safeFinite(Math.abs(blended), existing.score);
+        existing.supportingClaims = [
+          ...existing.supportingClaims,
+          ...macro.supportingClaims.map((c) => `[macro:${macro.symbol}] ${c}`),
+        ].slice(0, 5);
+      } else {
+        // No existing signal for this crypto — create a dampened macro-derived one
+        signals.push({
+          symbol: target,
+          direction: relayDirection,
+          score: safeFinite(macro.score * MACRO_DAMPEN, 0),
+          observations: macro.observations,
+          latestGeneratedAt: macro.latestGeneratedAt,
+          supportingClaims: macro.supportingClaims.map((c) => `[macro:${macro.symbol}] ${c}`).slice(0, 3),
+          contradictionPenalty: macro.contradictionPenalty,
+          bullishWeight: relayDirection === "bullish" ? macro.score * MACRO_DAMPEN : 0,
+          bearishWeight: relayDirection === "bearish" ? macro.score * MACRO_DAMPEN : 0,
+          rawScore: (relayDirection === "bullish" ? 1 : -1) * macro.score * MACRO_DAMPEN,
+        });
+      }
+    }
+  }
+
+  // Re-sort after macro relay additions
+  signals.sort((a, b) => b.score - a.score);
 
   return signals;
 }
