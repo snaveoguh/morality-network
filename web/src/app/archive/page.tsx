@@ -3,7 +3,7 @@ import { getAllArchivedItemsWithHashes } from "@/lib/archive";
 import { BiasPill } from "@/components/feed/BiasBar";
 import { BRAND_NAME, withBrand } from "@/lib/brand";
 
-export const revalidate = 300; // 5 min ISR
+export const revalidate = 3600; // 1 hour ISR (was 5 min — ~$30/mo savings)
 export const maxDuration = 55;
 export const dynamic = "force-dynamic";
 

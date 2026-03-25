@@ -3,8 +3,8 @@ import { DEFAULT_FEEDS } from "@/lib/rss";
 import { getCrawlQueueStats, seedCrawlQueueFromRegistry } from "@/lib/crawl-queue";
 import { getCanonicalSourceRegistry, registryStats } from "@/lib/source-registry";
 
-// Cache for 5 minutes
-export const revalidate = 300;
+// Cache for 1 hour (was 5 min — ~$20/mo savings)
+export const revalidate = 3600;
 
 // ============================================================================
 // GOVERNANCE ENDPOINTS — All the external APIs we depend on

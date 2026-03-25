@@ -7,7 +7,7 @@ import { computeEventShapedSentimentSnapshot } from "@/lib/event-corpus";
 import { fetchMarketData } from "@/lib/sentiment";
 import { recordSnapshot } from "@/lib/score-history";
 
-export const revalidate = 300; // 5 minutes ISR
+export const revalidate = 3600; // 1 hour ISR (was 5 min — ~$50/mo savings)
 export const maxDuration = 60; // allow up to 60s on Vercel Pro
 
 // In-memory cache

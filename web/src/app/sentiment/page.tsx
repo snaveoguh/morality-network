@@ -10,7 +10,7 @@ import { GlobalIndexCard } from "@/components/sentiment/GlobalIndexCard";
 import { SentimentGrid } from "@/components/sentiment/SentimentGrid";
 import { recordSnapshot } from "@/lib/score-history";
 
-export const revalidate = 300; // 5 min ISR
+export const revalidate = 3600; // 1 hour ISR (was 5 min — ~$100/mo savings)
 export const maxDuration = 60; // allow up to 60s on Vercel Pro
 
 let previousSnapshot: SentimentSnapshot | null = null;
