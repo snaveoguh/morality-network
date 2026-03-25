@@ -162,3 +162,38 @@ pub struct AIScore {
 impl AIScore {
     pub const SIZE: usize = 8 + 32 + 8 + 8 + 1;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+//  ZK Password Recovery
+// ═══════════════════════════════════════════════════════════════════
+
+/// ZK recovery commitment — PDA seed: ["zk_recovery", owner]
+#[account]
+pub struct ZkRecoveryCommitment {
+    pub owner: Pubkey,
+    pub commitment: [u8; 32],      // Poseidon(password, salt)
+    pub circuit_type: u8,           // 0 = single-factor, 1 = MFA
+    pub nonce: u64,
+    pub failed_attempts: u64,
+    pub last_attempt_ts: i64,
+    pub bump: u8,
+}
+
+impl ZkRecoveryCommitment {
+    // 8 (disc) + 32 + 32 + 1 + 8 + 8 + 8 + 1 = 98
+    pub const SIZE: usize = 8 + 32 + 32 + 1 + 8 + 8 + 8 + 1;
+}
+
+/// Pending ZK recovery — PDA seed: ["zk_pending", owner]
+#[account]
+pub struct ZkPendingRecovery {
+    pub owner: Pubkey,
+    pub new_address: Pubkey,
+    pub execute_after: i64,         // Unix timestamp
+    pub bump: u8,
+}
+
+impl ZkPendingRecovery {
+    // 8 (disc) + 32 + 32 + 8 + 1 = 81
+    pub const SIZE: usize = 8 + 32 + 32 + 8 + 1;
+}

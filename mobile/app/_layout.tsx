@@ -20,6 +20,7 @@ export default function RootLayout() {
         initialRouteName={walletExists ? '(tabs)' : 'onboarding'}
       >
         <Stack.Screen name="onboarding" />
+        <Stack.Screen name="recover" />
         <Stack.Screen name="(tabs)" />
       </Stack>
     </>

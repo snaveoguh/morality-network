@@ -115,6 +115,47 @@ export default function SettingsTab() {
           </View>
         </View>
 
+        {/* ZK Password Recovery */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ZK Password Recovery</Text>
+          <Text style={{ fontSize: 13, color: '#666', lineHeight: 18 }}>
+            Set a recovery password to recover your wallet without a seed phrase.
+            Uses zero-knowledge proofs — your password never touches the blockchain.
+          </Text>
+          <TouchableOpacity
+            style={[styles.btn, { backgroundColor: '#2D5A8E' }]}
+            onPress={() => {
+              Alert.prompt(
+                'Set Recovery Password',
+                'Choose a strong password (8+ chars). This is different from your PIN.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Set Password',
+                    onPress: (pwd) => {
+                      if (!pwd || pwd.length < 8) {
+                        Alert.alert('Error', 'Password must be at least 8 characters');
+                        return;
+                      }
+                      // TODO: Wire up setupRecoveryPassword() + registerCommitment()
+                      Alert.alert('Coming Soon', 'ZK recovery will be active after contract deployment.');
+                    },
+                  },
+                ],
+                'secure-text',
+              );
+            }}
+          >
+            <Text style={styles.btnText}>Set Recovery Password</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.btn}
+            onPress={() => router.push('/recover')}
+          >
+            <Text style={styles.btnText}>Recover Wallet</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Danger zone */}
         <View style={[styles.section, { marginTop: 40 }]}>
           <Text style={[styles.sectionTitle, { color: ACCENT }]}>Danger Zone</Text>
