@@ -680,7 +680,7 @@ class TraderEngine {
           );
           const positionAgeForReversal = Date.now() - position.openedAt;
           const minAgeForReversal = 600_000; // 10 min minimum — ignore early flip-flops
-          const minReversalScore = 0.5; // signal must be strongly directional
+          const minReversalScore = 0.65; // signal must be strongly directional
           if (
             currentSignal &&
             currentSignal.contradictionPenalty <= 0.3 && // strong consensus (was 0.5)
@@ -1464,6 +1464,14 @@ class TraderEngine {
       kellyPhase: kelly.phase,
       kellySizeUsd: kelly.positionNotionalUsd,
       actualSizeUsd: notionalUsd,
+      compositeDirection: composite.direction,
+      compositeConfidence: composite.confidence,
+      compositeReasons: composite.reasons.slice(0, 6),
+      technicalDirection: composite.components.technical?.direction,
+      technicalStrength: composite.components.technical?.strength,
+      patternDirection: composite.components.pattern?.direction,
+      patternNames: composite.components.pattern?.patterns,
+      agreementMet: composite.agreementMet,
     };
 
     const prePosition: Position = {

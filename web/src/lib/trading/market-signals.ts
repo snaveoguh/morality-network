@@ -226,8 +226,65 @@ export async function fetchFundingRateSignal(
 
 /* ═══════════════════  3. HL Open Interest  ═══════════════════ */
 
-// Track previous OI to detect changes
+// In-memory fallback for OI baselines (used when Redis is unavailable)
 const prevOI = new Map<string, { oi: number; ts: number }>();
+
+/* ── Upstash Redis persistence for OI baselines (survives serverless cold starts) ── */
+
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL ?? "";
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN ?? "";
+const OI_REDIS_KEY = "pooter:oi-baselines";
+
+function oiRedisEnabled(): boolean {
+  return !!(UPSTASH_URL && UPSTASH_TOKEN);
+}
+
+async function loadOIBaseline(symbol: string): Promise<{ oi: number; ts: number } | null> {
+  // Check in-memory first (hot path within same invocation)
+  const mem = prevOI.get(symbol);
+  if (mem) return mem;
+
+  if (!oiRedisEnabled()) return null;
+  try {
+    const res = await fetch(`${UPSTASH_URL}/hget/${OI_REDIS_KEY}/${symbol}`, {
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(3_000),
+    });
+    if (!res.ok) return null;
+    const body = await res.json() as { result: string | null };
+    if (!body.result) return null;
+    const parsed = JSON.parse(body.result) as { oi: number; ts: number };
+    if (typeof parsed.oi === "number" && typeof parsed.ts === "number") {
+      prevOI.set(symbol, parsed); // warm in-memory cache
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function saveOIBaseline(symbol: string, oi: number, ts: number): Promise<void> {
+  const entry = { oi, ts };
+  prevOI.set(symbol, entry);
+
+  if (!oiRedisEnabled()) return;
+  try {
+    await fetch(UPSTASH_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${UPSTASH_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(["HSET", OI_REDIS_KEY, symbol, JSON.stringify(entry)]),
+      cache: "no-store",
+      signal: AbortSignal.timeout(3_000),
+    });
+  } catch {
+    // Non-fatal — in-memory fallback still works within this invocation
+  }
+}
 
 /**
  * Fetch open interest from HyperLiquid and detect significant changes.
@@ -236,6 +293,10 @@ const prevOI = new Map<string, { oi: number; ts: number }>();
  * Falling OI → position unwinding → neutral/reduce confidence
  *
  * Uses metaAndAssetCtxs endpoint (same as funding — combined to share cache).
+ *
+ * OI baselines are persisted to Upstash Redis so they survive serverless
+ * cold starts. Without this, OI always returns neutral on the first
+ * invocation because the in-memory baseline is lost between deploys.
  */
 export async function fetchOpenInterestSignal(
   _config: TraderExecutionConfig,
@@ -272,9 +333,9 @@ export async function fetchOpenInterestSignal(
     const markPx = parseFloat(assetCtxs[assetIndex].markPx);
     const funding = parseFloat(assetCtxs[assetIndex].funding);
 
-    // Compare with previous reading
-    const prev = prevOI.get(symbol);
-    prevOI.set(symbol, { oi: currentOI, ts: Date.now() });
+    // Compare with previous reading (Redis-backed, survives cold starts)
+    const prev = await loadOIBaseline(symbol);
+    await saveOIBaseline(symbol, currentOI, Date.now());
 
     if (!prev || Date.now() - prev.ts > 30 * 60_000) {
       // First reading or stale — can't compute change
