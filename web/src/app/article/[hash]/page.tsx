@@ -340,15 +340,9 @@ function resolveEditionIllustrationUrl(editorial: Awaited<ReturnType<typeof getA
   return `${SITE_URL}/api/edition/${editionNumber}/illustration`;
 }
 
-/** Pick the best OG image: edition illustration > article imageUrl > editorial imageUrl > empty. */
-function resolveOgImages(
-  imageUrl: string | undefined,
-  editorial: Awaited<ReturnType<typeof getArchivedEditorial>> | null,
-): Array<{ url: string }> {
-  const illustrationUrl = resolveEditionIllustrationUrl(editorial);
-  if (illustrationUrl) return [{ url: illustrationUrl }];
-  if (imageUrl) return [{ url: imageUrl }];
-  if (editorial?.primary?.imageUrl) return [{ url: editorial.primary.imageUrl }];
+/** OG images are now always rendered via opengraph-image.tsx (grayscale).
+ *  No explicit image URLs in metadata — Next.js auto-discovers the component. */
+function resolveOgImages(): Array<{ url: string }> {
   return [];
 }
 
@@ -367,7 +361,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
 
   if (!item) {
     if (editorial?.primary?.title) {
-      const images = resolveOgImages(undefined, editorial);
+      const images = resolveOgImages();
       return {
         title: withBrand(editorial.primary.title),
         description: editorial.subheadline,
@@ -413,7 +407,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   const sourceInfo = item.bias
     ? `${item.source} (${item.bias.bias}) — ${item.category}`
     : `${item.source} — ${item.category}`;
-  const images = resolveOgImages(item.imageUrl, editorial);
+  const images = resolveOgImages();
 
   return {
     title: withBrand(item.title),

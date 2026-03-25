@@ -4,7 +4,7 @@ import { join } from "path";
 import { getArchivedFeedItemByHash } from "@/lib/archive";
 import { getArchivedEditorial } from "@/lib/editorial-archive";
 import { formatDateline } from "@/lib/article";
-import { BRAND_DOMAIN, BRAND_NAME } from "@/lib/brand";
+import { BRAND_DOMAIN, BRAND_NAME, SITE_URL } from "@/lib/brand";
 
 // 24h revalidation — the image is deterministic per article hash.
 export const revalidate = 86400;
@@ -33,6 +33,7 @@ interface OGArticle {
   category: string;
   dateline: string;
   imageUrl: string | null;
+  illustrationUrl: string | null;
   tags: string[];
   dailyTitle: string | null;
   isDailyEdition: boolean;
@@ -79,6 +80,16 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
   ]);
 }
 
+const EDITION_EPOCH_MS = 1741651200 * 1000; // March 11 2025 00:00 UTC
+
+function resolveIllustrationUrl(editorial: Awaited<ReturnType<typeof getArchivedEditorial>> | null): string | null {
+  if (!editorial?.isDailyEdition || !editorial.hasIllustration) return null;
+  const editorialDate = editorial.generatedAt ? new Date(editorial.generatedAt).getTime() : Date.now();
+  const daysSinceEpoch = Math.floor((editorialDate - EDITION_EPOCH_MS) / 86400000);
+  if (daysSinceEpoch < 0) return null;
+  return `${SITE_URL}/api/edition/${daysSinceEpoch + 1}/illustration`;
+}
+
 async function resolveArticle(hash: string): Promise<OGArticle | null> {
   const editorial = await getArchivedEditorial(hash).catch(() => null);
   if (editorial) {
@@ -89,6 +100,7 @@ async function resolveArticle(hash: string): Promise<OGArticle | null> {
       category: editorial.isDailyEdition ? "Daily Edition" : "Editorial",
       dateline: formatDateline(editorial.generatedAt),
       imageUrl: editorial.primary.imageUrl || null,
+      illustrationUrl: resolveIllustrationUrl(editorial),
       tags: editorial.tags || [],
       dailyTitle: editorial.dailyTitle || null,
       isDailyEdition: editorial.isDailyEdition || false,
@@ -108,6 +120,7 @@ async function resolveArticle(hash: string): Promise<OGArticle | null> {
       category: archivedItem.category || "World",
       dateline: formatDateline(archivedItem.pubDate),
       imageUrl: archivedItem.imageUrl || null,
+      illustrationUrl: null,
       tags: archivedItem.tags || [],
       dailyTitle: null,
       isDailyEdition: false,
@@ -153,10 +166,10 @@ function renderArticle(
           backgroundColor: "#0A0A0A",
         }}
       >
-        {/* B&W painting background */}
+        {/* Article image (grayscale) or fallback B&W painting */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={bgBase64}
+          src={article.illustrationUrl || article.imageUrl || bgBase64}
           alt=""
           width={1200}
           height={630}
@@ -167,7 +180,8 @@ function renderArticle(
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            opacity: 0.2,
+            opacity: article.illustrationUrl ? 0.4 : article.imageUrl ? 0.3 : 0.2,
+            filter: "grayscale(100%)",
           }}
         />
 
