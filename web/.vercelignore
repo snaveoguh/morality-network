@@ -1,0 +1,4 @@
+# Large data files — served via Redis/indexer in production.
+# Local JSON files are dev-only seeds; excluding saves ~18 MB from build.
+src/data/article-archive.json
+src/data/editorial-archive.json
