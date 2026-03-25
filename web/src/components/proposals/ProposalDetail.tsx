@@ -17,7 +17,7 @@ import {
   isDelegationActivityProposal,
 } from "@/lib/governance";
 import Link from "next/link";
-import { useCallback, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { isAddress } from "viem";
 
@@ -132,6 +132,27 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
   const handleInterpretationPosted = useCallback(() => {
     commentRefetchRef.current?.();
   }, []);
+
+  // Persist proposal entity context to Redis registry on every view
+  useEffect(() => {
+    const body = proposal.fullBody || proposal.body || "";
+    fetch("/api/entity-context", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        hash: proposalDiscussionHash,
+        title: proposal.title,
+        description: body.slice(0, 300) || undefined,
+        imageUrl: extractImageFromBody(body) || undefined,
+        source: proposal.dao,
+        type: "proposal",
+        dao: proposal.dao,
+        status: proposal.status,
+        linkBack: `/proposals/${proposal.id}`,
+      }),
+    }).catch(() => {});
+  }, [proposalDiscussionHash]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const { forPct, againstPct } = getVotePercentage(
     proposal.votesFor,
     proposal.votesAgainst
