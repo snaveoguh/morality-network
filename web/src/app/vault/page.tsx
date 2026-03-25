@@ -77,8 +77,8 @@ export default function VaultPage() {
       {/* Footer note */}
       <footer className="mt-12 border-t-2 border-[var(--rule)] pt-4">
         <p className="font-mono text-[9px] uppercase tracking-widest text-[var(--ink-faint)]">
-          Contracts are upgradeable (UUPS proxy pattern) and pausable. All deployed on Base L2 and Arbitrum.
-          Source code available in the repository under <code>contracts/src/</code>.
+          EVM contracts are upgradeable (UUPS proxy pattern) and pausable. Deployed on Base Sepolia and Arbitrum Sepolia (testnet).
+          Solana programs built with Anchor. Source code available under <code>contracts/src/</code> and <code>solana-programs/</code>.
         </p>
       </footer>
     </main>
