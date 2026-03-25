@@ -387,27 +387,53 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
 
     all.sort((a, b) => b.sortTime - a.sortTime);
 
-    // Pooter Originals mix naturally by timestamp — no float-to-top.
-    // Users can filter to "Pooter OG" tab to see only originals.
+    // ── FEED MIX ──
+    // Split into buckets, then interleave so the front page feels like a
+    // newspaper: lead with general news, sprinkle in governance / parliament /
+    // videos, and feature Pooter Originals prominently.
+    const INSTITUTIONAL_CATS = new Set([
+      "parliament", "congress", "eu", "canada", "australia", "sec",
+      "governance", "candidates",
+    ]);
 
-    // Published articles float to top while maintaining their relative order
-    if (publishedHashes && publishedHashes.size > 0) {
-      const published: TileItem[] = [];
-      const rest: TileItem[] = [];
-      for (const item of all) {
-        if (
-          item.type === "rss" &&
-          publishedHashes.has(computeEntityHash(item.data.link))
-        ) {
-          published.push(item);
-        } else {
-          rest.push(item);
-        }
+    const published: TileItem[] = [];
+    const originals: TileItem[] = [];
+    const news: TileItem[] = [];        // general-interest RSS + video + casts
+    const institutional: TileItem[] = []; // parliament, congress, governance
+
+    for (const item of all) {
+      if (
+        item.type === "rss" &&
+        publishedHashes &&
+        publishedHashes.size > 0 &&
+        publishedHashes.has(computeEntityHash(item.data.link))
+      ) {
+        published.push(item);
+      } else if (item.type === "pooter-original") {
+        originals.push(item);
+      } else if (item.type === "governance" || INSTITUTIONAL_CATS.has(item.category)) {
+        institutional.push(item);
+      } else {
+        news.push(item); // RSS, video, cast — all general content
       }
-      return [...published, ...rest];
     }
 
-    return all;
+    // Round-robin merge: 5 news → 1 institutional, repeat.
+    // Governance/parliament still appear but don't dominate the front page.
+    const mixed: TileItem[] = [];
+    let ni = 0, ii = 0;
+    while (ni < news.length || ii < institutional.length) {
+      for (let k = 0; k < 5 && ni < news.length; k++) mixed.push(news[ni++]);
+      if (ii < institutional.length) mixed.push(institutional[ii++]);
+    }
+
+    // Interleave Pooter Originals every ~12 items, first one near the top
+    for (let i = 0; i < originals.length; i++) {
+      const insertAt = Math.min(i * 12 + 2, mixed.length);
+      mixed.splice(insertAt, 0, originals[i]);
+    }
+
+    return [...published, ...mixed];
   }, [rssItems, casts, proposals, videos, publishedHashList, pooterOriginals]);
 
   const wireEntityMetaByHash = useMemo(() => {
