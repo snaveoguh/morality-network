@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "pooter world",
+    "slug": "pooter-world",
+    "version": "0.1.0",
+    "scheme": "pooterworld",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F0E8"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "world.pooter.app",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Use Face ID to unlock your wallet"
+      }
+    },
+    "android": {
+      "package": "world.pooter.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#1A1A1A",
+        "foregroundImage": "./assets/icon.png"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-local-authentication",
+      "expo-crypto"
+    ]
+  }
+}
