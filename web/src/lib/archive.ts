@@ -481,6 +481,22 @@ export async function autoArchiveBatch(items: FeedItem[]): Promise<void> {
           })
           .filter((x): x is ArchivedFeedItem => x !== null);
         redisSetArticleBatch(changedItems).catch(() => {});
+
+        // Persist entity context for archived articles
+        import("./entity-context").then(({ setEntityContextBatch }) =>
+          setEntityContextBatch(
+            changedItems.map((item) => ({
+              hash: item.hash,
+              title: item.title,
+              description: item.description,
+              imageUrl: item.imageUrl,
+              source: item.source,
+              type: "article",
+              url: item.link,
+              linkBack: `/article/${item.hash}`,
+            })),
+          ),
+        ).catch(() => {});
       }
 
       // Also write to disk (may fail on Vercel read-only FS)

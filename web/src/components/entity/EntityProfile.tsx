@@ -22,13 +22,17 @@ import {
   saveStumbleContext,
   type StumbleContextEntry,
 } from "@/lib/stumble-context";
+import type { EntityContext } from "@/lib/entity-context";
+import Link from "next/link";
 
 interface EntityProfileProps {
   entityHash: `0x${string}`;
   initialContext?: StumbleContextEntry | null;
+  /** Rich context from the entity context registry (Redis-backed) */
+  entityContext?: EntityContext | null;
 }
 
-export function EntityProfile({ entityHash, initialContext = null }: EntityProfileProps) {
+export function EntityProfile({ entityHash, initialContext = null, entityContext = null }: EntityProfileProps) {
   const { isConnected } = useAccount();
   const searchParams = useSearchParams();
   const [stumbleContext, setStumbleContext] = useState<StumbleContextEntry | null>(initialContext);
@@ -86,6 +90,20 @@ export function EntityProfile({ entityHash, initialContext = null }: EntityProfi
         saveStumbleContext(entry);
       }
       setStumbleContext(entry);
+
+      // Persist to server-side entity context registry
+      fetch("/api/entity-context", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hash: entityHash,
+          title: title || url,
+          description: description || undefined,
+          source: source || "stumble",
+          type,
+          url: url || undefined,
+        }),
+      }).catch(() => {});
       return;
     }
 
@@ -132,6 +150,32 @@ export function EntityProfile({ entityHash, initialContext = null }: EntityProfi
             {/* Title — show human-readable name when available */}
             {hasContext && resolvedTitle !== entityHash ? (
               <>
+                {/* Entity context image */}
+                {entityContext?.imageUrl && (
+                  <div className="mb-3 overflow-hidden border border-[var(--rule-light)]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={entityContext.imageUrl}
+                      alt=""
+                      className="h-auto max-h-48 w-full object-cover grayscale"
+                    />
+                  </div>
+                )}
+
+                {/* DAO + status badges */}
+                {entityContext?.dao && (
+                  <div className="mb-1.5 flex items-center gap-2">
+                    <span className="border border-[var(--rule)] px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-light)]">
+                      {entityContext.dao}
+                    </span>
+                    {entityContext.status && (
+                      <span className="border border-[var(--rule-light)] px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+                        {entityContext.status}
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 <h1 className="font-headline text-xl leading-tight text-[var(--ink)] sm:text-2xl">
                   {resolvedTitle}
                 </h1>
@@ -148,6 +192,17 @@ export function EntityProfile({ entityHash, initialContext = null }: EntityProfi
                     {stumbleContext.description}
                   </p>
                 )}
+
+                {/* Link back to source on pooter.world */}
+                {entityContext?.linkBack && (
+                  <Link
+                    href={entityContext.linkBack}
+                    className="mt-1.5 inline-block font-mono text-[10px] uppercase tracking-wider text-[var(--ink-light)] underline decoration-[var(--rule)] underline-offset-2 transition-colors hover:text-[var(--ink)]"
+                  >
+                    View source &rarr;
+                  </Link>
+                )}
+
                 {/* Original URL — clickable if it's a real URL */}
                 {stumbleContext?.url && /^https?:\/\//.test(stumbleContext.url) && (
                   <a
