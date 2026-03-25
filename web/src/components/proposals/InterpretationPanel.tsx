@@ -18,9 +18,10 @@ import type { Proposal } from "@/lib/governance";
 
 interface InterpretationPanelProps {
   proposal: Proposal;
+  onSuccess?: () => void;
 }
 
-export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
+export function InterpretationPanel({ proposal, onSuccess }: InterpretationPanelProps) {
   const { isConnected } = useAccount();
   const [claim, setClaim] = useState("");
   const [evidence, setEvidence] = useState("");
@@ -66,8 +67,9 @@ export function InterpretationPanel({ proposal }: InterpretationPanelProps) {
       setEvidence("");
       setSelectedSide(null);
       setErrorMessage(null);
+      onSuccess?.();
     }
-  }, [isInterpretationConfirmed, flowStep]);
+  }, [isInterpretationConfirmed, flowStep, onSuccess]);
 
   useEffect(() => {
     if (flowStep === "posting" && interpretationWriteError) {

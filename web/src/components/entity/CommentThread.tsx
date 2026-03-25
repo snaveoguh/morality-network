@@ -23,12 +23,14 @@ import {
 interface CommentThreadProps {
   entityHash: `0x${string}`;
   compact?: boolean;
+  /** Exposes the refetch function so a parent can trigger a refresh (e.g. after a sidebar post). */
+  onRefetchReady?: (refetch: () => void) => void;
 }
 
 type ViewMode = "flat" | "threaded";
 const COMMENT_PAGE_SIZE = 100;
 
-export function CommentThread({ entityHash, compact = false }: CommentThreadProps) {
+export function CommentThread({ entityHash, compact = false, onRefetchReady }: CommentThreadProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("threaded");
 
   const { data: commentCount, refetch: refetchCommentCount } = useReadContract({
@@ -70,6 +72,11 @@ export function CommentThread({ entityHash, compact = false }: CommentThreadProp
     void refetchCommentCount();
     void refetchCommentIds();
   }
+
+  // Expose refetch to parent so sibling components can trigger a refresh
+  useEffect(() => {
+    onRefetchReady?.(handleRefetch);
+  }, [onRefetchReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className={compact ? "space-y-3" : "space-y-4"}>

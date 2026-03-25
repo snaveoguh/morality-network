@@ -17,7 +17,7 @@ import {
   isDelegationActivityProposal,
 } from "@/lib/governance";
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useCallback, useRef, useState, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { isAddress } from "viem";
 
@@ -123,6 +123,15 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
     discussionProposalId
   );
   const proposalDiscussionHash = computeEntityHash(proposalDiscussionIdentifier);
+
+  // Wire sidebar InterpretationPanel → CommentThread refetch
+  const commentRefetchRef = useRef<(() => void) | null>(null);
+  const handleCommentRefetchReady = useCallback((refetch: () => void) => {
+    commentRefetchRef.current = refetch;
+  }, []);
+  const handleInterpretationPosted = useCallback(() => {
+    commentRefetchRef.current?.();
+  }, []);
   const { forPct, againstPct } = getVotePercentage(
     proposal.votesFor,
     proposal.votesAgainst
@@ -491,13 +500,13 @@ export function ProposalDetail({ proposal }: ProposalDetailProps) {
           <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
             Interpretation Thread
           </h2>
-          <CommentThread entityHash={proposalDiscussionHash} compact />
+          <CommentThread entityHash={proposalDiscussionHash} compact onRefetchReady={handleCommentRefetchReady} />
         </div>
       </div>
 
       {/* ══ SIDEBAR ══ */}
       <div className="space-y-5">
-        <InterpretationPanel proposal={proposal} />
+        <InterpretationPanel proposal={proposal} onSuccess={handleInterpretationPosted} />
 
         {/* Prediction market */}
         {proposal.dao === "Nouns DAO" &&
