@@ -28,6 +28,12 @@ interface MastheadProps {
   dailyHash?: string | null;
 }
 
+/** Strip stray markdown bold/italic markers from AI-generated text */
+function stripMd(s: string | null | undefined): string | null | undefined {
+  if (!s) return s;
+  return s.replace(/\*{1,3}/g, "").replace(/_{1,3}/g, "").replace(/^#+\s+/, "");
+}
+
 export function Masthead({
   dailyTitle,
   dailyHeadline,
@@ -96,13 +102,13 @@ export function Masthead({
               className="group block"
             >
               <h1 className="font-headline text-4xl font-bold leading-[1.15] text-[var(--ink)] transition-colors group-hover:text-[var(--accent-red)] sm:text-5xl lg:text-6xl">
-                {dailyHeadline}
+                {stripMd(dailyHeadline)}
               </h1>
             </Link>
 
             {dailySubheadline && (
               <p className="mx-auto mt-3 max-w-2xl font-body-serif text-sm italic leading-relaxed text-[var(--ink-light)] sm:text-base">
-                {dailySubheadline}
+                {stripMd(dailySubheadline)}
               </p>
             )}
           </>

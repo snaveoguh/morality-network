@@ -433,11 +433,16 @@ export interface PooterOriginal {
   editedBy?: string;
 }
 
+/** Strip stray markdown bold/italic/heading markers from AI-generated text */
+function stripMd(s: string): string {
+  return s.replace(/\*{1,3}/g, "").replace(/_{1,3}/g, "").replace(/^#+\s+/, "").trim();
+}
+
 function archivedToOriginal(item: ArchivedEditorial): PooterOriginal {
   return {
     hash: item.entityHash,
-    title: item.primary.title,
-    subheadline: item.subheadline,
+    title: stripMd(item.primary.title),
+    subheadline: stripMd(item.subheadline),
     category: item.primary.category,
     source: item.primary.source,
     generatedAt: item.generatedAt,
