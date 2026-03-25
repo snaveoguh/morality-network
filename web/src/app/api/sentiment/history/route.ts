@@ -6,7 +6,7 @@ import {
   type ScoreHistoryEntry,
 } from "@/lib/score-history";
 
-export const revalidate = 300; // 5 minutes, matching sentiment
+export const revalidate = 3600; // 1 hour, matching sentiment (was 5 min)
 
 export async function GET() {
   try {

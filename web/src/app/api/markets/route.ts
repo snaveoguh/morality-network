@@ -5,7 +5,7 @@ const DEXSCREENER_API = `https://api.dexscreener.com/latest/dex/tokens/${MO_TOKE
 const COINGECKO_API =
   "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,zcash,mog-coin,solana,pax-gold,dogecoin,pepe&vs_currencies=usd&include_24hr_change=true";
 
-export const revalidate = 30;
+export const revalidate = 120; // 2 min (was 30s — ~$15/mo savings)
 
 export async function GET() {
   try {

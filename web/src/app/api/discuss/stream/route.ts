@@ -3,8 +3,8 @@ import { CONTRACTS, COMMENTS_ABI } from "@/lib/contracts";
 import { baseContractsPublicClient } from "@/lib/server/onchain-clients";
 import { rateLimit } from "@/lib/rate-limit";
 
-const POLL_INTERVAL_MS = 5_000;
-const STREAM_TTL_MS = 60_000;
+const POLL_INTERVAL_MS = 15_000; // was 5s — reduce Vercel function duration
+const STREAM_TTL_MS = 45_000;   // was 60s — shorter streams = less cost
 const ENTITY_HASH_PATTERN = /^0x[a-fA-F0-9]{64}$/;
 
 export async function GET(req: NextRequest) {
