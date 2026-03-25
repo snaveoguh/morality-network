@@ -1,6 +1,6 @@
 import "server-only";
 
-import articleArchiveSnapshot from "@/data/article-archive.json";
+import { getLocalArchivedFeedItems } from "@/lib/archive";
 import { computeEntityHash } from "@/lib/entity";
 import { getRecentPooterOriginals } from "@/lib/editorial-archive";
 import { fetchAllProposals } from "@/lib/governance";
@@ -36,20 +36,6 @@ const DEFAULT_DISCOVERY_REQUEST: DiscoveryRequest = {
 
 let corpusCache: { records: SearchRecord[]; expiresAt: number } | null = null;
 let corpusPromise: Promise<SearchRecord[]> | null = null;
-
-interface ArchivedSearchFeedItem {
-  hash: string;
-  id: string;
-  title: string;
-  link: string;
-  description: string;
-  pubDate: string;
-  source: string;
-  sourceUrl?: string;
-  category: string;
-  tags?: string[];
-  canonicalClaim?: string;
-}
 
 async function withTimeoutFallback<T>(
   promise: Promise<T>,
@@ -106,25 +92,6 @@ function buildSearchableText(result: SearchResult): string {
       ...(result.tags ?? []),
     ].join(" "),
   );
-}
-
-function getBundledArchivedFeedItems(): FeedItem[] {
-  const snapshot = articleArchiveSnapshot as {
-    items?: Record<string, ArchivedSearchFeedItem>;
-  };
-
-  return Object.values(snapshot.items ?? {}).map((item) => ({
-    id: item.id || item.hash,
-    title: item.title,
-    link: item.link,
-    description: item.description || "",
-    pubDate: item.pubDate,
-    source: item.source,
-    sourceUrl: item.sourceUrl || "",
-    category: item.category,
-    tags: item.tags ?? [],
-    canonicalClaim: item.canonicalClaim,
-  }));
 }
 
 function scoreRecord(record: SearchRecord, query: string, terms: string[]): number {
@@ -184,7 +151,7 @@ async function buildCorpus(): Promise<SearchRecord[]> {
     governance,
   ] = await Promise.all([
     withTimeoutFallback(fetchAllFeeds(DEFAULT_FEEDS), 4_000, [] as FeedItem[]),
-    Promise.resolve(getBundledArchivedFeedItems()),
+    withTimeoutFallback(getLocalArchivedFeedItems(), 3_000, [] as FeedItem[]),
     withTimeoutFallback(
       getRecentPooterOriginals(false, 500),
       3_500,
