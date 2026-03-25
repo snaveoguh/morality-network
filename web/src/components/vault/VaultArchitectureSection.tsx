@@ -108,18 +108,40 @@ const ROLES = [
 
 const AUDIT_SUMMARY = {
   total: 52,
-  critical: 4,
-  high: 12,
-  medium: 18,
-  low: 14,
-  info: 4,
-  topIssues: [
-    "Single-operator custody model — no timelocks or multisig on privileged operations",
-    "NAV reporter can drift share price by up to 10% per report interval",
-    "Strategy hot wallet has no forced-return mechanism",
+  critical: { found: 4, fixed: 4 },
+  high: { found: 12, fixed: 12 },
+  medium: { found: 18, fixed: 18 },
+  low: { found: 14, fixed: 10 },
+  info: { found: 4, fixed: 0 },
+  criticalFixes: [
+    "Cancelled withdrawals now have a cancel mechanism — shares are no longer permanently locked",
+    "NAV reporter delta checks applied to all four accounting buckets, including first report",
+    "All role setters now reject address(0) to prevent permanent disabling of functionality",
+    "Tipping vault pattern redesigned — SOL now held in per-entity PDA with correct bookkeeping",
+  ],
+  highFixes: [
+    "Reentrancy guards added to all vault contracts and tipping/prediction market",
+    "rescueETH functions now track escrowed amounts, only rescue excess",
+    "Pause checks added to all state-mutating instructions (ratings, comments, votes, AI scores)",
+    "AI oracle cooldown (5 min) prevents score manipulation spam",
+    "12 Anchor events added for full indexer parity with Solidity contracts",
+  ],
+  remainingRisks: [
+    "Single-operator custody model — timelocks + multisig recommended before mainnet",
     "Cross-chain state is entirely off-chain — bridge executor is trusted oracle",
+    "Strategy hot wallet has no forced-return mechanism — requires operational trust",
   ],
 };
+
+const SOLANA_PROGRAMS = [
+  {
+    name: "morality (Anchor)",
+    chain: "Solana",
+    status: "Devnet",
+    modules: ["Registry", "Ratings", "Leaderboard", "Comments", "Tipping", "Voting"],
+    description: "Single program with 6 instruction modules — entity registration, reputation scoring, AI oracle integration, SOL tipping with per-entity vault PDAs, and onchain governance.",
+  },
+];
 
 export function VaultArchitectureSection() {
   return (
@@ -230,41 +252,104 @@ export function VaultArchitectureSection() {
         </div>
       </section>
 
+      {/* Solana Programs */}
+      <section>
+        <h2 className="mb-4 border-b-2 border-[var(--rule)] pb-2 font-headline text-xl tracking-wide">
+          Solana Programs
+        </h2>
+        <p className="mb-4 font-body-serif text-sm leading-relaxed text-[var(--ink-light)]">
+          A dual-chain architecture mirrors core reputation and tipping functionality on Solana via Anchor.
+          The Solana program underwent the same security audit process as the EVM contracts.
+        </p>
+        {SOLANA_PROGRAMS.map((p) => (
+          <div key={p.name} className="border-2 border-[var(--rule)] p-4">
+            <div className="mb-1 flex items-center gap-3">
+              <span className="font-mono text-xs font-bold text-[var(--ink)]">{p.name}</span>
+              <span className="rounded border border-[var(--rule-light)] px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+                {p.chain} &middot; {p.status}
+              </span>
+            </div>
+            <p className="mb-3 font-body-serif text-xs leading-relaxed text-[var(--ink-light)]">
+              {p.description}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {p.modules.map((m) => (
+                <span key={m} className="border border-[var(--rule-light)] px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+                  {m}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
+
       {/* Audit Summary */}
       <section>
         <h2 className="mb-4 border-b-2 border-[var(--rule)] pb-2 font-headline text-xl tracking-wide">
-          Security Audit Summary
+          Security Audit &amp; Hardening
         </h2>
         <p className="mb-4 font-body-serif text-sm leading-relaxed text-[var(--ink-light)]">
-          All 10 contracts underwent automated security analysis. {AUDIT_SUMMARY.total} findings
-          were identified and addressed prior to deployment. The full audit report is available in
-          the repository at <code className="font-mono text-[10px]">contracts/SECURITY_AUDIT.md</code>.
+          All EVM contracts and Solana programs underwent automated security analysis.{" "}
+          {AUDIT_SUMMARY.total} findings were identified across both chains. All critical and high
+          severity issues have been patched. The full audit report is available at{" "}
+          <code className="font-mono text-[10px]">contracts/SECURITY_AUDIT.md</code>.
         </p>
 
         <div className="mb-6 grid grid-cols-5 gap-2 text-center">
           {[
-            { label: "Critical", count: AUDIT_SUMMARY.critical, color: "bg-red-800 text-white" },
-            { label: "High", count: AUDIT_SUMMARY.high, color: "bg-red-600 text-white" },
-            { label: "Medium", count: AUDIT_SUMMARY.medium, color: "bg-amber-600 text-white" },
-            { label: "Low", count: AUDIT_SUMMARY.low, color: "bg-[var(--ink-faint)] text-white" },
-            { label: "Info", count: AUDIT_SUMMARY.info, color: "bg-[var(--rule)] text-[var(--ink)]" },
+            { label: "Critical", found: AUDIT_SUMMARY.critical.found, fixed: AUDIT_SUMMARY.critical.fixed, color: "bg-red-800 text-white" },
+            { label: "High", found: AUDIT_SUMMARY.high.found, fixed: AUDIT_SUMMARY.high.fixed, color: "bg-red-600 text-white" },
+            { label: "Medium", found: AUDIT_SUMMARY.medium.found, fixed: AUDIT_SUMMARY.medium.fixed, color: "bg-amber-600 text-white" },
+            { label: "Low", found: AUDIT_SUMMARY.low.found, fixed: AUDIT_SUMMARY.low.fixed, color: "bg-[var(--ink-faint)] text-white" },
+            { label: "Info", found: AUDIT_SUMMARY.info.found, fixed: AUDIT_SUMMARY.info.fixed, color: "bg-[var(--rule)] text-[var(--ink)]" },
           ].map((s) => (
             <div key={s.label} className={`${s.color} py-3`}>
-              <div className="font-headline text-lg">{s.count}</div>
-              <div className="font-mono text-[8px] uppercase tracking-widest">{s.label}</div>
+              <div className="font-headline text-lg">{s.fixed}/{s.found}</div>
+              <div className="font-mono text-[8px] uppercase tracking-widest">{s.label} fixed</div>
             </div>
           ))}
         </div>
 
-        <div className="border-2 border-[var(--rule)] p-4">
-          <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-[var(--ink-faint)]">
-            Key Architectural Risks
+        {/* Critical fixes */}
+        <div className="mb-4 border-2 border-emerald-700 p-4">
+          <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-emerald-700">
+            Critical Fixes Applied
           </div>
           <ul className="space-y-2">
-            {AUDIT_SUMMARY.topIssues.map((issue, i) => (
+            {AUDIT_SUMMARY.criticalFixes.map((fix, i) => (
               <li key={i} className="flex items-start gap-2 font-body-serif text-xs leading-relaxed text-[var(--ink-light)]">
-                <span className="mt-0.5 font-mono text-[10px] text-[var(--accent-red)]">&#9679;</span>
-                {issue}
+                <span className="mt-0.5 font-mono text-[10px] text-emerald-700">&#10003;</span>
+                {fix}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* High fixes */}
+        <div className="mb-4 border-2 border-[var(--rule)] p-4">
+          <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-[var(--ink-faint)]">
+            High Severity Fixes
+          </div>
+          <ul className="space-y-2">
+            {AUDIT_SUMMARY.highFixes.map((fix, i) => (
+              <li key={i} className="flex items-start gap-2 font-body-serif text-xs leading-relaxed text-[var(--ink-light)]">
+                <span className="mt-0.5 font-mono text-[10px] text-emerald-700">&#10003;</span>
+                {fix}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Remaining risks */}
+        <div className="border-2 border-[var(--rule)] p-4">
+          <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-[var(--ink-faint)]">
+            Remaining Architectural Risks (Pre-Mainnet)
+          </div>
+          <ul className="space-y-2">
+            {AUDIT_SUMMARY.remainingRisks.map((risk, i) => (
+              <li key={i} className="flex items-start gap-2 font-body-serif text-xs leading-relaxed text-[var(--ink-light)]">
+                <span className="mt-0.5 font-mono text-[10px] text-amber-700">&#9679;</span>
+                {risk}
               </li>
             ))}
           </ul>
@@ -273,8 +358,9 @@ export function VaultArchitectureSection() {
         <div className="mt-4 border border-[var(--rule-light)] bg-[var(--paper)] p-4">
           <p className="font-body-serif text-xs italic leading-relaxed text-[var(--ink-faint)]">
             This was an automated static analysis, not a formal audit by a professional security firm.
-            Before deploying contracts that manage real user funds, engage a reputable auditor
-            (Trail of Bits, OpenZeppelin, Spearbit, etc.) for a manual review.
+            All critical and high findings have been patched. Before deploying contracts that manage real
+            user funds, engage a reputable auditor (Trail of Bits, OpenZeppelin, Spearbit, etc.) for a
+            manual review.
           </p>
         </div>
       </section>
