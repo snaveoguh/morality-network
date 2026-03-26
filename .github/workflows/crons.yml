@@ -12,6 +12,8 @@ on:
     - cron: '45 5 * * *'
     # Newsroom content — daily at 6am UTC
     - cron: '0 6 * * *'
+    # The Daily Pooter newsletter — daily at 7:15am UTC (after all content generated)
+    - cron: '15 7 * * *'
   workflow_dispatch: # allow manual trigger
 
 jobs:
@@ -28,17 +30,28 @@ jobs:
             "0 4 * * *")   ROUTE="/api/moral-commentary/generate" ;;
             "30 5 * * *")  ROUTE="/api/cron/daily-edition" ;;
             "45 5 * * *")  ROUTE="/api/cron/daily-illustration" ;;
-            "0 6 * * *")   ROUTE="/api/newsroom" ;;
+            "0 6 * * *")   ROUTE="/api/newsroom" ; METHOD="GET" ;;
+            "15 7 * * *")  ROUTE="/api/newsletter/send" ; METHOD="POST" ;;
             *)             ROUTE="/api/cron/daily-edition" ;;
           esac
           echo "route=$ROUTE" >> "$GITHUB_OUTPUT"
-          echo "Triggering $ROUTE"
+          echo "method=${METHOD:-GET}" >> "$GITHUB_OUTPUT"
+          echo "Triggering $METHOD $ROUTE"
 
       - name: Hit endpoint
         run: |
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "https://pooter.world${{ steps.route.outputs.route }}")
+          METHOD="${{ steps.route.outputs.method }}"
+          if [ "$METHOD" = "POST" ]; then
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+              -X POST \
+              -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+              -H "Content-Type: application/json" \
+              "https://pooter.world${{ steps.route.outputs.route }}")
+          else
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+              "https://pooter.world${{ steps.route.outputs.route }}")
+          fi
           echo "Status: $RESPONSE"
           if [ "$RESPONSE" -ge 500 ]; then
             echo "Server error — failing job"
