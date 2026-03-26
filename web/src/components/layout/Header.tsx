@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRef, useState, useEffect } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ChainSwitcher } from "@/components/shared/ChainSwitcher";
 import { SearchBar } from "@/components/layout/SearchBar";
@@ -33,18 +34,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-[var(--rule)] bg-[var(--paper)]">
       <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4">
         <div className="flex min-w-0 items-center gap-2">
-          <Link
-            href="/"
-            className="flex h-4 w-4 shrink-0 items-center justify-center"
-            aria-label={`${BRAND_NAME} home`}
-            title={BRAND_NAME}
-          >
-            <img
-              src="https://morality.s3.eu-west-2.amazonaws.com/brand/glyph.png"
-              alt=""
-              className="h-4 w-4 object-contain grayscale contrast-200 brightness-0"
-            />
-          </Link>
+          <LogoMenu />
 
           <nav className="scrollbar-hide flex min-w-0 items-center gap-0 overflow-x-auto whitespace-nowrap">
             {NAV_LINKS.map(({ href, label }, i) => {
@@ -79,6 +69,68 @@ export function Header() {
         </div>
       </div>
     </header>
+  );
+}
+
+const LOGO_MENU_ITEMS = [
+  { href: "/write", label: "Create", desc: "Publish an article" },
+  { href: "/style-guide", label: "Style Guide", desc: "Brand & design system" },
+  { href: "/zk-recovery", label: "ZK Recovery", desc: "Passwordless wallet recovery" },
+];
+
+function LogoMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex h-4 w-4 items-center justify-center transition-opacity hover:opacity-70"
+        aria-label={`${BRAND_NAME} menu`}
+        title={BRAND_NAME}
+      >
+        <img
+          src="https://morality.s3.eu-west-2.amazonaws.com/brand/glyph.png"
+          alt=""
+          className="h-4 w-4 object-contain grayscale contrast-200 brightness-0"
+        />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full z-[999] mt-2 w-52 border border-[var(--rule)] bg-[var(--paper)] shadow-lg">
+          <div className="border-b border-[var(--rule)] px-3 py-2">
+            <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+              {BRAND_NAME}
+            </span>
+          </div>
+          {LOGO_MENU_ITEMS.map(({ href, label, desc }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setOpen(false)}
+              className="block border-b border-[var(--rule-light)] px-3 py-2 transition-colors last:border-b-0 hover:bg-[var(--paper-dark)]"
+            >
+              <span className="block font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--ink)]">
+                {label}
+              </span>
+              <span className="block font-mono text-[8px] tracking-[0.1em] text-[var(--ink-faint)]">
+                {desc}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
