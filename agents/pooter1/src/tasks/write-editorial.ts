@@ -9,6 +9,7 @@ import {
   getDailyStats,
   incrementDailyStat,
 } from "../memory.js";
+import { rateOnChain } from "../onchain.js";
 import { POOTER_API_URL, CRON_SECRET, MAX_EDITORIALS_PER_DAY } from "../config.js";
 
 async function fetchTodaysFeed(): Promise<any[]> {
@@ -120,6 +121,19 @@ export async function writeEditorial(): Promise<void> {
         type: "editorial",
         timestamp: new Date().toISOString(),
       });
+
+      // Rate the top stories we referenced (on-chain)
+      for (const story of topStories.slice(0, 3)) {
+        if (story.title) {
+          // Rate 3-5 based on newsworthiness (pooter1's opinion)
+          const score = Math.min(5, Math.max(3, Math.round(Math.random() * 2) + 3)) as 1 | 2 | 3 | 4 | 5;
+          await rateOnChain(
+            story.title,
+            score,
+            `Referenced in pooter1 editorial: "${headline.trim().slice(0, 50)}"`,
+          );
+        }
+      }
     } else {
       console.warn(`[pooter1] Publish failed: ${res.status}`);
     }

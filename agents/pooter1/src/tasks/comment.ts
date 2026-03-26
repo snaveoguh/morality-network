@@ -9,6 +9,7 @@ import {
   incrementDailyStat,
   recordEngagement,
 } from "../memory.js";
+import { commentOnChain, rateOnChain } from "../onchain.js";
 import { POOTER_API_URL, CRON_SECRET, MAX_COMMENTS_PER_DAY } from "../config.js";
 
 async function fetchTodaysFeed(): Promise<any[]> {
@@ -60,9 +61,10 @@ export async function commentOnArticles(): Promise<void> {
 
       if (!comment || comment.length < 20) continue;
 
-      // Post comment via API
-      // TODO: Wire up to on-chain commenting via @pooter/sdk once contracts are deployed
-      console.log(`[pooter1] Comment on "${article.title.slice(0, 50)}": ${comment.slice(0, 100)}...`);
+      // Post comment on-chain via Base L2
+      const identifier = article.link || article.title;
+      const txHash = await commentOnChain(identifier, comment);
+      console.log(`[pooter1] Comment on "${article.title.slice(0, 50)}": ${comment.slice(0, 80)}... ${txHash ? `(tx: ${txHash.slice(0, 12)}...)` : "(off-chain)"}`);
 
       await incrementDailyStat("comments");
       await recordEngagement({

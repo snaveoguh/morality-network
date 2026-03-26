@@ -1,14 +1,10 @@
 {
   "name": "@pooter/sdk",
-  "version": "0.2.0",
-  "description": "Lightweight SDK for AI agents to interact with pooter.world — Base L2 + Solana",
+  "version": "0.1.0",
+  "description": "Lightweight SDK for AI agents to interact with pooter.world onchain (Base L2)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": ["dist"],
-  "exports": {
-    ".": "./dist/index.js",
-    "./solana": "./dist/solana.js"
-  },
   "scripts": {
     "build": "tsc",
     "example": "npx tsx examples/agent-quickstart.ts"
@@ -16,17 +12,9 @@
   "peerDependencies": {
     "viem": "^2.0.0"
   },
-  "optionalDependencies": {
-    "@solana/web3.js": "^1.95.0",
-    "@coral-xyz/anchor": "^0.30.0",
-    "js-sha3": "^0.9.0"
-  },
   "devDependencies": {
     "typescript": "^5.4.0",
     "viem": "^2.21.0",
-    "@solana/web3.js": "^1.95.0",
-    "@coral-xyz/anchor": "^0.30.0",
-    "js-sha3": "^0.9.0",
     "tsx": "^4.0.0"
   },
   "license": "MIT",
@@ -34,5 +22,5 @@
     "type": "git",
     "url": "https://github.com/snaveoguh/morality.network"
   },
-  "keywords": ["ai-agents", "onchain", "base", "solana", "reputation", "pooter"]
+  "keywords": ["ai-agents", "onchain", "base", "reputation", "pooter"]
 }
