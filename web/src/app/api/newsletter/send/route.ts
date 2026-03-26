@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Redis } from "@upstash/redis";
 
 export const runtime = "nodejs";
 export const maxDuration = 55;
@@ -6,11 +7,25 @@ export const maxDuration = 55;
 const CRON_SECRET = process.env.CRON_SECRET?.trim();
 const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim();
 const NEWSLETTER_FROM = process.env.NEWSLETTER_FROM || "pooter <daily@pooter.world>";
-const NEWSLETTER_TO = (process.env.NEWSLETTER_RECIPIENTS || "")
+const ENV_RECIPIENTS = (process.env.NEWSLETTER_RECIPIENTS || "")
   .split(",")
   .map((e) => e.trim())
   .filter(Boolean);
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pooter.world";
+
+async function getAllRecipients(): Promise<string[]> {
+  const all = new Set(ENV_RECIPIENTS);
+  try {
+    const url = process.env.UPSTASH_REDIS_REST_URL;
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+    if (url && token) {
+      const redis = new Redis({ url, token });
+      const subs = await redis.smembers("newsletter:subscribers");
+      for (const s of subs) all.add(s as string);
+    }
+  } catch {}
+  return Array.from(all);
+}
 
 /**
  * POST /api/newsletter/send
@@ -28,6 +43,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "RESEND_API_KEY not configured" }, { status: 500 });
   }
 
+  const NEWSLETTER_TO = await getAllRecipients();
   if (NEWSLETTER_TO.length === 0) {
     return NextResponse.json({ error: "No recipients configured" }, { status: 400 });
   }
