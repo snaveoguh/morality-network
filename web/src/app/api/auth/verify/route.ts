@@ -16,22 +16,47 @@ export async function POST(request: Request) {
     }
 
     if (!session.nonce) {
-      return NextResponse.json({ error: "Missing SIWE nonce" }, { status: 400 });
+      console.error("[auth/verify] No nonce in session. Cookie may not have been sent back.");
+      return NextResponse.json({ error: "Missing SIWE nonce — session cookie not found. Clear cookies and retry." }, { status: 400 });
     }
 
+    const expectedDomain = getExpectedDomain(request);
     const siweMessage = new SiweMessage(message);
+
+    console.log("[auth/verify] Verifying:", {
+      sessionNonce: session.nonce,
+      messageNonce: siweMessage.nonce,
+      expectedDomain,
+      messageDomain: siweMessage.domain,
+      address: siweMessage.address,
+    });
+
     const result = await siweMessage.verify(
       {
         signature,
         nonce: session.nonce,
-        domain: getExpectedDomain(request),
+        domain: expectedDomain,
       },
       { suppressExceptions: true },
     );
 
     if (!result.success) {
+      console.error("[auth/verify] Verification failed:", {
+        error: result.error,
+        expectedDomain,
+        messageDomain: siweMessage.domain,
+        nonceMatch: session.nonce === siweMessage.nonce,
+      });
       session.destroy();
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+      return NextResponse.json({
+        error: "Invalid signature",
+        debug: {
+          domainMatch: expectedDomain === siweMessage.domain,
+          nonceMatch: session.nonce === siweMessage.nonce,
+          expectedDomain,
+          messageDomain: siweMessage.domain,
+        }
+      }, { status: 401 });
     }
 
     session.address = result.data.address;
