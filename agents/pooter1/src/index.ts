@@ -83,9 +83,9 @@ app.post("/tasks/learn", requireAuth, async (c) => {
 
 // ── Start ──────────────────────────────────────────────────────────
 const port = parseInt(process.env.PORT || "3001", 10);
-console.log(`[${AGENT_NAME}] Starting on port ${port}`);
 
-export default {
-  port,
-  fetch: app.fetch,
-};
+import { serve } from "@hono/node-server";
+
+serve({ fetch: app.fetch, port }, () => {
+  console.log(`[${AGENT_NAME}] Listening on port ${port}`);
+});
