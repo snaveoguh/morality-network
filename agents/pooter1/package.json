@@ -12,6 +12,7 @@
     "learn": "tsx src/tasks/learn.ts"
   },
   "dependencies": {
+    "@hono/node-server": "^1.0.0",
     "hono": "^4.0.0",
     "viem": "^2.0.0",
     "@solana/web3.js": "^1.90.0"
