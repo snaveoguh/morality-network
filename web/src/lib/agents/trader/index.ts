@@ -30,7 +30,8 @@ const DEFAULT_CYCLE_INTERVAL_MS = 90_000; // 90 seconds
 
 const SERVERLESS_RUNTIME =
   process.env.VERCEL === "1" ||
-  process.env.AWS_EXECUTION_ENV?.toLowerCase().includes("lambda") === true;
+  process.env.AWS_EXECUTION_ENV?.toLowerCase().includes("lambda") === true ||
+  process.env.RAILWAY_ENVIRONMENT !== undefined;
 
 const BACKGROUND_ENABLED =
   process.env.TRADER_ENABLE_BACKGROUND_CYCLE === "true";

@@ -5,7 +5,9 @@
  * Warns users that trading is disabled and points them to production.
  */
 export function DevBanner() {
-  const isPreview = process.env.NEXT_PUBLIC_VERCEL_ENV === "preview";
+  const isPreview = process.env.NEXT_PUBLIC_VERCEL_ENV === "preview"
+    || process.env.RAILWAY_ENVIRONMENT === "staging"
+    || (typeof window !== "undefined" && window.location.hostname === "dev.pooter.world");
   if (!isPreview) return null;
 
   return (

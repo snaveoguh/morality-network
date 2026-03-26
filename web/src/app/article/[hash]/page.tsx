@@ -144,7 +144,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   if (!primary) {
     try {
       const pubRes = await fetch(
-        `${process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://pooter.world"}/api/articles/publish?hash=${hash}`,
+        `${process.env.NEXT_PUBLIC_SITE_URL || "https://pooter.world"}/api/articles/publish?hash=${hash}`,
         { next: { revalidate: 60 } },
       );
       if (pubRes.ok) {
