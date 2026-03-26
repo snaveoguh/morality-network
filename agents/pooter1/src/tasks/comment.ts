@@ -10,6 +10,7 @@ import {
   recordEngagement,
 } from "../memory.js";
 import { commentOnChain, rateOnChain } from "../onchain.js";
+import { bridge } from "../bridge.js";
 import { POOTER_API_URL, CRON_SECRET, MAX_COMMENTS_PER_DAY } from "../config.js";
 
 async function fetchTodaysFeed(): Promise<any[]> {
@@ -65,6 +66,13 @@ export async function commentOnArticles(): Promise<void> {
       const identifier = article.link || article.title;
       const txHash = await commentOnChain(identifier, comment);
       console.log(`[pooter1] Comment on "${article.title.slice(0, 50)}": ${comment.slice(0, 80)}... ${txHash ? `(tx: ${txHash.slice(0, 12)}...)` : "(off-chain)"}`);
+
+      // Broadcast to agent bridge
+      await bridge.entityCommented({
+        identifier: identifier,
+        comment: comment.slice(0, 200),
+        txHash: txHash || undefined,
+      });
 
       await incrementDailyStat("comments");
       await recordEngagement({
