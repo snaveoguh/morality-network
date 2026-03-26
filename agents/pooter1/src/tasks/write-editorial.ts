@@ -10,6 +10,7 @@ import {
   incrementDailyStat,
 } from "../memory.js";
 import { rateOnChain } from "../onchain.js";
+import { bridge } from "../bridge.js";
 import { POOTER_API_URL, CRON_SECRET, MAX_EDITORIALS_PER_DAY } from "../config.js";
 
 async function fetchTodaysFeed(): Promise<any[]> {
@@ -120,6 +121,13 @@ export async function writeEditorial(): Promise<void> {
         title: headline,
         type: "editorial",
         timestamp: new Date().toISOString(),
+      });
+
+      // Broadcast to agent bridge
+      await bridge.editorialPublished({
+        title: headline.trim(),
+        entityHash: result.entityHash || "",
+        url: result.slug ? `https://pooter.world/article/${result.entityHash}` : undefined,
       });
 
       // Rate the top stories we referenced (on-chain)
