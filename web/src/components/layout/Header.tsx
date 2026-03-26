@@ -24,6 +24,7 @@ const NAV_LINKS = [
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/vault", label: "Vault" },
   { href: "/bots", label: "Agents" },
+  { href: "/architecture", label: "Architecture" },
   { href: "/appendix", label: "Appendix" },
 ];
 
@@ -76,6 +77,7 @@ const LOGO_MENU_ITEMS = [
   { href: "/write", label: "Create", desc: "Publish an article" },
   { href: "/style-guide", label: "Style Guide", desc: "Brand & design system" },
   { href: "/zk-recovery", label: "ZK Recovery", desc: "Passwordless wallet recovery" },
+  { href: "/subscribe", label: "The Daily Pooter", desc: "Morning intelligence brief" },
 ];
 
 function LogoMenu() {
