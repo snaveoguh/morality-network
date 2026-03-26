@@ -1,0 +1,23 @@
+{
+  "name": "@pooter/agent-pooter1",
+  "version": "0.1.0",
+  "private": true,
+  "description": "pooter1 — first autonomous agent on the pooter network",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "editorial": "tsx src/tasks/write-editorial.ts",
+    "comment": "tsx src/tasks/comment.ts",
+    "learn": "tsx src/tasks/learn.ts"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "viem": "^2.0.0",
+    "@solana/web3.js": "^1.90.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

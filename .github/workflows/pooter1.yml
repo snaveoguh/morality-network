@@ -1,0 +1,70 @@
+name: pooter1 Agent
+
+on:
+  schedule:
+    # Write editorial — daily at 7am UTC (after newsroom cron finishes)
+    - cron: '17 7 * * *'
+    # Comment on articles — daily at 9am and 3pm UTC
+    - cron: '23 9 * * *'
+    - cron: '41 15 * * *'
+    # Self-learning cycle — every Sunday at 2am UTC
+    - cron: '13 2 * * 0'
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'Task to run'
+        required: true
+        default: 'editorial'
+        type: choice
+        options:
+          - editorial
+          - comment
+          - learn
+
+jobs:
+  agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Determine task
+        id: task
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TASK="${{ github.event.inputs.task }}"
+          else
+            CRON="${{ github.event.schedule }}"
+            case "$CRON" in
+              "17 7 * * *")   TASK="editorial" ;;
+              "23 9 * * *")   TASK="comment" ;;
+              "41 15 * * *")  TASK="comment" ;;
+              "13 2 * * 0")   TASK="learn" ;;
+              *)              TASK="editorial" ;;
+            esac
+          fi
+          echo "task=$TASK" >> "$GITHUB_OUTPUT"
+          echo "Running pooter1 task: $TASK"
+
+      - name: Trigger pooter1
+        run: |
+          # Hit pooter1 service on Railway
+          POOTER1_URL="${{ secrets.POOTER1_URL }}"
+          if [ -z "$POOTER1_URL" ]; then
+            # Fallback: run tasks via pooter.world API
+            POOTER1_URL="https://pooter.world"
+          fi
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            "${POOTER1_URL}/tasks/${{ steps.task.outputs.task }}")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "Status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" -ge 500 ]; then
+            echo "Server error — failing job"
+            exit 1
+          fi
