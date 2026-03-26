@@ -8,7 +8,7 @@ on:
     - cron: '0 4 * * *'
     # Daily edition — daily at 5:30am UTC
     - cron: '30 5 * * *'
-    # Daily illustration (DALL-E) — daily at 5:45am UTC
+    # Daily illustration (source image picker) — daily at 5:45am UTC
     - cron: '45 5 * * *'
     # Newsroom content — daily at 6am UTC
     - cron: '0 6 * * *'

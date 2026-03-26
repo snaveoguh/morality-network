@@ -1,33 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { computeEntityHash } from "@/lib/entity";
 import { getArchivedEditorial, saveEditorial } from "@/lib/editorial-archive";
-import { generateIllustration } from "@/lib/image-generation";
+import { pickSourceImage } from "@/lib/image-generation";
 import { getIllustration, saveIllustration } from "@/lib/illustration-store";
 import { verifyCronAuth } from "@/lib/cron-auth";
+import { fetchAllFeeds } from "@/lib/rss";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55;
 
 /**
- * GET /api/cron/daily-illustration — generate today's cover illustration
+ * GET /api/cron/daily-illustration — pick today's cover image from sources
  *
- * Runs AFTER the daily edition cron. Checks if today's daily edition exists
- * and doesn't have an illustration yet. If so, generates one via DALL-E 3.
+ * Runs AFTER the daily edition cron. Finds the best editorial image from
+ * today's RSS sources — real journalism photography, not AI-generated.
+ * Images are served grayscale via CSS to match the newspaper aesthetic.
  *
- * Separate from daily-edition generation because DALL-E takes 10-30s and
- * the editorial writer+extractor already use most of Vercel's 55s limit.
- *
- * Storage strategy: illustration-store (Redis + local file) is primary,
- * but as a fallback also stores base64 inline on the editorial itself.
- * The illustration endpoint checks both locations.
- *
- * Auth: Requires CRON_SECRET Bearer token (sent automatically by Vercel cron).
+ * Auth: Requires CRON_SECRET Bearer token.
  */
 export async function GET(request: NextRequest) {
   const authError = verifyCronAuth(request);
   if (authError) return authError;
+
   try {
-    // Compute today's daily edition hash
     const today = new Date().toISOString().slice(0, 10);
     const dailyId = `pooter-daily-${today}`;
     const hash = computeEntityHash(dailyId);
@@ -42,7 +37,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Check if illustration already exists in store
+    // Check if illustration already exists
     if (editorial.hasIllustration) {
       const existing = await getIllustration(hash).catch(() => null);
       if (existing?.base64) {
@@ -53,7 +48,6 @@ export async function GET(request: NextRequest) {
           size: `${Math.round(existing.base64.length / 1024)}KB`,
         });
       }
-      // Also check inline on editorial
       if (editorial.illustrationBase64) {
         return NextResponse.json({
           status: "cached",
@@ -63,56 +57,103 @@ export async function GET(request: NextRequest) {
           source: "inline",
         });
       }
-      // hasIllustration is true but no data anywhere — regenerate
-      console.warn("[cron/daily-illustration] hasIllustration=true but no data found — regenerating");
     }
 
-    // Get headline + daily title for the prompt
+    // Gather candidate images from today's RSS articles
     const headline = editorial.primary?.title || "Daily Edition";
-    const dailyTitle = editorial.dailyTitle || "DAILY EDITION";
+    console.log(`[cron/daily-illustration] Picking source image for "${headline.slice(0, 60)}..."`);
 
-    console.log(`[cron/daily-illustration] Generating cover art for "${headline.slice(0, 60)}..."`);
+    // Build candidates from editorial's related sources first
+    const candidates: { url: string; source: string; title: string }[] = [];
 
-    // Generate illustration via DALL-E 3
-    const illustration = await generateIllustration(headline, dailyTitle);
+    // 1. Images from the editorial's own related sources
+    if (editorial.relatedSources && Array.isArray(editorial.relatedSources)) {
+      for (const src of editorial.relatedSources) {
+        if (src.imageUrl) {
+          candidates.push({
+            url: src.imageUrl,
+            source: src.source || src.sourceUrl || "unknown",
+            title: src.title || headline,
+          });
+        }
+      }
+    }
 
-    if (!illustration) {
+    // 2. Primary article image
+    if (editorial.primary?.imageUrl) {
+      candidates.unshift({
+        url: editorial.primary.imageUrl,
+        source: editorial.primary.source || "primary",
+        title: editorial.primary.title || headline,
+      });
+    }
+
+    // 3. Fallback: fetch fresh RSS and grab top images
+    if (candidates.length < 3) {
+      try {
+        const feeds = await fetchAllFeeds();
+        const withImages = feeds
+          .filter((item: { imageUrl?: string }) => item.imageUrl)
+          .slice(0, 10);
+        for (const item of withImages) {
+          candidates.push({
+            url: item.imageUrl!,
+            source: item.source,
+            title: item.title,
+          });
+        }
+      } catch (err) {
+        console.warn("[cron/daily-illustration] RSS fallback failed:", err);
+      }
+    }
+
+    if (!candidates.length) {
       return NextResponse.json({
         status: "skipped",
-        reason: "DALL-E generation failed or OPENAI_API_KEY not configured",
+        reason: "No source images available",
         date: today,
       });
     }
 
-    const sizeKB = Math.round(illustration.base64.length / 1024);
-    console.log(`[cron/daily-illustration] Generated (${sizeKB}KB)`);
+    // Pick the best image
+    const illustration = await pickSourceImage(candidates);
 
-    // Save illustration to store (Redis + local file)
+    if (!illustration) {
+      return NextResponse.json({
+        status: "skipped",
+        reason: "No suitable images could be downloaded",
+        date: today,
+        candidatesChecked: candidates.length,
+      });
+    }
+
+    const sizeKB = Math.round(illustration.base64.length / 1024);
+    console.log(`[cron/daily-illustration] Picked source image (${sizeKB}KB)`);
+
+    // Save to illustration store
     const storePersisted = await saveIllustration(hash, {
       base64: illustration.base64,
       prompt: illustration.prompt,
       revisedPrompt: illustration.revisedPrompt,
     });
 
-    // FALLBACK: also save base64 inline on the editorial itself
-    // This ensures the illustration endpoint can always find it,
-    // even if Redis is unavailable and Vercel FS is read-only.
+    // Save inline on editorial as fallback
     editorial.hasIllustration = true;
     editorial.illustrationBase64 = illustration.base64;
     try {
       await saveEditorial(hash, editorial, editorial.generatedBy || "claude-ai");
-      console.log("[cron/daily-illustration] Saved illustration inline on editorial (fallback)");
     } catch (err) {
       console.warn("[cron/daily-illustration] Failed to re-save editorial:", err instanceof Error ? err.message : err);
     }
 
     return NextResponse.json({
-      status: "generated",
+      status: "picked",
       date: today,
       hash,
       size: `${sizeKB}KB`,
       storePersisted,
-      revisedPrompt: illustration.revisedPrompt?.slice(0, 200),
+      imageSource: illustration.prompt,
+      originalUrl: illustration.revisedPrompt,
     });
   } catch (err) {
     console.error("[cron/daily-illustration] Failed:", err);
