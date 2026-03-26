@@ -140,6 +140,52 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     });
   }
 
+  // ─── Check user-published articles in Redis ──────────────────────
+  if (!primary) {
+    try {
+      const pubRes = await fetch(
+        `${process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://pooter.world"}/api/articles/publish?hash=${hash}`,
+        { next: { revalidate: 60 } },
+      );
+      if (pubRes.ok) {
+        const userArticle = await pubRes.json();
+        if (userArticle && userArticle.title) {
+          return (
+            <section className="mx-auto max-w-4xl py-10">
+              <div className="border-b-2 border-[var(--rule)] pb-6">
+                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[var(--ink-faint)]">
+                  {userArticle.source || "pooter.world"} · {userArticle.category?.toUpperCase() || "GENERAL"}
+                </p>
+                <h1 className="mt-1 font-headline text-3xl leading-tight text-[var(--ink)] md:text-4xl">
+                  {userArticle.title}
+                </h1>
+                <p className="mt-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                  By {userArticle.author} · {new Date(userArticle.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                </p>
+              </div>
+
+              {userArticle.media?.length > 0 && (
+                <div className="mt-4 flex gap-3 overflow-x-auto">
+                  {userArticle.media.map((url: string, i: number) => (
+                    <img key={i} src={url} alt="" className="h-48 object-cover grayscale" />
+                  ))}
+                </div>
+              )}
+
+              <article className="prose-pooter mt-6 whitespace-pre-wrap font-body-serif text-base leading-relaxed">
+                {userArticle.body}
+              </article>
+
+              <div className="mt-8">
+                <CommentThread entityHash={hash as `0x${string}`} />
+              </div>
+            </section>
+          );
+        }
+      }
+    } catch {}
+  }
+
   if (!primary) {
     // Editorial was already checked in parallel above — no need to re-fetch
 
