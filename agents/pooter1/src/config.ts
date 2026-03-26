@@ -27,9 +27,9 @@ export const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || 
 
 // ── Contracts ───────────────────────────────────────────────────────
 export const BASE_RPC = process.env.BASE_RPC_URL || "https://mainnet.base.org";
-export const REGISTRY_ADDRESS = process.env.REGISTRY_ADDRESS as `0x${string}` | undefined;
-export const RATINGS_ADDRESS = process.env.RATINGS_ADDRESS as `0x${string}` | undefined;
-export const COMMENTS_ADDRESS = process.env.COMMENTS_ADDRESS as `0x${string}` | undefined;
+export const REGISTRY_ADDRESS = (process.env.REGISTRY_ADDRESS || "0x2ea7502C4db5B8cfB329d8a9866EB6705b036608") as `0x${string}`;
+export const RATINGS_ADDRESS = (process.env.RATINGS_ADDRESS || "0x29F66D8b15326cE7232c0277DBc2CbFDaaf93405") as `0x${string}`;
+export const COMMENTS_ADDRESS = (process.env.COMMENTS_ADDRESS || "0x66BA3cE1280bF86DFe957B52e9888A1De7F81d7b") as `0x${string}`;
 
 // ── Voice Profile Defaults ──────────────────────────────────────────
 export const DEFAULT_VOICE_PROFILE = {
