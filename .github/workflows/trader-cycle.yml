@@ -2,8 +2,9 @@ name: Trader Cycle
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "*/5 * * * *"
+  # DISABLED: trader now runs on Railway worker service (disciplined-serenity)
+  # schedule:
+  #   - cron: "*/5 * * * *"
 
 permissions:
   contents: read

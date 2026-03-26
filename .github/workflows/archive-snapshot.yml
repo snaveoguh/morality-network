@@ -2,8 +2,9 @@ name: Archive Snapshot
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17 8,20 * * *"
+  # DISABLED: was failing consistently, archive now managed via Redis
+  # schedule:
+  #   - cron: "17 8,20 * * *"
 
 permissions:
   contents: write

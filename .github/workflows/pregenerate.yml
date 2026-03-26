@@ -2,9 +2,9 @@ name: Pre-generate Editorials
 
 on:
   workflow_dispatch:
-  schedule:
-    # Every 30 minutes — generates 3 articles in parallel per run
-    - cron: "*/30 * * * *"
+  # DISABLED: replaced by crons.yml daily editorial generation
+  # schedule:
+  #   - cron: "*/30 * * * *"
 
 jobs:
   pregenerate:
