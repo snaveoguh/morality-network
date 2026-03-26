@@ -13,7 +13,8 @@ import type { TokenLaunch } from "./types";
 
 const SERVERLESS_RUNTIME =
   process.env.VERCEL === "1" ||
-  process.env.AWS_EXECUTION_ENV?.toLowerCase().includes("lambda") === true;
+  process.env.AWS_EXECUTION_ENV?.toLowerCase().includes("lambda") === true ||
+  process.env.RAILWAY_ENVIRONMENT !== undefined;
 const BACKGROUND_POLL_ENABLED = process.env.SCANNER_ENABLE_BACKGROUND_POLL === "true";
 
 class ScannerAgent implements Agent {
