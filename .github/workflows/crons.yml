@@ -1,0 +1,46 @@
+name: Daily Crons
+
+on:
+  schedule:
+    # Moral compass crawl — Mon + Thu at 3am UTC
+    - cron: '0 3 * * 1,4'
+    # AI commentary generation — daily at 4am UTC
+    - cron: '0 4 * * *'
+    # Daily edition — daily at 5:30am UTC
+    - cron: '30 5 * * *'
+    # Daily illustration (DALL-E) — daily at 5:45am UTC
+    - cron: '45 5 * * *'
+    # Newsroom content — daily at 6am UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch: # allow manual trigger
+
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Determine which endpoint to hit
+        id: route
+        run: |
+          CRON="${{ github.event.schedule }}"
+          case "$CRON" in
+            "0 3 * * 1,4") ROUTE="/api/moral-compass/crawl" ;;
+            "0 4 * * *")   ROUTE="/api/moral-commentary/generate" ;;
+            "30 5 * * *")  ROUTE="/api/cron/daily-edition" ;;
+            "45 5 * * *")  ROUTE="/api/cron/daily-illustration" ;;
+            "0 6 * * *")   ROUTE="/api/newsroom" ;;
+            *)             ROUTE="/api/cron/daily-edition" ;;
+          esac
+          echo "route=$ROUTE" >> "$GITHUB_OUTPUT"
+          echo "Triggering $ROUTE"
+
+      - name: Hit endpoint
+        run: |
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://pooter.world${{ steps.route.outputs.route }}")
+          echo "Status: $RESPONSE"
+          if [ "$RESPONSE" -ge 500 ]; then
+            echo "Server error — failing job"
+            exit 1
+          fi
