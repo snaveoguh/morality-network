@@ -30,7 +30,7 @@ const SECURITY_HEADERS: Record<string, string> = {
 const CSP_DIRECTIVES = [
   "default-src 'self'",
   // Next.js hydration + RainbowKit inline scripts require unsafe-inline
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com",
   // Tailwind + RainbowKit inline styles + Google Fonts CSS
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
@@ -45,6 +45,10 @@ const CSP_DIRECTIVES = [
     "https://mainnet.rpc.buidlguidl.com https://mainnet.base.org https://sepolia.base.org",
     "https://api.hyperliquid.xyz",
     "https://relay.walletconnect.com wss://relay.walletconnect.com",
+    "https://euc.li",                           // ENS avatars
+    "https://static.cloudflareinsights.com",     // Cloudflare analytics
+    "https://*.up.railway.app",                  // Railway services
+    "https://fond-woodcock-74091.upstash.io",    // Upstash Redis
   ].join(" "),
   "object-src 'none'",
   "base-uri 'self'",
