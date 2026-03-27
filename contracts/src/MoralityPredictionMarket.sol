@@ -18,15 +18,6 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "./interfaces/IProposalState.sol";
 
 contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
-    uint256 private reentrancyLock;
-
-    modifier nonReentrant() {
-        require(reentrancyLock == 1, "Reentrant");
-        reentrancyLock = 2;
-        _;
-        reentrancyLock = 1;
-    }
-
     enum Outcome { UNRESOLVED, FOR, AGAINST, VOID }
 
     struct DaoResolverConfig {
@@ -54,17 +45,29 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
         bool claimed;
     }
 
+    // ── Storage layout: must match original L1 deploy order ──
+    // slot 0
     uint256 public protocolFeeBps;
-    uint256 public totalFeesCollected;
+    // slot 1
     uint256 public totalStaked;
-
-    // dao key hash => resolver config
+    // slot 2
     mapping(bytes32 => DaoResolverConfig) public daoResolverConfigs;
-
-    // proposalKey => Market
+    // slot 3
     mapping(bytes32 => Market) public markets;
-    // proposalKey => user => Position
+    // slot 4
     mapping(bytes32 => mapping(address => Position)) public positions;
+    // ── New slots appended after original layout ──
+    // slot 5
+    uint256 public totalFeesCollected;
+    // slot 6
+    uint256 private reentrancyLock;
+
+    modifier nonReentrant() {
+        require(reentrancyLock == 1, "Reentrant");
+        reentrancyLock = 2;
+        _;
+        reentrancyLock = 1;
+    }
 
     event MarketCreated(bytes32 indexed proposalKey, string dao, string proposalId);
     event StakePlaced(bytes32 indexed proposalKey, address indexed staker, bool isFor, uint256 amount);
@@ -85,6 +88,11 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
         __Pausable_init();
         reentrancyLock = 1;
         protocolFeeBps = 200; // 2% fee on winnings
+    }
+
+    /// @notice One-shot reinitializer to fix storage layout after upgrade.
+    function initializeV4() public reinitializer(4) {
+        reentrancyLock = 1;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
