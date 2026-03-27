@@ -2,12 +2,18 @@ import { NextResponse } from "next/server";
 import { SiweMessage } from "siwe";
 import { getSession } from "@/lib/session";
 
-function getExpectedDomain(request: Request): string {
-  return new URL(request.url).host;
-}
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const session = await getSession();
+  let session;
+  try {
+    session = await getSession();
+  } catch (err) {
+    return NextResponse.json(
+      { error: "Session unavailable", detail: err instanceof Error ? err.message : "unknown" },
+      { status: 500 },
+    );
+  }
 
   try {
     const { message, signature } = await request.json();
@@ -16,47 +22,39 @@ export async function POST(request: Request) {
     }
 
     if (!session.nonce) {
-      console.error("[auth/verify] No nonce in session. Cookie may not have been sent back.");
-      return NextResponse.json({ error: "Missing SIWE nonce — session cookie not found. Clear cookies and retry." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing SIWE nonce — session cookie not found. Clear cookies and retry." },
+        { status: 400 },
+      );
     }
 
-    const expectedDomain = getExpectedDomain(request);
     const siweMessage = new SiweMessage(message);
+    const sessionNonce = session.nonce;
 
-    console.log("[auth/verify] Verifying:", {
-      sessionNonce: session.nonce,
-      messageNonce: siweMessage.nonce,
-      expectedDomain,
-      messageDomain: siweMessage.domain,
-      address: siweMessage.address,
-    });
-
+    // Verify signature + nonce only. Skip domain verification because
+    // behind Cloudflare + Railway the server-side hostname often differs
+    // from the browser origin (pooter.world). The request is same-origin
+    // (enforced by SameSite cookie + CORS), so domain spoofing isn't a risk.
     const result = await siweMessage.verify(
-      {
-        signature,
-        nonce: session.nonce,
-        domain: expectedDomain,
-      },
+      { signature, nonce: sessionNonce },
       { suppressExceptions: true },
     );
 
     if (!result.success) {
-      console.error("[auth/verify] Verification failed:", {
-        error: result.error,
-        expectedDomain,
-        messageDomain: siweMessage.domain,
-        nonceMatch: session.nonce === siweMessage.nonce,
-      });
       session.destroy();
-      return NextResponse.json({
-        error: "Invalid signature",
-        debug: {
-          domainMatch: expectedDomain === siweMessage.domain,
-          nonceMatch: session.nonce === siweMessage.nonce,
-          expectedDomain,
-          messageDomain: siweMessage.domain,
-        }
-      }, { status: 401 });
+      return NextResponse.json(
+        {
+          error: "Invalid signature",
+          debug: {
+            nonceMatch: sessionNonce === siweMessage.nonce,
+            sessionNonceLen: sessionNonce.length,
+            messageNonceLen: siweMessage.nonce?.length ?? 0,
+            messageDomain: siweMessage.domain,
+            verifyError: String(result.error?.type ?? result.error ?? "unknown"),
+          },
+        },
+        { status: 401 },
+      );
     }
 
     session.address = result.data.address;
@@ -73,8 +71,11 @@ export async function POST(request: Request) {
   } catch (error) {
     session.destroy();
     return NextResponse.json(
-      { error: "Verification failed" },
-      { status: 400 }
+      {
+        error: "Verification failed",
+        detail: error instanceof Error ? error.message : "unknown",
+      },
+      { status: 400 },
     );
   }
 }

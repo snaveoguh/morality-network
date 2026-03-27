@@ -49,6 +49,24 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "3456", "--directory", "/Users/hugo/Downloads/iea-site"],
       "port": 3456
+    },
+    {
+      "name": "cre-worklist",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/hugo/cre-worklist && npm run dev"],
+      "port": 3457
+    },
+    {
+      "name": "ferroli-worldcup",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/hugo/Downloads/ferroli-worldcup && npm run dev -- -p 3004"],
+      "port": 3004
+    },
+    {
+      "name": "flue-stox",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/hugo/Downloads/flue-stox && npm run dev -- -p 3005"],
+      "port": 3005
     }
   ]
 }

@@ -52,7 +52,7 @@ body { background: var(--paper); color: var(--ink); }
 }
 
 /* ── Newspaper grid ── */
-.newspaper-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-flow: dense; gap: 0; overflow: visible; max-width: 100%; }
+.newspaper-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-flow: dense; gap: 0; overflow: hidden; max-width: 100%; box-sizing: border-box; }
 .newspaper-cell { border-right: 1px solid var(--rule-light); border-bottom: 1px solid var(--rule-light); padding: 14px 16px; overflow-wrap: anywhere; min-width: 0; overflow: hidden; }
 .newspaper-hero     { grid-column: span 6; border-right: none; }
 .newspaper-major    { grid-column: span 3; }

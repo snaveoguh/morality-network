@@ -139,7 +139,7 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
     // ========================================================================
 
     /// @notice Stake ETH on a prediction outcome.
-    ///         Market must already exist (created by owner) and be unresolved.
+    ///         If the market does not exist yet, the first stake auto-creates it.
     /// @param dao The DAO identifier
     /// @param proposalId The proposal ID
     /// @param isFor true = stake on FOR (proposal passes), false = AGAINST
@@ -152,7 +152,22 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
 
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
         Market storage m = markets[key];
-        require(m.exists, "No market");
+
+        // Auto-create market on first wager
+        if (!m.exists) {
+            DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
+            address governor = (cfg.enabled && cfg.governor != address(0)) ? cfg.governor : address(0);
+            uint256 proposalNumericId = _parseUintStrict(proposalId);
+
+            m.proposalKey = key;
+            m.createdAt = block.timestamp;
+            m.governor = governor;
+            m.proposalNumericId = proposalNumericId;
+            m.exists = true;
+
+            emit MarketCreated(key, dao, proposalId);
+        }
+
         require(m.outcome == Outcome.UNRESOLVED, "Market resolved");
 
         // If market has a same-chain governor, verify proposal is still open.
