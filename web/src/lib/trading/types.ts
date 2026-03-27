@@ -123,6 +123,7 @@ export interface TraderRiskConfig {
   circuitBreakerLosses: number;
   circuitBreakerPauseMs: number;
   maxHoldMs?: number;
+  minHoldMs?: number;
 }
 
 export interface TraderSafetyConfig {

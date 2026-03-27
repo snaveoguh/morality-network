@@ -671,6 +671,29 @@ class TraderEngine {
           continue;
         }
 
+        // ── Minimum hold time: skip all exit checks (except catastrophic loss) ──
+        const minHoldMs = this.config.risk.minHoldMs ?? 0;
+        if (minHoldMs > 0 && positionAgeMs < minHoldMs) {
+          // Safety valve: still allow exit on catastrophic loss (>50% drawdown)
+          const currentPriceForCheck = await this.resolvePositionPriceUsd(position);
+          if (currentPriceForCheck) {
+            const isShortCheck = position.direction === "short";
+            const levCheck = position.leverage ?? 1;
+            const pricePctCheck = isShortCheck
+              ? (position.entryPriceUsd - currentPriceForCheck) / position.entryPriceUsd
+              : (currentPriceForCheck - position.entryPriceUsd) / position.entryPriceUsd;
+            const pnlPctCheck = pricePctCheck * levCheck;
+            if (pnlPctCheck < -0.5) {
+              console.log(
+                `[trader] catastrophic-loss: closing ${position.marketSymbol} at ${(pnlPctCheck * 100).toFixed(1)}% despite min-hold (age=${(positionAgeMs / 60_000).toFixed(0)}min)`,
+              );
+              const closed = await this.closePosition(position, "stop-loss", currentPriceForCheck);
+              if (closed) report.exits.push(closed);
+            }
+          }
+          continue; // Skip all other exit checks during min hold period
+        }
+
         // ── Signal reversal: close only on STRONG reversals ──
         // Require: signal flipped direction, low contradiction, high absolute score,
         // AND position must have been open long enough to avoid whipsaw
