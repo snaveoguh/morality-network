@@ -1129,16 +1129,21 @@ export function AgentMarketDashboard() {
     }).prepareMessage();
 
     const signature = await signMessageAsync({ message });
-    const verifyRes = await fetch("/api/auth/verify", {
+    const verifyRes = await fetch("/api/auth/siwe-verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message, signature }),
     });
     const verifyPayload = (await verifyRes.json().catch(() => ({}))) as {
       error?: string;
+      debug?: { domainMatch?: boolean; nonceMatch?: boolean; expectedDomain?: string; messageDomain?: string };
     };
     if (!verifyRes.ok) {
-      throw new Error(verifyPayload.error || "Wallet verification failed");
+      const dbg = verifyPayload.debug;
+      const detail = dbg
+        ? ` [domain=${dbg.expectedDomain}→${dbg.messageDomain} match=${dbg.domainMatch}, nonce=${dbg.nonceMatch}]`
+        : "";
+      throw new Error((verifyPayload.error || "Wallet verification failed") + detail);
     }
 
     await Promise.all([refreshSubscription(), refresh()]);

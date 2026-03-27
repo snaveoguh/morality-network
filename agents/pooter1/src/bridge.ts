@@ -50,11 +50,11 @@ export async function publishToBridge(
   };
 
   try {
-    const res = await fetch(`${BRIDGE_URL}/api/agents/bridge/relay`, {
+    const res = await fetch(`${BRIDGE_URL}/api/agents/bus/relay`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(BRIDGE_SECRET ? { "x-bridge-secret": BRIDGE_SECRET } : {}),
+        ...(BRIDGE_SECRET ? { Authorization: `Bearer ${BRIDGE_SECRET}` } : {}),
       },
       body: JSON.stringify(message),
       signal: AbortSignal.timeout(10_000),

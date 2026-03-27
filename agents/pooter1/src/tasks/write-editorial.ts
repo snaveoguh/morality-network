@@ -15,7 +15,7 @@ import { POOTER_API_URL, CRON_SECRET, MAX_EDITORIALS_PER_DAY } from "../config.j
 
 async function fetchTodaysFeed(): Promise<any[]> {
   const res = await fetch(`${POOTER_API_URL}/api/feed`, {
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.timeout(30_000),
   });
   if (!res.ok) throw new Error(`Feed fetch failed: ${res.status}`);
   const data = await res.json();

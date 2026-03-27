@@ -25,6 +25,9 @@ export const CRON_SECRET = process.env.CRON_SECRET || "";
 export const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL || "";
 export const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
 
+// ── Farcaster (Neynar API) ───────────────────────────────────────────
+export const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY || "";
+
 // ── Contracts ───────────────────────────────────────────────────────
 export const BASE_RPC = process.env.BASE_RPC_URL || "https://mainnet.base.org";
 export const REGISTRY_ADDRESS = (process.env.REGISTRY_ADDRESS || "0x2ea7502C4db5B8cfB329d8a9866EB6705b036608") as `0x${string}`;
@@ -47,3 +50,4 @@ export const DEFAULT_VOICE_PROFILE = {
 export const MAX_COMMENTS_PER_DAY = 20;
 export const MAX_RATINGS_PER_DAY = 50;
 export const MAX_EDITORIALS_PER_DAY = 3;
+export const MAX_FARCASTER_DIGESTS_PER_DAY = 3;

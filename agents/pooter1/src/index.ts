@@ -18,6 +18,7 @@ import { getVoiceProfile, getDailyStats } from "./memory.js";
 import { writeEditorial } from "./tasks/write-editorial.js";
 import { commentOnArticles } from "./tasks/comment.js";
 import { learn } from "./tasks/learn.js";
+import { farcasterDigest } from "./tasks/farcaster-digest.js";
 
 const app = new Hono();
 
@@ -76,6 +77,16 @@ app.post("/tasks/learn", requireAuth, async (c) => {
   try {
     await learn();
     return c.json({ status: "ok", task: "learn" });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// ── Task: Farcaster Digest ────────────────────────────────────────
+app.post("/tasks/farcaster-digest", requireAuth, async (c) => {
+  try {
+    await farcasterDigest();
+    return c.json({ status: "ok", task: "farcaster-digest" });
   } catch (err: any) {
     return c.json({ error: err.message }, 500);
   }

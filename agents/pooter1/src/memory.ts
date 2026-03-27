@@ -31,7 +31,7 @@ async function redisGet(key: string): Promise<string | null> {
   }
 }
 
-async function redisSet(key: string, value: string, ttlSeconds?: number): Promise<void> {
+export async function redisSet(key: string, value: string, ttlSeconds?: number): Promise<void> {
   if (!UPSTASH_REDIS_REST_URL) return;
   try {
     const cmd = ttlSeconds

@@ -91,7 +91,7 @@ export default function RootLayout({
           <MarqueeBanner />
           <ExtensionBanner />
           <Header />
-          <main className="mx-auto max-w-7xl px-4 py-2">{children}</main>
+          <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-2">{children}</main>
           <InstallPrompt />
           <BetaToast />
           <PooterNotificationHub />

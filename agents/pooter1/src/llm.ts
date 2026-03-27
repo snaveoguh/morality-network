@@ -36,7 +36,16 @@ export async function generate(opts: GenerateOpts): Promise<string> {
   }
 
   const data = await response.json();
-  return data.text || data.content || "";
+  return stripThinkTags(data.text || data.content || "");
+}
+
+/** Strip Qwen-style <think>...</think> reasoning blocks from output */
+function stripThinkTags(text: string): string {
+  // Handle closed tags: <think>...</think>
+  let cleaned = text.replace(/<think>[\s\S]*?<\/think>\s*/g, "");
+  // Handle unclosed <think> (model didn't close the tag)
+  cleaned = cleaned.replace(/<think>[\s\S]*/g, "");
+  return cleaned.trim();
 }
 
 export async function chat(
@@ -63,5 +72,5 @@ export async function chat(
   }
 
   const data = await response.json();
-  return data.text || data.content || "";
+  return stripThinkTags(data.text || data.content || "");
 }

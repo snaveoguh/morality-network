@@ -68,7 +68,7 @@ export function CastCard({ cast }: CastCardProps) {
           </div>
 
           {/* Cast text */}
-          <p className="mb-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-200" style={{ fontFamily: "'Comic Sans MS', 'Comic Neue', cursive" }}>
+          <p className="mb-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-200" style={{ fontFamily: "'Comic Sans MS', 'Comic Neue', cursive", overflowWrap: 'anywhere' }}>
             {cast.text}
           </p>
 

@@ -75,7 +75,7 @@ const RATINGS_ABI = [
 const COMMENTS_ABI = [
   {
     type: "function" as const,
-    name: "postComment",
+    name: "comment",
     inputs: [
       { name: "entityHash", type: "bytes32" },
       { name: "content", type: "string" },
@@ -113,6 +113,8 @@ function entityHash(identifier: string): `0x${string}` {
   return keccak256(toBytes(identifier));
 }
 
+export { entityHash };
+
 // ── Public API ──────────────────────────────────────────────────────
 
 export async function ensureEntityRegistered(identifier: string): Promise<`0x${string}`> {
@@ -124,16 +126,23 @@ export async function ensureEntityRegistered(identifier: string): Promise<`0x${s
     return hash;
   }
 
+  // Check if already registered — getEntity reverts if not found
+  let exists = false;
   try {
-    const entity = await clients.publicClient.readContract({
+    await clients.publicClient.readContract({
       address: CONTRACTS.registry,
       abi: REGISTRY_ABI,
       functionName: "getEntity",
       args: [hash],
     });
+    exists = true;
+  } catch {
+    // Entity doesn't exist — need to register
+  }
 
-    if (entity.exists) return hash;
+  if (exists) return hash;
 
+  try {
     // Register as URL entity (type 0)
     const txHash = await clients.walletClient.writeContract({
       address: CONTRACTS.registry,
@@ -142,14 +151,12 @@ export async function ensureEntityRegistered(identifier: string): Promise<`0x${s
       args: [identifier, 0],
     });
 
+    // Wait for confirmation before sending follow-up txs (avoids nonce collision)
+    await clients.publicClient.waitForTransactionReceipt({ hash: txHash });
     console.log(`[pooter1:onchain] Registered entity: ${txHash}`);
     return hash;
   } catch (err: any) {
-    // Already registered (revert) is fine
-    if (err.message?.includes("already") || err.message?.includes("revert")) {
-      return hash;
-    }
-    console.warn(`[pooter1:onchain] Registration failed: ${err.message}`);
+    console.warn(`[pooter1:onchain] Registration failed: ${err.message?.slice(0, 100)}`);
     return hash;
   }
 }
@@ -200,10 +207,12 @@ export async function commentOnChain(
     const txHash = await clients.walletClient.writeContract({
       address: CONTRACTS.comments,
       abi: COMMENTS_ABI,
-      functionName: "postComment",
+      functionName: "comment",
       args: [hash, content.slice(0, 2000), parentId],
     });
 
+    // Wait for confirmation to avoid nonce collisions on sequential comments
+    await clients.publicClient.waitForTransactionReceipt({ hash: txHash });
     console.log(`[pooter1:onchain] Commented on ${identifier.slice(0, 30)}: ${txHash}`);
     return txHash;
   } catch (err: any) {
