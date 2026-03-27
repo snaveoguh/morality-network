@@ -16,7 +16,10 @@ contract UpgradeSecurityL1 is Script {
         vm.startBroadcast(deployerKey);
 
         MoralityPredictionMarket newImpl = new MoralityPredictionMarket();
-        UUPSUpgradeable(proxy).upgradeToAndCall(address(newImpl), "");
+        UUPSUpgradeable(proxy).upgradeToAndCall(
+            address(newImpl),
+            abi.encodeCall(MoralityPredictionMarket.initializeV4, ())
+        );
 
         console2.log("New implementation:", address(newImpl));
         console2.log("Proxy upgraded:", proxy);
