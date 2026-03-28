@@ -122,7 +122,7 @@ const LAYERS: Layer[] = [
       { name: "Trade Journal", detail: "Full entry/exit rationale per position — signal source, Kelly phase, composite breakdown, agreement status, whale flow, moral score", tag: "LIVE" },
       { name: "Vault Rail", detail: "Capital flow pipeline: Base deposit → Morpho yield → Bridge → HyperLiquid perps. NAV reporting, withdrawal queue", tag: "OFF" },
       { name: "Vault Strategy", detail: "Auto-allocate buffer, auto-settle when flat, auto-report loss. Multi-funder capital pooling", tag: "OFF" },
-      { name: "Polypooter", detail: "Polymarket arbitrage scanner — completeness arb, multi-outcome arb, stale odds detection. Separate microservice, code ready", tag: "OFF" },
+      { name: "Polypooter", detail: "Polymarket arbitrage scanner — completeness arb, multi-outcome arb. Separate Hono microservice on Railway, scans every 5min. UI at /predictions/arb", tag: "LIVE" },
     ],
   },
   {
