@@ -90,7 +90,7 @@ export interface SignalSourceScore {
 }
 
 export function scoreSignalSources(journal: TradeJournalEntry[]): SignalSourceScore[] {
-  const sources = ["technical", "pattern", "news", "composite"];
+  const sources = ["technical", "pattern", "news", "wallet-flow", "composite"];
   const bySource = new Map<string, TradeJournalEntry[]>();
 
   for (const t of journal) {
@@ -156,6 +156,7 @@ export interface AdaptiveWeights {
   technical: number;
   pattern: number;
   news: number;
+  walletFlow: number;
   reason: string;
 }
 
@@ -165,9 +166,10 @@ export interface AdaptiveWeights {
  */
 export function computeAdaptiveWeights(journal: TradeJournalEntry[]): AdaptiveWeights {
   const defaults: AdaptiveWeights = {
-    technical: 0.4,
-    pattern: 0.3,
-    news: 0.3,
+    technical: 0.35,
+    pattern: 0.25,
+    news: 0.25,
+    walletFlow: 0.15,
     reason: "default weights (insufficient trade history)",
   };
 
@@ -178,43 +180,50 @@ export function computeAdaptiveWeights(journal: TradeJournalEntry[]): AdaptiveWe
   const techScore = sourceScores.find((s) => s.source === "technical");
   const patternScore = sourceScores.find((s) => s.source === "pattern");
   const newsScore = sourceScores.find((s) => s.source === "news");
+  const wfScore = sourceScores.find((s) => s.source === "wallet-flow");
 
   // If no source has enough data, keep defaults
-  const hasEnoughData = [techScore, patternScore, newsScore].some(
+  const hasEnoughData = [techScore, patternScore, newsScore, wfScore].some(
     (s) => s && s.trades >= 5,
   );
   if (!hasEnoughData) return defaults;
 
   // Blend: 70% data-driven + 30% prior (prevents wild swings)
-  const priorTech = 0.4, priorPattern = 0.3, priorNews = 0.3;
-  const dataTech = techScore?.suggestedWeight ?? 0.33;
-  const dataPattern = patternScore?.suggestedWeight ?? 0.33;
-  const dataNews = newsScore?.suggestedWeight ?? 0.33;
+  const priorTech = 0.35, priorPattern = 0.25, priorNews = 0.25, priorWf = 0.15;
+  const dataTech = techScore?.suggestedWeight ?? 0.25;
+  const dataPattern = patternScore?.suggestedWeight ?? 0.25;
+  const dataNews = newsScore?.suggestedWeight ?? 0.25;
+  const dataWf = wfScore?.suggestedWeight ?? 0.25;
 
   let technical = 0.7 * dataTech + 0.3 * priorTech;
   let pattern = 0.7 * dataPattern + 0.3 * priorPattern;
   let news = 0.7 * dataNews + 0.3 * priorNews;
+  let walletFlow = 0.7 * dataWf + 0.3 * priorWf;
 
   // Normalize
-  const sum = technical + pattern + news;
+  const sum = technical + pattern + news + walletFlow;
   technical /= sum;
   pattern /= sum;
   news /= sum;
+  walletFlow /= sum;
 
-  // Floor: no source below 10%
-  technical = Math.max(technical, 0.1);
-  pattern = Math.max(pattern, 0.1);
-  news = Math.max(news, 0.1);
-  const sum2 = technical + pattern + news;
+  // Floor: no source below 5%
+  technical = Math.max(technical, 0.05);
+  pattern = Math.max(pattern, 0.05);
+  news = Math.max(news, 0.05);
+  walletFlow = Math.max(walletFlow, 0.05);
+  const sum2 = technical + pattern + news + walletFlow;
   technical /= sum2;
   pattern /= sum2;
   news /= sum2;
+  walletFlow /= sum2;
 
   return {
     technical: Math.round(technical * 100) / 100,
     pattern: Math.round(pattern * 100) / 100,
     news: Math.round(news * 100) / 100,
-    reason: `adaptive weights from ${journal.length} trades (tech acc: ${((techScore?.accuracy ?? 0) * 100).toFixed(0)}%, pattern: ${((patternScore?.accuracy ?? 0) * 100).toFixed(0)}%, news: ${((newsScore?.accuracy ?? 0) * 100).toFixed(0)}%)`,
+    walletFlow: Math.round(walletFlow * 100) / 100,
+    reason: `adaptive weights from ${journal.length} trades (tech: ${((techScore?.accuracy ?? 0) * 100).toFixed(0)}%, pattern: ${((patternScore?.accuracy ?? 0) * 100).toFixed(0)}%, news: ${((newsScore?.accuracy ?? 0) * 100).toFixed(0)}%, wf: ${((wfScore?.accuracy ?? 0) * 100).toFixed(0)}%)`,
   };
 }
 

@@ -93,6 +93,17 @@ class BusCoordinatorAgent implements Agent {
       messageBus.subscribe("position-closed", (message) => this.onPositionClosed(message)),
       messageBus.subscribe("circuit-breaker-tripped", (message) => this.onCircuitBreakerTripped(message)),
       messageBus.subscribe("trader-cycle-complete", (message) => this.onTraderCycleComplete(message)),
+      // Governance alpha signals
+      messageBus.subscribe("governance-alpha", (message) => this.onGovernanceAlpha(message)),
+      // Autoresearch experiment events
+      messageBus.subscribe("experiment-started", (message) => {
+        console.log(`[coordinator] Experiment started: ${(message.payload as Record<string, unknown>)?.id}`);
+        this.lastActivityAt = Date.now();
+      }),
+      messageBus.subscribe("experiment-completed", (message) => {
+        console.log(`[coordinator] Experiment completed: ${(message.payload as Record<string, unknown>)?.id} — ${(message.payload as Record<string, unknown>)?.status}`);
+        this.lastActivityAt = Date.now();
+      }),
       messageBus.subscribeDirect(this.id, (message) => this.onDirectMessage(message))
     );
 
@@ -301,6 +312,50 @@ class BusCoordinatorAgent implements Agent {
       this.recalculateCooldownMultiplier();
       console.log("[Coordinator] Trader recovered from circuit breaker — resuming normal cooldowns");
     }
+  }
+
+  /**
+   * Handle governance alpha signals from the GovernanceWatcherAgent.
+   * Logs the signal and publishes a boosted trade-candidate if the asset
+   * matches one of the trader's watch markets.
+   */
+  private onGovernanceAlpha(message: AgentMessage): void {
+    this.bumpActivity();
+    const signal = message.payload as {
+      proposalId?: string;
+      protocol?: string;
+      tradeableAsset?: string;
+      direction?: string;
+      confidence?: number;
+      reasoning?: string;
+      eventType?: string;
+    };
+
+    if (!signal.tradeableAsset || !signal.direction) return;
+
+    console.log(
+      `[Coordinator] Governance alpha: ${signal.tradeableAsset} ${signal.direction} ` +
+      `(${signal.eventType}, conf=${signal.confidence?.toFixed(2)}) — ${signal.reasoning?.slice(0, 80)}`,
+    );
+
+    // Publish as a trade-candidate so the trader can pick it up
+    // The trader's composite signal will integrate this as a news-like signal
+    void messageBus.publish({
+      id: randomUUID(),
+      from: this.id,
+      to: "*",
+      topic: "governance-trade-signal",
+      payload: {
+        symbol: signal.tradeableAsset,
+        direction: signal.direction,
+        confidence: signal.confidence ?? 0.3,
+        source: `governance:${signal.protocol}`,
+        reasoning: signal.reasoning,
+        eventType: signal.eventType,
+        proposalId: signal.proposalId,
+      },
+      timestamp: Date.now(),
+    });
   }
 
   private recalculateCooldownMultiplier(): void {

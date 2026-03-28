@@ -96,6 +96,9 @@ export interface EntryRationale {
   technicalStrength?: number;
   patternDirection?: string;
   patternNames?: string[];
+  walletFlowDirection?: string;
+  walletFlowStrength?: number;
+  whaleNetExposure?: number;
   agreementMet?: boolean;
 }
 
@@ -179,6 +182,8 @@ export interface SignalWeights {
   news: number;
   /** Market data signals: fear/greed + funding + OI (combined). Default 0.15 */
   marketData?: number;
+  /** Whale wallet flow signal: net long/short exposure of tracked wallets. Default 0.10 */
+  walletFlow?: number;
 }
 
 export interface TradeJournalEntry {

@@ -8,6 +8,7 @@ import type {
   AgentStatus,
   MessageHandler,
 } from "../core/types";
+import { governanceWatcher } from "../governance";
 
 function sanitizeTopic(topic: string): string {
   return topic.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
@@ -165,6 +166,41 @@ class AgentFactory {
     });
 
     return { id: watcher.id, created: true };
+  }
+
+  /**
+   * Spawn the governance watcher agent.
+   * It's already registered as a singleton, so this just starts it if idle.
+   */
+  spawnGovernanceWatcher(requestedBy: string): SpawnResult {
+    const id = governanceWatcher.id;
+
+    if (governanceWatcher.status() === "running") {
+      return { id, created: false, reason: "already-running" };
+    }
+
+    if (this.spawnedIds.size >= this.maxAgents) {
+      return { id, created: false, reason: "factory-limit-reached" };
+    }
+
+    // The governance agent auto-registers on import, so just start it
+    governanceWatcher.start();
+    this.spawnedIds.add(id);
+
+    void messageBus.publish({
+      id: randomUUID(),
+      from: "agent-factory",
+      to: "*",
+      topic: "agent-spawned",
+      payload: {
+        id,
+        type: "governance-watcher",
+        requestedBy,
+      },
+      timestamp: Date.now(),
+    });
+
+    return { id, created: true };
   }
 
   listSpawnedAgentIds(): string[] {
