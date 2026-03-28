@@ -99,38 +99,51 @@ const LAYERS: Layer[] = [
   },
   {
     id: "trading",
-    title: "V. Trading Engine — 9,300+ LOC",
+    title: "V. Trading Engine — 12,000+ LOC",
     subtitle:
-      "Autonomous multi-source signal aggregation → HyperLiquid perpetual execution with Kelly Criterion position sizing, moral gates, and circuit breakers.",
+      "Autonomous multi-venue trading system with 5-source composite signals, recursive self-improvement, whale tracking, and Kelly Criterion sizing. Runs 24/7 on HyperLiquid perpetuals with live capital.",
     items: [
-      { name: "Composite Signal Pipeline", detail: "Technical indicators (RSI, MACD, Bollinger), pattern detection (Cup-and-Handle, etc.), news sentiment, market momentum, council vote" },
-      { name: "Council Signal", detail: "7+ independent signals vote on direction — majority consensus required before execution" },
-      { name: "Kelly Criterion Sizing", detail: "Fractional Kelly for position sizing — mathematically optimal bet sizing based on edge and bankroll" },
-      { name: "Moral Gate", detail: "Ethical filter — refuses to trade on articles about humanitarian crises, sanctions, etc." },
-      { name: "Circuit Breaker", detail: "3 consecutive losses triggers automatic pause — human override required to resume" },
-      { name: "HyperLiquid L1", detail: "Perpetual futures execution — REST API client, deposit/withdraw, position management" },
-      { name: "Vault Rail", detail: "Capital flow pipeline: Base deposit → Bridge → Morpho yield → HyperLiquid perps" },
-      { name: "Self-Learning", detail: "Agent learns from trade outcomes — adjusts signal weights based on P&L feedback loop" },
-      { name: "Trade Journal", detail: "Complete execution log with entry/exit reasons, timestamps, P&L attribution" },
-      { name: "Risk Advisory", detail: "Pre-trade safety checks — max position size, correlation limits, drawdown thresholds" },
+      { name: "Composite Signal Pipeline", detail: "5 weighted sources: Technical (30%) + AI Pattern (22%) + News (22%) + Market Data (16%) + Whale Flow (10%). Requires 2-of-5 agreement on direction", tag: "LIVE" },
+      { name: "Technical Analysis", detail: "RSI(14), Ichimoku Cloud, MACD(12/26/9), triple EMA (9/21/55), Bollinger Bands(20,2), VWAP — 6 indicators on 15min candles", tag: "LIVE" },
+      { name: "AI Pattern Detection", detail: "LLM scans 50 candles for head & shoulders, double tops, triangles, flags, wedges, breakouts — Groq Llama 3.3 70B", tag: "LIVE" },
+      { name: "Whale Wallet Flow", detail: "Polls 10 whale wallets ($100M-$13B accounts) on HyperLiquid. 60%+ consensus on direction → signal. 5min cache", tag: "LIVE" },
+      { name: "Market Data Bundle", detail: "Fear & Greed Index (contrarian), HL funding rates (contrarian), HL open interest changes (trend confirmation). All free, no auth", tag: "LIVE" },
+      { name: "Council Signal", detail: "4-persona LLM debate — Technical Analyst, Fundamental Analyst, Sentiment Analyst, Risk Manager. Each votes BUY/SELL/HOLD. Boosts or dampens confidence ±15-20%", tag: "LIVE" },
+      { name: "Recursive Autoresearch", detail: "Every 50 closed trades: generate learning report → LLM proposes parameter tweak → create experiment → run 30 trades → adopt if profit factor +10% or Sharpe +0.2", tag: "LIVE" },
+      { name: "Kelly Criterion Sizing", detail: "3 phases: Cold (<10 trades, 25% Kelly), Warm (10-99, 50%), Hot (100+, 2/3 Kelly). Max 25% fraction. Per-market Kelly from trade history", tag: "LIVE" },
+      { name: "Moral Gate", detail: "SOUL.md enforcement — long only if entity score >70, short only if <30. Checked before every entry. Blocks in neutral zone (30-70)", tag: "LIVE" },
+      { name: "Circuit Breaker", detail: "3 consecutive losses → pause trading 1 hour. Still evaluates exits during pause. Auto-resume after cooldown", tag: "LIVE" },
+      { name: "Scalper (WebSocket)", detail: "1min candle momentum trading — big candle (1.5%) + volume spike (3x) + VWAP breakout triggers. BTC/ETH/SOL, max 3 open scalps, 10x leverage", tag: "LIVE" },
+      { name: "HyperLiquid Execution", detail: "REST + WebSocket API. 20 watch markets (BTC, ETH, SOL, HYPE, XRP, SUI, DOGE, LINK, AVAX, BNB, PAXG, TAO, ZEC, FET, TRUMP, BCH, WLD, AAVE, OP, ARB)", tag: "LIVE" },
+      { name: "Position Management", detail: "Stop-loss 6%, take-profit 12%, trailing stop 5% (activated at +4%). Max hold 8hr, min hold 15min. Scaled exits at TP×1, ×1.5, ×2, ×3", tag: "LIVE" },
+      { name: "Self-Learning", detail: "Per-market Kelly params, signal source accuracy scoring, adaptive weight adjustment (70% data + 30% prior), streak analysis, negative-edge market detection", tag: "LIVE" },
+      { name: "Experiment Store", detail: "Upstash Redis persistence for autoresearch experiments. Tracks baseline vs experiment params, metrics, adoption history", tag: "LIVE" },
+      { name: "News Signals", detail: "70+ RSS feeds aggregated with 72-hour decay. Editorial impact scoring. Macro relay (SPX/DXY → BTC/ETH sentiment at 50% damping)", tag: "LIVE" },
+      { name: "Trade Journal", detail: "Full entry/exit rationale per position — signal source, Kelly phase, composite breakdown, agreement status, whale flow, moral score", tag: "LIVE" },
+      { name: "Vault Rail", detail: "Capital flow pipeline: Base deposit → Morpho yield → Bridge → HyperLiquid perps. NAV reporting, withdrawal queue", tag: "OFF" },
+      { name: "Vault Strategy", detail: "Auto-allocate buffer, auto-settle when flat, auto-report loss. Multi-funder capital pooling", tag: "OFF" },
+      { name: "Polypooter", detail: "Polymarket arbitrage scanner — completeness arb, multi-outcome arb, stale odds detection. Separate microservice, code ready", tag: "OFF" },
     ],
   },
   {
     id: "agents",
-    title: "VI. Autonomous Agent Swarm",
+    title: "VI. Autonomous Agent Swarm — 9 Agents",
     subtitle:
-      "7 specialized agents coordinating via message bus with persistent memory, self-learning, and ethical guardrails.",
+      "9 specialized agents coordinating via pub/sub message bus with persistent memory, self-learning, ethical guardrails, and sub-agent spawning via AgentFactory.",
     items: [
-      { name: "Trader Agent", detail: "Executes trading cycles, publishes signals, manages positions on HyperLiquid" },
-      { name: "Newsroom Agent", detail: "Synthesizes RSS feeds into actionable intelligence — polls indexer, LLM synthesis" },
-      { name: "Scanner Agent", detail: "Detects hot tokens, new pairs, unusual volume — real-time market surveillance" },
-      { name: "Scalper Agent", detail: "Sub-minute trading strategies — high-frequency signal processing" },
-      { name: "NounIRL Agent", detail: "Settles Nouns auctions when target traits appear — predicts from NounsSeeder algorithm" },
-      { name: "Coordinator Agent", detail: "Orchestrates message bus — routes messages between agents, manages lifecycle" },
-      { name: "Swarm Agent", detail: "Multi-agent orchestration — task decomposition, parallel execution, result aggregation" },
-      { name: "Agent Memory", detail: "Persistent knowledge base — learn from URLs, recall context, forget outdated knowledge" },
-      { name: "Agent Soul", detail: "Personality framework — POOTER_SOUL_V1 with MORALITY_AXES for ethical decision-making" },
-      { name: "Message Bus", detail: "Pub/sub inter-agent communication — typed messages, event streaming via SSE" },
+      { name: "Trader Agent", detail: "90-second cycles on HyperLiquid. Evaluates exits → fetches signals → computes composite → Kelly sizing → executes. Publishes trade-executed, position-closed events", tag: "LIVE" },
+      { name: "Scalper Agent", detail: "WebSocket-driven 1min candle momentum on BTC/ETH/SOL. Volume spike + big candle + VWAP breakout detection. Max 3 concurrent scalps", tag: "LIVE" },
+      { name: "Newsroom Agent", detail: "Cron-driven (2hr). Crawls 70+ RSS feeds, synthesizes 10 editorials per run via LLM. Max 2 per topic, 1 per source. Multi-source synthesis", tag: "LIVE" },
+      { name: "Governance Watcher", detail: "Polls Tally API every 5min across 6 protocols (Compound, Aave, Uniswap, ENS, Arbitrum, Optimism). Detects new proposals, vote shifts, executions → alpha signals", tag: "LIVE" },
+      { name: "Coordinator Agent", detail: "Orchestrates all bus events. Routes governance-alpha to trader, manages circuit breaker state, spawns watchers, adjusts cooldowns on loss streaks", tag: "LIVE" },
+      { name: "Scanner Agent", detail: "Watches Base L2 DEX factories for new token launches. Scores candidates, enriches with DexScreener data. Request-driven in serverless", tag: "ON-DEMAND" },
+      { name: "Swarm Agent", detail: "Multi-agent orchestration — task decomposition, parallel execution, result aggregation. LLM-powered reasoning", tag: "LIVE" },
+      { name: "Pooter1 Agent", detail: "Separate Railway service. Editorial writing, Farcaster posting, comment generation, weekly self-learning cycles. Port 3001", tag: "LIVE" },
+      { name: "NounIRL Agent", detail: "Settles Nouns auctions when target traits appear — predicts from NounsSeeder algorithm. Omnichain tip verification. Separate repo (noun.wtf)", tag: "EXTERNAL" },
+      { name: "AgentFactory", detail: "Dynamic sub-agent spawning. Max 8 agents. Spawns TopicBurstWatchers and GovernanceWatcher on demand. Publishes agent-spawned events", tag: "LIVE" },
+      { name: "Message Bus", detail: "Pub/sub inter-agent communication — typed messages, topic subscriptions, direct messaging, SSE streaming to frontend", tag: "LIVE" },
+      { name: "Agent Memory", detail: "Persistent knowledge base — learn from URLs, recall context, forget outdated. Knowledge graph with relevance scoring", tag: "LIVE" },
+      { name: "Agent Soul", detail: "POOTER_SOUL_V1 — MORALITY_AXES personality framework. Moral compass crawl, ethical reasoning, trade constraint enforcement", tag: "LIVE" },
     ],
   },
   {
@@ -256,13 +269,15 @@ const LAYERS: Layer[] = [
 ];
 
 const INFRA_ITEMS = [
-  { label: "Railway", detail: "Monorepo deployment — web app, Ponder indexer, Agent Hub, PostgreSQL" },
-  { label: "Groq (free tier)", detail: "Llama 3.3 70B for editorial synthesis, scoring, chat — $0/day" },
+  { label: "Railway", detail: "Monorepo deployment — web app, Ponder indexer, Agent Hub, Pooter1, PostgreSQL. Dev + Production environments" },
+  { label: "HyperLiquid L1", detail: "Perpetual futures execution — REST + WebSocket API. 20 watch markets, cross-margin, live trading" },
+  { label: "Upstash Redis", detail: "Position store, OI baselines, experiment history, signal cache — survives serverless cold starts" },
+  { label: "Groq (free tier)", detail: "Llama 3.3 70B via Agent Hub — pattern detection, council debate, autoresearch, editorial synthesis. $0/day" },
   { label: "Together.ai", detail: "LLM fallback provider — 8B fast model for lightweight tasks" },
-  { label: "OpenAI", detail: "DALL-E 3 for daily edition illustrations" },
-  { label: "Upstash Redis", detail: "Trading state, position store, signal cache" },
-  { label: "HyperLiquid L1", detail: "Perpetual futures execution — REST API" },
-  { label: "CoinGecko / DexScreener", detail: "Market data feeds — prices, volume, liquidity" },
+  { label: "Anthropic / OpenAI", detail: "Premium fallback — Haiku/Sonnet/GPT-4o, daily budget capped at $0.20. DALL-E 3 for illustrations" },
+  { label: "Alternative.me", detail: "Crypto Fear & Greed Index — contrarian signal, 30min cache" },
+  { label: "Tally API", detail: "Governance proposal data — 6 protocols (Compound, Aave, Uniswap, ENS, Arbitrum, Optimism)" },
+  { label: "CoinGecko / DexScreener", detail: "Market data feeds — prices, volume, liquidity, holder distribution" },
   { label: "Last.fm", detail: "Music metadata and discovery" },
   { label: "Neynar", detail: "Farcaster channel feeds" },
 ];
@@ -274,11 +289,11 @@ const STATS: { label: string; value: string }[] = [
   { label: "Web Routes", value: "32 pages" },
   { label: "API Endpoints", value: "78" },
   { label: "React Components", value: "700+" },
-  { label: "Trading Engine LOC", value: "9,300+" },
-  { label: "Autonomous Agents", value: "7" },
-  { label: "Ponder Tables", value: "8" },
-  { label: "Mobile Screens", value: "10+" },
-  { label: "Extension Modules", value: "25+" },
+  { label: "Trading Engine LOC", value: "12,000+" },
+  { label: "Signal Sources", value: "5" },
+  { label: "Autonomous Agents", value: "9" },
+  { label: "HL Watch Markets", value: "20" },
+  { label: "Whale Wallets Tracked", value: "10" },
   { label: "Chains Supported", value: "4" },
 ];
 
@@ -289,6 +304,10 @@ const TAG_COLORS: Record<string, string> = {
   "Vault Rail": "border-[var(--accent-red)] text-[var(--accent-red)]",
   ZK: "border-[var(--ink)] text-[var(--ink)] bg-[var(--paper-dark)]",
   Test: "border-[var(--rule-light)] text-[var(--ink-faint)]",
+  LIVE: "border-green-700 text-green-700 bg-green-50",
+  OFF: "border-[var(--rule-light)] text-[var(--ink-faint)] bg-[var(--paper-dark)]",
+  "ON-DEMAND": "border-amber-600 text-amber-600 bg-amber-50",
+  EXTERNAL: "border-[var(--ink-light)] text-[var(--ink-light)] bg-[var(--paper-dark)]",
 };
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
@@ -449,50 +468,89 @@ export default function ArchitecturePage() {
         <div className="overflow-x-auto border border-[var(--rule)] bg-[var(--paper-dark)] p-4">
           <pre className="font-mono text-[8px] leading-[1.6] text-[var(--ink-light)] sm:text-[9px]">{`
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         USER  SURFACES                                  │
-│  ┌──────────┐   ┌───────────────┐   ┌───────────────┐   ┌───────────┐ │
-│  │ Web App  │   │ Mobile (Expo) │   │ Extension v3  │   │    SDK    │ │
-│  │ Next.js  │   │ React Native  │   │ Content + BG  │   │ TS / npm  │ │
-│  └────┬─────┘   └───────┬───────┘   └───────┬───────┘   └─────┬─────┘ │
-└───────┼─────────────────┼───────────────────┼─────────────────┼───────┘
-        │                 │                   │                 │
-        ▼                 ▼                   ▼                 ▼
+│                       SIGNAL  PIPELINE  (90s cycle)                     │
+│                                                                         │
+│  ┌────────────┐ ┌────────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
+│  │ Technical  │ │ AI Pattern │ │   News   │ │  Market  │ │  Whale   │ │
+│  │ RSI, MACD  │ │ LLM chart  │ │ 70+ RSS  │ │ F&G, OI  │ │ 10 walls │ │
+│  │ Ichi, EMA  │ │ patterns   │ │ feeds    │ │ Funding  │ │ $13B+    │ │
+│  │   30%      │ │   22%      │ │   22%    │ │   16%    │ │   10%    │ │
+│  └─────┬──────┘ └─────┬──────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ │
+│        └───────────────┴─────────────┴────────────┴────────────┘       │
+│                                 │                                       │
+│                    ┌────────────▼────────────┐                          │
+│                    │   COMPOSITE  SIGNAL     │                          │
+│                    │  2-of-5 agreement gate  │                          │
+│                    └────────────┬────────────┘                          │
+│                                 │                                       │
+│         ┌───────────────────────┼───────────────────────┐              │
+│         ▼                       ▼                       ▼              │
+│  ┌──────────────┐   ┌──────────────────┐   ┌───────────────────┐      │
+│  │ COUNCIL VOTE │   │   MORAL  GATE    │   │ KELLY  CRITERION  │      │
+│  │ 4-persona    │   │ Long >70 / <30   │   │ Cold / Warm / Hot │      │
+│  │ LLM debate   │   │ Short from SOUL  │   │ Max 25% fraction  │      │
+│  └──────┬───────┘   └────────┬─────────┘   └────────┬──────────┘      │
+│         └────────────────────┼──────────────────────┘                  │
+│                              ▼                                          │
+│                 ┌─────────────────────────┐                             │
+│                 │    HYPERLIQUID  L1      │                             │
+│                 │  20 markets · cross-    │                             │
+│                 │  margin · REST + WS     │                             │
+│                 └────────────┬────────────┘                             │
+│                              │                                          │
+│    ┌─────────────────────────┼──────────────────────────┐              │
+│    ▼                         ▼                          ▼              │
+│  ┌──────────┐  ┌──────────────────────┐  ┌──────────────────┐         │
+│  │ SCALPER  │  │   RISK  MANAGEMENT   │  │  AUTORESEARCH    │         │
+│  │ 1m WS    │  │  SL 6% · TP 12%     │  │  every 50 trades │         │
+│  │ momentum │  │  trailing 5%         │  │  LLM → tweak     │         │
+│  │ BTC/ETH  │  │  circuit breaker 3L  │  │  → experiment    │         │
+│  │ SOL      │  │  max hold 8hr        │  │  → adopt/reject  │         │
+│  └──────────┘  └──────────────────────┘  └──────────────────┘         │
+└─────────────────────────────────────────────────────────────────────────┘
+
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                          API  LAYER                                     │
-│  78 endpoints · SIWE auth · rate limiting · security headers            │
-│  ┌──────────┐ ┌────────────┐ ┌───────────┐ ┌───────────┐ ┌──────────┐ │
-│  │   Feed   │ │  Trading   │ │  Agents   │ │ Editorial │ │ Editions │ │
-│  │ /api/fed │ │ /api/trad  │ │ /api/agen │ │ /api/edit │ │ /api/edi │ │
-│  └──────────┘ └────────────┘ └───────────┘ └───────────┘ └──────────┘ │
-└────────────────────────────┬────────────────────────────────────────────┘
-                             │
-        ┌────────────────────┼────────────────────┐
-        ▼                    ▼                    ▼
-┌──────────────┐  ┌──────────────────┐  ┌─────────────────┐
-│  AGENT HUB   │  │  TRADING ENGINE  │  │  PONDER INDEXER │
-│  Groq / LLM  │  │  HyperLiquid L1  │  │  PostgreSQL     │
-│  $0/day      │  │  Kelly + Circuit  │  │  GraphQL API    │
-└──────────────┘  └──────────────────┘  └─────────────────┘
-                             │
-        ┌────────────────────┼────────────────────┐
-        ▼                    ▼                    ▼
+│                       AGENT  SWARM  (9 agents)                          │
+│                                                                         │
+│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌──────────┐ ┌───────────┐ │
+│  │  Trader   │ │  Scalper  │ │ Newsroom  │ │Governanc │ │  Scanner  │ │
+│  │  90s cyc  │ │  1m WS    │ │  2hr cron │ │  5m poll │ │ on-demand │ │
+│  │  [LIVE]   │ │  [LIVE]   │ │  [LIVE]   │ │  [LIVE]  │ │ [STANDBY] │ │
+│  └─────┬─────┘ └─────┬─────┘ └─────┬─────┘ └────┬─────┘ └─────┬─────┘ │
+│        └──────────────┴─────────────┴────────────┴──────────────┘      │
+│                                 │                                       │
+│                    ┌────────────▼────────────┐                          │
+│                    │     COORDINATOR         │                          │
+│                    │  routes all bus events   │                          │
+│                    │  manages lifecycle       │                          │
+│                    └────────────┬────────────┘                          │
+│                                 │                                       │
+│         ┌───────────────────────┼───────────────────────┐              │
+│         ▼                       ▼                       ▼              │
+│  ┌──────────────┐  ┌──────────────────┐  ┌──────────────────┐         │
+│  │  Swarm Agent │  │  Pooter1 (ext)   │  │  NounIRL (ext)   │         │
+│  │  multi-agent │  │  Railway :3001   │  │  noun.wtf repo   │         │
+│  │  orchestrate │  │  editorial +     │  │  Nouns auction    │         │
+│  │  [LIVE]      │  │  Farcaster       │  │  settlement       │         │
+│  └──────────────┘  │  [LIVE]          │  │  [EXTERNAL]       │         │
+│                    └──────────────────┘  └──────────────────┘         │
+└─────────────────────────────────────────────────────────────────────────┘
+
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      SMART  CONTRACT  LAYER                             │
 │                                                                         │
 │  BASE L2 (8453)          ETHEREUM (1)         ARBITRUM           SOLANA │
 │  ┌──────────────┐       ┌──────────────┐     ┌──────────┐    ┌───────┐ │
 │  │ Registry     │       │ Prediction   │     │ Transit  │    │Anchor │ │
-│  │ Ratings      │       │ Market       │     │ Escrow   │    │Progra │ │
-│  │ Comments     │       │              │     │ Strategy │    │  m    │ │
-│  │ Tipping      │       │ Nouns Gov V4 │     │ Manager  │    │       │ │
-│  │ Leaderboard  │       │ (read-only)  │     │          │    │ 6 mod │ │
-│  │ AgentVault   │       └──────────────┘     └──────────┘    │ ules  │ │
-│  │ Editions     │                                            └───────┘ │
-│  │ Auctions     │       ┌──────────────┐                               │
-│  │ MO Token     │       │   ZK LAYER   │                               │
-│  │ Vault Rail   │       │ Circom 2.1.6 │                               │
-│  │ (6 contracts)│       │ Groth16 ─────┼──── BN254 shared curve ────── │
-│  └──────────────┘       └──────────────┘                               │
+│  │ Ratings      │       │ Market       │     │ Escrow   │    │6 mod  │ │
+│  │ Comments     │       │ Nouns Gov V4 │     │ Strategy │    │ules   │ │
+│  │ Tipping      │       └──────────────┘     │ Manager  │    └───────┘ │
+│  │ Leaderboard  │       ┌──────────────┐     └──────────┘              │
+│  │ AgentVault   │       │   ZK LAYER   │                               │
+│  │ Editions     │       │ Circom 2.1.6 │                               │
+│  │ MO Token     │       │ Groth16 ─────┼──── BN254 shared curve ────── │
+│  │ Vault Rail×6 │       └──────────────┘                               │
+│  └──────────────┘                                                       │
 └─────────────────────────────────────────────────────────────────────────┘
 `.trim()}</pre>
         </div>
