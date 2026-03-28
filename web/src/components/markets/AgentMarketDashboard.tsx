@@ -313,6 +313,21 @@ function formatPct(value: number | null | undefined): string {
   return `${pct >= 0 ? "+" : ""}${pct.toFixed(decimals)}%`;
 }
 
+function formatHoldDuration(openedAt: number, closedAt?: number): string {
+  if (!closedAt) return "--";
+  const ms = closedAt - openedAt;
+  if (ms < 0) return "--";
+  const totalSec = Math.floor(ms / 1000);
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
 function formatSignedPctBps(value: string): string {
   try {
     const bps = Number(value);
@@ -642,6 +657,7 @@ export function AgentMarketDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [closedPage, setClosedPage] = useState(0);
+  const [pnlTimeFilter, setPnlTimeFilter] = useState<"5m" | "15m" | "1h" | "4h" | "1d" | "7d" | "all">("all");
   const [expandedPositionId, setExpandedPositionId] = useState<string | null>(null);
   const [depositAmount, setDepositAmount] = useState("0.01");
   const [withdrawAmount, setWithdrawAmount] = useState("0.01");
@@ -791,6 +807,61 @@ export function AgentMarketDashboard() {
     }
     return base;
   }, [data, parallelRunners]);
+
+  // ── PnL time filter ──
+  const pnlCutoff = useMemo(() => {
+    if (pnlTimeFilter === "all") return 0;
+    const ms: Record<string, number> = {
+      "5m": 5 * 60e3, "15m": 15 * 60e3, "1h": 3600e3,
+      "4h": 4 * 3600e3, "1d": 86400e3, "7d": 7 * 86400e3,
+    };
+    return Date.now() - (ms[pnlTimeFilter] ?? 0);
+  }, [pnlTimeFilter]);
+
+  const filteredOpen = useMemo(
+    () => (pnlCutoff === 0 ? allOpen : allOpen.filter((r) => r.position.openedAt >= pnlCutoff)),
+    [allOpen, pnlCutoff],
+  );
+
+  const filteredClosed = useMemo(
+    () => (pnlCutoff === 0 ? allClosed : allClosed.filter((r) => (r.position.closedAt ?? 0) >= pnlCutoff)),
+    [allClosed, pnlCutoff],
+  );
+
+  const filteredTotals = useMemo((): PerformanceTotals | undefined => {
+    if (!combinedTotals) return undefined;
+    if (pnlCutoff === 0) return combinedTotals;
+
+    let unrealizedPnlUsd = 0;
+    let realizedPnlUsd = 0;
+    let estimatedTradingFeesUsd = 0;
+
+    for (const r of filteredOpen) {
+      unrealizedPnlUsd += r.unrealizedPnlUsd ?? 0;
+      estimatedTradingFeesUsd += r.estimatedFeesUsd ?? 0;
+    }
+    for (const r of filteredClosed) {
+      realizedPnlUsd += r.realizedPnlUsd ?? 0;
+      estimatedTradingFeesUsd += r.estimatedFeesUsd ?? 0;
+    }
+
+    const grossPnlUsd = realizedPnlUsd + unrealizedPnlUsd;
+    const feeBps = data?.performanceFeeBps ?? 500;
+    const performanceFeeUsd = realizedPnlUsd > 0 ? (realizedPnlUsd * feeBps) / 10_000 : 0;
+    const netPnlAfterFeeUsd = grossPnlUsd - performanceFeeUsd;
+
+    return {
+      ...combinedTotals,
+      openPositions: filteredOpen.length,
+      closedPositions: filteredClosed.length,
+      unrealizedPnlUsd,
+      realizedPnlUsd,
+      grossPnlUsd,
+      estimatedTradingFeesUsd,
+      performanceFeeUsd,
+      netPnlAfterFeeUsd,
+    };
+  }, [combinedTotals, filteredOpen, filteredClosed, pnlCutoff, data?.performanceFeeBps]);
 
   // Active venue labels for display
   const activeVenues = useMemo(() => {
@@ -1352,35 +1423,53 @@ export function AgentMarketDashboard() {
         </div>
       </section>
 
+      {/* PnL time filter */}
+      <div className="flex items-center gap-1">
+        <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)] mr-2">PnL Window</span>
+        {(["5m", "15m", "1h", "4h", "1d", "7d", "all"] as const).map((f) => (
+          <button
+            key={f}
+            onClick={() => { setPnlTimeFilter(f); setClosedPage(0); }}
+            className={`px-1.5 py-0.5 font-mono text-[9px] ${
+              pnlTimeFilter === f
+                ? "text-[var(--ink)] font-bold underline underline-offset-2"
+                : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+            }`}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <MetricCard
           label="Open PnL"
-          value={formatUsd(combinedTotals?.unrealizedPnlUsd ?? 0)}
-          valueClass={pnlClass(combinedTotals?.unrealizedPnlUsd ?? 0)}
+          value={formatUsd(filteredTotals?.unrealizedPnlUsd ?? 0)}
+          valueClass={pnlClass(filteredTotals?.unrealizedPnlUsd ?? 0)}
         />
         <MetricCard
           label="Realized PnL"
-          value={formatUsd(combinedTotals?.realizedPnlUsd ?? 0)}
-          valueClass={pnlClass(combinedTotals?.realizedPnlUsd ?? 0)}
+          value={formatUsd(filteredTotals?.realizedPnlUsd ?? 0)}
+          valueClass={pnlClass(filteredTotals?.realizedPnlUsd ?? 0)}
         />
         <MetricCard
           label="Gross PnL"
-          value={formatUsd(combinedTotals?.grossPnlUsd ?? 0)}
-          valueClass={pnlClass(combinedTotals?.grossPnlUsd ?? 0)}
+          value={formatUsd(filteredTotals?.grossPnlUsd ?? 0)}
+          valueClass={pnlClass(filteredTotals?.grossPnlUsd ?? 0)}
         />
         <MetricCard
           label="Exch Fees (est)"
-          value={`-${formatUsd(combinedTotals?.estimatedTradingFeesUsd ?? 0)}`}
+          value={`-${formatUsd(filteredTotals?.estimatedTradingFeesUsd ?? 0)}`}
           valueClass="text-[var(--accent-red)]"
         />
         <MetricCard
           label={`Perf Fee (${feePct.toFixed(1)}%)`}
-          value={formatUsd(combinedTotals?.performanceFeeUsd ?? 0)}
+          value={formatUsd(filteredTotals?.performanceFeeUsd ?? 0)}
         />
         <MetricCard
           label="Net PnL"
-          value={formatUsd(combinedTotals?.netPnlAfterFeeUsd ?? 0)}
-          valueClass={pnlClass(combinedTotals?.netPnlAfterFeeUsd ?? 0)}
+          value={formatUsd(filteredTotals?.netPnlAfterFeeUsd ?? 0)}
+          valueClass={pnlClass(filteredTotals?.netPnlAfterFeeUsd ?? 0)}
         />
       </section>
 
@@ -1783,13 +1872,13 @@ export function AgentMarketDashboard() {
 
       <section className="border border-[var(--rule-light)] p-4">
         <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-          Open Positions ({combinedTotals?.openPositions ?? 0})
+          Open Positions ({filteredTotals?.openPositions ?? 0})
         </h2>
         {!hasFullMarketAccess ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
             Detailed open-position telemetry unlocks for verified 100k MO holders.
           </p>
-        ) : allOpen.length === 0 ? (
+        ) : filteredOpen.length === 0 ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
             No open positions.
           </p>
@@ -1810,7 +1899,7 @@ export function AgentMarketDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {allOpen.map((row) => {
+                {filteredOpen.map((row) => {
                   const isExpanded = expandedPositionId === row.position.id;
                   return (
                     <Fragment key={row.position.id}>
@@ -1866,13 +1955,13 @@ export function AgentMarketDashboard() {
 
       <section className="border border-[var(--rule-light)] p-4">
         <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-          Closed Positions ({combinedTotals?.closedPositions ?? 0})
+          Closed Positions ({filteredTotals?.closedPositions ?? 0})
         </h2>
         {!hasFullMarketAccess ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
             Detailed trade history unlocks for verified 100k MO holders.
           </p>
-        ) : allClosed.length === 0 ? (
+        ) : filteredClosed.length === 0 ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
             No closed positions yet.
           </p>
@@ -1890,11 +1979,12 @@ export function AgentMarketDashboard() {
                   <th className="py-2 pr-3">Exit</th>
                   <th className="py-2 pr-3">Fees (est)</th>
                   <th className="py-2 pr-3">Realized</th>
+                  <th className="py-2 pr-3">Held</th>
                   <th className="py-2 pr-0">Closed</th>
                 </tr>
               </thead>
               <tbody>
-                {allClosed.slice(closedPage * CLOSED_PAGE_SIZE, (closedPage + 1) * CLOSED_PAGE_SIZE).map((row) => {
+                {filteredClosed.slice(closedPage * CLOSED_PAGE_SIZE, (closedPage + 1) * CLOSED_PAGE_SIZE).map((row) => {
                   const isExpanded = expandedPositionId === row.position.id;
                   return (
                     <Fragment key={row.position.id}>
@@ -1935,6 +2025,9 @@ export function AgentMarketDashboard() {
                           {formatUsd(row.realizedPnlUsd)} (
                           {formatPct(row.realizedPnlPct)})
                         </td>
+                        <td className="py-2 pr-3 font-mono text-[10px] text-[var(--ink-faint)]">
+                          {formatHoldDuration(row.position.openedAt, row.position.closedAt)}
+                        </td>
                         <td className="py-2 pr-0 font-mono text-[10px] text-[var(--ink-faint)]">
                           {row.position.closedAt
                             ? new Date(row.position.closedAt).toLocaleString()
@@ -1942,18 +2035,18 @@ export function AgentMarketDashboard() {
                         </td>
                       </tr>
                       {isExpanded && (
-                        <tr><td colSpan={10} className="p-0"><RationalePanel position={row.position} /></td></tr>
+                        <tr><td colSpan={11} className="p-0"><RationalePanel position={row.position} /></td></tr>
                       )}
                     </Fragment>
                   );
                 })}
               </tbody>
             </table>
-            {allClosed.length > CLOSED_PAGE_SIZE && (
+            {filteredClosed.length > CLOSED_PAGE_SIZE && (
               <div className="mt-3 flex items-center justify-between font-mono text-[9px] text-[var(--ink-faint)]">
                 <span>
-                  Page {closedPage + 1} of {Math.ceil(allClosed.length / CLOSED_PAGE_SIZE)}
-                  {" "}({allClosed.length} total)
+                  Page {closedPage + 1} of {Math.ceil(filteredClosed.length / CLOSED_PAGE_SIZE)}
+                  {" "}({filteredClosed.length} total)
                 </span>
                 <div className="flex gap-2">
                   <button
@@ -1964,8 +2057,8 @@ export function AgentMarketDashboard() {
                     ← Prev
                   </button>
                   <button
-                    onClick={() => setClosedPage((p) => Math.min(Math.ceil(allClosed.length / CLOSED_PAGE_SIZE) - 1, p + 1))}
-                    disabled={(closedPage + 1) * CLOSED_PAGE_SIZE >= allClosed.length}
+                    onClick={() => setClosedPage((p) => Math.min(Math.ceil(filteredClosed.length / CLOSED_PAGE_SIZE) - 1, p + 1))}
+                    disabled={(closedPage + 1) * CLOSED_PAGE_SIZE >= filteredClosed.length}
                     className="border border-[var(--rule)] px-2 py-0.5 uppercase tracking-wider hover:bg-[var(--bg-alt)] disabled:opacity-30"
                   >
                     Next →
