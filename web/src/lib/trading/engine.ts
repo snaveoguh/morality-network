@@ -26,6 +26,8 @@ import { fetchTechnicalSignal } from "./technical";
 import { detectPatterns } from "./pattern-detector";
 import { computeCompositeSignal, type CompositeSignal } from "./composite-signal";
 import { fetchMarketDataSignals } from "./market-signals";
+import { fetchWalletFlowSignal } from "./wallet-flow";
+import { runAutoresearchCycle, getExperimentOverrideWeights } from "./autoresearch";
 import { fetchCouncilSignal } from "./council-signal";
 import {
   computeVaultSettlementPlan,
@@ -166,6 +168,15 @@ class TraderEngine {
     }
 
     await this.evaluateOpenPositions(report, marketSignals);
+
+    // Autoresearch: trigger self-improvement cycle if enough trades have closed
+    if (report.exits.length > 0) {
+      try {
+        await runAutoresearchCycle(this.store.getAll(), this.config.risk);
+      } catch (err) {
+        console.warn("[trader] autoresearch cycle failed:", err instanceof Error ? err.message : err);
+      }
+    }
 
     let candidates: ScannerLaunch[] = [];
     if (isSpotVenue(this.config.executionVenue)) {
@@ -1312,28 +1323,41 @@ class TraderEngine {
         }
       }
 
-      // 2b. Market data signals (fear/greed + funding + OI — parallel with pattern)
+      // 2b. Market data signals + wallet flow (parallel with pattern)
       let marketDataBundle = null;
+      let walletFlowSignal = null;
       try {
-        marketDataBundle = await fetchMarketDataSignals(this.config, symbol);
+        const [mktData, wfSignal] = await Promise.all([
+          fetchMarketDataSignals(this.config, symbol),
+          fetchWalletFlowSignal(this.config, symbol).catch((err) => {
+            console.warn(`[trader] wallet flow signal failed for ${symbol}:`, err instanceof Error ? err.message : err);
+            return null;
+          }),
+        ]);
+        marketDataBundle = mktData;
+        walletFlowSignal = wfSignal;
       } catch (err) {
         console.warn(`[trader] market data signals failed for ${symbol}:`, err instanceof Error ? err.message : err);
       }
 
-      // 3. Composite signal
+      // 3. Composite signal (with experiment override weights if active)
+      const experimentWeights = await getExperimentOverrideWeights().catch(() => undefined);
       const composite = computeCompositeSignal({
         symbol,
         technical: technicalSignal,
         pattern: patternResult,
         newsSignal,
         marketData: marketDataBundle,
+        walletFlow: walletFlowSignal,
         minConfidence: this.config.risk.minSignalConfidence,
+        overrideWeights: experimentWeights,
       });
 
       const mktDir = composite.components.marketData?.direction ?? "n/a";
+      const wfDir = composite.components.walletFlow?.direction ?? "n/a";
       console.log(
         `[trader] composite ${symbol}: ${composite.direction} conf=${composite.confidence.toFixed(2)} agreement=${composite.agreementMet} | ` +
-        `tech=${technicalSignal?.direction ?? "n/a"} pat=${patternResult?.overallDirection ?? "n/a"} news=${newsSignal?.direction ?? "n/a"} mkt=${mktDir}`,
+        `tech=${technicalSignal?.direction ?? "n/a"} pat=${patternResult?.overallDirection ?? "n/a"} news=${newsSignal?.direction ?? "n/a"} mkt=${mktDir} wf=${wfDir}`,
       );
 
       if (composite.direction === "neutral") {
@@ -1494,6 +1518,9 @@ class TraderEngine {
       technicalStrength: composite.components.technical?.strength,
       patternDirection: composite.components.pattern?.direction,
       patternNames: composite.components.pattern?.patterns,
+      walletFlowDirection: composite.components.walletFlow?.direction,
+      walletFlowStrength: composite.components.walletFlow?.strength,
+      whaleNetExposure: composite.components.walletFlow?.whaleNetExposure,
       agreementMet: composite.agreementMet,
     };
 
@@ -1569,6 +1596,9 @@ class TraderEngine {
         technicalStrength: composite.components.technical?.strength,
         patternDirection: composite.components.pattern?.direction,
         patternNames: composite.components.pattern?.patterns,
+        walletFlowDirection: composite.components.walletFlow?.direction,
+        walletFlowStrength: composite.components.walletFlow?.strength,
+        whaleNetExposure: composite.components.walletFlow?.whaleNetExposure,
         agreementMet: composite.agreementMet,
       },
     };

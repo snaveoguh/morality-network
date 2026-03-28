@@ -12,6 +12,7 @@ import type { TechnicalSignal } from "./technical";
 import type { PatternDetectionResult } from "./pattern-detector";
 import type { AggregatedMarketSignal } from "./signals";
 import type { MarketDataBundle } from "./market-signals";
+import type { WalletFlowSignal } from "./wallet-flow";
 import type { SignalWeights } from "./types";
 
 /* ═══════════════════════════  Types  ═══════════════════════════ */
@@ -47,8 +48,17 @@ export interface CompositeSignal {
       weight: number;
       sources: string[];
     } | null;
+    walletFlow: {
+      direction: "long" | "short" | "neutral";
+      strength: number;
+      confidence: number;
+      weight: number;
+      whaleNetExposure: number;
+      whalesLong: number;
+      whalesShort: number;
+    } | null;
   };
-  /** 2-of-3 agreement check passed (now 2-of-4 with market data) */
+  /** 2-of-5 agreement check (technical, pattern, news, market data, wallet flow) */
   agreementMet: boolean;
   reasons: string[];
 }
@@ -56,16 +66,18 @@ export interface CompositeSignal {
 /* ═══════════════════  Default Weights  ═══════════════════ */
 
 function getWeights(): Required<SignalWeights> {
-  const t = parseFloat(process.env.SIGNAL_WEIGHT_TECHNICAL || "0.35");
-  const p = parseFloat(process.env.SIGNAL_WEIGHT_PATTERN || "0.25");
-  const n = parseFloat(process.env.SIGNAL_WEIGHT_NEWS || "0.25");
-  const m = parseFloat(process.env.SIGNAL_WEIGHT_MARKET_DATA || "0.15");
-  const total = t + p + n + m;
+  const t = parseFloat(process.env.SIGNAL_WEIGHT_TECHNICAL || "0.30");
+  const p = parseFloat(process.env.SIGNAL_WEIGHT_PATTERN || "0.22");
+  const n = parseFloat(process.env.SIGNAL_WEIGHT_NEWS || "0.22");
+  const m = parseFloat(process.env.SIGNAL_WEIGHT_MARKET_DATA || "0.16");
+  const w = parseFloat(process.env.SIGNAL_WEIGHT_WALLET_FLOW || "0.10");
+  const total = t + p + n + m + w;
   return {
     technical: t / total,
     pattern: p / total,
     news: n / total,
     marketData: m / total,
+    walletFlow: w / total,
   };
 }
 
@@ -91,12 +103,15 @@ export function computeCompositeSignal(args: {
   pattern: PatternDetectionResult | null;
   newsSignal: AggregatedMarketSignal | null;
   marketData?: MarketDataBundle | null;
+  walletFlow?: WalletFlowSignal | null;
   minConfidence: number;
   /** Override weights from self-learning module */
   overrideWeights?: SignalWeights;
 }): CompositeSignal {
-  const { symbol, technical, pattern, newsSignal, marketData, minConfidence, overrideWeights } = args;
-  const baseWeights = overrideWeights ? { ...overrideWeights, marketData: overrideWeights.marketData ?? 0.15 } : getWeights();
+  const { symbol, technical, pattern, newsSignal, marketData, walletFlow, minConfidence, overrideWeights } = args;
+  const baseWeights = overrideWeights
+    ? { ...overrideWeights, marketData: overrideWeights.marketData ?? 0.16, walletFlow: overrideWeights.walletFlow ?? 0.10 }
+    : getWeights();
 
   // Combine market data sub-signals into a single direction + strength
   const marketDataCombined = combineMarketData(marketData ?? null);
@@ -106,19 +121,22 @@ export function computeCompositeSignal(args: {
   const hasPattern = pattern !== null && pattern.overallDirection !== "neutral";
   const hasNews = newsSignal !== null;
   const hasMarketData = marketDataCombined !== null && marketDataCombined.direction !== "neutral";
+  const hasWalletFlow = walletFlow !== null && walletFlow !== undefined && walletFlow.direction !== "neutral";
 
   // Redistribute weights if sources are missing
   let wTech = hasTechnical ? baseWeights.technical : 0;
   let wPat = hasPattern ? baseWeights.pattern : 0;
   let wNews = hasNews ? baseWeights.news : 0;
   let wMkt = hasMarketData ? baseWeights.marketData : 0;
-  const totalWeight = wTech + wPat + wNews + wMkt;
+  let wWf = hasWalletFlow ? (baseWeights.walletFlow ?? 0.10) : 0;
+  const totalWeight = wTech + wPat + wNews + wMkt + wWf;
 
   if (totalWeight > 0) {
     wTech /= totalWeight;
     wPat /= totalWeight;
     wNews /= totalWeight;
     wMkt /= totalWeight;
+    wWf /= totalWeight;
   }
 
   // Compute weighted directional score (-1 to +1)
@@ -157,6 +175,13 @@ export function computeCompositeSignal(args: {
     reasons.push(...marketDataCombined.reasons);
   }
 
+  if (hasWalletFlow && walletFlow) {
+    const wfScore = directionScore(walletFlow.direction) * walletFlow.strength;
+    weightedScore += wfScore * wWf;
+    weightedConfidence += walletFlow.confidence * wWf;
+    reasons.push(...walletFlow.reasons);
+  }
+
   // Determine direction from weighted score
   let direction: Direction = "neutral";
   if (weightedScore > 0.05) direction = "long";
@@ -171,6 +196,7 @@ export function computeCompositeSignal(args: {
   if (hasPattern && pattern) directions.push(pattern.overallDirection);
   if (hasNews && newsSignal) directions.push(newsToDirection(newsSignal.direction));
   if (hasMarketData && marketDataCombined) directions.push(marketDataCombined.direction);
+  if (hasWalletFlow && walletFlow) directions.push(walletFlow.direction);
 
   const longVotes = directions.filter((d) => d === "long").length;
   const shortVotes = directions.filter((d) => d === "short").length;
@@ -208,6 +234,9 @@ export function computeCompositeSignal(args: {
         : null,
       marketData: hasMarketData && marketDataCombined
         ? { direction: marketDataCombined.direction, strength: marketDataCombined.strength, confidence: marketDataCombined.confidence, weight: wMkt, sources: marketDataCombined.sources }
+        : null,
+      walletFlow: hasWalletFlow && walletFlow
+        ? { direction: walletFlow.direction, strength: walletFlow.strength, confidence: walletFlow.confidence, weight: wWf, whaleNetExposure: walletFlow.whaleNetExposure, whalesLong: walletFlow.whalesLong, whalesShort: walletFlow.whalesShort }
         : null,
     },
     agreementMet,

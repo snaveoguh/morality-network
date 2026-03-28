@@ -15,6 +15,7 @@ import "@/lib/agents/swarm";
 import "@/lib/agents/coordinator";
 import "@/lib/agents/trader";
 import "@/lib/agents/scalper";
+import "@/lib/agents/governance";
 
 export const dynamic = "force-dynamic";
 
