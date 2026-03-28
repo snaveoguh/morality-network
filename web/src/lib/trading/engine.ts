@@ -1483,7 +1483,8 @@ class TraderEngine {
       `composite=${composite.confidence.toFixed(2)} kelly=${kelly.fraction.toFixed(3)} (${kelly.phase})`,
     );
 
-    const orderLeverage = kelly.leverage > 1 ? kelly.leverage : this.config.hyperliquid.defaultLeverage;
+    const rawLeverage = kelly.leverage > 1 ? kelly.leverage : this.config.hyperliquid.defaultLeverage;
+    const orderLeverage = Math.min(rawLeverage, this.config.risk.maxLeverage);
 
     const quoteTokenAddress = this.config.quoteTokens.USDC ?? candidate.tokenAddress;
     const quoteDecimals = this.config.quoteTokenDecimals.USDC ?? 6;
