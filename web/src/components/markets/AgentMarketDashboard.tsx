@@ -2132,7 +2132,192 @@ export function AgentMarketDashboard() {
           } satisfies TerminalTradingContext}
         />
       </section>
+
+      {/* Strategy Config shell — visual preview, not wired to auto-execution */}
+      <StrategyConfigShell />
     </div>
+  );
+}
+
+// ============================================================================
+// STRATEGY CONFIG SHELL — "coming soon" strategy configuration panel
+// ============================================================================
+
+const STRATEGY_STORAGE_KEY = "pooter:user-strategy";
+
+interface UserStrategy {
+  stopLossPct: number;
+  takeProfitPct: number;
+  maxLeverage: number;
+  markets: string[];
+  autoTrade: boolean;
+}
+
+const DEFAULT_STRATEGY: UserStrategy = {
+  stopLossPct: 12,
+  takeProfitPct: 30,
+  maxLeverage: 40,
+  markets: ["BTC", "ETH", "SOL"],
+  autoTrade: false,
+};
+
+const AVAILABLE_MARKETS = [
+  "BTC", "ETH", "SOL", "HYPE", "XRP", "SUI", "DOGE", "LINK",
+  "AVAX", "BNB", "PAXG", "TAO", "ZEC", "FET", "TRUMP", "BCH",
+  "WLD", "AAVE", "OP", "ARB",
+];
+
+function StrategyConfigShell() {
+  const [expanded, setExpanded] = useState(false);
+  const [strategy, setStrategy] = useState<UserStrategy>(DEFAULT_STRATEGY);
+  const [showComingSoon, setShowComingSoon] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STRATEGY_STORAGE_KEY);
+      if (raw) setStrategy(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  function updateStrategy(partial: Partial<UserStrategy>) {
+    const next = { ...strategy, ...partial };
+    setStrategy(next);
+    try {
+      localStorage.setItem(STRATEGY_STORAGE_KEY, JSON.stringify(next));
+    } catch {}
+  }
+
+  function toggleMarket(market: string) {
+    const markets = strategy.markets.includes(market)
+      ? strategy.markets.filter((m) => m !== market)
+      : [...strategy.markets, market];
+    updateStrategy({ markets });
+  }
+
+  return (
+    <section className="space-y-2">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center justify-between"
+      >
+        <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+          Strategy Config
+        </h2>
+        <span className="font-mono text-[10px] text-[var(--ink-faint)]">
+          {expanded ? "▾" : "▸"}
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="border border-[var(--rule-light)] p-4 space-y-4">
+          <p className="font-mono text-[9px] text-[var(--ink-faint)]">
+            Configure your personal trading strategy. Connect a Bankr API key in the terminal to trade.
+            Auto-execution coming soon — for now, use the terminal to manually execute trades.
+          </p>
+
+          {/* Stop Loss */}
+          <div className="flex items-center justify-between">
+            <label className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--ink)]">
+              Stop Loss %
+            </label>
+            <input
+              type="number"
+              value={strategy.stopLossPct}
+              onChange={(e) => updateStrategy({ stopLossPct: Number(e.target.value) })}
+              min={1}
+              max={50}
+              className="w-20 border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-1 text-right font-mono text-[11px] text-[var(--ink)] outline-none focus:border-[var(--rule)]"
+            />
+          </div>
+
+          {/* Take Profit */}
+          <div className="flex items-center justify-between">
+            <label className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--ink)]">
+              Take Profit %
+            </label>
+            <input
+              type="number"
+              value={strategy.takeProfitPct}
+              onChange={(e) => updateStrategy({ takeProfitPct: Number(e.target.value) })}
+              min={1}
+              max={200}
+              className="w-20 border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-1 text-right font-mono text-[11px] text-[var(--ink)] outline-none focus:border-[var(--rule)]"
+            />
+          </div>
+
+          {/* Max Leverage */}
+          <div className="flex items-center justify-between">
+            <label className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--ink)]">
+              Max Leverage
+            </label>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                value={strategy.maxLeverage}
+                onChange={(e) => updateStrategy({ maxLeverage: Number(e.target.value) })}
+                min={1}
+                max={50}
+                className="w-20 border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-1 text-right font-mono text-[11px] text-[var(--ink)] outline-none focus:border-[var(--rule)]"
+              />
+              <span className="font-mono text-[10px] text-[var(--ink-faint)]">x</span>
+            </div>
+          </div>
+
+          {/* Markets */}
+          <div>
+            <label className="mb-2 block font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--ink)]">
+              Markets
+            </label>
+            <div className="flex flex-wrap gap-1">
+              {AVAILABLE_MARKETS.map((market) => (
+                <button
+                  key={market}
+                  onClick={() => toggleMarket(market)}
+                  className={`border px-2 py-1 font-mono text-[8px] uppercase tracking-[0.1em] ${
+                    strategy.markets.includes(market)
+                      ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
+                      : "border-[var(--rule-light)] text-[var(--ink-faint)] hover:border-[var(--rule)]"
+                  }`}
+                >
+                  {market}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Auto-Trade Toggle — Coming Soon */}
+          <div className="relative flex items-center justify-between border-t border-[var(--rule-light)] pt-4">
+            <div>
+              <label className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--ink)]">
+                Auto-Execute Signals
+              </label>
+              <p className="font-mono text-[8px] text-[var(--ink-faint)]">
+                Route platform signals to your Bankr wallet automatically
+              </p>
+            </div>
+            <button
+              onClick={() => setShowComingSoon(true)}
+              onMouseLeave={() => setShowComingSoon(false)}
+              className="relative border border-[var(--rule-light)] px-3 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-faint)] opacity-60 cursor-not-allowed"
+            >
+              Off
+              {showComingSoon && (
+                <span className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[var(--rule)] bg-[var(--paper)] px-2 py-1 font-mono text-[8px] text-[var(--ink)]">
+                  Coming Soon
+                </span>
+              )}
+            </button>
+          </div>
+
+          <p className="font-mono text-[8px] text-[var(--ink-faint)]">
+            Settings saved locally. When auto-execution launches, these parameters will define
+            your personal strategy — including stop loss, take profit, leverage caps, and which
+            markets to trade. The platform&apos;s signal engine will generate entries and exits
+            routed through your connected Bankr wallet.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
 

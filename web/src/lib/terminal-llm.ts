@@ -73,6 +73,15 @@ When the user wants to take action, include the exact tag in your response:
 - Deposit ETH: [FUND 0.05]
 - Withdraw ETH: [WITHDRAW 0.05]${!ctx.canWithdraw ? " (vault-only, currently disabled)" : ""}
 - Show status: [STATUS]
+- Suggest a trade: [TRADE open 40x long BTC worth $50 on hyperliquid]
+
+TRADE EXECUTION (via Bankr Agent API):
+Users who have connected their Bankr API key can execute trades directly from this terminal.
+When the user asks about trading, suggests a position, or asks "what should I trade?" — you can suggest a trade using the [TRADE] tag.
+The user will see a confirmation card and must approve before any trade executes. Their Bankr wallet is separate from the platform's trading bot.
+Only suggest trades when the user explicitly asks to trade or asks for trade ideas.
+Never auto-trade. Always let the user confirm via the confirmation card.
+Keep trade suggestions specific: include direction (long/short), asset, leverage, and size where possible.
 
 RULES:
 - Be specific about numbers. Reference actual positions, prices, PnL from CURRENT STATE.

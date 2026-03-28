@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TerminalTradingContext } from "@/lib/terminal-types";
 
-type TerminalRole = "assistant" | "user" | "system" | "risk";
+type TerminalRole = "assistant" | "user" | "system" | "risk" | "trade";
 
 interface TerminalMessage {
   id: string;
@@ -182,6 +182,104 @@ function parseActionTags(text: string): Array<{ action: string; amount?: string 
 }
 
 // ============================================================================
+// TRADE INTENT DETECTION — detect trade commands from user input or LLM tags
+// ============================================================================
+
+const TRADE_PATTERNS = [
+  /^(long|short)\s+(\w+)\s*(\d+x)?\s*\$?(\d+\.?\d*)?/i,
+  /^(buy|sell)\s+\$?(\d+\.?\d*)?\s*(?:of\s+)?(\w+)\s*(\d+x)?/i,
+  /^(open|close)\s+(?:a\s+)?(\d+x\s+)?(long|short)\s+(?:on\s+)?(\w+)\s*(?:worth\s+\$?(\d+\.?\d*))?/i,
+];
+
+const TRADE_TAG_RE = /\[TRADE\s+(.+?)\]/gi;
+
+interface ParsedTradeIntent {
+  raw: string;
+  direction?: "long" | "short";
+  asset?: string;
+  leverage?: string;
+  amount?: string;
+}
+
+function parseTradeIntent(text: string): ParsedTradeIntent | null {
+  const lower = text.trim().toLowerCase();
+
+  // Pattern 1: "long BTC 40x $50" or "short ETH 10x"
+  let match = lower.match(/^(long|short)\s+(\w+)\s*(\d+x)?\s*\$?(\d+\.?\d*)?/i);
+  if (match) {
+    return {
+      raw: text.trim(),
+      direction: match[1] as "long" | "short",
+      asset: match[2].toUpperCase(),
+      leverage: match[3],
+      amount: match[4],
+    };
+  }
+
+  // Pattern 2: "open a 40x long on BTC worth $50"
+  match = lower.match(/^open\s+(?:a\s+)?(\d+x\s+)?(long|short)\s+(?:on\s+)?(\w+)\s*(?:worth\s+\$?(\d+\.?\d*))?/i);
+  if (match) {
+    return {
+      raw: text.trim(),
+      direction: match[2] as "long" | "short",
+      asset: match[3].toUpperCase(),
+      leverage: match[1]?.trim(),
+      amount: match[4],
+    };
+  }
+
+  // Pattern 3: "close BTC" or "close my BTC position"
+  match = lower.match(/^close\s+(?:my\s+)?(\w+)\s*(?:position)?/i);
+  if (match) {
+    return {
+      raw: text.trim(),
+      asset: match[1].toUpperCase(),
+    };
+  }
+
+  return null;
+}
+
+function parseTradeTagsFromResponse(text: string): string[] {
+  const trades: string[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = TRADE_TAG_RE.exec(text)) !== null) {
+    trades.push(match[1]);
+  }
+  TRADE_TAG_RE.lastIndex = 0;
+  return trades;
+}
+
+// ============================================================================
+// BANKR API KEY STORAGE — localStorage, never server-persisted
+// ============================================================================
+
+const BANKR_KEY_STORAGE = "pooter:bankr-api-key";
+
+function loadBankrKey(): string {
+  try {
+    return localStorage.getItem(BANKR_KEY_STORAGE) || "";
+  } catch {
+    return "";
+  }
+}
+
+function saveBankrKey(key: string) {
+  try {
+    if (key) {
+      localStorage.setItem(BANKR_KEY_STORAGE, key);
+    } else {
+      localStorage.removeItem(BANKR_KEY_STORAGE);
+    }
+  } catch {}
+}
+
+function maskKey(key: string): string {
+  if (key.length <= 8) return "***";
+  return `${key.slice(0, 6)}...${key.slice(-4)}`;
+}
+
+// ============================================================================
 // COMPONENT
 // ============================================================================
 
@@ -218,6 +316,14 @@ export function AgentBotTerminal({
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  // ── Bankr connection state ──
+  const [bankrKey, setBankrKey] = useState<string>("");
+  const [showBankrInput, setShowBankrInput] = useState(false);
+  const [bankrKeyDraft, setBankrKeyDraft] = useState("");
+  const [pendingTrade, setPendingTrade] = useState<ParsedTradeIntent | null>(null);
+  const [tradeExecuting, setTradeExecuting] = useState(false);
+  const bankrConnected = bankrKey.length > 10;
+
   useEffect(() => {
     const loaded = loadState(fundingSummary);
     setSessions(loaded.sessions);
@@ -226,6 +332,7 @@ export function AgentBotTerminal({
       if (loaded.usage.monthKey === monthKeyNow()) return loaded.usage;
       return { monthKey: monthKeyNow(), used: 0 };
     });
+    setBankrKey(loadBankrKey());
   }, [fundingSummary]);
 
   useEffect(() => {
@@ -508,6 +615,16 @@ export function AgentBotTerminal({
           }
         }
       }
+
+      // Check for TRADE tags from LLM response
+      const tradeTags = parseTradeTagsFromResponse(bankrText);
+      if (tradeTags.length > 0 && bankrConnected) {
+        // Show confirmation for the first trade suggestion
+        const tradeIntent = parseTradeIntent(tradeTags[0]);
+        if (tradeIntent) {
+          setPendingTrade(tradeIntent);
+        }
+      }
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       const msg = err instanceof Error ? err.message : "LLM request failed";
@@ -523,6 +640,124 @@ export function AgentBotTerminal({
       setStreamingRiskId(null);
       abortRef.current = null;
     }
+  }
+
+  // ========================================================================
+  // BANKR TRADE EXECUTION — submit trade via Bankr Agent API
+  // ========================================================================
+
+  async function executeBankrTrade(prompt: string) {
+    if (!bankrKey) {
+      appendMessage("system", "Connect your Bankr API key to trade. Click 'Connect Bankr' above.");
+      return;
+    }
+
+    setTradeExecuting(true);
+    const tradeMsgId = appendMessage("trade", `⏳ Submitting to Bankr: "${prompt}"`);
+
+    try {
+      const res = await fetch("/api/terminal/trade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bankrApiKey: bankrKey,
+          prompt,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Trade request failed" }));
+        updateMessageText(tradeMsgId, `✗ ${(err as { error?: string }).error || "Trade failed"}`);
+        return;
+      }
+
+      // Consume SSE stream for trade updates
+      const reader = res.body?.getReader();
+      if (!reader) {
+        updateMessageText(tradeMsgId, "✗ No response from trade endpoint");
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let finalStatus = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith("data: ")) continue;
+
+          try {
+            const data = JSON.parse(trimmed.slice(6)) as {
+              status: string;
+              message?: string;
+              response?: string;
+              error?: string;
+              jobId?: string;
+              done?: boolean;
+            };
+
+            if (data.status === "completed") {
+              finalStatus = `✓ ${data.response || data.message || "Trade completed"}`;
+              updateMessageText(tradeMsgId, finalStatus);
+            } else if (data.status === "failed") {
+              finalStatus = `✗ ${data.error || data.message || "Trade failed"}`;
+              updateMessageText(tradeMsgId, finalStatus);
+            } else if (data.status === "cancelled") {
+              finalStatus = `⊘ Trade cancelled`;
+              updateMessageText(tradeMsgId, finalStatus);
+            } else {
+              // Processing update
+              updateMessageText(tradeMsgId, `⏳ ${data.message || `${data.status}...`}`);
+            }
+          } catch {
+            // skip malformed
+          }
+        }
+      }
+
+      if (!finalStatus) {
+        updateMessageText(tradeMsgId, "✗ Trade timed out — check Bankr for status");
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Trade execution failed";
+      updateMessageText(tradeMsgId, `✗ ${msg}`);
+    } finally {
+      setTradeExecuting(false);
+      setPendingTrade(null);
+    }
+  }
+
+  function handleConfirmTrade() {
+    if (!pendingTrade) return;
+    // Build a natural language prompt for Bankr
+    const parts = [];
+    if (pendingTrade.direction) {
+      parts.push(`open a`);
+      if (pendingTrade.leverage) parts.push(pendingTrade.leverage);
+      parts.push(pendingTrade.direction);
+      if (pendingTrade.asset) parts.push(`on ${pendingTrade.asset}`);
+      if (pendingTrade.amount) parts.push(`worth $${pendingTrade.amount}`);
+      parts.push(`on hyperliquid`);
+    } else {
+      // Close command
+      parts.push(pendingTrade.raw);
+    }
+    const prompt = parts.join(" ");
+    setPendingTrade(null);
+    void executeBankrTrade(prompt);
+  }
+
+  function handleCancelTrade() {
+    setPendingTrade(null);
+    appendMessage("system", "Trade cancelled.");
   }
 
   // ========================================================================
@@ -628,6 +863,19 @@ export function AgentBotTerminal({
         return;
       }
 
+      // Check for trade intent (if Bankr is connected)
+      const tradeIntent = parseTradeIntent(command);
+      if (tradeIntent && bankrConnected) {
+        setPendingTrade(tradeIntent);
+        setIsBusy(false);
+        return;
+      }
+      if (tradeIntent && !bankrConnected) {
+        appendMessage("system", "Connect your Bankr API key to execute trades. Click 'Connect Bankr' above.");
+        setIsBusy(false);
+        return;
+      }
+
       // Not a built-in command — route to dual-engine LLM
       await streamLLMResponse(command);
     } catch (error) {
@@ -667,6 +915,13 @@ export function AgentBotTerminal({
       case "risk":
         // Venice risk analysis — dashed border, subtle distinct background
         return "border-dashed border-[var(--ink-faint)] bg-[var(--paper)]";
+      case "trade":
+        // Trade execution — accent border
+        return message.text.startsWith("✓")
+          ? "border-emerald-600 bg-[var(--paper)]"
+          : message.text.startsWith("✗")
+          ? "border-[var(--accent-red)] bg-[var(--paper)]"
+          : "border-[var(--ink-faint)] bg-[var(--paper)]";
       case "system":
         return "border-[var(--accent-red)] bg-[var(--paper)] text-[var(--accent-red)]";
       default:
@@ -729,6 +984,14 @@ export function AgentBotTerminal({
                 </span>
               </div>
             )}
+            {/* Trade execution label */}
+            {message.role === "trade" && (
+              <div className="mb-1 flex items-center gap-1.5">
+                <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+                  bankr · trade execution
+                </span>
+              </div>
+            )}
 
             <p className="whitespace-pre-wrap font-mono text-[12px] leading-relaxed text-[var(--ink)]">
               {message.text}
@@ -745,8 +1008,122 @@ export function AgentBotTerminal({
         ))}
       </div>
 
+      {/* Trade confirmation card */}
+      {pendingTrade && (
+        <div className="border-t border-[var(--rule-light)] bg-[var(--paper-dark)] p-3">
+          <div className="border border-[var(--rule)] p-3">
+            <p className="mb-2 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--ink-faint)]">
+              ⚡ Trade Confirmation
+            </p>
+            <p className="mb-1 font-mono text-[12px] font-bold text-[var(--ink)]">
+              {pendingTrade.direction?.toUpperCase() || "CLOSE"} {pendingTrade.asset || ""}
+              {pendingTrade.leverage ? ` @ ${pendingTrade.leverage}` : ""}
+              {pendingTrade.amount ? ` — $${pendingTrade.amount}` : ""}
+            </p>
+            <p className="mb-3 font-mono text-[9px] text-[var(--ink-faint)]">
+              Via Bankr Agent API → Your Bankr wallet on Hyperliquid
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleConfirmTrade}
+                disabled={tradeExecuting}
+                className="border border-emerald-700 bg-emerald-700 px-3 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-white hover:bg-emerald-800 disabled:opacity-50"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={handleCancelTrade}
+                disabled={tradeExecuting}
+                className="border border-[var(--rule)] px-3 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink)] hover:bg-[var(--paper-dark)] disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Input area */}
       <div className="border-t border-[var(--rule-light)] p-3">
+        {/* Bankr connection — inline above input */}
+        <div className="mb-2 flex items-center gap-2">
+          {!bankrConnected ? (
+            showBankrInput ? (
+              <div className="flex flex-1 items-center gap-1">
+                <input
+                  value={bankrKeyDraft}
+                  onChange={(e) => setBankrKeyDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && bankrKeyDraft.length > 10) {
+                      saveBankrKey(bankrKeyDraft);
+                      setBankrKey(bankrKeyDraft);
+                      setBankrKeyDraft("");
+                      setShowBankrInput(false);
+                    }
+                    if (e.key === "Escape") {
+                      setShowBankrInput(false);
+                      setBankrKeyDraft("");
+                    }
+                  }}
+                  placeholder="Paste Bankr API key..."
+                  className="flex-1 border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-1 font-mono text-[10px] text-[var(--ink)] outline-none focus:border-[var(--rule)]"
+                  type="password"
+                  autoFocus
+                />
+                <button
+                  onClick={() => {
+                    if (bankrKeyDraft.length > 10) {
+                      saveBankrKey(bankrKeyDraft);
+                      setBankrKey(bankrKeyDraft);
+                      setBankrKeyDraft("");
+                      setShowBankrInput(false);
+                    }
+                  }}
+                  className="border border-[var(--ink)] px-2 py-1 font-mono text-[8px] uppercase text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => { setShowBankrInput(false); setBankrKeyDraft(""); }}
+                  className="px-1 font-mono text-[10px] text-[var(--ink-faint)] hover:text-[var(--ink)]"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowBankrInput(true)}
+                className="font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-faint)] underline decoration-dotted hover:text-[var(--ink)]"
+              >
+                Connect Bankr to trade
+              </button>
+            )
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-emerald-700">
+                Bankr ✓ {maskKey(bankrKey)}
+              </span>
+              <button
+                onClick={() => {
+                  saveBankrKey("");
+                  setBankrKey("");
+                }}
+                className="font-mono text-[8px] uppercase text-[var(--ink-faint)] underline decoration-dotted hover:text-[var(--accent-red)]"
+              >
+                Disconnect
+              </button>
+            </div>
+          )}
+          <a
+            href="https://docs.bankr.bot/agent-api/overview"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--ink-faint)] underline decoration-dotted hover:text-[var(--ink)]"
+          >
+            Docs
+          </a>
+        </div>
+
         <div className="mb-2 flex items-center justify-between gap-2">
           <p
             className={`font-mono text-[9px] uppercase tracking-[0.14em] ${
@@ -778,15 +1155,21 @@ export function AgentBotTerminal({
                 void handleSend();
               }
             }}
-            placeholder={locked ? "Hold 100k MO and verify wallet to continue..." : "ask about positions, risk, strategy..."}
+            placeholder={
+              locked
+                ? "Hold 100k MO and verify wallet to continue..."
+                : bankrConnected
+                ? "Trade or ask anything... (e.g. 'long BTC 40x')"
+                : "ask about positions, risk, strategy..."
+            }
             className="w-full border border-[var(--rule-light)] bg-[var(--paper)] px-2 py-2 font-mono text-[12px] text-[var(--ink)] outline-none focus:border-[var(--rule)]"
           />
           <button
             onClick={() => void handleSend()}
-            disabled={isBusy || locked}
+            disabled={isBusy || locked || tradeExecuting}
             className="border border-[var(--ink)] bg-[var(--ink)] px-3 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--paper)] hover:bg-[var(--paper)] hover:text-[var(--ink)] disabled:opacity-50"
           >
-            {isBusy ? "..." : "Send"}
+            {isBusy || tradeExecuting ? "..." : "Send"}
           </button>
         </div>
       </div>
