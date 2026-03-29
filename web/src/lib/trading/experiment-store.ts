@@ -17,6 +17,7 @@ export interface ExperimentParams {
     news: number;
     marketData: number;
     walletFlow: number;
+    webIntelligence: number;
   };
   stopLossPct: number;
   takeProfitPct: number;

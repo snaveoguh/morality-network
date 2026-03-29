@@ -44,11 +44,12 @@ let lastCycleTradeCount = 0;
 export function extractCurrentParams(risk: TraderRiskConfig): ExperimentParams {
   return {
     signalWeights: {
-      technical: parseFloat(process.env.SIGNAL_WEIGHT_TECHNICAL || "0.30"),
-      pattern: parseFloat(process.env.SIGNAL_WEIGHT_PATTERN || "0.22"),
-      news: parseFloat(process.env.SIGNAL_WEIGHT_NEWS || "0.22"),
-      marketData: parseFloat(process.env.SIGNAL_WEIGHT_MARKET_DATA || "0.16"),
-      walletFlow: parseFloat(process.env.SIGNAL_WEIGHT_WALLET_FLOW || "0.10"),
+      technical: parseFloat(process.env.SIGNAL_WEIGHT_TECHNICAL || "0.26"),
+      pattern: parseFloat(process.env.SIGNAL_WEIGHT_PATTERN || "0.20"),
+      news: parseFloat(process.env.SIGNAL_WEIGHT_NEWS || "0.20"),
+      marketData: parseFloat(process.env.SIGNAL_WEIGHT_MARKET_DATA || "0.14"),
+      walletFlow: parseFloat(process.env.SIGNAL_WEIGHT_WALLET_FLOW || "0.08"),
+      webIntelligence: parseFloat(process.env.SIGNAL_WEIGHT_WEB_INTEL || "0.12"),
     },
     stopLossPct: risk.stopLossPct,
     takeProfitPct: risk.takeProfitPct,
@@ -127,7 +128,7 @@ async function generateHypothesis(
   const prompt = `You are an autonomous trading system optimizer. Analyze this performance report and suggest ONE specific parameter change to improve performance.
 
 ## Current Parameters
-Signal weights: technical=${currentParams.signalWeights.technical}, pattern=${currentParams.signalWeights.pattern}, news=${currentParams.signalWeights.news}, marketData=${currentParams.signalWeights.marketData}, walletFlow=${currentParams.signalWeights.walletFlow}
+Signal weights: technical=${currentParams.signalWeights.technical}, pattern=${currentParams.signalWeights.pattern}, news=${currentParams.signalWeights.news}, marketData=${currentParams.signalWeights.marketData}, walletFlow=${currentParams.signalWeights.walletFlow}, webIntelligence=${currentParams.signalWeights.webIntelligence}
 Stop loss: ${(currentParams.stopLossPct * 100).toFixed(1)}%
 Take profit: ${(currentParams.takeProfitPct * 100).toFixed(1)}%
 Trailing stop: ${(currentParams.trailingStopPct * 100).toFixed(1)}%
@@ -404,6 +405,7 @@ export async function getExperimentOverrideWeights(): Promise<SignalWeights | un
     news: w.news,
     marketData: w.marketData,
     walletFlow: w.walletFlow,
+    webIntelligence: w.webIntelligence,
   };
 }
 

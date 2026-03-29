@@ -27,6 +27,7 @@ import { detectPatterns } from "./pattern-detector";
 import { computeCompositeSignal, type CompositeSignal } from "./composite-signal";
 import { fetchMarketDataSignals } from "./market-signals";
 import { fetchWalletFlowSignal } from "./wallet-flow";
+import { fetchWebIntelligenceSignal, type WebIntelligenceSignal } from "./web-intelligence";
 import { runAutoresearchCycle, getExperimentOverrideWeights } from "./autoresearch";
 import { fetchCouncilSignal } from "./council-signal";
 import {
@@ -675,7 +676,7 @@ class TraderEngine {
         if (maxHoldMs > 0 && positionAgeMs > maxHoldMs) {
           const currentPrice = await this.resolvePositionPriceUsd(position);
           console.log(
-            `[trader] max-hold-time: closing ${position.marketSymbol} after ${(positionAgeMs / 3_600_000).toFixed(1)}h (limit=${(maxHoldMs / 3_600_000).toFixed(1)}h)`,
+            `[trader] safety-net-max-hold: closing ${position.marketSymbol} after ${(positionAgeMs / 86_400_000).toFixed(1)}d (limit=${(maxHoldMs / 86_400_000).toFixed(1)}d)`,
           );
           const closed = await this.closePosition(position, "max-hold-time", currentPrice ?? position.entryPriceUsd);
           if (closed) report.exits.push(closed);
@@ -796,7 +797,59 @@ class TraderEngine {
           }
         }
 
+        // ── Dynamic take-profit at web-intelligence key levels ──
+        if (position.dynamicTpLevels && position.dynamicTpLevels.length > 0) {
+          const isShortDtp = position.direction === "short";
+          const hitLevel = position.dynamicTpLevels.find((level) =>
+            isShortDtp ? currentPriceUsd <= level : currentPriceUsd >= level,
+          );
+
+          if (hitLevel) {
+            const remainingLevels = position.dynamicTpLevels.filter((l) => l !== hitLevel);
+            const qty = BigInt(position.quantityTokenRaw);
+
+            if (remainingLevels.length === 0) {
+              // Last level — full close
+              console.log(`[trader] dynamic-TP: full close ${position.marketSymbol} at level $${hitLevel.toFixed(2)} (last level)`);
+              const closed = await this.closePosition(position, "dynamic-tp", currentPriceUsd);
+              if (closed) report.exits.push(closed);
+              continue;
+            } else {
+              // Partial close 25% at this level
+              const partialQty = (qty * BigInt(25)) / BigInt(100);
+              if (partialQty > BigInt(0) && partialQty < qty) {
+                const partialClosed = await this.partialClosePosition(position, partialQty.toString(), currentPriceUsd);
+                if (partialClosed) {
+                  console.log(`[trader] dynamic-TP: partial close 25% of ${position.marketSymbol} at level $${hitLevel.toFixed(2)} (${remainingLevels.length} levels remain)`);
+                  // Update stored position to remove the hit level
+                  await this.store.upsert({ ...position, dynamicTpLevels: remainingLevels });
+                }
+              }
+              // Don't continue — let other exit checks run too
+            }
+          }
+
+          // Refresh dynamic TP levels from web intel every 20 min
+          const posAgeForRefresh = Date.now() - position.openedAt;
+          if (posAgeForRefresh > 20 * 60 * 1000 && position.marketSymbol) {
+            try {
+              const freshIntel = await fetchWebIntelligenceSignal(this.config, position.marketSymbol, currentPriceUsd);
+              if (freshIntel) {
+                const freshLevels = position.direction === "long"
+                  ? freshIntel.resistanceLevels.filter((r) => r > currentPriceUsd).sort((a, b) => a - b)
+                  : freshIntel.supportLevels.filter((s) => s < currentPriceUsd).sort((a, b) => b - a);
+                if (freshLevels.length > 0) {
+                  await this.store.upsert({ ...position, dynamicTpLevels: freshLevels });
+                }
+              }
+            } catch {
+              // Non-fatal — keep existing levels
+            }
+          }
+        }
+
         // ── Scaled take-profit: close 25% at each tier, let the rest ride ──
+        // Fallback when no dynamic TP levels are set
         // Tiers: TP×1 = 25%, TP×1.5 = 25%, TP×2 = 25%, TP×3 = full close
         const tp = position.takeProfitPct;
         const tiers = [
@@ -1323,19 +1376,25 @@ class TraderEngine {
         }
       }
 
-      // 2b. Market data signals + wallet flow (parallel with pattern)
+      // 2b. Market data signals + wallet flow + web intelligence (parallel with pattern)
       let marketDataBundle = null;
       let walletFlowSignal = null;
+      let webIntelSignal: WebIntelligenceSignal | null = null;
       try {
-        const [mktData, wfSignal] = await Promise.all([
+        const [mktData, wfSignal, wiSignal] = await Promise.all([
           fetchMarketDataSignals(this.config, symbol),
           fetchWalletFlowSignal(this.config, symbol).catch((err) => {
             console.warn(`[trader] wallet flow signal failed for ${symbol}:`, err instanceof Error ? err.message : err);
             return null;
           }),
+          fetchWebIntelligenceSignal(this.config, symbol, market.priceUsd).catch((err) => {
+            console.warn(`[trader] web intelligence signal failed for ${symbol}:`, err instanceof Error ? err.message : err);
+            return null;
+          }),
         ]);
         marketDataBundle = mktData;
         walletFlowSignal = wfSignal;
+        webIntelSignal = wiSignal;
       } catch (err) {
         console.warn(`[trader] market data signals failed for ${symbol}:`, err instanceof Error ? err.message : err);
       }
@@ -1349,15 +1408,17 @@ class TraderEngine {
         newsSignal,
         marketData: marketDataBundle,
         walletFlow: walletFlowSignal,
+        webIntelligence: webIntelSignal,
         minConfidence: this.config.risk.minSignalConfidence,
         overrideWeights: experimentWeights,
       });
 
       const mktDir = composite.components.marketData?.direction ?? "n/a";
       const wfDir = composite.components.walletFlow?.direction ?? "n/a";
+      const wiDir = composite.components.webIntelligence?.direction ?? "n/a";
       console.log(
         `[trader] composite ${symbol}: ${composite.direction} conf=${composite.confidence.toFixed(2)} agreement=${composite.agreementMet} | ` +
-        `tech=${technicalSignal?.direction ?? "n/a"} pat=${patternResult?.overallDirection ?? "n/a"} news=${newsSignal?.direction ?? "n/a"} mkt=${mktDir} wf=${wfDir}`,
+        `tech=${technicalSignal?.direction ?? "n/a"} pat=${patternResult?.overallDirection ?? "n/a"} news=${newsSignal?.direction ?? "n/a"} mkt=${mktDir} wf=${wfDir} wi=${wiDir}`,
       );
 
       if (composite.direction === "neutral") {
@@ -1554,6 +1615,12 @@ class TraderEngine {
       moralScore: undefined,
       moralJustification: undefined,
       entryRationale,
+      // Store dynamic TP levels from web intelligence (resistance for longs, support for shorts)
+      dynamicTpLevels: composite.components.webIntelligence
+        ? (direction === "long"
+            ? composite.components.webIntelligence.resistanceLevels.filter((r: number) => r > (market.priceUsd ?? 0)).sort((a: number, b: number) => a - b)
+            : composite.components.webIntelligence.supportLevels.filter((s: number) => s < (market.priceUsd ?? Infinity)).sort((a: number, b: number) => b - a))
+        : undefined,
     };
     await this.store.upsert(prePosition);
 
