@@ -1,16 +1,13 @@
-import { redirect } from "next/navigation";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
+import { EntitySearch } from "@/components/registry/EntitySearch";
 import { buildAnalystReputationFromPredictionMarkets } from "@/lib/analyst-reputation";
 import { buildInterpretationOutcomeScores } from "@/lib/interpretation-scores";
 import { buildUniversalLedger } from "@/lib/universal-ledger";
 
-export const dynamic = "force-dynamic"; // too heavy for build-time prerender
+export const dynamic = "force-dynamic";
 export const maxDuration = 55;
 
-export default async function LeaderboardPage() {
-  // Redirect to /registry — the new home for this page
-  redirect("/registry");
-  // eslint-disable-next-line no-unreachable
+export default async function RegistryPage() {
   const [entries, analystSnapshot, interpretationSnapshot] = await Promise.all([
     buildUniversalLedger(),
     buildAnalystReputationFromPredictionMarkets({
@@ -30,24 +27,37 @@ export default async function LeaderboardPage() {
 
   return (
     <div>
-      {/* Page header — newspaper style */}
+      {/* Page header */}
       <div className="mb-6 border-b-2 border-[var(--rule)] pb-4">
         <h1 className="font-headline text-3xl text-[var(--ink)]">
-          The Universal Ledger
+          The Universal Registry
         </h1>
         <p className="mt-1 font-body-serif text-sm italic text-[var(--ink-light)]">
-          Reputation rankings for every source, domain, contract, and entity on the network
+          Score any URL, contract, domain, or address. AI morality scoring + onchain ratings.
         </p>
+      </div>
+
+      {/* Entity search + scoring */}
+      <div className="mb-8 border border-[var(--rule)] p-4">
+        <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+          Morality Oracle
+        </h2>
+        <p className="mb-4 font-mono text-[9px] text-[var(--ink-faint)]">
+          Paste any URL, smart contract address (Base or Solana), domain, or wallet.
+          The Oracle scores it for morality, bias, factuality, and risk — then anyone can rate it onchain.
+        </p>
+        <EntitySearch />
       </div>
 
       {/* Scoring explanation */}
       <div className="mb-6 border border-[var(--rule-light)] p-4">
         <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
-          <span className="font-bold text-[var(--ink)]">Composite Score</span> ={" "}
-          Factuality (50%) + Volume (30%) + Community (20%)
+          <span className="font-bold text-[var(--ink)]">Onchain Composite</span> ={" "}
+          Rating (40%) + AI Score (30%) + Tips (20%) + Engagement (10%)
         </p>
       </div>
 
+      {/* Analyst Discovery */}
       <div className="mb-6 border border-[var(--rule-light)] p-4">
         <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
           Analyst Discovery
@@ -94,6 +104,7 @@ export default async function LeaderboardPage() {
         )}
       </div>
 
+      {/* Ideas That Aged Best */}
       <div className="mb-6 border border-[var(--rule-light)] p-4">
         <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
           Ideas That Aged Best
@@ -140,6 +151,7 @@ export default async function LeaderboardPage() {
         )}
       </div>
 
+      {/* Entity Rankings (existing leaderboard table) */}
       <LeaderboardTable entries={entries} />
     </div>
   );
