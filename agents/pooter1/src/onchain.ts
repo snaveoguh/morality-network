@@ -201,7 +201,8 @@ export async function commentOnChain(
     return null;
   }
 
-  const hash = await ensureEntityRegistered(identifier);
+  // Use hash directly — Comments contract doesn't require entity registration
+  const hash = entityHash(identifier);
 
   try {
     const txHash = await clients.walletClient.writeContract({
@@ -225,4 +226,21 @@ export function getAgentAddress(): string | null {
   if (!POOTER1_PRIVATE_KEY) return null;
   const account = privateKeyToAccount(POOTER1_PRIVATE_KEY as `0x${string}`);
   return account.address;
+}
+
+/** Returns the agent's ETH balance in wei, or null if no wallet configured */
+export async function getEthBalance(): Promise<bigint | null> {
+  const clients = getClients();
+  if (!clients) return null;
+
+  try {
+    const balance = await clients.publicClient.getBalance({
+      address: clients.account.address,
+    });
+    console.log(`[pooter1:onchain] Balance: ${balance} wei (${Number(balance) / 1e18} ETH)`);
+    return balance;
+  } catch (err: any) {
+    console.warn(`[pooter1:onchain] Balance check failed: ${err.message}`);
+    return null;
+  }
 }
