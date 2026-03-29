@@ -17,6 +17,7 @@ import { AGENT_NAME, CRON_SECRET } from "./config.js";
 import { getVoiceProfile, getDailyStats } from "./memory.js";
 import { writeEditorial } from "./tasks/write-editorial.js";
 import { commentOnArticles } from "./tasks/comment.js";
+import { getAgentAddress } from "./onchain.js";
 import { learn } from "./tasks/learn.js";
 import { farcasterDigest } from "./tasks/farcaster-digest.js";
 
@@ -39,6 +40,7 @@ app.get("/health", async (c) => {
   return c.json({
     agent: AGENT_NAME,
     status: "alive",
+    wallet: getAgentAddress(),
     voiceVersion: voice.version,
     tone: voice.tone,
     dailyStats: stats,
