@@ -297,8 +297,8 @@ export function getTraderConfig(): TraderExecutionConfig {
       trailingStopActivationPct: numberFromEnv("TRADER_TRAILING_STOP_ACTIVATION_PCT", 0.04),
       circuitBreakerLosses: numberFromEnv("TRADER_CIRCUIT_BREAKER_LOSSES", 2),
       circuitBreakerPauseMs: numberFromEnv("TRADER_CIRCUIT_BREAKER_PAUSE_MS", 3_600_000),
-      maxHoldMs: numberFromEnv("TRADER_MAX_HOLD_MS", 28_800_000), // 8 hours default
-      minHoldMs: numberFromEnv("TRADER_MIN_HOLD_MS", 900_000), // 15 min — no exits before this (except catastrophic loss)
+      maxHoldMs: numberFromEnv("TRADER_MAX_HOLD_MS", 604_800_000), // 7 days safety net (was 8h) — let winners ride
+      minHoldMs: numberFromEnv("TRADER_MIN_HOLD_MS", 0), // immediate exit on signal flip (was 15min)
     },
     safety: {
       minScannerCandidatesLive: numberFromEnv("TRADER_MIN_SCANNER_CANDIDATES_LIVE", 2),

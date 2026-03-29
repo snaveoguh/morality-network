@@ -57,7 +57,7 @@ export interface Position {
   txHash?: Hash;
   status: "open" | "closed";
   closedAt?: number;
-  exitReason?: "stop-loss" | "take-profit" | "trailing-stop" | "signal-reversal" | "expired" | "manual" | "max-hold-time";
+  exitReason?: "stop-loss" | "take-profit" | "trailing-stop" | "signal-reversal" | "expired" | "manual" | "max-hold-time" | "dynamic-tp";
   exitPriceUsd?: number;
   exitTxHash?: Hash;
   trailingStopPct?: number;
@@ -76,6 +76,8 @@ export interface Position {
   exitRationale?: ExitRationale;
   /** HyperLiquid's own unrealized PnL (includes funding, fees) — authoritative for open HL positions */
   hlUnrealizedPnlUsd?: number;
+  /** Dynamic TP levels from web intelligence — resistance for longs, support for shorts */
+  dynamicTpLevels?: number[];
 }
 
 export interface EntryRationale {
@@ -182,8 +184,10 @@ export interface SignalWeights {
   news: number;
   /** Market data signals: fear/greed + funding + OI (combined). Default 0.15 */
   marketData?: number;
-  /** Whale wallet flow signal: net long/short exposure of tracked wallets. Default 0.10 */
+  /** Whale wallet flow signal: net long/short exposure of tracked wallets. Default 0.08 */
   walletFlow?: number;
+  /** Web intelligence signal: crowd sentiment, key levels, narratives. Default 0.12 */
+  webIntelligence?: number;
 }
 
 export interface TradeJournalEntry {
