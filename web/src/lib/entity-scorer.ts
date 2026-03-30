@@ -9,7 +9,7 @@ import "server-only";
 
 import { routerGenerate } from "./ai-router";
 import { scanEntity, detectChain, type ChainScanResult } from "./chain-scanner";
-import { detectEntityType, computeEntityHash } from "./entity";
+import { detectEntityType, computeEntityHash, isNarrativeIdentifier } from "./entity";
 import { EntityType } from "./contracts";
 
 // ============================================================================
@@ -19,7 +19,7 @@ import { EntityType } from "./contracts";
 export interface EntityScore {
   identifier: string;
   entityHash: string;
-  entityType: "url" | "domain" | "address" | "contract";
+  entityType: "url" | "domain" | "address" | "contract" | "narrative";
   chain?: "base" | "solana" | "ethereum";
 
   /** Morality score 0-100 */
@@ -229,6 +229,27 @@ Return this exact JSON:
 export async function scoreEntity(identifier: string): Promise<EntityScore> {
   const trimmed = identifier.trim();
   const entityHash = computeEntityHash(trimmed);
+
+  // Narrative entities: score the thesis directly (no URL fetch needed)
+  if (isNarrativeIdentifier(trimmed)) {
+    const narrativeDesc = trimmed.replace(/^narrative:/, "");
+    const aiScore = await scoreUrlOrDomain(trimmed, `Macro market narrative: ${narrativeDesc}`);
+    return {
+      identifier: trimmed,
+      entityHash,
+      entityType: "narrative",
+      moralityScore: aiScore.moralityScore ?? 50,
+      factualityScore: aiScore.factualityScore ?? null,
+      biasTilt: aiScore.biasTilt ?? null,
+      biasLabel: aiScore.biasLabel ?? null,
+      riskScore: aiScore.riskScore ?? 0,
+      riskFlags: aiScore.riskFlags ?? [],
+      reasoning: aiScore.reasoning ?? "Narrative analysis unavailable.",
+      metadata: {},
+      scoredBy: aiScore.scoredBy ?? "none",
+      scoredAt: Date.now(),
+    };
+  }
 
   // Detect entity type
   const chainDetect = detectChain(trimmed);

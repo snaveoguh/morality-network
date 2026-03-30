@@ -5,7 +5,17 @@ export function computeEntityHash(identifier: string): `0x${string}` {
   return keccak256(toBytes(identifier));
 }
 
+/** Check if an identifier is a narrative entity (prefix convention). */
+export function isNarrativeIdentifier(identifier: string): boolean {
+  return identifier.startsWith("narrative:");
+}
+
 export function detectEntityType(identifier: string): EntityType {
+  // Narrative entities use URL type for onchain compat
+  if (isNarrativeIdentifier(identifier)) {
+    return EntityType.URL;
+  }
+
   // Ethereum address: 0x followed by 40 hex chars
   if (/^0x[a-fA-F0-9]{40}$/.test(identifier)) {
     // Heuristic: could be a contract or an EOA
@@ -31,7 +41,8 @@ export function shortenAddress(address: string, chars = 4): string {
   return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
 }
 
-export function entityTypeLabel(entityType: EntityType): string {
+export function entityTypeLabel(entityType: EntityType, overrideType?: string): string {
+  if (overrideType === "narrative") return "Narrative";
   switch (entityType) {
     case EntityType.URL:
       return "URL";
