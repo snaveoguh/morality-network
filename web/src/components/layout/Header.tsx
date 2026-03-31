@@ -6,6 +6,7 @@ import { useRef, useState, useEffect } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ChainSwitcher } from "@/components/shared/ChainSwitcher";
 import { SearchBar } from "@/components/layout/SearchBar";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { BRAND_NAME } from "@/lib/brand";
 
 const NAV_LINKS = [
@@ -65,6 +66,7 @@ export function Header() {
           <div className="hidden md:block">
             <SearchBar />
           </div>
+          <ThemeToggle />
           <ChainSwitcher />
           <MiniWalletButton />
         </div>
@@ -104,7 +106,7 @@ function LogoMenu() {
         <img
           src="https://morality.s3.eu-west-2.amazonaws.com/brand/glyph.png"
           alt=""
-          className="h-4 w-4 object-contain grayscale contrast-200 brightness-0"
+          className="h-4 w-4 object-contain header-glyph"
         />
       </button>
 
