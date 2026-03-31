@@ -218,15 +218,15 @@ export function SearchBar() {
                 zIndex: 99997,
                 maxHeight: "min(78vh, 760px)",
                 overflowY: "auto",
-                backgroundColor: "#F5F0E8",
-                border: "2px solid #1A1A1A",
+                backgroundColor: "var(--paper)",
+                border: "2px solid var(--rule)",
                 boxShadow: "8px 8px 0 rgba(26, 26, 26, 0.12)",
               }}
             >
               <div
                 style={{
                   padding: "10px 12px 8px",
-                  borderBottom: "2px solid #1A1A1A",
+                  borderBottom: "2px solid var(--rule)",
                   background:
                     "linear-gradient(180deg, rgba(0,0,0,0.035) 0%, rgba(0,0,0,0) 100%)",
                 }}
@@ -246,7 +246,7 @@ export function SearchBar() {
                         fontSize: "8px",
                         textTransform: "uppercase",
                         letterSpacing: "0.18em",
-                        color: "#6B665E",
+                        color: "var(--ink-faint)",
                         marginBottom: 4,
                       }}
                     >
@@ -257,7 +257,7 @@ export function SearchBar() {
                         fontFamily: "serif",
                         fontSize: "18px",
                         lineHeight: 1.1,
-                        color: "#1A1A1A",
+                        color: "var(--ink)",
                       }}
                     >
                       {query.trim().length >= 2
@@ -273,7 +273,7 @@ export function SearchBar() {
                       fontSize: "8px",
                       textTransform: "uppercase",
                       letterSpacing: "0.16em",
-                      color: "#8A8174",
+                      color: "var(--ink-faint)",
                       textAlign: "right",
                     }}
                   >
@@ -327,7 +327,7 @@ export function SearchBar() {
                       <div
                         key={row}
                         style={{
-                          borderBottom: "1px solid #DDD4C4",
+                          borderBottom: "1px solid var(--rule-light)",
                           padding: "10px 4px",
                         }}
                       >
@@ -335,7 +335,7 @@ export function SearchBar() {
                           style={{
                             width: "32%",
                             height: 8,
-                            background: "#DDD4C4",
+                            background: "var(--rule-light)",
                             marginBottom: 8,
                           }}
                         />
@@ -343,7 +343,7 @@ export function SearchBar() {
                           style={{
                             width: "88%",
                             height: 13,
-                            background: "#CFC5B5",
+                            background: "var(--rule-light)",
                             marginBottom: 6,
                           }}
                         />
@@ -351,7 +351,7 @@ export function SearchBar() {
                           style={{
                             width: "72%",
                             height: 10,
-                            background: "#E6DDCF",
+                            background: "var(--rule-light)",
                           }}
                         />
                       </div>
@@ -369,7 +369,7 @@ export function SearchBar() {
                         fontFamily: "serif",
                         fontStyle: "italic",
                         fontSize: 18,
-                        color: "#6B665E",
+                        color: "var(--ink-faint)",
                         marginBottom: 6,
                       }}
                     >
@@ -381,7 +381,7 @@ export function SearchBar() {
                         fontSize: "9px",
                         textTransform: "uppercase",
                         letterSpacing: "0.14em",
-                        color: "#8A8174",
+                        color: "var(--ink-faint)",
                       }}
                     >
                       Try a topic, source, artist, tag, or claim
@@ -422,7 +422,7 @@ export function SearchBar() {
                             fontSize: "8px",
                             textTransform: "uppercase",
                             letterSpacing: "0.14em",
-                            color: "#8A8174",
+                            color: "var(--ink-faint)",
                           }}
                         >
                           {group.count} shown
@@ -479,7 +479,7 @@ function SearchResultRow({
             fontSize: "8px",
             textTransform: "uppercase",
             letterSpacing: "0.12em",
-            color: "#756C60",
+            color: "var(--ink-faint)",
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -494,7 +494,7 @@ function SearchResultRow({
               fontSize: "8px",
               textTransform: "uppercase",
               letterSpacing: "0.14em",
-              color: "#8A8174",
+              color: "var(--ink-faint)",
               flexShrink: 0,
             }}
           >
@@ -507,7 +507,7 @@ function SearchResultRow({
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: "15px",
           lineHeight: 1.22,
-          color: "#1A1A1A",
+          color: "var(--ink)",
           marginBottom: result.subtitle ? 4 : 0,
         }}
       >
@@ -519,7 +519,7 @@ function SearchResultRow({
             fontFamily: "'Libre Baskerville', Georgia, serif",
             fontSize: "11px",
             lineHeight: 1.45,
-            color: "#4C473F",
+            color: "var(--ink-light)",
           }}
         >
           {result.subtitle}
@@ -533,7 +533,7 @@ function SearchResultRow({
             fontSize: "8px",
             textTransform: "uppercase",
             letterSpacing: "0.12em",
-            color: "#8A8174",
+            color: "var(--ink-faint)",
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -548,7 +548,7 @@ function SearchResultRow({
   const commonStyle = {
     display: "block",
     padding: "10px 6px 11px",
-    borderBottom: "1px solid #E6DDCF",
+    borderBottom: "1px solid var(--rule-light)",
     textDecoration: "none",
     cursor: "pointer",
     transition: "background 0.12s ease",
@@ -563,10 +563,10 @@ function SearchResultRow({
         onClick={onSelect}
         style={commonStyle}
         onMouseEnter={(event) => {
-          event.currentTarget.style.backgroundColor = "#EDE6D6";
+          event.currentTarget.style.backgroundColor = "var(--paper-dark)";
         }}
         onMouseLeave={(event) => {
-          event.currentTarget.style.backgroundColor = "#F5F0E8";
+          event.currentTarget.style.backgroundColor = "var(--paper)";
         }}
       >
         {content}
@@ -580,10 +580,10 @@ function SearchResultRow({
       onClick={onSelect}
       style={commonStyle}
       onMouseEnter={(event) => {
-        event.currentTarget.style.backgroundColor = "#EDE6D6";
+        event.currentTarget.style.backgroundColor = "var(--paper-dark)";
       }}
       onMouseLeave={(event) => {
-        event.currentTarget.style.backgroundColor = "#F5F0E8";
+        event.currentTarget.style.backgroundColor = "var(--paper)";
       }}
     >
       {content}
