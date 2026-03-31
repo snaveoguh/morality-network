@@ -8,10 +8,16 @@ import {
   getDailyStats,
   incrementDailyStat,
   recordEngagement,
+  getRecentEngagement,
 } from "../memory.js";
-import { commentOnChain, rateOnChain, entityHash } from "../onchain.js";
+import { commentOnChain, entityHash, getEthBalance } from "../onchain.js";
 import { bridge } from "../bridge.js";
 import { POOTER_API_URL, CRON_SECRET, MAX_COMMENTS_PER_DAY } from "../config.js";
+
+/** Minimum ETH balance to attempt on-chain comments (0.0005 ETH) */
+const MIN_BALANCE_WEI = 500_000_000_000_000n; // 0.0005 ETH
+/** Max comments per cron run */
+const COMMENTS_PER_RUN = 3;
 
 /** Push article metadata to pooter.world so entity pages have context */
 async function pushEntityContext(article: any, identifier: string): Promise<void> {
@@ -65,13 +71,37 @@ export async function commentOnArticles(): Promise<void> {
     return;
   }
 
+  // Gas balance check — skip on-chain if wallet is too low
+  const balance = await getEthBalance();
+  if (balance !== null && balance < MIN_BALANCE_WEI) {
+    console.warn(`[pooter1] ETH balance too low for on-chain comments (${balance} wei). Top up the agent wallet.`);
+    return;
+  }
+
   const feed = await fetchTodaysFeed();
   const voice = await getVoiceProfile();
 
-  // Pick 3-5 articles to comment on
+  // Dedup: get recently commented entity hashes to skip
+  const recentEngagement = await getRecentEngagement(100);
+  const alreadyCommented = new Set(
+    recentEngagement
+      .filter((e) => e.type === "comment")
+      .map((e) => e.entityHash),
+  );
+
+  // Pick up to COMMENTS_PER_RUN articles we haven't commented on yet
   const toComment = feed
-    .filter((item: any) => item.title && item.description)
-    .slice(0, 5);
+    .filter((item: any) => {
+      if (!item.title || !item.description) return false;
+      const identifier = item.link || item.title;
+      const hash = entityHash(identifier);
+      if (alreadyCommented.has(hash)) {
+        console.log(`[pooter1] Skipping already-commented: "${item.title.slice(0, 50)}"`);
+        return false;
+      }
+      return true;
+    })
+    .slice(0, COMMENTS_PER_RUN);
 
   for (const article of toComment) {
     if (stats.comments >= MAX_COMMENTS_PER_DAY) break;
@@ -101,6 +131,7 @@ export async function commentOnArticles(): Promise<void> {
 
       // Post comment on-chain via Base L2
       const identifier = article.link || article.title;
+      const hash = entityHash(identifier);
       const txHash = await commentOnChain(identifier, comment);
       console.log(`[pooter1] Comment on "${article.title.slice(0, 50)}": ${comment.slice(0, 80)}... ${txHash ? `(tx: ${txHash.slice(0, 12)}...)` : "(off-chain)"}`);
 
@@ -116,7 +147,7 @@ export async function commentOnArticles(): Promise<void> {
 
       await incrementDailyStat("comments");
       await recordEngagement({
-        entityHash: article.entityHash || article.eventHash || "",
+        entityHash: hash,
         title: article.title,
         type: "comment",
         timestamp: new Date().toISOString(),

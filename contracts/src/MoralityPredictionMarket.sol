@@ -288,7 +288,13 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
         } else {
             uint256 totalPot = m.forPool + m.againstPool;
 
-            if (m.outcome == Outcome.FOR && pos.forStake > 0) {
+            // If nobody bet on the winning side, refund everyone
+            bool winningPoolEmpty = (m.outcome == Outcome.FOR && m.forPool == 0)
+                || (m.outcome == Outcome.AGAINST && m.againstPool == 0);
+
+            if (winningPoolEmpty) {
+                payout = pos.forStake + pos.againstStake;
+            } else if (m.outcome == Outcome.FOR && pos.forStake > 0) {
                 // Winner: proportional share of total pot
                 payout = (pos.forStake * totalPot) / m.forPool;
             } else if (m.outcome == Outcome.AGAINST && pos.againstStake > 0) {
@@ -297,7 +303,7 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
             // Losers get nothing (payout stays 0)
 
             // Protocol fee on profit only (not on returned stake)
-            if (payout > 0) {
+            if (payout > 0 && !winningPoolEmpty) {
                 uint256 winnerStake = m.outcome == Outcome.FOR ? pos.forStake : pos.againstStake;
                 uint256 profit = payout > winnerStake ? payout - winnerStake : 0;
                 uint256 fee = (profit * protocolFeeBps) / 10000;
