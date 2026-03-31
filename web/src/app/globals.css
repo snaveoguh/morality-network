@@ -4,15 +4,30 @@
    E-INK NEWSPAPER — pooter world
    ============================================================================ */
 
-:root {
+:root, [data-theme="light"] {
   --paper: #F5F0E8;
   --paper-dark: #EDE6D6;
+  --paper-tint: #EDE6D6;
   --ink: #1A1A1A;
   --ink-light: #4A4A4A;
   --ink-faint: #8A8A8A;
   --rule: #2A2A2A;
   --rule-light: #C8C0B0;
   --accent-red: #8B0000;
+  --background: var(--paper);
+  --foreground: var(--ink);
+}
+
+[data-theme="dark"] {
+  --paper: #0A0A0A;
+  --paper-dark: #141414;
+  --paper-tint: #1A1A1A;
+  --ink: #E8E4DC;
+  --ink-light: #B0ACA4;
+  --ink-faint: #6A6A6A;
+  --rule: #D0CCC4;
+  --rule-light: #2A2A2A;
+  --accent-red: #CC3333;
   --background: var(--paper);
   --foreground: var(--ink);
 }
@@ -44,6 +59,7 @@ body { background: var(--paper); color: var(--ink); }
 
 /* ── E-ink image filter ── */
 .newspaper-img { filter: grayscale(100%) contrast(1.2) brightness(1.05); mix-blend-mode: multiply; }
+[data-theme="dark"] .newspaper-img { mix-blend-mode: screen; filter: grayscale(100%) contrast(1.1) brightness(0.8); }
 .newspaper-img-hero { position: relative; }
 .newspaper-img-hero::after {
   content: ""; position: absolute; inset: 0;
@@ -155,6 +171,10 @@ body { background: var(--paper); color: var(--ink); }
   padding: 10px 24px;
   text-align: center;
 }
+
+/* ── Header glyph — dark on light, light on dark ── */
+.header-glyph { filter: grayscale(100%) contrast(2) brightness(0); }
+[data-theme="dark"] .header-glyph { filter: grayscale(100%) contrast(2) brightness(0) invert(1); }
 
 /* ── Inverted ink block ── */
 .ink-block {

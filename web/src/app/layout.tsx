@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playfair_Display, Libre_Baskerville, UnifrakturCook } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers/WagmiProvider";
+import { ThemeProvider } from "@/lib/theme";
 import { Header } from "@/components/layout/Header";
 import { MarqueeBanner } from "@/components/layout/MarqueeBanner";
 import { ExtensionBanner } from "@/components/layout/ExtensionBanner";
@@ -82,10 +83,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${baskerville.variable} ${fraktur.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
       >
+        <ThemeProvider>
         <Providers>
           <DevBanner />
           <MarqueeBanner />
@@ -96,6 +98,7 @@ export default function RootLayout({
           <BetaToast />
           <PooterNotificationHub />
         </Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -107,7 +107,7 @@ contract ZKRecovery is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     function initialize(address _verifier) public initializer {
         __Ownable_init(msg.sender);
-        __UUPSUpgradeable_init();
+        // UUPSUpgradeable has no initializer in this OZ version (no-op)
         verifier = IGroth16Verifier(_verifier);
     }
 
