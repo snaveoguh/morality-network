@@ -39,6 +39,7 @@
     "@upstash/redis": "^1.37.0",
     "bs58": "^6.0.0",
     "ethers": "^6.16.0",
+    "gsap": "^3.14.2",
     "iron-session": "^8.0.4",
     "lightweight-charts": "^5.1.0",
     "next": "16.1.6",
