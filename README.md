@@ -132,15 +132,18 @@ compositeScore = (onchainRating x 0.4) + (aiScore x 0.3) + (tipVolume x 0.2) + (
 
 ## Deployment
 
-```bash
-# Manual deploy to dev
-railway link -p earnest-love -e dev -s morality-network && railway up --detach
+Production auto-deploys from `main` via GitHub integration on `faithful-purpose`.
 
-# Manual deploy to production
+```bash
+# Production deploys automatically when you merge to main.
+# To manually deploy to production:
 railway link -p faithful-purpose -e production -s morality-network && railway up --detach
+
+# Dev (earnest-love) is currently broken — CLI deploys fail at initialization.
+# railway link -p earnest-love -e dev -s morality-network && railway up --detach
 ```
 
-Preferred workflow: Railway GitHub-connected deploys for the web service, with Cloudflare continuing to own the public DNS.
+Cloudflare owns the public DNS. Railway (`faithful-purpose`) hosts the production web service.
 
 ## License
 

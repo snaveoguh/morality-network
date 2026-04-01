@@ -27,20 +27,24 @@ These services were observed during the April 1, 2026 audit and are part of the 
 | `faithful-purpose / production / radiant-liberation` | Unhealthy duplicate `pooter1`-style service | Cleanup candidate |
 | `spirited-flexibility` | `noun.wtf` infrastructure | Out of scope for `pooter.world` |
 
-### Public DNS
+### Public DNS (updated 2026-04-01)
 
 - Authoritative nameservers: `annalise.ns.cloudflare.com`, `melnicoff.ns.cloudflare.com`
-- `pooter.world` is served via `railway-edge`
-- `dev.pooter.world` currently CNAMEs to `svb92msz.up.railway.app`
+- `pooter.world` CNAME → `oewwxjq0.up.railway.app` (faithful-purpose, DNS only)
+- `dev.pooter.world` CNAME → `svb92msz.up.railway.app` (earnest-love, DNS only — **currently broken**)
 
 ### Deploy Commands
 
 ```bash
-# Deploy web to dev
-railway link -p earnest-love -e dev -s morality-network && railway up --detach
-
-# Deploy web to production
+# Production auto-deploys from GitHub main via faithful-purpose.
+# To manually deploy to production:
 railway link -p faithful-purpose -e production -s morality-network && railway up --detach
+
+# Always re-link after manual deploy:
+railway link -p faithful-purpose -e production -s morality-network
+
+# Dev (earnest-love) — BROKEN as of 2026-04-01, CLI deploys fail at initialization:
+# railway link -p earnest-love -e dev -s morality-network && railway up --detach
 
 # Deploy indexer
 railway link -p pooter-indexer -e production -s pooter-indexer && railway up --detach

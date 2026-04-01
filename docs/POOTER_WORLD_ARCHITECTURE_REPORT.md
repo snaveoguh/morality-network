@@ -59,11 +59,11 @@ This report is based on direct inspection of the active `morality.network-master
 | `faithful-purpose / production / radiant-liberation` | Appears to be duplicate `pooter1`-style service and unhealthy | Confusing extra runtime | Repair with explicit ownership or archive |
 | `spirited-flexibility` | User-confirmed `noun.wtf` infrastructure | Not part of `pooter.world` | Leave out of pooter runbooks |
 
-### Public Edge
+### Public Edge (updated 2026-04-01)
 
 - DNS is on Cloudflare nameservers.
-- `pooter.world` and `dev.pooter.world` both terminate at `railway-edge`.
-- `dev.pooter.world` currently CNAMEs to `svb92msz.up.railway.app`.
+- `pooter.world` CNAME → `oewwxjq0.up.railway.app` (faithful-purpose, DNS only).
+- `dev.pooter.world` CNAME → `svb92msz.up.railway.app` (earnest-love, DNS only — **currently broken**, CLI deploys fail at initialization).
 - Cloudflare should be treated as the public edge and Railway as the serving platform.
 
 ## System Overview
