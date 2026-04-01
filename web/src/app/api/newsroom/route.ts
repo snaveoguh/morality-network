@@ -4,23 +4,23 @@ import { getNewsroomEdition } from "@/lib/newsroom-edition";
 import { verifyCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 55; // Vercel hobby plan limit
+export const maxDuration = 55;
 
 // ============================================================================
 // GET /api/newsroom — run the newsroom pipeline (cron endpoint)
 //
-// Called by Vercel cron every 2h. Generates Pooter Originals for top stories.
+// Called by the scheduled job 3x daily (6am, 2pm, 10pm UTC). Generates Pooter Originals for top stories.
 // Idempotent — skips stories that already have editorials.
 //
-// Auth: Requires CRON_SECRET Bearer token (sent automatically by Vercel cron).
+// Auth: Requires CRON_SECRET Bearer token from the active scheduler or operator.
 // ============================================================================
 
 export async function GET(request: NextRequest) {
   const authError = verifyCronAuth(request);
   if (authError) return authError;
   try {
-    // Run the pipeline — capped at 2 stories per cron invocation to fit
-    // within Vercel's 55s maxDuration. Runs every 2h, so ~24 originals/day.
+    // Run the pipeline — capped at 2 stories per scheduled invocation so the
+    // request stays bounded. Runs 3x daily, so roughly 6 originals/day.
     // Idempotent: skips already-generated stories.
     const result = await runNewsroom({
       forceRegenerate: false,
