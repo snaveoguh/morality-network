@@ -67,6 +67,12 @@
       "runtimeExecutable": "/bin/bash",
       "runtimeArgs": ["-c", "cd /Users/hugo/Downloads/flue-stox && npm run dev -- -p 3005"],
       "port": 3005
+    },
+    {
+      "name": "pooter1-agent",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/hugo/Downloads/morality.network-master/agents/pooter1 && PORT=3006 npx tsx src/index.ts"],
+      "port": 3006
     }
   ]
 }
