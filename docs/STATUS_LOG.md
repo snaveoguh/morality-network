@@ -2,6 +2,8 @@
 
 Use this log for periodic updates tied to deliverable IDs.
 
+Historical entries may mention Vercel-era infrastructure. For the current deployment topology and service ownership, use `docs/DEPLOYMENTS.md`.
+
 ## Update Template
 
 - Date:

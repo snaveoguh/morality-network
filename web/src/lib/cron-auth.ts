@@ -1,12 +1,12 @@
 import "server-only";
 
 /**
- * Verify that an incoming request is from Vercel Cron or an authorized caller.
+ * Verify that an incoming request is from the configured scheduler or another
+ * authorized caller.
  *
- * Vercel automatically sends `Authorization: Bearer <CRON_SECRET>` on cron
- * invocations when the CRON_SECRET environment variable is set. This utility
- * checks that header on all cron/mutation endpoints so they can't be triggered
- * by random external requests.
+ * Scheduled jobs and protected mutation endpoints are expected to send
+ * `Authorization: Bearer <CRON_SECRET>`. This utility checks that header so
+ * these routes cannot be triggered by random external requests.
  *
  * Usage:
  *   import { verifyCronAuth } from "@/lib/cron-auth";
@@ -24,8 +24,8 @@ import { NextResponse } from "next/server";
  * Returns a 401 NextResponse if the request is not authorized, or null if OK.
  * Checks `Authorization: Bearer <CRON_SECRET>` header.
  *
- * In development (NODE_ENV !== "production"), auth is skipped so you can
- * curl endpoints locally without setting CRON_SECRET.
+ * In development (NODE_ENV !== "production"), auth is skipped so you can test
+ * endpoints locally without setting CRON_SECRET.
  */
 export function verifyCronAuth(request: Request): NextResponse | null {
   // Skip auth in development for local testing

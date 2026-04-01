@@ -265,13 +265,14 @@ Auth levels: PUBLIC = no auth, AUTH = SIWE session, HOLDER = MO token holder gat
 
 | Service | URL | Platform |
 |---|---|---|
-| Production | https://pooter.world | Vercel |
-| Dev/Preview | https://dev.pooter.world | Vercel (aliased preview) |
+| Production | https://pooter.world | Railway behind Cloudflare |
+| Dev/Preview | https://dev.pooter.world | Railway behind Cloudflare |
+| Indexer API | https://pooter-indexer-production.up.railway.app | Railway |
 | Agent Hub | https://heartfelt-flow-production-d872.up.railway.app | Railway |
 
 ## Dev Site Wiring (Base Sepolia)
 
-Set these env vars on Vercel preview to point dev at Sepolia:
+Set these env vars on the dev Railway frontend to point dev at Sepolia:
 
 ```
 NEXT_PUBLIC_CONTRACTS_CHAIN_ID=84532

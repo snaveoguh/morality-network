@@ -9,10 +9,10 @@ export const maxDuration = 55;
 /**
  * GET /api/cron/daily-edition — generate today's daily edition
  *
- * Called by Vercel cron (every 2h). Checks cache first — only generates
- * if today's edition doesn't exist yet. Safe to call repeatedly.
+ * Called by the scheduled job. Checks cache first and only generates if
+ * today's edition doesn't exist yet. Safe to call repeatedly.
  *
- * Auth: Requires CRON_SECRET Bearer token (sent automatically by Vercel cron).
+ * Auth: Requires CRON_SECRET Bearer token from the active scheduler.
  */
 export async function GET(request: NextRequest) {
   const authError = verifyCronAuth(request);
