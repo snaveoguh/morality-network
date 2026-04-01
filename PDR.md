@@ -27,7 +27,7 @@ A permissionless, censorship-resistant news feed and discussion platform where:
 ┌──────────────────────────────────────────────────────────────────────────────────┐
 │                              FRONTEND (Next.js 16)                               │
 │                                                                                  │
-│   pooter.world / dev.pooter.world — Vercel                                      │
+│   pooter.world / dev.pooter.world — Railway behind Cloudflare                   │
 │                                                                                  │
 │   ┌──────────┐ ┌───────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐            │
 │   │ Feed     │ │ Editorial │ │ Signals  │ │ Bots     │ │ Entity   │            │
@@ -42,8 +42,8 @@ A permissionless, censorship-resistant news feed and discussion platform where:
             │                        │                      │
             ▼                        ▼                      ▼
 ┌───────────────────────┐  ┌──────────────────────┐  ┌────────────────────────────┐
-│ POOTER INDEXER        │  │ AGENT HUB            │  │ TRADING ENGINE             │
-│ (Railway)             │  │ (Railway)            │  │ (Vercel cron)              │
+│ POOTER INDEXER        │  │ AGENT HUB            │  │ TRADING / WORKER RUNTIME   │
+│ (Railway)             │  │ (Railway)            │  │ (Railway service)          │
 │                       │  │                      │  │                            │
 │ - Ponder v0.16        │  │ Hono + Groq API      │  │ - Signal aggregation       │
 │ - PostgreSQL          │  │                      │  │ - Newsdesk fetch           │
@@ -88,7 +88,7 @@ A permissionless, censorship-resistant news feed and discussion platform where:
 | Indexer | Ponder v0.16 + PostgreSQL | Event indexing + editorial archive |
 | LLM Hub | Hono + Groq API (agent-hub) | Centralized LLM routing, $0/day |
 | AI Models | Qwen3-32B (premium), Llama 3.3 70B (fast) | Free tier on Groq |
-| Hosting | Vercel (web) + Railway (services) | Zero-config deploys |
+| Hosting | Railway services behind Cloudflare | One host for web + workers, isolated by service |
 
 ---
 
@@ -473,30 +473,32 @@ totalScore = (onchainRatingAvg × 0.4) + (aiScore × 0.3) + (tipVolume × 0.2) +
 
 ```
 ┌────────────────────────┐     ┌────────────────────────┐
-│ VERCEL                 │     │ RAILWAY                │
+│ CLOUDFLARE             │     │ RAILWAY                │
 │                        │     │                        │
-│ pooter.world (prod)    │     │ Agent Hub (Hono)       │
-│ dev.pooter.world (dev) │◄───►│ heartfelt-flow         │
+│ DNS + proxy            │     │ morality-network       │
+│ pooter.world (prod)    │────►│ - prod frontend        │
+│ dev.pooter.world (dev) │────►│ - dev frontend         │
 │                        │     │ Port 3100              │
-│ - Next.js 16           │     │                        │
-│ - ISR (60s revalidate) │     │ Pooter Indexer (Ponder)│
-│ - Cron: /api/trading   │     │ - PostgreSQL 5GB       │
-│ - Ephemeral FS         │     │ - Editorial archive    │
+│                        │     │ Pooter Indexer (Ponder)│
+│                        │     │ - PostgreSQL 5GB       │
+│                        │     │ - Editorial archive    │
 │                        │     │ - Market impact data   │
-│ Team: mshrmstudio      │     │                        │
+│                        │     │                        │
+│                        │     │ Worker services        │
+│                        │     │ - trading / swarm      │
+│                        │     │ - pooter1              │
+│                        │     │ - polypooter           │
 └────────────────────────┘     └────────────────────────┘
 ```
 
 ### Deploy Commands
 
 ```bash
-# Web to dev (preview)
-cd /Users/hugo/Downloads/morality.network-master/web
-npx vercel && npx vercel alias <url> dev.pooter.world
+# Web to dev
+railway link -p earnest-love -e dev -s morality-network && railway up --detach
 
 # Web to prod
-cd /Users/hugo/Downloads/morality.network-master/web
-npx vercel --prod
+railway link -p faithful-purpose -e production -s morality-network && railway up --detach
 
 # Agent Hub to Railway
 cd /Users/hugo/agent-hub && railway up --detach
@@ -504,7 +506,7 @@ cd /Users/hugo/agent-hub && railway up --detach
 
 ### Environment Variables
 
-**Vercel (pooter.world):**
+**Railway frontend (`morality-network`):**
 - `AGENT_HUB_URL` — agent-hub Railway URL
 - `AGENT_HUB_SECRET` — shared auth token
 - `BASE_MAINNET_RPC_URL` — Base L2 RPC
@@ -678,8 +680,8 @@ The HL perp engine doesn't use token scanner candidates. Instead, newsdesk/aggre
 ### Trading: Exit Priority
 Exits are evaluated BEFORE new entries. Signal fetch happens before exit evaluation so signal-reversal exits have access to current market data.
 
-### Vercel Ephemeral FS
-`editorial-archive.json` doesn't persist between serverless invocations. ISR caching (`revalidate`) prevents re-generating AI editorials on every request. Critical data lives in the Ponder indexer (PostgreSQL on Railway).
+### Legacy Serverless Ephemeral FS Note
+`editorial-archive.json` does not persist across ephemeral instances. ISR caching (`revalidate`) prevents re-generating AI editorials on every request. Critical data lives in the Ponder indexer (PostgreSQL on Railway).
 
 ### Agent Hub: $0/Day LLM Costs
 Groq free tier handles all LLM calls. Together.ai as fallback. No direct Anthropic/OpenAI API costs in production.

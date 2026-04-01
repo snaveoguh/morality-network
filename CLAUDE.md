@@ -4,6 +4,8 @@
 
 **ALWAYS deploy to dev first. NEVER deploy directly to production unless the user explicitly says "deploy to prod" or "push to prod".**
 
+`pooter.world` and `dev.pooter.world` are served from Railway behind Cloudflare DNS/proxy. Do not treat Vercel as the current deployment target for the web app.
+
 ### Deploy to dev (DEFAULT — do this first):
 ```bash
 railway link -p earnest-love -e dev -s morality-network && railway up --detach
@@ -13,13 +15,13 @@ railway link -p earnest-love -e dev -s morality-network && railway up --detach
 
 ### Deploy to prod (ONLY when user explicitly asks):
 ```bash
-railway link -p earnest-love -e production -s morality-network && railway up --detach
+railway link -p faithful-purpose -e production -s morality-network && railway up --detach
 ```
 - URL: https://pooter.world
 
 ### After any deploy, always re-link to production:
 ```bash
-railway link -p earnest-love -e production -s morality-network
+railway link -p faithful-purpose -e production -s morality-network
 ```
 
 ## Workflow
@@ -49,4 +51,5 @@ railway link -p earnest-love -e production -s morality-network
 - Agent: `agents/pooter1/` (Pooter bot — editorial writer, Farcaster poster)
 - Contracts: `contracts/` (Solidity 0.8.24 on Base L2)
 - Mobile: `mobile/` (React Native / Expo)
+- Current web deploy target: Railway service `morality-network`
 - Build config: `railway.json` in repo root

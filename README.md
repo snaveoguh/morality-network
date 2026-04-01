@@ -4,6 +4,8 @@ A censorship-resistant news feed, AI editorial engine, and discussion platform w
 
 **Live:** [pooter.world](https://pooter.world) | **Dev:** [dev.pooter.world](https://dev.pooter.world)
 
+Cloudflare handles DNS and proxying for the public domains. The Next.js app is served from Railway, not Vercel.
+
 ## What is this?
 
 - **AI Newsroom** — Automated editorial pipeline: crawls RSS feeds, generates AI editorials with market-impact analysis, publishes daily editions with DALL-E cover art
@@ -81,7 +83,7 @@ AGENT_HUB_URL=                          # Agent Hub URL (primary)
 OPENAI_API_KEY=                         # DALL-E 3 illustrations
 
 # Cron Security (required in production)
-CRON_SECRET=                            # Vercel cron auth token
+CRON_SECRET=                            # Shared service auth token for cron/worker routes
 GOD_MODE_SECRET=                        # Editorial edit auth token
 GOD_MODE_ADDRESSES=                     # Comma-separated wallet addresses
 
@@ -99,7 +101,7 @@ forge build
 forge test
 ```
 
-## Cron Schedule (Vercel)
+## Cron Schedule
 
 | Endpoint | Schedule | Purpose |
 |----------|----------|---------|
@@ -110,7 +112,7 @@ forge test
 | `/api/cron/daily-illustration` | Daily 5:45 AM UTC | Generate DALL-E cover art |
 | `/api/newsroom` | 3x daily (6 AM, 2 PM, 10 PM UTC) | Generate Pooter Originals for top stories |
 
-All cron endpoints require `CRON_SECRET` Bearer token authentication.
+All cron endpoints require `CRON_SECRET` Bearer token authentication. The table above is the repository source of truth for schedule intent; the active scheduler configuration lives in the deployment platform and must be kept in sync there.
 
 ## Scoring Formula
 
@@ -131,12 +133,14 @@ compositeScore = (onchainRating x 0.4) + (aiScore x 0.3) + (tipVolume x 0.2) + (
 ## Deployment
 
 ```bash
-# Deploy to dev (preview)
-cd web && npx vercel && npx vercel alias <url> dev.pooter.world
+# Manual deploy to dev
+railway link -p earnest-love -e dev -s morality-network && railway up --detach
 
-# Deploy to production
-cd web && npx vercel --prod
+# Manual deploy to production
+railway link -p faithful-purpose -e production -s morality-network && railway up --detach
 ```
+
+Preferred workflow: Railway GitHub-connected deploys for the web service, with Cloudflare continuing to own the public DNS.
 
 ## License
 

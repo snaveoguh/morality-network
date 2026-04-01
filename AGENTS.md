@@ -32,8 +32,8 @@ These are non-negotiable constraints. No agent may violate these regardless of i
 - Cross-chain operations must be recoverable. If a bridge route gets stuck, there must be a timeout-based recovery path.
 
 ### 3. Separation of concerns
-- **Vercel** serves the frontend and editorial crons. It does NOT execute trades.
-- **Railway** runs the trading worker. It does NOT serve user-facing pages.
+- **Cloudflare** is the public edge: DNS, proxying, TLS, and hostname routing.
+- **Railway** serves the frontend, background workers, indexer, and agent services in separate services. User-facing pages and workers must remain isolated by service, even when they share Railway.
 - **Redis** is a cache, not a database. Everything in Redis must be reconstructable from the chain or the indexer.
 - **The indexer** is the read layer. The chain is the write layer. Never write to the indexer directly.
 
@@ -66,7 +66,7 @@ The autonomous trading system manages real money. These rules are absolute.
 ### Environment Isolation
 - **Dev and prod must never share the same trading wallet or Redis store.**
 - **Dev must never execute real trades.** `TRADER_DRY_RUN=true` on all non-production environments.
-- **Trading crons belong on Railway, not Vercel.** Vercel is for serving pages.
+- **Trading crons and workers belong on Railway background services, not the user-facing frontend service.**
 
 ---
 
