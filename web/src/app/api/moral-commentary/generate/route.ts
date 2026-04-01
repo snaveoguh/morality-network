@@ -7,10 +7,10 @@ export const maxDuration = 55;
 
 /**
  * GET /api/moral-commentary/generate
- * Called by Vercel cron daily at 4 AM UTC (1 hour after moral compass crawl).
+ * Called by the scheduled job daily at 4 AM UTC (1 hour after moral compass crawl).
  * Generates today's Moral Commentary article.
  *
- * Auth: Requires CRON_SECRET Bearer token (sent automatically by Vercel cron).
+ * Auth: Requires CRON_SECRET Bearer token from the active scheduler.
  */
 export async function GET(request: NextRequest) {
   const authError = verifyCronAuth(request);

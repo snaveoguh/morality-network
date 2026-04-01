@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import { listRecentMarketImpactRecords } from "./editorial-archive";
 import { generateTextForTask } from "./ai-provider";
 import { hasAIProviderForTask } from "./ai-models";
@@ -41,7 +42,7 @@ const VALID_SENTIMENTS = new Set<NarrativeSentiment>([
  * Extract macro narratives from recent editorials via AI.
  * Returns new narratives not already in the seed list.
  */
-export async function extractNarrativesFromEditorials(): Promise<
+async function extractNarrativesFromEditorialsUncached(): Promise<
   MacroNarrative[]
 > {
   if (!hasAIProviderForTask("factExtraction")) return [];
@@ -100,4 +101,16 @@ export async function extractNarrativesFromEditorials(): Promise<
   } catch {
     return [];
   }
+}
+
+const getCachedEditorialNarratives = unstable_cache(
+  async () => extractNarrativesFromEditorialsUncached(),
+  ["markets-ai-narratives-v1"],
+  { revalidate: 86_400 },
+);
+
+export async function extractNarrativesFromEditorials(): Promise<
+  MacroNarrative[]
+> {
+  return getCachedEditorialNarratives();
 }

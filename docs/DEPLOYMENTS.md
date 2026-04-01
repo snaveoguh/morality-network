@@ -1,27 +1,49 @@
 # Deployments
 
-Last updated: 2026-03-24.
+Last updated: 2026-04-01.
 
 ## Launch Runtime Topology
 
-| Service | Platform | URL |
-|---------|----------|-----|
-| Web (prod) | Vercel | https://pooter.world |
-| Web (dev) | Vercel | https://dev.pooter.world |
-| Indexer API | Railway | `INDEXER_BACKEND_URL` |
-| Agent Hub | Railway | `AGENT_HUB_URL` |
-| Extension | Chrome Web Store | Deferred |
+| Service | Platform | URL | Current Railway Target |
+|---------|----------|-----|------------------------|
+| Web (prod) | Railway behind Cloudflare | https://pooter.world | `faithful-purpose / production / morality-network` |
+| Web (dev) | Railway behind Cloudflare | https://dev.pooter.world | `earnest-love / dev / morality-network` |
+| Background worker | Railway | internal / non-user-facing | `faithful-purpose / production / disciplined-serenity` |
+| Indexer API | Railway | https://pooter-indexer-production.up.railway.app | `pooter-indexer / production / pooter-indexer` |
+| Agent Hub | Railway | https://heartfelt-flow-production-d872.up.railway.app | `heartfelt-flow / production / heartfelt-flow` |
+| Polypooter | Railway | https://polypooter-production.up.railway.app | `earnest-love / production / polypooter` |
+| Extension | Chrome Web Store | Deferred | n/a |
 
-Vercel team: `mshrmstudio`
+### Auxiliary And Cleanup Candidates
+
+These services were observed during the April 1, 2026 audit and are part of the current Railway estate, but they should not be treated as the canonical prod stack unless explicitly re-designated.
+
+| Service | Observed role | Current disposition |
+|---------|---------------|---------------------|
+| `earnest-love / production / morality-network` | Older Railway frontend | Legacy candidate; not the current public prod host |
+| `pooter-indexer / production / pooter-worker` | Overlapping worker activity | Cleanup candidate |
+| `pooter-indexer / production / pooter-agent-worker` | Overlapping agent/trader worker activity | Cleanup candidate |
+| `pooter-indexer / production / pooter1` | Feature-specific agent/editorial service | Keep only if intentionally owned |
+| `faithful-purpose / production / radiant-liberation` | Unhealthy duplicate `pooter1`-style service | Cleanup candidate |
+| `spirited-flexibility` | `noun.wtf` infrastructure | Out of scope for `pooter.world` |
+
+### Public DNS
+
+- Authoritative nameservers: `annalise.ns.cloudflare.com`, `melnicoff.ns.cloudflare.com`
+- `pooter.world` is served via `railway-edge`
+- `dev.pooter.world` currently CNAMEs to `svb92msz.up.railway.app`
 
 ### Deploy Commands
 
 ```bash
-# Deploy to dev (preview + alias)
-cd web && npx vercel && npx vercel alias <url> dev.pooter.world
+# Deploy web to dev
+railway link -p earnest-love -e dev -s morality-network && railway up --detach
 
-# Deploy to production
-cd web && npx vercel --prod
+# Deploy web to production
+railway link -p faithful-purpose -e production -s morality-network && railway up --detach
+
+# Deploy indexer
+railway link -p pooter-indexer -e production -s pooter-indexer && railway up --detach
 ```
 
 ## Current Chain Status
@@ -185,7 +207,7 @@ For pure dev/testnet rollouts, the Foundry scripts can deploy:
 - Web uses env-overridable addresses in:
   - `web/src/lib/contracts.ts`
 
-## Cron Schedule (vercel.json)
+## Cron Schedule
 
 | Endpoint | Schedule | Purpose |
 |----------|----------|---------|
@@ -195,6 +217,8 @@ For pure dev/testnet rollouts, the Foundry scripts can deploy:
 | `/api/cron/daily-edition` | Daily 5:30 AM UTC | Generate daily edition |
 | `/api/cron/daily-illustration` | Daily 5:45 AM UTC | DALL-E cover art |
 | `/api/newsroom` | 3x daily (6am, 2pm, 10pm UTC) | Pooter Originals |
+
+The schedule table above is the repo-level source of truth. The active scheduler configuration lives in the deployment platform, and no checked-in Vercel scheduler file should be treated as authoritative.
 
 ## Explorer Links
 

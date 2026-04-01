@@ -23,7 +23,7 @@ This document captures the current launch stance after the hardening pass across
 
 ### Launch-critical
 
-- `web`: public Next.js surface on Vercel or equivalent
+- `web`: public Next.js surface on Railway behind Cloudflare
 - `indexer`: Ponder API + persistent Postgres
 - `web` worker process: scanner sync, swarm refresh, optional trader execution
 - Base mainnet contracts and addresses aligned across web + indexer
@@ -37,7 +37,7 @@ This document captures the current launch stance after the hardening pass across
 
 ## Worker Deployment
 
-Run the worker as a small always-on Node process, not inside Vercel request handlers.
+Run the worker as a small always-on Node process, not inside the user-facing frontend service.
 
 Recommended environment:
 

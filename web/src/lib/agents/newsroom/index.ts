@@ -3,7 +3,7 @@
 // Curates and generates 10 compelling editorial pieces per day from RSS feeds.
 // Enforces topic diversity (max 2 per topic, max 1 per source).
 // Publishes "pooter-original-published" events to the message bus.
-// Runs via Vercel cron (every 2 hours) — no background polling in serverless.
+// Runs via the scheduled newsroom job every 2 hours — no background polling.
 
 import { randomUUID } from "node:crypto";
 import type { Agent, AgentSnapshot, AgentStatus } from "../core/types";
@@ -44,7 +44,7 @@ class NewsroomAgent implements Agent {
   }
 
   /**
-   * Run the newsroom pipeline. Called by /api/newsroom cron route.
+   * Run the newsroom pipeline. Called by the scheduled /api/newsroom route.
    * Returns the full NewsroomResult for API response.
    */
   async runNow(): Promise<NewsroomResult> {

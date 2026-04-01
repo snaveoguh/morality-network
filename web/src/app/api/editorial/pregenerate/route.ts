@@ -10,15 +10,15 @@ import {
 import { verifyCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 55; // Vercel limit
+export const maxDuration = 55;
 
 /**
  * GET /api/editorial/pregenerate
  *
- * Called by GitHub Actions cron (every 30 min) and Vercel cron (daily).
+ * Called by scheduled jobs and safe to invoke manually.
  * Pre-generates top 5 feed items that don't have editorials yet.
  *
- * Auth: Requires CRON_SECRET Bearer token (sent automatically by Vercel cron).
+ * Auth: Requires CRON_SECRET Bearer token from the active scheduler.
  */
 export async function GET(request: NextRequest) {
   const authError = verifyCronAuth(request);

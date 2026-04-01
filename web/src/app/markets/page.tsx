@@ -1,11 +1,11 @@
 import { AgentMarketDashboard } from "@/components/markets/AgentMarketDashboard";
 import { NarrativeGrid } from "@/components/markets/NarrativeGrid";
 import { getSeedNarratives } from "@/lib/narratives";
+import type { MacroNarrative } from "@/lib/narratives";
 import { extractNarrativesFromEditorials } from "@/lib/narrative-extractor";
 import { withBrand } from "@/lib/brand";
 
-export const dynamic = "force-dynamic";
-export const maxDuration = 30;
+export const revalidate = 900;
 
 export const metadata = {
   title: withBrand("Agent Markets"),
@@ -13,10 +13,23 @@ export const metadata = {
     "Macro narratives, market sentiment, and live agent trading telemetry.",
 };
 
+async function getAiNarrativesWithBudget(): Promise<MacroNarrative[]> {
+  try {
+    return await Promise.race([
+      extractNarrativesFromEditorials(),
+      new Promise<MacroNarrative[]>((resolve) =>
+        setTimeout(() => resolve([]), 2_000),
+      ),
+    ]);
+  } catch {
+    return [];
+  }
+}
+
 export default async function MarketsPage() {
   const [seedNarratives, aiNarratives] = await Promise.all([
     Promise.resolve(getSeedNarratives()),
-    extractNarrativesFromEditorials().catch(() => []),
+    getAiNarrativesWithBudget(),
   ]);
 
   // Merge seed + AI-extracted, deduplicate by id

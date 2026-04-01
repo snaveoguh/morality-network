@@ -1,140 +1,159 @@
 # Morality Co-operative Limited
 
-## pooter world System Architecture Report
+## pooter.world System Architecture Report
 
 Prepared for co-operative members  
-Date: March 12, 2026
+Date: April 1, 2026
 
-This report is based on direct inspection of the active `` codebase and official vendor pricing pages checked on March 12, 2026.
+This report is based on direct inspection of the active `morality.network-master` codebase, Railway service bindings, and public DNS and HTTP routing observed on April 1, 2026. [docs/DEPLOYMENTS.md](./DEPLOYMENTS.md) remains the operational source of truth for domains, deploy commands, and environment ownership.
 
 ## Executive Summary
 
-- The live launch stack is the `` system, not the legacy repo root. The active production surfaces are `web`, `indexer`, and `contracts`, with `extension` as an optional adjacent client.
-- pooter world is a hybrid system: onchain state lives on Base and Ethereum mainnet, while the user-facing product, ingestion, AI pipelines, and query acceleration live offchain in TypeScript services.
-- Base mainnet is the operational social layer: registry, ratings, comments, tipping, leaderboard, agent vault, and NFT editions all default there. Ethereum mainnet is reserved for the trust-minimized Nouns and Lil Nouns prediction market.
-- The web application is not only a frontend. It is also an API layer, cron runner, metadata host for editions, feed aggregator, AI orchestration layer, and part of the data persistence path.
-- The indexer is the intended durable query layer, but the checked-in Ponder config still defaults to Base Sepolia while the web defaults to Base mainnet. That environment split is the most important architecture mismatch in the repo.
-- Durability is currently fragmented across three classes of storage: onchain contract state, indexer database state, and web-local JSON files or in-memory stores. This increases operational risk and makes serverless hosting less reliable than it appears.
-- Immediate operational issues exist: committed environment files containing live-looking secrets, a committed deployer private-key file, and a Sign-In With Ethereum flow that verifies signatures but does not yet establish a hardened production session.
-- Practical recurring operating cost is likely in the low two-digit to low three-digit USD range per month before gas, depending on whether the indexer is always-on, how many seats are on Vercel or Railway, and how heavily Anthropic models are used.
+- Public traffic for `pooter.world` and `dev.pooter.world` now flows through Cloudflare to Railway. Vercel is no longer the live hosting model for the public web product.
+- The launch stack is composed of five meaningful runtime planes: public web, durable indexer/API, background worker, agent hub, and a feature-specific Polymarket sidecar.
+- Onchain state remains the only canonical write layer. The indexer is the durable read layer. The web app is a presentation and orchestration layer and should not be treated as the system of record.
+- The strongest architectural improvement since the Vercel-era layout is workload separation. User-facing pages, long-running worker loops, indexing, and model routing are no longer forced through one request lifecycle.
+- The biggest remaining weakness is operational sprawl. Multiple Railway services overlap or appear partially legacy, which makes it easy for operators and AI agents to target the wrong service.
+- Chain posture is still mixed. Current deployment docs treat Base Sepolia as the active core-contract environment, while parts of the web app still default to Base mainnet addresses and Ethereum mainnet remains in scope for the Nouns prediction rail. That mismatch must be resolved before claiming fully aligned production readiness.
+- Remaining file-backed archives in the web app should be treated as transitional persistence, not the long-term durability model.
+- Operating cost is now more sensitive to Railway service count, Postgres footprint, and AI usage than to frontend function duration. The clearest cost win is consolidation of duplicate services.
 
 ## Scope
 
 ### Included
 
-- `web`: Next.js application, API routes, feeds, miniapps, AI workflows, edition metadata, cron entrypoints
-- `indexer`: Ponder event indexer, query API, scanner persistence, Postgres or PGlite storage
-- `contracts`: Solidity contracts, Foundry scripts, Base and Ethereum deployments
-- `extension`: optional Chrome extension surface for inline onchain interactions
+- `web`: Next.js application, API routes, cron-triggered endpoints, edition metadata, miniapp surfaces
+- `indexer`: Ponder ingestion, query API, scanner persistence, Postgres-backed read layer
+- `contracts`: Solidity protocol contracts, deployment scripts, broadcast artifacts
+- Railway runtime topology for the production and development pooter surfaces
+- Agent and worker services that directly support pooter.world
 
-### Excluded From Production Scope
+### Excluded From Launch-Critical Scope
 
-- Root `README.md` describes Morality 1.0 as a playground in .NET 4.5.2 and not the final launch architecture.
-- Historical directories such as `morality.network.contracts-master`, `ratings-main`, and old Chrome extension prototypes should be treated as legacy research or archived prototypes, not launch-critical infrastructure.
+- `spirited-flexibility` and other `noun.wtf` infrastructure
+- Historical root prototypes and archived experiments that are not part of the active pooter deployment path
+- Any local-only `.vercel` metadata, which is already gitignored and not a production artifact
+
+## Current Runtime Topology
+
+### Launch-Critical Services
+
+| Runtime plane | Current target | Public URL | Role | Canonical state |
+| --- | --- | --- | --- | --- |
+| Public web (prod) | `faithful-purpose / production / morality-network` | `https://pooter.world` | User-facing Next.js app, SSR, API routes, auth, metadata, orchestration | No |
+| Public web (dev) | `earnest-love / dev / morality-network` | `https://dev.pooter.world` | Development and preview frontend | No |
+| Durable read layer | `pooter-indexer / production / pooter-indexer` | `https://pooter-indexer-production.up.railway.app` | Event indexing, denormalized reads, archive and scanner backing APIs | No, but intended canonical offchain cache |
+| Background execution | `faithful-purpose / production / disciplined-serenity` | internal / non-user-facing | Scheduled jobs, scanners, trading and coordination loops | No |
+| Agent hub | `heartfelt-flow / production / heartfelt-flow` | `https://heartfelt-flow-production-d872.up.railway.app` | LLM routing and provider abstraction | No |
+| Market sidecar | `earnest-love / production / polypooter` | `https://polypooter-production.up.railway.app` | Polymarket arb and market-specific sidecar logic | No |
+| Onchain contracts | Base Sepolia, Base mainnet defaults in app config, Ethereum mainnet market rail | chain-native | Canonical identity, comments, tipping, prediction settlement, editions, vault rail | Yes |
+
+### Overlap And Cleanup Candidates
+
+| Service | Observed role | Relation to pooter.world | Recommended action |
+| --- | --- | --- | --- |
+| `earnest-love / production / morality-network` | Older Railway frontend | Not the current public production host | Archive or relabel clearly |
+| `pooter-indexer / production / pooter-worker` | Worker-style trading and scanner activity | Overlaps the canonical worker role | Merge into one worker plan or archive |
+| `pooter-indexer / production / pooter-agent-worker` | Worker-style agent and trading activity | Overlaps the canonical worker role | Merge into one worker plan or archive |
+| `pooter-indexer / production / pooter1` | Dedicated agent/editorial service | Supports pooter features but is not core web hosting | Keep only if intentionally owned and documented |
+| `faithful-purpose / production / radiant-liberation` | Appears to be duplicate `pooter1`-style service and unhealthy | Confusing extra runtime | Repair with explicit ownership or archive |
+| `spirited-flexibility` | User-confirmed `noun.wtf` infrastructure | Not part of `pooter.world` | Leave out of pooter runbooks |
+
+### Public Edge
+
+- DNS is on Cloudflare nameservers.
+- `pooter.world` and `dev.pooter.world` both terminate at `railway-edge`.
+- `dev.pooter.world` currently CNAMEs to `svb92msz.up.railway.app`.
+- Cloudflare should be treated as the public edge and Railway as the serving platform.
 
 ## System Overview
 
 | Layer | Primary technology | Runtime or host | Canonical state |
 | --- | --- | --- | --- |
-| Web product and API | TypeScript, React 19.2.3, Next.js 16.1.6, Tailwind 4 | Vercel is explicitly configured | No, except some ad hoc file-backed caches and archives |
-| Indexer and query API | TypeScript, Ponder, Hono, viem | Any Node host; local Docker and Postgres are provided | No, but intended as the main offchain query layer |
-| Smart contracts | Solidity 0.8.24, Foundry, OpenZeppelin upgradeable | Base mainnet, Base Sepolia, Ethereum mainnet | Yes for registry, social, treasury, and market state |
+| Public web | TypeScript, Next.js 16, React 19, Tailwind 4 | Railway behind Cloudflare | No |
+| Background execution | TypeScript Node services | Railway worker services | No |
+| Durable read layer | Ponder, Hono, Postgres, viem | Railway indexer service plus Postgres | No, but intended offchain source of truth |
+| LLM orchestration | Hono/Node service with provider routing | Railway agent hub | No |
+| Sidecar agents | TypeScript/Node feature services | Railway sidecars | No |
+| Smart contracts | Solidity 0.8.24, Foundry, OpenZeppelin upgradeable | Base and Ethereum | Yes |
 | Browser wallet integration | wagmi, viem, RainbowKit, SIWE | User browser | No |
-| Optional extension | TypeScript Chrome extension | Chrome runtime | No |
-| Legacy prototype stack | C# / .NET 4.5.2 | Legacy local app only | No |
+| Optional extension | TypeScript Chrome extension | Browser runtime | No |
+| Legacy prototype stack | C# / .NET 4.5.2 | Historical only | No |
 
 ## Full Network Diagram
 
 ```mermaid
 flowchart LR
-    Users["Readers, traders, creators, moderators, co-op members"]
-    Wallets["Wallets / SIWE\nMetaMask, Coinbase, injected wallets,\noptional WalletConnect"]
+    Users["Readers, traders, creators, operators, co-op members"]
+    Wallets["Wallets / SIWE\nMetaMask, Coinbase Wallet,\ninjected wallets, WalletConnect"]
+    Cloudflare["Cloudflare\nDNS, TLS, proxy, edge"]
+    ProdWeb["Railway prod web\nfaithful-purpose / morality-network"]
+    DevWeb["Railway dev web\nearnest-love / morality-network"]
+    Worker["Railway worker\nfaithful-purpose / disciplined-serenity"]
+    Indexer["Railway indexer\npooter-indexer / pooter-indexer"]
+    AgentHub["Railway agent hub\nheartfelt-flow / heartfelt-flow"]
+    Polypooter["Railway sidecar\nearnest-love / polypooter"]
+    Postgres["Postgres\nindexer backing store"]
+    Base["Base contracts\nsocial, vault, editions, markets"]
+    Ethereum["Ethereum mainnet rail\nNouns / Lil Nouns market"]
+    RPC["RPC endpoints"]
+    Feeds["RSS, governance, Farcaster,\nmarket data, external APIs"]
+    AI["Anthropic and agent-hub model providers"]
 
-    subgraph Vercel["Vercel-hosted Next.js application (`web`)"]
-        WebUI["UI routes\n/, /leaderboard, /discuss,\n/proposals, /predictions,\n/markets, /signals, /sentiment,\n/stumble, /bots, /archive"]
-        Api["API routes\n/auth, /ai/score, /trading/execute,\n/agents/*, /edition/*, /health/*"]
-        Cron["Vercel Cron\n`/api/trading/execute`\n00:00 UTC daily"]
-        JsonStore["File-backed archives\n`src/data/article-archive.json`\n`src/data/editorial-archive.json`"]
-        MemoryStore["In-memory agent state\nscanner, coordinator, bus"]
-    end
-
-    subgraph Indexer["Indexer service (`indexer`)"]
-        Ponder["Ponder event ingestion"]
-        Hono["Public API / GraphQL / health / scanner routes"]
-        Pg["Postgres or PGlite\nindexer database"]
-    end
-
-    subgraph Base["Base mainnet"]
-        Registry["MoralityRegistry"]
-        Ratings["MoralityRatings"]
-        Comments["MoralityComments"]
-        Tipping["MoralityTipping"]
-        Leaderboard["MoralityLeaderboard"]
-        BaseMarket["MoralityPredictionMarket (Base)"]
-        Vault["MoralityAgentVault"]
-        Editions["PooterEditions"]
-        MO["MO token"]
-    end
-
-    subgraph Ethereum["Ethereum mainnet"]
-        EthMarket["MoralityPredictionMarket (L1)"]
-    end
-
-    subgraph External["External providers and data dependencies"]
-        RPC["RPC endpoints\nmainnet.base.org,\nsepolia.base.org,\nmainnet.rpc.buidlguidl.com"]
-        Anthropic["Anthropic API"]
-        Cloudflare["Cloudflare Browser Rendering"]
-        Feeds["RSS, Reddit, 4chan, YouTube RSS,\nFarcaster via Neynar"]
-        Governance["Snapshot, Tally,\nUK Parliament, US Congress,\nEU, Canada, Australia, SEC"]
-        Markets["DexScreener, CoinGecko,\nHyperliquid APIs and Telegram mirror"]
-        Aux["Auxiliary remote services\nexample: noun.wtf Ponder API on Railway"]
-    end
-
-    Users --> WebUI
+    Users --> Cloudflare
+    Cloudflare --> ProdWeb
+    Cloudflare --> DevWeb
     Users --> Wallets
-    Wallets --> WebUI
-    WebUI --> Api
-    Cron --> Api
-    Api --> JsonStore
-    Api --> MemoryStore
-    Api --> Ponder
-    Api --> Hono
-    Hono --> Pg
-    Ponder --> Pg
+    Wallets --> ProdWeb
+    Wallets --> DevWeb
 
-    Wallets --> Registry
-    Wallets --> Ratings
-    Wallets --> Comments
-    Wallets --> Tipping
-    Wallets --> Leaderboard
-    Wallets --> BaseMarket
-    Wallets --> Vault
-    Wallets --> Editions
-    Wallets --> EthMarket
+    ProdWeb --> Indexer
+    ProdWeb --> Worker
+    ProdWeb --> AgentHub
+    ProdWeb --> Polypooter
+    ProdWeb --> Feeds
+    ProdWeb --> RPC
 
-    Ponder --> Registry
-    Ponder --> Ratings
-    Ponder --> Comments
-    Ponder --> Tipping
-    Ponder --> Leaderboard
+    DevWeb --> Indexer
+    DevWeb --> AgentHub
+    DevWeb --> RPC
 
-    Api --> Anthropic
-    Api --> Cloudflare
-    Api --> Feeds
-    Api --> Governance
-    Api --> Markets
-    Api --> Aux
-    Api --> RPC
-    Ponder --> RPC
-    Editions -. tokenURI/image .-> Api
-    Api --> MO
+    Worker --> Indexer
+    Worker --> AgentHub
+    Worker --> Feeds
+    Worker --> RPC
+
+    AgentHub --> AI
+    Indexer --> Postgres
+    Indexer --> RPC
+
+    Wallets --> Base
+    Wallets --> Ethereum
+    Indexer --> Base
+    Indexer --> Ethereum
+    ProdWeb -. edition metadata / tokenURI .-> Base
 ```
 
 ## Onchain Contract Topology
 
+The contract family is broader than a simple ratings app. It already covers registry, social features, treasury-like flows, editions, prediction markets, and the vault rail. Exact addresses should be read from [docs/DEPLOYMENTS.md](./DEPLOYMENTS.md) and the broadcast artifacts, not inferred from stale defaults.
+
+| Contract family | Primary role | Current posture |
+| --- | --- | --- |
+| `MoralityRegistry` | Entity registration and ownership claims | Documented in the current Base Sepolia deploy set |
+| `MoralityRatings` | Structured ratings and reason storage | Documented in the current Base Sepolia deploy set |
+| `MoralityComments` | Threaded onchain discussion and votes | Documented in the current Base Sepolia deploy set |
+| `MoralityTipping` | Entity and comment tipping plus withdrawals | Documented in the current Base Sepolia deploy set |
+| `MoralityLeaderboard` | Reputation and composite score surfaces | Documented in the current Base Sepolia deploy set |
+| `MoralityPredictionMarket` | Prediction market settlement | Base Sepolia in current deploy docs; Ethereum mainnet remains part of the Nouns market architecture |
+| `MoralityAgentVault` | Agent-managed vault and vault rail entrypoint | Documented in current deploy docs; rail rollout is coordinated separately |
+| `PooterEditions` | ERC-721 editions with metadata served by pooter.world | Documented in current deploy docs |
+| `PooterAuctions` | Auction layer for editions | Documented as separate rollout from `DeployAll.s.sol` |
+| `MoralityProposalVoting` | Optional governance voting layer | Not part of the default current deploy set |
+
 ```mermaid
 flowchart TB
-    subgraph Base["Base mainnet contracts"]
+    subgraph Base["Base contract family\n(active docs currently point to Sepolia,\nwhile some web defaults still point to mainnet)"]
         Registry["MoralityRegistry"]
         Ratings["MoralityRatings"]
         Comments["MoralityComments"]
@@ -143,260 +162,198 @@ flowchart TB
         BaseMarket["MoralityPredictionMarket"]
         Vault["MoralityAgentVault"]
         Editions["PooterEditions"]
-        OptionalVoting["MoralityProposalVoting\noptional, not shown as deployed on Base mainnet"]
+        Auctions["PooterAuctions"]
+        Voting["MoralityProposalVoting (optional)"]
     end
 
-    subgraph Ethereum["Ethereum mainnet contracts"]
-        L1Market["MoralityPredictionMarket"]
+    subgraph Ethereum["Ethereum mainnet rail"]
+        L1Market["MoralityPredictionMarket\nNouns / Lil Nouns rail"]
     end
 
     subgraph Offchain["Offchain service edge"]
-        EditionApi["pooter.world `/api/edition/:tokenId` and image routes"]
+        EditionApi["pooter.world edition metadata / image routes"]
+        IndexerApi["pooter indexer API"]
     end
 
-    Ratings -->|"reads entity registration"| Registry
-    Tipping -->|"resolves ownership"| Registry
-    Tipping -->|"tips comments + updates totals"| Comments
-    Comments -->|"authorized tipping contract"| Tipping
-    Leaderboard -->|"reads"| Registry
-    Leaderboard -->|"reads"| Ratings
-    Leaderboard -->|"reads"| Tipping
-    Leaderboard -->|"reads"| Comments
+    Ratings --> Registry
+    Comments --> Registry
+    Tipping --> Registry
+    Tipping --> Comments
+    Leaderboard --> Registry
+    Leaderboard --> Ratings
+    Leaderboard --> Comments
+    Leaderboard --> Tipping
+    Auctions --> Editions
     Editions -. tokenURI / image .-> EditionApi
-    BaseMarket -. governance resolver config / sync scripts .-> L1Market
+    IndexerApi --> Registry
+    IndexerApi --> Ratings
+    IndexerApi --> Comments
+    IndexerApi --> Tipping
+    IndexerApi --> BaseMarket
+    BaseMarket -. governance and market sync .-> L1Market
 ```
 
-## Smart Contract Inventory
+## Product Surface Inventory
 
-### Base Mainnet
-
-| Contract | Role | Proxy address | Implementation address |
+| Route or surface | Functional role | Main dependencies | Main write path |
 | --- | --- | --- | --- |
-| MoralityRegistry | Universal entity registry and canonical claim system | `0x2ea7502C4db5B8cfB329d8a9866EB6705b036608` | `0x68d72ee14cb657f17ba4a1e23c77444b1fbd677e` |
-| MoralityRatings | 1-5 ratings plus structured reasons | `0x29F66D8b15326cE7232c0277DBc2CbFDaaf93405` | `0xb61be51e8aed1360eaa03eb673f74d66ec4898d7` |
-| MoralityComments | Threaded comments, argument types, voting | `0x66BA3cE1280bF86DFe957B52e9888A1De7F81d7b` | `0x622cd30124e24dffe77c29921bd7622e30d57f8b` |
-| MoralityTipping | Entity and comment tipping, escrow withdrawals | `0x27c79A57BE68EB62c9C6bB19875dB76D33FD099B` | `0x57dc0c9833a124fe39193dc6a554e0ff37606202` |
-| MoralityLeaderboard | Composite score with AI oracle hook | `0x29f0235d74E09536f0b7dF9C6529De17B8aF5Fc6` | `0x1c73efffeb89ad8699770921dbd860bb5da5b15a` |
-| MoralityPredictionMarket | Base-side prediction market deployment | `0x71b2e273727385c617fe254f4fb14a36a679b12a` | `0x14a361454edcb477644eb82bf540a26e1cead72a` |
-| MoralityAgentVault | Managed ETH vault for trading agents | `0x4b48d35e019129bb5a16920adc4cb7f445ec8ca5` | `0xf5bc0775ce478df8477781017d67809d663d9995` |
-| PooterEditions | ERC-721 editions with metadata served by pooter.world | `0x06d7c7d70c685d58686ff6e0b0db388209fccc6e` | `0x98855cc7c85d563194d8e42b57d9cf35d5446286` |
+| `/` | Streaming front page and mixed editorial feed | Feeds, archive, editorials, indexer, AI surfaces | Archive and editorial generation flows |
+| `/leaderboard` | Universal reputation and analyst ranking | Onchain contracts, indexer, derived scoring | Primarily read-only |
+| `/discuss` | Onchain discussion rooms | Base contract reads | Onchain comment and vote transactions |
+| `/proposals` | DAO and governance aggregation | Snapshot, Tally, governance feeds | None by default |
+| `/predictions` | Nouns and Lil Nouns market surface | Ethereum rail, governance proposal data | Onchain prediction market transactions |
+| `/markets` | Agent market dashboard | Worker outputs, market data, vault data, narratives | Operator-triggered workflows and read-heavy dashboarding |
+| `/signals` | Signal and commentary surface | Trading engine, sentiment and market data | Internal operator workflows only |
+| `/sentiment` | Morality Index and topic sentiment | Feed corpus, market data, AI scoring | Derived offchain state |
+| `/archive` | Long-term article archive | Stored article and editorial artifacts | Archive persistence and reads |
+| `/bots` | Agent telemetry and operator console | Worker, bus, scanner, agent APIs | System and operator actions |
+| `/nouns/[id]` and marketplace surfaces | Nouns pages, listing, fill, and cancel flows | Ethereum NFT data, Seaport/OpenSea, indexer proxies | Typed order creation and order-state sync |
+| Chrome extension | Inline contextual rating and tipping UI | Shared contract config and onchain reads | Onchain ratings, tips, comments |
 
-### Ethereum Mainnet
-
-| Contract | Role | Proxy address | Implementation address |
-| --- | --- | --- | --- |
-| MoralityPredictionMarket | Trust-minimized Nouns and Lil Nouns proposal market | `0x2ea7502C4db5B8cfB329d8a9866EB6705b036608` | `0x68d72ee14cb657f17ba4a1e23c77444b1fbd677e` |
-
-### Important Note
-
-The checked-in deploy scripts and broadcast artifacts show active Base mainnet and Ethereum mainnet deployments, but `indexer/ponder.config.ts` still defaults to Base Sepolia addresses. Production indexer configuration should be reconciled before presenting this architecture as fully aligned.
-
-## Miniapp and Product Surface Inventory
-
-| Route or surface | Functional role | Main reads | Main writes |
-| --- | --- | --- | --- |
-| `/` | Streaming front page and mixed feed | RSS, governance feeds, Farcaster, archive, AI-derived content | article archive JSON, editorial archive JSON |
-| `/leaderboard` | Universal reputation ledger | RSS aggregation, governance activity, analyst reputation, interpretation scores | mostly read-only |
-| `/discuss` | Onchain discussion rooms | Base comments and votes | Base comment and vote transactions |
-| `/proposals` | DAO, parliamentary, and governance aggregator | Snapshot, Tally, onchain governors, parliamentary APIs, SEC feeds, Hyperliquid governance | none by default |
-| `/predictions` | Nouns and Lil Nouns ETH prediction markets | Ethereum mainnet market, governance proposals | Ethereum mainnet staking and claim transactions |
-| `/markets` | Agent market dashboard | trading engine, agent vault data, market feeds | operator-triggered trading actions |
-| `/signals` | AI and market signal surface | trading engine, sentiment and market data | none or internal operator flows |
-| `/sentiment` | Morality Index and topic sentiment | market data, feed corpus, event corpus, AI scoring | derived offchain state |
-| `/stumble` | Randomized discovery and archive resurfacing | feed archive and live feed | none |
-| `/bots` | Internal agent telemetry console | `/api/agents`, `/api/agents/scanner`, `/api/agents/bus` | operator and system-level agent actions |
-| `/archive` | Long-term article archive | archived feed items, archived editorials | archive reads; currently file-backed |
-| Chrome extension | Inline contextual rating and tipping UI on arbitrary websites | onchain reads plus shared contracts config | onchain ratings, comments, tips, votes |
-
-## Languages, Frameworks, and Runtime Boundaries
+## Languages, Frameworks, And Runtime Boundaries
 
 | Component | Languages | Frameworks and libraries | Runtime notes |
 | --- | --- | --- | --- |
-| `web` | TypeScript, CSS, a small amount of shell and Node scripts | Next.js 16.1.6, React 19.2.3, Tailwind 4, wagmi, viem, RainbowKit, Anthropic SDK | Runs as a server-rendered web app plus API layer |
-| `indexer` | TypeScript | Ponder, Hono, viem | Long-running or semi-persistent Node service, better suited to always-on hosting |
-| `contracts` | Solidity 0.8.24 | Foundry, OpenZeppelin upgradeable UUPS stack | Deployed on EVM chains |
-| `extension` | TypeScript, browser APIs | Chrome extension runtime | Optional client surface, not required for launch |
-| Legacy root | C# | .NET 4.5.2 | Historical prototype only |
+| `web` | TypeScript, CSS | Next.js, React, Tailwind, wagmi, viem, RainbowKit | SSR app plus API surface; should stay thin |
+| `indexer` | TypeScript | Ponder, Hono, viem | Always-on or semi-persistent service; durable read layer |
+| `contracts` | Solidity | Foundry, OpenZeppelin upgradeable | Canonical onchain state |
+| `agent hub` | TypeScript | Hono and provider adapters | Centralized LLM abstraction |
+| Worker and sidecars | TypeScript | Node services, trading and scanner logic | Long-running background execution |
+| `extension` | TypeScript | Chrome extension runtime | Optional client surface |
 
-## Data Stores and Persistence Boundaries
+## Data Stores And Persistence Boundaries
 
-| Data store | Technology | Current purpose | Risk level |
+| Store | Technology | Current purpose | Risk level |
 | --- | --- | --- | --- |
-| Contract state on Base and Ethereum | EVM storage | canonical social state, prediction markets, vaults, NFTs | low, assuming audited deployment and key control |
-| Indexer database | Postgres or PGlite | query acceleration, denormalized events, scanner persistence | medium until production chain config is aligned |
-| `article-archive.json` | local JSON file in web app | persistent article archive | high on serverless hosting; local disk is not a durable database |
-| `editorial-archive.json` | local JSON file in web app | persistent AI editorial archive | high on serverless hosting; same durability issue |
-| In-memory agent stores | Node memory | scanner launches, bus state, coordinator state | high; process restarts lose history unless proxied to indexer |
-| Session cookie config | cookie plus env secret | SIWE session scaffolding | medium; verify route does not yet fully establish hardened sessions |
+| Contract state | EVM storage | Canonical identity, social actions, markets, vault state, editions | Low |
+| Indexer database | Postgres | Query acceleration, denormalized events, scanner and archive backing | Medium until chain config is fully aligned |
+| `web/src/data/article-archive.json` | Local JSON in repo and app tree | Article archive bootstrap and persistence | Medium-high if treated as primary production store |
+| `web/src/data/editorial-archive.json` | Local JSON in repo and app tree | Editorial archive bootstrap and persistence | Medium-high if treated as primary production store |
+| `web/src/data/score-history.json` | Local JSON in repo and app tree | Historical scoring snapshots | Medium if not checkpointed elsewhere |
+| In-memory worker and bus state | Process memory | Coordinator, scanner, relay, transient state | High unless checkpointed to indexer or DB |
+| Session and secrets | Env plus cookies | SIWE session scaffolding and operator auth | Medium until hardening is completed |
 
-## Hosting and Provider Matrix
+## Provider And Dependency Matrix
 
-| Provider or dependency | Status in architecture | Evidence in code | Notes |
+| Provider or dependency | Status | Role in architecture | Notes |
 | --- | --- | --- | --- |
-| Vercel | confirmed | `web/vercel.json` | Hosts the Next.js app and runs a daily cron hitting `/api/trading/execute` |
-| Postgres | confirmed as supported | `indexer/docker-compose.yml`, `indexer/ponder.config.ts` | Local compose included; production host is not explicitly documented |
-| PGlite | confirmed fallback | `indexer/ponder.config.ts` | Useful for local development, not ideal for serious production analytics |
-| Base public RPC | confirmed | `web/src/lib/server/onchain-clients.ts` | Default fallback is `https://mainnet.base.org` |
-| Ethereum public RPC | confirmed | `web/src/lib/server/onchain-clients.ts` | Default fallback is `https://mainnet.rpc.buidlguidl.com` |
-| Anthropic | confirmed | `web/src/app/api/ai/score/route.ts`, `web/src/lib/claude-editorial.ts`, `web/src/lib/daily-edition.ts` | Used for scoring, editorials, daily editions, and digesting |
-| Cloudflare Browser Rendering | confirmed optional | `web/src/lib/cloudflare-crawl.ts` | Used as an optional crawl and extraction backend |
-| Neynar / Farcaster | confirmed optional | `web/src/lib/farcaster.ts` | Farcaster feed ingestion depends on API access |
-| Snapshot and Tally | confirmed | `web/src/lib/governance.ts`, `web/src/app/api/health/sources/route.ts` | Governance aggregation depends on these APIs |
-| DexScreener and CoinGecko | confirmed | `indexer/src/api/routes.ts`, `web/src/app/api/markets/route.ts` | Market pricing and token-launch enrichment |
-| Hyperliquid APIs and Telegram mirror | confirmed | `web/src/lib/governance.ts`, trading engine | Used for markets and governance-style feeds |
-| Railway-hosted auxiliary API | confirmed for Nouns description fallback | `web/src/lib/nouns.ts` | The code references a Railway-hosted Ponder API for Nouns descriptions |
+| Cloudflare | Confirmed | DNS, proxy, TLS, public edge | Public domains route through `railway-edge` |
+| Railway | Confirmed | Hosts web, worker, indexer, agent hub, and sidecars | Main serving platform |
+| Postgres | Confirmed | Durable indexer backing store | Lives in the `pooter-indexer` project |
+| Anthropic | Confirmed | Editorial and scoring workloads | Should remain budgeted and queued |
+| Agent-hub model providers | Confirmed at service level | Fallback and model routing behind the agent hub | Keep provider selection centralized |
+| Snapshot, Tally, and governance feeds | Confirmed | Governance ingestion | Read-heavy external dependencies |
+| Neynar and Farcaster | Optional but present | Social and feed ingestion | Feature dependency, not canonical state |
+| CoinGecko, DexScreener, and Hyperliquid | Confirmed | Markets and trading context | Degrade gracefully on failure |
+| Cloudflare Browser Rendering | Optional | Crawl and extraction backend | Useful but not launch-critical |
+| OpenSea and Seaport | Confirmed in Nouns marketplace flows | Listing, fill, and cancel order lifecycle | Approval surfaces should be explicit to users |
 
 ## Architecture Observations
 
 ### What Is Strong
 
-- The product is already split along sensible boundaries: web UI, event indexer, and smart contracts.
-- The contract suite is richer than a simple rating app. It includes registry, argumentation, tipping, leaderboard, markets, vault, and editions as a coherent protocol layer.
-- The web app has already evolved into a multi-surface product rather than a single page application, which makes it suitable for launch storytelling and future modularization.
-- Offchain services are mostly written in TypeScript, which keeps the staffing model simple for a small technical team.
+- Public web, long-running worker logic, indexing, and LLM routing are separated by service instead of collapsed into one request lifecycle.
+- The onchain protocol layer is richer than a content site: registry, comments, tipping, prediction rails, editions, and vault infrastructure form a coherent base.
+- Cloudflare plus Railway is simpler to reason about than the previous split mental model where Vercel, Railway, and sidecars blurred together.
+- The indexer pattern is the right durability model for a product that reads more often than it writes.
 
 ### What Is Fragile
 
-- Production and staging chain configuration are not aligned. The web defaults to Base mainnet while the checked-in indexer config points to Base Sepolia.
-- The web tier is persisting important content to local JSON files inside the app tree. That is not robust on serverless or immutable deployments.
-- Some agent state is only in process memory unless a scanner backend URL is supplied, which means restarts can silently drop useful operational data.
-- Sign-In With Ethereum is only partially productionized. The verify route validates the signature and returns the address, but the code comments still say a proper session or JWT should be created in production.
+- Railway project sprawl is still too high. Multiple services overlap, and the naming does not clearly signal which service is canonical.
+- Chain configuration remains split between documented Base Sepolia deploys and mainnet-oriented defaults in parts of the web app.
+- Some important content archives still sit in the web tree instead of being treated as first-class durable data.
+- Scheduler ownership is easy to lose track of unless one document explicitly names the active jobs and platform configuration.
+- SIWE/auth and secret hygiene still need hardening before the system should be described as fully production-hardened.
 
-## Ongoing Infrastructure Cost Model
+## Operating Cost Model
 
-### Pricing Inputs Checked On March 12, 2026
+These estimates are directional. They describe the cost drivers created by the current architecture, not a billing export.
 
-| Line item | Pricing input | Why it matters here |
+| Cost center | What drives spend now | Best control lever |
 | --- | --- | --- |
-| Vercel Pro | starts at `$20/user/month` | likely host for `web`, server rendering, API routes, cron |
-| Railway | Hobby `$5/month`; Pro `$20/seat/month`; usage-based CPU, RAM, and volume billing | plausible managed host for always-on indexer or auxiliary APIs |
-| Railway usage rates | `$0.0000134/vCPU-second`, `$0.00000386/GB-second`, `$0.00000006/GB-second` for volume | useful for modeling an always-on indexer and database |
-| Anthropic API | Sonnet 4/4.5 and 3.7: `$3/MTok input`, `$15/MTok output`; Haiku 4.5: `$1/MTok input`, `$5/MTok output` | editorials, scoring, daily edition generation, digesting |
-| Cloudflare Browser Rendering | first `10 hours/month` included on paid plans, then `$0.09/hour` | only relevant if crawl and extraction are used heavily |
-| Base and Ethereum gas | variable, not fixed monthly | deploys, upgrades, resolution, tipping, comments, trading, claims |
+| Cloudflare edge | Usually low for DNS, proxy, and TLS alone | Keep advanced add-ons minimal unless needed |
+| Prod and dev web services | Railway service uptime, memory, build and runtime usage | Sleep or downsize dev when unused |
+| Indexer plus Postgres | Always-on compute, storage, and backfill volume | Keep one durable read layer and avoid duplicate data stores |
+| Background workers | Number of always-on worker services | Collapse overlapping workers into one canonical service |
+| Agent hub and sidecars | Always-on service count plus model traffic | Keep only feature-critical sidecars live |
+| AI inference | Editorial volume and model selection | Use cheaper models for scoring and classification; reserve premium models for long-form output |
+| Onchain gas | Deployment, upgrades, trades, tips, and claims | Batch non-urgent operations and separate dev from prod wallets |
 
-Farcaster ingestion via Neynar is visible in the codebase, but Neynar pricing was not included in the modeled totals because the exact plan tier in use could not be confirmed from the production configuration or re-verified from a public pricing source during this audit.
+### Scenario View
 
-### Practical Monthly Scenarios
-
-These are directional operating estimates, not invoices. They are based on repo behavior and simple usage assumptions.
-
-| Scenario | Assumptions | Estimated monthly total |
+| Scenario | Assumptions | Monthly profile |
 | --- | --- | --- |
-| Lean demo or pilot | 1 Vercel seat, public RPC, light Anthropic usage, no always-on managed indexer | roughly `$26-$40` plus gas |
-| Managed launch baseline | 1 Vercel seat, small always-on indexer or API worker, small Postgres footprint, light-to-moderate Anthropic usage | roughly `$40-$75` plus gas |
-| Small team operating mode | 2+ Vercel seats, medium always-on indexer footprint, more frequent Anthropic generation, some Cloudflare overage | roughly `$75-$130+` plus gas |
+| Lean launch | Prod web, one worker, one indexer/Postgres pair, dev sleeping, moderate AI | Low hundreds USD or below before gas |
+| Current observed footprint | Prod web, dev web, worker, indexer/Postgres, agent hub, Polypooter, moderate AI | Low-to-mid hundreds USD before gas |
+| Sprawled footprint | Current footprint plus duplicate legacy workers and services left running | Higher spend with limited additional user value |
 
-### Resource Math For A Small Always-On Indexer
+The most valuable cost-cutting move is not a cheaper model or a smaller web instance. It is eliminating duplicate always-on services that do nearly the same job.
 
-Using Railway's published usage pricing, a continuously running service at approximately `0.25 vCPU`, `0.5 GB RAM`, and `5 GB` of volume works out to roughly:
+## Risks And Immediate Remediation
 
-- CPU: about `$8.68/month`
-- RAM: about `$5.00/month`
-- Volume: about `$0.78/month`
-- Total resource usage: about `$14.46/month`, before any Railway base plan or seat charges
+| Priority | Risk | Why it matters | Recommended action |
+| --- | --- | --- | --- |
+| P0 | Runtime ambiguity across Railway projects | Operators and agents can deploy to or inspect the wrong service | Publish a single canonical service map and archive duplicate services |
+| P0 | Chain-environment drift | Users can hit a UI that implies the wrong network or contract addresses | Align docs, env defaults, and indexer config around one declared production chain |
+| P0 | File-backed production archives | Web-local JSON is a weak primary durability model | Move archives and score history into Postgres or object storage with explicit recovery flow |
+| P0 | Secrets and wallet hygiene | Earlier repo state included risky secret handling patterns | Re-rotate anything previously exposed and keep secrets only in managed env stores |
+| P1 | Incomplete session and auth hardening | Signature verification alone is not the same as robust production session management | Finish SIWE session issuance, expiry, rotation, and operator scope rules |
+| P1 | Scheduler drift | Jobs can keep running without repo truth or silently stop after platform changes | Treat `docs/DEPLOYMENTS.md` as the schedule source of truth and document the active scheduler owner |
+| P1 | Duplicate agent and worker services | Extra services raise cost and debugging complexity | Assign explicit ownership or shut them down |
+| P2 | Sidecar proliferation | Feature-specific services can become accidental critical dependencies | Mark each sidecar as critical, optional, or experimental in docs and envs |
 
-At approximately `0.5 vCPU`, `1 GB RAM`, and `10 GB` of volume, the same service is about `$28.93/month` before plan or seat charges.
+## Recommended Target Architecture
 
-### AI Cost Sensitivity
-
-- A single daily long-form Sonnet editorial at roughly `30k` input tokens and `8k` output tokens is about `$6.30/month`.
-- Lightweight daily scoring or classification at roughly `100k` input tokens and `20k` output tokens on Haiku 4.5 is about `$6.00/month`.
-- AI costs remain modest if Sonnet is reserved for long-form synthesis and cheaper models handle classification, scoring, and refresh jobs.
-
-## Where Costs Can Be Reduced
-
-1. Consolidate web-local JSON archives and scanner persistence into the indexer database. This removes fragile serverless disk writes and avoids paying for two different durability patterns.
-2. Use a model tiering policy: Haiku for scoring, tagging, and lightweight synthesis; Sonnet only for the editorial surfaces that members actually read.
-3. Move long-running agent loops and scanner polling out of the Vercel request lifecycle and into a small always-on worker. This reduces timeouts, duplicate work, and serverless unpredictability.
-4. Keep public RPC endpoints for low-traffic launch periods, but only introduce paid RPC once rate limits or reliability become a measured bottleneck.
-5. Cache slow third-party governance and market API responses more aggressively at the indexer or API layer so repeated reads do not fan out into dozens of vendor calls.
-6. If the Chrome extension is not in the initial launch scope, avoid treating it as a first-wave operational dependency.
-
-## Risks and Immediate Remediation
-
-### Priority 0
-
-- Rotate any secrets present in `web/.env.local` and remove them from tracked or shared environments.
-- Rotate the deployer key referenced by `contracts/.env` and move deployment secrets into a proper secret manager.
-
-### Priority 1
-
-- Align the indexer from Base Sepolia to the same production chain and contract addresses used by the web application.
-- Replace file-backed production archives with Postgres-backed tables or an object-storage plus manifest pattern.
-- Finish the SIWE session flow so authentication creates a real signed session rather than only returning an address after verification.
-
-### Priority 2
-
-- Publish one explicit production deployment document naming the actual host for web, indexer, database, cron, and any worker services.
-- Separate "launch-critical" services from "nice-to-have" experiments such as scanner bus telemetry, so members can see what must be funded first.
-- Add chain-environment labels everywhere: Base mainnet, Base Sepolia, Ethereum mainnet, and any future test deployments.
-
-## Recommended Target Architecture After Hardening
-
-1. Keep smart contracts as the canonical settlement and reputation layer.
-2. Keep the Next.js app as the public web surface and thin orchestration layer.
-3. Move all durable offchain data into a single managed Postgres-backed indexer or data service.
-4. Use a small always-on worker for scanner polling, agent coordination, daily editions, and other scheduled jobs.
-5. Treat AI as a metered utility behind explicit queues, budgets, and model selection rules.
-6. Document a clean split between production, staging, and experimental features.
+1. Keep onchain contracts as the only canonical write layer for user identity, social state, markets, and vault settlement.
+2. Keep the Railway prod web service thin: render pages, authenticate users, proxy durable reads, and orchestrate workflows.
+3. Standardize on one canonical worker service for scanners, scheduled jobs, and trading loops.
+4. Treat the indexer and Postgres as the one durable offchain read and cache system, not one of several competing stores.
+5. Keep the agent hub centralized so model selection, fallback, and budget policy live in one place.
+6. Document sidecars explicitly. If a service is optional, say so; if it is legacy, archive it.
+7. Separate dev and prod by hostname, wallet, env, and scheduler ownership so dev can never accidentally behave like prod.
+8. Preserve Cloudflare as the public edge and Railway as the serving plane until there is a strong reason to add more infrastructure layers.
 
 ## Conclusion
 
-pooter world is already more than a website. It is a mixed architecture composed of an onchain reputation protocol, a media and governance ingestion system, AI-assisted editorial and scoring workflows, and a growing family of miniapps around discussion, prediction, discovery, and market telemetry.
+pooter.world is now much closer to a legible operating model than it was under the old Vercel-era mental model. The core architecture is understandable: Cloudflare at the edge, Railway for service hosting, an indexer for durable reads, workers for long-running jobs, and onchain contracts as the only source of truth.
 
-The architecture is credible for launch, but it should not yet be presented as fully production-hardened without three fixes: secret rotation, chain-environment alignment, and consolidation of offchain persistence into a durable database-backed service.
-
-Once those are addressed, the system becomes easier to explain, cheaper to operate, and safer to scale.
+The remaining work is mostly organizational rather than conceptual. The system needs one canonical map of live services, one declared production chain posture, and one durable offchain persistence strategy. Once those are locked, the platform becomes easier to operate, cheaper to explain, and far harder for humans or agents to mis-target.
 
 ## Appendix A: Evidence Base
 
-Primary code locations inspected for this report:
+Primary repo locations and runtime observations used for this report:
 
+- `docs/DEPLOYMENTS.md`
+- `README.md`
 - `web/package.json`
-- `web/vercel.json`
 - `web/src/lib/contracts.ts`
 - `web/src/lib/server/onchain-clients.ts`
-- `web/src/app/api/auth/verify/route.ts`
-- `web/src/lib/session.ts`
 - `web/src/lib/archive.ts`
 - `web/src/lib/editorial-archive.ts`
-- `web/src/app/api/agents/scanner/route.ts`
-- `web/src/app/api/trading/execute/route.ts`
-- `web/src/lib/governance.ts`
-- `web/src/lib/farcaster.ts`
-- `web/src/lib/cloudflare-crawl.ts`
-- `web/src/lib/nouns.ts`
+- `web/src/lib/narrative-extractor.ts`
+- `web/src/app/api/newsroom/route.ts`
+- `web/src/app/api/cron/daily-edition/route.ts`
+- `web/src/app/api/cron/daily-illustration/route.ts`
+- `web/src/app/api/v1/marketplace/orders/[[...slug]]/route.ts`
+- `web/src/hooks/useSeaport.ts`
 - `indexer/ponder.config.ts`
 - `indexer/ponder.schema.ts`
 - `indexer/src/api/routes.ts`
-- `indexer/docker-compose.yml`
-- `contracts/src/*.sol`
 - `contracts/script/DeployAll.s.sol`
-- `contracts/script/DeployPredictionMarketL1.s.sol`
-- `contracts/broadcast/DeployAll.s.sol/8453/run-latest.json`
-- `contracts/broadcast/DeployPredictionMarketL1.s.sol/1/run-latest.json`
+- `contracts/script/DeployVaultRailBase.s.sol`
+- `contracts/script/DeployVaultRailArb.s.sol`
+- `contracts/broadcast/DeployAll.s.sol/84532/run-latest.json`
+- Railway service links, domains, and health/routes checked on April 1, 2026
+- Public DNS and HTTP headers for `pooter.world` and `dev.pooter.world` checked on April 1, 2026
 
-## Appendix B: Reusable Technical Prompt
+## Appendix B: Documentation Governance
 
-Use the following prompt if a refreshed architecture report is needed later:
-
-> Produce a board-grade technical architecture report for Morality Co-operative Limited covering the live pooter world production system. Inspect the active `` codebase only unless explicitly told otherwise, and distinguish clearly between confirmed production architecture, staging configuration, legacy code, and inferred components. Include:
->
-> 1. an executive summary written for technically literate non-engineers,
-> 2. a full system context diagram showing users, browser clients, wallets, web app, API routes, cron jobs, indexer services, databases, smart contracts, RPC endpoints, AI providers, governance providers, market-data providers, and any auxiliary worker services,
-> 3. a dedicated onchain contract topology diagram listing every deployed contract, chain, proxy, implementation, upgrade pattern, and major dependency edge,
-> 4. a complete inventory of miniapps, routes, APIs, storage layers, and languages or frameworks used by each subsystem,
-> 5. a hosting and provider matrix naming which services are confirmed versus inferred,
-> 6. a monthly infrastructure cost model with explicit assumptions, vendor links, and opportunities to reduce cost without materially reducing launch capability,
-> 7. a risk register covering secrets management, staging versus production mismatches, data durability, auth hardening, observability gaps, and operational single points of failure,
-> 8. a recommended target-state architecture and prioritized remediation plan.
->
-> Format the report in polished Markdown with tables and Mermaid diagrams. Use exact dates, cite official pricing pages, avoid hype, and write so that a new senior engineer could use the document to understand the system quickly.
+- [docs/DEPLOYMENTS.md](./DEPLOYMENTS.md) is the operational source of truth for deploy targets, hostnames, and cron schedule.
+- Host-specific scheduler config should live in the active deployment platform, not in checked-in legacy platform files.
+- Local `.vercel/` metadata remains gitignored and is not part of the production architecture.
 
 ## Appendix C: Pricing Sources
 
-- Vercel pricing: <https://vercel.com/pricing>
 - Railway pricing: <https://railway.com/pricing>
 - Anthropic API pricing: <https://www.anthropic.com/pricing#api>
 - Cloudflare Browser Rendering pricing: <https://developers.cloudflare.com/browser-rendering/platform/pricing/>
