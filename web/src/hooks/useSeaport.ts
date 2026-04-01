@@ -72,16 +72,17 @@ export interface UseSeaportApprovalResult {
 function getIndexerUrl(): string {
   return (
     process.env.NEXT_PUBLIC_INDEXER_URL ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
     ""
-  ).replace(/\/$/, "");
+  ).replace(/\\n/g, "").replace(/\/$/, "");
+}
+
+function getMarketplaceApiUrl(path: string): string {
+  const base = getIndexerUrl();
+  return base ? `${base}${path}` : path;
 }
 
 async function postOrderToIndexer(order: StoredOrder): Promise<void> {
-  const base = getIndexerUrl();
-  if (!base) throw new Error("Indexer URL not configured");
-
-  const res = await fetch(`${base}/api/v1/marketplace/orders`, {
+  const res = await fetch(getMarketplaceApiUrl("/api/v1/marketplace/orders"), {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(order),
@@ -94,10 +95,11 @@ async function postOrderToIndexer(order: StoredOrder): Promise<void> {
 }
 
 async function fetchOrderFromIndexer(orderHash: string): Promise<StoredOrder> {
-  const base = getIndexerUrl();
-  if (!base) throw new Error("Indexer URL not configured");
-
-  const res = await fetch(`${base}/api/v1/marketplace/orders/${encodeURIComponent(orderHash)}`);
+  const res = await fetch(
+    getMarketplaceApiUrl(
+      `/api/v1/marketplace/orders/${encodeURIComponent(orderHash)}`,
+    ),
+  );
   if (!res.ok) {
     throw new Error(`Order not found: ${res.status}`);
   }
@@ -106,25 +108,29 @@ async function fetchOrderFromIndexer(orderHash: string): Promise<StoredOrder> {
 }
 
 async function markOrderFilled(orderHash: string, txHash: string, taker: string): Promise<void> {
-  const base = getIndexerUrl();
-  if (!base) return; // best-effort
-
-  await fetch(`${base}/api/v1/marketplace/orders/${encodeURIComponent(orderHash)}/fill`, {
-    method: "PUT",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ txHash, taker }),
-  }).catch(() => {}); // non-blocking
+  await fetch(
+    getMarketplaceApiUrl(
+      `/api/v1/marketplace/orders/${encodeURIComponent(orderHash)}/fill`,
+    ),
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ txHash, taker }),
+    },
+  ).catch(() => {}); // non-blocking
 }
 
 async function markOrderCancelled(orderHash: string, txHash: string): Promise<void> {
-  const base = getIndexerUrl();
-  if (!base) return;
-
-  await fetch(`${base}/api/v1/marketplace/orders/${encodeURIComponent(orderHash)}/cancel`, {
-    method: "PUT",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ txHash }),
-  }).catch(() => {});
+  await fetch(
+    getMarketplaceApiUrl(
+      `/api/v1/marketplace/orders/${encodeURIComponent(orderHash)}/cancel`,
+    ),
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ txHash }),
+    },
+  ).catch(() => {});
 }
 
 // ── useSeaportApproval ───────────────────────────────────────────────────────

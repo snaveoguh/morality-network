@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { formatEther, parseEther, type Address } from "viem";
 import { SiweMessage } from "siwe";
 import {
@@ -13,9 +14,34 @@ import {
   useWriteContract,
 } from "wagmi";
 import { AGENT_VAULT_ABI } from "@/lib/contracts";
-import { AgentBotTerminal } from "@/components/markets/AgentBotTerminal";
-import TradingChart from "@/components/markets/TradingChart";
 import type { TerminalTradingContext } from "@/lib/terminal-types";
+
+const TradingChart = dynamic(
+  () => import("@/components/markets/TradingChart"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[340px] items-center justify-center border border-[var(--rule-light)] bg-[var(--paper-dark)] font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+        Loading chart...
+      </div>
+    ),
+  },
+);
+
+const AgentBotTerminal = dynamic(
+  () =>
+    import("@/components/markets/AgentBotTerminal").then((m) => ({
+      default: m.AgentBotTerminal,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-[420px] border border-[var(--rule-light)] bg-[var(--paper-dark)] p-4 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+        Loading terminal...
+      </div>
+    ),
+  },
+);
 
 const BASE_CAPITAL_VAULT_ABI = [
   {

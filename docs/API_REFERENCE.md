@@ -370,7 +370,7 @@ Global activity feed. Query: `limit`, `cursor`, `from`, `to`, `actionTypes`, `ac
 
 ## Authentication
 
-- **Cron endpoints:** Require `Authorization: Bearer <CRON_SECRET>` header (sent automatically by Vercel cron)
+- **Cron endpoints:** Require `Authorization: Bearer <CRON_SECRET>` header (sent by the active scheduler or internal worker caller)
 - **Editorial edit:** Requires `Authorization: Bearer <GOD_MODE_SECRET>`
 - **Operator endpoints:** Require wallet signature from `OPERATOR_ADDRESSES`
 - **Terminal:** Rate limited per IP, full access gated by MO token balance

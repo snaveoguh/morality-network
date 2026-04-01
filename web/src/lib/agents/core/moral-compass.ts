@@ -11,7 +11,7 @@
 //   4. Discover new sources via LLM analysis of crawled content
 //   5. Synthesize a coherent ~2000-char moral framework every 3 days
 //   6. Decay unreinforced principles over time
-//   7. Runs daily at 3 AM UTC via Vercel cron
+//   7. Runs daily at 3 AM UTC via the scheduled crawl job
 // ─────────────────────────────────────────────────────────────────────────────
 
 import "server-only";
@@ -716,7 +716,7 @@ export async function getMoralCompassStats(): Promise<{
 
 /**
  * Run the full moral compass pipeline.
- * Called daily by Vercel cron at 3 AM UTC.
+ * Called daily by the scheduled crawl job at 3 AM UTC.
  */
 export async function runMoralCompassPipeline(): Promise<MoralCompassResult> {
   console.log("[moral-compass] starting pipeline...");
