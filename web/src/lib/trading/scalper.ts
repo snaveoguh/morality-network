@@ -22,6 +22,7 @@ import {
 } from "./hyperliquid";
 import { computeRSI, computeEMAs, computeBollinger } from "./technical";
 import { checkMoralGate, logMoralGateDecision } from "./moral-gate";
+import { globalPositionLock } from "./global-position-lock";
 import type { ScalperConfig, ScalpSignal, ScalpPosition, TraderExecutionConfig, EntryRationale } from "./types";
 import { PositionStore } from "./position-store";
 
@@ -200,8 +201,8 @@ export function detectScalpSignal(
     confluenceCount++;
   }
 
-  // Require at least 1 primary trigger (big candle, volume spike, or VWAP breakout)
-  if (!direction || confluenceCount < 1) return null;
+  // Require at least 4 confluent signals — event sniper mode, not routine scalping
+  if (!direction || confluenceCount < 4) return null;
 
   if (confluenceCount >= 3) trigger = "multi-confluence";
 
@@ -497,6 +498,11 @@ export class ScalperManager {
       }
     }
 
+    // Global cross-system cooldown (engine + scalper)
+    if (!globalPositionLock.canOpen(market, "scalper")) {
+      return;
+    }
+
     // Already executing on this market?
     if (this.executingMarkets.has(market)) return;
 
@@ -626,16 +632,18 @@ export class ScalperManager {
         signalDirection: signal.direction,
         signalScore: signal.confidence,
       };
-      const hlId = `hl:${market.toUpperCase()}`;
+      const scalpStoreId = `scalp:${market.toUpperCase()}:${Date.now()}`;
       try {
-        // Find existing position in the open list
-        const existingList = this.store.getOpen().filter((p) => p.id === hlId);
+        // Find existing position in the open list (check both scalp: and hl: prefixes)
+        const existingList = this.store.getOpen().filter(
+          (p) => p.marketSymbol?.toUpperCase() === market.toUpperCase() && p.status === "open",
+        );
         const existing = existingList[0];
         if (existing) {
           await this.store.upsert({ ...existing, entryRationale: rationale });
         } else {
           await this.store.upsert({
-            id: hlId,
+            id: scalpStoreId,
             venue: "hyperliquid-perp",
             chainId: 42161,
             marketSymbol: market.toUpperCase(),

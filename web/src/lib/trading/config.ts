@@ -284,7 +284,7 @@ export function getTraderConfig(): TraderExecutionConfig {
     entryBudgetRaw,
     risk: {
       minScore: numberFromEnv("TRADER_MIN_SCORE", 50),
-      maxOpenPositions: numberFromEnv("TRADER_MAX_OPEN_POSITIONS", 4),
+      maxOpenPositions: numberFromEnv("TRADER_MAX_OPEN_POSITIONS", 2),
       maxNewEntriesPerCycle: numberFromEnv("TRADER_MAX_NEW_ENTRIES_PER_CYCLE", 1),
       maxPositionUsd: numberFromEnv("TRADER_MAX_POSITION_USD", 150),
       maxPortfolioUsd: numberFromEnv("TRADER_MAX_PORTFOLIO_USD", 600),
@@ -292,13 +292,13 @@ export function getTraderConfig(): TraderExecutionConfig {
       takeProfitPct: numberFromEnv("TRADER_TAKE_PROFIT_PCT", 0.30),
       slippageBps: numberFromEnv("TRADER_SLIPPAGE_BPS", 250),
       maxLeverage: numberFromEnv("TRADER_MAX_LEVERAGE", 40),
-      minSignalConfidence: numberFromEnv("TRADER_MIN_SIGNAL_CONFIDENCE", 0.65),
+      minSignalConfidence: numberFromEnv("TRADER_MIN_SIGNAL_CONFIDENCE", 0.82),
       trailingStopPct: numberFromEnv("TRADER_TRAILING_STOP_PCT", 0.08),
       trailingStopActivationPct: numberFromEnv("TRADER_TRAILING_STOP_ACTIVATION_PCT", 0.04),
       circuitBreakerLosses: numberFromEnv("TRADER_CIRCUIT_BREAKER_LOSSES", 2),
       circuitBreakerPauseMs: numberFromEnv("TRADER_CIRCUIT_BREAKER_PAUSE_MS", 3_600_000),
-      maxHoldMs: numberFromEnv("TRADER_MAX_HOLD_MS", 604_800_000), // 7 days safety net (was 8h) — let winners ride
-      minHoldMs: numberFromEnv("TRADER_MIN_HOLD_MS", 0), // immediate exit on signal flip (was 15min)
+      maxHoldMs: numberFromEnv("TRADER_MAX_HOLD_MS", 604_800_000), // 7 days safety net — let winners ride
+      minHoldMs: numberFromEnv("TRADER_MIN_HOLD_MS", 3_600_000), // 1 hour minimum hold — no position is the best position
     },
     safety: {
       minScannerCandidatesLive: numberFromEnv("TRADER_MIN_SCANNER_CANDIDATES_LIVE", 2),
@@ -309,8 +309,8 @@ export function getTraderConfig(): TraderExecutionConfig {
       isTestnet: boolFromEnv("HYPERLIQUID_IS_TESTNET", false),
       accountAddress: optionalAddressFromEnv("HYPERLIQUID_ACCOUNT_ADDRESS"),
       defaultMarket: stringFromEnv("HYPERLIQUID_DEFAULT_MARKET", "BTC").toUpperCase(),
-      defaultLeverage: numberFromEnv("HYPERLIQUID_DEFAULT_LEVERAGE", 2),
-      entryNotionalUsd: numberFromEnv("HYPERLIQUID_ENTRY_USD", 75),
+      defaultLeverage: numberFromEnv("HYPERLIQUID_DEFAULT_LEVERAGE", 20),
+      entryNotionalUsd: numberFromEnv("HYPERLIQUID_ENTRY_USD", 30),
       minAccountValueUsd: numberFromEnv("HYPERLIQUID_MIN_ACCOUNT_VALUE_USD", 100),
       watchMarkets: stringFromEnv("HYPERLIQUID_WATCH_MARKETS", "BTC,ETH,SOL,HYPE,XRP,SUI,DOGE,LINK,AVAX,BNB,PAXG,TAO,ZEC,FET,TRUMP,BCH,WLD,AAVE,OP,ARB").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean),
     },
@@ -446,16 +446,16 @@ export function getScalperConfig(): ScalperConfig {
       .split(",")
       .map((s) => s.trim().toUpperCase())
       .filter(Boolean),
-    candleThresholdPct: numberFromEnv("SCALPER_CANDLE_THRESHOLD_PCT", 0.015),
-    volumeSpikeMultiplier: numberFromEnv("SCALPER_VOLUME_SPIKE_MULTIPLIER", 3),
-    stopLossPct: numberFromEnv("SCALPER_STOP_LOSS_PCT", 0.008),
-    takeProfitPct: numberFromEnv("SCALPER_TAKE_PROFIT_PCT", 0.02),
+    candleThresholdPct: numberFromEnv("SCALPER_CANDLE_THRESHOLD_PCT", 0.05),
+    volumeSpikeMultiplier: numberFromEnv("SCALPER_VOLUME_SPIKE_MULTIPLIER", 8),
+    stopLossPct: numberFromEnv("SCALPER_STOP_LOSS_PCT", 0.025),
+    takeProfitPct: numberFromEnv("SCALPER_TAKE_PROFIT_PCT", 0.08),
     maxPositionUsd: numberFromEnv("SCALPER_MAX_POSITION_USD", 100),
     defaultLeverage: numberFromEnv("SCALPER_DEFAULT_LEVERAGE", 10),
-    cooldownMs: numberFromEnv("SCALPER_COOLDOWN_MS", 120_000),
-    maxHoldMs: numberFromEnv("SCALPER_MAX_HOLD_MS", 900_000),
-    maxOpenScalps: numberFromEnv("SCALPER_MAX_OPEN_SCALPS", 3),
-    vwapDeviationPct: numberFromEnv("SCALPER_VWAP_DEVIATION_PCT", 0.01),
+    cooldownMs: numberFromEnv("SCALPER_COOLDOWN_MS", 3_600_000),
+    maxHoldMs: numberFromEnv("SCALPER_MAX_HOLD_MS", 7_200_000),
+    maxOpenScalps: numberFromEnv("SCALPER_MAX_OPEN_SCALPS", 1),
+    vwapDeviationPct: numberFromEnv("SCALPER_VWAP_DEVIATION_PCT", 0.03),
     dryRun: boolFromEnv("TRADER_DRY_RUN", true),
   };
 }
