@@ -29,6 +29,7 @@ import { fetchMarketDataSignals } from "./market-signals";
 import { fetchWalletFlowSignal } from "./wallet-flow";
 import { fetchWebIntelligenceSignal, type WebIntelligenceSignal } from "./web-intelligence";
 import { runAutoresearchCycle, getExperimentOverrideWeights } from "./autoresearch";
+import { globalPositionLock } from "./global-position-lock";
 import { fetchCouncilSignal } from "./council-signal";
 import {
   computeVaultSettlementPlan,
@@ -1324,10 +1325,11 @@ class TraderEngine {
     const cooldownSymbols = new Set(recentlyClosed.map((p) => p.marketSymbol?.toUpperCase()).filter(Boolean));
 
     // ── Cross-system awareness: include scalper positions from the store ──
+    // Only match scalp: prefix — hl: positions are the engine's own.
     const storeOpen = this.store.getOpen();
     const scalperSymbols = new Set(
       storeOpen
-        .filter((p) => p.id.startsWith("scalp:") || p.id.startsWith("hl:"))
+        .filter((p) => p.id.startsWith("scalp:"))
         .map((p) => p.marketSymbol?.toUpperCase())
         .filter(Boolean),
     );
@@ -1344,6 +1346,12 @@ class TraderEngine {
       }
       if (cooldownSymbols.has(symbol.toUpperCase())) {
         skippedReasons.push(`${symbol}: cooldown (closed <10min ago)`);
+        continue;
+      }
+      // Global cross-system cooldown (engine + scalper)
+      if (!globalPositionLock.canOpen(symbol, "engine")) {
+        const remaining = globalPositionLock.getRemainingMs(symbol);
+        skippedReasons.push(`${symbol}: global cooldown (${Math.round(remaining / 1000)}s remaining)`);
         continue;
       }
 
@@ -1533,6 +1541,19 @@ class TraderEngine {
       return null;
     }
     const notionalUsd = Math.max(requestedNotionalUsd, exchangeMinNotionalUsd);
+
+    // ═══ FEE-AWARENESS GATE — edge must exceed fees by a hurdle multiplier ═══
+    const HL_ROUND_TRIP_FEE_RATE = 0.0007;
+    const estimatedFees = notionalUsd * HL_ROUND_TRIP_FEE_RATE;
+    const avgWinLossRatio = kelly.fraction > 0 ? Math.max(1, kelly.positionNotionalUsd / (notionalUsd * this.config.risk.stopLossPct)) : 1;
+    const expectedEdge = notionalUsd * compositeConfidence * 0.01; // conservative: confidence% chance of 1% move
+    const feeHurdle = parseFloat(process.env.TRADER_FEE_HURDLE_MULTIPLIER ?? "3.0");
+    if (expectedEdge < estimatedFees * feeHurdle) {
+      console.log(
+        `[trader] fee-gate: skipping ${market.symbol} — expectedEdge=$${expectedEdge.toFixed(4)} < fees×${feeHurdle}=$${(estimatedFees * feeHurdle).toFixed(4)}`,
+      );
+      return null;
+    }
 
     const portfolioNotional = openPositions.reduce((sum, position) => sum + position.entryNotionalUsd, 0);
     if (portfolioNotional + notionalUsd > this.config.risk.maxPortfolioUsd) {

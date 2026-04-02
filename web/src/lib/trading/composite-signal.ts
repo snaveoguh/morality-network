@@ -224,14 +224,15 @@ export function computeCompositeSignal(args: {
 
   const longVotes = directions.filter((d) => d === "long").length;
   const shortVotes = directions.filter((d) => d === "short").length;
+  const minAgreement = parseInt(process.env.TRADER_MIN_COMPOSITE_AGREEMENT_COUNT ?? "3", 10);
   const agreementMet =
     directions.length <= 1 || // only 1 source = auto-agree
-    (direction === "long" && longVotes >= 2) ||
-    (direction === "short" && shortVotes >= 2);
+    (direction === "long" && longVotes >= minAgreement) ||
+    (direction === "short" && shortVotes >= minAgreement);
 
-  // If no agreement, downgrade to neutral
+  // If no agreement, downgrade to neutral — no position is the best position
   if (!agreementMet) {
-    reasons.push(`Direction disagreement — 2-of-${directions.length} agreement not met, forcing neutral`);
+    reasons.push(`Direction disagreement — ${minAgreement}-of-${directions.length} agreement not met, forcing neutral`);
     direction = "neutral";
   }
 
