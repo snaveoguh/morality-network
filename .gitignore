@@ -48,3 +48,5 @@ web/dist-worker/
 web/.claude/
 .ponder/
 v2/indexer/.ponder/
+.netlify/state.json
+designs/

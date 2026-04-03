@@ -1,6 +1,6 @@
 # Deployments
 
-Last updated: 2026-04-01.
+Last updated: 2026-04-03.
 
 ## Launch Runtime Topology
 
@@ -31,7 +31,7 @@ These services were observed during the April 1, 2026 audit and are part of the 
 
 - Authoritative nameservers: `annalise.ns.cloudflare.com`, `melnicoff.ns.cloudflare.com`
 - `pooter.world` CNAME → `oewwxjq0.up.railway.app` (faithful-purpose, DNS only)
-- `dev.pooter.world` CNAME → `svb92msz.up.railway.app` (earnest-love, DNS only — **currently broken**)
+- `dev.pooter.world` CNAME → `svb92msz.up.railway.app` (earnest-love, DNS only — currently serving)
 
 ### Deploy Commands
 
@@ -43,8 +43,9 @@ railway link -p faithful-purpose -e production -s morality-network && railway up
 # Always re-link after manual deploy:
 railway link -p faithful-purpose -e production -s morality-network
 
-# Dev (earnest-love) — BROKEN as of 2026-04-01, CLI deploys fail at initialization:
-# railway link -p earnest-love -e dev -s morality-network && railway up --detach
+# Dev target:
+# railway link -p earnest-love -e dev -s morality-network
+# Use dev as the staging environment before promoting to main.
 
 # Deploy indexer
 railway link -p pooter-indexer -e production -s pooter-indexer && railway up --detach
@@ -67,6 +68,18 @@ Runtime mode flags:
 - `SESSION_SECRET=<long-random-session-secret>`
 - `OPERATOR_ADDRESSES=<comma-separated-operator-wallets>`
 - `TERMINAL_FULL_ACCESS_MIN_MO=100000` (default holder gate for full terminal access)
+
+## Release Workflow
+
+Canonical flow going forward:
+
+1. Start from `dev` or a feature branch off `dev`
+2. Push tested changes to `origin/dev`
+3. Validate on `https://dev.pooter.world`
+4. Fast-forward `main` from `dev`
+5. Let production deploy from `main`
+
+Avoid direct production CLI deploys from a dirty local workspace unless there is an explicit incident response reason.
 
 ## Base Sepolia (Chain ID: 84532)
 

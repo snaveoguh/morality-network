@@ -3,7 +3,7 @@
 ## pooter.world System Architecture Report
 
 Prepared for co-operative members  
-Date: April 1, 2026
+Date: April 3, 2026
 
 This report is based on direct inspection of the active `morality.network-master` codebase, Railway service bindings, and public DNS and HTTP routing observed on April 1, 2026. [docs/DEPLOYMENTS.md](./DEPLOYMENTS.md) remains the operational source of truth for domains, deploy commands, and environment ownership.
 
@@ -63,8 +63,15 @@ This report is based on direct inspection of the active `morality.network-master
 
 - DNS is on Cloudflare nameservers.
 - `pooter.world` CNAME → `oewwxjq0.up.railway.app` (faithful-purpose, DNS only).
-- `dev.pooter.world` CNAME → `svb92msz.up.railway.app` (earnest-love, DNS only — **currently broken**, CLI deploys fail at initialization).
+- `dev.pooter.world` CNAME → `svb92msz.up.railway.app` (earnest-love, DNS only — currently serving as the staging environment).
 - Cloudflare should be treated as the public edge and Railway as the serving platform.
+
+### Release Discipline
+
+- `dev` is the staging branch.
+- `main` is the production branch.
+- New work should be validated on `dev.pooter.world` before promotion to `main`.
+- Direct production CLI deploys from a dirty local workspace should be treated as exceptions, because they create Git-to-runtime drift.
 
 ## System Overview
 

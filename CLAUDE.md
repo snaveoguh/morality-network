@@ -3,10 +3,10 @@
 ## Deployment Rules
 
 **Production auto-deploys from `main` via GitHub integration on faithful-purpose.**
-**Dev (earnest-love) is BROKEN as of 2026-04-01 — CLI deploys fail at initialization.**
+**`dev` is the staging branch. Test there first, then promote `dev -> main`.**
 
 `pooter.world` is served from Railway (`faithful-purpose`) behind Cloudflare DNS.
-`dev.pooter.world` is currently non-functional (earnest-love broken).
+`dev.pooter.world` is currently serving from Railway (`earnest-love / dev / morality-network`) behind Cloudflare DNS.
 
 ### Deploy to prod:
 Production deploys **automatically** when you push/merge to `main` on GitHub.
@@ -25,36 +25,39 @@ railway link -p faithful-purpose -e production -s morality-network && railway up
 railway link -p faithful-purpose -e production -s morality-network
 ```
 
-### Dev (BROKEN — do not use until fixed):
+### Dev:
 ```bash
-# earnest-love CLI deploys fail at initialization as of 2026-04-01
-# railway link -p earnest-love -e dev -s morality-network && railway up --detach
+# dev.pooter.world is the staging target
+# validate there before promoting to main
 ```
-- URL: https://dev.pooter.world (currently down)
-- Railway project: `earnest-love` (broken)
+- URL: https://dev.pooter.world
+- Railway project: `earnest-love`
+- Current note: custom domain is attached and the site responds, but Railway status output does not currently expose a tracked branch/commit for dev the way production does
 
 ## Workflow
-1. Make changes on a feature branch
-2. Commit and push to GitHub
-3. Merge to `main` → faithful-purpose auto-deploys to pooter.world
-4. Test on pooter.world (no working dev site currently)
+1. Start from `dev` or a feature branch off `dev`
+2. Push to `origin/dev`
+3. Test on `dev.pooter.world`
+4. Fast-forward `main` from `dev`
+5. Verify production on `pooter.world`
 
 ## Railway Project Map
 
 | Project | Role | Status |
 |---------|------|--------|
 | **faithful-purpose** | PROD — pooter.world, worker, deploys from GitHub `main` | ✅ Active |
-| **earnest-love** | DEV — dev.pooter.world, polypooter sidecar | ⚠️ Broken |
+| **earnest-love** | DEV — dev.pooter.world, polypooter sidecar | ⚠️ Live, but branch wiring still needs cleanup/confirmation |
 | **pooter-indexer** | Indexer, Postgres, agent workers | ✅ Active |
 | **heartfelt-flow** | Agent Hub (LLM router: Groq/Together) | ✅ Active |
 
 See `memory/railway_projects.md` for full service-level detail.
 
 ## Git Workflow
-- **NEVER work directly on `main`.** Always create a feature branch first.
+- **NEVER work directly on `main`.** Use `dev` as staging and branch off `dev` for feature work.
 - Branch naming: `feat/short-description`, `fix/short-description`, `chore/short-description`
 - Commit early and often — small, atomic commits with clear messages
-- When user says "deploy" or "push to prod": merge branch to main → auto-deploys via GitHub
+- When user says "deploy to dev": push tested work to `dev`
+- When user says "push to prod": promote `dev -> main` → auto-deploys via GitHub
 - **Never force push.** Never rebase published branches.
 - If unsure whether to commit, commit. Lost work is worse than extra commits.
 
