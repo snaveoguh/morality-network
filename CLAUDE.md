@@ -3,10 +3,10 @@
 ## Deployment Rules
 
 **Production auto-deploys from `main` via GitHub integration on faithful-purpose.**
-**Dev (earnest-love) is BROKEN as of 2026-04-01 — CLI deploys fail at initialization.**
+**Dev is live at `dev.pooter.world` on `earnest-love / dev / morality-network`, but Railway CLI metadata does not currently surface a tracked branch/commit for that service.**
 
 `pooter.world` is served from Railway (`faithful-purpose`) behind Cloudflare DNS.
-`dev.pooter.world` is currently non-functional (earnest-love broken).
+`dev.pooter.world` is currently serving from Railway (`earnest-love / dev / morality-network`) behind Cloudflare DNS.
 
 ### Deploy to prod:
 Production deploys **automatically** when you push/merge to `main` on GitHub.
@@ -25,26 +25,27 @@ railway link -p faithful-purpose -e production -s morality-network && railway up
 railway link -p faithful-purpose -e production -s morality-network
 ```
 
-### Dev (BROKEN — do not use until fixed):
+### Dev:
 ```bash
-# earnest-love CLI deploys fail at initialization as of 2026-04-01
-# railway link -p earnest-love -e dev -s morality-network && railway up --detach
+# dev.pooter.world is live on earnest-love / dev / morality-network
+# treat it as the dev target, but do not assume Railway is auto-deploying a specific branch
 ```
-- URL: https://dev.pooter.world (currently down)
-- Railway project: `earnest-love` (broken)
+- URL: https://dev.pooter.world
+- Railway project: `earnest-love`
+- Current note: custom domain is attached and the site responds, but Railway status output does not currently expose a tracked branch/commit for dev the way production does
 
 ## Workflow
 1. Make changes on a feature branch
-2. Commit and push to GitHub
+2. Push to `dev` when you want to test on `dev.pooter.world`
 3. Merge to `main` → faithful-purpose auto-deploys to pooter.world
-4. Test on pooter.world (no working dev site currently)
+4. Test on `dev.pooter.world` first, then verify production on `pooter.world`
 
 ## Railway Project Map
 
 | Project | Role | Status |
 |---------|------|--------|
 | **faithful-purpose** | PROD — pooter.world, worker, deploys from GitHub `main` | ✅ Active |
-| **earnest-love** | DEV — dev.pooter.world, polypooter sidecar | ⚠️ Broken |
+| **earnest-love** | DEV — dev.pooter.world, polypooter sidecar | ⚠️ Live, but branch wiring still needs cleanup/confirmation |
 | **pooter-indexer** | Indexer, Postgres, agent workers | ✅ Active |
 | **heartfelt-flow** | Agent Hub (LLM router: Groq/Together) | ✅ Active |
 

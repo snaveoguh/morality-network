@@ -63,7 +63,7 @@ This report is based on direct inspection of the active `morality.network-master
 
 - DNS is on Cloudflare nameservers.
 - `pooter.world` CNAME → `oewwxjq0.up.railway.app` (faithful-purpose, DNS only).
-- `dev.pooter.world` CNAME → `svb92msz.up.railway.app` (earnest-love, DNS only — **currently broken**, CLI deploys fail at initialization).
+- `dev.pooter.world` CNAME → `svb92msz.up.railway.app` (earnest-love, DNS only — currently serving as of 2026-04-02, though CLI status still does not show a tracked branch/commit).
 - Cloudflare should be treated as the public edge and Railway as the serving platform.
 
 ## System Overview
