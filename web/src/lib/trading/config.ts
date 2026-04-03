@@ -299,6 +299,7 @@ export function getTraderConfig(): TraderExecutionConfig {
       circuitBreakerPauseMs: numberFromEnv("TRADER_CIRCUIT_BREAKER_PAUSE_MS", 3_600_000),
       maxHoldMs: numberFromEnv("TRADER_MAX_HOLD_MS", 604_800_000), // 7 days safety net — let winners ride
       minHoldMs: numberFromEnv("TRADER_MIN_HOLD_MS", 3_600_000), // 1 hour minimum hold — no position is the best position
+      directionMode: (process.env.TRADER_DIRECTION_MODE ?? "both") as "long-only" | "short-only" | "both",
     },
     safety: {
       minScannerCandidatesLive: numberFromEnv("TRADER_MIN_SCANNER_CANDIDATES_LIVE", 2),

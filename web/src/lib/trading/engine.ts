@@ -1492,6 +1492,17 @@ class TraderEngine {
     const direction = composite.direction as "long" | "short";
     const side: "buy" | "sell" = direction === "short" ? "sell" : "buy";
 
+    // ═══ DIRECTION MODE FILTER — respect TRADER_DIRECTION_MODE env var ═══
+    const dirMode = this.config.risk.directionMode ?? "both";
+    if (dirMode === "long-only" && direction === "short") {
+      console.log(`[trader] direction-mode: skipping ${market.symbol} SHORT (long-only mode)`);
+      return null;
+    }
+    if (dirMode === "short-only" && direction === "long") {
+      console.log(`[trader] direction-mode: skipping ${market.symbol} LONG (short-only mode)`);
+      return null;
+    }
+
     // ═══ SOUL.md MORAL GATE — disabled for now, re-enable when onchain ratings exist ═══
     // const moralGateResult = await checkMoralGate(market.symbol, direction);
     // logMoralGateDecision(moralGateResult);
