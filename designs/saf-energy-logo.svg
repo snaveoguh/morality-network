@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 310" width="820" height="310">
+  <!-- Transparent background (no fill) -->
+
+  <!-- Outer border box -->
+  <rect x="24" y="20" width="772" height="210" rx="0" ry="0" fill="none" stroke="#1a1a1a" stroke-width="7"/>
+
+  <!-- SAF (black, bold) -->
+  <text x="60" y="172" font-family="'Futura', 'Arial Black', 'Trebuchet MS', sans-serif" font-weight="900" font-size="128" fill="#1a1a1a" letter-spacing="6">SAF</text>
+
+  <!-- ENERGY (red, bold) -->
+  <text x="330" y="172" font-family="'Futura', 'Arial Black', 'Trebuchet MS', sans-serif" font-weight="900" font-size="128" fill="#e52020" letter-spacing="4">ENERGY</text>
+
+  <!-- Left decorative line -->
+  <line x1="240" y1="272" x2="330" y2="272" stroke="#1a1a1a" stroke-width="2.5"/>
+
+  <!-- BY DEFUGO text (rounded font) -->
+  <text x="410" y="280" font-family="'Futura', 'Nunito', 'Arial Rounded MT Bold', sans-serif" font-weight="700" font-size="30" fill="#1a1a1a" text-anchor="middle" letter-spacing="5">BY DEFUGO</text>
+
+  <!-- Right decorative line -->
+  <line x1="490" y1="272" x2="580" y2="272" stroke="#1a1a1a" stroke-width="2.5"/>
+</svg>

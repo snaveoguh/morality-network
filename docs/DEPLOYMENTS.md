@@ -1,6 +1,6 @@
 # Deployments
 
-Last updated: 2026-04-01.
+Last updated: 2026-04-02.
 
 ## Launch Runtime Topology
 
@@ -31,7 +31,7 @@ These services were observed during the April 1, 2026 audit and are part of the 
 
 - Authoritative nameservers: `annalise.ns.cloudflare.com`, `melnicoff.ns.cloudflare.com`
 - `pooter.world` CNAME → `oewwxjq0.up.railway.app` (faithful-purpose, DNS only)
-- `dev.pooter.world` CNAME → `svb92msz.up.railway.app` (earnest-love, DNS only — **currently broken**)
+- `dev.pooter.world` CNAME → `svb92msz.up.railway.app` (earnest-love, DNS only — currently serving)
 
 ### Deploy Commands
 
@@ -43,8 +43,10 @@ railway link -p faithful-purpose -e production -s morality-network && railway up
 # Always re-link after manual deploy:
 railway link -p faithful-purpose -e production -s morality-network
 
-# Dev (earnest-love) — BROKEN as of 2026-04-01, CLI deploys fail at initialization:
-# railway link -p earnest-love -e dev -s morality-network && railway up --detach
+# Dev target:
+# railway link -p earnest-love -e dev -s morality-network
+# Note: dev.pooter.world is live, but Railway status output does not currently expose
+# a tracked branch/commit for the dev service the way production does.
 
 # Deploy indexer
 railway link -p pooter-indexer -e production -s pooter-indexer && railway up --detach
