@@ -129,6 +129,7 @@ export interface TraderRiskConfig {
   circuitBreakerPauseMs: number;
   maxHoldMs?: number;
   minHoldMs?: number;
+  directionMode?: "long-only" | "short-only" | "both";
 }
 
 export interface TraderSafetyConfig {

@@ -337,14 +337,14 @@ function scoreIndicators(
       reason = "Price above cloud but TK bearish → divergence, caution";
     } else if (ichimoku.priceVsCloud === "below" && tkBullish) {
       // Price below cloud but TK turning bullish = potential reversal
-      vote = 0.25;
-      reason = "Price below cloud but TK bullish → potential reversal";
+      vote = -0.25;
+      reason = "Price below cloud but TK bullish → weakening bearish";
     } else if (ichimoku.priceVsCloud === "below") {
       vote = -0.5;
       reason = `Price below ${redCloud ? "red" : "green"} cloud → bearish`;
     } else if (ichimoku.priceVsCloud === "above") {
-      vote = 0.25;
-      reason = `Price above cloud, TK neutral`;
+      vote = 0.5;
+      reason = `Price above cloud, TK neutral → bullish`;
     } else {
       // Inside cloud = uncertainty
       vote = 0;
@@ -440,7 +440,7 @@ export async function fetchTechnicalSignal(
       confidence: 0,
       indicators: {
         rsi14: 50,
-        ichimoku: { tenkanSen: 0, kijunSen: 0, senkouSpanA: 0, senkouSpanB: 0, chikouSpan: 0, cloudColor: "green", priceVsCloud: "inside" },
+        ichimoku: { tenkanSen: 0, kijunSen: 0, senkouSpanA: 0, senkouSpanB: 0, chikouSpan: 0, cloudColor: "neutral" as any, priceVsCloud: "inside" },
         macd: { macd: 0, signal: 0, histogram: 0, crossover: "none" },
         ema: { ema9: 0, ema21: 0, ema55: 0, shortCrossLong: "none", trendAlignment: "mixed" },
         bollinger: { upper: 0, middle: 0, lower: 0, percentB: 0.5, bandwidth: 0 },
