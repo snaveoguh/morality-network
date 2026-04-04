@@ -14,6 +14,7 @@ import { getParallelBaseConfig, getTraderConfig, getScalperConfig } from "../lib
 import { ScalperManager } from "../lib/trading/scalper";
 import { PositionStore } from "../lib/trading/position-store";
 import { runVaultRailKeeper } from "../lib/trading/vault-rail";
+import { spawnSwarm, stopSwarm } from "../lib/agents/spawn-swarm";
 
 type WorkerTaskName = "scanner" | "swarm" | "trader" | "bridge" | "vault";
 type PersistedAgentEvent = {
@@ -509,6 +510,18 @@ async function main(): Promise<void> {
     }
   }
 
+  // Spawn the 67-agent emergent swarm (idempotent — needs SWARM_ENABLED=true)
+  try {
+    const swarmResult = spawnSwarm();
+    if (swarmResult.spawned) {
+      log("swarm spawned", { agents: swarmResult.agentCount, skills: swarmResult.skillCount });
+    } else {
+      log("swarm not enabled (set SWARM_ENABLED=true to activate)");
+    }
+  } catch (error) {
+    log("swarm spawn failed", error instanceof Error ? error.message : error);
+  }
+
   const timers: Array<ReturnType<typeof setInterval>> = [];
   for (const task of tasks) {
     const intervalMs =
@@ -556,6 +569,7 @@ async function main(): Promise<void> {
     if (scalper) {
       await scalper.stop().catch(() => {});
     }
+    stopSwarm();
     log(`received ${signal}, shutting down`);
     process.exit(0);
   };
