@@ -463,7 +463,7 @@ function filterOriginal(item: ArchivedEditorial, cutoff: number): boolean {
 
 export async function getRecentPooterOriginals(
   maxAge48h = true,
-  limit = 20,
+  limit = 150,
 ): Promise<PooterOriginal[]> {
   const cutoff = maxAge48h ? Date.now() - 48 * 60 * 60 * 1000 : 0;
   const safeLimit = Math.max(1, limit);
