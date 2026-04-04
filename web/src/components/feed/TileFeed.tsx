@@ -70,6 +70,7 @@ interface TileFeedProps {
 const FILTER_OPTIONS = [
   { value: "all", label: "All" },
   { value: "pooter-og", label: "Pooter OG" },
+  { value: "moral-commentary", label: "Morality" },
   { value: "news", label: "News" },
   { value: "tech", label: "Tech" },
   { value: "crypto", label: "Crypto" },
@@ -427,10 +428,22 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
       if (ii < institutional.length) mixed.push(institutional[ii++]);
     }
 
-    // Interleave Pooter Originals every ~12 items, first one near the top
-    for (let i = 0; i < originals.length; i++) {
-      const insertAt = Math.min(i * 12 + 2, mixed.length);
-      mixed.splice(insertAt, 0, originals[i]);
+    // Interleave Pooter Originals — moral commentary gets pole position,
+    // other originals every ~8 items for a fuller feed
+    const isMoralCommentary = (o: TileItem) => {
+      const d = o.data as PooterOriginalData;
+      return d.category?.toLowerCase() === "moral commentary" || d.tags?.includes("moral-commentary");
+    };
+    const moralCommentary = originals.filter(isMoralCommentary);
+    const otherOriginals = originals.filter((o) => !isMoralCommentary(o));
+    // Moral commentary always near the very top (position 1)
+    for (let i = moralCommentary.length - 1; i >= 0; i--) {
+      mixed.splice(Math.min(1, mixed.length), 0, moralCommentary[i]);
+    }
+    // Other originals every ~8 items
+    for (let i = 0; i < otherOriginals.length; i++) {
+      const insertAt = Math.min(i * 8 + 3, mixed.length);
+      mixed.splice(insertAt, 0, otherOriginals[i]);
     }
 
     return [...published, ...mixed];
@@ -506,6 +519,12 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
     if (filter !== "all") {
       if (filter === "pooter-og") {
         result = result.filter((item) => item.type === "pooter-original");
+      } else if (filter === "moral-commentary") {
+        result = result.filter((item) =>
+          item.type === "pooter-original" &&
+          (item.data.category.toLowerCase() === "moral commentary" ||
+           item.data.tags?.includes("moral-commentary")),
+        );
       } else if (filter === "news") {
         result = result.filter((item) => NEWS_CATEGORIES.has(item.category));
       } else {
@@ -550,7 +569,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
 
     return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-      .slice(0, 12)
+      .slice(0, 24)
       .map(([tag]) => tag);
   }, [preTagFiltered]);
 

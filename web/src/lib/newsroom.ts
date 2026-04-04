@@ -364,6 +364,7 @@ export function selectStories(
 
 const DELAY_BETWEEN_GENERATIONS_MS = 2_000;
 const DEFAULT_MAX_STORIES = 10; // Pooter Originals: 10 curated pieces per day
+const MAX_DAILY_EDITORIALS = parseInt(process.env.NEWSROOM_MAX_DAILY_EDITORIALS ?? "5", 10);
 
 function getTodayUTC(): string {
   return new Date().toISOString().slice(0, 10);
@@ -417,6 +418,18 @@ export async function runNewsroom(
     hasAIProviderForTask("editorialWriter") &&
     hasAIProviderForTask("editorialExtractor");
 
+  // ── Hard daily cap — count editorials already generated today ──
+  const alreadyGeneratedToday = existingEdition?.stories.length ?? 0;
+  const remainingBudget = Math.max(0, MAX_DAILY_EDITORIALS - alreadyGeneratedToday);
+  if (remainingBudget === 0) {
+    reportWarn("newsroom", `Daily cap reached (${MAX_DAILY_EDITORIALS}). Skipping generation.`);
+    return {
+      edition: existingEdition ?? { date: today, generatedAt: new Date().toISOString(), updatedAt: new Date().toISOString(), stories: [] },
+      generated: 0, skipped: selected.length, errors: 0,
+      details: selected.map((c) => ({ hash: c.entityHash, title: c.primary.title, status: "skipped" as const })),
+    };
+  }
+
   const details: NewsroomResult["details"] = [];
   let generated = 0;
   let skipped = 0;
@@ -424,6 +437,13 @@ export async function runNewsroom(
 
   for (const cluster of selected) {
     const hash = cluster.entityHash;
+
+    // Hard daily cap — stop generating once we hit the limit
+    if (generated >= remainingBudget) {
+      details.push({ hash, title: cluster.primary.title, status: "skipped" });
+      skipped++;
+      continue;
+    }
 
     // Skip if already in today's edition (unless forced)
     if (!options?.forceRegenerate && existingHashes.has(hash)) {
