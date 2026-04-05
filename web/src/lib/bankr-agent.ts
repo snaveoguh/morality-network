@@ -74,7 +74,8 @@ export async function submitPrompt(
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     if (res.status === 401) throw new Error("Invalid Bankr API key");
-    if (res.status === 429) throw new Error("Bankr rate limit exceeded (100/day free, 1000/day Club)");
+    if (res.status === 402) throw new Error("Bankr account requires prepaid credits — fund via https://docs.openclaw.dev");
+    if (res.status === 429) throw new Error("Bankr rate limit exceeded — check your plan credits at https://docs.openclaw.dev");
     throw new Error(`Bankr API ${res.status}: ${text.slice(0, 200)}`);
   }
 

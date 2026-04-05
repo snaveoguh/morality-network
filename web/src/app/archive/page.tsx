@@ -5,7 +5,6 @@ import { BRAND_NAME, withBrand } from "@/lib/brand";
 
 export const revalidate = 3600; // 1 hour ISR (was 5 min — ~$30/mo savings)
 export const maxDuration = 55;
-export const dynamic = "force-dynamic";
 
 /** Race a promise against a timeout — returns fallback on timeout */
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {

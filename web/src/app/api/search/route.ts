@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     const payload = await searchSite(q);
     return NextResponse.json(payload, {
       headers: {
-        "cache-control": "public, max-age=15, s-maxage=15, stale-while-revalidate=30",
+        "cache-control": "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
       },
     });
   } catch (error) {

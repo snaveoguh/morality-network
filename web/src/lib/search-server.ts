@@ -17,7 +17,7 @@ interface SearchRecord extends SearchResult {
   sortTime: number;
 }
 
-const SEARCH_CACHE_TTL_MS = 5 * 60 * 1000;
+const SEARCH_CACHE_TTL_MS = 30 * 60 * 1000; // 30 min — corpus rarely changes faster
 const MAX_RESULTS_PER_SECTION = 5;
 
 const DEFAULT_DISCOVERY_REQUEST: DiscoveryRequest = {
