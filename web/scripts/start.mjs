@@ -26,5 +26,10 @@ if (workerTasks) {
   console.log("[start] No WORKER_TASKS — launching Next.js server");
   execSync("npx next start -p " + (process.env.PORT || "3000"), {
     stdio: "inherit",
+    env: {
+      ...process.env,
+      // Prevent OOM on Railway — default 512MB is too small for SSR with large archives
+      NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=1024"].filter(Boolean).join(" "),
+    },
   });
 }
