@@ -464,11 +464,15 @@ function filterOriginal(item: ArchivedEditorial, cutoff: number): boolean {
 export async function getRecentPooterOriginals(
   maxAge48h = true,
   limit = 150,
+  noAgeCap = false,
 ): Promise<PooterOriginal[]> {
-  // Even with maxAge48h=false, cap at 7 days — ancient editorials shouldn't resurface
-  const cutoff = maxAge48h
-    ? Date.now() - 48 * 60 * 60 * 1000
-    : Date.now() - 7 * 24 * 60 * 60 * 1000;
+  // Default: 48h if strict, 7 days if relaxed. noAgeCap bypasses all limits
+  // (used by masthead last-resort so the page is never empty).
+  const cutoff = noAgeCap
+    ? 0
+    : maxAge48h
+      ? Date.now() - 48 * 60 * 60 * 1000
+      : Date.now() - 7 * 24 * 60 * 60 * 1000;
   const safeLimit = Math.max(1, limit);
 
   // Try remote indexer first — has fresh data from crons

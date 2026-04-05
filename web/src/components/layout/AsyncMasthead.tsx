@@ -36,7 +36,7 @@ export async function AsyncMasthead() {
     // Cache miss
   }
 
-  // 2. Fallback: most recent Pooter Original
+  // 2. Fallback: most recent Pooter Original (7-day window)
   if (!dailyEdition) {
     try {
       const originals = await getRecentPooterOriginals(false);
@@ -52,6 +52,25 @@ export async function AsyncMasthead() {
       }
     } catch {
       // No originals available
+    }
+  }
+
+  // 3. Last resort: any-age Pooter Original — masthead should never be empty
+  if (!dailyEdition) {
+    try {
+      const anyAge = await getRecentPooterOriginals(false, 1, true);
+      const pick = anyAge[0];
+      if (pick) {
+        dailyEdition = {
+          hash: pick.hash,
+          dailyTitle: pick.dailyTitle ?? "FROM THE ARCHIVE",
+          headline: pick.title,
+          subheadline: pick.subheadline,
+          generatedAt: pick.generatedAt,
+        };
+      }
+    } catch {
+      // Archive unavailable — Masthead will show brand fallback
     }
   }
 
