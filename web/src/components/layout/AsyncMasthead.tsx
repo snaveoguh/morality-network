@@ -61,9 +61,11 @@ async function resolveMasthead(): Promise<MastheadEdition | null> {
     // No originals available
   }
 
-  // 3. Last resort: any-age Pooter Original (1s cap — local JSON only at this point)
+  // 3. Last resort: any-age Pooter Original — masthead must NEVER be empty
+  // Give 3s — inner indexer fetch has its own 2s cap, so local JSON always
+  // has headroom to complete.
   try {
-    const anyAge = await withTimeout(getRecentPooterOriginals(false, 1, true), 1000);
+    const anyAge = await withTimeout(getRecentPooterOriginals(false, 1, true), 3000);
     const pick = anyAge?.[0];
     if (pick) {
       return {
@@ -82,8 +84,8 @@ async function resolveMasthead(): Promise<MastheadEdition | null> {
 }
 
 export async function AsyncMasthead() {
-  // Hard 4s ceiling — if the entire resolution chain hangs, show brand fallback
-  const dailyEdition = await withTimeout(resolveMasthead(), 4000);
+  // Hard 8s ceiling — each tier has internal timeouts so this is a safety net
+  const dailyEdition = await withTimeout(resolveMasthead(), 8000);
 
   return (
     <Masthead
