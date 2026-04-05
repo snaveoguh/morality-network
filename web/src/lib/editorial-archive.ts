@@ -465,7 +465,10 @@ export async function getRecentPooterOriginals(
   maxAge48h = true,
   limit = 150,
 ): Promise<PooterOriginal[]> {
-  const cutoff = maxAge48h ? Date.now() - 48 * 60 * 60 * 1000 : 0;
+  // Even with maxAge48h=false, cap at 7 days — ancient editorials shouldn't resurface
+  const cutoff = maxAge48h
+    ? Date.now() - 48 * 60 * 60 * 1000
+    : Date.now() - 7 * 24 * 60 * 60 * 1000;
   const safeLimit = Math.max(1, limit);
 
   // Try remote indexer first — has fresh data from crons
