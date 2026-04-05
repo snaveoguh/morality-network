@@ -476,22 +476,28 @@ export async function getRecentPooterOriginals(
   const safeLimit = Math.max(1, limit);
 
   // Try remote indexer first — has fresh data from crons
+  // 2s timeout so we fall through to local JSON quickly if indexer is slow/down
   if (getIndexerBackendUrl()) {
     try {
-      const hashes = await fetchRemoteEditorialHashes(Math.max(safeLimit * 2, 30));
-      if (hashes.size > 0) {
-        const resolved = await Promise.all(
-          Array.from(hashes).slice(0, Math.max(safeLimit * 2, 30)).map((h) =>
-            getArchivedEditorial(h).catch(() => null),
-          ),
-        );
-        const originals = resolved
-          .filter((item): item is ArchivedEditorial => item !== null && filterOriginal(item, cutoff))
-          .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())
-          .slice(0, safeLimit)
-          .map(archivedToOriginal);
-        if (originals.length > 0) return originals;
-      }
+      const indexerResult = await Promise.race([
+        (async () => {
+          const hashes = await fetchRemoteEditorialHashes(Math.max(safeLimit * 2, 30));
+          if (hashes.size === 0) return null;
+          const resolved = await Promise.all(
+            Array.from(hashes).slice(0, Math.max(safeLimit * 2, 30)).map((h) =>
+              getArchivedEditorial(h).catch(() => null),
+            ),
+          );
+          const originals = resolved
+            .filter((item): item is ArchivedEditorial => item !== null && filterOriginal(item, cutoff))
+            .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())
+            .slice(0, safeLimit)
+            .map(archivedToOriginal);
+          return originals.length > 0 ? originals : null;
+        })(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]);
+      if (indexerResult) return indexerResult;
     } catch (err) {
       console.warn("[editorial-archive] remote originals fetch failed, falling back to local:", err);
     }
