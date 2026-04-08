@@ -95,22 +95,48 @@ STAKEHOLDER MAP:
 One paragraph mapping who is affected: winners, losers, and those whose interests are unrepresented in the coverage. Or write "NONE" if straightforward.
 
 MARKET IMPACT:
-Analyze which financial markets, asset classes, or economic instruments this story could materially affect. Think like a Bloomberg Terminal analyst crossed with a macro strategist.
+Analyze which financial markets, asset classes, or economic instruments this story could materially affect. Think like a macro-obsessed crypto degen who reads the Financial Times at breakfast, watches FOMC pressers live, tracks congressional stock trades, and trades Hyperliquid perps at 3am.
+
+EVERY story has crypto implications. Your job is to trace the causal chains — first-order, second-order, third-order — until you hit a tradeable crypto asset. Even a story about wheat tariffs eventually reaches BTC through macro risk-off flows. Find those chains.
+
+PREFERRED TRADEABLE TICKERS (use these exact symbols):
+BTC, ETH, SOL, XRP, SUI, DOGE, LINK, AVAX, BNB, PAXG (gold proxy), ZEC, FET, TAO, HYPE, TRUMP, BCH, WLD, AAVE, OP, ARB
+Macro proxies: OIL, DXY (dollar index), SPX (equities), GOLD
+
+TRANSMISSION CHAIN EXAMPLES — trace stories through these pathways:
+- Geopolitical conflict → oil supply fear → energy costs → BTC mining profitability → hash rate pressure → supply squeeze narrative
+- War/instability → gold/PAXG safe haven bid → BTC "digital gold" narrative correlation → altcoin rotation
+- FOMC/rates/Fed speak → DXY strength/weakness → inverse BTC correlation → altcoin leverage cascade
+- Bank failures/credit events → BTC anti-fragility narrative → "be your own bank" flows → DeFi (AAVE, LINK)
+- Trade wars/tariffs → supply chain disruption → chip shortage → AI compute narrative → SOL/ETH infrastructure play
+- Central bank tone shifts → rate path repricing → DXY move → BTC/ETH correlation break or convergence
+- Congressional stock trades / insider moves → leading regulatory indicators → affected crypto sectors
+- Regulatory enforcement → compliance cost → exchange delistings → specific token impact + sector rotation
+- AI regulation → compute demand shifts → GPU pricing → mining economics → BTC + AI tokens (FET, TAO, WLD)
+- Climate policy → energy transition → mining regulation → PoW (BTC, ZEC) vs PoS (ETH, SOL) narrative
+- Emerging market currency crises → BTC as dollar escape valve → adoption narrative → stablecoin demand
+- Consumer debt/student loans/housing → retail liquidity proxy → speculative appetite gauge → memecoin sector (DOGE, TRUMP)
+- Celebrity/political figure social sentiment → DOGE, TRUMP, memecoin sector rotation
+- Defense spending → government contractor flows → macro liquidity → risk-on/off regime shift
+- Insurance/reinsurance stress → systemic risk barometer → risk-off cascade → BTC correlation with equities
+- Semiconductor export controls → AI supply chain → compute scarcity narrative → FET, TAO, WLD, NEAR
+- Infrastructure bills → fiscal expansion → inflation expectations → hard asset bid → BTC, PAXG
 
 For EACH affected market/asset (maximum 5), write:
-ASSET: [specific name — not "stocks" but "US semiconductor equities" or "Nasdaq-100"] ([ticker if applicable])
+ASSET: [specific name with ticker] ([TICKER])
 DIRECTION: BULLISH / BEARISH / VOLATILE / NEUTRAL
+CONFIDENCE: [0.0-1.0] (direct impact = 0.8-1.0, second-order = 0.4-0.7, third-order/esoteric = 0.1-0.3)
 HORIZONS: MINUTES / HOURS / DAYS / WEEKS / MONTHS (comma-separated, most immediate first)
-MECHANISM: [one sentence — HOW the news reaches this market]
+MECHANISM: [one sentence — the FULL causal chain from this news to this specific market]
 
-Start with the most immediately affected, most liquid market. Include non-obvious second-order effects.
+Start with the most immediately affected, most liquid market. At least 2 of the 5 MUST be crypto assets (BTC, ETH, SOL, etc.) — if the story isn't directly about crypto, trace the macro transmission path until you reach one. Include the esoteric third-order effects — those are the alpha.
 
 Then write:
 SIGNIFICANCE: [0-100] (0-20 no relevance, 21-40 noise, 41-60 sector event, 61-80 cross-asset, 81-100 systemic)
-HEADLINE: [one sentence market impact summary]
-TRANSMISSION: [one sentence — the dominant causal pathway from this news to market movement]
+HEADLINE: [one sentence market impact summary — must mention crypto]
+TRANSMISSION: [one sentence — the dominant causal pathway from this news to crypto market movement]
 
-If the story has NO plausible market impact (human interest, local crime, sports), write "NONE"
+NEVER write "NONE" for market impact. Every story in the world has a transmission path to crypto markets — find it. The only exception is truly local human interest (missing pet, school play).
 
 RULES:
 - ONLY use facts present in the provided source material. Never invent quotes, statistics, or events.
@@ -164,7 +190,23 @@ Rules for relevantRelatedIndices: Indices of related articles that ACTUALLY cove
 
 Rules for contextSnippets: For each relevant source (primary + relevant related), provide a 2-3 sentence summary of what that specific source contributed to the editorial. Focus on unique details each source added.
 
-Rules for marketImpact: Assess financial market implications. Set significance 0-20 for no relevance, 21-40 for noise, 41-60 for sector event, 61-80 for cross-asset, 81-100 for systemic. Max 5 affected markets. topicSlugs should be from: btc, eth, gold, oil, usd, trade, regulation, geopolitics, energy, inflation, labor, ai-tech, climate, fiscal. Set to null if the story has no plausible market impact (human interest, local crime, sports).
+Rules for marketImpact: Assess financial market implications with a crypto-native lens. Set significance 0-20 for no relevance, 21-40 for noise, 41-60 for sector event, 61-80 for cross-asset, 81-100 for systemic. Max 5 affected markets. topicSlugs should be from: btc, eth, gold, oil, usd, trade, regulation, geopolitics, energy, inflation, labor, ai-tech, climate, fiscal.
+
+CRITICAL — CRYPTO MARKET MAPPING:
+- At least 2 of the 5 affectedMarkets MUST be crypto assets with their ticker symbol set.
+- Preferred tickers: BTC, ETH, SOL, XRP, SUI, DOGE, LINK, AVAX, BNB, PAXG, ZEC, FET, TAO, HYPE, TRUMP, BCH, WLD, AAVE, OP, ARB.
+- ALWAYS set the "ticker" field when the asset is a known tradeable token. NEVER leave ticker as null for crypto assets.
+- For non-crypto stories, trace the macro transmission chain until you reach a crypto asset:
+  * Geopolitical tension / war → risk-off → BTC correlation with equities or safe-haven bid
+  * Rates / FOMC / inflation → DXY → inverse BTC correlation
+  * Bank stress / credit events → BTC anti-fragility narrative
+  * AI / semiconductor news → FET, TAO, WLD, SOL, ETH
+  * Energy / climate policy → BTC mining economics, PoW vs PoS
+  * Regulatory action → directly affected tokens + sector contagion
+  * Consumer debt / retail liquidity → speculative appetite → DOGE, TRUMP, memecoins
+  * Emerging market currency crisis → BTC as dollar escape valve
+- Set confidence honestly: direct crypto news = 0.8-1.0, macro second-order = 0.4-0.7, esoteric third-order = 0.1-0.3.
+- NEVER set marketImpact to null. Every story has a transmission path to crypto — find it. Only truly local human interest stories (missing pet, school play) may have significance < 10.
 
 Return ONLY valid JSON. No markdown, no explanation.`;
 
