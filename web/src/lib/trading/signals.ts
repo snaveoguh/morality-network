@@ -377,6 +377,21 @@ export async function getAggregatedMarketSignals(options?: {
     return newsdeskSignals.filter((s) => s.score >= minAbsScore);
   }
 
+  // Try swarm signals — real-time cluster-derived signals from 70+ RSS feeds
+  try {
+    const { fetchSwarmSignals } = await import("./swarm-signals.js");
+    const swarmSignals = await fetchSwarmSignals();
+    if (swarmSignals.length > 0) {
+      const filtered = swarmSignals.filter((s: AggregatedMarketSignal) => s.score >= minAbsScore);
+      console.log(
+        `[signals] using swarm: ${filtered.length} emerging event signals (${swarmSignals.length} raw)`,
+      );
+      return filtered.slice(0, limit);
+    }
+  } catch (err) {
+    console.warn("[signals] swarm signals unavailable:", err instanceof Error ? err.message : err);
+  }
+
   // Fallback: raw aggregation from indexer
   // Race the indexer call against a 10s timeout — if the backend is down, fail fast to fallback
   const records = await withTimeout(

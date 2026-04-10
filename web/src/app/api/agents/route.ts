@@ -16,7 +16,6 @@ import "@/lib/agents/coordinator";
 import "@/lib/agents/trader";
 import "@/lib/agents/scalper";
 import "@/lib/agents/governance";
-import { spawnSwarm } from "@/lib/agents/spawn-swarm";
 
 export const dynamic = "force-dynamic";
 
@@ -140,8 +139,6 @@ export async function GET(request: Request) {
     } else {
       // Ensure all agents are initialized (idempotent)
       agentRegistry.ensureInitialized();
-      // Spawn the 67-agent emergent swarm (idempotent — only runs once)
-      spawnSwarm();
       localAgents = agentRegistry.listAll();
     }
 
