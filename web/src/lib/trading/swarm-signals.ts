@@ -74,6 +74,16 @@ const BEARISH_WORDS = [
   "collapsed", "fraud", "scam", "lawsuit", "sued", "charged", "indicted",
   "recession", "downturn", "bearish", "sell-off", "selloff", "warning",
   "downgrade", "negative", "worst", "crisis", "default", "bankrupt", "bankruptcy",
+  // Extended — common headline language
+  "slips", "slipped", "slides", "tumbles", "tumbled", "sinks", "sank", "weakens",
+  "weakened", "retreats", "retreated", "struggles", "stumbles", "stalls", "stalled",
+  "plummets", "dips", "dipped", "erases", "erased", "loses", "losing",
+  "tensions", "escalation", "escalates", "war", "conflict", "attack", "attacks",
+  "crackdown", "probe", "investigation", "penalty", "fine", "fined",
+  "delays", "delayed", "postpone", "postponed", "suspend", "suspended",
+  "outflow", "outflows", "withdraw", "withdrawal", "liquidation", "liquidated",
+  "volatility", "uncertain", "instability", "contagion", "panic",
+  "below", "under", "beneath", "lowest", "bottom", "floor",
 ];
 
 const BULLISH_WORDS = [
@@ -83,6 +93,15 @@ const BULLISH_WORDS = [
   "investment", "fund", "funded", "milestone", "breakthrough", "innovation",
   "growth", "growing", "positive", "best", "all-time high", "ath",
   "accumulate", "accumulating", "institutional", "etf", "inflow", "inflows",
+  // Extended — common headline language
+  "rises", "rising", "climbs", "climbing", "jumps", "jumped", "soars", "soared",
+  "rebounds", "rebounded", "recovers", "recovered", "strengthens", "strengthened",
+  "tops", "topped", "exceeds", "exceeded", "breaks", "broke", "hits",
+  "deal", "deals", "agreement", "signed", "signing", "expands", "expansion",
+  "demand", "demands", "reopening", "resumes", "resumed", "restores", "restored",
+  "lifts", "lifted", "eases", "eased", "cuts", "cut", "boost", "boosted",
+  "above", "over", "highest", "peak", "top", "ceiling", "new high",
+  "confidence", "optimism", "momentum", "acceleration", "accumulation",
 ];
 
 /**
@@ -207,6 +226,13 @@ export function aggregateSwarmSignals(
   const bySymbol = new Map<string, AggregatedMarketSignal>();
 
   for (const cluster of clusters) {
+    const symbols = extractTradingSymbols(cluster.tags, cluster.canonicalClaim);
+    const polarity = detectClusterPolarity(cluster.canonicalClaim, cluster.contradictionFlags);
+    if (symbols.length === 0 || polarity === null) {
+      console.log(
+        `[swarm-signals] skip cluster: symbols=${symbols.length} polarity=${polarity} claim="${cluster.canonicalClaim.slice(0, 80)}" tags=[${cluster.tags.slice(0, 5).join(",")}]`,
+      );
+    }
     const signals = clusterToSignals(cluster);
     for (const signal of signals) {
       const existing = bySymbol.get(signal.symbol);
