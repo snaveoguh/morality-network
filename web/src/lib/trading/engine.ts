@@ -219,9 +219,9 @@ class TraderEngine {
         report.entries.push(opened);
         entries += 1;
       } catch (error) {
-        report.errors.push(
-          `entry:${candidate.tokenAddress}:${error instanceof Error ? error.message : "unknown error"}`
-        );
+        const msg = `entry:${candidate.tokenAddress}:${error instanceof Error ? error.message : "unknown error"}`;
+        console.error(`[trader] entry error: ${msg}`);
+        report.errors.push(msg);
       }
     }
 
@@ -1657,24 +1657,32 @@ class TraderEngine {
     await this.store.upsert(prePosition);
 
     // ─── Now place the actual order ───
-    const order = this.config.dryRun
-      ? await simulateHyperliquidOrder({
-          config: this.config,
-          symbol: market.symbol,
-          marketId: market.marketId,
-          side,
-          leverage: orderLeverage,
-          notionalUsd,
-          szDecimals: market.szDecimals,
-        })
-      : await executeHyperliquidOrderLive({
-          config: this.config,
-          market,
-          side,
-          leverage: orderLeverage,
-          slippageBps: this.config.risk.slippageBps,
-          notionalUsd,
-        });
+    let order: Awaited<ReturnType<typeof executeHyperliquidOrderLive>>;
+    try {
+      order = this.config.dryRun
+        ? await simulateHyperliquidOrder({
+            config: this.config,
+            symbol: market.symbol,
+            marketId: market.marketId,
+            side,
+            leverage: orderLeverage,
+            notionalUsd,
+            szDecimals: market.szDecimals,
+          })
+        : await executeHyperliquidOrderLive({
+            config: this.config,
+            market,
+            side,
+            leverage: orderLeverage,
+            slippageBps: this.config.risk.slippageBps,
+            notionalUsd,
+          });
+    } catch (orderErr) {
+      // Order failed — delete pre-persisted position so it doesn't poison the Kelly journal
+      console.error(`[trader] HL order failed for ${market.symbol}: ${orderErr instanceof Error ? orderErr.message : orderErr}`);
+      this.store.deleteById(positionId);
+      throw orderErr;
+    }
 
     const quoteSpentRaw = Math.max(1, Math.floor(order.notionalUsd * 10 ** quoteDecimals)).toString();
 

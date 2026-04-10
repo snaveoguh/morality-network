@@ -140,6 +140,13 @@ export class PositionStore {
     await this.persist();
   }
 
+  /** Remove a position entirely (e.g. failed order cleanup). */
+  deleteById(id: string): void {
+    this.positions.delete(id);
+    // Persist asynchronously — fire and forget
+    this.persist().catch(() => {});
+  }
+
   async close(
     positionId: string,
     updates: Partial<Position>,
@@ -156,6 +163,37 @@ export class PositionStore {
     this.positions.set(positionId, next);
     await this.persist();
     return next;
+  }
+
+  /**
+   * Load closed positions from legacy Redis keys (read-only).
+   * Merges old history without polluting the active store.
+   * Deduplicates by position ID — current store wins on conflicts.
+   */
+  async getAllWithLegacy(): Promise<Position[]> {
+    const current = this.getAll();
+    const currentIds = new Set(current.map((p) => p.id));
+
+    // Legacy keys from previous store paths
+    const legacyKeys = ["pooter:positions", "pooter:v2", "pooter:v3"];
+    const legacyPositions: Position[] = [];
+
+    for (const key of legacyKeys) {
+      if (key === this.redisKey) continue; // skip our own key
+      const positions = await redisGet(key);
+      if (positions) {
+        for (const p of positions) {
+          if (!currentIds.has(p.id) && p.status === "closed") {
+            currentIds.add(p.id);
+            legacyPositions.push(p);
+          }
+        }
+      }
+    }
+
+    return [...current, ...legacyPositions].sort(
+      (a, b) => b.openedAt - a.openedAt,
+    );
   }
 
   private async persist(): Promise<void> {

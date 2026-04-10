@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     const store = new PositionStore(config.positionStorePath);
     await store.load();
 
-    const journal = positionsToJournal(store.getAll());
+    const journal = positionsToJournal(await store.getAllWithLegacy());
     const metrics = computePerformanceMetrics(journal);
 
     // Fetch live account value

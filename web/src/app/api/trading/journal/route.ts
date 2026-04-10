@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const store = new PositionStore(config.positionStorePath);
     await store.load();
 
-    let journal = positionsToJournal(store.getAll());
+    let journal = positionsToJournal(await store.getAllWithLegacy());
 
     if (symbol) {
       journal = journal.filter((t) => t.symbol === symbol);
