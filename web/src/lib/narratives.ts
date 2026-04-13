@@ -141,9 +141,71 @@ function hydrateSeedNarratives(): MacroNarrative[] {
 }
 
 /**
- * Get all narratives — seed list + AI-extracted.
- * AI-extracted narratives are merged in when available.
+ * Get all narratives — seed list + live swarm-derived narratives.
+ *
+ * Live narratives are converted from swarm clusters (emerging events detected
+ * from 70+ RSS feeds). They represent what the agent swarm is actually seeing
+ * right now, not what was manually curated.
  */
+export async function getLiveNarratives(): Promise<MacroNarrative[]> {
+  const seeds = hydrateSeedNarratives();
+
+  // Try to fetch live swarm clusters and convert to narratives
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/agents/swarm`,
+      { next: { revalidate: 300 }, signal: AbortSignal.timeout(8_000) },
+    );
+    if (!res.ok) return seeds;
+
+    const data = (await res.json()) as {
+      clusters?: Array<{
+        canonicalClaim: string;
+        tags: string[];
+        itemCount: number;
+        latestPubDate: string;
+        contradictionFlags: Array<{ claim: string; counter: string }>;
+      }>;
+    };
+
+    if (!data.clusters?.length) return seeds;
+
+    const live: MacroNarrative[] = data.clusters
+      .filter((c) => c.itemCount >= 2) // Need multi-source corroboration
+      .slice(0, 12)
+      .map((cluster) => {
+        const id = `swarm-${cluster.tags.slice(0, 3).join("-").toLowerCase().replace(/[^a-z0-9-]/g, "")}`;
+        const hasContradiction = cluster.contradictionFlags.length > 0;
+        // Categorize by tags
+        const tagStr = cluster.tags.join(" ").toLowerCase();
+        const category: NarrativeCategory =
+          /crypto|bitcoin|ethereum|defi|nft/.test(tagStr) ? "crypto-native" :
+          /war|conflict|china|russia|iran|sanction|geopolit/.test(tagStr) ? "geopolitical" :
+          /fed|rate|inflation|monetary|central bank/.test(tagStr) ? "monetary-policy" :
+          /sector|energy|ai|tech|chip/.test(tagStr) ? "sector-rotation" :
+          "macro-risk";
+        const sentiment: NarrativeSentiment = hasContradiction ? "contested" : "neutral";
+
+        return {
+          id,
+          title: cluster.canonicalClaim.slice(0, 80),
+          description: cluster.canonicalClaim,
+          category,
+          sentiment,
+          entityHash: computeNarrativeHash(id),
+          seedDate: cluster.latestPubDate,
+          source: "editorial-ai" as const,
+        };
+      });
+
+    // Live narratives first, then seeds
+    return [...live, ...seeds];
+  } catch {
+    return seeds;
+  }
+}
+
+/** Synchronous version — seeds only (no network). */
 export function getSeedNarratives(): MacroNarrative[] {
   return hydrateSeedNarratives();
 }

@@ -9,28 +9,35 @@ import { SearchBar } from "@/components/layout/SearchBar";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { BRAND_NAME } from "@/lib/brand";
 
+/** Core navigation — the engine. */
 const NAV_LINKS = [
   { href: "/", label: "Feed" },
-  { href: "/stumble", label: "Stumble" },
+  { href: "/pipe", label: "Pipe" },
   { href: "/markets", label: "Markets" },
-  { href: "/signals", label: "Signals" },
+  { href: "/bots", label: "Agents" },
   { href: "/sentiment", label: "Index" },
   { href: "/archive", label: "Archive" },
   { href: "/proposals", label: "Governance" },
-  { href: "/predictions", label: "Predictions" },
-  { href: "/pepe", label: "Pepe" },
-  { href: "/nouns", label: "Nouns" },
-  { href: "/music", label: "Music" },
-  { href: "/discuss", label: "Discuss" },
-  { href: "/registry", label: "Registry" },
-  { href: "/vault", label: "Vault" },
-  { href: "/bots", label: "Agents" },
-  { href: "/architecture", label: "Architecture" },
-  { href: "/appendix", label: "Appendix" },
+];
+
+/** Everything else — still functional, tucked into a dropdown. */
+const ARCHIVE_LINKS = [
+  { href: "/signals", label: "Signals", desc: "Raw trading signals" },
+  { href: "/stumble", label: "Stumble", desc: "Random article discovery" },
+  { href: "/predictions", label: "Predictions", desc: "Binary outcome markets" },
+  { href: "/predictions/arb", label: "Arb Scanner", desc: "Polymarket arbitrage" },
+  { href: "/nouns", label: "Nouns", desc: "NFT marketplace" },
+  { href: "/pepe", label: "Pepe", desc: "Rare Pepe exchange" },
+  { href: "/music", label: "Music", desc: "Taste-aware discovery" },
+  { href: "/discuss", label: "Discuss", desc: "Onchain discussion" },
+  { href: "/registry", label: "Registry", desc: "Entity morality scores" },
+  { href: "/vault", label: "Vault", desc: "Capital management" },
+  { href: "/terminal", label: "Terminal", desc: "AI trading chat" },
 ];
 
 export function Header() {
   const pathname = usePathname();
+  const isArchiveActive = ARCHIVE_LINKS.some(({ href }) => pathname.startsWith(href));
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--rule)] bg-[var(--paper)]">
@@ -58,6 +65,8 @@ export function Header() {
                 </span>
               );
             })}
+            <span className="mx-2 text-[var(--rule-light)]">|</span>
+            <ArchiveDropdown isActive={isArchiveActive} />
           </nav>
 
         </div>
@@ -75,11 +84,67 @@ export function Header() {
   );
 }
 
+function ArchiveDropdown({ isActive }: { isActive: boolean }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`font-mono text-[9px] uppercase tracking-[0.16em] transition-colors ${
+          isActive
+            ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-[1px] decoration-[var(--rule)]"
+            : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+        }`}
+      >
+        More
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full z-[999] mt-3 w-56 border border-[var(--rule)] bg-[var(--paper)] shadow-lg">
+          <div className="border-b border-[var(--rule)] px-3 py-1.5">
+            <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+              Archive
+            </span>
+          </div>
+          {ARCHIVE_LINKS.map(({ href, label, desc }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setOpen(false)}
+              className="block border-b border-[var(--rule-light)] px-3 py-1.5 transition-colors last:border-b-0 hover:bg-[var(--paper-dark)]"
+            >
+              <span className="block font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--ink)]">
+                {label}
+              </span>
+              <span className="block font-mono text-[7px] tracking-[0.1em] text-[var(--ink-faint)]">
+                {desc}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const LOGO_MENU_ITEMS = [
   { href: "/write", label: "Create", desc: "Publish an article" },
+  { href: "/subscribe", label: "The Daily Pooter", desc: "Morning intelligence brief" },
+  { href: "/architecture", label: "Architecture", desc: "System design docs" },
+  { href: "/appendix", label: "Appendix", desc: "Contracts & API reference" },
   { href: "/style-guide", label: "Style Guide", desc: "Brand & design system" },
   { href: "/zk-recovery", label: "ZK Recovery", desc: "Passwordless wallet recovery" },
-  { href: "/subscribe", label: "The Daily Pooter", desc: "Morning intelligence brief" },
 ];
 
 function LogoMenu() {
