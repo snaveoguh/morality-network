@@ -99,15 +99,5 @@ export default function EquityCurve({ data }: EquityCurveProps) {
     chartRef.current?.timeScale().fitContent();
   }, [data]);
 
-  if (data.length === 0) {
-    return (
-      <div ref={containerRef} className="flex h-full w-full items-center justify-center">
-        <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-          Accumulating equity data...
-        </span>
-      </div>
-    );
-  }
-
   return <div ref={containerRef} className="h-full w-full" />;
 }
