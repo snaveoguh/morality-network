@@ -20,10 +20,14 @@ const NAV_LINKS = [
   { href: "/proposals", label: "Governance" },
 ];
 
-/** Everything else — still functional, tucked into a dropdown. */
-const ARCHIVE_LINKS = [
+/** Co-operative: org info + playground projects + archived features. */
+const COOP_EXTERNAL_LINKS = [
+  { href: "https://mutuals.fca.org.uk/Search/Society/30459", label: "FCA Register", desc: "Morality Co-operative Ltd" },
+  { href: "https://github.com/snaveoguh/morality-network", label: "Source Code", desc: "Open source on GitHub" },
+];
+
+const COOP_PLAYGROUND_LINKS = [
   { href: "/signals", label: "Signals", desc: "Raw trading signals" },
-  { href: "/stumble", label: "Stumble", desc: "Random article discovery" },
   { href: "/predictions", label: "Predictions", desc: "Binary outcome markets" },
   { href: "/predictions/arb", label: "Arb Scanner", desc: "Polymarket arbitrage" },
   { href: "/nouns", label: "Nouns", desc: "NFT marketplace" },
@@ -33,11 +37,12 @@ const ARCHIVE_LINKS = [
   { href: "/registry", label: "Registry", desc: "Entity morality scores" },
   { href: "/vault", label: "Vault", desc: "Capital management" },
   { href: "/terminal", label: "Terminal", desc: "AI trading chat" },
+  { href: "/stumble", label: "Stumble", desc: "Random article discovery" },
 ];
 
 export function Header() {
   const pathname = usePathname();
-  const isArchiveActive = ARCHIVE_LINKS.some(({ href }) => pathname.startsWith(href));
+  const isArchiveActive = COOP_PLAYGROUND_LINKS.some(({ href }) => pathname.startsWith(href));
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--rule)] bg-[var(--paper)]">
@@ -66,7 +71,7 @@ export function Header() {
               );
             })}
             <span className="mx-2 text-[var(--rule-light)]">|</span>
-            <ArchiveDropdown isActive={isArchiveActive} />
+            <CoopDropdown isActive={isArchiveActive} />
           </nav>
 
         </div>
@@ -84,7 +89,7 @@ export function Header() {
   );
 }
 
-function ArchiveDropdown({ isActive }: { isActive: boolean }) {
+function CoopDropdown({ isActive }: { isActive: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -100,24 +105,49 @@ function ArchiveDropdown({ isActive }: { isActive: boolean }) {
     <div ref={ref} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={`font-mono text-[9px] uppercase tracking-[0.16em] transition-colors ${
-          isActive
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((o) => !o); }}
+        className={`font-mono text-[9px] uppercase tracking-[0.16em] transition-colors cursor-pointer ${
+          isActive || open
             ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-[1px] decoration-[var(--rule)]"
             : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
         }`}
       >
-        More
+        Co-op
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-[999] mt-3 w-56 border border-[var(--rule)] bg-[var(--paper)] shadow-lg">
+        <div className="absolute right-0 top-full z-[999] mt-3 w-64 border border-[var(--rule)] bg-[var(--paper)] shadow-lg max-h-[80vh] overflow-y-auto">
+          {/* Co-operative info */}
           <div className="border-b border-[var(--rule)] px-3 py-1.5">
             <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-              Archive
+              Morality Co-operative Ltd
             </span>
           </div>
-          {ARCHIVE_LINKS.map(({ href, label, desc }) => (
+          {COOP_EXTERNAL_LINKS.map(({ href, label, desc }) => (
+            <a
+              key={href}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="block border-b border-[var(--rule-light)] px-3 py-1.5 transition-colors hover:bg-[var(--paper-dark)]"
+            >
+              <span className="block font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--ink)]">
+                {label} &nearr;
+              </span>
+              <span className="block font-mono text-[7px] tracking-[0.1em] text-[var(--ink-faint)]">
+                {desc}
+              </span>
+            </a>
+          ))}
+
+          {/* Playground projects */}
+          <div className="border-b border-[var(--rule)] px-3 py-1.5 mt-0">
+            <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+              Playground
+            </span>
+          </div>
+          {COOP_PLAYGROUND_LINKS.map(({ href, label, desc }) => (
             <Link
               key={href}
               href={href}
