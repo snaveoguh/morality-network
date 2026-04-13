@@ -201,17 +201,21 @@ export default function BotsPage() {
       const scannerUrl = forceScannerRefresh
         ? "/api/agents/scanner?limit=100&refresh=1"
         : "/api/agents/scanner?limit=100";
-      const [agentsRes, scannerRes, busRes, consoleRes] = await Promise.all([
+      const [agentsRes, scannerRes, busRes, consoleRes] = await Promise.allSettled([
         fetch("/api/agents").then((r) => r.json()),
         fetch(scannerUrl).then((r) => r.json()),
         fetch("/api/agents/bus?limit=100").then((r) => r.json()),
-        fetch("/api/agents/console?windowMs=900000").then((r) => r.json()),
+        fetch("/api/agents/console?windowMs=900000").then((r) => r.ok ? r.json() : null),
       ]);
-      setAgents(agentsRes.agents ?? []);
-      setLaunches(scannerRes.launches ?? []);
-      setScannerStats(scannerRes.agent?.stats ?? {});
-      setBusMessages(busRes.messages ?? []);
-      setConsoleState(consoleRes?.error ? null : (consoleRes as SwarmConsoleState));
+      if (agentsRes.status === "fulfilled") setAgents(agentsRes.value.agents ?? []);
+      if (scannerRes.status === "fulfilled") {
+        setLaunches(scannerRes.value.launches ?? []);
+        setScannerStats(scannerRes.value.agent?.stats ?? {});
+      }
+      if (busRes.status === "fulfilled") setBusMessages(busRes.value.messages ?? []);
+      if (consoleRes.status === "fulfilled" && consoleRes.value && !consoleRes.value.error) {
+        setConsoleState(consoleRes.value as SwarmConsoleState);
+      }
       setLastRefresh(Date.now());
       lastConsoleRefreshRef.current = Date.now();
     } catch (err) {
