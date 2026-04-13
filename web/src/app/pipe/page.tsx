@@ -124,13 +124,12 @@ export default function PipePage() {
   const [equityHistory, setEquityHistory] = useState<{ time: number; value: number }[]>([]);
 
   const refresh = useCallback(async () => {
-    const [feedRes, agentRes, swarmRes, signalRes, perfRes, metricsRes] =
+    const [feedRes, agentRes, swarmRes, signalRes, metricsRes] =
       await Promise.allSettled([
         fetch("/api/feed?limit=30").then((r) => r.json()),
         fetch("/api/agents").then((r) => r.json()),
         fetch("/api/agents/swarm").then((r) => r.json()),
         fetch("/api/trading/signals").then((r) => r.json()),
-        fetch("/api/trading/performance").then((r) => r.json()),
         fetch("/api/trading/metrics").then((r) => r.json()),
       ]);
 
@@ -138,33 +137,36 @@ export default function PipePage() {
     if (agentRes.status === "fulfilled") setAgents(agentRes.value.agents ?? []);
     if (swarmRes.status === "fulfilled") setClusters(swarmRes.value.clusters?.slice(0, 15) ?? []);
     if (signalRes.status === "fulfilled") setSignals(signalRes.value.signals?.slice(0, 15) ?? []);
-    if (perfRes.status === "fulfilled") {
-      setPerf(perfRes.value);
-      // Add to equity history
-      const val = perfRes.value.accountValueUsd;
-      if (typeof val === "number" && val > 0) {
-        setEquityHistory((prev) => {
-          const next = [...prev, { time: Date.now(), value: val }];
-          return next.slice(-200); // keep last 200 points
-        });
-      }
-    }
-    if (metricsRes.status === "fulfilled" && metricsRes.value.performance) {
-      const m = metricsRes.value.performance;
-      setMetrics(m);
-      setOpenPositions(m.open ?? []);
-      setClosedPositions(m.closed?.slice(0, 20) ?? []);
-      // Build equity curve from closed trades if we don't have live data
-      if (m.closed?.length > 0 && equityHistory.length === 0) {
-        let cumPnl = 0;
-        const history = m.closed
-          .filter((c: ClosedPosition) => c.position.closedAt > 0)
-          .sort((a: ClosedPosition, b: ClosedPosition) => a.position.closedAt - b.position.closedAt)
-          .map((c: ClosedPosition) => {
-            cumPnl += c.position.pnlUsd;
-            return { time: c.position.closedAt, value: cumPnl };
+    if (metricsRes.status === "fulfilled") {
+      const payload = metricsRes.value;
+      const m = payload.performance ?? payload;
+      if (m) {
+        setMetrics(m);
+        setPerf({ timestamp: m.timestamp ?? Date.now(), accountValueUsd: m.accountValueUsd ?? null, openPositionCount: m.open?.length ?? m.totals?.openPositions ?? 0 });
+        setOpenPositions(m.open ?? []);
+        setClosedPositions(m.closed?.slice(0, 20) ?? []);
+
+        // Add live account value to equity history
+        const val = m.accountValueUsd;
+        if (typeof val === "number" && val > 0) {
+          setEquityHistory((prev) => {
+            const next = [...prev, { time: Date.now(), value: val }];
+            return next.slice(-200);
           });
-        if (history.length > 0) setEquityHistory(history);
+        }
+
+        // Build equity curve from closed trades on first load
+        if (m.closed?.length > 0 && equityHistory.length === 0) {
+          let cumPnl = 0;
+          const history = m.closed
+            .filter((c: ClosedPosition) => c.position.closedAt > 0)
+            .sort((a: ClosedPosition, b: ClosedPosition) => a.position.closedAt - b.position.closedAt)
+            .map((c: ClosedPosition) => {
+              cumPnl += c.position.pnlUsd;
+              return { time: c.position.closedAt, value: cumPnl };
+            });
+          if (history.length > 0) setEquityHistory(history);
+        }
       }
     }
     setLastUpdate(Date.now());
