@@ -14,6 +14,8 @@
   --rule: #2A2A2A;
   --rule-light: #C8C0B0;
   --accent-red: #8B0000;
+  --accent-green: #1A6B35;
+  --accent-amber: #8B6914;
   --background: var(--paper);
   --foreground: var(--ink);
 }
@@ -28,6 +30,8 @@
   --rule: #D0CCC4;
   --rule-light: #2A2A2A;
   --accent-red: #CC3333;
+  --accent-green: #22C55E;
+  --accent-amber: #D4A017;
   --background: var(--paper);
   --foreground: var(--ink);
 }
@@ -224,3 +228,18 @@ body { background: var(--paper); color: var(--ink); }
   75% { transform: translate(0.5px, 0.5px); }
   100% { transform: translate(0, 0); }
 }
+
+/* ── Pipeline flow animation ── */
+@keyframes pipeline-flow {
+  0% { opacity: 0; transform: translateX(-4px); }
+  20% { opacity: 1; transform: translateX(0); }
+  80% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(4px); }
+}
+.pipeline-item-enter { animation: pipeline-flow 0.4s ease-out; }
+
+@keyframes data-pulse {
+  0%, 100% { border-color: var(--rule-light); }
+  50% { border-color: var(--accent-green); }
+}
+.data-pulse { animation: data-pulse 2s ease-in-out; }

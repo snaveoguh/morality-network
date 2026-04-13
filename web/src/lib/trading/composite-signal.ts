@@ -224,7 +224,7 @@ export function computeCompositeSignal(args: {
 
   const longVotes = directions.filter((d) => d === "long").length;
   const shortVotes = directions.filter((d) => d === "short").length;
-  const minAgreement = parseInt(process.env.TRADER_MIN_COMPOSITE_AGREEMENT_COUNT ?? "3", 10);
+  const minAgreement = parseInt(process.env.TRADER_MIN_COMPOSITE_AGREEMENT_COUNT ?? "2", 10);
   const agreementMet =
     directions.length <= 1 || // only 1 source = auto-agree
     (direction === "long" && longVotes >= minAgreement) ||

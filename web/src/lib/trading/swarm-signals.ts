@@ -288,7 +288,7 @@ export function aggregateSwarmSignals(
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL ?? "";
 const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN ?? "";
 const REDIS_KEY = "pooter:swarm-signals";
-const TTL_SECONDS = 30 * 60; // 30 minutes
+const TTL_SECONDS = 2 * 60 * 60; // 2 hours — news doesn't change that fast
 
 export async function persistSwarmSignals(signals: AggregatedMarketSignal[]): Promise<boolean> {
   if (!UPSTASH_URL || !UPSTASH_TOKEN) return false;

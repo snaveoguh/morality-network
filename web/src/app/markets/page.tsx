@@ -1,16 +1,17 @@
 import { AgentMarketDashboard } from "@/components/markets/AgentMarketDashboard";
 import { NarrativeGrid } from "@/components/markets/NarrativeGrid";
-import { getSeedNarratives } from "@/lib/narratives";
+import { getLiveNarratives } from "@/lib/narratives";
 import { withBrand } from "@/lib/brand";
 
+export const revalidate = 300; // 5 min — live narratives from swarm
 export const metadata = {
   title: withBrand("Agent Markets"),
   description:
     "Macro narratives, market sentiment, and live agent trading telemetry.",
 };
 
-export default function MarketsPage() {
-  const narratives = getSeedNarratives();
+export default async function MarketsPage() {
+  const narratives = await getLiveNarratives();
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">

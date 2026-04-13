@@ -1348,8 +1348,31 @@ export function AgentMarketDashboard() {
         : `Hold ${subscription.requiredMoBalance || "100000"} MO in the connected wallet for full access`
     : null;
 
+  const isFlat = allOpen.length === 0;
+  const lastTradeAge = allClosed.length > 0 && allClosed[0].position.closedAt
+    ? Date.now() - allClosed[0].position.closedAt
+    : Infinity;
+  const isStale = lastTradeAge > 24 * 60 * 60 * 1000; // no trade in 24h
+
   return (
     <div className="space-y-6">
+      {/* Honesty banner — show real state instead of looking dead */}
+      {isFlat && (
+        <div className="border border-[var(--rule-light)] bg-[var(--paper-tint)] px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-amber-500" />
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]">
+              {isStale ? "Awaiting Signal Consensus" : "Flat — No Open Positions"}
+            </span>
+          </div>
+          <p className="mt-1 font-mono text-[8px] tracking-[0.1em] text-[var(--ink-faint)]">
+            {isStale
+              ? "The composite signal pipeline requires 2+ sources to agree on direction before opening a position. Signals are being generated — waiting for consensus."
+              : `Last trade closed ${allClosed.length > 0 ? new Date(allClosed[0].position.closedAt ?? 0).toLocaleString() : "unknown"}. Agent is scanning for the next opportunity.`}
+          </p>
+        </div>
+      )}
+
       <section className="border-b-2 border-[var(--rule)] pb-4">
         <h1 className="font-headline text-2xl font-bold text-[var(--ink)]">
           Agent Markets

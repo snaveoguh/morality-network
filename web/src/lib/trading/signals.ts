@@ -379,8 +379,29 @@ export async function getAggregatedMarketSignals(options?: {
 
   // Try swarm signals — real-time cluster-derived signals from 70+ RSS feeds
   try {
-    const { fetchSwarmSignals } = await import("./swarm-signals.js");
-    const swarmSignals = await fetchSwarmSignals();
+    const { fetchSwarmSignals, aggregateSwarmSignals, persistSwarmSignals } = await import("./swarm-signals");
+    let swarmSignals = await fetchSwarmSignals();
+
+    // If Redis cache is empty (expired or worker hasn't run), compute inline
+    if (swarmSignals.length === 0) {
+      console.log("[signals] swarm cache empty — computing inline from RSS feeds");
+      try {
+        const { runResearchSwarm } = await import("../agent-swarm");
+        const items = await withTimeout(fetchAllFeeds(DEFAULT_FEEDS), 25_000, []);
+        if (items.length > 0) {
+          const output = runResearchSwarm(items, 30);
+          swarmSignals = aggregateSwarmSignals(output.clusters);
+          // Persist for next call so we don't re-fetch
+          if (swarmSignals.length > 0) {
+            persistSwarmSignals(swarmSignals).catch(() => {}); // fire-and-forget
+          }
+          console.log(`[signals] inline swarm: ${swarmSignals.length} signals from ${items.length} feed items`);
+        }
+      } catch (inlineErr) {
+        console.warn("[signals] inline swarm computation failed:", inlineErr instanceof Error ? inlineErr.message : inlineErr);
+      }
+    }
+
     if (swarmSignals.length > 0) {
       const filtered = swarmSignals.filter((s: AggregatedMarketSignal) => s.score >= minAbsScore);
       console.log(
@@ -392,8 +413,7 @@ export async function getAggregatedMarketSignals(options?: {
     console.warn("[signals] swarm signals unavailable:", err instanceof Error ? err.message : err);
   }
 
-  // Fallback: raw aggregation from indexer
-  // Race the indexer call against a 10s timeout — if the backend is down, fail fast to fallback
+  // Fallback: raw aggregation from indexer (editorial archive)
   const records = await withTimeout(
     listRecentMarketImpactRecords(limit),
     10_000,
