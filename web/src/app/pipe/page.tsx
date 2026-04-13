@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 
 const EquityCurve = dynamic(() => import("@/components/pipe/EquityCurve"), { ssr: false });
+const NewsGlobe = dynamic(() => import("@/components/pipe/NewsGlobe"), { ssr: false });
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -199,6 +200,12 @@ export default function PipePage() {
   const accountValue = perf?.accountValueUsd ?? metrics?.accountValueUsd ?? 0;
   const isLive = metrics ? !metrics.dryRun : false;
 
+  // Extract unique source names for globe visualization
+  const activeSources = useMemo(
+    () => [...new Set(feed.map((f) => f.source))],
+    [feed],
+  );
+
   return (
     <div className="min-h-screen bg-[var(--paper)]">
       {/* ─── Top Metrics Strip ─── */}
@@ -228,31 +235,46 @@ export default function PipePage() {
         </div>
       </div>
 
-      {/* ─── Equity Curve ─── */}
+      {/* ─── Equity Curve + Globe ─── */}
       <div className="border-b border-[var(--rule)]">
         <div className="mx-auto max-w-[1600px] px-4 py-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-                Net Equity // {isLive ? "Live Session" : "Paper"}
-              </span>
-              <div className="mt-0.5 font-mono text-2xl font-bold" style={{ color: totalPnl >= 0 ? "var(--accent-green)" : "var(--accent-red)" }}>
-                {totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {/* Left: Equity info + chart */}
+            <div className="lg:col-span-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+                    Net Equity // {isLive ? "Live Session" : "Paper"}
+                  </span>
+                  <div className="mt-0.5 font-mono text-2xl font-bold" style={{ color: totalPnl >= 0 ? "var(--accent-green)" : "var(--accent-red)" }}>
+                    {totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)}
+                  </div>
+                  <div className="font-mono text-[8px] text-[var(--ink-faint)]">
+                    {totalTrades} trades &middot; Account ${accountValue.toFixed(2)}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={refresh}
+                  className="border border-[var(--rule)] px-3 py-1 font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)] transition-colors hover:bg-[var(--paper-dark)] hover:text-[var(--ink)]"
+                >
+                  Refresh
+                </button>
               </div>
-              <div className="font-mono text-[8px] text-[var(--ink-faint)]">
-                {totalTrades} trades &middot; Account ${accountValue.toFixed(2)}
+              <div className="mt-2 h-[180px]">
+                <EquityCurve data={equityHistory} />
               </div>
             </div>
-            <button
-              type="button"
-              onClick={refresh}
-              className="border border-[var(--rule)] px-3 py-1 font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--ink-faint)] transition-colors hover:bg-[var(--paper-dark)] hover:text-[var(--ink)]"
-            >
-              Refresh
-            </button>
-          </div>
-          <div className="mt-2 h-[180px]">
-            <EquityCurve data={equityHistory} />
+
+            {/* Right: 3D News Globe */}
+            <div className="hidden lg:block">
+              <div className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)] mb-1">
+                Source Activity
+              </div>
+              <div className="h-[200px]">
+                <NewsGlobe activeSources={activeSources} />
+              </div>
+            </div>
           </div>
         </div>
       </div>
