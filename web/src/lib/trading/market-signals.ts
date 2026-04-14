@@ -57,77 +57,46 @@ interface FearGreedResponse {
 }
 
 /**
- * Fetch the crypto Fear & Greed index from Alternative.me (free, no auth).
- * Value: 0 = extreme fear, 100 = extreme greed.
+ * Fear & Greed Index — DISABLED as a trading signal.
  *
- * Signal logic (contrarian):
- *   - Extreme fear (< 25) → long (market oversold, bounce expected)
- *   - Fear (25-45) → mild long
- *   - Neutral (45-55) → neutral
- *   - Greed (55-75) → mild short
- *   - Extreme greed (> 75) → short (market overheated, correction expected)
+ * The contrarian logic (extreme fear → long) was blocking ALL shorts in bear
+ * markets. Tech says short, F&G says long, they can never agree → permanent
+ * neutral → no trades. When they did agree on long, it longed into dumps.
+ *
+ * F&G is a lagging retail sentiment indicator — not useful for perp trading.
+ * Still fetches the value for logging/display but always returns neutral
+ * so it doesn't influence the composite signal.
  */
 export async function fetchFearGreedSignal(): Promise<MarketDataSignal> {
-  const CACHE_KEY = "fear-greed";
-  const cached = getCached<MarketDataSignal>(CACHE_KEY);
-  if (cached) return cached;
+  let value = 50;
+  let classification = "unknown";
 
   try {
     const res = await fetch("https://api.alternative.me/fng/?limit=1&format=json", {
       signal: AbortSignal.timeout(5_000),
     });
-    if (!res.ok) throw new Error(`FNG API ${res.status}`);
-
-    const body = (await res.json()) as FearGreedResponse;
-    const current = body.data?.[0];
-    if (!current) throw new Error("No FNG data");
-
-    const value = parseInt(current.value, 10);
-    const classification = current.value_classification;
-
-    let direction: "long" | "short" | "neutral" = "neutral";
-    let strength = 0;
-
-    if (value < 25) {
-      direction = "long";
-      strength = (25 - value) / 25; // 0→1 as value goes 25→0
-    } else if (value < 45) {
-      direction = "long";
-      strength = (45 - value) / 40; // mild
-    } else if (value > 75) {
-      direction = "short";
-      strength = (value - 75) / 25; // 0→1 as value goes 75→100
-    } else if (value > 55) {
-      direction = "short";
-      strength = (value - 55) / 40; // mild
+    if (res.ok) {
+      const body = (await res.json()) as FearGreedResponse;
+      const current = body.data?.[0];
+      if (current) {
+        value = parseInt(current.value, 10);
+        classification = current.value_classification;
+      }
     }
-
-    const signal: MarketDataSignal = {
-      source: "fear-greed",
-      symbol: "MARKET",
-      timestamp: Date.now(),
-      direction,
-      strength: Math.min(1, strength),
-      confidence: 0.6, // moderate — it's a lagging indicator
-      value,
-      reasons: [`Fear & Greed: ${value}/100 (${classification}) → contrarian ${direction}`],
-    };
-
-    setCache(CACHE_KEY, signal, 30 * 60_000); // 30min cache
-    return signal;
-  } catch (err) {
-    console.warn("[market-signals] Fear & Greed fetch failed:", err instanceof Error ? err.message : err);
-    return {
-      source: "fear-greed",
-      symbol: "MARKET",
-      timestamp: Date.now(),
-      direction: "neutral",
-      strength: 0,
-      confidence: 0,
-      value: 50,
-      reasons: ["Fear & Greed: unavailable"],
-    };
+  } catch {
+    // swallow — value stays at default
   }
+
+  return {
+    source: "fear-greed",
+    symbol: "MARKET",
+    timestamp: Date.now(),
+    direction: "neutral",
+    strength: 0,
+    confidence: 0,
+    value,
+    reasons: [`Fear & Greed: ${value}/100 (${classification}) — disabled, not used for trading`],
+  };
 }
 
 /* ═══════════════════  2. HL Funding Rates  ═══════════════════ */
