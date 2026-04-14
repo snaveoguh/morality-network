@@ -64,25 +64,33 @@ function publicConfigSummary(config: unknown) {
   };
 }
 
-function sanitizePerformance<T extends {
-  readiness: {
-    liveReady: boolean;
-    balances: unknown[];
-    reasons: string[];
-  };
-  open: unknown[];
-  closed: unknown[];
-}>(report: T): T {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function sanitizePerformance(report: any) {
+  // Public view: strip wallet addresses and open positions,
+  // but include closed trade P&L so the equity chart works.
+  const sanitizedClosed = (report.closed ?? []).map((row: any) => ({
+    position: {
+      id: row.position?.id,
+      symbol: row.position?.symbol,
+      direction: row.position?.direction,
+      pnlUsd: row.position?.pnlUsd,
+      closedAt: row.position?.closedAt,
+      leverage: row.position?.leverage,
+      entryPrice: row.position?.entryPrice,
+      exitPrice: row.position?.exitPrice,
+    },
+  }));
+
   return {
     ...report,
     account: undefined,
     fundingAddress: undefined,
     open: [],
-    closed: [],
+    closed: sanitizedClosed,
     readiness: {
       ...report.readiness,
       balances: [],
-      reasons: report.readiness.liveReady
+      reasons: report.readiness?.liveReady
         ? []
         : ["Detailed readiness data requires operator access."],
     },

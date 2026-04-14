@@ -21,11 +21,13 @@ export default function EquityCurve({ data }: EquityCurveProps) {
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Line"> | null>(null);
 
-  // Detect theme
   const isDark = typeof document !== "undefined" && document.documentElement.getAttribute("data-theme") === "dark";
 
+  // Only create chart when we have data
+  const hasData = data.length > 0;
+
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !hasData) return;
 
     const chart = createChart(containerRef.current, {
       layout: {
@@ -33,6 +35,7 @@ export default function EquityCurve({ data }: EquityCurveProps) {
         textColor: isDark ? "#6A6A6A" : "#8A8A8A",
         fontFamily: "monospace",
         fontSize: 9,
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: isDark ? "#1A1A1A" : "#EDE6D6", style: LineStyle.Dotted },
@@ -77,20 +80,20 @@ export default function EquityCurve({ data }: EquityCurveProps) {
     return () => {
       resizeObserver.disconnect();
       chart.remove();
+      chartRef.current = null;
+      seriesRef.current = null;
     };
-  }, [isDark]);
+  }, [isDark, hasData]);
 
   // Update data
   useEffect(() => {
     if (!seriesRef.current || data.length === 0) return;
 
-    // Convert to lightweight-charts format (time in seconds)
     const chartData = data.map((d) => ({
       time: Math.floor(d.time / 1000) as Time,
       value: d.value,
     }));
 
-    // Color line based on P&L direction
     const lastValue = data[data.length - 1]?.value ?? 0;
     const lineColor = lastValue >= 0 ? "#22C55E" : "#EF4444";
 
@@ -98,6 +101,21 @@ export default function EquityCurve({ data }: EquityCurveProps) {
     seriesRef.current.setData(chartData);
     chartRef.current?.timeScale().fitContent();
   }, [data]);
+
+  if (!hasData) {
+    return (
+      <div className="flex h-full w-full items-center justify-center border border-[var(--rule-light)]">
+        <div className="text-center">
+          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+            No Trade Data
+          </div>
+          <div className="mt-1 font-mono text-[7px] tracking-[0.1em] text-[var(--ink-faint)]">
+            Chart populates as the trader executes positions
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return <div ref={containerRef} className="h-full w-full" />;
 }
