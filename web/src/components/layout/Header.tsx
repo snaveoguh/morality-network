@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
+// CoopDropdown removed — Co-op is now a full page at /coop
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ChainSwitcher } from "@/components/shared/ChainSwitcher";
 import { SearchBar } from "@/components/layout/SearchBar";
@@ -20,12 +21,7 @@ const NAV_LINKS = [
   { href: "/proposals", label: "Governance" },
 ];
 
-/** Co-operative: org info + playground projects + archived features. */
-const COOP_EXTERNAL_LINKS = [
-  { href: "https://mutuals.fca.org.uk/Search/Society/30459", label: "FCA Register", desc: "Morality Co-operative Ltd" },
-  { href: "https://github.com/snaveoguh/morality-network", label: "Source Code", desc: "Open source on GitHub" },
-];
-
+/** Playground links — used for active-state detection in nav. */
 const COOP_PLAYGROUND_LINKS = [
   { href: "/signals", label: "Signals", desc: "Raw trading signals" },
   { href: "/predictions", label: "Predictions", desc: "Binary outcome markets" },
@@ -42,7 +38,7 @@ const COOP_PLAYGROUND_LINKS = [
 
 export function Header() {
   const pathname = usePathname();
-  const isArchiveActive = COOP_PLAYGROUND_LINKS.some(({ href }) => pathname.startsWith(href));
+  const isCoopActive = pathname === "/coop" || COOP_PLAYGROUND_LINKS.some(({ href }) => pathname.startsWith(href));
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--rule)] bg-[var(--paper)]">
@@ -71,10 +67,19 @@ export function Header() {
               );
             })}
 
-            {/* Co-op — inside nav flex for baseline alignment */}
+            {/* Co-op page link */}
             <span className="flex items-center">
               <span className="mx-2 text-[var(--rule-light)]">|</span>
-              <CoopDropdown isActive={isArchiveActive} />
+              <Link
+                href="/coop"
+                className={`font-mono text-[9px] uppercase tracking-[0.16em] transition-colors ${
+                  isCoopActive
+                    ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-[1px] decoration-[var(--rule)]"
+                    : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+                }`}
+              >
+                Co-op
+              </Link>
             </span>
           </nav>
         </div>
@@ -92,84 +97,7 @@ export function Header() {
   );
 }
 
-function CoopDropdown({ isActive }: { isActive: boolean }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    if (open) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
-
-  return (
-    <span ref={ref} className="relative inline-flex items-center">
-      <button
-        type="button"
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((o) => !o); }}
-        className={`font-mono text-[9px] uppercase tracking-[0.16em] transition-colors cursor-pointer ${
-          isActive || open
-            ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-[1px] decoration-[var(--rule)]"
-            : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
-        }`}
-      >
-        Co-op
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-full z-[999] mt-3 w-64 border border-[var(--rule)] bg-[var(--paper)] shadow-lg max-h-[80vh] overflow-y-auto">
-          {/* Co-operative info */}
-          <div className="border-b border-[var(--rule)] px-3 py-1.5">
-            <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-              Morality Co-operative Ltd
-            </span>
-          </div>
-          {COOP_EXTERNAL_LINKS.map(({ href, label, desc }) => (
-            <a
-              key={href}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setOpen(false)}
-              className="block border-b border-[var(--rule-light)] px-3 py-1.5 transition-colors hover:bg-[var(--paper-dark)]"
-            >
-              <span className="block font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--ink)]">
-                {label} {"\u2197"}
-              </span>
-              <span className="block font-mono text-[7px] tracking-[0.1em] text-[var(--ink-faint)]">
-                {desc}
-              </span>
-            </a>
-          ))}
-
-          {/* Playground projects */}
-          <div className="border-b border-[var(--rule)] px-3 py-1.5 mt-0">
-            <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-              Playground
-            </span>
-          </div>
-          {COOP_PLAYGROUND_LINKS.map(({ href, label, desc }) => (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setOpen(false)}
-              className="block border-b border-[var(--rule-light)] px-3 py-1.5 transition-colors last:border-b-0 hover:bg-[var(--paper-dark)]"
-            >
-              <span className="block font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--ink)]">
-                {label}
-              </span>
-              <span className="block font-mono text-[7px] tracking-[0.1em] text-[var(--ink-faint)]">
-                {desc}
-              </span>
-            </Link>
-          ))}
-        </div>
-      )}
-    </span>
-  );
-}
+// CoopDropdown removed — Co-op is now a dedicated page at /coop
 
 const LOGO_MENU_ITEMS = [
   { href: "/write", label: "Create", desc: "Publish an article" },
