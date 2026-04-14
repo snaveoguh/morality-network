@@ -71,8 +71,10 @@ export function Header() {
               );
             })}
           </nav>
-          <span className="mx-2 text-[var(--rule-light)]">|</span>
-          <CoopDropdown isActive={isArchiveActive} />
+          <span className="shrink-0 flex items-center">
+            <span className="mx-2 text-[var(--rule-light)]">|</span>
+            <CoopDropdown isActive={isArchiveActive} />
+          </span>
         </div>
 
         <div className="flex items-center gap-1.5">
