@@ -70,11 +70,13 @@ export function Header() {
                 </span>
               );
             })}
+
+            {/* Co-op — inside nav flex for baseline alignment */}
+            <span className="flex items-center">
+              <span className="mx-2 text-[var(--rule-light)]">|</span>
+              <CoopDropdown isActive={isArchiveActive} />
+            </span>
           </nav>
-          <span className="shrink-0 flex items-center">
-            <span className="mx-2 text-[var(--rule-light)]">|</span>
-            <CoopDropdown isActive={isArchiveActive} />
-          </span>
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -103,7 +105,7 @@ function CoopDropdown({ isActive }: { isActive: boolean }) {
   }, [open]);
 
   return (
-    <div ref={ref} className="relative">
+    <span ref={ref} className="relative inline-flex items-center">
       <button
         type="button"
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((o) => !o); }}
@@ -134,7 +136,7 @@ function CoopDropdown({ isActive }: { isActive: boolean }) {
               className="block border-b border-[var(--rule-light)] px-3 py-1.5 transition-colors hover:bg-[var(--paper-dark)]"
             >
               <span className="block font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--ink)]">
-                {label} &nearr;
+                {label} {"\u2197"}
               </span>
               <span className="block font-mono text-[7px] tracking-[0.1em] text-[var(--ink-faint)]">
                 {desc}
@@ -165,7 +167,7 @@ function CoopDropdown({ isActive }: { isActive: boolean }) {
           ))}
         </div>
       )}
-    </div>
+    </span>
   );
 }
 
