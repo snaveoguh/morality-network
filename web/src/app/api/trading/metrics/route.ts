@@ -71,14 +71,15 @@ function sanitizePerformance(report: any) {
   const sanitizedClosed = (report.closed ?? []).map((row: any) => ({
     position: {
       id: row.position?.id,
-      symbol: row.position?.symbol,
+      symbol: row.position?.marketSymbol ?? row.position?.symbol,
       direction: row.position?.direction,
-      pnlUsd: row.position?.pnlUsd,
+      entryPrice: row.position?.entryPriceUsd,
+      exitPrice: row.position?.exitPriceUsd,
       closedAt: row.position?.closedAt,
       leverage: row.position?.leverage,
-      entryPrice: row.position?.entryPrice,
-      exitPrice: row.position?.exitPrice,
     },
+    realizedPnlUsd: row.realizedPnlUsd ?? 0,
+    pnlUsd: row.realizedPnlUsd ?? 0,
   }));
 
   return {

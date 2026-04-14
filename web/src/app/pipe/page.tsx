@@ -159,11 +159,11 @@ export default function PipePage() {
         if (m.closed?.length > 0 && equityHistory.length === 0) {
           let cumPnl = 0;
           const history = m.closed
-            .filter((c: ClosedPosition) => c.position.closedAt > 0)
-            .sort((a: ClosedPosition, b: ClosedPosition) => a.position.closedAt - b.position.closedAt)
-            .map((c: ClosedPosition) => {
-              cumPnl += c.position.pnlUsd;
-              return { time: c.position.closedAt, value: cumPnl };
+            .filter((c: any) => (c.position?.closedAt ?? 0) > 0)
+            .sort((a: any, b: any) => (a.position?.closedAt ?? 0) - (b.position?.closedAt ?? 0))
+            .map((c: any) => {
+              cumPnl += c.realizedPnlUsd ?? c.pnlUsd ?? c.position?.pnlUsd ?? 0;
+              return { time: c.position?.closedAt ?? 0, value: cumPnl };
             });
           if (history.length > 0) setEquityHistory(history);
         }
@@ -515,18 +515,20 @@ function PositionEntry({ position }: { position: OpenPosition }) {
   );
 }
 
-function ClosedTradeEntry({ trade }: { trade: ClosedPosition }) {
-  const p = trade.position;
-  const isWin = p.pnlUsd >= 0;
+function ClosedTradeEntry({ trade }: { trade: any }) {
+  const p = trade.position ?? {};
+  const pnl = trade.realizedPnlUsd ?? trade.pnlUsd ?? p.pnlUsd ?? 0;
+  const isWin = pnl >= 0;
+  const symbol = p.symbol ?? p.marketSymbol ?? "?";
   return (
     <div className="flex items-center gap-2 py-0.5 font-mono text-[8px]">
       <span className="font-bold uppercase" style={{ color: isWin ? "var(--accent-green)" : "var(--accent-red)" }}>
         {isWin ? "W" : "L"}
       </span>
-      <span className="text-[var(--ink)]">{p.symbol}</span>
-      <span className="text-[var(--ink-faint)]">{p.direction} {p.leverage}x</span>
+      <span className="text-[var(--ink)]">{symbol}</span>
+      <span className="text-[var(--ink-faint)]">{p.direction ?? "?"} {p.leverage ?? "?"}x</span>
       <span className="ml-auto font-bold" style={{ color: isWin ? "var(--accent-green)" : "var(--accent-red)" }}>
-        {isWin ? "+" : ""}${p.pnlUsd.toFixed(2)}
+        {isWin ? "+" : ""}${pnl.toFixed(2)}
       </span>
     </div>
   );
