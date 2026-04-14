@@ -95,6 +95,13 @@ function formatUsd(price: number | null): string {
   }
   if (price >= 1) return `$${price.toFixed(2)}`;
   if (price >= 0.01) return `$${price.toFixed(4)}`;
+  // For very small prices (memecoins), show enough significant digits
+  if (price > 0) {
+    // Count leading zeros after decimal point, then show 2 significant digits
+    const exp = Math.floor(Math.log10(price));
+    const decimals = Math.max(6, Math.abs(exp) + 2);
+    return `$${price.toFixed(decimals)}`;
+  }
   return `$${price.toFixed(6)}`;
 }
 
