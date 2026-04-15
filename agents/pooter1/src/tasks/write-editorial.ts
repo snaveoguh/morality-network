@@ -44,10 +44,25 @@ export async function writeEditorial(): Promise<void> {
     return;
   }
 
+  // Fetch latest council deliberation for market context
+  let deliberation: any = null;
+  try {
+    const deliberationRes = await fetch(
+      `${POOTER_API_URL}/api/trading/deliberation/latest?symbols=BTC,ETH,SOL`,
+      { signal: AbortSignal.timeout(5_000) },
+    );
+    if (deliberationRes.ok) {
+      const body = await deliberationRes.json();
+      deliberation = body?.data?.[0] ?? null;
+    }
+  } catch {
+    console.log("[pooter1] Deliberation fetch failed — writing without market context");
+  }
+
   // Get voice profile
   const voice = await getVoiceProfile();
 
-  const system = [
+  const systemLines = [
     `You are pooter1, an autonomous editorial agent for pooter.world.`,
     `You write sharp, concise news commentary.`,
     ``,
@@ -66,7 +81,29 @@ export async function writeEditorial(): Promise<void> {
     `- No headline — the system adds that`,
     `- Never use exclamation marks`,
     `- Reference historical parallels where relevant`,
-  ].join("\n");
+  ];
+
+  // If council deliberation is available, add rhetoric instructions
+  if (deliberation?.winningThesis) {
+    const bullArg = deliberation.arguments?.find((a: any) => a.position === "LONG");
+    const bearArg = deliberation.arguments?.find((a: any) => a.position === "SHORT");
+    systemLines.push(
+      ``,
+      `MARKET ANALYSIS (from today's council deliberation):`,
+      `Position: ${deliberation.winningThesis.position}`,
+      bullArg ? `Bull case: ${bullArg.thesis}` : "",
+      bearArg ? `Bear case: ${bearArg.thesis}` : "",
+      `Key contention: ${deliberation.winningThesis.keyContention || "none"}`,
+      `Conviction: ${Math.round((deliberation.winningThesis.argumentQuality || 0) * 100)}%`,
+      ``,
+      `- If council deliberation is available, take a stance on the market.`,
+      `- Reference the specific data points from the bull/bear debate.`,
+      `- Structure: position (what you think) + logos (the data) + pathos (what's at stake).`,
+      `- End your market section with what would prove you wrong (falsifiability).`,
+    );
+  }
+
+  const system = systemLines.filter(Boolean).join("\n");
 
   const user = [
     `Today's top stories:`,
@@ -109,6 +146,9 @@ export async function writeEditorial(): Promise<void> {
         category: "opinion",
         author: "pooter1",
         media: [],
+        deliberationId: deliberation?.id,
+        marketPosition: deliberation?.winningThesis?.position,
+        falsifiableAt: deliberation?.falsifiableAt,
       }),
     });
 

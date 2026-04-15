@@ -13,7 +13,8 @@ export type AIModelTask =
   | "selfLearn"
   | "moralCompass"
   | "tradingPatternDetection"
-  | "webIntelligence";
+  | "webIntelligence"
+  | "councilDeliberation";
 
 export interface AIProviderTaskPolicy {
   providers: AIProviderId[];
@@ -127,6 +128,10 @@ export const AI_MODEL_POLICY: Record<AIModelTask, AIProviderTaskPolicy> = {
     models: FAST_MODELS,
   },
   webIntelligence: {
+    providers: FAST_PROVIDER_ORDER,
+    models: FAST_MODELS,
+  },
+  councilDeliberation: {
     providers: FAST_PROVIDER_ORDER,
     models: FAST_MODELS,
   },
