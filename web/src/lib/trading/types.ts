@@ -102,6 +102,16 @@ export interface EntryRationale {
   walletFlowStrength?: number;
   whaleNetExposure?: number;
   agreementMet?: boolean;
+  /** Deliberation record ID from council deliberation */
+  deliberationId?: string;
+  /** Summary of the winning thesis from council deliberation */
+  deliberationSummary?: string;
+  /** Argument quality score (0-1) from council deliberation */
+  deliberationArgumentQuality?: number;
+  /** The main disagreement point in the council */
+  deliberationKeyContention?: string;
+  /** Whether council deliberation overrode composite direction */
+  deliberationOverride?: boolean;
 }
 
 export interface ExitRationale {

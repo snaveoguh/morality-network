@@ -74,6 +74,31 @@ interface BusEvent {
   timestamp: number;
 }
 
+interface DeliberationArg {
+  persona: string;
+  position: "LONG" | "SHORT" | "HOLD";
+  conviction: number;
+  thesis: string;
+  dataPoints: string[];
+  counterToPersona: string | null;
+  vulnerabilities: string[];
+}
+
+interface DeliberationData {
+  id: string;
+  symbol: string;
+  price: number;
+  timestamp: number;
+  arguments: DeliberationArg[];
+  winningThesis: {
+    position: "LONG" | "SHORT" | "HOLD";
+    argumentQuality: number;
+    summary: string;
+    keyContention: string;
+  };
+  falsifiableAt?: string;
+}
+
 interface PerfData {
   timestamp: number;
   accountValueUsd: number | null;
@@ -116,6 +141,7 @@ export default function PipePage() {
   const [openPositions, setOpenPositions] = useState<OpenPosition[]>([]);
   const [closedPositions, setClosedPositions] = useState<ClosedPosition[]>([]);
   const [events, setEvents] = useState<BusEvent[]>([]);
+  const [deliberations, setDeliberations] = useState<DeliberationData[]>([]);
   const [perf, setPerf] = useState<PerfData | null>(null);
   const [metrics, setMetrics] = useState<MetricsData["performance"] | null>(null);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
@@ -124,19 +150,21 @@ export default function PipePage() {
   const [equityHistory, setEquityHistory] = useState<{ time: number; value: number }[]>([]);
 
   const refresh = useCallback(async () => {
-    const [feedRes, agentRes, swarmRes, signalRes, metricsRes] =
+    const [feedRes, agentRes, swarmRes, signalRes, metricsRes, deliberationRes] =
       await Promise.allSettled([
         fetch("/api/feed?limit=30").then((r) => r.json()),
         fetch("/api/agents").then((r) => r.json()),
         fetch("/api/agents/swarm").then((r) => r.json()),
         fetch("/api/trading/signals").then((r) => r.json()),
         fetch("/api/trading/metrics").then((r) => r.json()),
+        fetch("/api/trading/deliberation/latest").then((r) => r.json()),
       ]);
 
     if (feedRes.status === "fulfilled") setFeed(feedRes.value.items?.slice(0, 30) ?? []);
     if (agentRes.status === "fulfilled") setAgents(agentRes.value.agents ?? []);
     if (swarmRes.status === "fulfilled") setClusters(swarmRes.value.clusters?.slice(0, 15) ?? []);
     if (signalRes.status === "fulfilled") setSignals(signalRes.value.signals?.slice(0, 15) ?? []);
+    if (deliberationRes.status === "fulfilled") setDeliberations(deliberationRes.value.data ?? []);
     if (metricsRes.status === "fulfilled") {
       const payload = metricsRes.value;
       const m = payload.performance ?? payload;
@@ -312,6 +340,18 @@ export default function PipePage() {
             {signals.map((sig, i) => (
               <SignalEntry key={`sig-${i}`} signal={sig} />
             ))}
+            {deliberations.length > 0 && (
+              <>
+                <div className="border-t border-[var(--rule-light)] pt-2 mt-2">
+                  <div className="font-mono text-[7px] uppercase tracking-[0.2em] text-[var(--ink-faint)] mb-1">
+                    Council Deliberation
+                  </div>
+                </div>
+                {deliberations.map((d) => (
+                  <DeliberationCard key={d.id} deliberation={d} />
+                ))}
+              </>
+            )}
             {clusters.length > 0 && (
               <>
                 <div className="border-t border-[var(--rule-light)] pt-2 mt-2">
@@ -491,6 +531,123 @@ function NarrativeEntry({ cluster }: { cluster: SwarmCluster }) {
           <span key={t} className="font-mono text-[6px] uppercase tracking-[0.1em] text-[var(--ink-faint)] bg-[var(--paper-dark)] px-1">{t}</span>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Deliberation Card ──────────────────────────────────────────────────────
+
+function DeliberationCard({ deliberation: d }: { deliberation: DeliberationData }) {
+  const [expanded, setExpanded] = useState(false);
+  const posColor =
+    d.winningThesis.position === "LONG" ? "var(--accent-green)" :
+    d.winningThesis.position === "SHORT" ? "var(--accent-red)" :
+    "var(--ink-faint)";
+  const qualityPct = Math.round(d.winningThesis.argumentQuality * 100);
+
+  return (
+    <div className="border border-[var(--rule-light)] p-2 mb-1">
+      {/* Header row */}
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-[10px] font-bold text-[var(--ink)]">{d.symbol}</span>
+        <span className="font-mono text-[9px] font-bold uppercase" style={{ color: posColor }}>
+          {d.winningThesis.position}
+        </span>
+        <span className="font-mono text-[7px] text-[var(--ink-faint)]">${d.price.toFixed(2)}</span>
+        <div className="ml-auto flex items-center gap-1">
+          <span className="font-mono text-[7px] text-[var(--ink-faint)]">Q:{qualityPct}%</span>
+          {/* Quality bar */}
+          <div className="h-1 w-12 bg-[var(--paper-dark)]">
+            <div
+              className="h-full transition-all"
+              style={{
+                width: `${qualityPct}%`,
+                backgroundColor: qualityPct > 60 ? "var(--accent-green)" : qualityPct > 30 ? "var(--accent-amber)" : "var(--accent-red)",
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Key contention */}
+      {d.winningThesis.keyContention && (
+        <div className="mt-1 font-mono text-[7px] leading-tight text-[var(--ink-faint)]">
+          {d.winningThesis.keyContention.slice(0, 140)}
+        </div>
+      )}
+
+      {/* Expand/collapse */}
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="mt-1 font-mono text-[7px] uppercase tracking-[0.14em] text-[var(--accent-amber)] hover:underline"
+      >
+        {expanded ? "Collapse" : `${d.arguments.length} Arguments`}
+      </button>
+
+      {/* Expanded arguments */}
+      {expanded && (
+        <div className="mt-1 space-y-1.5">
+          {d.arguments.map((arg, i) => {
+            const argColor =
+              arg.position === "LONG" ? "var(--accent-green)" :
+              arg.position === "SHORT" ? "var(--accent-red)" :
+              "var(--ink-faint)";
+            return (
+              <div key={i} className="border-l-2 pl-2" style={{ borderColor: argColor }}>
+                <div className="flex items-center gap-1">
+                  <span className="font-mono text-[7px] font-bold uppercase text-[var(--ink)]">
+                    {arg.persona.split(" ")[0]}
+                  </span>
+                  <span className="font-mono text-[7px] font-bold uppercase" style={{ color: argColor }}>
+                    {arg.position}
+                  </span>
+                  <span className="font-mono text-[6px] text-[var(--ink-faint)]">{arg.conviction}%</span>
+                  {arg.counterToPersona && (
+                    <span className="font-mono text-[6px] text-[var(--accent-amber)]">
+                      vs {arg.counterToPersona.split(" ")[0]}
+                    </span>
+                  )}
+                </div>
+                <div className="font-mono text-[7px] leading-tight text-[var(--ink)] mt-0.5">
+                  {arg.thesis}
+                </div>
+                {arg.dataPoints.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-0.5">
+                    {arg.dataPoints.slice(0, 5).map((dp, j) => (
+                      <span key={j} className="bg-[var(--paper-dark)] px-1 py-px font-mono text-[6px] text-[var(--ink-faint)]">
+                        {dp}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {arg.vulnerabilities.length > 0 && (
+                  <div className="font-mono text-[6px] text-[var(--accent-red)] mt-0.5">
+                    Falsifiable: {arg.vulnerabilities[0]}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Winning summary */}
+          {d.winningThesis.summary && (
+            <div className="border-t border-[var(--rule-light)] pt-1 mt-1">
+              <div className="font-mono text-[7px] font-bold uppercase text-[var(--ink-faint)]">Verdict</div>
+              <div className="font-mono text-[7px] leading-tight text-[var(--ink)]">
+                {d.winningThesis.summary}
+              </div>
+            </div>
+          )}
+
+          {/* Falsifiable countdown */}
+          {d.falsifiableAt && (
+            <div className="font-mono text-[6px] text-[var(--ink-faint)]">
+              Check at: {new Date(d.falsifiableAt).toLocaleString()}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

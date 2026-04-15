@@ -111,6 +111,20 @@ async function fetchPreviousEditions(count = 3): Promise<PreviousEditionSummary[
 // DATA GATHERING — parallel fetch of all daily signals
 // ============================================================================
 
+interface DeliberationSummary {
+  symbol: string;
+  price: number;
+  position: string;
+  argumentQuality: number;
+  summary: string;
+  keyContention: string;
+  bullThesis?: string;
+  bearThesis?: string;
+  bullDataPoints?: string[];
+  bearDataPoints?: string[];
+  vulnerabilities?: string[];
+}
+
 interface DailyEditionData {
   rssItems: FeedItem[];
   sentiment: ReturnType<typeof computeSentimentSnapshot>;
@@ -120,6 +134,7 @@ interface DailyEditionData {
   headlines: string[];
   musicPick: MusicPick;
   previousEditions: PreviousEditionSummary[];
+  deliberations: DeliberationSummary[];
 }
 
 /** Race a promise against a timeout — returns fallback on timeout */
@@ -130,12 +145,44 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
   ]);
 }
 
+async function fetchDeliberations(): Promise<DeliberationSummary[]> {
+  try {
+    const { getLatestDeliberation } = await import("./trading/deliberation");
+    const symbols = ["BTC", "ETH", "SOL"];
+    const results = await Promise.all(
+      symbols.map(async (symbol) => {
+        const record = await getLatestDeliberation(symbol);
+        if (!record) return null;
+        const bullArg = record.arguments.find((a) => a.position === "LONG");
+        const bearArg = record.arguments.find((a) => a.position === "SHORT");
+        return {
+          symbol: record.symbol,
+          price: record.price,
+          position: record.winningThesis.position,
+          argumentQuality: record.winningThesis.argumentQuality,
+          summary: record.winningThesis.summary,
+          keyContention: record.winningThesis.keyContention,
+          bullThesis: bullArg?.thesis,
+          bearThesis: bearArg?.thesis,
+          bullDataPoints: bullArg?.dataPoints,
+          bearDataPoints: bearArg?.dataPoints,
+          vulnerabilities: [...(bullArg?.vulnerabilities ?? []), ...(bearArg?.vulnerabilities ?? [])],
+        } as DeliberationSummary;
+      }),
+    );
+    return results.filter((r): r is DeliberationSummary => r !== null);
+  } catch {
+    return [];
+  }
+}
+
 async function gatherDailyEditionData(): Promise<DailyEditionData> {
-  const [rssItems, marketData, videos, previousEditions] = await Promise.all([
+  const [rssItems, marketData, videos, previousEditions, deliberations] = await Promise.all([
     withTimeout(fetchAllFeeds(), 10_000, []),
     withTimeout(fetchMarketData(), 5_000, { priceChanges: {} }),
     withTimeout(fetchDailyVideos(20), 5_000, []),
     withTimeout(fetchPreviousEditions(3).catch(() => [] as PreviousEditionSummary[]), 5_000, []),
+    withTimeout(fetchDeliberations(), 5_000, []),
   ]);
 
   // Compute sentiment snapshot
@@ -156,7 +203,7 @@ async function gatherDailyEditionData(): Promise<DailyEditionData> {
 
   const musicPick = getDailyMusicPick();
 
-  return { rssItems, sentiment, videos, biasDigest, sources, headlines, musicPick, previousEditions };
+  return { rssItems, sentiment, videos, biasDigest, sources, headlines, musicPick, previousEditions, deliberations };
 }
 
 // ============================================================================
@@ -164,7 +211,7 @@ async function gatherDailyEditionData(): Promise<DailyEditionData> {
 // ============================================================================
 
 function buildWriterPrompt(data: DailyEditionData): string {
-  const { rssItems, sentiment, videos, biasDigest, sources, headlines, musicPick, previousEditions } = data;
+  const { rssItems, sentiment, videos, biasDigest, sources, headlines, musicPick, previousEditions, deliberations } = data;
 
   // Top stories — group by category, pick top articles
   const topStories = rssItems.slice(0, 25).map((item) => {
@@ -213,7 +260,17 @@ ${topTopics}
 === MARKET SIGNALS ===
 ${marketTopics || "No market data available"}
 
-=== SOURCE BIAS LANDSCAPE ===
+${deliberations.length > 0 ? `=== COUNCIL DELIBERATION ===
+The trading council debated these markets today. These are the actual arguments, not just signals. You have access to the council's internal debate. Use it. Tell the reader what the bulls and bears are actually arguing about — not just which way the market moved. Name the specific data points. This is what makes your market analysis different from everyone else's.
+
+${deliberations.map((d) => `${d.symbol} at $${d.price.toFixed(2)}:
+BULL: ${d.bullThesis || "No bull case argued"}
+BEAR: ${d.bearThesis || "No bear case argued"}
+VERDICT: ${d.summary} (conviction: ${Math.round(d.argumentQuality * 100)}%)
+KEY DISPUTE: ${d.keyContention || "None"}
+WHAT WOULD PROVE US WRONG: ${d.vulnerabilities?.slice(0, 2).join("; ") || "Unspecified"}`).join("\n\n")}
+
+` : ""}=== SOURCE BIAS LANDSCAPE ===
 ${biasInfo}
 
 === TODAY'S VIDEO PICKS ===
