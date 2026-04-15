@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { fetchAllProposals, fetchGovernanceSocialSignals } from "@/lib/governance";
 import { GovernanceSocialList } from "@/components/proposals/GovernanceSocialList";
 import { ProposalsList } from "@/components/proposals/ProposalsList";
+import { CreateProposalForm } from "@/components/proposals/CreateProposalForm";
 
 export const revalidate = 3600; // 1 hour ISR
 export const maxDuration = 55;
@@ -23,7 +24,11 @@ export default function ProposalsPage() {
         <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--ink-faint)]">
           Nouns DAO · Parliament · Congress · Hyperliquid · Governance Wire
         </p>
+        <p className="mt-2 max-w-xl font-body-serif text-xs leading-relaxed text-[var(--ink-light)]">
+          Self-governance requires deliberation, not just voting. Propose, argue, and counter-argue onchain. Every argument is permanent and attributable.
+        </p>
       </div>
+      <CreateProposalForm />
       <Suspense fallback={<GovernanceSkeleton />}>
         <AsyncGovernanceContent />
       </Suspense>
