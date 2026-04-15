@@ -73,7 +73,24 @@ export function AuctionCard({ editionNumber }: AuctionCardProps) {
   const [communityTitle, setCommunityTitle] = useState(`COMMUNITY EDITION #${editionNumber}`);
   const [communityHash, setCommunityHash] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [editionPosition, setEditionPosition] = useState<{ position: string; quality: number } | null>(null);
   const auctionsDeployed = POOTER_AUCTIONS_ADDRESS !== ZERO_ADDRESS;
+
+  // Fetch editorial market position for this edition
+  useEffect(() => {
+    fetch(`/api/trading/deliberation/latest?symbols=BTC`)
+      .then((r) => r.json())
+      .then((body) => {
+        const d = body?.data?.[0];
+        if (d?.winningThesis) {
+          setEditionPosition({
+            position: `${d.winningThesis.position} ${d.symbol}`,
+            quality: d.winningThesis.argumentQuality,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [editionNumber]);
 
   // Check if edition is minted
   const { data: ownerData } = useReadContract({
@@ -242,6 +259,26 @@ export function AuctionCard({ editionNumber }: AuctionCardProps) {
           {statusLabel}
         </span>
       </div>
+
+      {/* Conviction badge — editorial market position */}
+      {editionPosition && (
+        <div className="mt-1.5 flex items-center gap-2">
+          <span className="font-mono text-[7px] uppercase tracking-[0.14em] text-[var(--ink-faint)]">
+            Editorial Position:
+          </span>
+          <span
+            className="font-mono text-[8px] font-bold uppercase"
+            style={{
+              color: editionPosition.position.startsWith("LONG") ? "var(--accent-green)" : editionPosition.position.startsWith("SHORT") ? "var(--accent-red)" : "var(--ink-faint)",
+            }}
+          >
+            {editionPosition.position}
+          </span>
+          <span className="font-mono text-[7px] text-[var(--ink-faint)]">
+            {Math.round(editionPosition.quality * 100)}% conviction
+          </span>
+        </div>
+      )}
 
       {/* Edition preview — illustration + newspaper SVG */}
       {showPreview && (

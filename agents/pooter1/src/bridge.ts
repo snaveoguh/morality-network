@@ -89,4 +89,10 @@ export const bridge = {
 
   emergingEvent: (data: { headline: string; sources: string[]; urgency: "low" | "medium" | "high" }) =>
     publishToBridge("emerging-event", data),
+
+  deliberationCompleted: (data: { symbol: string; position: string; argumentQuality: number; id: string }) =>
+    publishToBridge("deliberation-completed", data),
+
+  editorialPositionTaken: (data: { title: string; position: string; falsifiableAt: string; entityHash: string }) =>
+    publishToBridge("editorial-position-taken", data),
 };

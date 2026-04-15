@@ -30,7 +30,7 @@ import { fetchWalletFlowSignal } from "./wallet-flow";
 import { fetchWebIntelligenceSignal, type WebIntelligenceSignal } from "./web-intelligence";
 import { runAutoresearchCycle, getExperimentOverrideWeights } from "./autoresearch";
 import { globalPositionLock } from "./global-position-lock";
-import { fetchCouncilSignal } from "./council-signal";
+import { runCouncilDeliberation, fetchCouncilSignal } from "./council-signal";
 import {
   computeVaultSettlementPlan,
   computeVaultTopUpPlan,
@@ -1317,6 +1317,13 @@ class TraderEngine {
     let bestComposite: CompositeSignal | null = null;
     let bestMarket: Awaited<ReturnType<typeof fetchHyperliquidMarketBySymbol>> = null;
     let bestNewsSignal: AggregatedMarketSignal | null = null;
+    let bestDeliberation: {
+      deliberationId?: string;
+      deliberationSummary?: string;
+      deliberationArgumentQuality?: number;
+      deliberationKeyContention?: string;
+      deliberationOverride?: boolean;
+    } = {};
 
     // Per-symbol cooldown: don't re-enter a market within 10 minutes of closing
     const recentlyClosed = this.store.getClosed().filter(
@@ -1434,34 +1441,64 @@ class TraderEngine {
         continue;
       }
 
-      // 4. Council signal (LLM multi-agent debate) — adjusts confidence
+      // 4. Council deliberation — argument quality can override composite
+      let deliberationId: string | undefined;
+      let deliberationSummary: string | undefined;
+      let deliberationArgumentQuality: number | undefined;
+      let deliberationKeyContention: string | undefined;
+      let deliberationOverride = false;
       try {
-        const council = await fetchCouncilSignal({
+        const deliberation = await runCouncilDeliberation({
           symbol,
           price: market.priceUsd,
           technical: technicalSignal,
           marketData: marketDataBundle,
           newsSignal,
         });
-        if (council && council.direction !== "neutral") {
-          if (council.direction === composite.direction) {
-            // Council agrees — boost confidence by up to 15%
-            composite.confidence = Math.min(1, composite.confidence + council.confidence * 0.15);
-            composite.reasons.push(`Council confirms ${council.direction} (${council.votes.filter(v => v.vote === (council.direction === "long" ? "BUY" : "SELL")).length}/4 votes)`);
-          } else {
-            // Council disagrees — dampen confidence by up to 20%
-            composite.confidence = Math.max(0, composite.confidence - council.confidence * 0.20);
-            composite.reasons.push(`Council disagrees: ${council.direction} vs composite ${composite.direction} — dampening confidence`);
-            // If confidence drops below threshold, force neutral
+        if (deliberation && deliberation.winningThesis.position !== "HOLD") {
+          const quality = deliberation.winningThesis.argumentQuality;
+          const councilDir = deliberation.winningThesis.position === "LONG" ? "long" : "short";
+          deliberationId = deliberation.id;
+          deliberationSummary = deliberation.winningThesis.summary;
+          deliberationArgumentQuality = quality;
+          deliberationKeyContention = deliberation.winningThesis.keyContention;
+
+          if (councilDir === composite.direction) {
+            // Council agrees — boost confidence proportional to argument quality
+            composite.confidence = Math.min(1, composite.confidence + quality * 0.25);
+            composite.reasons.push(
+              `Council deliberation confirms ${councilDir} (quality: ${quality.toFixed(2)}) — ${deliberation.winningThesis.keyContention?.slice(0, 80) || ""}`,
+            );
+          } else if (quality > 0.6) {
+            // High-quality opposing argument — override composite direction
+            deliberationOverride = true;
+            composite.direction = councilDir as "long" | "short";
+            composite.confidence = quality * 0.8;
+            composite.reasons.push(
+              `DELIBERATION OVERRIDE: council argued ${councilDir} with quality ${quality.toFixed(2)}, overriding composite — ${deliberation.winningThesis.summary?.slice(0, 100) || ""}`,
+            );
+            console.log(
+              `[trader] DELIBERATION OVERRIDE ${symbol}: composite was ${composite.direction === "long" ? "short" : "long"}, ` +
+              `council argued ${councilDir} quality=${quality.toFixed(2)}`,
+            );
+          } else if (quality >= 0.3) {
+            // Medium-quality disagreement — dampen confidence
+            composite.confidence = Math.max(0, composite.confidence - quality * 0.20);
+            composite.reasons.push(
+              `Council disagrees (${councilDir}, quality: ${quality.toFixed(2)}) — dampening confidence`,
+            );
             if (composite.confidence < this.config.risk.minSignalConfidence) {
               composite.direction = "neutral";
               composite.reasons.push("Council disagreement pushed confidence below threshold");
             }
+          } else {
+            // Low-quality deliberation — ignore
+            composite.reasons.push(`Council deliberation low quality (${quality.toFixed(2)}) — no adjustment`);
           }
         }
       } catch (err) {
         // Council is non-fatal — composite signal stands on its own
-        console.warn(`[trader] council signal failed for ${symbol}:`, err instanceof Error ? err.message : err);
+        console.warn(`[trader] council deliberation failed for ${symbol}:`, err instanceof Error ? err.message : err);
       }
 
       if (composite.direction === "neutral") {
@@ -1474,6 +1511,7 @@ class TraderEngine {
         bestComposite = composite;
         bestMarket = market;
         bestNewsSignal = newsSignal;
+        bestDeliberation = { deliberationId, deliberationSummary, deliberationArgumentQuality, deliberationKeyContention, deliberationOverride };
       }
     }
 
@@ -1616,6 +1654,7 @@ class TraderEngine {
       walletFlowStrength: composite.components.walletFlow?.strength,
       whaleNetExposure: composite.components.walletFlow?.whaleNetExposure,
       agreementMet: composite.agreementMet,
+      ...bestDeliberation,
     };
 
     const prePosition: Position = {
@@ -1708,6 +1747,7 @@ class TraderEngine {
         walletFlowStrength: composite.components.walletFlow?.strength,
         whaleNetExposure: composite.components.walletFlow?.whaleNetExposure,
         agreementMet: composite.agreementMet,
+        ...bestDeliberation,
       },
     };
 
