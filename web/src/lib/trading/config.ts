@@ -313,7 +313,7 @@ export function getTraderConfig(): TraderExecutionConfig {
       defaultLeverage: numberFromEnv("HYPERLIQUID_DEFAULT_LEVERAGE", 20),
       entryNotionalUsd: numberFromEnv("HYPERLIQUID_ENTRY_USD", 30),
       minAccountValueUsd: numberFromEnv("HYPERLIQUID_MIN_ACCOUNT_VALUE_USD", 100),
-      watchMarkets: stringFromEnv("HYPERLIQUID_WATCH_MARKETS", "BTC,ETH,SOL,HYPE,XRP,SUI,DOGE,LINK,AVAX,BNB,PAXG,TAO,ZEC,FET,TRUMP,BCH,WLD,AAVE,OP,ARB").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean),
+      watchMarkets: stringFromEnv("HYPERLIQUID_WATCH_MARKETS", "BTC,ETH,SOL,HYPE,XRP,SUI,DOGE,LINK,AVAX,BNB,PAXG,TAO,ZEC,FET,BCH,WLD,AAVE,OP,ARB").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean),
     },
     vaultStrategy: buildVaultStrategyConfig("TRADER"),
     vaultRail: buildVaultRailConfig("TRADER", rpcUrl),

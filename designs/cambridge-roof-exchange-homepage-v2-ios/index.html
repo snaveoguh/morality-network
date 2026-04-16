@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cambridge Roof Exchange | Homepage Redesign Prototype</title>
+    <meta
+      name="description"
+      content="Standalone homepage redesign prototype for Cambridge Roof Exchange using live CRE imagery, case study copy, and a tiled drone-video hero."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="utility-bar">
+      <div class="utility-bar__inner">
+        <div class="utility-badges">
+          <img
+            src="https://crex.lon1.cdn.digitaloceanspaces.com/init/other-logos/nfrc-logo.png"
+            alt="NFRC member"
+          />
+          <img
+            src="https://crex.lon1.cdn.digitaloceanspaces.com/init/other-logos/citb-logo.png"
+            alt="CITB"
+          />
+          <img
+            src="https://crex.lon1.cdn.digitaloceanspaces.com/init/misc-icons/safecontractorlogo.svg"
+            alt="SafeContractor approved"
+          />
+          <img
+            src="https://crex.lon1.cdn.digitaloceanspaces.com/init/misc-icons/iso9001.svg"
+            alt="ISO 9001"
+          />
+          <img
+            src="https://crex.lon1.cdn.digitaloceanspaces.com/init/misc-icons/iso14001.svg"
+            alt="ISO 14001"
+          />
+          <img
+            src="https://crex.lon1.cdn.digitaloceanspaces.com/init/misc-icons/iso45001.svg"
+            alt="ISO 45001"
+          />
+        </div>
+        <p class="utility-summary">NFRC member, SafeContractor approved, ISO 9001 / 14001 / 45001</p>
+        <a class="utility-call" href="tel:+441223782085">Call 01223 782 085</a>
+      </div>
+    </div>
+
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href="#hero" aria-label="Cambridge Roof Exchange homepage prototype">
+          <img
+            src="https://crex.lon1.cdn.digitaloceanspaces.com/init/logos/cre-logo.svg"
+            alt="Cambridge Roof Exchange"
+          />
+        </a>
+        <nav class="main-nav" aria-label="Primary">
+          <a href="#outcomes">About</a>
+          <a href="#services">Services</a>
+          <a href="#projects">Case Studies</a>
+          <a href="#compliance">ESG</a>
+          <a href="#contact">Contact</a>
+        </nav>
+        <a class="button button--ghost" href="#contact">Request a Survey</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="hero">
+        <div class="hero__media-grid" aria-hidden="true">
+          <div class="media-tile media-tile--a">
+            <video
+              autoplay
+              muted
+              loop
+              playsinline
+              preload="metadata"
+              poster="./assets/luton-poster.jpg"
+            >
+              <source src="./assets/luton-hero.mp4" type="video/mp4" />
+            </video>
+          </div>
+          <div class="media-tile media-tile--b">
+            <img src="./assets/luton-poster.jpg" alt="" />
+          </div>
+          <div class="media-tile media-tile--c">
+            <img
+              src="https://crex.lon1.cdn.digitaloceanspaces.com/init/misc/about-2.png"
+              alt=""
+            />
+          </div>
+          <div class="media-tile media-tile--d">
+            <video
+              autoplay
+              muted
+              loop
+              playsinline
+              preload="metadata"
+              poster="./assets/grok-poster.jpg"
+            >
+              <source src="./assets/grok-hero.mp4" type="video/mp4" />
+            </video>
+          </div>
+          <div class="media-tile media-tile--e">
+            <img src="./assets/grok-poster.jpg" alt="" />
+          </div>
+          <div class="media-tile media-tile--f">
+            <img src="./assets/luton-poster.jpg" alt="" />
+          </div>
+        </div>
+        <div class="hero__overlay"></div>
+
+        <div class="hero__inner">
+          <div class="hero-copy">
+            <div class="hero-copy__header">
+              <p class="eyebrow">Commercial Roofing, Cladding &amp; Asbestos Removal</p>
+              <p class="hero-status">Survey-led. Live-site ready.</p>
+            </div>
+            <h1>
+              <span>Refurbish ageing</span>
+              <span>industrial roofs</span>
+              <span>without shutting</span>
+              <span>down the site.</span>
+            </h1>
+            <p class="hero-copy__lede">
+              Cambridge Roof Exchange delivers industrial roof refurbishment, overcladding,
+              asbestos removal and specialist roofing works for warehouses, factories, depots and
+              commercial buildings across Cambridge and the UK.
+            </p>
+            <div class="hero-proof">
+              <span>60 years in roofing industry</span>
+              <span>4.9 Google rating</span>
+              <span>ISO-accredited</span>
+              <span>Live-site specialists</span>
+            </div>
+            <div class="hero-actions">
+              <a class="button button--primary" href="#contact">Request a Survey</a>
+              <a class="button button--secondary" href="#projects">View Recent Projects</a>
+            </div>
+            <div class="hero-dashboard" aria-label="Key proof points">
+              <article class="metric-card">
+                <p class="metric-card__value">60</p>
+                <p class="metric-card__label">Years in the roofing industry</p>
+              </article>
+              <article class="metric-card">
+                <p class="metric-card__value">4.9</p>
+                <p class="metric-card__label">Google rating from recent buyers</p>
+              </article>
+              <article class="metric-card">
+                <p class="metric-card__value">ISO</p>
+                <p class="metric-card__label">9001, 14001 and 45001 accredited</p>
+              </article>
+            </div>
+            <div class="hero-brief">
+              <p>
+                CRE feels most modern when the page frames every enquiry around roof condition,
+                operational pressure and the right refurbishment route instead of a generic trade
+                menu.
+              </p>
+            </div>
+          </div>
+
+          <aside class="quote-panel" id="contact">
+            <div class="quote-panel__mast">
+              <div>
+                <p class="quote-panel__eyebrow">Fast-track the first conversation</p>
+                <h2>Start Your Roof Survey</h2>
+              </div>
+              <p class="quote-panel__stamp">Photos and drawings welcome</p>
+            </div>
+            <p class="quote-panel__intro">
+              Tell us what you are dealing with and we’ll review the right next step for your
+              building, budget and programme.
+            </p>
+            <div class="quote-panel__signals" aria-label="How CRE frames the brief">
+              <article>
+                <strong>Condition</strong>
+                <p>Leaks, ageing sheets, thermal loss or asbestos risk.</p>
+              </article>
+              <article>
+                <strong>Operations</strong>
+                <p>Live sites, restricted access, tenancy pressure and phasing.</p>
+              </article>
+              <article>
+                <strong>Intent</strong>
+                <p>Repair, overclad, replace or survey the roof first.</p>
+              </article>
+            </div>
+
+            <form class="quote-form">
+              <div class="field-grid">
+                <label>
+                  <span>Name</span>
+                  <input type="text" name="name" autocomplete="name" placeholder="Your name" />
+                </label>
+                <label>
+                  <span>Company</span>
+                  <input
+                    type="text"
+                    name="company"
+                    autocomplete="organization"
+                    placeholder="Company name"
+                  />
+                </label>
+                <label>
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    name="email"
+                    autocomplete="email"
+                    placeholder="name@company.com"
+                  />
+                </label>
+                <label>
+                  <span>Phone</span>
+                  <input
+                    type="tel"
+                    name="phone"
+                    autocomplete="tel"
+                    placeholder="01223 000 000"
+                  />
+                </label>
+                <label class="field-grid__full">
+                  <span>Site postcode / location</span>
+                  <input
+                    type="text"
+                    name="location"
+                    autocomplete="street-address"
+                    placeholder="Cambridge, CB23 or site address"
+                  />
+                </label>
+                <label>
+                  <span>Service needed</span>
+                  <select name="service">
+                    <option>Commercial roofing / cladding</option>
+                    <option>Asbestos removal</option>
+                    <option>Flat roofing</option>
+                    <option>Specialist works</option>
+                    <option>Survey only</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Building type</span>
+                  <select name="building-type">
+                    <option>Warehouse / logistics</option>
+                    <option>Factory / manufacturing</option>
+                    <option>Commercial unit</option>
+                    <option>Retail / mixed-use</option>
+                    <option>Other</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Approx roof area</span>
+                  <select name="roof-area">
+                    <option>Under 1,000 m²</option>
+                    <option>1,000 to 5,000 m²</option>
+                    <option>5,000 to 10,000 m²</option>
+                    <option>10,000+ m²</option>
+                    <option>Not sure yet</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Live site?</span>
+                  <select name="live-site">
+                    <option>Yes, operational throughout</option>
+                    <option>No, vacant / phased</option>
+                    <option>Not confirmed yet</option>
+                  </select>
+                </label>
+                <label class="field-grid__full">
+                  <span>Upload drawings or photos</span>
+                  <input type="file" name="assets" multiple />
+                </label>
+                <label class="field-grid__full">
+                  <span>Message</span>
+                  <textarea
+                    name="message"
+                    rows="5"
+                    placeholder="Tell us the roof issue, timing, access constraints and whether asbestos, leaks, thermal upgrade or overcladding are in scope."
+                  ></textarea>
+                </label>
+              </div>
+              <button class="button button--accent button--full" type="button">
+                Request My Survey &amp; Budget Quote
+              </button>
+              <p class="quote-form__note">
+                Confidential enquiry. Drawings, drone stills and site photos welcome.
+              </p>
+            </form>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section section--proof">
+        <div class="section__inner proof-grid">
+          <article class="proof-lead">
+            <p class="eyebrow eyebrow--dark">What the first fold should prove</p>
+            <h2>Industrial buyers are scanning for competence, not inspiration.</h2>
+            <p>
+              The experience feels more premium when it looks like a roofing team is already
+              triaging the job instead of presenting a generic contractor brochure.
+            </p>
+          </article>
+          <article>
+            <strong>Industrial and commercial focus</strong>
+            <p>
+              Position the business around warehouses, manufacturing, distribution and live
+              operating sites rather than generic domestic roofing.
+            </p>
+          </article>
+          <article>
+            <strong>Refurbishment-led thinking</strong>
+            <p>
+              Lead with repair, overclad and upgrade strategies before defaulting to complete
+              replacement.
+            </p>
+          </article>
+          <article>
+            <strong>Compliance built in</strong>
+            <p>
+              Structural coordination, building-control issues, health and safety planning and
+              asbestos considerations are handled from the outset.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="outcomes">
+        <div class="section__inner">
+          <div class="section-heading">
+            <p class="eyebrow eyebrow--dark">Built for live industrial and commercial environments</p>
+            <h2>Give buyers the confidence that CRE knows what happens after the survey.</h2>
+            <p>
+              From asbestos overclads to solar-ready refurbishment, the homepage should make it
+              clear that CRE manages the technical detail in-house so projects move forward with
+              less disruption and more certainty.
+            </p>
+          </div>
+
+          <div class="outcomes-layout">
+            <article class="impact-panel">
+              <p class="impact-panel__label">Buyer confidence stack</p>
+              <h3>Make the page answer the three hard questions before the first call.</h3>
+              <ul class="impact-list">
+                <li>Can CRE keep the building operational while the works happen?</li>
+                <li>Will the recommendation match the roof condition instead of defaulting to replacement?</li>
+                <li>Can one team handle compliance, asbestos and programme pressure together?</li>
+              </ul>
+            </article>
+
+            <div class="card-grid card-grid--three">
+              <article class="info-card">
+                <p class="info-card__kicker">01</p>
+                <h3>Keep the building operational</h3>
+                <p>
+                  Plan refurbishment and overcladding works around active sites, access constraints
+                  and phased programmes.
+                </p>
+              </article>
+              <article class="info-card">
+                <p class="info-card__kicker">02</p>
+                <h3>Upgrade performance</h3>
+                <p>
+                  Improve weatherproofing, thermal performance and roof life without defaulting
+                  straight to full replacement.
+                </p>
+              </article>
+              <article class="info-card">
+                <p class="info-card__kicker">03</p>
+                <h3>Handle compliance early</h3>
+                <p>
+                  Deal with building control, structural coordination, health and safety planning and
+                  asbestos risk before site disruption begins.
+                </p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--ink" id="services">
+        <div class="section__inner">
+          <div class="section-heading section-heading--split">
+            <div>
+              <p class="eyebrow">Services that solve the real problem behind a failing roof</p>
+              <h2>Refurbishment-led solutions instead of generic trade categories.</h2>
+            </div>
+            <p>
+              CRE focuses on work that reduces risk, improves performance and makes ageing
+              buildings easier to operate, insure and lease.
+            </p>
+          </div>
+
+          <div class="services-layout">
+            <article class="service-feature">
+              <p class="service-feature__label">Refurbishment logic</p>
+              <h3>Start with the condition of the roof and the pressure on the site, then set the scope.</h3>
+              <p>
+                That framing gives CRE a more current position than a standard contractor menu.
+                It makes the site feel consultative, technical and genuinely useful from the first
+                scroll.
+              </p>
+              <ul class="tag-list tag-list--ghost" aria-label="Service themes">
+                <li>Repair before replace</li>
+                <li>Overclad when viable</li>
+                <li>Solar-ready upgrades</li>
+                <li>Live-site sequencing</li>
+              </ul>
+            </article>
+
+            <div class="service-stack">
+              <article class="service-card service-card--row">
+                <p class="service-card__index">01</p>
+                <div>
+                  <h3>Asbestos Removal</h3>
+                  <p>
+                    Safe removal, replacement and refurbishment strategies for ageing asbestos roof systems.
+                  </p>
+                </div>
+              </article>
+              <article class="service-card service-card--row">
+                <p class="service-card__index">02</p>
+                <div>
+                  <h3>Commercial Roofing &amp; Cladding</h3>
+                  <p>
+                    Refurbishment, overcladding and complete envelope upgrades for industrial and commercial buildings.
+                  </p>
+                </div>
+              </article>
+              <article class="service-card service-card--row">
+                <p class="service-card__index">03</p>
+                <div>
+                  <h3>Flat Roofing</h3>
+                  <p>
+                    Durable flat roof systems designed around building use, access requirements and long-term maintenance.
+                  </p>
+                </div>
+              </article>
+              <article class="service-card service-card--row">
+                <p class="service-card__index">04</p>
+                <div>
+                  <h3>Specialist Works</h3>
+                  <p>
+                    Complex new-build and specialist envelope packages delivered with design, procurement and project management support.
+                  </p>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <a class="text-link" href="#projects">Explore the project work that proves it</a>
+        </div>
+      </section>
+
+      <section class="section" id="projects">
+        <div class="section__inner">
+          <div class="section-heading section-heading--split">
+            <div>
+              <p class="eyebrow eyebrow--dark">Proof on the roof</p>
+              <h2>Case studies should do the heavy lifting.</h2>
+            </div>
+            <p>
+              Use real project photography, drone stills and measurable outcomes. These are the
+              strongest sales assets on the site and deserve premium placement.
+            </p>
+          </div>
+
+          <div class="project-ledger" aria-label="Project themes">
+            <span>Warehouse refurbishments</span>
+            <span>Live-site coordination</span>
+            <span>Thermal upgrades</span>
+            <span>Solar-ready thinking</span>
+          </div>
+
+          <div class="project-grid">
+            <article class="project-card project-card--wide">
+              <div class="project-card__media">
+                <img
+                  src="https://crex.lon1.cdn.digitaloceanspaces.com/media-files/aldi.png"
+                  alt="Aerial roof image from Cambridge Roof Exchange project work"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-card__body">
+                <span class="project-card__serial">01</span>
+                <p class="project-card__meta">Featured case study</p>
+                <h3>Sealed Air Warehouse Facility, St. Neots</h3>
+                <p>
+                  5,000 m² warehouse refurbishment across a 22-week programme including asbestos
+                  removal, gutter refurbishment, cladding and industrial roof lights.
+                </p>
+                <ul class="tag-list" aria-label="Project tags">
+                  <li>22-week programme</li>
+                  <li>Asbestos removal</li>
+                  <li>Warehouse refurbishment</li>
+                </ul>
+              </div>
+            </article>
+
+            <article class="project-card">
+              <div class="project-card__media project-card__media--tall">
+                <img
+                  src="https://crex.lon1.cdn.digitaloceanspaces.com/init/misc/about-2.png"
+                  alt="Roof works detail photography"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-card__body">
+                <span class="project-card__serial">02</span>
+                <p class="project-card__meta">Thermal upgrade</p>
+                <h3>Iron Mountain, Swindon</h3>
+                <p>
+                  Overclad roof refurbishment designed to improve thermal performance and deliver a
+                  drier, more dependable roof envelope.
+                </p>
+                <ul class="tag-list" aria-label="Project tags">
+                  <li>Overclad strategy</li>
+                  <li>Thermal performance</li>
+                  <li>Dependable envelope</li>
+                </ul>
+              </div>
+            </article>
+
+            <article class="project-card">
+              <div class="project-card__media project-card__media--tall">
+                <img
+                  src="https://crex.lon1.cdn.digitaloceanspaces.com/media-files/aldi.png"
+                  alt="Commercial roofing and cladding project image"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-card__body">
+                <span class="project-card__serial">03</span>
+                <p class="project-card__meta">Tenant-ready refurbishment</p>
+                <h3>Aldi Lok’nStore, Staines-upon-Thames</h3>
+                <p>
+                  Roofing and flat-roofing works completed ahead of new occupation, with solar
+                  integration front of mind.
+                </p>
+                <ul class="tag-list" aria-label="Project tags">
+                  <li>New occupation</li>
+                  <li>Flat roofing</li>
+                  <li>Solar-ready</li>
+                </ul>
+              </div>
+            </article>
+
+            <article class="project-card project-card--wide">
+              <div class="project-card__media">
+                <img
+                  src="https://crex.lon1.cdn.digitaloceanspaces.com/init/misc/about-2.png"
+                  alt="Industrial roof refurbishment site photo"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-card__body">
+                <span class="project-card__serial">04</span>
+                <p class="project-card__meta">Live-site coordination</p>
+                <h3>Wenzels The Bakers, London</h3>
+                <p>
+                  Roof renovation planned around an operating bakery, supporting the client’s goal
+                  of installing solar panels on the roof.
+                </p>
+                <ul class="tag-list" aria-label="Project tags">
+                  <li>14-week programme</li>
+                  <li>Live site</li>
+                  <li>Solar-ready strategy</li>
+                </ul>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--sand">
+        <div class="section__inner">
+          <div class="section-heading">
+            <p class="eyebrow eyebrow--dark">From survey to handover, one team owns the detail</p>
+            <h2>Turn the process into a trust signal.</h2>
+            <p>
+              The new homepage should reassure buyers that CRE can move from inspection to
+              specification to live-site delivery without handing responsibility around.
+            </p>
+          </div>
+
+          <div class="timeline">
+            <article class="timeline-step">
+              <span>01</span>
+              <h3>Survey &amp; drone inspection</h3>
+              <p>Capture the roof properly before decisions are made.</p>
+            </article>
+            <article class="timeline-step">
+              <span>02</span>
+              <h3>Specification &amp; costing</h3>
+              <p>Recommend repair, overclad, replacement or asbestos works based on actual roof condition.</p>
+            </article>
+            <article class="timeline-step">
+              <span>03</span>
+              <h3>Compliance planning</h3>
+              <p>Coordinate structural, building-control and safety requirements before disruption begins.</p>
+            </article>
+            <article class="timeline-step">
+              <span>04</span>
+              <h3>Live-site delivery</h3>
+              <p>Sequence the work around operations, access restrictions and programme pressure.</p>
+            </article>
+            <article class="timeline-step">
+              <span>05</span>
+              <h3>Handover &amp; aftercare</h3>
+              <p>Leave the client with a roof system that is easier to manage, maintain and plan around.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--ink" id="compliance">
+        <div class="section__inner compliance-grid">
+          <div>
+            <p class="eyebrow">Health, safety and compliance are part of the offer</p>
+            <h2>Put the accreditations in service of the buyer’s risk calculation.</h2>
+            <p>
+              CRE works to ISO 9001, ISO 14001 and ISO 45001 standards and manages the practical
+              realities of asbestos risk, fragile roofs, access planning and live commercial
+              environments from the start of the job, not as an afterthought.
+            </p>
+            <p>
+              The site should also highlight CRE’s ability to handle design coordination,
+              procurement, customer care, building-control requirements and structural compliance
+              in-house.
+            </p>
+            <ul class="compliance-list">
+              <li>Address asbestos and fragile-roof risk before mobilisation.</li>
+              <li>Coordinate structural, safety and building-control requirements early.</li>
+              <li>Keep procurement, customer care and delivery aligned under one roof team.</li>
+              <li>Show accreditations as proof of delivery discipline, not decoration.</li>
+            </ul>
+          </div>
+
+          <div class="accreditation-panel">
+            <img
+              src="https://crex.lon1.cdn.digitaloceanspaces.com/init/other-logos/nfrc-logo.png"
+              alt="NFRC member"
+            />
+            <img
+              src="https://crex.lon1.cdn.digitaloceanspaces.com/init/misc-icons/safecontractorlogo.svg"
+              alt="SafeContractor approved"
+            />
+            <img
+              src="https://crex.lon1.cdn.digitaloceanspaces.com/init/misc-icons/iso9001.svg"
+              alt="ISO 9001"
+            />
+            <img
+              src="https://crex.lon1.cdn.digitaloceanspaces.com/init/misc-icons/iso14001.svg"
+              alt="ISO 14001"
+            />
+            <img
+              src="https://crex.lon1.cdn.digitaloceanspaces.com/init/misc-icons/iso45001.svg"
+              alt="ISO 45001"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--cta">
+        <div class="section__inner cta-band">
+          <div>
+            <p class="eyebrow eyebrow--dark">Final conversion moment</p>
+            <h2>If the roof is already costing you time, inspect it properly.</h2>
+            <p>
+              Send the site details, drawings or photos and CRE can advise whether the right route
+              is repair, overclad, replacement or asbestos removal.
+            </p>
+          </div>
+          <div class="cta-band__actions">
+            <a class="button button--primary" href="#contact">Request My Survey &amp; Budget Quote</a>
+            <a class="button button--secondary button--dark" href="tel:+441223782085">Call 01223 782 085</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <p>Cambridge Roof Exchange Ltd</p>
+        <p>223 Barton Court, Comberton, Cambridge, CB23 7BU</p>
+        <p>
+          Survey-first conversations welcome. Drawings, drone stills and site photos help CRE
+          scope the right route faster.
+        </p>
+      </div>
+    </footer>
+
+    <div class="mobile-cta">
+      <p class="mobile-cta__label">Need a fast roof triage?</p>
+      <div class="mobile-cta__actions">
+        <a href="tel:+441223782085">Call</a>
+        <a href="#contact">Request Survey</a>
+      </div>
+    </div>
+  </body>
+</html>
