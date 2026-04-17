@@ -69,6 +69,12 @@
       "port": 3005
     },
     {
+      "name": "8bit-generator",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8091", "--directory", "/Users/hugo/Downloads/8bit-music-generator"],
+      "port": 8091
+    },
+    {
       "name": "pooter1-agent",
       "runtimeExecutable": "/bin/bash",
       "runtimeArgs": ["-c", "cd /Users/hugo/Downloads/morality.network-master/agents/pooter1 && PORT=3006 npx tsx src/index.ts"],

@@ -20,6 +20,8 @@ import { commentOnArticles } from "./tasks/comment.js";
 import { getAgentAddress } from "./onchain.js";
 import { learn } from "./tasks/learn.js";
 import { farcasterDigest } from "./tasks/farcaster-digest.js";
+import { scanAndReplyToMentions } from "./tasks/reply-to-mention.js";
+import { MENTION_POLL_INTERVAL_MS } from "./config.js";
 
 const app = new Hono();
 
@@ -94,6 +96,16 @@ app.post("/tasks/farcaster-digest", requireAuth, async (c) => {
   }
 });
 
+// ── Task: Mention Scanner ─────────────────────────────────────────
+app.post("/tasks/mention-scan", requireAuth, async (c) => {
+  try {
+    await scanAndReplyToMentions();
+    return c.json({ status: "ok", task: "mention-scan" });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
 // ── Start ──────────────────────────────────────────────────────────
 const port = parseInt(process.env.PORT || "3001", 10);
 
@@ -101,4 +113,14 @@ import { serve } from "@hono/node-server";
 
 serve({ fetch: app.fetch, port }, () => {
   console.log(`[${AGENT_NAME}] Listening on port ${port}`);
+
+  // Background mention scanner — polls every 60s for @pooter mentions
+  setInterval(() => {
+    scanAndReplyToMentions().catch((err) =>
+      console.warn(`[${AGENT_NAME}] Mention scan error: ${err.message}`),
+    );
+  }, MENTION_POLL_INTERVAL_MS);
+  console.log(
+    `[${AGENT_NAME}] Mention scanner active (every ${MENTION_POLL_INTERVAL_MS / 1000}s)`,
+  );
 });
