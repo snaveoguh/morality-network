@@ -56,7 +56,9 @@ const EMPTY_ARCHIVE: ArticleArchiveFile = {
 let cache: ArticleArchiveFile | null = null;
 let cacheLoadedAtMs = 0;
 const CACHE_TTL_MS = 30_000;
-const REMOTE_ARCHIVE_LIMIT = 100_000;
+// Capped to keep the indexer response under the Node heap budget on Railway.
+// At 100_000 the response hit ~34 MB and OOM-crashed the web process.
+const REMOTE_ARCHIVE_LIMIT = 2_000;
 
 /* ── Upstash Redis REST helpers (survives Vercel cold starts) ── */
 
