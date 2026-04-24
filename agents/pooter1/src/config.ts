@@ -51,3 +51,10 @@ export const MAX_COMMENTS_PER_DAY = 20;
 export const MAX_RATINGS_PER_DAY = 50;
 export const MAX_EDITORIALS_PER_DAY = 3;
 export const MAX_FARCASTER_DIGESTS_PER_DAY = 3;
+export const MAX_MENTION_REPLIES_PER_DAY = 30;
+
+// ── Mention Scanner ─────────────────────────────────────────────────
+/** Max comment IDs to scan per run (prevents runaway RPC reads on first boot) */
+export const MENTION_SCAN_LOOKBACK = 200;
+/** Polling interval in ms for the background mention scanner */
+export const MENTION_POLL_INTERVAL_MS = 60_000;

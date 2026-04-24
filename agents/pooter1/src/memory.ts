@@ -146,6 +146,7 @@ interface DailyStats {
   editorials: number;
   comments: number;
   ratings: number;
+  replies: number;
 }
 
 export async function getDailyStats(): Promise<DailyStats> {
@@ -154,14 +155,38 @@ export async function getDailyStats(): Promise<DailyStats> {
   if (stored) {
     try { return JSON.parse(stored); } catch {}
   }
-  return { date: today, editorials: 0, comments: 0, ratings: 0 };
+  return { date: today, editorials: 0, comments: 0, ratings: 0, replies: 0 };
 }
 
 export async function incrementDailyStat(
-  type: "editorials" | "comments" | "ratings",
+  type: "editorials" | "comments" | "ratings" | "replies",
 ): Promise<void> {
   const stats = await getDailyStats();
   stats[type]++;
   // TTL 48h — auto-cleanup
   await redisSet(`${DAILY_STATS_KEY}:${stats.date}`, JSON.stringify(stats), 172800);
+}
+
+// ── Mention Scanning ───────────────────────────────────────────────
+
+const MENTION_CURSOR_KEY = "pooter1:mention-cursor";
+const REPLIED_PREFIX = "pooter1:replied:";
+
+export async function getMentionCursor(): Promise<bigint> {
+  const stored = await redisGet(MENTION_CURSOR_KEY);
+  return stored ? BigInt(stored) : 0n;
+}
+
+export async function setMentionCursor(id: bigint): Promise<void> {
+  await redisSet(MENTION_CURSOR_KEY, id.toString());
+}
+
+export async function hasRepliedToComment(commentId: bigint): Promise<boolean> {
+  const stored = await redisGet(`${REPLIED_PREFIX}${commentId}`);
+  return stored !== null;
+}
+
+export async function markCommentReplied(commentId: bigint): Promise<void> {
+  // 7-day TTL — old dedup keys clean themselves up
+  await redisSet(`${REPLIED_PREFIX}${commentId}`, "1", 604800);
 }
