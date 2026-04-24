@@ -1555,6 +1555,9 @@ export function normalizeGovernanceCast(
 export async function fetchGovernanceSocialSignals(): Promise<
   GovernanceSocialSignal[]
 > {
+  // ⚠️ Farcaster disabled — no Neynar calls. Re-enable via FARCASTER_ENABLED=true
+  if (process.env.FARCASTER_ENABLED !== "true") return [];
+
   return loadTtlValue(
     governanceSocialCache,
     "farcaster",

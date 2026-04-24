@@ -1,5 +1,11 @@
 // Farcaster integration via Neynar API
 // Fetches @pip's social graph and surfaces engaged casts in the feed
+//
+// ⚠️  DISABLED — all Neynar calls short-circuited to avoid API hammering.
+//    Pooter.world doesn't need its own FC feed; noun.wtf is the only consumer.
+//    To re-enable: set FARCASTER_ENABLED=true in env vars.
+
+const FARCASTER_DISABLED = process.env.FARCASTER_ENABLED !== "true";
 
 const NEYNAR_API = "https://api.neynar.com/v2/farcaster";
 const API_KEY = process.env.NEYNAR_API_KEY || "NEYNAR_FROG_FM"; // dev fallback
@@ -49,6 +55,7 @@ export interface CastEmbed {
 // ============================================================================
 
 export async function lookupUser(username: string): Promise<FarcasterUser | null> {
+  if (FARCASTER_DISABLED) return null;
   try {
     const res = await fetch(
       `${NEYNAR_API}/user/by_username?username=${encodeURIComponent(username)}`,
@@ -80,6 +87,7 @@ export async function lookupUser(username: string): Promise<FarcasterUser | null
 // ============================================================================
 
 export async function fetchSocialFeed(fid: number): Promise<Cast[]> {
+  if (FARCASTER_DISABLED) return [];
   try {
     const res = await fetch(
       `${NEYNAR_API}/feed?feed_type=following&fid=${fid}&with_recasts=true&limit=50`,
@@ -99,6 +107,7 @@ export async function fetchSocialFeed(fid: number): Promise<Cast[]> {
 // ============================================================================
 
 export async function fetchTrendingCasts(): Promise<Cast[]> {
+  if (FARCASTER_DISABLED) return [];
   try {
     const res = await fetch(
       `${NEYNAR_API}/feed/trending?limit=10&time_window=24h`,
@@ -118,6 +127,7 @@ export async function fetchTrendingCasts(): Promise<Cast[]> {
 // ============================================================================
 
 export async function fetchPopularCasts(fid: number): Promise<Cast[]> {
+  if (FARCASTER_DISABLED) return [];
   try {
     const res = await fetch(
       `${NEYNAR_API}/feed/user/popular?fid=${fid}`,
@@ -144,6 +154,7 @@ const KNOWN_FIDS: Record<string, number> = { pip: 7924 };
 export async function fetchFarcasterContent(
   username: string = "pip"
 ): Promise<Cast[]> {
+  if (FARCASTER_DISABLED) return [];
   // Use cached FID if known, otherwise do the API lookup
   const fid = KNOWN_FIDS[username] ?? (await lookupUser(username))?.fid;
   if (!fid) {

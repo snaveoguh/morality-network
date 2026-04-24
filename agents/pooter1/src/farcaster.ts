@@ -1,9 +1,12 @@
 /**
  * pooter1 Farcaster client — reads casts via Neynar API.
  * Ported from web/src/lib/farcaster.ts, stripped of Next.js cache directives.
+ *
+ * ⚠️  DISABLED — all Neynar calls short-circuited. Re-enable via FARCASTER_ENABLED=true env var.
  */
 import { NEYNAR_API_KEY } from "./config.js";
 
+const FARCASTER_DISABLED = process.env.FARCASTER_ENABLED !== "true";
 const NEYNAR_API = "https://api.neynar.com/v2/farcaster";
 
 function headers(): Record<string, string> {
@@ -51,6 +54,7 @@ export interface CastEmbed {
 // ── API Functions ────────────────────────────────────────────────────
 
 export async function fetchTrendingCasts(limit = 10): Promise<Cast[]> {
+  if (FARCASTER_DISABLED) return [];
   try {
     const res = await fetch(
       `${NEYNAR_API}/feed/trending?limit=${limit}&time_window=24h`,
@@ -66,6 +70,7 @@ export async function fetchTrendingCasts(limit = 10): Promise<Cast[]> {
 }
 
 export async function fetchChannelFeed(channelId: string, limit = 25): Promise<Cast[]> {
+  if (FARCASTER_DISABLED) return [];
   try {
     const res = await fetch(
       `${NEYNAR_API}/feed/channels?channel_ids=${encodeURIComponent(channelId)}&limit=${limit}`,
@@ -81,6 +86,7 @@ export async function fetchChannelFeed(channelId: string, limit = 25): Promise<C
 }
 
 export async function searchCasts(query: string, limit = 10): Promise<Cast[]> {
+  if (FARCASTER_DISABLED) return [];
   try {
     const res = await fetch(
       `${NEYNAR_API}/cast/search?q=${encodeURIComponent(query)}&limit=${limit}`,
