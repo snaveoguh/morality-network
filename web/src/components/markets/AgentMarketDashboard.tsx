@@ -28,6 +28,11 @@ const TradingChart = dynamic(
   },
 );
 
+const CrossVenueSpreads = dynamic(
+  () => import("@/components/markets/CrossVenueSpreads"),
+  { ssr: false },
+);
+
 const AgentBotTerminal = dynamic(
   () =>
     import("@/components/markets/AgentBotTerminal").then((m) => ({
@@ -1569,6 +1574,10 @@ export function AgentMarketDashboard() {
           />
         </section>
       ) : null}
+
+      <section>
+        <CrossVenueSpreads />
+      </section>
 
       <section>
         <TradingChart height={340} watchMarkets={["BTC","ETH","SOL","HYPE","XRP","SUI","DOGE","LINK","AVAX","BNB","PAXG","TAO","ZEC","FET","TRUMP","BCH","WLD","AAVE","OP","ARB"]} />
