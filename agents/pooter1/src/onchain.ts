@@ -84,6 +84,43 @@ const COMMENTS_ABI = [
     outputs: [{ name: "", type: "uint256" }],
     stateMutability: "nonpayable" as const,
   },
+  {
+    type: "function" as const,
+    name: "nextCommentId",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view" as const,
+  },
+  {
+    type: "function" as const,
+    name: "getComment",
+    inputs: [{ name: "commentId", type: "uint256" }],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "id", type: "uint256" },
+          { name: "entityHash", type: "bytes32" },
+          { name: "author", type: "address" },
+          { name: "content", type: "string" },
+          { name: "parentId", type: "uint256" },
+          { name: "score", type: "int256" },
+          { name: "tipTotal", type: "uint256" },
+          { name: "timestamp", type: "uint256" },
+          { name: "exists", type: "bool" },
+        ],
+      },
+    ],
+    stateMutability: "view" as const,
+  },
+  {
+    type: "function" as const,
+    name: "getChildComments",
+    inputs: [{ name: "parentId", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256[]" }],
+    stateMutability: "view" as const,
+  },
 ] as const;
 
 // ── Client setup ────────────────────────────────────────────────────
@@ -226,6 +263,73 @@ export function getAgentAddress(): string | null {
   if (!POOTER1_PRIVATE_KEY) return null;
   const account = privateKeyToAccount(POOTER1_PRIVATE_KEY as `0x${string}`);
   return account.address;
+}
+
+// ── Comment reading (for mention scanning) ─────────────────────────
+
+export interface OnchainComment {
+  id: bigint;
+  entityHash: `0x${string}`;
+  author: `0x${string}`;
+  content: string;
+  parentId: bigint;
+  score: bigint;
+  tipTotal: bigint;
+  timestamp: bigint;
+  exists: boolean;
+}
+
+export async function getNextCommentId(): Promise<bigint> {
+  const clients = getClients();
+  if (!clients) return 0n;
+  return clients.publicClient.readContract({
+    address: CONTRACTS.comments,
+    abi: COMMENTS_ABI,
+    functionName: "nextCommentId",
+  });
+}
+
+export async function getCommentById(id: bigint): Promise<OnchainComment | null> {
+  const clients = getClients();
+  if (!clients) return null;
+  try {
+    const c = await clients.publicClient.readContract({
+      address: CONTRACTS.comments,
+      abi: COMMENTS_ABI,
+      functionName: "getComment",
+      args: [id],
+    });
+    if (!c.exists) return null;
+    return {
+      id: c.id,
+      entityHash: c.entityHash as `0x${string}`,
+      author: c.author as `0x${string}`,
+      content: c.content,
+      parentId: c.parentId,
+      score: c.score,
+      tipTotal: c.tipTotal,
+      timestamp: c.timestamp,
+      exists: c.exists,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Walk up the parentId chain to build conversation context (newest first). */
+export async function getCommentThread(
+  commentId: bigint,
+  maxDepth = 5,
+): Promise<OnchainComment[]> {
+  const thread: OnchainComment[] = [];
+  let currentId = commentId;
+  for (let i = 0; i < maxDepth && currentId > 0n; i++) {
+    const comment = await getCommentById(currentId);
+    if (!comment) break;
+    thread.push(comment);
+    currentId = comment.parentId;
+  }
+  return thread.reverse(); // oldest first
 }
 
 /** Returns the agent's ETH balance in wei, or null if no wallet configured */
