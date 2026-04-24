@@ -28,6 +28,12 @@ const CHANNELS = ["base", "crypto", "farcaster", "degen", "nouns"];
 // ── Main Task ────────────────────────────────────────────────────────
 
 export async function farcasterDigest(): Promise<void> {
+  // ⚠️ Farcaster disabled — no Neynar calls. Re-enable via FARCASTER_ENABLED=true
+  if (process.env.FARCASTER_ENABLED !== "true") {
+    console.log(`[pooter1] Farcaster digest disabled (FARCASTER_ENABLED != true)`);
+    return;
+  }
+
   const stats = await getDailyStats();
   if ((stats as any).farcasterDigests >= MAX_FARCASTER_DIGESTS_PER_DAY) {
     console.log(`[pooter1] Daily Farcaster digest limit reached`);

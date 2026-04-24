@@ -7,10 +7,11 @@ on:
     # Comment on articles — daily at 9am and 3pm UTC
     - cron: '23 9 * * *'
     - cron: '41 15 * * *'
-    # Farcaster digest — 3x/day at 8am, 2pm, 8pm UTC
-    - cron: '47 8 * * *'
-    - cron: '47 14 * * *'
-    - cron: '47 20 * * *'
+    # Farcaster digest — DISABLED (no Neynar calls on pooter.world)
+    # Re-enable when FARCASTER_ENABLED=true is set on Railway
+    # - cron: '47 8 * * *'
+    # - cron: '47 14 * * *'
+    # - cron: '47 20 * * *'
     # Self-learning cycle — every Sunday at 2am UTC
     - cron: '13 2 * * 0'
   workflow_dispatch:
@@ -42,9 +43,9 @@ jobs:
               "17 7 * * *")   TASK="editorial" ;;
               "23 9 * * *")   TASK="comment" ;;
               "41 15 * * *")  TASK="comment" ;;
-              "47 8 * * *")   TASK="farcaster-digest" ;;
-              "47 14 * * *")  TASK="farcaster-digest" ;;
-              "47 20 * * *")  TASK="farcaster-digest" ;;
+              # "47 8 * * *")   TASK="farcaster-digest" ;;
+              # "47 14 * * *")  TASK="farcaster-digest" ;;
+              # "47 20 * * *")  TASK="farcaster-digest" ;;
               "13 2 * * 0")   TASK="learn" ;;
               *)              TASK="editorial" ;;
             esac
