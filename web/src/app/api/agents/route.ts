@@ -1,7 +1,6 @@
 // ─── GET /api/agents — List all agents + remote agents ──────────────────────
 
 import { NextResponse } from "next/server";
-import { verifyOperatorAuth } from "@/lib/operator-auth";
 import { reportWarn } from "@/lib/report-error";
 import { agentRegistry, getAgentSoulSummary } from "@/lib/agents/core";
 import { buildNounIrlAgentSnapshot } from "@/lib/agents/nounirl";
@@ -21,9 +20,9 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    const unauthorized = await verifyOperatorAuth(request);
-    if (unauthorized) return unauthorized;
-
+    // Public — returns aggregated agent metadata (names, statuses, counts).
+    // No private keys, wallets, or pre-trade intent. /pipe page consumes this for
+    // the "Agents" column visible to co-op funders and visitors.
     const workerMode = isWorkerAgentRuntime();
     const backendUrl = getIndexerBackendUrl();
     let localAgents: unknown[] = [];
