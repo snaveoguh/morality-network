@@ -14,8 +14,9 @@ import { getParallelBaseConfig, getTraderConfig, getScalperConfig } from "../lib
 import { ScalperManager } from "../lib/trading/scalper";
 import { PositionStore } from "../lib/trading/position-store";
 import { runVaultRailKeeper } from "../lib/trading/vault-rail";
+import { runScoutCycle } from "../lib/trading/scout";
 
-type WorkerTaskName = "scanner" | "swarm" | "trader" | "bridge" | "vault";
+type WorkerTaskName = "scanner" | "swarm" | "trader" | "bridge" | "vault" | "scout";
 type PersistedAgentEvent = {
   id: string;
   from: string;
@@ -27,7 +28,7 @@ type PersistedAgentEvent = {
 };
 
 const DEFAULT_TASKS: WorkerTaskName[] = ["scanner", "swarm"];
-const VALID_TASKS = new Set<WorkerTaskName>(["scanner", "swarm", "trader", "bridge", "vault"]);
+const VALID_TASKS = new Set<WorkerTaskName>(["scanner", "swarm", "trader", "bridge", "vault", "scout"]);
 const runningTasks = new Set<WorkerTaskName>();
 
 function log(message: string, meta?: unknown): void {
@@ -389,6 +390,23 @@ async function runVaultTask(): Promise<void> {
   }
 }
 
+async function runScoutTask(): Promise<void> {
+  const report = await runScoutCycle();
+  if (!report.enabled) {
+    log("scout task skipped because SCOUT_ENABLED is false");
+    return;
+  }
+  log("scout cycle completed", {
+    dryRun: report.dryRun,
+    evaluated: report.evaluated,
+    opened: report.opened,
+    closed: report.closed,
+    skipped: report.skipped,
+    errors: report.errors.length,
+    errorSample: report.errors.slice(0, 3),
+  });
+}
+
 async function runBridgeTask(): Promise<void> {
   const bridgeBaseUrl = getBridgeBaseUrl();
   if (!bridgeBaseUrl) {
@@ -466,6 +484,8 @@ async function executeTask(name: WorkerTaskName): Promise<boolean> {
       await runTraderTask();
     } else if (name === "vault") {
       await runVaultTask();
+    } else if (name === "scout") {
+      await runScoutTask();
     } else {
       await runBridgeTask();
     }
@@ -528,7 +548,9 @@ async function main(): Promise<void> {
             ? parseIntegerEnv("WORKER_TRADER_INTERVAL_MS", 120_000)
             : task === "vault"
               ? parseIntegerEnv("WORKER_VAULT_INTERVAL_MS", 300_000)
-              : parseIntegerEnv("WORKER_BRIDGE_INTERVAL_MS", 10_000);
+              : task === "scout"
+                ? parseIntegerEnv("WORKER_SCOUT_INTERVAL_MS", 300_000)
+                : parseIntegerEnv("WORKER_BRIDGE_INTERVAL_MS", 10_000);
     timers.push(scheduleTask(task, intervalMs));
     log(`${task} scheduled`, { intervalMs });
   }
