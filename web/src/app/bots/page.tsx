@@ -392,10 +392,15 @@ export default function BotsPage() {
 function SwarmConsolePanel({ state }: { state: SwarmConsoleState | null }) {
   if (!state) {
     return (
-      <div className="border border-[var(--rule-light)] p-4">
+      <div className="border border-[var(--rule-light)] p-4 space-y-2">
         <p className="font-mono text-[10px] text-[var(--ink-faint)]">
-          Console metrics are not available yet. The live bus still works, but the aggregate view
-          needs the indexer-backed runtime.
+          Console aggregate view is gated on operator access — sign in with an operator
+          wallet (or hit <span className="font-mono">/api/agents/console</span> with a bearer
+          token) to load throughput, bridge health, AI spend and trader decisions.
+        </p>
+        <p className="font-mono text-[10px] text-[var(--ink-faint)]">
+          The live bus tab below keeps streaming without auth, so you can still watch raw
+          messages flow.
         </p>
       </div>
     );

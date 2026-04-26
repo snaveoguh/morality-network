@@ -58,7 +58,9 @@ let cacheLoadedAtMs = 0;
 const CACHE_TTL_MS = 30_000;
 // Capped to keep the indexer response under the Node heap budget on Railway.
 // At 100_000 the response hit ~34 MB and OOM-crashed the web process.
-const REMOTE_ARCHIVE_LIMIT = 2_000;
+// 25_000 ≈ 8.5 MB peak — well under the OOM threshold and matches what users
+// expect to see on /archive (we used to surface ~20k+ before the cap landed).
+const REMOTE_ARCHIVE_LIMIT = 25_000;
 
 /* ── Upstash Redis REST helpers (survives Vercel cold starts) ── */
 
