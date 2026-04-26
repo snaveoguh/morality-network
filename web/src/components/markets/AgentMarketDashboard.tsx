@@ -1934,7 +1934,7 @@ export function AgentMarketDashboard() {
         </h2>
         {!hasFullMarketAccess ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
-            Detailed open-position telemetry unlocks for verified 100k MO holders.
+            Detailed open-position telemetry unlocks for the operator wallet or verified 100k MO holders. Connect your wallet to verify access.
           </p>
         ) : filteredOpen.length === 0 ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
@@ -2017,7 +2017,7 @@ export function AgentMarketDashboard() {
         </h2>
         {!hasFullMarketAccess ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
-            Detailed trade history unlocks for verified 100k MO holders.
+            Detailed trade history unlocks for the operator wallet or verified 100k MO holders. Connect your wallet to verify access.
           </p>
         ) : filteredClosed.length === 0 ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
