@@ -386,10 +386,11 @@ function resolveEditionIllustrationUrl(editorial: Awaited<ReturnType<typeof getA
   return `${SITE_URL}/api/edition/${editionNumber}/illustration`;
 }
 
-/** OG images are now always rendered via opengraph-image.tsx (grayscale).
- *  No explicit image URLs in metadata — Next.js auto-discovers the component. */
-function resolveOgImages(): Array<{ url: string }> {
-  return [];
+/** Point OG/Twitter image meta tags at the auto-generated opengraph-image route.
+ *  An empty array here suppresses Next.js's file-based auto-discovery, so we
+ *  publish the URL explicitly. */
+function resolveOgImages(hash: string): Array<{ url: string }> {
+  return [{ url: `${SITE_URL}/article/${hash}/opengraph-image` }];
 }
 
 export async function generateMetadata({ params }: ArticlePageProps) {
@@ -407,7 +408,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
 
   if (!item) {
     if (editorial?.primary?.title) {
-      const images = resolveOgImages();
+      const images = resolveOgImages(hash);
       return {
         title: withBrand(editorial.primary.title),
         description: editorial.subheadline,
@@ -453,7 +454,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   const sourceInfo = item.bias
     ? `${item.source} (${item.bias.bias}) — ${item.category}`
     : `${item.source} — ${item.category}`;
-  const images = resolveOgImages();
+  const images = resolveOgImages(hash);
 
   return {
     title: withBrand(item.title),
