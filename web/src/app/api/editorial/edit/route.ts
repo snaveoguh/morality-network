@@ -148,6 +148,12 @@ export async function POST(request: NextRequest) {
   // Bust ISR cache so edits are visible to all visitors immediately
   try {
     revalidatePath(`/article/${hash}`);
+    // OG/Twitter image routes have their own 24h revalidate — bust them too
+    // so an uploaded cover photo becomes the share card without waiting a day.
+    if (edits.illustrationBase64) {
+      revalidatePath(`/article/${hash}/opengraph-image`);
+      revalidatePath(`/article/${hash}/twitter-image`);
+    }
     // Also revalidate the illustration endpoint if an image was uploaded
     if (edits.illustrationBase64 && existing.isDailyEdition) {
       const genDate = new Date(existing.generatedAt);

@@ -1,8 +1,10 @@
 import { ImageResponse } from "next/og";
+import { NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import { join } from "path";
 import { getArchivedFeedItemByHash } from "@/lib/archive";
 import { getArchivedEditorial } from "@/lib/editorial-archive";
+import { getIllustration } from "@/lib/illustration-store";
 import { formatDateline } from "@/lib/article";
 import { BRAND_DOMAIN, BRAND_NAME, SITE_URL } from "@/lib/brand";
 
@@ -45,6 +47,22 @@ export default async function ArticleOGImage({
   params: Promise<{ hash: string }>;
 }) {
   const { hash } = await params;
+
+  // If an editor uploaded a cover photo for this article, serve it raw as the OG image.
+  // No overlay, no masthead — the photo is the OG image. Headline/description still
+  // travel via the page's <meta> tags (see generateMetadata in page.tsx).
+  const uploaded = await getIllustration(hash).catch(() => null);
+  if (uploaded?.base64) {
+    const raw = uploaded.base64.replace(/^data:image\/[a-z]+;base64,/, "");
+    const buffer = Buffer.from(raw, "base64");
+    return new NextResponse(buffer, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=600",
+        "Content-Length": String(buffer.length),
+      },
+    });
+  }
 
   const [serifBold, mono, monoBold, imgBuf] = await Promise.all([
     fetch(NOTO_SERIF_BOLD).then((res) => res.arrayBuffer()),
