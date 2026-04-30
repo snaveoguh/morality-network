@@ -60,6 +60,12 @@ export interface HyperliquidOrderIntent {
   txHash: Hash;
   timestamp: number;
   orderId?: number;
+  /**
+   * Client order ID (32-char hex with 0x prefix) — passed to HL on placement
+   * and echoed back on every fill of this order. Primary join key between HL
+   * fills and the local pooter.trade_decisions row.
+   */
+  cloid?: `0x${string}`;
 }
 
 export interface HyperliquidLivePosition {
@@ -576,6 +582,7 @@ export async function simulateHyperliquidOrder(args: {
   leverage: number;
   notionalUsd: number;
   szDecimals: number;
+  cloid?: `0x${string}`;
 }): Promise<HyperliquidOrderIntent> {
   const market = await fetchHyperliquidMarketBySymbol(args.config, args.symbol);
   const fillPriceUsd = market?.priceUsd ?? null;
@@ -599,6 +606,7 @@ export async function simulateHyperliquidOrder(args: {
     sizeRaw,
     txHash: syntheticHash(`dry-run:${args.symbol}:${Date.now()}`),
     timestamp: Date.now(),
+    cloid: args.cloid,
   };
 }
 
@@ -611,6 +619,13 @@ export async function executeHyperliquidOrderLive(args: {
   reduceOnly?: boolean;
   notionalUsd?: number;
   sizeRaw?: string;
+  /**
+   * Optional client order ID (32-char hex with 0x prefix). When provided,
+   * HL echoes it back on every fill of this order, allowing fills to be
+   * joined to local trade-decision metadata. Strongly recommended on entry
+   * orders so the dashboard can attach rationale, signal source, etc.
+   */
+  cloid?: `0x${string}`;
 }): Promise<HyperliquidOrderIntent> {
   if (args.config.dryRun) {
     throw new Error("Live Hyperliquid execution requested in dry-run mode");
@@ -657,6 +672,9 @@ export async function executeHyperliquidOrderLive(args: {
               tif: "FrontendMarket",
             },
           },
+          // cloid is optional but strongly recommended on entry orders so
+          // HL fills can be joined to our pooter.trade_decisions metadata.
+          ...(args.cloid ? { c: args.cloid } : {}),
         },
       ],
       grouping: "na",

@@ -15,6 +15,7 @@ import {
 } from "./hyperliquid";
 import { fetchTokenMarketSnapshot, normalizeQuoteSymbol, type DexScreenerChainId } from "./market";
 import { PositionStore } from "./position-store";
+import { createTradeDecision, newCloid } from "../db/trade-decisions";
 import { fetchScannerCandidates } from "./scanner-client";
 import { getAggregatedMarketSignals, type AggregatedMarketSignal } from "./signals";
 import { estimateAmountOutMin, executeSwap, readTokenDecimals, waitForSuccess } from "./swap";
@@ -1620,6 +1621,9 @@ class TraderEngine {
     const quoteTokenAddress = this.config.quoteTokens.USDC ?? candidate.tokenAddress;
     const quoteDecimals = this.config.quoteTokenDecimals.USDC ?? 6;
     const positionId = `hl:${market.symbol}:${market.marketId}`;
+    // 32-char hex cloid (with 0x prefix) — HL echoes this on every fill of
+    // the order, joining HL fills back to our pooter.trade_decisions row.
+    const cloid = newCloid() as `0x${string}`;
 
     // Archive any existing closed position at this ID before we overwrite
     const closedAtId = this.store.getAll().find((p) => p.id === positionId && p.status === "closed");
@@ -1707,6 +1711,7 @@ class TraderEngine {
             leverage: orderLeverage,
             notionalUsd,
             szDecimals: market.szDecimals,
+            cloid,
           })
         : await executeHyperliquidOrderLive({
             config: this.config,
@@ -1715,6 +1720,7 @@ class TraderEngine {
             leverage: orderLeverage,
             slippageBps: this.config.risk.slippageBps,
             notionalUsd,
+            cloid,
           });
     } catch (orderErr) {
       // Order failed — delete pre-persisted position so it doesn't poison the Kelly journal
@@ -1752,6 +1758,44 @@ class TraderEngine {
     };
 
     await this.store.upsert(opened);
+
+    // Mirror the entry into pooter.trade_decisions so the new HL+Postgres
+    // metrics endpoint (Stage 1) can join HL fills with our rationale +
+    // signal source via cloid. The Redis position store remains the live
+    // source of truth for the engine's own decisions until Stage 2 — this
+    // write is purely additive.
+    try {
+      const wallet = resolveHyperliquidAccountAddress(this.config, this.clients.address);
+      await createTradeDecision({
+        id: positionId,
+        cloid,
+        hlOid: order.orderId ? String(order.orderId) : null,
+        wallet,
+        marketSymbol: market.symbol,
+        venue: "hyperliquid-perp",
+        direction,
+        leverage: order.leverage,
+        openedAt: new Date(opened.openedAt),
+        entryNotionalUsd: order.notionalUsd,
+        signalSource: opened.signalSource ?? null,
+        signalConfidence: opened.signalConfidence ?? null,
+        kellyFraction: opened.kellyFraction ?? null,
+        moralScore: opened.moralScore ?? null,
+        moralJustification: opened.moralJustification ?? null,
+        stopLossPct: opened.stopLossPct ?? null,
+        takeProfitPct: opened.takeProfitPct ?? null,
+        trailingStopPct: opened.trailingStopPct ?? null,
+        dynamicTpLevels: opened.dynamicTpLevels ?? null,
+        entryRationale: opened.entryRationale ?? null,
+      });
+    } catch (dbErr) {
+      // Postgres unavailable — log and continue. Trade is still live on HL;
+      // dashboard will show it without rationale until backfill picks it up.
+      console.error(
+        `[trader] failed to record TradeDecision for ${market.symbol} cloid=${cloid}: ${dbErr instanceof Error ? dbErr.message : dbErr}`,
+      );
+    }
+
     return opened;
   }
 
