@@ -23,6 +23,7 @@ import {
 import { computeRSI, computeEMAs, computeBollinger } from "./technical";
 import { checkMoralGate, logMoralGateDecision } from "./moral-gate";
 import { globalPositionLock } from "./global-position-lock";
+import { createTradeDecision, closeTradeDecisionByCloid, newCloid } from "../db/trade-decisions";
 import type { ScalperConfig, ScalpSignal, ScalpPosition, TraderExecutionConfig, EntryRationale } from "./types";
 import { PositionStore } from "./position-store";
 
@@ -567,6 +568,7 @@ export class ScalperManager {
 
     // Use market's max leverage (BTC=40x, ETH=25x, etc.), fall back to config default
     const leverage = marketSnapshot.maxLeverage ?? this.scalperConfig.defaultLeverage;
+    const cloid = newCloid() as `0x${string}`;
 
     const order = this.scalperConfig.dryRun
       ? await simulateHyperliquidOrder({
@@ -577,6 +579,7 @@ export class ScalperManager {
           leverage,
           notionalUsd,
           szDecimals: marketSnapshot.szDecimals,
+          cloid,
         })
       : await executeHyperliquidOrderLive({
           config: this.traderConfig,
@@ -585,6 +588,7 @@ export class ScalperManager {
           leverage,
           slippageBps: this.traderConfig.risk.slippageBps,
           notionalUsd,
+          cloid,
         });
 
     // Compute SL/TP prices
@@ -597,6 +601,7 @@ export class ScalperManager {
 
     const scalp: ScalpPosition = {
       id: `scalp:${order.id}`,
+      cloid,
       symbol: market,
       marketId: order.marketId,
       direction: signal.direction,
@@ -660,6 +665,33 @@ export class ScalperManager {
         log(`rationale pre-persist failed: ${err instanceof Error ? err.message : err}`);
       }
     }
+
+    // Mirror to pooter.trade_decisions (best-effort, fire-and-forget)
+    const walletAddress = privateKeyToAccount(this.traderConfig.privateKey).address as Address;
+    const wallet = resolveHyperliquidAccountAddress(this.traderConfig, walletAddress);
+    createTradeDecision({
+      id: scalp.id,
+      cloid,
+      hlOid: order.orderId ? String(order.orderId) : null,
+      wallet,
+      marketSymbol: market,
+      venue: "hyperliquid-perp",
+      direction: signal.direction,
+      leverage: order.leverage,
+      openedAt: new Date(scalp.openedAt),
+      entryNotionalUsd: order.notionalUsd,
+      signalSource: `scalper:${signal.trigger}`,
+      signalConfidence: signal.confidence,
+      stopLossPct: this.scalperConfig.stopLossPct,
+      takeProfitPct: this.scalperConfig.takeProfitPct,
+      entryRationale: {
+        trigger: signal.trigger,
+        reasons: signal.reasons,
+        indicators: signal.indicators,
+      },
+    }).catch((dbErr) => {
+      log(`failed to record TradeDecision for ${market} cloid=${cloid}: ${dbErr instanceof Error ? dbErr.message : dbErr}`);
+    });
   }
 
   /* ── Exit monitoring ── */
@@ -746,6 +778,17 @@ export class ScalperManager {
     // Keep last 200 closed
     if (this.closedScalps.length > 200) {
       this.closedScalps = this.closedScalps.slice(-200);
+    }
+
+    // Mirror close to pooter.trade_decisions (best-effort, fire-and-forget)
+    if (scalp.cloid) {
+      closeTradeDecisionByCloid(scalp.cloid, {
+        closedAt: new Date(scalp.closedAt ?? Date.now()),
+        exitReason: reason,
+        exitRationale: { trigger: reason, priceAtTrigger: exitPrice, pnlUsd: scalp.pnlUsd, holdDurationMs: (scalp.closedAt ?? Date.now()) - scalp.openedAt },
+      }).catch((err) => {
+        log(`failed to close TradeDecision cloid=${scalp.cloid}: ${err instanceof Error ? err.message : err}`);
+      });
     }
 
     const holdMs = (scalp.closedAt ?? Date.now()) - scalp.openedAt;

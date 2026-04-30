@@ -35,6 +35,8 @@ export interface ScannerLaunch {
 
 export interface Position {
   id: string;
+  /** 32-char hex (0x-prefixed) sent as HL order cloid, joins to pooter.trade_decisions */
+  cloid?: `0x${string}`;
   venue?: ExecutionVenue;
   tokenAddress: Address;
   tokenDecimals: number;
@@ -369,6 +371,8 @@ export interface ScalpSignal {
 
 export interface ScalpPosition {
   id: string;
+  /** 32-char hex (0x-prefixed) cloid — joins HL fills to pooter.trade_decisions */
+  cloid?: `0x${string}`;
   symbol: string;
   marketId: number | null;
   direction: "long" | "short";

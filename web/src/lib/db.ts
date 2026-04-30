@@ -32,11 +32,29 @@ function makeClient(): Sql {
 }
 
 /**
- * Module-level singleton. The `globalThis.__pooterDb` cache prevents Next.js
- * dev mode from leaking connections on hot reload.
+ * Lazy singleton — defers connection until first actual query, so that
+ * `next build` can collect page metadata without DATABASE_URL set.
+ * The `globalThis.__pooterDb` cache prevents Next.js dev mode from
+ * leaking connections on hot reload.
  */
-export const sql: Sql =
-  globalThis.__pooterDb ?? (globalThis.__pooterDb = makeClient());
+function getSql(): Sql {
+  if (globalThis.__pooterDb) return globalThis.__pooterDb;
+  const client = makeClient();
+  globalThis.__pooterDb = client;
+  return client;
+}
+
+// Proxy that lazily instantiates the real client on first property access.
+// This is safe because `postgres` returns a tagged-template function that
+// is also an object with methods like `.begin()`, `.end()`, `.json()`, etc.
+export const sql: Sql = new Proxy({} as Sql, {
+  get(_target, prop, receiver) {
+    return Reflect.get(getSql(), prop, receiver);
+  },
+  apply(_target, thisArg, argArray) {
+    return Reflect.apply(getSql() as unknown as (...args: unknown[]) => unknown, thisArg, argArray);
+  },
+});
 
 /**
  * Returns true if DATABASE_URL is configured AND a trivial query succeeds.
