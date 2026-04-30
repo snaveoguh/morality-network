@@ -15,7 +15,7 @@ import {
 } from "./hyperliquid";
 import { fetchTokenMarketSnapshot, normalizeQuoteSymbol, type DexScreenerChainId } from "./market";
 import { PositionStore } from "./position-store";
-import { createTradeDecision, newCloid } from "../db/trade-decisions";
+import { createTradeDecision, closeTradeDecisionByCloid, findOpenByWalletSymbol, closeTradeDecisionByWalletSymbolOpened, newCloid } from "../db/trade-decisions";
 import { fetchScannerCandidates } from "./scanner-client";
 import { getAggregatedMarketSignals, type AggregatedMarketSignal } from "./signals";
 import { estimateAmountOutMin, executeSwap, readTokenDecimals, waitForSuccess } from "./swap";
@@ -359,6 +359,7 @@ class TraderEngine {
         closedAt: Date.now(),
         exitRationale: this.buildExitRationale(stored, exitNote, exitPriceUsd),
       });
+      this.mirrorCloseToPg(stored, "manual", exitPriceUsd);
     }
 
     return positions;
@@ -913,6 +914,44 @@ class TraderEngine {
     };
   }
 
+  /**
+   * Best-effort mirror a position close to pooter.trade_decisions.
+   * Uses cloid if available, falls back to (wallet, symbol, openedAt).
+   * Fire-and-forget — never blocks the close path.
+   */
+  private mirrorCloseToPg(
+    position: Position,
+    reason: string,
+    exitPriceUsd: number,
+  ): void {
+    const closeInput = {
+      closedAt: new Date(),
+      exitReason: reason,
+      exitRationale: this.buildExitRationale(position, reason, exitPriceUsd),
+    };
+
+    const doClose = async () => {
+      if (position.cloid) {
+        await closeTradeDecisionByCloid(position.cloid, closeInput);
+      } else if (position.marketSymbol) {
+        // Fallback for positions opened before cloid was added
+        const wallet = resolveHyperliquidAccountAddress(this.config, this.clients.address);
+        await closeTradeDecisionByWalletSymbolOpened(
+          wallet,
+          position.marketSymbol,
+          new Date(position.openedAt),
+          closeInput,
+        );
+      }
+    };
+
+    doClose().catch((err) => {
+      console.error(
+        `[trader] failed to close TradeDecision for ${position.marketSymbol ?? position.id}: ${err instanceof Error ? err.message : err}`,
+      );
+    });
+  }
+
   private async closePosition(
     position: Position,
     reason: NonNullable<Position["exitReason"]>,
@@ -996,12 +1035,14 @@ class TraderEngine {
     const closeSide = position.direction === "short" ? "buy" : "sell";
 
     if (this.config.dryRun) {
-      return this.store.close(position.id, {
+      const dryResult = await this.store.close(position.id, {
         exitReason: reason,
         exitPriceUsd,
         exitTxHash: syntheticHash(),
         exitRationale: this.buildExitRationale(position, reason, exitPriceUsd),
       });
+      this.mirrorCloseToPg(position, reason, exitPriceUsd);
+      return dryResult;
     }
 
     const execution = await executeHyperliquidOrderLive({
@@ -1014,12 +1055,17 @@ class TraderEngine {
       sizeRaw: position.quantityTokenRaw,
     });
 
-    return this.store.close(position.id, {
+    const closed = await this.store.close(position.id, {
       exitReason: reason,
       exitPriceUsd: execution.fillPriceUsd,
       exitTxHash: execution.txHash,
       exitRationale: this.buildExitRationale(position, reason, execution.fillPriceUsd),
     });
+
+    // Mirror close to pooter.trade_decisions (best-effort)
+    this.mirrorCloseToPg(position, reason, execution.fillPriceUsd);
+
+    return closed;
   }
 
   /**
@@ -1071,6 +1117,7 @@ class TraderEngine {
           exitPriceUsd: currentPriceUsd,
           exitRationale: this.buildExitRationale(position, "take-profit (partial close completed)", currentPriceUsd),
         });
+        this.mirrorCloseToPg(position, "take-profit", currentPriceUsd);
       }
       return true;
     } catch (error) {
@@ -1663,6 +1710,7 @@ class TraderEngine {
 
     const prePosition: Position = {
       id: positionId,
+      cloid,
       venue: "hyperliquid-perp",
       tokenAddress: quoteTokenAddress,
       tokenDecimals: market.szDecimals,

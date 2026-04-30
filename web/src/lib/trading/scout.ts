@@ -15,11 +15,13 @@ import {
   executeHyperliquidOrderLive,
   fetchCandles,
   fetchHyperliquidMarketBySymbol,
+  resolveHyperliquidAccountAddress,
   simulateHyperliquidOrder,
 } from "./hyperliquid";
 import { globalPositionLock } from "./global-position-lock";
 import { PositionStore } from "./position-store";
 import { getTraderConfig } from "./config";
+import { createTradeDecision, closeTradeDecisionByCloid, newCloid } from "../db/trade-decisions";
 import type { Position, TraderExecutionConfig } from "./types";
 
 const SCOUT_STORE_PATH = "/tmp/pooter-scout-positions.json";
@@ -218,10 +220,12 @@ function buildScoutPosition(args: {
   cfg: ScoutConfig;
   signalConfidence: number;
   txHash?: `0x${string}`;
+  cloid: `0x${string}`;
 }): Position {
   const id = `scout:hl:${args.symbol}:${Date.now()}:${randomUUID().slice(0, 8)}`;
   return {
     id,
+    cloid: args.cloid,
     venue: "hyperliquid-perp",
     tokenAddress: "0x0000000000000000000000000000000000000000",
     tokenDecimals: 18,
@@ -295,6 +299,17 @@ async function maybeExitPosition(
   });
   globalPositionLock.recordClose(symbol, "scalper");
 
+  // Mirror close to pooter.trade_decisions (best-effort, fire-and-forget)
+  if (position.cloid) {
+    closeTradeDecisionByCloid(position.cloid, {
+      closedAt: new Date(),
+      exitReason,
+      exitRationale: { trigger: exitReason, priceAtTrigger: currentPrice, holdDurationMs: Date.now() - position.openedAt },
+    }).catch((err) => {
+      log(`failed to close TradeDecision cloid=${position.cloid}: ${err instanceof Error ? err.message : err}`);
+    });
+  }
+
   log(
     `${config.dryRun ? "DRY " : ""}closed ${direction} ${symbol} ${exitReason} pnl=${(leveragedPnlPct * 100).toFixed(2)}% entry=${position.entryPriceUsd.toFixed(2)} exit=${currentPrice.toFixed(2)}`,
   );
@@ -345,6 +360,7 @@ async function tryOpenPosition(
   }
 
   const side: "buy" | "sell" = signal.side === "long" ? "buy" : "sell";
+  const cloid = newCloid() as `0x${string}`;
 
   let order;
   try {
@@ -357,6 +373,7 @@ async function tryOpenPosition(
           leverage: cfg.leverage,
           notionalUsd: cfg.entryUsd,
           szDecimals: market.szDecimals,
+          cloid,
         })
       : await executeHyperliquidOrderLive({
           config,
@@ -365,6 +382,7 @@ async function tryOpenPosition(
           leverage: cfg.leverage,
           slippageBps: cfg.slippageBps,
           notionalUsd: cfg.entryUsd,
+          cloid,
         });
   } catch (err) {
     return { opened: false, error: `order: ${err instanceof Error ? err.message : String(err)}` };
@@ -381,10 +399,35 @@ async function tryOpenPosition(
     cfg,
     signalConfidence: signal.confidence,
     txHash: order.txHash,
+    cloid,
   });
 
   await store.upsert(position);
   globalPositionLock.recordOpen(symbol, "scalper");
+
+  // Mirror to pooter.trade_decisions (best-effort, fire-and-forget)
+  try {
+    const wallet = resolveHyperliquidAccountAddress(config, config.privateKey ? (await import("viem/accounts")).privateKeyToAccount(config.privateKey).address : "0x0");
+    await createTradeDecision({
+      id: position.id,
+      cloid,
+      hlOid: order.orderId ? String(order.orderId) : null,
+      wallet,
+      marketSymbol: symbol,
+      venue: "hyperliquid-perp",
+      direction: signal.side,
+      leverage: order.leverage,
+      openedAt: new Date(position.openedAt),
+      entryNotionalUsd: order.notionalUsd,
+      signalSource: "scout-momentum",
+      signalConfidence: signal.confidence,
+      stopLossPct: cfg.stopLossPct,
+      takeProfitPct: cfg.takeProfitPct,
+      entryRationale: { signal: signal.reason, normalizedSlope: signal.normalizedSlope, fastEma: signal.fastEma, slowEma: signal.slowEma },
+    });
+  } catch (dbErr) {
+    log(`failed to record TradeDecision for ${symbol} cloid=${cloid}: ${dbErr instanceof Error ? dbErr.message : dbErr}`);
+  }
 
   log(
     `${config.dryRun ? "DRY " : ""}opened ${signal.side} ${symbol} @ ${order.fillPriceUsd.toFixed(2)} ` +
