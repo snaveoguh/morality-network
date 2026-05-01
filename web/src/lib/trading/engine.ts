@@ -15,7 +15,7 @@ import {
 } from "./hyperliquid";
 import { fetchTokenMarketSnapshot, normalizeQuoteSymbol, type DexScreenerChainId } from "./market";
 import { PositionStore } from "./position-store";
-import { createTradeDecision, closeTradeDecisionByCloid, findOpenByWalletSymbol, closeTradeDecisionByWalletSymbolOpened, newCloid } from "../db/trade-decisions";
+import { createTradeDecision, closeTradeDecisionByCloid, findOpenByWalletSymbol, closeTradeDecisionByWalletSymbolOpened, updateRuntimeStateByCloid, newCloid } from "../db/trade-decisions";
 import { fetchScannerCandidates } from "./scanner-client";
 import { getAggregatedMarketSignals, type AggregatedMarketSignal } from "./signals";
 import { estimateAmountOutMin, executeSwap, readTokenDecimals, waitForSuccess } from "./swap";
@@ -781,7 +781,10 @@ class TraderEngine {
           const lwm = position.lowWaterMark ?? position.entryPriceUsd;
           if (isShort) {
             const newLwm = Math.min(lwm, currentPriceUsd);
-            if (newLwm < lwm) await this.store.upsert({ ...position, lowWaterMark: newLwm });
+            if (newLwm < lwm) {
+              await this.store.upsert({ ...position, lowWaterMark: newLwm });
+              if (position.cloid) updateRuntimeStateByCloid(position.cloid, { lowWaterMark: newLwm }).catch(() => {});
+            }
             const trailPrice = newLwm * (1 + trailingPricePct);
             if (currentPriceUsd >= trailPrice) {
               const closed = await this.closePosition(position, "trailing-stop", currentPriceUsd);
@@ -790,7 +793,10 @@ class TraderEngine {
             }
           } else {
             const newHwm = Math.max(hwm, currentPriceUsd);
-            if (newHwm > hwm) await this.store.upsert({ ...position, highWaterMark: newHwm });
+            if (newHwm > hwm) {
+              await this.store.upsert({ ...position, highWaterMark: newHwm });
+              if (position.cloid) updateRuntimeStateByCloid(position.cloid, { highWaterMark: newHwm }).catch(() => {});
+            }
             const trailPrice = newHwm * (1 - trailingPricePct);
             if (currentPriceUsd <= trailPrice) {
               const closed = await this.closePosition(position, "trailing-stop", currentPriceUsd);
@@ -826,6 +832,7 @@ class TraderEngine {
                   console.log(`[trader] dynamic-TP: partial close 25% of ${position.marketSymbol} at level $${hitLevel.toFixed(2)} (${remainingLevels.length} levels remain)`);
                   // Update stored position to remove the hit level
                   await this.store.upsert({ ...position, dynamicTpLevels: remainingLevels });
+                  if (position.cloid) updateRuntimeStateByCloid(position.cloid, { dynamicTpLevels: remainingLevels }).catch(() => {});
                 }
               }
               // Don't continue — let other exit checks run too
@@ -843,6 +850,7 @@ class TraderEngine {
                   : freshIntel.supportLevels.filter((s) => s < currentPriceUsd).sort((a, b) => b - a);
                 if (freshLevels.length > 0) {
                   await this.store.upsert({ ...position, dynamicTpLevels: freshLevels });
+                  if (position.cloid) updateRuntimeStateByCloid(position.cloid, { dynamicTpLevels: freshLevels }).catch(() => {});
                 }
               }
             } catch {
