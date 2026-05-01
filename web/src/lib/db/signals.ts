@@ -113,6 +113,22 @@ export async function getRecentSignalsByProducer(
   `;
 }
 
+/** Fetch every recent signal across all symbols/producers. Used by the trader
+ *  to assemble the cross-asset news signal feed. */
+export async function getRecentSignals(
+  lookbackHours = 2,
+  limit = 500,
+): Promise<SignalRow[]> {
+  const cutoff = new Date(Date.now() - lookbackHours * 3600_000);
+  return sql<SignalRow[]>`
+    SELECT * FROM pooter.signals
+    WHERE produced_at >= ${cutoff}
+      AND (ttl_expires_at IS NULL OR ttl_expires_at > NOW())
+    ORDER BY produced_at DESC
+    LIMIT ${limit}
+  `;
+}
+
 /** Run periodically to delete signals past their TTL. Safe to call on every cycle. */
 export async function pruneExpiredSignals(): Promise<number> {
   const rows = await sql`

@@ -377,6 +377,32 @@ export async function getAggregatedMarketSignals(options?: {
     return newsdeskSignals.filter((s) => s.score >= minAbsScore);
   }
 
+  // Postgres unified signal feed — fed by swarm + editorial dual-write.
+  // This is the new primary path; Redis swarm cache stays as a fallback
+  // until Stage 3c retires it.
+  try {
+    const { fetchAggregatedNewsSignalsFromPostgres } = await import("./swarm-signals");
+    const pgSignals = await withTimeout(
+      fetchAggregatedNewsSignalsFromPostgres(2),
+      5_000,
+      [] as AggregatedMarketSignal[],
+    );
+    if (pgSignals.length > 0) {
+      const filtered = pgSignals.filter((s) => s.score >= minAbsScore);
+      if (filtered.length > 0) {
+        console.log(
+          `[signals] using postgres: ${filtered.length} signals (${pgSignals.length} raw, ${pgSignals.length - filtered.length} below ${minAbsScore} threshold)`,
+        );
+        return filtered.slice(0, limit);
+      }
+    }
+  } catch (err) {
+    console.warn(
+      "[signals] postgres signal read failed, falling back to redis/inline:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
   // Try swarm signals — real-time cluster-derived signals from 70+ RSS feeds
   try {
     const { fetchSwarmSignals, aggregateSwarmSignals, persistSwarmSignals } = await import("./swarm-signals");
