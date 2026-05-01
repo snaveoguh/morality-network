@@ -186,9 +186,14 @@ export async function GET(request: Request) {
     const includeFunders = authState.authorized;
 
     const config = getTraderConfig();
-    const walletAddress = config.privateKey
-      ? (await import("viem/accounts")).privateKeyToAccount(config.privateKey).address as Address
-      : "0x0000000000000000000000000000000000000000" as Address;
+    // Resolve wallet: prefer env var (web service usually has no private key),
+    // then derive from private key, then fall back to config accountAddress.
+    const envWallet = process.env.TRADER_WALLET ?? process.env.HYPERLIQUID_ACCOUNT_ADDRESS;
+    const walletAddress = envWallet && isAddress(envWallet)
+      ? (envWallet as Address)
+      : config.privateKey
+        ? (await import("viem/accounts")).privateKeyToAccount(config.privateKey).address as Address
+        : "0x0000000000000000000000000000000000000000" as Address;
     const hlWallet = resolveHyperliquidAccountAddress(config, walletAddress);
     const pgAvailable = await dbReachable();
 
@@ -197,7 +202,7 @@ export async function GET(request: Request) {
       fetchHyperliquidLivePositions(config, hlWallet as Address).catch(() => []),
       fetchHyperliquidAccountValueUsd(config, hlWallet as Address).catch(() => null),
       pgAvailable ? getOpenForWallet(hlWallet) : Promise.resolve([]),
-      pgAvailable ? getRecentClosed(hlWallet, 500) : Promise.resolve([]),
+      pgAvailable ? getRecentClosed(hlWallet, 2000) : Promise.resolve([]),
       fetchVaultOverview({
         limit: 50,
         account: includeAccount ? account : null,
