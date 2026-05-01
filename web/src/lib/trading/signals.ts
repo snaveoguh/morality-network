@@ -377,63 +377,55 @@ export async function getAggregatedMarketSignals(options?: {
     return newsdeskSignals.filter((s) => s.score >= minAbsScore);
   }
 
-  // Postgres unified signal feed — fed by swarm + editorial dual-write.
-  // This is the new primary path; Redis swarm cache stays as a fallback
-  // until Stage 3c retires it.
+  // Unified news signal feed from pooter.signals (swarm + editorial producers).
+  // If Postgres has nothing recent, compute fresh swarm signals from RSS and
+  // persist so the next read is hot.
   try {
-    const { fetchAggregatedNewsSignalsFromPostgres } = await import("./swarm-signals");
-    const pgSignals = await withTimeout(
+    const {
+      fetchAggregatedNewsSignalsFromPostgres,
+      aggregateSwarmSignals,
+      persistSwarmSignals,
+    } = await import("./swarm-signals");
+
+    let signals = await withTimeout(
       fetchAggregatedNewsSignalsFromPostgres(2),
       5_000,
       [] as AggregatedMarketSignal[],
     );
-    if (pgSignals.length > 0) {
-      const filtered = pgSignals.filter((s) => s.score >= minAbsScore);
-      if (filtered.length > 0) {
-        console.log(
-          `[signals] using postgres: ${filtered.length} signals (${pgSignals.length} raw, ${pgSignals.length - filtered.length} below ${minAbsScore} threshold)`,
-        );
-        return filtered.slice(0, limit);
-      }
-    }
-  } catch (err) {
-    console.warn(
-      "[signals] postgres signal read failed, falling back to redis/inline:",
-      err instanceof Error ? err.message : err,
-    );
-  }
 
-  // Try swarm signals — real-time cluster-derived signals from 70+ RSS feeds
-  try {
-    const { fetchSwarmSignals, aggregateSwarmSignals, persistSwarmSignals } = await import("./swarm-signals");
-    let swarmSignals = await fetchSwarmSignals();
-
-    // If Redis cache is empty (expired or worker hasn't run), compute inline
-    if (swarmSignals.length === 0) {
-      console.log("[signals] swarm cache empty — computing inline from RSS feeds");
+    if (signals.length === 0) {
+      console.log("[signals] postgres empty — computing inline from RSS feeds");
       try {
         const { runResearchSwarm } = await import("../agent-swarm");
         const items = await withTimeout(fetchAllFeeds(DEFAULT_FEEDS), 25_000, []);
         if (items.length > 0) {
           const output = runResearchSwarm(items, 30);
-          swarmSignals = aggregateSwarmSignals(output.clusters);
-          // Persist for next call so we don't re-fetch
-          if (swarmSignals.length > 0) {
-            persistSwarmSignals(swarmSignals).catch(() => {}); // fire-and-forget
+          signals = aggregateSwarmSignals(output.clusters);
+          if (signals.length > 0) {
+            persistSwarmSignals(signals).catch(() => {}); // fire-and-forget
           }
-          console.log(`[signals] inline swarm: ${swarmSignals.length} signals from ${items.length} feed items`);
+          console.log(
+            `[signals] inline swarm: ${signals.length} signals from ${items.length} feed items`,
+          );
         }
       } catch (inlineErr) {
-        console.warn("[signals] inline swarm computation failed:", inlineErr instanceof Error ? inlineErr.message : inlineErr);
+        console.warn(
+          "[signals] inline swarm computation failed:",
+          inlineErr instanceof Error ? inlineErr.message : inlineErr,
+        );
       }
     }
 
-    if (swarmSignals.length > 0) {
-      const filtered = swarmSignals.filter((s: AggregatedMarketSignal) => s.score >= minAbsScore);
-      console.log(
-        `[signals] using swarm: ${filtered.length} emerging event signals (${swarmSignals.length} raw)`,
+    if (signals.length > 0) {
+      const filtered = signals.filter(
+        (s: AggregatedMarketSignal) => s.score >= minAbsScore,
       );
-      return filtered.slice(0, limit);
+      if (filtered.length > 0) {
+        console.log(
+          `[signals] using postgres: ${filtered.length} signals (${signals.length} raw, ${signals.length - filtered.length} below ${minAbsScore} threshold)`,
+        );
+        return filtered.slice(0, limit);
+      }
     }
   } catch (err) {
     console.warn("[signals] swarm signals unavailable:", err instanceof Error ? err.message : err);
