@@ -6,6 +6,11 @@ import { keccak256, toBytes } from "viem";
 import type { ArticleContent } from "./article";
 import { fetchIndexerJson, getIndexerBackendUrl } from "./server/indexer-backend";
 import { reportWarn } from "./report-error";
+import {
+  recordSignalsBatch,
+  type RecordSignalInput,
+  type SignalDirection,
+} from "./db/signals";
 
 // ============================================================================
 // EDITORIAL ARCHIVE — Deep persistence for AI-generated editorials
@@ -352,6 +357,15 @@ export async function saveEditorial(
   // Redis first — survives serverless cold starts
   redisSetEditorial(hash, record).catch(() => {});
 
+  // Postgres signal feed — fire-and-forget so editorial save isn't blocked
+  // on DB writes. Only emits when marketImpact has affectedMarkets.
+  persistEditorialSignals(hash, record).catch((err) => {
+    console.warn(
+      "[editorial-archive] signal persist failed (non-fatal):",
+      err instanceof Error ? err.message : err,
+    );
+  });
+
   try {
     await persistArchive(archive);
   } catch (err) {
@@ -361,6 +375,70 @@ export async function saveEditorial(
   console.log(
     `[editorial-archive] saved ${hash.slice(0, 10)}... (${generatedBy}, v${record.version})`,
   );
+}
+
+/* ── Editorial → pooter.signals ── */
+
+const EDITORIAL_SIGNAL_TTL_MS = 48 * 60 * 60 * 1000;
+
+function mapMarketImpactDirection(
+  direction: "bullish" | "bearish" | "volatile" | "neutral",
+): SignalDirection {
+  if (direction === "bullish") return "bullish";
+  if (direction === "bearish") return "bearish";
+  return "neutral";
+}
+
+async function persistEditorialSignals(
+  hash: string,
+  editorial: ArchivedEditorial,
+): Promise<void> {
+  const impact = editorial.marketImpact;
+  if (!impact || !Array.isArray(impact.affectedMarkets)) return;
+
+  const producedAt = new Date(editorial.generatedAt);
+  const ttlExpiresAt = new Date(Date.now() + EDITORIAL_SIGNAL_TTL_MS);
+  const significanceWeight = Math.max(0, Math.min(100, impact.significance)) / 100;
+
+  const rows: RecordSignalInput[] = [];
+  for (const market of impact.affectedMarkets) {
+    const ticker = (market.ticker ?? "").trim().toUpperCase();
+    if (!ticker) continue;
+
+    const direction = mapMarketImpactDirection(market.direction);
+    const confidence = Math.max(0, Math.min(1, market.confidence ?? 0));
+    if (confidence <= 0) continue;
+
+    rows.push({
+      id: `editorial-${hash}-${ticker}`,
+      producedAt,
+      producedBy: "editorial",
+      symbol: ticker,
+      direction,
+      strength: confidence,
+      score: confidence * significanceWeight,
+      claim: editorial.claim || impact.headline || null,
+      entityHash: hash,
+      marketImpact: {
+        significance: impact.significance,
+        headline: impact.headline,
+        primaryTimeHorizon: impact.primaryTimeHorizon,
+        timeHorizons: market.timeHorizons,
+        rationale: market.rationale,
+        asset: market.asset,
+        transmissionMechanism: impact.transmissionMechanism,
+      },
+      sourceDetail: {
+        version: editorial.version,
+        generatedBy: editorial.generatedBy,
+        topicSlugs: impact.topicSlugs,
+      },
+      ttlExpiresAt,
+    });
+  }
+
+  if (rows.length === 0) return;
+  await recordSignalsBatch(rows);
 }
 
 /**
