@@ -6,9 +6,9 @@
  * converts those clusters into AggregatedMarketSignal objects that the
  * composite signal can consume as news signals.
  *
- * Flow: runResearchSwarm() → clusters → aggregateSwarmSignals() → Postgres
- *       (and Redis during dual-write window) → getAggregatedMarketSignals()
- *       reads → computeCompositeSignal()
+ * Flow: runResearchSwarm() → clusters → aggregateSwarmSignals() →
+ *       persistSwarmSignals() → pooter.signals → getAggregatedMarketSignals()
+ *       reads via fetchAggregatedNewsSignalsFromPostgres → computeCompositeSignal()
  */
 
 import type { EmergingEventCluster, AgentContradictionFlag } from "../agent-swarm.js";
@@ -289,56 +289,40 @@ export function aggregateSwarmSignals(
   return Array.from(bySymbol.values());
 }
 
-/* ═══════════════════  Redis persistence  ═══════════════════ */
+/* ═══════════════════  Persistence (Postgres)  ═══════════════════ */
 
-const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL ?? "";
-const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN ?? "";
-const REDIS_KEY = "pooter:swarm-signals";
-const TTL_SECONDS = 2 * 60 * 60; // 2 hours — news doesn't change that fast
+const SIGNAL_TTL_SECONDS = 2 * 60 * 60; // 2 hours — news doesn't change that fast
 
-export async function persistSwarmSignals(signals: AggregatedMarketSignal[]): Promise<boolean> {
-  // Dual-write: Postgres is the new source of truth, Redis stays during the
-  // migration window (Stage 3c will remove the Redis path).
-  persistSwarmSignalsToPostgres(signals).catch((err) => {
+/**
+ * Persist swarm signals. Returns true when at least one row was written.
+ * Postgres is the sole signal store after Stage 3c.
+ */
+export async function persistSwarmSignals(
+  signals: AggregatedMarketSignal[],
+): Promise<boolean> {
+  try {
+    const written = await persistSwarmSignalsToPostgres(signals);
+    return written > 0;
+  } catch (err) {
     console.warn(
-      "[swarm-signals] Postgres write failed (non-fatal during dual-write):",
+      "[swarm-signals] Postgres write failed:",
       err instanceof Error ? err.message : err,
     );
-  });
-
-  if (!UPSTASH_URL || !UPSTASH_TOKEN) return false;
-  try {
-    const payload = JSON.stringify({
-      signals,
-      generatedAt: new Date().toISOString(),
-      count: signals.length,
-    });
-    const res = await fetch(UPSTASH_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${UPSTASH_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(["SET", REDIS_KEY, payload, "EX", TTL_SECONDS.toString()]),
-      cache: "no-store",
-    });
-    return res.ok;
-  } catch {
     return false;
   }
 }
 
 /**
- * Write swarm signals to pooter.signals (Postgres). Each call inserts a fresh
- * row per symbol — IDs are timestamped so re-runs don't collide. TTL matches
- * the Redis cache so old swarm signals expire on the same cadence.
+ * Write swarm signals to pooter.signals. Each call inserts a fresh row per
+ * symbol — IDs are timestamped so re-runs don't collide. TTL matches the
+ * 2-hour news window.
  */
 export async function persistSwarmSignalsToPostgres(
   signals: AggregatedMarketSignal[],
 ): Promise<number> {
   if (signals.length === 0) return 0;
   const now = new Date();
-  const ttlExpiresAt = new Date(now.getTime() + TTL_SECONDS * 1000);
+  const ttlExpiresAt = new Date(now.getTime() + SIGNAL_TTL_SECONDS * 1000);
   const rows: RecordSignalInput[] = signals.map((s) => ({
     id: `swarm-${now.toISOString()}-${s.symbol}`,
     producedAt: now,
@@ -363,32 +347,12 @@ export async function persistSwarmSignalsToPostgres(
   return rows.length;
 }
 
-export async function fetchSwarmSignals(): Promise<AggregatedMarketSignal[]> {
-  if (!UPSTASH_URL || !UPSTASH_TOKEN) return [];
-  try {
-    const res = await fetch(`${UPSTASH_URL}/get/${REDIS_KEY}`, {
-      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    const body = (await res.json()) as { result?: string };
-    if (!body.result) return [];
-    const parsed = JSON.parse(body.result) as {
-      signals?: AggregatedMarketSignal[];
-    };
-    return Array.isArray(parsed.signals) ? parsed.signals : [];
-  } catch {
-    return [];
-  }
-}
-
 /**
  * Read recent swarm + editorial signals from Postgres and collapse to one
  * AggregatedMarketSignal per symbol — the most recent strong signal wins.
  *
- * This replaces the Redis fetchSwarmSignals path: Postgres carries every
- * producer's output (swarm, editorial, council, …) so the trader sees the
- * full news picture from a single read.
+ * Postgres carries every producer's output (swarm, editorial, council, …)
+ * so the trader sees the full news picture from a single read.
  */
 export async function fetchAggregatedNewsSignalsFromPostgres(
   lookbackHours = 2,
