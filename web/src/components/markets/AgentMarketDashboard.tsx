@@ -716,8 +716,12 @@ export function AgentMarketDashboard() {
   const refresh = useCallback(async () => {
     try {
       const query = connectedAddress ? `?account=${connectedAddress}` : "";
+      // Feature flag: NEXT_PUBLIC_METRICS_V2=1 env var OR ?v2=1 URL param
+      const useV2 = process.env.NEXT_PUBLIC_METRICS_V2 === "1"
+        || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("v2") === "1");
+      const metricsPath = useV2 ? "metrics-v2" : "metrics";
       const [metricsRes, marketsRes] = await Promise.all([
-        fetch(`/api/trading/metrics${query}`, { cache: "no-store" }),
+        fetch(`/api/trading/${metricsPath}${query}`, { cache: "no-store" }),
         fetch("/api/markets", { cache: "no-store" }),
       ]);
       const payload = (await metricsRes.json()) as MetricsResponse;
