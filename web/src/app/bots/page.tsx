@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { LogViewer } from "@/components/bots/LogViewer";
 
 // ─── Types (mirroring API responses) ────────────────────────────────────────
 
@@ -192,7 +193,7 @@ export default function BotsPage() {
   const [streamStatus, setStreamStatus] = useState<"connecting" | "live" | "degraded">("connecting");
   const [lastRefresh, setLastRefresh] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"console" | "agents" | "scanner" | "bus">("console");
+  const [activeTab, setActiveTab] = useState<"console" | "agents" | "scanner" | "bus" | "logs">("console");
   const lastConsoleRefreshRef = useRef(0);
 
   const refresh = useCallback(async (forceScannerRefresh = false) => {
@@ -313,7 +314,7 @@ export default function BotsPage() {
 
       {/* ── Tab Switcher ────────────────────────────────── */}
       <div className="mb-4 flex gap-0 border-b border-[var(--rule-light)]">
-        {(["console", "agents", "scanner", "bus"] as const).map((tab) => (
+        {(["console", "agents", "scanner", "bus", "logs"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -327,6 +328,7 @@ export default function BotsPage() {
             {tab === "agents" && `Agents (${agents.length})`}
             {tab === "scanner" && `Scanner (${launches.length})`}
             {tab === "bus" && `Bus (${busMessages.length})`}
+            {tab === "logs" && "Live Logs"}
           </button>
         ))}
       </div>
@@ -385,6 +387,9 @@ export default function BotsPage() {
           )}
         </div>
       )}
+
+      {/* ── Logs Tab ─────────────────────────────────────── */}
+      {activeTab === "logs" && <LogViewer />}
     </div>
   );
 }
