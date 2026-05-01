@@ -13,7 +13,11 @@
 
 import type { EmergingEventCluster, AgentContradictionFlag } from "../agent-swarm.js";
 import type { AggregatedMarketSignal } from "./signals.js";
-import { recordSignalsBatch, type RecordSignalInput } from "../db/signals";
+import {
+  recordSignalsBatch,
+  getRecentSignals,
+  type RecordSignalInput,
+} from "../db/signals";
 
 /* ═══════════════════  Symbol extraction  ═══════════════════ */
 
@@ -376,4 +380,71 @@ export async function fetchSwarmSignals(): Promise<AggregatedMarketSignal[]> {
   } catch {
     return [];
   }
+}
+
+/**
+ * Read recent swarm + editorial signals from Postgres and collapse to one
+ * AggregatedMarketSignal per symbol — the most recent strong signal wins.
+ *
+ * This replaces the Redis fetchSwarmSignals path: Postgres carries every
+ * producer's output (swarm, editorial, council, …) so the trader sees the
+ * full news picture from a single read.
+ */
+export async function fetchAggregatedNewsSignalsFromPostgres(
+  lookbackHours = 2,
+): Promise<AggregatedMarketSignal[]> {
+  const rows = await getRecentSignals(lookbackHours, 500);
+  const bySymbol = new Map<string, AggregatedMarketSignal>();
+
+  for (const row of rows) {
+    if (row.direction === "neutral") continue;
+    if (bySymbol.has(row.symbol)) continue; // rows are DESC by produced_at, first wins
+
+    const detail = (row.source_detail ?? {}) as Record<string, unknown>;
+    const direction = row.direction;
+    const score = Math.max(0, Math.min(1, row.strength));
+
+    const observations =
+      typeof detail.observations === "number" ? detail.observations : 1;
+    const latestGeneratedAt =
+      typeof detail.latestGeneratedAt === "string"
+        ? detail.latestGeneratedAt
+        : row.produced_at.toISOString();
+    const supportingClaims = Array.isArray(detail.supportingClaims)
+      ? (detail.supportingClaims as string[])
+      : row.claim
+        ? [row.claim]
+        : [];
+    const bullishWeight =
+      typeof detail.bullishWeight === "number"
+        ? detail.bullishWeight
+        : direction === "bullish"
+          ? score
+          : 0;
+    const bearishWeight =
+      typeof detail.bearishWeight === "number"
+        ? detail.bearishWeight
+        : direction === "bearish"
+          ? score
+          : 0;
+    const contradictionPenalty =
+      typeof detail.contradictionPenalty === "number"
+        ? detail.contradictionPenalty
+        : 0;
+
+    bySymbol.set(row.symbol, {
+      symbol: row.symbol,
+      direction,
+      score,
+      observations,
+      latestGeneratedAt,
+      supportingClaims,
+      contradictionPenalty,
+      bullishWeight,
+      bearishWeight,
+      rawScore: row.score ?? (direction === "bullish" ? score : -score),
+    });
+  }
+
+  return Array.from(bySymbol.values());
 }
