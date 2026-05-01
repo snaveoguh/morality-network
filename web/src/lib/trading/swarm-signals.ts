@@ -6,12 +6,14 @@
  * converts those clusters into AggregatedMarketSignal objects that the
  * composite signal can consume as news signals.
  *
- * Flow: runResearchSwarm() → clusters → aggregateSwarmSignals() → Redis
- *       → getAggregatedMarketSignals() reads → computeCompositeSignal()
+ * Flow: runResearchSwarm() → clusters → aggregateSwarmSignals() → Postgres
+ *       (and Redis during dual-write window) → getAggregatedMarketSignals()
+ *       reads → computeCompositeSignal()
  */
 
 import type { EmergingEventCluster, AgentContradictionFlag } from "../agent-swarm.js";
 import type { AggregatedMarketSignal } from "./signals.js";
+import { recordSignalsBatch, type RecordSignalInput } from "../db/signals";
 
 /* ═══════════════════  Symbol extraction  ═══════════════════ */
 
@@ -291,6 +293,15 @@ const REDIS_KEY = "pooter:swarm-signals";
 const TTL_SECONDS = 2 * 60 * 60; // 2 hours — news doesn't change that fast
 
 export async function persistSwarmSignals(signals: AggregatedMarketSignal[]): Promise<boolean> {
+  // Dual-write: Postgres is the new source of truth, Redis stays during the
+  // migration window (Stage 3c will remove the Redis path).
+  persistSwarmSignalsToPostgres(signals).catch((err) => {
+    console.warn(
+      "[swarm-signals] Postgres write failed (non-fatal during dual-write):",
+      err instanceof Error ? err.message : err,
+    );
+  });
+
   if (!UPSTASH_URL || !UPSTASH_TOKEN) return false;
   try {
     const payload = JSON.stringify({
@@ -311,6 +322,41 @@ export async function persistSwarmSignals(signals: AggregatedMarketSignal[]): Pr
   } catch {
     return false;
   }
+}
+
+/**
+ * Write swarm signals to pooter.signals (Postgres). Each call inserts a fresh
+ * row per symbol — IDs are timestamped so re-runs don't collide. TTL matches
+ * the Redis cache so old swarm signals expire on the same cadence.
+ */
+export async function persistSwarmSignalsToPostgres(
+  signals: AggregatedMarketSignal[],
+): Promise<number> {
+  if (signals.length === 0) return 0;
+  const now = new Date();
+  const ttlExpiresAt = new Date(now.getTime() + TTL_SECONDS * 1000);
+  const rows: RecordSignalInput[] = signals.map((s) => ({
+    id: `swarm-${now.toISOString()}-${s.symbol}`,
+    producedAt: now,
+    producedBy: "swarm",
+    symbol: s.symbol,
+    direction: s.direction,
+    strength: Math.max(0, Math.min(1, s.score)),
+    score: s.rawScore,
+    claim: s.supportingClaims[0] ?? null,
+    contradictionCount: s.contradictionPenalty > 0 ? Math.round(s.contradictionPenalty * 10) : 0,
+    sourceDetail: {
+      observations: s.observations,
+      latestGeneratedAt: s.latestGeneratedAt,
+      supportingClaims: s.supportingClaims,
+      bullishWeight: s.bullishWeight,
+      bearishWeight: s.bearishWeight,
+      contradictionPenalty: s.contradictionPenalty,
+    },
+    ttlExpiresAt,
+  }));
+  await recordSignalsBatch(rows);
+  return rows.length;
 }
 
 export async function fetchSwarmSignals(): Promise<AggregatedMarketSignal[]> {
