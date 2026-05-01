@@ -716,10 +716,9 @@ export function AgentMarketDashboard() {
   const refresh = useCallback(async () => {
     try {
       const query = connectedAddress ? `?account=${connectedAddress}` : "";
-      // Feature flag: NEXT_PUBLIC_METRICS_V2=1 env var OR ?v2=1 URL param
-      const useV2 = process.env.NEXT_PUBLIC_METRICS_V2 === "1"
-        || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("v2") === "1");
-      const metricsPath = useV2 ? "metrics-v2" : "metrics";
+      // v2 is the default (HL+Postgres direct). Use ?v1=1 to fall back to v1 (Redis-backed).
+      const useV1 = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("v1") === "1";
+      const metricsPath = useV1 ? "metrics" : "metrics-v2";
       const [metricsRes, marketsRes] = await Promise.all([
         fetch(`/api/trading/${metricsPath}${query}`, { cache: "no-store" }),
         fetch("/api/markets", { cache: "no-store" }),
