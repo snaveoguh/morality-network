@@ -15,6 +15,7 @@ import { ScalperManager } from "../lib/trading/scalper";
 import { PositionStore } from "../lib/trading/position-store";
 import { runVaultRailKeeper } from "../lib/trading/vault-rail";
 import { runScoutCycle } from "../lib/trading/scout";
+import { installAgentLogShipper } from "../lib/server/agent-log-shipper";
 
 type WorkerTaskName = "scanner" | "swarm" | "trader" | "bridge" | "vault" | "scout";
 type PersistedAgentEvent = {
@@ -518,6 +519,10 @@ function scheduleTask(
 }
 
 async function main(): Promise<void> {
+  // Mirror console output to the Redis log buffer so /api/agents/logs/stream
+  // can replay it on the /bots Live Logs tab. Must run before the first log().
+  installAgentLogShipper();
+
   const tasks = getEnabledTasks();
   const once = process.argv.includes("--once");
   const runOnStart = boolFromEnv("WORKER_RUN_ON_START", true);
