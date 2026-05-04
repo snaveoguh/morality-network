@@ -557,6 +557,43 @@ export async function fetchRecentCloseFill(
 }
 
 /**
+ * Fetch all closing fills (closedPnl != 0) for the wallet within lookbackMs.
+ * Used by metrics-v2 to fill in realized PnL on Postgres trade_decisions rows
+ * that the backfill couldn't populate (the script stored exit_rationale but
+ * not pnlUsd, since HL is the source of truth for fill prices).
+ */
+export async function fetchCloseFills(
+  config: TraderExecutionConfig,
+  address: Address,
+  lookbackMs: number = 90 * 24 * 60 * 60 * 1000, // 90 days
+): Promise<Array<{ coin: string; time: number; closedPnl: number; px: number }>> {
+  try {
+    const clients = getHyperliquidClients(config);
+    const startTime = Date.now() - lookbackMs;
+    const response = await clients.infoClient.userFillsByTime({
+      user: address as `0x${string}`,
+      startTime,
+    });
+    const fills = Array.isArray(response) ? response : [];
+    const result: Array<{ coin: string; time: number; closedPnl: number; px: number }> = [];
+    for (const raw of fills) {
+      const f = raw as Record<string, unknown>;
+      const closedPnl = parseFloat(String(f.closedPnl ?? "0"));
+      if (!Number.isFinite(closedPnl) || closedPnl === 0) continue;
+      const coin = String(f.coin ?? "").toUpperCase();
+      const time = Number(f.time ?? 0);
+      const px = parseFloat(String(f.px ?? "0"));
+      if (coin && time > 0 && px > 0) {
+        result.push({ coin, time, closedPnl, px });
+      }
+    }
+    return result;
+  } catch {
+    return [];
+  }
+}
+
+/**
  * For each currently-open position, find the most recent "Open <Side>" fill
  * timestamp on HL. This is the actual open time of the position the wallet
  * currently holds (or its most recent re-entry). Used as an openedAt source
