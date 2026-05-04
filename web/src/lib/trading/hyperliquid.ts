@@ -556,6 +556,67 @@ export async function fetchRecentCloseFill(
   }
 }
 
+/**
+ * For each currently-open position, find the most recent "Open <Side>" fill
+ * timestamp on HL. This is the actual open time of the position the wallet
+ * currently holds (or its most recent re-entry). Used as an openedAt source
+ * when the trader hasn't mirrored a Postgres trade_decisions row yet.
+ *
+ * Returns a Map keyed by `${SYMBOL}:${direction}` → epoch ms. Entries that
+ * can't be matched in fill history are simply omitted; the caller decides
+ * the fallback.
+ */
+export async function fetchOpenFillTimes(
+  config: TraderExecutionConfig,
+  address: Address,
+  positions: Array<{ symbol: string; isShort: boolean }>,
+  lookbackMs: number = 30 * 24 * 60 * 60 * 1000, // 30 days
+): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
+  if (positions.length === 0) return result;
+
+  try {
+    const clients = getHyperliquidClients(config);
+    const startTime = Date.now() - lookbackMs;
+    const response = await clients.infoClient.userFillsByTime({
+      user: address as `0x${string}`,
+      startTime,
+    });
+    const fills = Array.isArray(response) ? response : [];
+
+    // Build lookup of (coin, direction) → newest "Open <Side>" fill time.
+    // Walk newest-first; first match wins.
+    const sorted = [...fills].sort(
+      (a, b) => Number((b as Record<string, unknown>).time ?? 0) - Number((a as Record<string, unknown>).time ?? 0),
+    );
+    const wanted = new Set(
+      positions.map((p) => `${p.symbol.toUpperCase()}:${p.isShort ? "short" : "long"}`),
+    );
+    for (const raw of sorted) {
+      if (wanted.size === 0) break;
+      const fill = raw as Record<string, unknown>;
+      const coin = String(fill.coin ?? "").toUpperCase();
+      const dir = String(fill.dir ?? "");
+      // dir is "Open Long" / "Open Short" / "Close Long" / "Close Short"
+      let direction: "long" | "short" | null = null;
+      if (dir === "Open Long") direction = "long";
+      else if (dir === "Open Short") direction = "short";
+      else continue;
+      const key = `${coin}:${direction}`;
+      if (!wanted.has(key) || result.has(key)) continue;
+      const t = Number(fill.time ?? 0);
+      if (t > 0) {
+        result.set(key, t);
+        wanted.delete(key);
+      }
+    }
+  } catch {
+    // ignore — caller falls back to Date.now() or PG
+  }
+
+  return result;
+}
+
 async function ensureLeverage(
   config: TraderExecutionConfig,
   market: HyperliquidMarketSnapshot,

@@ -19,6 +19,7 @@ import {
   fetchHyperliquidLivePositions,
   fetchHyperliquidAccountValueUsd,
   resolveHyperliquidAccountAddress,
+  fetchOpenFillTimes,
 } from "@/lib/trading/hyperliquid";
 import {
   getOpenForWallet,
@@ -211,6 +212,13 @@ export async function GET(request: Request) {
       }).catch(() => null),
     ]);
 
+    // For positions without a PG row, fall back to HL fill history for openedAt.
+    const openFillTimes = await fetchOpenFillTimes(
+      config,
+      hlWallet as Address,
+      livePositions.map((p) => ({ symbol: p.symbol, isShort: p.isShort })),
+    ).catch(() => new Map<string, number>());
+
     // ─── Build open position metrics from HL live data ───
     // Join HL positions with Postgres decisions for metadata
     const pgOpenBySymbol = new Map<string, TradeDecisionRow>();
@@ -267,13 +275,21 @@ export async function GET(request: Request) {
             entryNotionalUsd: notionalUsd,
             stopLossPct: config.risk.stopLossPct,
             takeProfitPct: config.risk.takeProfitPct,
-            openedAt: Date.now(), // HL doesn't tell us open time
+            openedAt:
+              openFillTimes.get(`${hlPos.symbol.toUpperCase()}:${direction}`) ??
+              Date.now(),
             status: "open" as const,
             hlUnrealizedPnlUsd: hlPos.unrealizedPnlUsd,
           };
 
-      // Compute current price from HL position data
-      const currentPriceUsd = hlPos.entryPriceUsd; // HL gives entry, not current — use unrealized PnL instead
+      // Derive current price from HL's positionValue (size × current mark) ÷ |size|.
+      // HL only returns entryPx directly; this is the only way to get current
+      // mark price without a second `allMids` call.
+      const absSize = Math.abs(Number(hlPos.size));
+      const currentPriceUsd =
+        absSize > 0 && Number.isFinite(hlPos.positionValueUsd)
+          ? hlPos.positionValueUsd / absSize
+          : hlPos.entryPriceUsd;
       const marketValueUsd = notionalUsd + hlPos.unrealizedPnlUsd;
       const pnlPct = notionalUsd > 0 ? hlPos.unrealizedPnlUsd / notionalUsd : 0;
 
