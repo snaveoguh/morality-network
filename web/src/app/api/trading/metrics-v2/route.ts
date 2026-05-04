@@ -20,6 +20,7 @@ import {
   fetchHyperliquidAccountValueUsd,
   resolveHyperliquidAccountAddress,
   fetchOpenFillTimes,
+  fetchCloseFills,
 } from "@/lib/trading/hyperliquid";
 import {
   getOpenForWallet,
@@ -213,11 +214,31 @@ export async function GET(request: Request) {
     ]);
 
     // For positions without a PG row, fall back to HL fill history for openedAt.
-    const openFillTimes = await fetchOpenFillTimes(
-      config,
-      hlWallet as Address,
-      livePositions.map((p) => ({ symbol: p.symbol, isShort: p.isShort })),
-    ).catch(() => new Map<string, number>());
+    // Also fetch closing fills to fill in realizedPnl on backfilled rows whose
+    // exit_rationale doesn't carry pnlUsd.
+    const [openFillTimes, closeFills] = await Promise.all([
+      fetchOpenFillTimes(
+        config,
+        hlWallet as Address,
+        livePositions.map((p) => ({ symbol: p.symbol, isShort: p.isShort })),
+      ).catch(() => new Map<string, number>()),
+      fetchCloseFills(config, hlWallet as Address).catch(() => []),
+    ]);
+
+    // Index close fills by coin (sorted oldest-first) so we can find the
+    // closest match for each PG row's closed_at.
+    const closeFillsByCoin = new Map<
+      string,
+      Array<{ time: number; closedPnl: number; px: number }>
+    >();
+    for (const f of closeFills) {
+      const arr = closeFillsByCoin.get(f.coin) ?? [];
+      arr.push({ time: f.time, closedPnl: f.closedPnl, px: f.px });
+      closeFillsByCoin.set(f.coin, arr);
+    }
+    for (const arr of closeFillsByCoin.values()) {
+      arr.sort((a, b) => a.time - b.time);
+    }
 
     // ─── Build open position metrics from HL live data ───
     // Join HL positions with Postgres decisions for metadata
@@ -312,24 +333,51 @@ export async function GET(request: Request) {
       const estFees = notionalUsd * HL_ROUND_TRIP_FEE_RATE;
       estimatedTradingFeesUsd += estFees;
 
-      // We don't have actual entry/exit prices in Postgres (HL is source of truth for prices).
-      // But the old endpoint calculated PnL from entry/exit prices stored in Redis.
-      // For now, extract what we can from the exit_rationale JSON if present.
+      // Postgres carries metadata; Hyperliquid is source of truth for prices/PnL.
+      // Prefer pnlUsd from exit_rationale if present; otherwise reconcile against
+      // the wallet's HL close fills, matching by coin + closed_at proximity.
       const exitRationale = pgRow.exit_rationale as Record<string, unknown> | null;
-      const exitPriceUsd = exitRationale?.priceAtTrigger as number | undefined;
-      const entryRationale = pgRow.entry_rationale as Record<string, unknown> | null;
+      let exitPriceUsd: number | undefined =
+        (exitRationale?.priceAtTrigger as number | undefined) ?? undefined;
 
-      // Try to compute PnL from rationale data or mark as null
       let pnlUsd: number | null = null;
       let pnlPct: number | null = null;
 
-      // Check if exit rationale has holdDurationMs or pnlUsd directly
-      if (exitRationale?.pnlUsd !== undefined) {
+      if (typeof exitRationale?.pnlUsd === "number") {
         pnlUsd = exitRationale.pnlUsd as number;
-        pnlPct = notionalUsd > 0 ? pnlUsd / notionalUsd : 0;
+      } else if (pgRow.closed_at) {
+        // Match against HL close fills. Sum every fill within ±2min of closed_at,
+        // because a single position close can split into multiple partial fills.
+        const coinFills = closeFillsByCoin.get(pgRow.market_symbol.toUpperCase());
+        if (coinFills && coinFills.length > 0) {
+          const closedAtMs = pgRow.closed_at.getTime();
+          const TOLERANCE_MS = 2 * 60 * 1000;
+          let summedPnl = 0;
+          let matched = 0;
+          let nearestPx: number | undefined;
+          let nearestDt = Infinity;
+          for (const f of coinFills) {
+            const dt = Math.abs(f.time - closedAtMs);
+            if (dt <= TOLERANCE_MS) {
+              summedPnl += f.closedPnl;
+              matched++;
+              if (dt < nearestDt) {
+                nearestDt = dt;
+                nearestPx = f.px;
+              }
+            }
+          }
+          if (matched > 0) {
+            pnlUsd = summedPnl;
+            if (exitPriceUsd === undefined && nearestPx !== undefined) {
+              exitPriceUsd = nearestPx;
+            }
+          }
+        }
       }
 
       if (pnlUsd !== null) {
+        pnlPct = notionalUsd > 0 ? pnlUsd / notionalUsd : 0;
         realizedPnlUsd += pnlUsd;
       }
 
