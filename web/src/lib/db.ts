@@ -45,9 +45,11 @@ function getSql(): Sql {
 }
 
 // Proxy that lazily instantiates the real client on first property access.
-// This is safe because `postgres` returns a tagged-template function that
-// is also an object with methods like `.begin()`, `.end()`, `.json()`, etc.
-export const sql: Sql = new Proxy({} as Sql, {
+// The target MUST be callable (a function) for the `apply` trap to fire on
+// tagged-template invocations like `sql`SELECT 1``. A plain object target
+// silently throws "proxy is not a function" inside dbReachable's try/catch.
+const sqlTarget = function sqlPlaceholder() {} as unknown as Sql;
+export const sql: Sql = new Proxy(sqlTarget, {
   get(_target, prop, receiver) {
     return Reflect.get(getSql(), prop, receiver);
   },
