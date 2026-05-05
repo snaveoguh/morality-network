@@ -182,6 +182,62 @@ interface SwarmConsoleState {
   };
 }
 
+// ─── Metrics V2 types ────────────────────────────────────────────────────────
+
+interface OpenPositionRow {
+  position: {
+    id: string;
+    marketSymbol: string;
+    direction: "long" | "short";
+    entryPriceUsd: number;
+    entryNotionalUsd: number;
+    openedAt: number;
+    leverage?: number;
+    signalSource?: string;
+  };
+  currentPriceUsd: number;
+  unrealizedPnlUsd: number;
+  unrealizedPnlPct: number;
+}
+
+interface MetricsV2Response {
+  performance: {
+    totals: {
+      openPositions: number;
+      closedPositions: number;
+      deployedUsd: number;
+      unrealizedPnlUsd: number;
+      realizedPnlUsd: number;
+      grossPnlUsd: number;
+    };
+    open: OpenPositionRow[];
+    readiness: {
+      liveReady: boolean;
+      dryRun: boolean;
+      balances: Array<{ symbol: string; formatted: string }>;
+      account?: string;
+    };
+    dryRun: boolean;
+    account: string;
+  } | null;
+  pgAvailable: boolean;
+  access: {
+    operator: boolean;
+    holder: boolean;
+    fullAccess: boolean;
+  };
+}
+
+// ─── Health types ────────────────────────────────────────────────────────────
+
+type DotStatus = "green" | "amber" | "red" | "unknown";
+
+interface HealthDot {
+  label: string;
+  status: DotStatus;
+  detail?: string;
+}
+
 // ─── Page ───────────────────────────────────────────────────────────────────
 
 export default function BotsPage() {
@@ -190,10 +246,11 @@ export default function BotsPage() {
   const [scannerStats, setScannerStats] = useState<Record<string, number>>({});
   const [busMessages, setBusMessages] = useState<BusMessage[]>([]);
   const [consoleState, setConsoleState] = useState<SwarmConsoleState | null>(null);
+  const [metricsV2, setMetricsV2] = useState<MetricsV2Response | null>(null);
   const [streamStatus, setStreamStatus] = useState<"connecting" | "live" | "degraded">("connecting");
   const [lastRefresh, setLastRefresh] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"console" | "agents" | "scanner" | "bus" | "logs">("console");
+  const [activeTab, setActiveTab] = useState<"overview" | "console" | "agents" | "scanner" | "bus" | "logs">("overview");
   const lastConsoleRefreshRef = useRef(0);
 
   const refresh = useCallback(async (forceScannerRefresh = false) => {
@@ -202,11 +259,12 @@ export default function BotsPage() {
       const scannerUrl = forceScannerRefresh
         ? "/api/agents/scanner?limit=100&refresh=1"
         : "/api/agents/scanner?limit=100";
-      const [agentsRes, scannerRes, busRes, consoleRes] = await Promise.allSettled([
+      const [agentsRes, scannerRes, busRes, consoleRes, metricsRes] = await Promise.allSettled([
         fetch("/api/agents").then((r) => r.json()),
         fetch(scannerUrl).then((r) => r.json()),
         fetch("/api/agents/bus?limit=100").then((r) => r.json()),
         fetch("/api/agents/console?windowMs=900000").then((r) => r.ok ? r.json() : null),
+        fetch("/api/trading/metrics-v2").then((r) => r.ok ? r.json() : null),
       ]);
       if (agentsRes.status === "fulfilled") setAgents(agentsRes.value.agents ?? []);
       if (scannerRes.status === "fulfilled") {
@@ -216,6 +274,9 @@ export default function BotsPage() {
       if (busRes.status === "fulfilled") setBusMessages(busRes.value.messages ?? []);
       if (consoleRes.status === "fulfilled" && consoleRes.value && !consoleRes.value.error) {
         setConsoleState(consoleRes.value as SwarmConsoleState);
+      }
+      if (metricsRes.status === "fulfilled" && metricsRes.value && !metricsRes.value.error) {
+        setMetricsV2(metricsRes.value as MetricsV2Response);
       }
       setLastRefresh(Date.now());
       lastConsoleRefreshRef.current = Date.now();
@@ -282,10 +343,14 @@ export default function BotsPage() {
     };
   }, []);
 
+  // ── Derive health dots ───────────────────────────────────────────────────
+  const healthDots = deriveHealthDots({ agents, consoleState, metricsV2, streamStatus });
+  const statusSentence = deriveStatusSentence({ metricsV2, consoleState, agents });
+
   return (
     <div>
       {/* ── Header ───────────────────────────────────────── */}
-      <div className="mb-6 border-b-2 border-[var(--rule)] pb-4">
+      <div className="mb-4 border-b-2 border-[var(--rule)] pb-4">
         <h1 className="font-headline text-3xl text-[var(--ink)]">
           Bot Telemetry
         </h1>
@@ -312,9 +377,12 @@ export default function BotsPage() {
         </div>
       </div>
 
+      {/* ── Always-visible health strip ──────────────────── */}
+      <HealthStrip dots={healthDots} sentence={statusSentence} />
+
       {/* ── Tab Switcher ────────────────────────────────── */}
       <div className="mb-4 flex gap-0 border-b border-[var(--rule-light)]">
-        {(["console", "agents", "scanner", "bus", "logs"] as const).map((tab) => (
+        {(["overview", "console", "agents", "scanner", "bus", "logs"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -324,6 +392,7 @@ export default function BotsPage() {
                 : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
             }`}
           >
+            {tab === "overview" && "Overview"}
             {tab === "console" && "Console"}
             {tab === "agents" && `Agents (${agents.length})`}
             {tab === "scanner" && `Scanner (${launches.length})`}
@@ -332,6 +401,15 @@ export default function BotsPage() {
           </button>
         ))}
       </div>
+
+      {/* ── Overview Tab ─────────────────────────────────── */}
+      {activeTab === "overview" && (
+        <OverviewPanel
+          metricsV2={metricsV2}
+          consoleState={consoleState}
+          agents={agents}
+        />
+      )}
 
       {activeTab === "console" && (
         <SwarmConsolePanel state={consoleState} />
@@ -393,6 +471,612 @@ export default function BotsPage() {
     </div>
   );
 }
+
+// ─── Health strip helpers ────────────────────────────────────────────────────
+
+function deriveHealthDots({
+  agents,
+  consoleState,
+  metricsV2,
+  streamStatus,
+}: {
+  agents: AgentSnapshot[];
+  consoleState: SwarmConsoleState | null;
+  metricsV2: MetricsV2Response | null;
+  streamStatus: "connecting" | "live" | "degraded";
+}): HealthDot[] {
+  // Web: SSE stream status
+  const webStatus: DotStatus =
+    streamStatus === "live" ? "green" : streamStatus === "degraded" ? "red" : "amber";
+
+  // Worker: any agent running
+  const workerRunning = agents.some((a) => a.status === "running");
+  const workerStatus: DotStatus = agents.length === 0
+    ? "unknown"
+    : workerRunning
+      ? "green"
+      : agents.some((a) => a.status === "error")
+        ? "red"
+        : "amber";
+
+  // Swarm: throughput activity in last 5 min
+  const latestEvent = consoleState?.throughput?.totals?.latestEventAt;
+  const swarmActive = latestEvent && Date.now() - latestEvent < 5 * 60 * 1000;
+  const swarmTopics = consoleState?.throughput?.topics ?? [];
+  const swarmHasSwarmTopic = swarmTopics.some((t) =>
+    t.topic?.toLowerCase().includes("swarm") || t.topic?.toLowerCase().includes("editorial")
+  );
+  const swarmStatus: DotStatus = consoleState === null
+    ? "unknown"
+    : swarmActive && swarmHasSwarmTopic
+      ? "green"
+      : swarmActive
+        ? "amber"
+        : "red";
+
+  // Signals: trader decisions exist recently (in last 2h)
+  const decisions = consoleState?.trader?.decisions ?? [];
+  const recentDecision = decisions[0];
+  const signalFresh = recentDecision && Date.now() - recentDecision.timestamp < 2 * 60 * 60 * 1000;
+  const signalsStatus: DotStatus = consoleState === null
+    ? "unknown"
+    : signalFresh
+      ? "green"
+      : decisions.length > 0
+        ? "amber"
+        : "red";
+
+  // Postgres
+  const pgStatus: DotStatus = metricsV2 === null
+    ? "unknown"
+    : metricsV2.pgAvailable
+      ? "green"
+      : "red";
+
+  // HL API: positions loaded means HL responded
+  const hlPositions = metricsV2?.performance?.totals?.openPositions ?? null;
+  const hlStatus: DotStatus = metricsV2 === null
+    ? "unknown"
+    : hlPositions !== null
+      ? "green"
+      : "red";
+
+  return [
+    { label: "Web", status: webStatus, detail: `SSE ${streamStatus}` },
+    { label: "Worker", status: workerStatus, detail: workerRunning ? `${agents.filter(a => a.status === "running").length} running` : "no agents running" },
+    { label: "Swarm", status: swarmStatus, detail: swarmActive ? `active ${timeSince(latestEvent!)} ago` : "no recent events" },
+    { label: "Signals", status: signalsStatus, detail: recentDecision ? `last ${timeSince(recentDecision.timestamp)} ago` : "no decisions" },
+    { label: "Postgres", status: pgStatus, detail: metricsV2 ? (metricsV2.pgAvailable ? "reachable" : "unreachable") : "unknown" },
+    { label: "HL API", status: hlStatus, detail: hlPositions !== null ? `${hlPositions} open` : "no data" },
+  ];
+}
+
+function deriveStatusSentence({
+  metricsV2,
+  consoleState,
+  agents,
+}: {
+  metricsV2: MetricsV2Response | null;
+  consoleState: SwarmConsoleState | null;
+  agents: AgentSnapshot[];
+}): string {
+  const openCount = metricsV2?.performance?.totals?.openPositions ?? null;
+  const realizedPnl = metricsV2?.performance?.totals?.realizedPnlUsd ?? null;
+  const decisions = consoleState?.trader?.decisions ?? [];
+  const entriesToday = decisions.filter(
+    (d) => d.topic === "trade-executed" && Date.now() - d.timestamp < 24 * 60 * 60 * 1000,
+  ).length;
+  const workerRunning = agents.some((a) => a.status === "running");
+  const swarmTopics = consoleState?.throughput?.topics ?? [];
+  const mappedMarkets = swarmTopics.filter(
+    (t) => t.topic?.toLowerCase().includes("trade-candidate"),
+  ).length;
+
+  let mode = "UNKNOWN";
+  if (metricsV2?.performance) {
+    mode = openCount && openCount > 0 ? "HOLDING" : "FLAT";
+    if (!workerRunning) mode = "OFFLINE";
+  }
+
+  const parts: string[] = [mode];
+  if (openCount !== null) parts.push(`${openCount} position${openCount !== 1 ? "s" : ""}`);
+  if (entriesToday !== undefined) parts.push(`${entriesToday} entries today`);
+  if (realizedPnl !== null) parts.push(`realized P&L: ${realizedPnl >= 0 ? "+" : ""}$${Math.abs(realizedPnl).toFixed(2)}`);
+  parts.push(`signals: ${mappedMarkets} markets mapped`);
+
+  return parts.join(" · ");
+}
+
+// ─── Health Strip ────────────────────────────────────────────────────────────
+
+function HealthStrip({ dots, sentence }: { dots: HealthDot[]; sentence: string }) {
+  const dotColor: Record<DotStatus, string> = {
+    green: "text-[#2d6a2e]",
+    amber: "text-[#b8860b]",
+    red: "text-[var(--accent-red)]",
+    unknown: "text-[var(--ink-faint)]",
+  };
+
+  return (
+    <div className="mb-4 border border-[var(--rule-light)] bg-[var(--bg-alt)] px-4 py-3">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+        {dots.map((dot) => (
+          <div key={dot.label} className="flex items-center gap-1.5" title={dot.detail}>
+            <span className={`text-base leading-none ${dotColor[dot.status]}`}>●</span>
+            <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-[var(--ink)]">
+              {dot.label}
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-1.5 font-mono text-[10px] text-[var(--ink-light)]">{sentence}</p>
+    </div>
+  );
+}
+
+// ─── Overview Panel ──────────────────────────────────────────────────────────
+
+function OverviewPanel({
+  metricsV2,
+  consoleState,
+  agents,
+}: {
+  metricsV2: MetricsV2Response | null;
+  consoleState: SwarmConsoleState | null;
+  agents: AgentSnapshot[];
+}) {
+  return (
+    <div className="space-y-6">
+      {/* Trader card */}
+      <TraderCard metricsV2={metricsV2} consoleState={consoleState} agents={agents} />
+
+      {/* Open positions table */}
+      <OpenPositionsTable metricsV2={metricsV2} />
+
+      {/* Signal pipeline flow */}
+      <SignalPipelineFlow consoleState={consoleState} />
+
+      {/* Recent decisions */}
+      <RecentDecisions consoleState={consoleState} />
+    </div>
+  );
+}
+
+// ─── Trader Card ─────────────────────────────────────────────────────────────
+
+function TraderCard({
+  metricsV2,
+  consoleState,
+  agents,
+}: {
+  metricsV2: MetricsV2Response | null;
+  consoleState: SwarmConsoleState | null;
+  agents: AgentSnapshot[];
+}) {
+  const totals = metricsV2?.performance?.totals;
+  const readiness = metricsV2?.performance?.readiness;
+  const balance = readiness?.balances?.[0]?.formatted ?? "—";
+  const openCount = totals?.openPositions ?? "—";
+  const realizedPnl = totals?.realizedPnlUsd ?? null;
+  const unrealizedPnl = totals?.unrealizedPnlUsd ?? null;
+  const dryRun = metricsV2?.performance?.dryRun;
+
+  // Last cycle from trader-cycle-complete events
+  const cycleDecisions = consoleState?.trader?.decisions?.filter(
+    (d) => d.topic === "trader-cycle-complete",
+  ) ?? [];
+  const lastCycle = cycleDecisions[0] ?? null;
+  const cycleSinceMs = lastCycle ? Date.now() - lastCycle.timestamp : null;
+  const cycleDurationMs =
+    lastCycle?.payload?.durationMs != null
+      ? Number(lastCycle.payload.durationMs)
+      : null;
+  const cycleErrors =
+    lastCycle?.payload?.errors != null
+      ? Number(lastCycle.payload.errors)
+      : null;
+
+  const workerAgent = agents.find(
+    (a) => a.id === "worker" || a.id?.includes("trader") || a.name?.toLowerCase().includes("worker"),
+  );
+
+  return (
+    <div className="border border-[var(--rule-light)] p-4">
+      <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+        Trader
+        {dryRun && (
+          <span className="ml-2 text-[#b8860b]">DRY RUN</span>
+        )}
+      </p>
+      <h2 className="mt-1 font-headline text-2xl text-[var(--ink)]">
+        {readiness?.account
+          ? `${readiness.account.slice(0, 6)}…${readiness.account.slice(-4)}`
+          : "HL Perps Trader"}
+      </h2>
+
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <OverviewMetric label="Balance" value={balance} />
+        <OverviewMetric
+          label="Open Positions"
+          value={String(openCount)}
+        />
+        <OverviewMetric
+          label="Realized P&L"
+          value={
+            realizedPnl == null
+              ? "—"
+              : `${realizedPnl >= 0 ? "+" : ""}$${Math.abs(realizedPnl).toFixed(2)}`
+          }
+          valueClass={
+            realizedPnl == null
+              ? undefined
+              : realizedPnl >= 0
+                ? "text-[#2d6a2e]"
+                : "text-[var(--accent-red)]"
+          }
+        />
+        <OverviewMetric
+          label="Unrealized P&L"
+          value={
+            unrealizedPnl == null
+              ? "—"
+              : `${unrealizedPnl >= 0 ? "+" : ""}$${Math.abs(unrealizedPnl).toFixed(2)}`
+          }
+          valueClass={
+            unrealizedPnl == null
+              ? undefined
+              : unrealizedPnl >= 0
+                ? "text-[#2d6a2e]"
+                : "text-[var(--accent-red)]"
+          }
+        />
+      </div>
+
+      {/* Last cycle */}
+      <div className="mt-3 border-t border-[var(--rule-light)] pt-2">
+        <p className="font-mono text-[8px] text-[var(--ink-faint)]">
+          Last cycle:{" "}
+          {lastCycle == null ? (
+            <span className="text-[#b8860b]">no cycle recorded</span>
+          ) : (
+            <span className="text-[var(--ink-light)]">
+              {cycleSinceMs != null ? `${formatDurationMs(cycleSinceMs)} ago` : "—"}
+              {cycleDurationMs != null ? ` · ${formatDurationMs(cycleDurationMs)}` : ""}
+              {cycleErrors != null ? ` · errors: ${cycleErrors}` : ""}
+            </span>
+          )}
+        </p>
+        {workerAgent && (
+          <p className="mt-0.5 font-mono text-[8px] text-[var(--ink-faint)]">
+            Worker: <span className={workerAgent.status === "running" ? "text-[#2d6a2e]" : "text-[var(--accent-red)]"}>{workerAgent.status}</span>
+            {workerAgent.lastActivityAt && (
+              <> · last active {timeSince(workerAgent.lastActivityAt)} ago</>
+            )}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OverviewMetric({
+  label,
+  value,
+  valueClass,
+}: {
+  label: string;
+  value: string;
+  valueClass?: string;
+}) {
+  return (
+    <div className="border border-[var(--rule-light)] p-2">
+      <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+        {label}
+      </p>
+      <p className={`mt-0.5 font-headline text-xl text-[var(--ink)] ${valueClass ?? ""}`}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+// ─── Open Positions Table ────────────────────────────────────────────────────
+
+function OpenPositionsTable({ metricsV2 }: { metricsV2: MetricsV2Response | null }) {
+  const open = metricsV2?.performance?.open ?? [];
+  const fullAccess = metricsV2?.access?.fullAccess ?? false;
+
+  return (
+    <div className="border border-[var(--rule-light)]">
+      <div className="flex items-baseline justify-between border-b border-[var(--rule-light)] px-4 py-2">
+        <h3 className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--ink)]">
+          Open Positions
+        </h3>
+        <span className="font-mono text-[8px] text-[var(--ink-faint)]">
+          {open.length} total
+        </span>
+      </div>
+
+      {!fullAccess && (
+        <p className="px-4 py-3 font-mono text-[9px] text-[var(--ink-faint)]">
+          Operator or MO holder access required to view open positions.
+        </p>
+      )}
+
+      {fullAccess && open.length === 0 && (
+        <p className="px-4 py-3 font-mono text-[9px] text-[var(--ink-faint)]">
+          No open positions.
+        </p>
+      )}
+
+      {fullAccess && open.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-[var(--rule-light)]">
+                {["Coin", "Side", "Entry", "Current", "Unreal PnL", "Notional", "Age", "Signal"].map((h) => (
+                  <th
+                    key={h}
+                    className="px-3 py-1.5 text-left font-mono text-[8px] uppercase tracking-[0.15em] text-[var(--ink-faint)]"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {open.map((row) => {
+                const pnl = row.unrealizedPnlUsd;
+                const pnlColor = pnl > 0
+                  ? "text-[#2d6a2e]"
+                  : pnl < 0
+                    ? "text-[var(--accent-red)]"
+                    : "text-[var(--ink-faint)]";
+                const age = timeSince(row.position.openedAt);
+                return (
+                  <tr
+                    key={row.position.id}
+                    className="border-b border-[var(--rule-light)] last:border-0"
+                  >
+                    <td className="px-3 py-1.5 font-mono text-[10px] font-bold text-[var(--ink)]">
+                      {row.position.marketSymbol}
+                    </td>
+                    <td className={`px-3 py-1.5 font-mono text-[9px] uppercase ${row.position.direction === "long" ? "text-[#2d6a2e]" : "text-[var(--accent-red)]"}`}>
+                      {row.position.direction}
+                      {row.position.leverage ? ` ${row.position.leverage}x` : ""}
+                    </td>
+                    <td className="px-3 py-1.5 font-mono text-[9px] text-[var(--ink-light)]">
+                      ${row.position.entryPriceUsd.toFixed(2)}
+                    </td>
+                    <td className="px-3 py-1.5 font-mono text-[9px] text-[var(--ink-light)]">
+                      ${row.currentPriceUsd.toFixed(2)}
+                    </td>
+                    <td className={`px-3 py-1.5 font-mono text-[9px] ${pnlColor}`}>
+                      {pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}
+                    </td>
+                    <td className="px-3 py-1.5 font-mono text-[9px] text-[var(--ink-light)]">
+                      ${row.position.entryNotionalUsd.toFixed(0)}
+                    </td>
+                    <td className="px-3 py-1.5 font-mono text-[9px] text-[var(--ink-faint)]">
+                      {age}
+                    </td>
+                    <td className="px-3 py-1.5 font-mono text-[8px] text-[var(--ink-faint)]">
+                      {row.position.signalSource ?? "—"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Signal Pipeline Flow ────────────────────────────────────────────────────
+
+interface PipelineStage {
+  label: string;
+  status: DotStatus;
+  detail: string;
+  lastRun?: string;
+}
+
+function SignalPipelineFlow({ consoleState }: { consoleState: SwarmConsoleState | null }) {
+  const topics = consoleState?.throughput?.topics ?? [];
+
+  // Derive stage statuses from throughput topics
+  const findTopic = (...names: string[]) =>
+    topics.find((t) => names.some((n) => t.topic?.toLowerCase().includes(n)));
+
+  const rssTopic = findTopic("editorial", "rss", "news");
+  const swarmTopic = findTopic("swarm");
+  const aggregatedTopic = findTopic("aggregated", "archive");
+  const tradeCandidateTopic = findTopic("trade-candidate");
+  const compositeTopic = findTopic("composite", "signal");
+  const decisionTopic = findTopic("trade-executed", "trader-cycle");
+
+  const rssCount = rssTopic?.count ?? 0;
+  const swarmOk = swarmTopic != null && swarmTopic.count > 0;
+  const swarmStuck =
+    swarmTopic != null
+      ? Date.now() - swarmTopic.lastSeenAt > 10 * 60 * 1000
+      : false;
+  const aggregatedCount = aggregatedTopic?.count ?? 0;
+  const mappedCount = tradeCandidateTopic?.count ?? 0;
+  const compositeOk = compositeTopic != null && compositeTopic.count > 0;
+  const decisionCount = decisionTopic?.count ?? 0;
+
+  const stages: PipelineStage[] = [
+    {
+      label: `RSS Feeds`,
+      status: rssCount > 0 ? "green" : consoleState ? "amber" : "unknown",
+      detail: rssCount > 0 ? `${rssCount} events` : "no events",
+      lastRun: rssTopic ? timeSince(rssTopic.lastSeenAt) + " ago" : undefined,
+    },
+    {
+      label: "Swarm",
+      status: consoleState === null
+        ? "unknown"
+        : !swarmTopic
+          ? "red"
+          : swarmStuck
+            ? "red"
+            : swarmOk
+              ? "green"
+              : "amber",
+      detail: !swarmTopic
+        ? "HUNG / no data"
+        : swarmStuck
+          ? "HUNG"
+          : swarmOk
+            ? `${swarmTopic.count} events`
+            : "degraded",
+      lastRun: swarmTopic ? timeSince(swarmTopic.lastSeenAt) + " ago" : undefined,
+    },
+    {
+      label: `Aggregated`,
+      status: aggregatedCount > 0 ? "green" : consoleState ? "amber" : "unknown",
+      detail: `${aggregatedCount} records`,
+      lastRun: aggregatedTopic ? timeSince(aggregatedTopic.lastSeenAt) + " ago" : undefined,
+    },
+    {
+      label: `Market Mapping`,
+      status: mappedCount > 0 ? "green" : consoleState ? "red" : "unknown",
+      detail: mappedCount > 0 ? `${mappedCount} candidates` : `0/${aggregatedCount} mapped`,
+      lastRun: tradeCandidateTopic ? timeSince(tradeCandidateTopic.lastSeenAt) + " ago" : undefined,
+    },
+    {
+      label: "Composite",
+      status: compositeOk ? "green" : consoleState ? "amber" : "unknown",
+      detail: compositeTopic ? `${compositeTopic.count} signals` : "no composite signals",
+      lastRun: compositeTopic ? timeSince(compositeTopic.lastSeenAt) + " ago" : undefined,
+    },
+    {
+      label: "Decision",
+      status: decisionCount > 0 ? "green" : consoleState ? "amber" : "unknown",
+      detail: decisionCount > 0 ? `${decisionCount} executed` : "no executions",
+      lastRun: decisionTopic ? timeSince(decisionTopic.lastSeenAt) + " ago" : undefined,
+    },
+  ];
+
+  const dotColor: Record<DotStatus, string> = {
+    green: "text-[#2d6a2e]",
+    amber: "text-[#b8860b]",
+    red: "text-[var(--accent-red)]",
+    unknown: "text-[var(--ink-faint)]",
+  };
+  const stageBorder: Record<DotStatus, string> = {
+    green: "border-[#2d6a2e]/40",
+    amber: "border-[#b8860b]/40",
+    red: "border-[var(--accent-red)]/60",
+    unknown: "border-[var(--rule-light)]",
+  };
+
+  return (
+    <div className="border border-[var(--rule-light)] p-4">
+      <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+        Signal Pipeline
+      </p>
+      <h3 className="mt-1 font-headline text-2xl text-[var(--ink)]">
+        Pipeline Health
+      </h3>
+      <div className="mt-3 flex flex-wrap items-center gap-0">
+        {stages.map((stage, i) => (
+          <div key={stage.label} className="flex items-center">
+            <div
+              className={`border ${stageBorder[stage.status]} px-3 py-2 min-w-[100px]`}
+              title={stage.lastRun ? `Last: ${stage.lastRun}` : undefined}
+            >
+              <div className="flex items-center gap-1">
+                <span className={`text-[10px] leading-none ${dotColor[stage.status]}`}>●</span>
+                <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink)]">
+                  {stage.label}
+                </span>
+              </div>
+              <p className={`mt-0.5 font-mono text-[8px] ${stage.status === "red" ? "text-[var(--accent-red)]" : "text-[var(--ink-faint)]"}`}>
+                {stage.detail}
+              </p>
+              {stage.lastRun && (
+                <p className="font-mono text-[7px] text-[var(--ink-faint)]">{stage.lastRun}</p>
+              )}
+            </div>
+            {i < stages.length - 1 && (
+              <span className="px-1 font-mono text-[10px] text-[var(--ink-faint)]">→</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Recent Decisions ────────────────────────────────────────────────────────
+
+function RecentDecisions({ consoleState }: { consoleState: SwarmConsoleState | null }) {
+  const decisions = consoleState?.trader?.decisions?.slice(0, 10) ?? [];
+
+  return (
+    <div className="border border-[var(--rule-light)]">
+      <div className="flex items-baseline justify-between border-b border-[var(--rule-light)] px-4 py-2">
+        <h3 className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--ink)]">
+          Recent Decisions
+        </h3>
+        <span className="font-mono text-[8px] text-[var(--ink-faint)]">
+          last {decisions.length}
+        </span>
+      </div>
+      {decisions.length === 0 ? (
+        <p className="px-4 py-3 font-mono text-[9px] text-[var(--ink-faint)]">
+          No recent trader decisions.
+          {consoleState === null && " Console data requires operator access."}
+        </p>
+      ) : (
+        <div>
+          {decisions.map((d) => (
+            <div
+              key={d.id}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-[var(--rule-light)] px-4 py-2 last:border-0"
+            >
+              <div className="min-w-0">
+                <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--ink)]">
+                  {d.topic} · {d.market}
+                </p>
+                <p className="font-mono text-[8px] text-[var(--ink-faint)]">
+                  {(d.side ?? "n/a").toUpperCase()} · {d.reason ?? "no reason"} ·{" "}
+                  {d.executionVenue ?? "unknown venue"} · {timeSince(d.timestamp)} ago
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-mono text-[9px] text-[var(--ink)]">
+                  {d.sizeUsd == null ? "--" : `$${formatCompact(d.sizeUsd)}`}
+                </p>
+                <p
+                  className={`font-mono text-[8px] ${
+                    d.pnlUsd == null
+                      ? "text-[var(--ink-faint)]"
+                      : d.pnlUsd >= 0
+                        ? "text-[#2d6a2e]"
+                        : "text-[var(--accent-red)]"
+                  }`}
+                >
+                  {d.pnlUsd == null
+                    ? d.dryRun
+                      ? "dry run"
+                      : "--"
+                    : `${d.pnlUsd >= 0 ? "+" : ""}$${formatCompact(Math.abs(d.pnlUsd))}`}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Existing panels (unchanged) ─────────────────────────────────────────────
 
 function SwarmConsolePanel({ state }: { state: SwarmConsoleState | null }) {
   if (!state) {
@@ -805,7 +1489,7 @@ function LaunchRow({ launch }: { launch: TokenLaunch }) {
 
         {/* Expand chevron */}
         <span className="flex-shrink-0 font-mono text-[10px] text-[var(--ink-faint)]">
-          {expanded ? "\u25B2" : "\u25BC"}
+          {expanded ? "▲" : "▼"}
         </span>
       </button>
 
@@ -954,7 +1638,7 @@ function BusMessageRow({ message }: { message: BusMessage }) {
           {age} ago
         </span>
         <span className="flex-shrink-0 font-mono text-[10px] text-[var(--ink-faint)]">
-          {expanded ? "\u25B2" : "\u25BC"}
+          {expanded ? "▲" : "▼"}
         </span>
       </button>
 
