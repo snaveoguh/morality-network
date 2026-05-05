@@ -24,9 +24,37 @@ import {
   getRegistryEntityByHash,
   isHttpIdentifier,
 } from "@/lib/entity-registry";
+import { getIllustration } from "@/lib/illustration-store";
 import { BRAND_NAME, SITE_URL, withBrand } from "@/lib/brand";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
+/** Extract a human-readable credit from an illustration store prompt. */
+function parseIllustrationSource(prompt: string | undefined | null): string | null {
+  if (!prompt) return null;
+  if (prompt.startsWith("Uploaded by ")) return "pooter world";
+  const match = prompt.match(/^Source:\s+(.+?)\s+—/);
+  return match ? match[1] : null;
+}
+
+/** Fetch the illustration source credit for a daily edition, trying daily hash then entity hash. */
+async function resolveIllustrationSource(
+  generatedAt: string | undefined,
+  entityHash: string,
+): Promise<string | null> {
+  const date = generatedAt ? new Date(generatedAt) : null;
+  if (date) {
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(date.getUTCDate()).padStart(2, "0");
+    const dailyHash = computeEntityHash(`pooter-daily-${y}-${m}-${d}`);
+    const illus = await getIllustration(dailyHash).catch(() => null)
+      ?? (dailyHash !== entityHash ? await getIllustration(entityHash).catch(() => null) : null);
+    const source = parseIllustrationSource(illus?.prompt);
+    if (source) return source;
+  }
+  return null;
+}
 
 export const revalidate = 3600; // 1 hour ISR
 export const maxDuration = 55;
@@ -90,9 +118,16 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       }
     }
 
+    const earlyIllustrationSource = (hydratedEditorial.isDailyEdition && hydratedEditorial.hasIllustration)
+      ? await resolveIllustrationSource(hydratedEditorial.generatedAt, hash)
+      : null;
+    const earlyArticle = earlyIllustrationSource
+      ? { ...hydratedEditorial, illustrationSource: earlyIllustrationSource }
+      : hydratedEditorial;
+
     return (
       <ArticleTemplate
-        article={hydratedEditorial}
+        article={earlyArticle}
         dateline={dateline}
         readTime={readTime}
         entityHash={hash}
@@ -318,9 +353,16 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     }
   }
 
+  const illustrationSource = (article.isDailyEdition && article.hasIllustration)
+    ? await resolveIllustrationSource(article.generatedAt, hash)
+    : null;
+  const articleWithSource = illustrationSource
+    ? { ...article, illustrationSource }
+    : article;
+
   return (
     <ArticleTemplate
-      article={article}
+      article={articleWithSource}
       dateline={dateline}
       readTime={readTime}
       entityHash={hash}

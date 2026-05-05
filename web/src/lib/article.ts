@@ -136,6 +136,8 @@ export interface ArticleContent {
   illustrationPrompt?: string;
   /** Whether an illustration exists in the separate illustration store */
   hasIllustration?: boolean;
+  /** Credit line for the cover illustration — RSS source name if auto-picked, "pooter world" if manually uploaded */
+  illustrationSource?: string | null;
   /** God mode: wallet address that last edited this editorial */
   editedBy?: string;
   /** God mode: ISO timestamp of last edit */
