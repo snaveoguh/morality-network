@@ -195,6 +195,14 @@ async function fetchBridgeJson(url: string): Promise<unknown | null> {
     if (!response.ok) {
       return null;
     }
+    // Guard against proxies/CDNs returning an HTML error page with HTTP 200
+    // (e.g. Cloudflare challenge pages). Attempting response.json() on those
+    // throws a SyntaxError that pollutes the logs with "Unexpected token '<'".
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.includes("application/json") && !contentType.includes("text/json")) {
+      reportWarn("api:agents:snapshot", `non-JSON content-type from ${url}: ${contentType}`);
+      return null;
+    }
     return await response.json();
   } catch (e) {
     reportWarn("api:agents:snapshot", e);
