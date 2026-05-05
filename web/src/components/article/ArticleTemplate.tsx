@@ -441,7 +441,7 @@ export function ArticleTemplate({
             </div>
           )}
           <figcaption className="mt-1.5 font-mono text-[9px] italic text-[var(--ink-faint)]">
-            {imagePreview ? "New illustration (unsaved)" : `Image: ${article.primary.source}`}
+            {imagePreview ? "New illustration (unsaved)" : `Image: ${article.illustrationSource ?? "pooter world"}`}
           </figcaption>
         </figure>
       ) : article.isDailyEdition && editing && isGodMode ? (
