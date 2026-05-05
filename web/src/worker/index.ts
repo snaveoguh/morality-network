@@ -294,32 +294,43 @@ async function runScannerTask(): Promise<void> {
   log("scanner sync completed", { upserted: payload.upserted ?? 0 });
 }
 
+const SWARM_HARD_TIMEOUT_MS = parseIntegerEnv("WORKER_SWARM_TIMEOUT_MS", 240_000);
+
 async function runSwarmTask(): Promise<void> {
-  const items = await fetchAllFeeds(DEFAULT_FEEDS);
-  const output = runResearchSwarm(
-    items,
-    parseIntegerEnv("WORKER_SWARM_CLUSTERS", 30, 1),
-  );
+  const timeoutError = new Error(`swarm exceeded hard timeout of ${SWARM_HARD_TIMEOUT_MS}ms — force-killed`);
 
-  // Convert clusters to trading signals and persist to Redis
-  const { aggregateSwarmSignals, persistSwarmSignals } = await import("../lib/trading/swarm-signals.js");
-  const swarmSignals = aggregateSwarmSignals(output.clusters);
-  const signalsPersisted = await persistSwarmSignals(swarmSignals);
+  await Promise.race([
+    (async () => {
+      const items = await fetchAllFeeds(DEFAULT_FEEDS);
+      const output = runResearchSwarm(
+        items,
+        parseIntegerEnv("WORKER_SWARM_CLUSTERS", 30, 1),
+      );
 
-  await postIndexer("/api/v1/swarm/latest", {
-    generatedAt: output.generatedAt,
-    scannedItems: output.scannedItems,
-    clusters: output.clusters,
-    contradictionFlags: output.contradictionFlags,
-  });
+      // Convert clusters to trading signals and persist to Postgres
+      const { aggregateSwarmSignals, persistSwarmSignals } = await import("../lib/trading/swarm-signals.js");
+      const swarmSignals = aggregateSwarmSignals(output.clusters);
+      const signalsPersisted = await persistSwarmSignals(swarmSignals);
 
-  log("swarm snapshot persisted", {
-    scannedItems: output.scannedItems,
-    clusters: output.clusters.length,
-    contradictionFlags: output.contradictionFlags.length,
-    swarmSignals: swarmSignals.length,
-    signalsPersisted,
-  });
+      await postIndexer("/api/v1/swarm/latest", {
+        generatedAt: output.generatedAt,
+        scannedItems: output.scannedItems,
+        clusters: output.clusters,
+        contradictionFlags: output.contradictionFlags,
+      });
+
+      log("swarm snapshot persisted", {
+        scannedItems: output.scannedItems,
+        clusters: output.clusters.length,
+        contradictionFlags: output.contradictionFlags.length,
+        swarmSignals: swarmSignals.length,
+        signalsPersisted,
+      });
+    })(),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(timeoutError), SWARM_HARD_TIMEOUT_MS),
+    ),
+  ]);
 }
 
 async function runTraderTask(): Promise<void> {
