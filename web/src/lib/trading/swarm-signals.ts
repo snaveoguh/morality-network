@@ -51,6 +51,17 @@ const SYMBOL_PATTERNS: Array<{ symbol: string; pattern: RegExp }> = [
   { symbol: "PAXG", pattern: /\b(war|conflict|geopolitical|sanctions?|safe\s*haven|uncertainty)\b/i },
   { symbol: "BTC", pattern: /\b(regulation|sec\b|crypto\s*ban|crypto\s*law|stablecoin\s*bill)\b/i },
   { symbol: "ETH", pattern: /\b(nft|web3|smart\s*contract|dao\b|governance\s*token)\b/i },
+  // Extended macro → crypto/commodity relay patterns
+  // Fed / rates / monetary policy tags
+  { symbol: "DXY", pattern: /\b(fomc|rate\s*hike|rate\s*cut|interest\s*rate|federal\s*reserve|tightening|loosening|pivot|dovish|hawkish|yield|treasury|bond\s*market|dxy)\b/i },
+  { symbol: "BTC", pattern: /\b(fomc|rate\s*cut|rate\s*hike|interest\s*rate|federal\s*reserve|tightening|loosening|pivot|dovish|hawkish)\b/i },
+  // Macro / geopolitics cluster tags
+  { symbol: "DXY", pattern: /\b(macro|global\s*macro|trade\s*war|tariff|tariffs|dollar|usd|currency|fx\b|political\s*risk|elections?)\b/i },
+  { symbol: "PAXG", pattern: /\b(geopolitics?|middle\s*east|russia|ukraine|tension|armed\s*conflict|missile|military|nato|escalat)\b/i },
+  // Oil / energy tags
+  { symbol: "OIL", pattern: /\b(oil|crude|wti|brent|petroleum|opec|energy\s*price|barrel|gas\s*price|natural\s*gas)\b/i },
+  // Equities / risk-on-off
+  { symbol: "SPX", pattern: /\b(stocks?|equit(?:y|ies)|s&p\s*500|nasdaq|dow\s*jones|sp500|risk.off|risk.on|market\s*crash|stock\s*market|wall\s*street|earnings?)\b/i },
 ];
 
 /**
@@ -131,7 +142,9 @@ export function detectClusterPolarity(
   }
 
   // Heavy contradictions = too noisy for a directional call
-  if (contradictionFlags.length >= 3) return null;
+  // Threshold raised from 3 → 5: mild disagreement (2-4 flags) should not
+  // zero out a signal that still has a clear net direction.
+  if (contradictionFlags.length >= 5) return null;
 
   // Contradiction penalty: discount the weaker side
   const contradictionDiscount = contradictionFlags.length > 0 ? 0.5 : 0;
