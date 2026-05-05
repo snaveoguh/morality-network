@@ -341,11 +341,17 @@ export default function BotsPage() {
     return () => {
       es.close();
     };
+  // refresh is stable (useCallback with no deps that change), intentionally
+  // not re-subscribing SSE on every render — the ref handles the refresh call
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Derive health dots ───────────────────────────────────────────────────
-  const healthDots = deriveHealthDots({ agents, consoleState, metricsV2, streamStatus });
-  const statusSentence = deriveStatusSentence({ metricsV2, consoleState, agents });
+  // nowMs is computed once per render cycle at the page root and threaded down
+  // to avoid calling Date.now() inside pure child components (react-hooks/purity)
+  const nowMs = lastRefresh || Date.now();
+  const healthDots = deriveHealthDots({ agents, consoleState, metricsV2, streamStatus, nowMs });
+  const statusSentence = deriveStatusSentence({ metricsV2, consoleState, agents, nowMs });
 
   return (
     <div>
@@ -408,6 +414,7 @@ export default function BotsPage() {
           metricsV2={metricsV2}
           consoleState={consoleState}
           agents={agents}
+          nowMs={nowMs}
         />
       )}
 
@@ -479,11 +486,13 @@ function deriveHealthDots({
   consoleState,
   metricsV2,
   streamStatus,
+  nowMs,
 }: {
   agents: AgentSnapshot[];
   consoleState: SwarmConsoleState | null;
   metricsV2: MetricsV2Response | null;
   streamStatus: "connecting" | "live" | "degraded";
+  nowMs: number;
 }): HealthDot[] {
   // Web: SSE stream status
   const webStatus: DotStatus =
@@ -501,7 +510,7 @@ function deriveHealthDots({
 
   // Swarm: throughput activity in last 5 min
   const latestEvent = consoleState?.throughput?.totals?.latestEventAt;
-  const swarmActive = latestEvent && Date.now() - latestEvent < 5 * 60 * 1000;
+  const swarmActive = latestEvent && nowMs - latestEvent < 5 * 60 * 1000;
   const swarmTopics = consoleState?.throughput?.topics ?? [];
   const swarmHasSwarmTopic = swarmTopics.some((t) =>
     t.topic?.toLowerCase().includes("swarm") || t.topic?.toLowerCase().includes("editorial")
@@ -517,7 +526,7 @@ function deriveHealthDots({
   // Signals: trader decisions exist recently (in last 2h)
   const decisions = consoleState?.trader?.decisions ?? [];
   const recentDecision = decisions[0];
-  const signalFresh = recentDecision && Date.now() - recentDecision.timestamp < 2 * 60 * 60 * 1000;
+  const signalFresh = recentDecision && nowMs - recentDecision.timestamp < 2 * 60 * 60 * 1000;
   const signalsStatus: DotStatus = consoleState === null
     ? "unknown"
     : signalFresh
@@ -555,16 +564,18 @@ function deriveStatusSentence({
   metricsV2,
   consoleState,
   agents,
+  nowMs,
 }: {
   metricsV2: MetricsV2Response | null;
   consoleState: SwarmConsoleState | null;
   agents: AgentSnapshot[];
+  nowMs: number;
 }): string {
   const openCount = metricsV2?.performance?.totals?.openPositions ?? null;
   const realizedPnl = metricsV2?.performance?.totals?.realizedPnlUsd ?? null;
   const decisions = consoleState?.trader?.decisions ?? [];
   const entriesToday = decisions.filter(
-    (d) => d.topic === "trade-executed" && Date.now() - d.timestamp < 24 * 60 * 60 * 1000,
+    (d) => d.topic === "trade-executed" && nowMs - d.timestamp < 24 * 60 * 60 * 1000,
   ).length;
   const workerRunning = agents.some((a) => a.status === "running");
   const swarmTopics = consoleState?.throughput?.topics ?? [];
@@ -620,21 +631,23 @@ function OverviewPanel({
   metricsV2,
   consoleState,
   agents,
+  nowMs,
 }: {
   metricsV2: MetricsV2Response | null;
   consoleState: SwarmConsoleState | null;
   agents: AgentSnapshot[];
+  nowMs: number;
 }) {
   return (
     <div className="space-y-6">
       {/* Trader card */}
-      <TraderCard metricsV2={metricsV2} consoleState={consoleState} agents={agents} />
+      <TraderCard metricsV2={metricsV2} consoleState={consoleState} agents={agents} nowMs={nowMs} />
 
       {/* Open positions table */}
       <OpenPositionsTable metricsV2={metricsV2} />
 
       {/* Signal pipeline flow */}
-      <SignalPipelineFlow consoleState={consoleState} />
+      <SignalPipelineFlow consoleState={consoleState} nowMs={nowMs} />
 
       {/* Recent decisions */}
       <RecentDecisions consoleState={consoleState} />
@@ -648,10 +661,12 @@ function TraderCard({
   metricsV2,
   consoleState,
   agents,
+  nowMs,
 }: {
   metricsV2: MetricsV2Response | null;
   consoleState: SwarmConsoleState | null;
   agents: AgentSnapshot[];
+  nowMs: number;
 }) {
   const totals = metricsV2?.performance?.totals;
   const readiness = metricsV2?.performance?.readiness;
@@ -666,7 +681,7 @@ function TraderCard({
     (d) => d.topic === "trader-cycle-complete",
   ) ?? [];
   const lastCycle = cycleDecisions[0] ?? null;
-  const cycleSinceMs = lastCycle ? Date.now() - lastCycle.timestamp : null;
+  const cycleSinceMs = lastCycle ? nowMs - lastCycle.timestamp : null;
   const cycleDurationMs =
     lastCycle?.payload?.durationMs != null
       ? Number(lastCycle.payload.durationMs)
@@ -883,7 +898,7 @@ interface PipelineStage {
   lastRun?: string;
 }
 
-function SignalPipelineFlow({ consoleState }: { consoleState: SwarmConsoleState | null }) {
+function SignalPipelineFlow({ consoleState, nowMs }: { consoleState: SwarmConsoleState | null; nowMs: number }) {
   const topics = consoleState?.throughput?.topics ?? [];
 
   // Derive stage statuses from throughput topics
@@ -901,7 +916,7 @@ function SignalPipelineFlow({ consoleState }: { consoleState: SwarmConsoleState 
   const swarmOk = swarmTopic != null && swarmTopic.count > 0;
   const swarmStuck =
     swarmTopic != null
-      ? Date.now() - swarmTopic.lastSeenAt > 10 * 60 * 1000
+      ? nowMs - swarmTopic.lastSeenAt > 10 * 60 * 1000
       : false;
   const aggregatedCount = aggregatedTopic?.count ?? 0;
   const mappedCount = tradeCandidateTopic?.count ?? 0;
