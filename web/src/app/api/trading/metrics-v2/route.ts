@@ -137,18 +137,38 @@ function publicConfigSummary(config: unknown) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function sanitizePerformance(report: any) {
+  // Closed positions are historical onchain records (HL fills are public),
+  // so we expose enough detail for the public /markets table to render its
+  // Realized / Size / Entry / Exit / Fees / Held columns. Operator-only
+  // sensitivity lives on OPEN positions (front-running risk) and on funder
+  // PII, both of which are still stripped below.
+  //
+  // Critical: keep the original `*Usd` field names so the AgentMarketDashboard
+  // reads them correctly. An earlier rename to `entryPrice` / `exitPrice` was
+  // why the Realized column appeared blank for non-operator viewers — the
+  // dashboard read `entryPriceUsd` and got `undefined`. We also preserve
+  // `null` for unreconciled PnL instead of coercing to 0, so unknowns render
+  // as "--" rather than misleading "$0.00".
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sanitizedClosed = (report.closed ?? []).map((row: any) => ({
     position: {
       id: row.position?.id,
-      symbol: row.position?.marketSymbol ?? row.position?.symbol,
+      tokenAddress: row.position?.tokenAddress,
+      marketSymbol: row.position?.marketSymbol ?? row.position?.symbol,
+      chain: row.position?.chain,
       direction: row.position?.direction,
-      entryPrice: row.position?.entryPriceUsd,
-      exitPrice: row.position?.exitPriceUsd,
+      entryPriceUsd: row.position?.entryPriceUsd,
+      exitPriceUsd: row.position?.exitPriceUsd,
+      entryNotionalUsd: row.position?.entryNotionalUsd,
+      openedAt: row.position?.openedAt,
       closedAt: row.position?.closedAt,
       leverage: row.position?.leverage,
     },
-    realizedPnlUsd: row.realizedPnlUsd ?? 0,
-    pnlUsd: row.realizedPnlUsd ?? 0,
+    realizedPnlUsd: row.realizedPnlUsd ?? null,
+    realizedPnlPct: row.realizedPnlPct ?? null,
+    estimatedFeesUsd: row.estimatedFeesUsd ?? null,
+    // Back-compat alias kept so older clients don't break.
+    pnlUsd: row.realizedPnlUsd ?? null,
   }));
 
   return {
