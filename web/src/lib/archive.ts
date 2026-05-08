@@ -57,10 +57,13 @@ let cache: ArticleArchiveFile | null = null;
 let cacheLoadedAtMs = 0;
 const CACHE_TTL_MS = 30_000;
 // Capped to keep the indexer response under the Node heap budget on Railway.
-// At 100_000 the response hit ~34 MB and OOM-crashed the web process.
-// 25_000 ≈ 8.5 MB peak — well under the OOM threshold and matches what users
-// expect to see on /archive (we used to surface ~20k+ before the cap landed).
-const REMOTE_ARCHIVE_LIMIT = 25_000;
+// History: 100_000 hit ~34 MB and OOM-crashed; 25_000 was *thought* to be
+// ~8.5 MB but actually grew to 44 MB as articles got fatter, OOM-crashing
+// pooter.world (heap exhausted during JSON.stringify). 5_000 holds us under
+// ~9 MB even at today's per-article size, and Next's data cache (2 MB cap)
+// will still reject the response — that's fine, it's only a perf nicety.
+// Re-evaluate if /archive starts looking too thin.
+const REMOTE_ARCHIVE_LIMIT = 5_000;
 
 /* ── Upstash Redis REST helpers (survives Vercel cold starts) ── */
 
