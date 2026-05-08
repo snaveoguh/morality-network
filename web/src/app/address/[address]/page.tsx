@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useEnsAddress, useEnsName, useEnsAvatar } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import { useBytecode } from "wagmi";
-import { shortenAddress, computeEntityHash } from "@/lib/entity";
+import { shortenAddress } from "@/lib/entity";
 import { OverviewTab } from "@/components/explorer/OverviewTab";
 
-type Tab = "Overview" | "Read" | "Interact" | "Code" | "Activity";
-
-const CONTRACT_TABS: Tab[] = ["Overview", "Read", "Interact", "Code", "Activity"];
-const EOA_TABS: Tab[] = ["Overview", "Activity"];
+// Tab structure removed — Read / Interact / Code / Activity were placeholders
+// ("coming soon"). Until those panels are built, the page renders the
+// Overview tab directly. Re-introduce the tabs here when implementing them.
 
 export default function AddressPage() {
   const params = useParams<{ address: string }>();
@@ -61,13 +60,6 @@ export default function AddressPage() {
   const displayName = ensName ?? (isEns ? rawAddress : null);
   const shortAddr = address ? shortenAddress(address, 6) : "...";
   const breadcrumbName = displayName ?? shortAddr;
-
-  // --- Tabs ---
-  const tabs = isContract ? CONTRACT_TABS : EOA_TABS;
-  const [activeTab, setActiveTab] = useState<Tab>("Overview");
-
-  // Reset tab if switching between contract/EOA and current tab is invalid
-  const effectiveTab = tabs.includes(activeTab) ? activeTab : "Overview";
 
   // --- Copy to clipboard ---
   const [copied, setCopied] = useState(false);
@@ -158,57 +150,13 @@ export default function AddressPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="mt-4 flex items-center gap-0 font-mono text-[10px] uppercase tracking-wider">
-        {tabs.map((tab, i) => (
-          <span key={tab} className="flex items-center">
-            {i > 0 && <span className="mx-2 text-[var(--rule-light)]">|</span>}
-            <button
-              onClick={() => setActiveTab(tab)}
-              className={
-                effectiveTab === tab
-                  ? "font-bold text-[var(--ink)] underline underline-offset-4"
-                  : "text-[var(--ink-faint)] hover:text-[var(--ink)] transition-colors"
-              }
-            >
-              {tab}
-            </button>
-          </span>
-        ))}
-      </div>
-
       {/* Divider */}
       <div className="mt-3 border-t border-[var(--rule)]" />
 
-      {/* Tab Content */}
+      {/* Overview — additional tabs (Read / Interact / Code / Activity) will
+          land here once the corresponding components are built. */}
       <div className="mt-6">
-        {effectiveTab === "Overview" && (
-          <OverviewTab address={address} isContract={isContract} />
-        )}
-
-        {effectiveTab === "Read" && (
-          <div className="py-8 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--ink-faint)]">
-            Read functions — coming soon
-          </div>
-        )}
-
-        {effectiveTab === "Interact" && (
-          <div className="py-8 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--ink-faint)]">
-            Write / interact — coming soon
-          </div>
-        )}
-
-        {effectiveTab === "Code" && (
-          <div className="py-8 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--ink-faint)]">
-            Source code — coming soon
-          </div>
-        )}
-
-        {effectiveTab === "Activity" && (
-          <div className="py-8 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--ink-faint)]">
-            Transaction activity — coming soon
-          </div>
-        )}
+        <OverviewTab address={address} isContract={isContract} />
       </div>
     </div>
   );

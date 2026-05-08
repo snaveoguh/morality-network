@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createReconnectingEventSource } from "@/lib/sse";
 
 type LogLevel = "info" | "warn" | "error" | "debug";
 
@@ -35,43 +36,47 @@ export function LogViewer() {
   pausedRef.current = paused;
 
   useEffect(() => {
-    const es = new EventSource("/api/agents/logs/stream?historyMs=600000&limit=300");
     setStatus("connecting");
+    const stream = createReconnectingEventSource(
+      "/api/agents/logs/stream?historyMs=600000&limit=300",
+      {
+        onOpen: () => setStatus("live"),
+        onMessage: (event) => {
+          try {
+            const payload = JSON.parse(event.data) as
+              | { type: "connected" | "heartbeat" }
+              | { type: "log"; entry: AgentLogEntry }
+              | { type: "error"; message?: string };
 
-    es.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data) as
-          | { type: "connected" | "heartbeat" }
-          | { type: "log"; entry: AgentLogEntry }
-          | { type: "error"; message?: string };
-
-        if (payload.type === "connected" || payload.type === "heartbeat") {
-          setStatus("live");
-          return;
-        }
-        if (payload.type === "error") {
-          setStatus("degraded");
-          return;
-        }
-        if (payload.type === "log") {
-          setStatus("live");
-          if (pausedRef.current) return;
-          setEntries((current) => {
-            if (current.some((e) => e.id === payload.entry.id)) return current;
-            const next = [...current, payload.entry];
-            if (next.length > MAX_BUFFER) {
-              return next.slice(next.length - MAX_BUFFER);
+            if (payload.type === "connected" || payload.type === "heartbeat") {
+              setStatus("live");
+              return;
             }
-            return next;
-          });
-        }
-      } catch {
-        setStatus("degraded");
-      }
-    };
-
-    es.onerror = () => setStatus("degraded");
-    return () => es.close();
+            if (payload.type === "error") {
+              setStatus("degraded");
+              return;
+            }
+            if (payload.type === "log") {
+              setStatus("live");
+              if (pausedRef.current) return;
+              setEntries((current) => {
+                if (current.some((e) => e.id === payload.entry.id)) return current;
+                const next = [...current, payload.entry];
+                if (next.length > MAX_BUFFER) {
+                  return next.slice(next.length - MAX_BUFFER);
+                }
+                return next;
+              });
+            }
+          } catch {
+            setStatus("degraded");
+          }
+        },
+        onError: (_event, _attempt, willRetry) =>
+          setStatus(willRetry ? "connecting" : "degraded"),
+      },
+    );
+    return () => stream.close();
   }, []);
 
   useEffect(() => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { LogViewer } from "@/components/bots/LogViewer";
+import { createReconnectingEventSource } from "@/lib/sse";
 
 // ─── Types (mirroring API responses) ────────────────────────────────────────
 
@@ -294,57 +295,55 @@ export default function BotsPage() {
   }, [refresh]);
 
   useEffect(() => {
-    const es = new EventSource("/api/agents/events/stream?limit=100&historyMs=300000");
     setStreamStatus("connecting");
+    const stream = createReconnectingEventSource(
+      "/api/agents/events/stream?limit=100&historyMs=300000",
+      {
+        onOpen: () => setStreamStatus("live"),
+        onMessage: (event) => {
+          try {
+            const payload = JSON.parse(event.data) as
+              | { type: "connected" | "heartbeat" }
+              | { type: "event"; event: BusMessage }
+              | { type: "error"; message?: string };
 
-    es.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data) as
-          | { type: "connected" | "heartbeat" }
-          | { type: "event"; event: BusMessage }
-          | { type: "error"; message?: string };
-
-        if (payload.type === "connected" || payload.type === "heartbeat") {
-          setStreamStatus("live");
-          return;
-        }
-
-        if (payload.type === "error") {
-          setStreamStatus("degraded");
-          return;
-        }
-
-        if (payload.type === "event") {
-          setStreamStatus("live");
-          setLastRefresh(Date.now());
-          setBusMessages((current) => {
-            const existing = new Set(current.map((message) => message.id));
-            if (existing.has(payload.event.id)) {
-              return current;
+            if (payload.type === "connected" || payload.type === "heartbeat") {
+              setStreamStatus("live");
+              return;
             }
-            return [payload.event, ...current].slice(0, 100);
-          });
-          if (Date.now() - lastConsoleRefreshRef.current > 5_000) {
-            lastConsoleRefreshRef.current = Date.now();
-            void refresh(false);
+
+            if (payload.type === "error") {
+              setStreamStatus("degraded");
+              return;
+            }
+
+            if (payload.type === "event") {
+              setStreamStatus("live");
+              setLastRefresh(Date.now());
+              setBusMessages((current) => {
+                const existing = new Set(current.map((message) => message.id));
+                if (existing.has(payload.event.id)) {
+                  return current;
+                }
+                return [payload.event, ...current].slice(0, 100);
+              });
+              if (Date.now() - lastConsoleRefreshRef.current > 5_000) {
+                lastConsoleRefreshRef.current = Date.now();
+                void refresh(false);
+              }
+            }
+          } catch {
+            setStreamStatus("degraded");
           }
-        }
-      } catch {
-        setStreamStatus("degraded");
-      }
-    };
+        },
+        onError: (_event, _attempt, willRetry) => {
+          setStreamStatus(willRetry ? "connecting" : "degraded");
+        },
+      },
+    );
 
-    es.onerror = () => {
-      setStreamStatus("degraded");
-    };
-
-    return () => {
-      es.close();
-    };
-  // refresh is stable (useCallback with no deps that change), intentionally
-  // not re-subscribing SSE on every render — the ref handles the refresh call
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => stream.close();
+  }, [refresh]);
 
   // ── Derive health dots ───────────────────────────────────────────────────
   // nowMs is computed once per render cycle at the page root and threaded down

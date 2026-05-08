@@ -81,9 +81,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // For pooter daily editions, only the editorial archive has the data.
   // Running both checks concurrently avoids the 20-30s sequential waterfall
   // that was causing Vercel function timeouts.
+  //
+  // Each lookup is independently capped at 5s — Redis or the indexer can hang,
+  // and we'd rather render with a missing primary than blow the 55s function
+  // budget waiting for an unresponsive backend.
   const [archivedPrimary, earlyEditorial] = await Promise.all([
-    getArchivedFeedItemByHash(hash as `0x${string}`).catch(() => null),
-    getArchivedEditorial(hash).catch(() => null),
+    withTimeout(
+      getArchivedFeedItemByHash(hash as `0x${string}`).catch(() => null),
+      5000,
+      null,
+    ),
+    withTimeout(getArchivedEditorial(hash).catch(() => null), 5000, null),
   ]);
 
   // If we have an editorial with its primary, skip the slow feed/registry paths
@@ -162,10 +170,16 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       });
     }
   }
+  // Registry recovery hits an RPC + an upstream archive fetch — cap at 8s so
+  // a slow chain RPC can't blow the function budget.
   const recoveredPrimary =
     livePrimary || archivedPrimary
       ? null
-      : await recoverPrimaryFromRegistry(hash as `0x${string}`);
+      : await withTimeout(
+          recoverPrimaryFromRegistry(hash as `0x${string}`).catch(() => null),
+          8000,
+          null,
+        );
   const primary = livePrimary ?? archivedPrimary ?? recoveredPrimary;
 
   // Ensure the specific primary is archived (may have been recovered from registry)
@@ -178,10 +192,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // ─── Check user-published articles in Redis ──────────────────────
   if (!primary) {
     try {
+      // 3s cap — this is a last-resort lookup; if the API is slow we'd rather
+      // fall through to the "Awaiting Content" fallback than hang the page.
+      const pubController = new AbortController();
+      const pubTimeout = setTimeout(() => pubController.abort(), 3000);
       const pubRes = await fetch(
         `${process.env.NEXT_PUBLIC_SITE_URL || "https://pooter.world"}/api/articles/publish?hash=${hash}`,
-        { next: { revalidate: 60 } },
-      );
+        { next: { revalidate: 60 }, signal: pubController.signal },
+      ).finally(() => clearTimeout(pubTimeout));
       if (pubRes.ok) {
         const userArticle = await pubRes.json();
         if (userArticle && userArticle.title) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
+import { createReconnectingEventSource } from "@/lib/sse";
 
 const EquityCurve = dynamic(() => import("@/components/pipe/EquityCurve"), { ssr: false });
 const NewsGlobe = dynamic(() => import("@/components/pipe/NewsGlobe"), { ssr: false });
@@ -200,18 +201,21 @@ export default function PipePage() {
     setLastUpdate(Date.now());
   }, [equityHistory.length]);
 
-  // SSE for real-time agent events
+  // SSE for real-time agent events — auto-reconnects with backoff
   useEffect(() => {
-    const es = new EventSource("/api/agents/events/stream");
-    es.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.type === "event" && data.event) {
-          setEvents((prev) => [data.event, ...prev].slice(0, 50));
+    const stream = createReconnectingEventSource("/api/agents/events/stream", {
+      onMessage: (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.type === "event" && data.event) {
+            setEvents((prev) => [data.event, ...prev].slice(0, 50));
+          }
+        } catch {
+          /* ignore */
         }
-      } catch { /* ignore */ }
-    };
-    return () => es.close();
+      },
+    });
+    return () => stream.close();
   }, []);
 
   // Poll every 15s

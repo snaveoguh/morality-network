@@ -6,6 +6,7 @@ import { AddressDisplay } from "@/components/shared/AddressDisplay";
 import { StructuredCommentForm } from "@/components/entity/StructuredCommentForm";
 import { CONTRACTS } from "@/lib/contracts";
 import { timeAgo } from "@/lib/entity";
+import { createReconnectingEventSource } from "@/lib/sse";
 
 interface LiveComment {
   id: string;
@@ -39,34 +40,41 @@ export function LiveRoom({ entityHash, entityName }: LiveRoomProps) {
 
   useEffect(() => {
     const url = `/api/discuss/stream?entityHash=${encodeURIComponent(entityHash)}`;
-    const es = new EventSource(url);
-
-    es.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "connected") {
-          setConnected(true);
-          setError(null);
-        } else if (data.type === "comment") {
-          setComments((prev) => {
-            if (prev.some((c) => c.id === data.id)) return prev;
-            return [...prev, data as LiveComment].slice(-200);
-          });
-          setTimeout(scrollToBottom, 50);
-        } else if (data.type === "error") {
-          setError(data.message);
+    const stream = createReconnectingEventSource(url, {
+      onOpen: () => {
+        setConnected(true);
+        setError(null);
+      },
+      onMessage: (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "connected") {
+            setConnected(true);
+            setError(null);
+          } else if (data.type === "comment") {
+            setComments((prev) => {
+              if (prev.some((c) => c.id === data.id)) return prev;
+              return [...prev, data as LiveComment].slice(-200);
+            });
+            setTimeout(scrollToBottom, 50);
+          } else if (data.type === "error") {
+            setError(data.message);
+          }
+        } catch {
+          // ignore
         }
-      } catch {
-        // ignore
-      }
-    };
+      },
+      onError: (_event, attempt, willRetry) => {
+        setConnected(false);
+        setError(
+          willRetry
+            ? `Connection lost. Reconnecting (attempt ${attempt + 1})…`
+            : "Connection lost. Reload to try again.",
+        );
+      },
+    });
 
-    es.onerror = () => {
-      setConnected(false);
-      setError("Connection lost. Reconnecting...");
-    };
-
-    return () => es.close();
+    return () => stream.close();
   }, [entityHash, scrollToBottom]);
 
   /** Find the content preview for a parent comment by ID */

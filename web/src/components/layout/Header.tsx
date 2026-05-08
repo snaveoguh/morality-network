@@ -17,6 +17,7 @@ const NAV_LINKS = [
   { href: "/markets", label: "Markets" },
   { href: "/bots", label: "Agents" },
   { href: "/sentiment", label: "Index" },
+  { href: "/originals", label: "Originals" },
   { href: "/archive", label: "Archive" },
   { href: "/proposals", label: "Governance" },
 ];
@@ -102,9 +103,11 @@ export function Header() {
 const LOGO_MENU_ITEMS = [
   { href: "/write", label: "Create", desc: "Publish an article" },
   { href: "/subscribe", label: "The Daily Pooter", desc: "Morning intelligence brief" },
+  { href: "/daily", label: "Daily Editions", desc: "Every front page, archived" },
   { href: "/architecture", label: "Architecture", desc: "System design docs" },
   { href: "/appendix", label: "Appendix", desc: "Contracts & API reference" },
   { href: "/style-guide", label: "Style Guide", desc: "Brand & design system" },
+  { href: "/typography", label: "Typography Lab", desc: "Variable-font candidates" },
   { href: "/zk-recovery", label: "ZK Recovery", desc: "Passwordless wallet recovery" },
 ];
 
