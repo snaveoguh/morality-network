@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Playfair_Display, Libre_Baskerville, UnifrakturCook } from "next/font/google";
+import { Geist, Geist_Mono, Playfair_Display, Libre_Baskerville, UnifrakturCook, Mona_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers/WagmiProvider";
 import { ThemeProvider } from "@/lib/theme";
@@ -15,6 +15,12 @@ import { DevBanner } from "@/components/layout/DevBanner";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+});
+
+const monaSans = Mona_Sans({
+  variable: "--font-mona-sans",
+  subsets: ["latin"],
+  axes: ["wdth"],
 });
 
 const geistMono = Geist_Mono({
@@ -85,7 +91,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${baskerville.variable} ${fraktur.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${baskerville.variable} ${fraktur.variable} ${monaSans.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
       >
         <ThemeProvider>
         <Providers>

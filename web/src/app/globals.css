@@ -47,7 +47,7 @@
   --color-rule: #2A2A2A;
   --color-rule-light: #C8C0B0;
   --color-accent-red: #8B0000;
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-mona-sans), var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -60,6 +60,33 @@ body { background: var(--paper); color: var(--ink); }
 .font-body-serif { font-family: var(--font-baskerville), 'Georgia', serif; }
 .font-headline { font-family: var(--font-playfair), 'Georgia', serif; font-weight: 900; letter-spacing: -0.01em; }
 .font-comic { font-family: 'Comic Neue', 'Comic Sans MS', cursive; }
+
+/* ── Variable-axis hover morph (Mona Sans) ──
+   Two states only — no extreme widening. Use:
+   - .hover-morph-subtle  for body links and small interactive text
+   - .hover-morph-medium  for primary nav, buttons, cards, selected states
+   `selected` modifier locks the morph in for active/selected items.
+*/
+.hover-morph-subtle,
+.hover-morph-medium {
+  font-variation-settings: "wght" 400, "wdth" 100;
+  transition: font-variation-settings 180ms ease, color 180ms ease, background-color 180ms ease;
+  will-change: font-variation-settings;
+}
+.hover-morph-subtle:hover,
+.hover-morph-subtle:focus-visible {
+  font-variation-settings: "wght" 600, "wdth" 105;
+}
+.hover-morph-medium:hover,
+.hover-morph-medium:focus-visible,
+.hover-morph-medium[data-selected="true"],
+.hover-morph-medium[aria-current="page"] {
+  font-variation-settings: "wght" 750, "wdth" 115;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hover-morph-subtle,
+  .hover-morph-medium { transition: none; }
+}
 
 /* ── E-ink image filter ── */
 .newspaper-img { filter: grayscale(100%) contrast(1.2) brightness(1.05); mix-blend-mode: multiply; }
