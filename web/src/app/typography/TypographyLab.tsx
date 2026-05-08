@@ -142,7 +142,7 @@ export default function TypographyLab() {
           Variable-axis font candidates
         </h1>
         <p className="mt-3 max-w-2xl font-body-serif text-base text-[var(--ink-light)]">
-          Hover the nav items below to feel each font's morph. The goal: a
+          Hover the nav items below to feel each font&apos;s morph. The goal: a
           hover/selected state that feels alive without screaming. Pick one — we
           ship it as the body sans alongside the existing serif stack.
         </p>
@@ -172,8 +172,8 @@ export default function TypographyLab() {
           Decision
         </p>
         <p className="mt-2 font-body-serif text-base italic text-[var(--ink-light)]">
-          Test each one for ~30 seconds. Whichever you can't stop mousing over,
-          that's the pick.
+          Test each one for ~30 seconds. Whichever you can&apos;t stop mousing
+          over, that&apos;s the pick.
         </p>
       </footer>
     </main>
