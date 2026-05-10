@@ -539,9 +539,22 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
       if (filter === "pooter-og") {
         result = result.filter((item) => item.type === "pooter-original");
       } else if (filter === "moral-commentary") {
-        result = result.filter(
-          (item) => item.type === "pooter-original" && isMoralCommentaryItem(item.data),
-        );
+        // Match pooter editorials (cron output + handwritten ethics essays) AND
+        // any RSS story whose tags or title indicate ethics/morality content,
+        // so the filter has stuff to surface even when the daily commentary
+        // cron is dry.
+        result = result.filter((item) => {
+          if (item.type === "pooter-original") return isMoralCommentaryItem(item.data);
+          if (item.type === "rss") {
+            return isMoralCommentaryItem({
+              category: item.data.category,
+              title: item.data.title,
+              subheadline: item.data.description,
+              tags: item.data.tags,
+            });
+          }
+          return false;
+        });
       } else if (filter === "news") {
         result = result.filter((item) => NEWS_CATEGORIES.has(item.category));
       } else {
