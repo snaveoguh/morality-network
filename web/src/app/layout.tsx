@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Playfair_Display, Libre_Baskerville, UnifrakturCook } from "next/font/google";
+import { Mona_Sans, Geist_Mono, UnifrakturCook } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers/WagmiProvider";
 import { ThemeProvider } from "@/lib/theme";
@@ -12,28 +12,18 @@ import { BetaToast } from "@/components/layout/BetaToast";
 import { PooterNotificationHub } from "@/components/notifications/PooterNotificationHub";
 import { DevBanner } from "@/components/layout/DevBanner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const monaSans = Mona_Sans({
+  variable: "--font-mona",
   subsets: ["latin"],
+  axes: ["wdth"],
+  style: ["normal", "italic"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "700", "900"],
-  style: ["normal", "italic"],
-});
-
-const baskerville = Libre_Baskerville({
-  variable: "--font-baskerville",
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  style: ["normal", "italic"],
+  display: "swap",
 });
 
 const fraktur = UnifrakturCook({
@@ -85,7 +75,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${baskerville.variable} ${fraktur.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
+        className={`${monaSans.variable} ${geistMono.variable} ${fraktur.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
       >
         <ThemeProvider>
         <Providers>
