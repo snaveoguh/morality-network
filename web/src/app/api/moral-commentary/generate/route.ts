@@ -18,7 +18,10 @@ export async function GET(request: NextRequest) {
   try {
     const result = await generateMoralCommentary();
     console.log("[moral-commentary] route result:", result);
-    return NextResponse.json(result);
+    // Treat a non-generated, non-skipped result as a real failure so the
+    // scheduled job fails loudly instead of green-checking every empty run.
+    const isHardFailure = !result.generated && !result.skipped;
+    return NextResponse.json(result, { status: isHardFailure ? 500 : 200 });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[moral-commentary] route error:", msg);
