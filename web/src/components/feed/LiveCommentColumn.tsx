@@ -6,7 +6,9 @@ import { formatEth, getDailyEditionHashClient, shortenAddress, timeAgo } from "@
 import { StructuredCommentForm } from "@/components/entity/StructuredCommentForm";
 
 const POLL_MS = 25_000;
-const FEED_LIMIT = 40;
+// Fetch API max so the column shows the full live wire and user can keep
+// scrolling alongside the news grid without hitting an internal scrollbar.
+const FEED_LIMIT = 100;
 
 type WireCommentActivity = {
   kind: "comment";
@@ -38,25 +40,7 @@ type ProtocolWireResponse = {
   activities?: WireActivity[];
 };
 
-interface WireEntityMeta {
-  category: string;
-  bias?: string;
-  tags?: string[];
-}
-
-interface LiveCommentColumnProps {
-  categoryFilter?: string;
-  biasFilter?: string;
-  tagFilter?: string;
-  entityMetaByHash?: Record<string, WireEntityMeta>;
-}
-
-export function LiveCommentColumn({
-  categoryFilter = "all",
-  biasFilter = "all",
-  tagFilter = "all",
-  entityMetaByHash = {},
-}: LiveCommentColumnProps) {
+export function LiveCommentColumn() {
   const [activities, setActivities] = useState<WireActivity[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -116,26 +100,13 @@ export function LiveCommentColumn({
     setTimeout(() => refreshRef.current(), 3000);
   }, []);
 
-  const hasActiveFilters =
-    categoryFilter !== "all" || biasFilter !== "all" || tagFilter !== "all";
-
-  const items = useMemo(
-    () =>
-      activities.filter((activity) =>
-        matchesActivityFilters(
-          activity,
-          categoryFilter,
-          biasFilter,
-          tagFilter,
-          entityMetaByHash
-        )
-      ),
-    [activities, categoryFilter, biasFilter, tagFilter, entityMetaByHash]
-  );
+  // The wire is a global live stream; front-page category/bias/tag filters
+  // intentionally do not narrow it — the wire is its own thing.
+  const items = activities;
   const hasActivity = items.length > 0;
 
   return (
-    <div className="sticky top-10 overflow-hidden">
+    <div>
       <div className="mb-3 border-b-2 border-[var(--rule)] pb-2">
         <div className="flex items-center justify-between">
           <h2 className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
@@ -168,7 +139,7 @@ export function LiveCommentColumn({
         </div>
       )}
 
-      <div className="max-h-[calc(100vh-170px)] space-y-0 overflow-y-auto pr-1">
+      <div className="space-y-0 pr-1">
         {items.map((activity) =>
           activity.kind === "comment" ? (
             <CommentActivityCard
@@ -182,9 +153,7 @@ export function LiveCommentColumn({
 
         {!hasActivity && loaded && (
           <p className="py-6 text-center font-body-serif text-sm italic text-[var(--ink-faint)]">
-            {hasActiveFilters
-              ? "No protocol activity for current filters."
-              : "No protocol activity yet."}
+            No protocol activity yet.
           </p>
         )}
 
@@ -296,45 +265,4 @@ function activityIdentity(activity: WireActivity): string {
     return `comment:${activity.id}:${activity.timestamp}:${activity.score}:${activity.tipTotal}`;
   }
   return `tip:${activity.id}:${activity.timestamp}:${activity.amount}`;
-}
-
-function matchesActivityFilters(
-  activity: WireActivity,
-  categoryFilter: string,
-  biasFilter: string,
-  tagFilter: string,
-  entityMetaByHash: Record<string, WireEntityMeta>
-): boolean {
-  if (categoryFilter === "all" && biasFilter === "all" && tagFilter === "all") {
-    return true;
-  }
-
-  const entityHash = activity.entityHash;
-  if (!entityHash) return false;
-
-  const meta = entityMetaByHash[entityHash.toLowerCase()];
-  if (!meta) return false;
-
-  if (categoryFilter !== "all" && meta.category !== categoryFilter) {
-    return false;
-  }
-
-  if (biasFilter !== "all") {
-    const bias = meta.bias;
-    if (!bias) return false;
-    if (biasFilter === "left") {
-      if (bias !== "left" && bias !== "far-left") return false;
-    } else if (biasFilter === "right") {
-      if (bias !== "right" && bias !== "far-right") return false;
-    } else if (bias !== biasFilter) {
-      return false;
-    }
-  }
-
-  if (tagFilter !== "all") {
-    const tags = meta.tags ?? [];
-    if (!tags.includes(tagFilter)) return false;
-  }
-
-  return true;
 }

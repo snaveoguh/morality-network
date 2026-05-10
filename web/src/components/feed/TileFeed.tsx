@@ -468,69 +468,6 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
     return [...published, ...mixed];
   }, [rssItems, casts, proposals, videos, publishedHashList, pooterOriginals]);
 
-  const wireEntityMetaByHash = useMemo(() => {
-    const map: Record<
-      string,
-      {
-        category: string;
-        bias?: string;
-        tags: string[];
-      }
-    > = {};
-
-    function upsert(
-      entityHash: `0x${string}`,
-      next: { category: string; bias?: string; tags: string[] }
-    ) {
-      const key = entityHash.toLowerCase();
-      const existing = map[key];
-
-      if (!existing) {
-        map[key] = {
-          category: next.category,
-          bias: next.bias,
-          tags: Array.from(new Set(next.tags)),
-        };
-        return;
-      }
-
-      const mergedTags = Array.from(new Set([...existing.tags, ...next.tags]));
-      map[key] = {
-        category: existing.category,
-        bias: existing.bias ?? next.bias,
-        tags: mergedTags,
-      };
-    }
-
-    for (const item of rssItems) {
-      upsert(computeEntityHash(item.link), {
-        category: item.category.toLowerCase(),
-        bias: item.bias?.bias ? item.bias.bias.toLowerCase() : undefined,
-        tags: (item.tags || []).map((tag) => tag.toLowerCase()),
-      });
-    }
-
-    for (const cast of casts) {
-      const tippableAddress = cast.author.verifiedAddresses?.[0] || "";
-      const hash = tippableAddress
-        ? computeEntityHash(tippableAddress)
-        : computeEntityHash(`farcaster://${cast.author.username}`);
-      upsert(hash, {
-        category: "farcaster",
-        tags: ["farcaster"],
-      });
-    }
-
-    for (const proposal of proposals) {
-      upsert(computeEntityHash(proposal.id), {
-        category: getProposalCategory(proposal),
-        tags: (proposal.tags || []).map((tag) => tag.toLowerCase()),
-      });
-    }
-
-    return map;
-  }, [rssItems, casts, proposals]);
-
   // Items filtered by category/country/bias (before tag filter) — used to
   // compute which tags are actually available given the other active filters.
   const preTagFiltered = useMemo(() => {
@@ -845,12 +782,7 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
         </div>
 
         <div className="w-full shrink-0 snap-start overflow-hidden pl-4 lg:block lg:w-56 lg:max-w-56 lg:shrink-0 lg:overflow-visible">
-          <LiveCommentColumn
-            categoryFilter={filter}
-            biasFilter={biasFilter}
-            tagFilter={tagFilter}
-            entityMetaByHash={wireEntityMetaByHash}
-          />
+          <LiveCommentColumn />
         </div>
       </div>
     </div>
