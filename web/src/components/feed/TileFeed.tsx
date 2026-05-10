@@ -91,6 +91,27 @@ const FILTER_OPTIONS = [
 // "News" filter matches all general news categories (World, Politics, Business)
 const NEWS_CATEGORIES = new Set(["world", "politics", "business"]);
 
+// "Morality" filter matches the daily moral-commentary cron output AND any
+// editorial whose tags or title indicate ethics/morality/justice content,
+// so handwritten or category-mismatched essays still surface.
+const MORAL_TAG_SET = new Set([
+  "moral-commentary", "ethics", "ethical", "morality", "moral",
+  "philosophy", "justice", "virtue",
+]);
+const MORAL_TITLE_RE = /\b(moral|ethic|ethics|ethical|justice|virtue|just\s+war)\b/i;
+
+function isMoralCommentaryItem(data: {
+  category?: string;
+  title?: string;
+  subheadline?: string;
+  tags?: string[];
+}): boolean {
+  if (data.category?.toLowerCase() === "moral commentary") return true;
+  if (data.tags?.some((t) => MORAL_TAG_SET.has(t.toLowerCase()))) return true;
+  const text = `${data.title ?? ""} ${data.subheadline ?? ""}`;
+  return MORAL_TITLE_RE.test(text);
+}
+
 const COUNTRY_FILTER_OPTIONS = [
   { value: "all", label: "All" },
   { value: "us", label: "US" },
@@ -430,10 +451,8 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
 
     // Interleave Pooter Originals — moral commentary gets pole position,
     // other originals every ~8 items for a fuller feed
-    const isMoralCommentary = (o: TileItem) => {
-      const d = o.data as PooterOriginalData;
-      return d.category?.toLowerCase() === "moral commentary" || d.tags?.includes("moral-commentary");
-    };
+    const isMoralCommentary = (o: TileItem) =>
+      isMoralCommentaryItem(o.data as PooterOriginalData);
     const moralCommentary = originals.filter(isMoralCommentary);
     const otherOriginals = originals.filter((o) => !isMoralCommentary(o));
     // Moral commentary always near the very top (position 1)
@@ -520,10 +539,8 @@ export function TileFeed({ rssItems, casts, proposals, videos = [], biasDigest, 
       if (filter === "pooter-og") {
         result = result.filter((item) => item.type === "pooter-original");
       } else if (filter === "moral-commentary") {
-        result = result.filter((item) =>
-          item.type === "pooter-original" &&
-          (item.data.category.toLowerCase() === "moral commentary" ||
-           item.data.tags?.includes("moral-commentary")),
+        result = result.filter(
+          (item) => item.type === "pooter-original" && isMoralCommentaryItem(item.data),
         );
       } else if (filter === "news") {
         result = result.filter((item) => NEWS_CATEGORIES.has(item.category));
