@@ -305,6 +305,15 @@ async function batchSettled<T>(
   return results;
 }
 
+/**
+ * Read-only access to the most recent RSS cache snapshot — even if stale.
+ * Used as a withTimeout() fallback so a slow upstream fetch never strands
+ * the homepage with zero news.
+ */
+export function getCachedFeedItems(): FeedItem[] {
+  return feedCache?.items ?? [];
+}
+
 export async function fetchAllFeeds(
   sources: FeedSource[] = DEFAULT_FEEDS
 ): Promise<FeedItem[]> {
@@ -357,6 +366,15 @@ export async function fetchAllFeeds(
 
   // Sort by date, newest first
   deduped.sort((a, b) => parseTimestamp(b.pubDate) - parseTimestamp(a.pubDate));
+
+  // Don't overwrite a non-empty cache with an empty fetch result. If every
+  // upstream feed errored or this fetch raced with an upstream outage,
+  // serve the previous snapshot rather than caching emptiness for a full
+  // FEED_CACHE_TTL_MS (which would freeze the homepage feed completely).
+  if (deduped.length === 0 && feedCache && feedCache.items.length > 0) {
+    reportWarn("RSS", `fetch returned 0 items — keeping previous cache (${feedCache.items.length})`);
+    return feedCache.items;
+  }
 
   // Cache results
   feedCache = { items: deduped, ts: Date.now() };

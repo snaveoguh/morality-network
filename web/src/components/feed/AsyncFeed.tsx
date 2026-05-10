@@ -7,7 +7,7 @@
 
 import { after } from "next/server";
 import { TileFeed } from "./TileFeed";
-import { fetchAllFeeds } from "@/lib/rss";
+import { fetchAllFeeds, getCachedFeedItems } from "@/lib/rss";
 import { fetchAllProposals, fetchGovernanceSocialSignals } from "@/lib/governance";
 import { fetchFarcasterContent } from "@/lib/farcaster";
 import { fetchDailyVideos } from "@/lib/video";
@@ -29,7 +29,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 
 export async function AsyncFeed() {
   const [rssItems, proposals, governanceSignals, casts, videos, publishedHashes, pooterOriginals] = await Promise.all([
-    withTimeout(fetchAllFeeds(), 8000, []),
+    // Fall back to last-known cached RSS rather than [] — otherwise an 8s
+    // timeout on cold-start renders the homepage with zero news for an
+    // entire cache TTL, breaking every category filter.
+    withTimeout(fetchAllFeeds(), 8000, getCachedFeedItems()),
     withTimeout(fetchAllProposals(), 8000, []),
     withTimeout(fetchGovernanceSocialSignals(), 5000, []),
     withTimeout(fetchFarcasterContent("pip"), 5000, []),
