@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 
 const EquityCurve = dynamic(() => import("@/components/pipe/EquityCurve"), { ssr: false });
@@ -42,6 +42,31 @@ interface TradingSignal {
   score: number;
   observations: number;
   supportingClaims: string[];
+}
+
+interface ExecutionCandidate {
+  symbol: string;
+  direction: "long" | "short" | "neutral";
+  confidence: number;
+  agreementMet: boolean;
+  eligible: boolean;
+  hasSignal: boolean;
+  sourceCount: number;
+  components: {
+    technical: {
+      direction: "long" | "short" | "neutral";
+      strength: number;
+    } | null;
+    pattern: {
+      direction: "long" | "short" | "neutral";
+      patterns: string[];
+    } | null;
+    news: {
+      direction: "long" | "short" | "neutral";
+      score: number;
+    } | null;
+  };
+  reasons: string[];
 }
 
 interface ClosedPosition {
@@ -137,6 +162,7 @@ export default function PipePage() {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [agents, setAgents] = useState<AgentSnapshot[]>([]);
   const [clusters, setClusters] = useState<SwarmCluster[]>([]);
+  const [executionCandidates, setExecutionCandidates] = useState<ExecutionCandidate[]>([]);
   const [signals, setSignals] = useState<TradingSignal[]>([]);
   const [openPositions, setOpenPositions] = useState<OpenPosition[]>([]);
   const [closedPositions, setClosedPositions] = useState<ClosedPosition[]>([]);
@@ -150,11 +176,12 @@ export default function PipePage() {
   const [equityHistory, setEquityHistory] = useState<{ time: number; value: number }[]>([]);
 
   const refresh = useCallback(async () => {
-    const [feedRes, agentRes, swarmRes, signalRes, metricsRes, deliberationRes] =
+    const [feedRes, agentRes, swarmRes, candidateRes, signalRes, metricsRes, deliberationRes] =
       await Promise.allSettled([
         fetch("/api/feed?limit=30").then((r) => r.json()),
         fetch("/api/agents").then((r) => r.json()),
         fetch("/api/agents/swarm").then((r) => r.json()),
+        fetch("/api/trading/signals/candidates?limit=8").then((r) => r.json()),
         fetch("/api/trading/signals").then((r) => r.json()),
         fetch("/api/trading/metrics").then((r) => r.json()),
         fetch("/api/trading/deliberation/latest").then((r) => r.json()),
@@ -163,6 +190,9 @@ export default function PipePage() {
     if (feedRes.status === "fulfilled") setFeed(feedRes.value.items?.slice(0, 30) ?? []);
     if (agentRes.status === "fulfilled") setAgents(agentRes.value.agents ?? []);
     if (swarmRes.status === "fulfilled") setClusters(swarmRes.value.clusters?.slice(0, 15) ?? []);
+    if (candidateRes.status === "fulfilled") {
+      setExecutionCandidates(candidateRes.value.candidates?.slice(0, 8) ?? []);
+    }
     if (signalRes.status === "fulfilled") setSignals(signalRes.value.signals?.slice(0, 15) ?? []);
     if (deliberationRes.status === "fulfilled") setDeliberations(deliberationRes.value.data ?? []);
     if (metricsRes.status === "fulfilled") {
@@ -335,11 +365,33 @@ export default function PipePage() {
 
         {/* Column 2: Signals + Narratives */}
         <div className="border-r border-[var(--rule-light)]">
-          <PanelHeader title="Edge Scanner" subtitle={`${signals.length} signals / ${clusters.length} clusters`} />
+          <PanelHeader
+            title="Edge Scanner"
+            subtitle={`${executionCandidates.length} candidates / ${signals.length} raw / ${clusters.length} clusters`}
+          />
           <div className="h-[calc(100vh-380px)] overflow-y-auto px-3 py-2 space-y-1">
-            {signals.map((sig, i) => (
-              <SignalEntry key={`sig-${i}`} signal={sig} />
-            ))}
+            {executionCandidates.length > 0 && (
+              <>
+                <div className="mb-1 font-mono text-[7px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+                  Execution Candidates
+                </div>
+                {executionCandidates.map((candidate) => (
+                  <CandidateEntry key={`candidate-${candidate.symbol}`} candidate={candidate} />
+                ))}
+              </>
+            )}
+            {signals.length > 0 && (
+              <>
+                <div className="border-t border-[var(--rule-light)] pt-2 mt-2">
+                  <div className="font-mono text-[7px] uppercase tracking-[0.2em] text-[var(--ink-faint)] mb-1">
+                    Raw News Flow
+                  </div>
+                </div>
+                {signals.map((sig, i) => (
+                  <SignalEntry key={`sig-${i}`} signal={sig} />
+                ))}
+              </>
+            )}
             {deliberations.length > 0 && (
               <>
                 <div className="border-t border-[var(--rule-light)] pt-2 mt-2">
@@ -364,7 +416,7 @@ export default function PipePage() {
                 ))}
               </>
             )}
-            {signals.length === 0 && clusters.length === 0 && (
+            {executionCandidates.length === 0 && signals.length === 0 && clusters.length === 0 && (
               <EmptyState label="Scanning..." />
             )}
           </div>
@@ -500,17 +552,61 @@ function BusEventEntry({ event }: { event: BusEvent }) {
 
 // ─── Signal Entries ──────────────────────────────────────────────────────────
 
+function CandidateEntry({ candidate }: { candidate: ExecutionCandidate }) {
+  const directionLabel =
+    candidate.direction === "long" ? "LONG" : candidate.direction === "short" ? "SHRT" : "WAIT";
+  const color =
+    candidate.direction === "long"
+      ? "var(--accent-green)"
+      : candidate.direction === "short"
+        ? "var(--accent-red)"
+        : "var(--accent-amber)";
+  const sourceLabels = [
+    candidate.components.technical ? "tech" : null,
+    candidate.components.pattern ? "pattern" : null,
+    candidate.components.news ? "news" : null,
+  ].filter(Boolean);
+  const summary =
+    candidate.reasons[0] ??
+    (candidate.eligible ? "Composite agreement met" : "Consensus still forming");
+
+  return (
+    <div className="border border-[var(--rule-light)] p-2">
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-[9px] font-bold uppercase" style={{ color }}>
+          {directionLabel}
+        </span>
+        <span className="font-mono text-[10px] font-bold text-[var(--ink)]">{candidate.symbol}</span>
+        <span className="font-mono text-[7px] uppercase tracking-[0.14em] text-[var(--ink-faint)]">
+          {candidate.eligible ? "ready" : "watch"}
+        </span>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="font-mono text-[8px] text-[var(--ink-faint)]">
+            CF:{Math.round(candidate.confidence * 100)}%
+          </span>
+          <span className="font-mono text-[7px] uppercase tracking-[0.1em] text-[var(--ink-faint)]">
+            {sourceLabels.join("+")}
+          </span>
+        </div>
+      </div>
+      <div className="mt-1 font-mono text-[7px] leading-tight text-[var(--ink-faint)]">
+        {summary}
+      </div>
+    </div>
+  );
+}
+
 function SignalEntry({ signal }: { signal: TradingSignal }) {
   const isBullish = signal.direction === "bullish";
   const color = isBullish ? "var(--accent-green)" : "var(--accent-red)";
   return (
     <div className="flex items-center gap-2 py-1 border-b border-[var(--rule-light)] last:border-0">
       <span className="font-mono text-[9px] font-bold uppercase" style={{ color }}>
-        {isBullish ? "LONG" : "SHRT"}
+        {isBullish ? "NEWS BULL" : "NEWS BEAR"}
       </span>
       <span className="font-mono text-[10px] font-bold text-[var(--ink)]">{signal.symbol}</span>
       <div className="ml-auto flex items-center gap-2">
-        <span className="font-mono text-[8px] text-[var(--ink-faint)]">EV:{signal.score.toFixed(1)}%</span>
+        <span className="font-mono text-[8px] text-[var(--ink-faint)]">Score:{signal.score.toFixed(1)}</span>
         <span className="font-mono text-[7px] text-[var(--ink-faint)]">{signal.observations} obs</span>
       </div>
     </div>

@@ -17,7 +17,7 @@ import { runVaultRailKeeper } from "../lib/trading/vault-rail";
 import { runScoutCycle } from "../lib/trading/scout";
 import { installAgentLogShipper } from "../lib/server/agent-log-shipper";
 
-type WorkerTaskName = "scanner" | "swarm" | "trader" | "bridge" | "vault" | "scout";
+type WorkerTaskName = "scanner" | "swarm" | "trader" | "bridge" | "vault" | "scout" | "editorial-signals";
 type PersistedAgentEvent = {
   id: string;
   from: string;
@@ -29,7 +29,7 @@ type PersistedAgentEvent = {
 };
 
 const DEFAULT_TASKS: WorkerTaskName[] = ["scanner", "swarm"];
-const VALID_TASKS = new Set<WorkerTaskName>(["scanner", "swarm", "trader", "bridge", "vault", "scout"]);
+const VALID_TASKS = new Set<WorkerTaskName>(["scanner", "swarm", "trader", "bridge", "vault", "scout", "editorial-signals"]);
 const runningTasks = new Set<WorkerTaskName>();
 
 function log(message: string, meta?: unknown): void {
@@ -479,6 +479,55 @@ async function runBridgeTask(): Promise<void> {
   });
 }
 
+async function runEditorialSignalsTask(): Promise<void> {
+  const { listRecentMarketImpactRecords } = await import("../lib/editorial-archive.js");
+  const { recordSignalsBatch } = await import("../lib/db/signals.js");
+  type Row = Awaited<Parameters<typeof recordSignalsBatch>[0][number]>;
+
+  const records = await listRecentMarketImpactRecords(200);
+  const rows: Row[] = [];
+
+  for (const record of records) {
+    const { significance = 50, affectedMarkets = [] } = record.marketImpact;
+    const significanceFraction = Math.max(0, Math.min(100, significance)) / 100;
+
+    for (const market of affectedMarkets) {
+      const symbol = market.ticker ?? null;
+      if (!symbol) continue;
+
+      // "volatile" is not a valid SignalDirection — map to neutral
+      const direction: Row["direction"] =
+        market.direction === "bullish" || market.direction === "bearish"
+          ? market.direction
+          : "neutral";
+
+      const strength = Math.min(1, market.confidence * significanceFraction);
+
+      rows.push({
+        id: `editorial-${record.entityHash}-${symbol}`,
+        producedAt: new Date(record.generatedAt),
+        producedBy: "editorial",
+        symbol,
+        direction,
+        strength,
+        score: direction === "bullish" ? strength : direction === "bearish" ? -strength : 0,
+        claim: record.claim?.slice(0, 500) ?? null,
+        entityHash: record.entityHash,
+        marketImpact: record.marketImpact,
+        ttlExpiresAt: new Date(Date.now() + 48 * 3_600_000),
+      });
+    }
+  }
+
+  if (rows.length > 0) {
+    await recordSignalsBatch(rows);
+  }
+  log("editorial-signals completed", {
+    editorialsScanned: records.length,
+    signalsRecorded: rows.length,
+  });
+}
+
 async function executeTask(name: WorkerTaskName): Promise<boolean> {
   if (runningTasks.has(name)) {
     log(`${name} skipped because a previous run is still in flight`);
@@ -498,6 +547,8 @@ async function executeTask(name: WorkerTaskName): Promise<boolean> {
       await runVaultTask();
     } else if (name === "scout") {
       await runScoutTask();
+    } else if (name === "editorial-signals") {
+      await runEditorialSignalsTask();
     } else {
       await runBridgeTask();
     }
@@ -566,7 +617,9 @@ async function main(): Promise<void> {
               ? parseIntegerEnv("WORKER_VAULT_INTERVAL_MS", 300_000)
               : task === "scout"
                 ? parseIntegerEnv("WORKER_SCOUT_INTERVAL_MS", 300_000)
-                : parseIntegerEnv("WORKER_BRIDGE_INTERVAL_MS", 10_000);
+                : task === "editorial-signals"
+                  ? parseIntegerEnv("WORKER_EDITORIAL_SIGNALS_INTERVAL_MS", 3_600_000)
+                  : parseIntegerEnv("WORKER_BRIDGE_INTERVAL_MS", 10_000);
     timers.push(scheduleTask(task, intervalMs));
     log(`${task} scheduled`, { intervalMs });
   }

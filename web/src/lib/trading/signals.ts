@@ -59,6 +59,13 @@ interface SignalAccumulator {
   claims: string[];
 }
 
+interface NewsdeskSignalAccumulator extends SignalAccumulator {
+  narrative?: string;
+  narrativeScore?: number;
+  suggestedAction?: "enter-long" | "enter-short" | "hold" | "exit";
+  synthesisConfidence?: number;
+}
+
 // ── Asset → HL ticker mapping ─────────────────────────────────────────────
 
 const TICKER_ALIASES: Record<string, string> = {
@@ -127,8 +134,8 @@ const SYMBOL_PATTERNS: Array<{ symbol: string; pattern: RegExp }> = [
   { symbol: "LINK", pattern: /\b(chainlink|link)\b/i },
   { symbol: "ARB", pattern: /\b(arbitrum|arb)\b/i },
   { symbol: "OP", pattern: /\b(optimism)\b/i },
-  { symbol: "GOLD", pattern: /\b(gold|xau|bullion|precious metal)\b/i },
-  { symbol: "SILVER", pattern: /\b(silver|xag)\b/i },
+  { symbol: "PAXG", pattern: /\b(gold|xau|bullion|precious metal)\b/i },
+  { symbol: "PAXG", pattern: /\b(silver|xag)\b/i },
   { symbol: "OIL", pattern: /\b(oil|crude|wti|brent|petroleum|barrel|opec|energy)\b/i },
   {
     symbol: "DXY",
@@ -214,6 +221,108 @@ function mapAssetToSymbol(asset: string, ticker: string | null): string | null {
   return null;
 }
 
+function canonicalizeNewsdeskSymbol(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return (
+    TICKER_ALIASES[normalizeTicker(value) || ""] ||
+    mapAssetToSymbol(value, value) ||
+    normalizeTicker(value)
+  );
+}
+
+function mergeNewsdeskSignals(signals: NewsdeskEnrichedSignal[]): NewsdeskEnrichedSignal[] {
+  const bySymbol = new Map<string, NewsdeskSignalAccumulator>();
+
+  for (const signal of signals) {
+    const symbol = canonicalizeNewsdeskSymbol(signal.symbol);
+    if (!symbol) {
+      continue;
+    }
+
+    const current = bySymbol.get(symbol) ?? {
+      bullishWeight: 0,
+      bearishWeight: 0,
+      observations: 0,
+      latestTs: 0,
+      claims: [],
+      narrativeScore: -1,
+    };
+
+    if (signal.direction === "bullish") {
+      current.bullishWeight += Math.max(0, safeFinite(signal.score, 0));
+    } else {
+      current.bearishWeight += Math.max(0, safeFinite(signal.score, 0));
+    }
+
+    current.observations += Math.max(0, Math.floor(safeFinite(signal.observations, 0)));
+
+    const latestTs = new Date(signal.latestGeneratedAt).getTime();
+    if (Number.isFinite(latestTs)) {
+      current.latestTs = Math.max(current.latestTs, latestTs);
+    }
+
+    for (const claim of signal.supportingClaims ?? []) {
+      if (claim && !current.claims.includes(claim) && current.claims.length < 5) {
+        current.claims.push(claim);
+      }
+    }
+
+    const currentScore = Math.max(0, safeFinite(signal.score, 0));
+    if (currentScore >= (current.narrativeScore ?? -1)) {
+      if (signal.narrative) current.narrative = signal.narrative;
+      if (signal.suggestedAction) current.suggestedAction = signal.suggestedAction;
+      if (signal.synthesisConfidence !== undefined) {
+        current.synthesisConfidence = safeFinite(signal.synthesisConfidence, 0);
+      }
+      current.narrativeScore = currentScore;
+    }
+
+    bySymbol.set(symbol, current);
+  }
+
+  const mergedSignals: Array<NewsdeskEnrichedSignal | null> = Array.from(bySymbol.entries()).map(
+    ([symbol, acc]) => {
+      const rawScore = acc.bullishWeight - acc.bearishWeight;
+      if (rawScore === 0) {
+        return null;
+      }
+
+      const maxWeight = Math.max(acc.bullishWeight, acc.bearishWeight);
+      const minWeight = Math.min(acc.bullishWeight, acc.bearishWeight);
+      const contradictionPenalty = maxWeight > 0 ? minWeight / maxWeight : 0;
+      const signal: NewsdeskEnrichedSignal = {
+        symbol,
+        direction: rawScore > 0 ? "bullish" : "bearish",
+        score: Math.abs(rawScore),
+        observations: acc.observations,
+        latestGeneratedAt:
+          acc.latestTs > 0 ? new Date(acc.latestTs).toISOString() : new Date(0).toISOString(),
+        supportingClaims: acc.claims,
+        contradictionPenalty: safeFinite(contradictionPenalty, 0),
+        bullishWeight: safeFinite(acc.bullishWeight, 0),
+        bearishWeight: safeFinite(acc.bearishWeight, 0),
+        rawScore: safeFinite(rawScore, 0),
+      };
+
+      if (acc.narrative) {
+        signal.narrative = acc.narrative;
+      }
+      if (acc.suggestedAction) {
+        signal.suggestedAction = acc.suggestedAction;
+      }
+      if (acc.synthesisConfidence !== undefined) {
+        signal.synthesisConfidence = acc.synthesisConfidence;
+      }
+
+      return signal;
+    },
+  );
+
+  return mergedSignals
+    .filter((signal): signal is NewsdeskEnrichedSignal => signal !== null)
+    .sort((a, b) => b.score - a.score);
+}
+
 function directionToSigned(direction: MarketImpactDirection): 1 | -1 | 0 {
   if (direction === "bullish") return 1;
   if (direction === "bearish") return -1;
@@ -240,7 +349,7 @@ function safeFinite(value: number, fallback: number): number {
 const FALLBACK_TOPIC_TO_SYMBOL: Record<string, string> = {
   btc: "BTC",
   eth: "ETH",
-  gold: "GOLD",
+  gold: "PAXG",
   oil: "OIL",
   usd: "DXY",
 };
@@ -343,10 +452,15 @@ async function fetchNewsdeskSignals(): Promise<NewsdeskEnrichedSignal[]> {
     if (!response.ok) return [];
 
     const data = (await response.json()) as NewsdeskSignalsResponse;
-    if (data.signals?.length > 0) {
-      _lastNewsdeskResponse = data;
+    const mergedSignals = mergeNewsdeskSignals(data.signals ?? []);
+    if (mergedSignals.length > 0) {
+      _lastNewsdeskResponse = {
+        ...data,
+        signals: mergedSignals,
+        count: mergedSignals.length,
+      };
     }
-    return data.signals ?? [];
+    return mergedSignals;
   } catch (err) {
     console.warn(
       "[signals] newsdesk fetch failed:",
@@ -506,6 +620,14 @@ export async function getAggregatedMarketSignals(options?: {
   console.log(
     `[signals] aggregated ${records.length} records, ${totalProcessed} markets (${totalMapped} mapped, ${totalUnmapped} unmapped), ${bySymbol.size} tickers`,
   );
+
+  // All records were age-filtered (>72h) or produced zero usable markets.
+  // Fall through to live RSS rather than returning an empty signal set —
+  // stale editorial records should not block the live fallback.
+  if (bySymbol.size === 0) {
+    console.log("[signals] editorial archive produced 0 tickers (all stale or unmapped) — falling back to live RSS");
+    return getFallbackFeedSignals();
+  }
 
   // Require at least 2 directional observations per symbol before emitting
   // a signal — a single editorial shouldn't determine trade direction.

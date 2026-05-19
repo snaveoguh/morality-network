@@ -101,7 +101,7 @@ async function redisSetEditorial(hash: string, editorial: ArchivedEditorial): Pr
         Authorization: `Bearer ${UPSTASH_TOKEN}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify([["SET", `${REDIS_EDITORIAL_PREFIX}${hash}`, serialized, "EX", "172800"]]),
+      body: JSON.stringify([["SET", `${REDIS_EDITORIAL_PREFIX}${hash}`, serialized, "EX", "604800"]]),
       cache: "no-store",
     });
   } catch (e) {
