@@ -28,8 +28,9 @@ if (workerTasks) {
     stdio: "inherit",
     env: {
       ...process.env,
-      // Prevent OOM on Railway — default 512MB is too small for SSR with large archives
-      NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=1024"].filter(Boolean).join(" "),
+      // Prevent OOM on Railway — 1024MB still hit ceiling under SSR + editorial lookup cascades,
+      // next-server died with status 134 and pooter.world stayed 502'd for days. Bump to 2048MB.
+      NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=2048"].filter(Boolean).join(" "),
     },
   });
 }
