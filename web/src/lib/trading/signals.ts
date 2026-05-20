@@ -385,7 +385,7 @@ export async function getAggregatedMarketSignals(options?: {
       fetchAggregatedNewsSignalsFromPostgres,
       aggregateSwarmSignals,
       persistSwarmSignals,
-    } = await import("./swarm-signals");
+    } = await import("./swarm-signals.js");
 
     let signals = await withTimeout(
       fetchAggregatedNewsSignalsFromPostgres(2),
@@ -396,7 +396,7 @@ export async function getAggregatedMarketSignals(options?: {
     if (signals.length === 0) {
       console.log("[signals] postgres empty — computing inline from RSS feeds");
       try {
-        const { runResearchSwarm } = await import("../agent-swarm");
+        const { runResearchSwarm } = await import("../agent-swarm.js");
         const items = await withTimeout(fetchAllFeeds(DEFAULT_FEEDS), 25_000, []);
         if (items.length > 0) {
           const output = runResearchSwarm(items, 30);
