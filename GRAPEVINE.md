@@ -9,6 +9,14 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 8 · codebase deep-dive
+- **when** — 2026-05-21
+- **what** — full architectural study of the pooter codebase (agent system, trading pipeline, onchain protocol, web app) via 4 parallel research agents; findings captured to `memory/architecture.md`
+- **why** — owner wants a refactor + a multi-agent trading expansion; a real architecture map was needed first
+- **where** — research only, no code changed
+- **rollback** — n/a (no change)
+- **key findings** — no account-level exposure cap (blocks safe multi-trading-agent expansion); `globalPositionLock` is in-process-only (would double-trade); the in-memory agent bus doesn't connect the worker (cross-runtime comms go via Postgres); 21MB JSON data files committed to git caused the OOM outage
+
 ## ▲ node 7 · /pipe render crash fixed
 - **when** — 2026-05-20 ~18:30 UTC
 - **what** — commit `6f438b6` — rewrote the `OpenPosition` interface + `PositionEntry` in `web/src/app/pipe/page.tsx` to match the metrics-v2 `TraderOpenPositionMetric` shape
