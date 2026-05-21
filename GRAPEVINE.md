@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 7 · /pipe render crash fixed
+- **when** — 2026-05-20 ~18:30 UTC
+- **what** — commit `6f438b6` — rewrote the `OpenPosition` interface + `PositionEntry` in `web/src/app/pipe/page.tsx` to match the metrics-v2 `TraderOpenPositionMetric` shape
+- **why** — `/pipe` tripped its error boundary for operators: `Cannot read properties of undefined (reading 'value')`. `PositionEntry` read the raw Hyperliquid position shape (`coin`, `leverage.value`) but `/api/trading/metrics` returns `{ position: {marketSymbol, direction, leverage:number}, unrealizedPnlUsd }` — `position.leverage` was undefined. Public viewers were unaffected (their `open` array is force-emptied).
+- **where** — `web/src/app/pipe/page.tsx`; deployed via `main`
+- **rollback** — `git revert 6f438b6`
+
 ## ▲ node 6 · editions backfilled
 - **when** — 2026-05-20 ~17:00 UTC
 - **what** — generated today's daily edition ("SIGNAL STATIC") + 7 fresh originals via `POST /api/editorial/pregenerate` (4 + 3, two passes around the 55s route cap)
