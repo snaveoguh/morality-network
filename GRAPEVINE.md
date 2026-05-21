@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 9 · inference meter completed (brick one)
+- **when** — 2026-05-21
+- **what** — commit `aadc8f0` — closed two blind spots in the inference meter (`web/src/lib/ai-provider.ts`): the Agent Hub path now records usage; `recordAIUsageSafely` works in worker context (it was throwing on `next/server` `after()` outside a request)
+- **why** — brick one of the accounting layer. The meter must see 100% of LLM calls before the inference-funding scoreboard can sit on it. Hub calls and all worker-side LLM calls (trader council, swarm) were previously unmetered.
+- **where** — `web/src/lib/ai-provider.ts`; deployed via `main`
+- **rollback** — `git revert aadc8f0`
+
 ## ▲ node 8 · codebase deep-dive
 - **when** — 2026-05-21
 - **what** — full architectural study of the pooter codebase (agent system, trading pipeline, onchain protocol, web app) via 4 parallel research agents; findings captured to `memory/architecture.md`
