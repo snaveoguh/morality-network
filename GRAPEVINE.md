@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 10 · inference-funding scoreboard (brick one)
+- **when** — 2026-05-21
+- **what** — commit `3371318` — new `web/src/lib/scoreboard.ts` (`getInferenceFundingStatus`) + `GET /api/scoreboard?hours=N` (operator-gated). Pairs metered inference cost against realized trading PnL windowed by `closedAt` → net USD + funding %.
+- **why** — brick one of the accounting layer: the North Star scoreboard. With the meter complete (node 9), this is the read that answers "does the platform fund its own inference?"
+- **where** — `web/src/lib/scoreboard.ts`, `web/src/app/api/scoreboard/route.ts` (both new); deployed via `main`
+- **rollback** — `git revert 3371318` (additive — nothing else imports these)
+
 ## ▲ node 9 · inference meter completed (brick one)
 - **when** — 2026-05-21
 - **what** — commit `aadc8f0` — closed two blind spots in the inference meter (`web/src/lib/ai-provider.ts`): the Agent Hub path now records usage; `recordAIUsageSafely` works in worker context (it was throwing on `next/server` `after()` outside a request)
