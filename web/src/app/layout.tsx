@@ -3,7 +3,6 @@ import { Geist, Geist_Mono, Playfair_Display, Libre_Baskerville, UnifrakturCook,
 import "./globals.css";
 import { Providers } from "@/providers/WagmiProvider";
 import { ThemeProvider } from "@/lib/theme";
-import { Header } from "@/components/layout/Header";
 import { MarqueeBanner } from "@/components/layout/MarqueeBanner";
 import { ExtensionBanner } from "@/components/layout/ExtensionBanner";
 import { SITE_URL, withBrand } from "@/lib/brand";
@@ -11,6 +10,7 @@ import { InstallPrompt } from "@/components/layout/InstallPrompt";
 import { BetaToast } from "@/components/layout/BetaToast";
 import { PooterNotificationHub } from "@/components/notifications/PooterNotificationHub";
 import { DevBanner } from "@/components/layout/DevBanner";
+import { WorkstationShell } from "@/components/workstation/WorkstationShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -91,15 +91,14 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${baskerville.variable} ${fraktur.variable} ${monaSans.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${baskerville.variable} ${fraktur.variable} ${monaSans.variable} min-h-screen overflow-x-hidden bg-[var(--chrome-bg)] font-sans text-[var(--ink)] antialiased`}
       >
         <ThemeProvider>
         <Providers>
           <DevBanner />
           <MarqueeBanner />
           <ExtensionBanner />
-          <Header />
-          <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-2">{children}</main>
+          <WorkstationShell>{children}</WorkstationShell>
           <InstallPrompt />
           <BetaToast />
           <PooterNotificationHub />

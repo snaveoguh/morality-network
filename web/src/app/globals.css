@@ -52,7 +52,7 @@
 }
 
 html, body { overflow-x: hidden; max-width: 100vw; }
-body { background: var(--paper); color: var(--ink); }
+body { background: var(--chrome-bg); color: var(--chrome-ink); }
 
 /* ── Fonts ── */
 .font-masthead { font-family: var(--font-fraktur), 'Old English Text MT', serif; font-weight: 700; }
@@ -270,3 +270,284 @@ body { background: var(--paper); color: var(--ink); }
   50% { border-color: var(--accent-green); }
 }
 .data-pulse { animation: data-pulse 2s ease-in-out; }
+
+/* ============================================================================
+   WORKSTATION CHROME — 1989 SunOS / FrameMaker
+   The newspaper is the document being edited. Chrome wraps document.
+   1-bit black-on-near-white. Striped title bars. Hard edges. Dither fills.
+   ============================================================================ */
+
+:root {
+  --chrome-bg: #F4F4F0;
+  --chrome-bg-2: #E8E8E0;
+  --chrome-ink: #000000;
+  --chrome-rule: #000000;
+  --chrome-soft: #777777;
+  --titlebar-stripes: repeating-linear-gradient(
+    0deg,
+    #000 0px, #000 1px,
+    #fff 1px, #fff 2px
+  );
+  --dither-50: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='4' height='4'><rect width='1' height='1' fill='%23000'/><rect x='2' y='2' width='1' height='1' fill='%23000'/></svg>");
+  --dither-25: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='4' height='4'><rect width='1' height='1' fill='%23000'/></svg>");
+  --dither-12: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><rect width='1' height='1' fill='%23000'/></svg>");
+}
+
+[data-theme="dark"] {
+  --chrome-bg: #1A1A1A;
+  --chrome-bg-2: #0A0A0A;
+  --chrome-ink: #E8E4DC;
+  --chrome-rule: #B8B4AC;
+  --chrome-soft: #8A8A8A;
+  --titlebar-stripes: repeating-linear-gradient(
+    0deg,
+    #B8B4AC 0px, #B8B4AC 1px,
+    #1A1A1A 1px, #1A1A1A 2px
+  );
+}
+
+/* Desktop background — subtle dither so chrome reads as workstation */
+.workstation-desktop {
+  background-color: var(--chrome-bg);
+  background-image: var(--dither-12);
+  background-repeat: repeat;
+}
+
+/* ── Chrome fonts ── */
+.font-chrome {
+  font-family: 'Geneva', 'Chicago', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0;
+  font-feature-settings: normal;
+}
+.font-terminal {
+  font-family: 'IBM Plex Mono', 'Berkeley Mono', 'Menlo', 'Monaco', monospace;
+  font-size: 11px;
+}
+.font-chrome-tiny {
+  font-family: 'Geneva', 'Chicago', 'Helvetica Neue', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+/* ── Window primitive ── */
+.win {
+  border: 1px solid var(--chrome-rule);
+  background: var(--chrome-bg);
+  box-shadow: 1px 1px 0 0 var(--chrome-rule);
+  position: relative;
+}
+.win-titlebar {
+  position: relative;
+  height: 18px;
+  background-image: var(--titlebar-stripes);
+  border-bottom: 1px solid var(--chrome-rule);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.win-titlebar-text {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--chrome-bg);
+  padding: 0 8px;
+  font-family: 'Geneva', 'Chicago', 'Helvetica Neue', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--chrome-ink);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  line-height: 14px;
+}
+.win-titlebar-btn {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--chrome-rule);
+  background: var(--chrome-bg);
+  display: inline-block;
+  flex-shrink: 0;
+}
+.win-titlebar-btn--close::before {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 4px;
+  margin: 2px;
+  background: var(--chrome-rule);
+}
+.win-body {
+  background: var(--chrome-bg);
+}
+
+/* ── Menu bar ── */
+.menubar {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--chrome-rule);
+  background: var(--chrome-bg);
+  height: 20px;
+  padding: 0 4px;
+  gap: 0;
+}
+.menubar-item {
+  font-family: 'Geneva', 'Chicago', 'Helvetica Neue', sans-serif;
+  font-size: 11px;
+  color: var(--chrome-ink);
+  padding: 0 8px;
+  height: 18px;
+  line-height: 18px;
+  cursor: default;
+  user-select: none;
+  white-space: nowrap;
+}
+.menubar-item:hover {
+  background: var(--chrome-ink);
+  color: var(--chrome-bg);
+}
+.menubar-item[data-active="true"] {
+  background: var(--chrome-ink);
+  color: var(--chrome-bg);
+}
+
+/* ── Palette ── */
+.palette {
+  border: 1px solid var(--chrome-rule);
+  background: var(--chrome-bg);
+  box-shadow: 1px 1px 0 0 var(--chrome-rule);
+}
+.palette-section {
+  border-bottom: 1px solid var(--chrome-rule);
+  padding: 6px 8px;
+}
+.palette-section:last-child { border-bottom: none; }
+.palette-label {
+  font-family: 'Geneva', 'Chicago', 'Helvetica Neue', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--chrome-ink);
+  margin-bottom: 4px;
+  display: block;
+}
+.palette-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--chrome-rule);
+  border: 1px solid var(--chrome-rule);
+}
+.palette-swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  background-color: var(--chrome-bg);
+  background-repeat: repeat;
+}
+.palette-swatch--solid-black { background-color: var(--chrome-ink); }
+.palette-swatch--solid-white { background-color: #fff; }
+.palette-swatch--d12 { background-image: var(--dither-12); }
+.palette-swatch--d25 { background-image: var(--dither-25); }
+.palette-swatch--d50 { background-image: var(--dither-50); }
+
+/* ── Ruler ── */
+.ruler {
+  height: 16px;
+  border-bottom: 1px solid var(--chrome-rule);
+  background: var(--chrome-bg);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+}
+.ruler-tick-major {
+  border-right: 1px solid var(--chrome-rule);
+  height: 100%;
+  position: relative;
+  flex: 1;
+  font-family: 'Geneva', 'Chicago', sans-serif;
+  font-size: 8px;
+  color: var(--chrome-ink);
+  padding-left: 2px;
+  padding-top: 1px;
+  box-sizing: border-box;
+}
+.ruler-tick-major::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 50%;
+  height: 4px;
+  width: 1px;
+  background: var(--chrome-rule);
+}
+
+/* ── Status bar ── */
+.statusbar {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  border-top: 1px solid var(--chrome-rule);
+  background: var(--chrome-bg);
+  font-family: 'Geneva', 'Chicago', 'Helvetica Neue', sans-serif;
+  font-size: 10px;
+  color: var(--chrome-ink);
+  padding: 0 6px;
+  gap: 12px;
+  overflow: hidden;
+}
+.statusbar-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-right: 1px solid var(--chrome-rule);
+  padding-right: 12px;
+  height: 100%;
+  white-space: nowrap;
+}
+.statusbar-cell:last-child { border-right: none; }
+
+/* ── Top-right menu ── */
+.topright-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Geneva', 'Chicago', 'Helvetica Neue', sans-serif;
+  font-size: 10px;
+  color: var(--chrome-ink);
+  letter-spacing: 0.04em;
+}
+.topright-menu-item {
+  cursor: default;
+}
+.topright-menu-item:hover {
+  text-decoration: underline;
+}
+
+/* ── Terminal block ── */
+.terminal-block {
+  background: var(--chrome-bg);
+  border: 1px solid var(--chrome-rule);
+  font-family: 'IBM Plex Mono', 'Berkeley Mono', monospace;
+  font-size: 11px;
+  color: var(--chrome-ink);
+  padding: 4px 6px;
+  line-height: 1.4;
+}
+
+/* ── CPU waveform ── */
+@keyframes cpu-pulse-shift {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-24px); }
+}
+.cpu-wave path {
+  animation: cpu-pulse-shift 1.6s linear infinite;
+}
+
+/* ── Hide chrome on small screens — falls back to plain newspaper ── */
+@media (max-width: 768px) {
+  .chrome-side-rail,
+  .chrome-tool-palette { display: none; }
+  .chrome-menubar { font-size: 10px; }
+  .chrome-menubar-item-secondary { display: none; }
+}
