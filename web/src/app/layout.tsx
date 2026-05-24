@@ -1,35 +1,51 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Playfair_Display, Libre_Baskerville, UnifrakturCook, Mona_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers/WagmiProvider";
 import { ThemeProvider } from "@/lib/theme";
+import { Header } from "@/components/layout/Header";
+import { MarqueeBanner } from "@/components/layout/MarqueeBanner";
+import { ExtensionBanner } from "@/components/layout/ExtensionBanner";
 import { SITE_URL, withBrand } from "@/lib/brand";
 import { InstallPrompt } from "@/components/layout/InstallPrompt";
 import { BetaToast } from "@/components/layout/BetaToast";
 import { PooterNotificationHub } from "@/components/notifications/PooterNotificationHub";
 import { DevBanner } from "@/components/layout/DevBanner";
-import { DocumentExaminer } from "@/components/xerox/DocumentExaminer";
-import { MemoHeader } from "@/components/xerox/MemoHeader";
-import { MemoFooter } from "@/components/xerox/MemoFooter";
-
-// ============================================================================
-// ROOT LAYOUT — Xerox PARC research memo shell
-//
-// Two columns:
-//   - Left (240px sticky):  Document Examiner outline tree
-//   - Right (flex):         MemoHeader band → main content → MemoFooter
-//
-// Pure ink-on-paper. 1px rules. No newspaper Fraktur. All-caps Helvetica.
-// ============================================================================
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
+const monaSans = Mona_Sans({
+  variable: "--font-mona-sans",
+  subsets: ["latin"],
+  axes: ["wdth"],
+});
+
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: ["400", "700", "900"],
+  style: ["normal", "italic"],
+});
+
+const baskerville = Libre_Baskerville({
+  variable: "--font-baskerville",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+});
+
+const fraktur = UnifrakturCook({
+  variable: "--font-fraktur",
+  subsets: ["latin"],
+  weight: "700",
 });
 
 export const metadata: Metadata = {
@@ -49,7 +65,7 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
-    "theme-color": "#F8F4EC",
+    "theme-color": "#1A1A1A",
   },
   openGraph: {
     type: "website",
@@ -73,27 +89,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="light" suppressHydrationWarning>
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${baskerville.variable} ${fraktur.variable} ${monaSans.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
       >
         <ThemeProvider>
-          <Providers>
-            <DevBanner />
-            <div className="memo-shell">
-              <aside className="memo-examiner-col">
-                <DocumentExaminer />
-              </aside>
-              <div className="memo-main-col">
-                <MemoHeader />
-                <main className="mx-auto max-w-[1080px] py-3">{children}</main>
-                <MemoFooter />
-              </div>
-            </div>
-            <InstallPrompt />
-            <BetaToast />
-            <PooterNotificationHub />
-          </Providers>
+        <Providers>
+          <DevBanner />
+          <MarqueeBanner />
+          <ExtensionBanner />
+          <Header />
+          <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-2">{children}</main>
+          <InstallPrompt />
+          <BetaToast />
+          <PooterNotificationHub />
+        </Providers>
         </ThemeProvider>
       </body>
     </html>
