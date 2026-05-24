@@ -8,32 +8,24 @@ import { AsyncFeed } from "@/components/feed/AsyncFeed";
 import { getDailyEditionHash } from "@/lib/daily-edition";
 import { getArchivedEditorial, getRecentPooterOriginals } from "@/lib/editorial-archive";
 import { SITE_URL, withBrand } from "@/lib/brand";
+import { Window } from "@/components/workstation/Window";
+import { MenuBar } from "@/components/workstation/MenuBar";
+import { ToolPalette } from "@/components/workstation/ToolPalette";
 
-export const revalidate = 900; // 15 min ISR (was 60s — $70+/mo savings)
+export const revalidate = 900;
 export const maxDuration = 30;
 
 // ============================================================================
-// FEED PAGE — instant shell, data streams in via Suspense
-//
-// The page shell (PooterTheme + skeleton placeholders) renders immediately.
-// AsyncMasthead and AsyncFeed are async server components that fetch data
-// independently — each streams into its Suspense boundary as soon as ready.
-//
-// Result: user sees the newspaper layout + lofi skeletons in <100ms,
-// content fills in progressively over the next few seconds.
+// FEED PAGE — workstation aesthetic: the homepage is a FrameMaker document
+// open on a SunOS desktop. Tool palette docks to the right.
 // ============================================================================
 
-/**
- * Dynamic OG metadata — shows today's masthead article in social previews
- * instead of the generic "pooter world" fallback.
- */
 export async function generateMetadata(): Promise<Metadata> {
   let headline: string | null = null;
   let subheadline: string | null = null;
   let dailyTitle: string | null = null;
 
   try {
-    // Try today's daily edition first
     const hash = getDailyEditionHash();
     const cached = await getArchivedEditorial(hash);
     if (cached?.isDailyEdition) {
@@ -41,11 +33,8 @@ export async function generateMetadata(): Promise<Metadata> {
       subheadline = cached.subheadline;
       dailyTitle = cached.dailyTitle ?? null;
     }
-  } catch {
-    // Cache miss
-  }
+  } catch {}
 
-  // Fallback: most recent Pooter Original (no time cutoff)
   if (!headline) {
     try {
       const originals = await getRecentPooterOriginals(false);
@@ -55,18 +44,14 @@ export async function generateMetadata(): Promise<Metadata> {
         subheadline = best.subheadline;
         dailyTitle = best.dailyTitle ?? null;
       }
-    } catch {
-      // No originals
-    }
+    } catch {}
   }
 
-  // If we have a real article, use it for metadata
   if (headline) {
     const title = dailyTitle
       ? withBrand(`${dailyTitle} — ${headline}`)
       : withBrand(headline);
     const description = subheadline || headline;
-
     return {
       title,
       description,
@@ -77,29 +62,60 @@ export async function generateMetadata(): Promise<Metadata> {
         siteName: "pooter world",
         url: SITE_URL,
       },
-      twitter: {
-        card: "summary_large_image",
-        title,
-        description,
-      },
+      twitter: { card: "summary_large_image", title, description },
     };
   }
 
-  // No article available — use defaults (layout.tsx metadata applies)
   return {};
 }
+
+const DOC_MENU = [
+  { label: "Document" },
+  { label: "Edit" },
+  { label: "Format" },
+  { label: "TextRects" },
+  { label: "Guides" },
+  { label: "Page" },
+];
 
 export default function FeedPage() {
   return (
     <>
       <PooterTheme />
-      <Suspense fallback={<MastheadSkeleton />}>
-        <AsyncMasthead />
-      </Suspense>
-      <div className="mt-4">
-        <Suspense fallback={<FeedSkeleton />}>
-          <AsyncFeed />
-        </Suspense>
+      <div className="flex gap-2 items-start">
+        <div className="flex-1 min-w-0">
+          <Window
+            title="POOTER.FRM — pooter-world/daily-edition.frm"
+            subtitle="/usr/pooter/bin/.makerinit/daily.doc"
+            menuBar={<MenuBar items={DOC_MENU} />}
+            ruler
+            flush
+            footer={
+              <>
+                <span className="font-mono text-[10px]">
+                  [Left] V = Go to Previous Page &nbsp;&nbsp;
+                  [Control] V = Go to Next Page
+                </span>
+                <span className="font-mono text-[10px]">Page 1 of ∞</span>
+              </>
+            }
+          >
+            <div className="fm-doc">
+              <Suspense fallback={<MastheadSkeleton />}>
+                <AsyncMasthead />
+              </Suspense>
+              <div className="mt-4">
+                <Suspense fallback={<FeedSkeleton />}>
+                  <AsyncFeed />
+                </Suspense>
+              </div>
+            </div>
+          </Window>
+        </div>
+        {/* Floating tool palette — hidden below xl to give the doc room */}
+        <div className="hidden xl:block sticky top-[28px]">
+          <ToolPalette />
+        </div>
       </div>
     </>
   );

@@ -1,15 +1,15 @@
 // ============================================================================
-// MASTHEAD SKELETON — instant lofi placeholder while daily edition loads
+// MASTHEAD SKELETON — instant placeholder while daily edition loads.
+// Workstation styling: 1-bit, no animated pulses, just dither.
 // ============================================================================
 
 import { CONTRACTS_CHAIN_ID } from "@/lib/contracts";
 
 export function MastheadSkeleton() {
-  // Static dateline — no data dependency
   const today = new Date();
   const editionNumber =
     Math.floor(
-      (today.getTime() - new Date("2026-03-11T00:00:00Z").getTime()) / 86400000
+      (today.getTime() - new Date("2026-03-11T00:00:00Z").getTime()) / 86400000,
     ) + 1;
   const dateStr = today
     .toLocaleDateString("en-GB", {
@@ -19,26 +19,21 @@ export function MastheadSkeleton() {
       year: "numeric",
     })
     .toUpperCase();
-  const chainTag = CONTRACTS_CHAIN_ID === 84532 ? "BASE SEPOLIA" : "BASE L2";
-  const dateline = `${dateStr} · EDITION ${editionNumber} · ${chainTag}`;
+  const chainTag = CONTRACTS_CHAIN_ID === 84532 ? "Base Sepolia" : "Base L2";
 
   return (
-    <div className="border-y border-[var(--rule)]">
-      {/* Real dateline — no data needed */}
-      <div className="border-b border-[var(--rule-light)] py-[3px] text-center font-mono text-[8px] uppercase tracking-[0.22em] text-[var(--ink-faint)]">
-        {dateline}
+    <div className="border-b border-[var(--ink)] bg-[var(--bg)] px-4 py-3">
+      <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-[var(--ink)] mb-2">
+        <span>{dateStr}</span>
+        <span>Edition {editionNumber}</span>
+        <span>{chainTag}</span>
       </div>
-
-      {/* Pulsing headline skeleton */}
-      <div className="px-4 py-5 text-center sm:py-6">
-        {/* Daily title bar */}
-        <div className="mx-auto mb-3 h-2 w-24 animate-pulse bg-[var(--rule-light)]" />
-        {/* Headline bars */}
-        <div className="mx-auto mb-2 h-7 w-4/5 animate-pulse bg-[var(--rule-light)] sm:h-9" />
-        <div className="mx-auto mb-3 h-7 w-3/5 animate-pulse bg-[var(--rule-light)] sm:h-9" />
-        {/* Subheadline */}
-        <div className="mx-auto h-4 w-2/5 animate-pulse bg-[var(--rule-light)]/60" />
-      </div>
+      <h2 className="fm-section-title text-center mb-1">pooter.world — daily edition</h2>
+      <div className="border-b border-[var(--ink)] mb-3" />
+      <div className="mx-auto mb-2 h-2 w-32 dither-50" />
+      <div className="mx-auto mb-2 h-6 w-3/5 dither-50" />
+      <div className="mx-auto mb-2 h-6 w-2/5 dither-50" />
+      <div className="mx-auto h-3 w-1/3 dither-25" />
     </div>
   );
 }

@@ -3,14 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
-// CoopDropdown removed — Co-op is now a full page at /coop
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ChainSwitcher } from "@/components/shared/ChainSwitcher";
 import { SearchBar } from "@/components/layout/SearchBar";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { BRAND_NAME } from "@/lib/brand";
 
-/** Core navigation — the engine. */
+/** Core navigation — the workstation menu bar */
 const NAV_LINKS = [
   { href: "/", label: "Feed" },
   { href: "/pipe", label: "Pipe" },
@@ -22,70 +21,57 @@ const NAV_LINKS = [
   { href: "/proposals", label: "Governance" },
 ];
 
-/** Playground links — used for active-state detection in nav. */
 const COOP_PLAYGROUND_LINKS = [
-  { href: "/signals", label: "Signals", desc: "Raw trading signals" },
-  { href: "/predictions", label: "Predictions", desc: "Binary outcome markets" },
-  { href: "/predictions/arb", label: "Arb Scanner", desc: "Polymarket arbitrage" },
-  { href: "/nouns", label: "Nouns", desc: "NFT marketplace" },
-  { href: "/pepe", label: "Pepe", desc: "Rare Pepe exchange" },
-  { href: "/music", label: "Music", desc: "Taste-aware discovery" },
-  { href: "/discuss", label: "Discuss", desc: "Onchain discussion" },
-  { href: "/registry", label: "Registry", desc: "Entity morality scores" },
-  { href: "/vault", label: "Vault", desc: "Capital management" },
-  { href: "/terminal", label: "Terminal", desc: "AI trading chat" },
-  { href: "/stumble", label: "Stumble", desc: "Random article discovery" },
+  { href: "/signals", label: "Signals" },
+  { href: "/predictions", label: "Predictions" },
+  { href: "/predictions/arb", label: "Arb Scanner" },
+  { href: "/nouns", label: "Nouns" },
+  { href: "/pepe", label: "Pepe" },
+  { href: "/music", label: "Music" },
+  { href: "/discuss", label: "Discuss" },
+  { href: "/registry", label: "Registry" },
+  { href: "/vault", label: "Vault" },
+  { href: "/terminal", label: "Terminal" },
+  { href: "/stumble", label: "Stumble" },
 ];
 
 export function Header() {
   const pathname = usePathname();
-  const isCoopActive = pathname === "/coop" || COOP_PLAYGROUND_LINKS.some(({ href }) => pathname.startsWith(href));
+  const isCoopActive =
+    pathname === "/coop" ||
+    COOP_PLAYGROUND_LINKS.some(({ href }) => pathname.startsWith(href));
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--rule)] bg-[var(--paper)]">
-      <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4">
-        <div className="flex min-w-0 items-center gap-2">
-          <LogoMenu />
-
-          <nav className="scrollbar-hide flex min-w-0 items-center gap-0 overflow-x-auto whitespace-nowrap">
-            {NAV_LINKS.map(({ href, label }, i) => {
-              const isActive =
-                href === "/" ? pathname === "/" : pathname.startsWith(href);
-              return (
-                <span key={href} className="flex items-center">
-                  {i > 0 && <span className="mx-2 text-[var(--rule-light)]">|</span>}
-                  <Link
-                    href={href}
-                    className={`font-mono text-[9px] uppercase tracking-[0.16em] transition-colors ${
-                      isActive
-                        ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-[1px] decoration-[var(--rule)]"
-                        : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
-                    }`}
-                  >
-                    {label}
-                  </Link>
-                </span>
-              );
-            })}
-
-            {/* Co-op page link */}
-            <span className="flex items-center">
-              <span className="mx-2 text-[var(--rule-light)]">|</span>
+    <header className="sticky top-0 z-30 border-b border-[var(--ink)] bg-[var(--bg)]">
+      {/* Workstation menubar — text-only, hover inverts */}
+      <div className="menubar h-[22px]">
+        <LogoMenu />
+        <span className="text-[var(--rule-soft)] mx-1">|</span>
+        <nav className="scrollbar-hide flex min-w-0 items-center overflow-x-auto whitespace-nowrap">
+          {NAV_LINKS.map(({ href, label }) => {
+            const isActive =
+              href === "/" ? pathname === "/" : pathname.startsWith(href);
+            return (
               <Link
-                href="/coop"
-                className={`font-mono text-[9px] uppercase tracking-[0.16em] transition-colors ${
-                  isCoopActive
-                    ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-[1px] decoration-[var(--rule)]"
-                    : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
-                }`}
+                key={href}
+                href={href}
+                className="menubar-item"
+                data-active={isActive ? "true" : undefined}
               >
-                Co-op
+                {label}
               </Link>
-            </span>
-          </nav>
-        </div>
+            );
+          })}
+          <Link
+            href="/coop"
+            className="menubar-item"
+            data-active={isCoopActive ? "true" : undefined}
+          >
+            Co-op
+          </Link>
+        </nav>
 
-        <div className="flex items-center gap-1.5">
+        <div className="ml-auto flex items-center gap-1 pr-1">
           <div className="hidden md:block">
             <SearchBar />
           </div>
@@ -98,18 +84,16 @@ export function Header() {
   );
 }
 
-// CoopDropdown removed — Co-op is now a dedicated page at /coop
-
 const LOGO_MENU_ITEMS = [
   { href: "/write", label: "Create", desc: "Publish an article" },
-  { href: "/subscribe", label: "The Daily Pooter", desc: "Morning intelligence brief" },
-  { href: "/daily", label: "Daily Editions", desc: "Every front page, archived" },
-  { href: "/status", label: "System Status", desc: "Public health dashboard" },
+  { href: "/subscribe", label: "The Daily Pooter", desc: "Morning brief" },
+  { href: "/daily", label: "Daily Editions", desc: "Every front page" },
+  { href: "/status", label: "System Status", desc: "Public health dash" },
   { href: "/architecture", label: "Architecture", desc: "System design docs" },
-  { href: "/appendix", label: "Appendix", desc: "Contracts & API reference" },
-  { href: "/style-guide", label: "Style Guide", desc: "Brand & design system" },
-  { href: "/typography", label: "Typography Lab", desc: "Variable-font candidates" },
-  { href: "/zk-recovery", label: "ZK Recovery", desc: "Passwordless wallet recovery" },
+  { href: "/appendix", label: "Appendix", desc: "Contracts & API" },
+  { href: "/style-guide", label: "Style Guide", desc: "Brand & design" },
+  { href: "/typography", label: "Typography Lab", desc: "Font candidates" },
+  { href: "/zk-recovery", label: "ZK Recovery", desc: "Wallet recovery" },
 ];
 
 function LogoMenu() {
@@ -129,21 +113,17 @@ function LogoMenu() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex h-4 w-4 items-center justify-center transition-opacity hover:opacity-70"
+        className="menubar-item font-bold"
         aria-label={`${BRAND_NAME} menu`}
         title={BRAND_NAME}
       >
-        <img
-          src="https://morality.s3.eu-west-2.amazonaws.com/brand/glyph.png"
-          alt=""
-          className="h-4 w-4 object-contain header-glyph"
-        />
+        File
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-[999] mt-2 w-52 border border-[var(--rule)] bg-[var(--paper)] shadow-lg">
-          <div className="border-b border-[var(--rule)] px-3 py-2">
-            <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+        <div className="absolute left-0 top-full z-[999] mt-0 w-56 border border-[var(--ink)] bg-[var(--bg)] shadow-[1px_1px_0_var(--ink)]">
+          <div className="border-b border-[var(--ink)] px-2 py-1">
+            <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink)]">
               {BRAND_NAME}
             </span>
           </div>
@@ -152,14 +132,10 @@ function LogoMenu() {
               key={href}
               href={href}
               onClick={() => setOpen(false)}
-              className="hover-morph-medium block border-b border-[var(--rule-light)] px-3 py-2 last:border-b-0 hover:bg-[var(--paper-dark)]"
+              className="block border-b border-[var(--rule-soft)] px-2 py-1 last:border-b-0 hover:bg-[var(--ink)] hover:text-[var(--bg)]"
             >
-              <span className="block text-[13px] tracking-[-0.005em] text-[var(--ink)]">
-                {label}
-              </span>
-              <span className="block font-mono text-[8px] tracking-[0.1em] text-[var(--ink-faint)]">
-                {desc}
-              </span>
+              <span className="block text-[12px]">{label}</span>
+              <span className="block font-mono text-[9px] opacity-60">{desc}</span>
             </Link>
           ))}
         </div>
@@ -192,7 +168,7 @@ function MiniWalletButton() {
             <button
               type="button"
               onClick={openConnectModal}
-              className="h-5 border border-[var(--rule)] bg-[var(--ink)] px-2 font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)]"
+              className="h-4 border border-[var(--ink)] bg-[var(--ink)] px-2 font-mono text-[9px] uppercase tracking-wider text-[var(--bg)] hover:bg-[var(--bg)] hover:text-[var(--ink)]"
             >
               Connect
             </button>
@@ -204,7 +180,7 @@ function MiniWalletButton() {
             <button
               type="button"
               onClick={openChainModal}
-              className="h-5 border border-[var(--accent-red)] bg-[var(--paper)] px-2 font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--accent-red)] transition-colors hover:bg-[var(--accent-red)] hover:text-[var(--paper)]"
+              className="h-4 border border-[var(--ink)] bg-[var(--bg)] px-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink)]"
             >
               Wrong Net
             </button>
@@ -215,18 +191,14 @@ function MiniWalletButton() {
           <button
             type="button"
             onClick={openAccountModal}
-            className="inline-flex h-5 items-center gap-1 border border-[var(--rule)] bg-[var(--paper)] px-1.5 font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--ink)] transition-colors hover:bg-[var(--paper-dark)]"
+            className="inline-flex h-4 items-center gap-1 border border-[var(--ink)] bg-[var(--bg)] px-1 font-mono text-[9px] uppercase tracking-wider text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--bg)]"
           >
             {chain.hasIcon && chain.iconUrl ? (
               <span
-                className="inline-flex h-2 w-2 overflow-hidden rounded-full"
+                className="inline-flex h-2 w-2 overflow-hidden"
                 style={{ background: chain.iconBackground }}
               >
-                <img
-                  alt={chain.name ?? "chain"}
-                  src={chain.iconUrl}
-                  className="h-2 w-2"
-                />
+                <img alt={chain.name ?? "chain"} src={chain.iconUrl} className="h-2 w-2" />
               </span>
             ) : null}
             <span>{account.displayName}</span>

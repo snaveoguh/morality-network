@@ -96,17 +96,15 @@ export function ExtensionBanner() {
   if (!extensionDetected || isConnected || dismissed) return null;
 
   return (
-    <div className="border-b border-[var(--rule)] bg-[var(--ink)] text-[var(--paper)]">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1.5">
+    <div className="border-b border-[var(--ink)] bg-[var(--ink)] text-[var(--bg)]">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1">
         <div className="flex items-center gap-2">
-          {/* Pulsing dot indicator */}
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
-          </span>
-
-          <span className="font-mono text-[9px] uppercase tracking-[0.16em]">
-            pooter world extension detected
+          <span
+            aria-hidden
+            className="inline-block w-2 h-2 border border-[var(--bg)] bg-[var(--bg)]"
+          />
+          <span className="font-mono text-[10px] uppercase tracking-wider">
+            pooter.world extension detected
           </span>
         </div>
 
@@ -114,17 +112,17 @@ export function ExtensionBanner() {
           <button
             type="button"
             onClick={handleConnect}
-            className="h-5 border border-[var(--paper)] bg-[var(--paper)] px-3 font-mono text-[7px] uppercase tracking-[0.16em] text-[var(--ink)] transition-colors hover:bg-transparent hover:text-[var(--paper)]"
+            className="h-4 border border-[var(--bg)] bg-[var(--bg)] px-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink)] hover:bg-transparent hover:text-[var(--bg)]"
           >
             Connect Extension Wallet
           </button>
           <button
             type="button"
             onClick={handleDismiss}
-            className="font-mono text-[9px] text-[var(--paper)] opacity-50 transition-opacity hover:opacity-100"
+            className="font-mono text-[12px] text-[var(--bg)] hover:opacity-60"
             aria-label="Dismiss"
           >
-            &times;
+            [x]
           </button>
         </div>
       </div>

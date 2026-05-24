@@ -174,38 +174,32 @@ export function MarqueeBanner() {
   }, [fetchQuotes]);
 
   return (
-    <div className="relative overflow-hidden bg-[var(--paper-dark)] py-1">
+    <div className="relative overflow-hidden border-b border-[var(--ink)] bg-[var(--bg)] py-[2px]">
       <div className="flex items-center">
+        <span className="shrink-0 border-r border-[var(--ink)] px-2 font-mono text-[10px] uppercase tracking-wider">
+          quotes
+        </span>
         <div className="overflow-hidden">
           <div className="animate-marquee whitespace-nowrap">
             {Array.from({ length: 2 }).map((_, loop) => (
               <span
                 key={`loop-${loop}`}
-                className="mx-6 inline-block font-mono text-[10px] uppercase tracking-[0.16em]"
+                className="mx-4 inline-block font-mono text-[10px] uppercase tracking-wider"
               >
                 {quotes.map((quote, i) => {
-                  const isUp = (quote.change24h ?? 0) >= 0;
                   return (
                     <span key={`${loop}-${quote.symbol}`} className="inline-flex items-center">
                       <a
                         href={quote.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]"
+                        className="text-[var(--ink)] hover:underline"
                       >
                         {quote.symbol} {formatUsd(quote.price)}{" "}
-                        <span
-                          className={
-                            isUp
-                              ? "text-[var(--ink-faint)]"
-                              : "text-[var(--accent-red)]"
-                          }
-                        >
-                          {formatChange(quote.change24h)}
-                        </span>
+                        <span className="text-[var(--ink)]">{formatChange(quote.change24h)}</span>
                       </a>
                       {i < quotes.length - 1 && (
-                        <span className="mx-3 text-[var(--rule-light)]">|</span>
+                        <span className="mx-2 text-[var(--rule-soft)]">|</span>
                       )}
                     </span>
                   );

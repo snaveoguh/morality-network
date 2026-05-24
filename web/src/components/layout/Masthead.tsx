@@ -5,20 +5,13 @@ import Link from "next/link";
 import { BRAND_NAME } from "@/lib/brand";
 import { CONTRACTS_CHAIN_ID } from "@/lib/contracts";
 import { EditionsPanel } from "@/components/editions/EditionsPanel";
+import { Founders } from "@/components/workstation/Founders";
 
 // ============================================================================
-// MASTHEAD — Newspaper front-page banner
+// MASTHEAD — Workstation document title block
 //
-// ┌─────────────────────────────────────────┐
-// │  WED, 11 MAR 2026 · EDITION 801 · BASE L2 │
-// │─────────────────────────────────────────│
-// │  Iran's shadow war meets the fruit     │  ← Daily headline (the hero)
-// │  fly's digital brain while oil chokes  │
-// │  the global throat.                     │
-// │                                         │
-// │  Three cargo ships struck, one          │  ← Subheadline
-// │  synthetic brain walking.               │
-// └─────────────────────────────────────────┘
+// Renders as the top of the FrameMaker document: small section header,
+// founders grid, daily headline + subheadline, then the body flows below.
 // ============================================================================
 
 interface MastheadProps {
@@ -28,7 +21,6 @@ interface MastheadProps {
   dailyHash?: string | null;
 }
 
-/** Strip stray markdown bold/italic markers from AI-generated text */
 function stripMd(s: string | null | undefined): string | null | undefined {
   if (!s) return s;
   return s.replace(/\*{1,3}/g, "").replace(/_{1,3}/g, "").replace(/^#+\s+/, "");
@@ -50,9 +42,10 @@ export function Masthead({
 
   const { dateStr, editionNumber } = useMemo(() => {
     const today = new Date();
-    const num = Math.floor(
-      (today.getTime() - new Date("2026-03-11T00:00:00Z").getTime()) / 86400000
-    ) + 1;
+    const num =
+      Math.floor(
+        (today.getTime() - new Date("2026-03-11T00:00:00Z").getTime()) / 86400000,
+      ) + 1;
     const ds = today
       .toLocaleDateString("en-GB", {
         weekday: "short",
@@ -65,17 +58,17 @@ export function Masthead({
   }, []);
 
   return (
-    <div className="border-y border-[var(--rule)]">
-      {/* Dateline — thin ruled bar */}
-      <div className="border-b border-[var(--rule-light)] py-[3px] text-center font-mono text-[8px] uppercase tracking-[0.22em] text-[var(--ink-faint)]">
-        {dateStr} &middot;{" "}
+    <div className="border-b border-[var(--ink)] bg-[var(--bg)] px-4 py-3">
+      {/* Dateline — looks like a FrameMaker page header */}
+      <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-[var(--ink)] mb-2">
+        <span>{dateStr}</span>
         <button
           onClick={() => setShowEditions(true)}
-          className="cursor-pointer underline-offset-2 transition-colors hover:text-[var(--ink)] hover:underline"
+          className="hover:underline cursor-pointer"
         >
-          EDITION {editionNumber}
+          Edition {editionNumber}
         </button>
-        {" "}&middot; {CONTRACTS_CHAIN_ID === 84532 ? "BASE SEPOLIA" : "BASE L2"}
+        <span>{CONTRACTS_CHAIN_ID === 84532 ? "Base Sepolia" : "Base L2"}</span>
       </div>
 
       {showEditions && (
@@ -85,40 +78,46 @@ export function Masthead({
         />
       )}
 
-      {/* Hero headline block */}
-      <div className="px-4 py-5 text-center sm:py-6">
+      {/* Section heading — "Text in Three Columns" mimic */}
+      <h2 className="fm-section-title text-center mb-1">
+        {BRAND_NAME.toLowerCase()} — daily edition
+      </h2>
+      <div className="border-b border-[var(--ink)] mb-3" />
+
+      {/* Sub-section label — Frame Technology Corporate Profile mimic */}
+      <h3 className="fm-subhead text-center">
+        Pooter Operating Co — Daily Profile
+      </h3>
+
+      {/* Founders grid — drop-in homage to Frame's founders */}
+      <Founders />
+
+      {/* Daily headline block */}
+      <div className="text-center mt-2">
         {dailyHeadline && dailyHash ? (
           <>
-            {/* Daily title — small signal word above headline */}
             {showDailyTitle && (
-              <p className="mb-2 font-mono text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--ink-faint)]">
+              <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--ink)]">
                 {normalizedDailyTitle}
               </p>
             )}
-
-            {/* Hero headline — THE front page story */}
-            <Link
-              href={`/article/${dailyHash}`}
-              className="group block"
-            >
-              <h1 className="font-headline text-4xl font-bold leading-[1.15] text-[var(--ink)] transition-colors group-hover:text-[var(--accent-red)] sm:text-5xl lg:text-6xl">
+            <Link href={`/article/${dailyHash}`} className="group block">
+              <h1 className="font-headline text-2xl font-bold leading-tight text-[var(--ink)] group-hover:underline sm:text-3xl">
                 {stripMd(dailyHeadline)}
               </h1>
             </Link>
-
             {dailySubheadline && (
-              <p className="mx-auto mt-3 max-w-2xl font-body-serif text-sm italic leading-relaxed text-[var(--ink-light)] sm:text-base">
+              <p className="mx-auto mt-2 max-w-2xl font-serif text-sm italic leading-relaxed text-[var(--ink-soft)]">
                 {stripMd(dailySubheadline)}
               </p>
             )}
           </>
         ) : (
           <>
-            {/* Fallback when no daily edition */}
-            <h1 className="font-headline text-4xl font-bold leading-none text-[var(--ink)] sm:text-5xl lg:text-6xl">
+            <h1 className="font-headline text-2xl font-bold leading-none text-[var(--ink)] sm:text-3xl">
               {BRAND_NAME}
             </h1>
-            <p className="mt-2 font-body-serif text-xs italic text-[var(--ink-light)] sm:text-sm">
+            <p className="mt-1 font-serif text-xs italic text-[var(--ink-soft)]">
               A public ledger of world events and their interpretation.
             </p>
           </>

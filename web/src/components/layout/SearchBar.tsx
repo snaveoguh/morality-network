@@ -183,8 +183,8 @@ export function SearchBar() {
   return (
     <>
       <div className="relative flex items-center">
-        <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 font-mono text-[7px] uppercase tracking-[0.18em] text-[var(--ink-faint)]">
-          Search
+        <span className="pointer-events-none absolute left-1 top-1/2 -translate-y-1/2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          find:
         </span>
         <input
           ref={inputRef}
@@ -194,12 +194,12 @@ export function SearchBar() {
           onFocus={() => {
             if (query.trim().length >= 2) setIsOpen(true);
           }}
-          placeholder="news, OG, video, music"
-          className="h-7 w-40 border-2 border-[var(--rule)] bg-[var(--paper)] pl-14 pr-7 font-mono text-[10px] text-[var(--ink)] placeholder-[var(--ink-faint)] transition-[width,border-color,box-shadow] duration-150 focus:w-[24rem] focus:border-[var(--ink)] focus:outline-none focus:shadow-[4px_4px_0_rgba(26,26,26,0.08)]"
+          placeholder=""
+          className="h-4 w-36 border border-[var(--ink)] bg-[var(--bg)] pl-9 pr-6 font-mono text-[10px] text-[var(--ink)] placeholder-[var(--ink-faint)] focus:w-[20rem] focus:outline-none"
           aria-label="Search across breaking news, pooter originals, videos, music, governance, and archive"
         />
         {loading && (
-          <span className="absolute right-2 h-2.5 w-2.5 animate-spin rounded-full border border-[var(--ink)] border-t-transparent" />
+          <span className="absolute right-1 font-mono text-[10px] text-[var(--ink)]">...</span>
         )}
       </div>
 
