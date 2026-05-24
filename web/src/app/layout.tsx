@@ -11,6 +11,7 @@ import { InstallPrompt } from "@/components/layout/InstallPrompt";
 import { BetaToast } from "@/components/layout/BetaToast";
 import { PooterNotificationHub } from "@/components/notifications/PooterNotificationHub";
 import { DevBanner } from "@/components/layout/DevBanner";
+import { DocumentExaminer } from "@/components/layout/DocumentExaminer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -99,6 +100,7 @@ export default function RootLayout({
           <MarqueeBanner />
           <ExtensionBanner />
           <Header />
+          <DocumentExaminer />
           <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-2">{children}</main>
           <InstallPrompt />
           <BetaToast />
