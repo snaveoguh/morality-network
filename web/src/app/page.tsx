@@ -8,32 +8,27 @@ import { AsyncFeed } from "@/components/feed/AsyncFeed";
 import { getDailyEditionHash } from "@/lib/daily-edition";
 import { getArchivedEditorial, getRecentPooterOriginals } from "@/lib/editorial-archive";
 import { SITE_URL, withBrand } from "@/lib/brand";
+import { NeXTWindow } from "@/components/nextstep/NeXTWindow";
+import { Inspector } from "@/components/nextstep/Inspector";
 
-export const revalidate = 900; // 15 min ISR (was 60s — $70+/mo savings)
+export const revalidate = 900;
 export const maxDuration = 30;
 
 // ============================================================================
-// FEED PAGE — instant shell, data streams in via Suspense
+// FEED PAGE — wrapped in a NeXTSTEP Workspace document window
 //
-// The page shell (PooterTheme + skeleton placeholders) renders immediately.
-// AsyncMasthead and AsyncFeed are async server components that fetch data
-// independently — each streams into its Suspense boundary as soon as ready.
-//
-// Result: user sees the newspaper layout + lofi skeletons in <100ms,
-// content fills in progressively over the next few seconds.
+// Title bar:   "Pooter Reader.app — daily-edition.po"
+// Window:      AsyncMasthead + AsyncFeed
+// Status bar:  edition + timestamp
+// Floating Inspector palette to the right of the window.
 // ============================================================================
 
-/**
- * Dynamic OG metadata — shows today's masthead article in social previews
- * instead of the generic "pooter world" fallback.
- */
 export async function generateMetadata(): Promise<Metadata> {
   let headline: string | null = null;
   let subheadline: string | null = null;
   let dailyTitle: string | null = null;
 
   try {
-    // Try today's daily edition first
     const hash = getDailyEditionHash();
     const cached = await getArchivedEditorial(hash);
     if (cached?.isDailyEdition) {
@@ -45,7 +40,6 @@ export async function generateMetadata(): Promise<Metadata> {
     // Cache miss
   }
 
-  // Fallback: most recent Pooter Original (no time cutoff)
   if (!headline) {
     try {
       const originals = await getRecentPooterOriginals(false);
@@ -60,7 +54,6 @@ export async function generateMetadata(): Promise<Metadata> {
     }
   }
 
-  // If we have a real article, use it for metadata
   if (headline) {
     const title = dailyTitle
       ? withBrand(`${dailyTitle} — ${headline}`)
@@ -85,22 +78,50 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   }
 
-  // No article available — use defaults (layout.tsx metadata applies)
   return {};
 }
 
+function formatNow(): string {
+  const d = new Date();
+  return d.toLocaleString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 export default function FeedPage() {
+  const editionNumber =
+    Math.floor(
+      (Date.now() - new Date("2026-03-11T00:00:00Z").getTime()) / 86400000,
+    ) + 1;
+
   return (
     <>
       <PooterTheme />
-      <Suspense fallback={<MastheadSkeleton />}>
-        <AsyncMasthead />
-      </Suspense>
-      <div className="mt-4">
-        <Suspense fallback={<FeedSkeleton />}>
-          <AsyncFeed />
+      <Inspector />
+      <NeXTWindow
+        title="Pooter Reader.app"
+        subtitle="— daily-edition.po"
+        statusBar={
+          <div className="flex items-center justify-between gap-3">
+            <span className="small-caps">
+              Edition {editionNumber} · Base L2 · Updated {formatNow()}
+            </span>
+            <span className="hidden sm:inline">12.3 MB</span>
+          </div>
+        }
+        className="lg:mr-60"
+      >
+        <Suspense fallback={<MastheadSkeleton />}>
+          <AsyncMasthead />
         </Suspense>
-      </div>
+        <div className="mt-2">
+          <Suspense fallback={<FeedSkeleton />}>
+            <AsyncFeed />
+          </Suspense>
+        </div>
+      </NeXTWindow>
     </>
   );
 }

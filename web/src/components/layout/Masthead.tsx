@@ -7,18 +7,15 @@ import { CONTRACTS_CHAIN_ID } from "@/lib/contracts";
 import { EditionsPanel } from "@/components/editions/EditionsPanel";
 
 // ============================================================================
-// MASTHEAD — Newspaper front-page banner
+// MASTHEAD — NeXTSTEP document title panel
 //
-// ┌─────────────────────────────────────────┐
-// │  WED, 11 MAR 2026 · EDITION 801 · BASE L2 │
-// │─────────────────────────────────────────│
-// │  Iran's shadow war meets the fruit     │  ← Daily headline (the hero)
-// │  fly's digital brain while oil chokes  │
-// │  the global throat.                     │
-// │                                         │
-// │  Three cargo ships struck, one          │  ← Subheadline
-// │  synthetic brain walking.               │
-// └─────────────────────────────────────────┘
+// Edition · date · chain (small caps, dark on slate)
+// ──────────────────────────────────────────────
+//   POOTER WORLD                     (Helvetica Black 48pt+)
+//   Daily Edition · Wed 12 Mar       (slate caption)
+//   ════════════════════════════════ (NeXT-red 2px rule)
+//   Hero headline                    (Helvetica Bold ~32pt)
+//   Subheadline                      (Helvetica Regular)
 // ============================================================================
 
 interface MastheadProps {
@@ -28,7 +25,6 @@ interface MastheadProps {
   dailyHash?: string | null;
 }
 
-/** Strip stray markdown bold/italic markers from AI-generated text */
 function stripMd(s: string | null | undefined): string | null | undefined {
   if (!s) return s;
   return s.replace(/\*{1,3}/g, "").replace(/_{1,3}/g, "").replace(/^#+\s+/, "");
@@ -50,9 +46,10 @@ export function Masthead({
 
   const { dateStr, editionNumber } = useMemo(() => {
     const today = new Date();
-    const num = Math.floor(
-      (today.getTime() - new Date("2026-03-11T00:00:00Z").getTime()) / 86400000
-    ) + 1;
+    const num =
+      Math.floor(
+        (today.getTime() - new Date("2026-03-11T00:00:00Z").getTime()) / 86400000,
+      ) + 1;
     const ds = today
       .toLocaleDateString("en-GB", {
         weekday: "short",
@@ -65,17 +62,21 @@ export function Masthead({
   }, []);
 
   return (
-    <div className="border-y border-[var(--rule)]">
-      {/* Dateline — thin ruled bar */}
-      <div className="border-b border-[var(--rule-light)] py-[3px] text-center font-mono text-[8px] uppercase tracking-[0.22em] text-[var(--ink-faint)]">
-        {dateStr} &middot;{" "}
+    <section className="bg-[var(--bg)]">
+      {/* Slate caption bar — small caps */}
+      <div className="next-panel flex items-center justify-between border-b border-black/30 px-3 py-1 text-[10px]">
+        <span className="small-caps text-[var(--ink)]">
+          {dateStr}
+        </span>
         <button
           onClick={() => setShowEditions(true)}
-          className="cursor-pointer underline-offset-2 transition-colors hover:text-[var(--ink)] hover:underline"
+          className="small-caps text-[var(--ink)] hover:text-[var(--accent-red)] transition-colors"
         >
-          EDITION {editionNumber}
+          ▸ Edition {editionNumber}
         </button>
-        {" "}&middot; {CONTRACTS_CHAIN_ID === 84532 ? "BASE SEPOLIA" : "BASE L2"}
+        <span className="small-caps text-[var(--ink)]">
+          {CONTRACTS_CHAIN_ID === 84532 ? "Base Sepolia" : "Base L2"}
+        </span>
       </div>
 
       {showEditions && (
@@ -85,45 +86,44 @@ export function Masthead({
         />
       )}
 
-      {/* Hero headline block */}
-      <div className="px-4 py-5 text-center sm:py-6">
+      {/* Hero block — Helvetica Black */}
+      <div className="px-4 py-6 sm:py-8">
+        <h1
+          className="font-masthead text-[40px] leading-[0.95] tracking-[-0.03em] text-[var(--ink)] sm:text-[60px] lg:text-[72px]"
+          style={{ fontWeight: 900 }}
+        >
+          {BRAND_NAME.toUpperCase()}
+        </h1>
+
+        {showDailyTitle && (
+          <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--ink-soft)] small-caps">
+            {normalizedDailyTitle}
+          </p>
+        )}
+
+        {/* NeXT-red rule */}
+        <div className="mt-3 h-[2px] w-full bg-[var(--accent-red)]" />
+
         {dailyHeadline && dailyHash ? (
-          <>
-            {/* Daily title — small signal word above headline */}
-            {showDailyTitle && (
-              <p className="mb-2 font-mono text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--ink-faint)]">
-                {normalizedDailyTitle}
-              </p>
-            )}
-
-            {/* Hero headline — THE front page story */}
-            <Link
-              href={`/article/${dailyHash}`}
-              className="group block"
-            >
-              <h1 className="font-headline text-4xl font-bold leading-[1.15] text-[var(--ink)] transition-colors group-hover:text-[var(--accent-red)] sm:text-5xl lg:text-6xl">
-                {stripMd(dailyHeadline)}
-              </h1>
-            </Link>
-
+          <Link href={`/article/${dailyHash}`} className="group mt-4 block">
+            <h2 className="text-2xl font-bold leading-[1.15] tracking-[-0.015em] text-[var(--ink)] transition-colors group-hover:text-[var(--accent-red)] sm:text-3xl lg:text-4xl">
+              {stripMd(dailyHeadline)}
+            </h2>
             {dailySubheadline && (
-              <p className="mx-auto mt-3 max-w-2xl font-body-serif text-sm italic leading-relaxed text-[var(--ink-light)] sm:text-base">
+              <p className="mt-2 max-w-2xl text-sm leading-snug text-[var(--ink-soft)] sm:text-base">
                 {stripMd(dailySubheadline)}
               </p>
             )}
-          </>
+          </Link>
         ) : (
-          <>
-            {/* Fallback when no daily edition */}
-            <h1 className="font-headline text-4xl font-bold leading-none text-[var(--ink)] sm:text-5xl lg:text-6xl">
-              {BRAND_NAME}
-            </h1>
-            <p className="mt-2 font-body-serif text-xs italic text-[var(--ink-light)] sm:text-sm">
-              A public ledger of world events and their interpretation.
-            </p>
-          </>
+          <p className="mt-4 max-w-2xl text-sm leading-snug text-[var(--ink-soft)]">
+            A public ledger of world events and their interpretation.
+          </p>
         )}
       </div>
-    </div>
+
+      {/* Thin separator before feed */}
+      <div className="border-b border-black/30" />
+    </section>
   );
 }

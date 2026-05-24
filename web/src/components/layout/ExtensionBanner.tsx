@@ -96,17 +96,15 @@ export function ExtensionBanner() {
   if (!extensionDetected || isConnected || dismissed) return null;
 
   return (
-    <div className="border-b border-[var(--rule)] bg-[var(--ink)] text-[var(--paper)]">
+    <div className="next-panel border-b border-black/30 bg-[var(--chrome-dark)] text-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1.5">
         <div className="flex items-center gap-2">
-          {/* Pulsing dot indicator */}
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+            <span className="absolute inline-flex h-full w-full animate-ping bg-green-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 bg-green-500" />
           </span>
-
-          <span className="font-mono text-[9px] uppercase tracking-[0.16em]">
-            pooter world extension detected
+          <span className="text-[10px] font-bold uppercase tracking-[0.12em] small-caps">
+            Pooter Extension Detected
           </span>
         </div>
 
@@ -114,17 +112,17 @@ export function ExtensionBanner() {
           <button
             type="button"
             onClick={handleConnect}
-            className="h-5 border border-[var(--paper)] bg-[var(--paper)] px-3 font-mono text-[7px] uppercase tracking-[0.16em] text-[var(--ink)] transition-colors hover:bg-transparent hover:text-[var(--paper)]"
+            className="bevel-button bg-[var(--chrome-mid)] h-5 px-3 text-[10px] font-bold text-[var(--ink)]"
           >
             Connect Extension Wallet
           </button>
           <button
             type="button"
             onClick={handleDismiss}
-            className="font-mono text-[9px] text-[var(--paper)] opacity-50 transition-opacity hover:opacity-100"
+            className="text-[11px] text-white opacity-60 transition-opacity hover:opacity-100"
             aria-label="Dismiss"
           >
-            &times;
+            ×
           </button>
         </div>
       </div>

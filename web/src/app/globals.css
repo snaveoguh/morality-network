@@ -1,112 +1,298 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   E-INK NEWSPAPER — pooter world
+   NeXTSTEP 1.0 (1989) — pooter world workstation reskin
+   Display PostScript era. Etched chrome, slate gray title bars, Helvetica.
    ============================================================================ */
 
 :root, [data-theme="light"] {
-  --paper: #F5F0E8;
-  --paper-dark: #EDE6D6;
-  --paper-tint: #EDE6D6;
-  --ink: #1A1A1A;
-  --ink-light: #4A4A4A;
-  --ink-faint: #8A8A8A;
-  --rule: #2A2A2A;
-  --rule-light: #C8C0B0;
-  --accent-red: #8B0000;
+  /* Surface */
+  --bg: #FFFFFF;                /* document content */
+  --bg-desktop: #999999;        /* desktop pattern base */
+  --chrome-light: #DDDDDD;
+  --chrome-mid: #BBBBBB;        /* default chrome (window edges, dock, palettes) */
+  --chrome-dark: #444444;       /* title bar */
+  --chrome-deeper: #2A2A2A;     /* title bar deep edge */
+
+  /* Ink */
+  --ink: #000000;
+  --ink-soft: #2A2A2A;
+  --ink-faint: #555555;
+  --ink-inverse: #FFFFFF;
+
+  /* Accents */
+  --accent-red: #CC0000;        /* NeXT red — warnings, active state, "Quit?" */
+  --accent-blue: #5577AA;       /* selection highlight */
+
+  /* Bevels */
+  --bevel-top: rgba(255,255,255,0.75);
+  --bevel-bottom: rgba(0,0,0,0.55);
+  --bevel-top-dark: rgba(255,255,255,0.18);
+  --bevel-bottom-dark: rgba(0,0,0,0.7);
+
+  /* Legacy aliases (so non-reskinned routes keep working) */
+  --paper: var(--bg);
+  --paper-dark: var(--chrome-light);
+  --paper-tint: var(--chrome-light);
+  --ink-light: var(--ink-soft);
+  --rule: var(--ink-soft);
+  --rule-light: var(--chrome-mid);
   --accent-green: #1A6B35;
   --accent-amber: #8B6914;
-  --background: var(--paper);
+  --background: var(--bg);
   --foreground: var(--ink);
 }
 
 [data-theme="dark"] {
-  --paper: #0A0A0A;
-  --paper-dark: #141414;
-  --paper-tint: #1A1A1A;
-  --ink: #E8E4DC;
-  --ink-light: #B0ACA4;
-  --ink-faint: #6A6A6A;
-  --rule: #D0CCC4;
-  --rule-light: #2A2A2A;
-  --accent-red: #CC3333;
+  /* NeXT "black cube" mode — pure black with slate chrome panels */
+  --bg: #1A1A1A;
+  --bg-desktop: #050505;
+  --chrome-light: #555555;
+  --chrome-mid: #3A3A3A;
+  --chrome-dark: #1F1F1F;
+  --chrome-deeper: #0A0A0A;
+
+  --ink: #F0F0F0;
+  --ink-soft: #C8C8C8;
+  --ink-faint: #888888;
+  --ink-inverse: #000000;
+
+  --accent-red: #FF3333;
+  --accent-blue: #88AACC;
+
+  --bevel-top: rgba(255,255,255,0.22);
+  --bevel-bottom: rgba(0,0,0,0.85);
+
+  --paper: var(--bg);
+  --paper-dark: var(--chrome-mid);
+  --paper-tint: var(--chrome-mid);
+  --ink-light: var(--ink-soft);
+  --rule: var(--chrome-light);
+  --rule-light: var(--chrome-mid);
   --accent-green: #22C55E;
   --accent-amber: #D4A017;
-  --background: var(--paper);
+  --background: var(--bg);
   --foreground: var(--ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-paper: #F5F0E8;
-  --color-paper-dark: #EDE6D6;
-  --color-ink: #1A1A1A;
-  --color-ink-light: #4A4A4A;
-  --color-ink-faint: #8A8A8A;
-  --color-rule: #2A2A2A;
-  --color-rule-light: #C8C0B0;
-  --color-accent-red: #8B0000;
-  --font-sans: var(--font-mona-sans), var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--bg);
+  --color-paper-dark: var(--chrome-light);
+  --color-ink: var(--ink);
+  --color-ink-light: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--ink-soft);
+  --color-rule-light: var(--chrome-mid);
+  --color-accent-red: var(--accent-red);
+  --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'Courier New', Courier, monospace;
 }
 
 html, body { overflow-x: hidden; max-width: 100vw; }
-body { background: var(--paper); color: var(--ink); }
 
-/* ── Fonts ── */
-.font-masthead { font-family: var(--font-fraktur), 'Old English Text MT', serif; font-weight: 700; }
-.font-headline-serif { font-family: var(--font-playfair), 'Georgia', 'Times New Roman', serif; }
-.font-body-serif { font-family: var(--font-baskerville), 'Georgia', serif; }
-.font-headline { font-family: var(--font-playfair), 'Georgia', serif; font-weight: 900; letter-spacing: -0.01em; }
-.font-comic { font-family: 'Comic Neue', 'Comic Sans MS', cursive; }
+body {
+  background: var(--bg-desktop);
+  color: var(--ink);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* 50% slate dither on the desktop edge */
+  background-image:
+    radial-gradient(circle, rgba(0,0,0,0.18) 0.6px, transparent 0.6px),
+    radial-gradient(circle, rgba(255,255,255,0.05) 0.6px, transparent 0.6px);
+  background-size: 3px 3px, 3px 3px;
+  background-position: 0 0, 1.5px 1.5px;
+}
 
-/* ── Variable-axis hover morph (Mona Sans) ──
-   Two states only — no extreme widening. Use:
-   - .hover-morph-subtle  for body links and small interactive text
-   - .hover-morph-medium  for primary nav, buttons, cards, selected states
-   `selected` modifier locks the morph in for active/selected items.
-*/
+[data-theme="dark"] body {
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.04) 0.6px, transparent 0.6px),
+    radial-gradient(circle, rgba(0,0,0,0.4) 0.6px, transparent 0.6px);
+}
+
+/* ── Helvetica utility classes (replace old serif fonts) ── */
+.font-masthead     { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 900; letter-spacing: -0.02em; }
+.font-headline     { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 900; letter-spacing: -0.02em; }
+.font-headline-serif { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; }
+.font-body-serif   { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 400; }
+.font-comic        { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; }
+
+/* ── Etched bevels — the core NeXT visual primitive ── */
+.bevel {
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-top),
+    inset -1px -1px 0 var(--bevel-bottom);
+}
+.bevel-thick {
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-top),
+    inset 2px 2px 0 rgba(255,255,255,0.35),
+    inset -1px -1px 0 var(--bevel-bottom),
+    inset -2px -2px 0 rgba(0,0,0,0.3);
+}
+.bevel-sunken {
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-top),
+    inset 1px 1px 0 var(--bevel-bottom);
+}
+
+/* Press state — invert the bevel */
+.bevel-button {
+  background: var(--chrome-mid);
+  color: var(--ink);
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-top),
+    inset -1px -1px 0 var(--bevel-bottom);
+  transition: none;
+}
+.bevel-button:active {
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-top),
+    inset 1px 1px 0 var(--bevel-bottom);
+}
+
+/* ── Title bar — horizontal etched scan-line pattern ──
+   Alternating 1px rows: white-top / dark-slate / black-bottom — gives the
+   subtle 3D scanline look that NeXTSTEP and SunOS share. */
+.titlebar {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.10) 0px,
+      rgba(255,255,255,0.10) 1px,
+      var(--chrome-dark) 1px,
+      var(--chrome-dark) 2px,
+      rgba(0,0,0,0.35) 2px,
+      rgba(0,0,0,0.35) 3px
+    );
+  color: var(--ink-inverse);
+  box-shadow:
+    inset 1px 1px 0 rgba(255,255,255,0.25),
+    inset -1px -1px 0 rgba(0,0,0,0.6);
+}
+
+.titlebar-text {
+  color: #FFFFFF;
+  font-weight: 700;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: 0;
+  /* keep text crisp over the striped background */
+  text-shadow: 0 1px 0 rgba(0,0,0,0.6);
+}
+
+/* The triangular close/zoom buttons on title bars */
+.titlebar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 14px;
+  background: var(--chrome-mid);
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-top),
+    inset -1px -1px 0 var(--bevel-bottom);
+  cursor: pointer;
+  font-size: 0;
+}
+.titlebar-button:active {
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-top),
+    inset 1px 1px 0 var(--bevel-bottom);
+}
+
+/* ── Dock chrome ── */
+.dock {
+  background: var(--chrome-mid);
+  box-shadow:
+    inset 1px 0 0 var(--bevel-top),
+    inset -1px 0 0 var(--bevel-bottom),
+    inset 0 1px 0 var(--bevel-top),
+    inset 0 -1px 0 var(--bevel-bottom);
+}
+.dock-tile {
+  background: var(--chrome-mid);
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-top),
+    inset -1px -1px 0 var(--bevel-bottom);
+  cursor: pointer;
+  position: relative;
+}
+.dock-tile[data-active="true"] {
+  background: var(--chrome-light);
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-top),
+    inset 1px 1px 0 var(--bevel-bottom);
+}
+.dock-tile[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  background: var(--accent-red);
+}
+
+/* ── Window / panel chrome ── */
+.next-window {
+  background: var(--bg);
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-top),
+    inset -1px -1px 0 var(--bevel-bottom),
+    2px 2px 0 rgba(0,0,0,0.4);
+}
+.next-panel {
+  background: var(--chrome-mid);
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-top),
+    inset -1px -1px 0 var(--bevel-bottom);
+}
+
+/* ── Menu bar — small-caps Helvetica ── */
+.menubar {
+  background: var(--chrome-mid);
+  color: var(--ink);
+  box-shadow:
+    inset 0 1px 0 var(--bevel-top),
+    inset 0 -1px 0 var(--bevel-bottom);
+}
+.menubar-item {
+  font-variant: small-caps;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0 10px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--ink);
+}
+.menubar-item:hover,
+.menubar-item[data-open="true"] {
+  background: var(--accent-blue);
+  color: #FFFFFF;
+}
+
+/* Small caps utility */
+.small-caps {
+  font-variant: small-caps;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* ── Hover morph — keep utility class names but make them a noop
+   in the NeXT skin (Helvetica isn't a variable font here). ── */
 .hover-morph-subtle,
-.hover-morph-medium {
-  font-variation-settings: "wght" 400, "wdth" 100;
-  transition: font-variation-settings 180ms ease, color 180ms ease, background-color 180ms ease;
-  will-change: font-variation-settings;
-}
-.hover-morph-subtle:hover,
-.hover-morph-subtle:focus-visible {
-  font-variation-settings: "wght" 600, "wdth" 105;
-}
-.hover-morph-medium:hover,
-.hover-morph-medium:focus-visible,
-.hover-morph-medium[data-selected="true"],
-.hover-morph-medium[aria-current="page"] {
-  font-variation-settings: "wght" 750, "wdth" 115;
-}
-@media (prefers-reduced-motion: reduce) {
-  .hover-morph-subtle,
-  .hover-morph-medium { transition: none; }
-}
+.hover-morph-medium { transition: color 120ms ease, background-color 120ms ease; }
 
-/* ── E-ink image filter ── */
-.newspaper-img { filter: grayscale(100%) contrast(1.2) brightness(1.05); mix-blend-mode: multiply; }
-[data-theme="dark"] .newspaper-img { mix-blend-mode: screen; filter: grayscale(100%) contrast(1.1) brightness(0.8); }
-.newspaper-img-hero { position: relative; }
-.newspaper-img-hero::after {
-  content: ""; position: absolute; inset: 0;
-  background-image: radial-gradient(circle, var(--ink) 1px, transparent 1px);
-  background-size: 3px 3px; mix-blend-mode: screen; opacity: 0.1; pointer-events: none;
-}
-
-/* ── Newspaper grid ── */
-.newspaper-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-flow: dense; gap: 0; overflow: hidden; max-width: 100%; box-sizing: border-box; }
-.newspaper-cell { border-right: 1px solid var(--rule-light); border-bottom: 1px solid var(--rule-light); padding: 14px 16px; overflow-wrap: anywhere; min-width: 0; overflow: hidden; }
+/* ── Newspaper grid utilities preserved (other pages still use them) ── */
+.newspaper-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-flow: dense; gap: 0; overflow: hidden; max-width: 100%; box-sizing: border-box; background: var(--bg); }
+.newspaper-cell { border-right: 1px solid var(--chrome-mid); border-bottom: 1px solid var(--chrome-mid); padding: 14px 16px; overflow-wrap: anywhere; min-width: 0; overflow: hidden; background: var(--bg); }
 .newspaper-hero     { grid-column: span 6; border-right: none; }
 .newspaper-major    { grid-column: span 3; }
 .newspaper-standard { grid-column: span 2; }
 .newspaper-minor    { grid-column: span 2; }
 .newspaper-filler   { grid-column: span 1; }
-
 @media (max-width: 1024px) {
   .newspaper-grid { grid-template-columns: repeat(4, 1fr); }
   .newspaper-hero { grid-column: span 4; }
@@ -118,60 +304,87 @@ body { background: var(--paper); color: var(--ink); }
   .newspaper-grid { grid-template-columns: 1fr; overflow: hidden; }
   .newspaper-cell { grid-column: span 1 !important; border-right: none; }
 }
-
-.newspaper-rule { grid-column: 1 / -1; border: none; border-top: 1px solid var(--rule); margin: 0; }
-.newspaper-double-rule { grid-column: 1 / -1; border: none; border-top: 1px solid var(--rule); border-bottom: 2px solid var(--rule); height: 4px; margin: 0; }
-
-/* ── Drop cap — tall thin Baskerville serif ── */
-.drop-cap::first-letter {
-  float: left;
-  font-family: var(--font-baskerville), 'Georgia', serif;
-  font-size: 5.5em;
-  line-height: 0.72;
-  padding-right: 10px;
-  padding-top: 6px;
-  font-weight: 400;
-  color: var(--ink);
-  letter-spacing: -0.02em;
+.newspaper-rule { grid-column: 1 / -1; border: none; border-top: 1px solid var(--ink-soft); margin: 0; }
+.newspaper-double-rule { grid-column: 1 / -1; border: none; border-top: 1px solid var(--ink-soft); border-bottom: 2px solid var(--ink-soft); height: 4px; margin: 0; }
+.pull-quote-row {
+  grid-column: 1 / -1;
+  border-top: 2px solid var(--ink-soft);
+  border-bottom: 2px solid var(--ink-soft);
+  padding: 10px 24px;
+  text-align: center;
+  background: var(--chrome-light);
 }
 
-/* ── Breaking stamp ── */
-.breaking-stamp { position: absolute; top: 8px; right: 8px; transform: rotate(-3deg); border: 2px solid var(--accent-red); color: var(--accent-red); font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 2px 6px; background: var(--paper); }
+/* Drop-cap — keep as small-caps Helvetica blocky initial (no more serif) */
+.drop-cap::first-letter {
+  float: left;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 4.4em;
+  line-height: 0.8;
+  padding-right: 8px;
+  padding-top: 4px;
+  font-weight: 900;
+  color: var(--ink);
+  letter-spacing: -0.04em;
+}
 
-/* ── Marquee ── */
+/* Newspaper image filter — kept for feed cards */
+.newspaper-img { filter: grayscale(100%) contrast(1.15) brightness(1.02); }
+.newspaper-img-hero { position: relative; }
+
+/* Breaking stamp — repurposed as NeXT red alert sticker */
+.breaking-stamp {
+  position: absolute; top: 6px; right: 6px;
+  border: 2px solid var(--accent-red);
+  color: var(--accent-red);
+  font-size: 9px; font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  background: var(--bg);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* Marquee preserved */
 @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
 .animate-marquee { animation: marquee 30s linear infinite; display: inline-flex; }
 .animate-marquee:hover { animation-play-state: paused; }
 
-/* ── Toast Notifications ── */
-@keyframes toast-slide-in {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-@keyframes toast-slide-out {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(100%); opacity: 0; }
-}
+/* Toast */
+@keyframes toast-slide-in { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes toast-slide-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
 .toast-enter { animation: toast-slide-in 0.3s ease-out; }
 .toast-exit { animation: toast-slide-out 0.28s ease-in forwards; }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--paper); }
-::-webkit-scrollbar-thumb { background: var(--rule-light); border-radius: 0; }
-::-webkit-scrollbar-thumb:hover { background: var(--rule); }
+/* Scrollbar — chunky NeXT-style sunken track */
+::-webkit-scrollbar { width: 13px; height: 13px; }
+::-webkit-scrollbar-track {
+  background: var(--chrome-mid);
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-bottom),
+    inset -1px -1px 0 var(--bevel-top);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--chrome-mid);
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-top),
+    inset -1px -1px 0 var(--bevel-bottom);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--chrome-light); }
+::-webkit-scrollbar-corner { background: var(--chrome-mid); }
 
-/* Hide scrollbar but keep scroll functionality */
 @utility scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
-::selection { background: var(--ink); color: var(--paper); }
+
+::selection { background: var(--accent-blue); color: #FFFFFF; }
 
 .stumble-page { min-height: calc(100vh - 5rem); }
 
-/* ── MO Heartbeat Loader ── */
+/* MO Heartbeat */
 @keyframes mo-heartbeat {
   0%, 100% { opacity: 1; transform: scale(1); }
   15% { opacity: 1; transform: scale(1.15); }
@@ -188,66 +401,47 @@ body { background: var(--paper); color: var(--ink); }
 .mo-heartbeat { animation: mo-heartbeat 1.4s ease-in-out infinite; transform-origin: center; }
 .mo-pixel { animation: mo-pixel-pulse 1.4s ease-in-out infinite; }
 
-/* ── Chaotic tilts ── */
-.tilt-cw-sm { transform: rotate(0.4deg); }
-.tilt-cw-md { transform: rotate(0.9deg); }
-.tilt-ccw-sm { transform: rotate(-0.35deg); }
-.tilt-ccw-md { transform: rotate(-0.8deg); }
+/* Tilts — no longer used but kept for back-compat */
+.tilt-cw-sm, .tilt-cw-md, .tilt-ccw-sm, .tilt-ccw-md { transform: none; }
 
-/* ── Pull quote row ── */
-.pull-quote-row {
-  grid-column: 1 / -1;
-  border-top: 2px solid var(--rule);
-  border-bottom: 2px solid var(--rule);
-  padding: 10px 24px;
-  text-align: center;
-}
-
-/* ── Header glyph — dark on light, light on dark ── */
+/* Header glyph filter */
 .header-glyph { filter: grayscale(100%) contrast(2) brightness(0); }
 [data-theme="dark"] .header-glyph { filter: grayscale(100%) contrast(2) brightness(0) invert(1); }
 
-/* ── Inverted ink block ── */
+/* Inverted ink block — repurposed as a NeXT dark panel */
 .ink-block {
-  background: var(--ink) !important;
-  color: var(--paper) !important;
+  background: var(--chrome-dark) !important;
+  color: var(--ink-inverse) !important;
 }
-.ink-block a,
-.ink-block span,
-.ink-block p,
-.ink-block h3,
-.ink-block h2 { color: inherit !important; }
+.ink-block a, .ink-block span, .ink-block p, .ink-block h3, .ink-block h2 { color: inherit !important; }
 .ink-block .newspaper-img { filter: grayscale(100%) contrast(1.2) brightness(1.3) invert(1); }
-.ink-block .breaking-stamp { border-color: var(--paper); color: var(--paper); background: var(--ink); }
+.ink-block .breaking-stamp { border-color: var(--bg); color: var(--bg); background: var(--chrome-dark); }
 
-/* ── Intro Splash / Mission ── */
+/* Intro splash */
 .intro-lofi {
   background:
-    radial-gradient(circle at 16% 18%, rgba(245, 240, 232, 0.12), transparent 34%),
-    radial-gradient(circle at 84% 78%, rgba(245, 240, 232, 0.08), transparent 36%),
+    radial-gradient(circle at 16% 18%, rgba(255,255,255,0.12), transparent 34%),
+    radial-gradient(circle at 84% 78%, rgba(255,255,255,0.08), transparent 36%),
     linear-gradient(135deg, #111111 0%, #1c1c1c 45%, #0f0f0f 100%);
 }
-
 .intro-lofi::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle, rgba(245, 240, 232, 0.25) 0.8px, transparent 0.8px);
+    radial-gradient(circle, rgba(255,255,255,0.25) 0.8px, transparent 0.8px);
   background-size: 3px 3px;
   mix-blend-mode: screen;
   opacity: 0.12;
   animation: intro-grain 6s linear infinite;
 }
-
 .intro-mission-text {
-  font-family: var(--font-playfair), "Georgia", serif;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 900;
   letter-spacing: -0.01em;
   text-wrap: balance;
 }
-
 @keyframes intro-grain {
   0% { transform: translate(0, 0); }
   25% { transform: translate(0.5px, -0.5px); }
@@ -256,7 +450,7 @@ body { background: var(--paper); color: var(--ink); }
   100% { transform: translate(0, 0); }
 }
 
-/* ── Pipeline flow animation ── */
+/* Pipeline flow */
 @keyframes pipeline-flow {
   0% { opacity: 0; transform: translateX(-4px); }
   20% { opacity: 1; transform: translateX(0); }
@@ -266,7 +460,17 @@ body { background: var(--paper); color: var(--ink); }
 .pipeline-item-enter { animation: pipeline-flow 0.4s ease-out; }
 
 @keyframes data-pulse {
-  0%, 100% { border-color: var(--rule-light); }
-  50% { border-color: var(--accent-green); }
+  0%, 100% { border-color: var(--chrome-mid); }
+  50% { border-color: var(--accent-red); }
 }
 .data-pulse { animation: data-pulse 2s ease-in-out; }
+
+/* ── NeXT clock tick ── */
+@keyframes next-tick { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ── NeXT process meter bar ── */
+@keyframes meter-bar-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+.meter-bar-active { animation: meter-bar-pulse 1.2s ease-in-out infinite; }

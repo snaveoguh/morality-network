@@ -174,14 +174,17 @@ export function MarqueeBanner() {
   }, [fetchQuotes]);
 
   return (
-    <div className="relative overflow-hidden bg-[var(--paper-dark)] py-1">
+    <div className="next-panel relative overflow-hidden py-1">
       <div className="flex items-center">
+        <span className="ml-1 mr-2 inline-flex h-5 items-center bevel-sunken bg-white px-2 text-[9px] font-bold tracking-[0.1em] small-caps text-[var(--ink)]">
+          Ticker
+        </span>
         <div className="overflow-hidden">
           <div className="animate-marquee whitespace-nowrap">
             {Array.from({ length: 2 }).map((_, loop) => (
               <span
                 key={`loop-${loop}`}
-                className="mx-6 inline-block font-mono text-[10px] uppercase tracking-[0.16em]"
+                className="mx-4 inline-block font-mono text-[10px] uppercase tracking-[0.08em]"
               >
                 {quotes.map((quote, i) => {
                   const isUp = (quote.change24h ?? 0) >= 0;
@@ -191,21 +194,22 @@ export function MarqueeBanner() {
                         href={quote.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]"
+                        className="text-[var(--ink)] transition-colors hover:text-[var(--accent-red)]"
                       >
-                        {quote.symbol} {formatUsd(quote.price)}{" "}
+                        <span className="font-bold">{quote.symbol}</span>{" "}
+                        {formatUsd(quote.price)}{" "}
                         <span
                           className={
                             isUp
-                              ? "text-[var(--ink-faint)]"
+                              ? "text-[var(--ink-soft)]"
                               : "text-[var(--accent-red)]"
                           }
                         >
-                          {formatChange(quote.change24h)}
+                          {isUp ? "▲" : "▼"} {formatChange(quote.change24h)}
                         </span>
                       </a>
                       {i < quotes.length - 1 && (
-                        <span className="mx-3 text-[var(--rule-light)]">|</span>
+                        <span className="mx-2 text-[var(--ink-faint)]">|</span>
                       )}
                     </span>
                   );
