@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface Node {
   label: string;
@@ -81,13 +81,21 @@ const TREE: Node[] = [
 ];
 
 const STORAGE_KEY = "pw-examiner-open";
+const POS_KEY = "pw-examiner-pos";
+const DEFAULT_POS = { x: 16, y: 96 };
+const WIN_W = 220;
+const MQ_DESKTOP = "(min-width: 1024px)";
 
 export function DocumentExaminer() {
   const pathname = usePathname() || "/";
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [windowOpen, setWindowOpen] = useState(true);
+  const [pos, setPos] = useState(DEFAULT_POS);
+  const [dragging, setDragging] = useState(false);
+  const dragOffset = useRef<{ x: number; y: number } | null>(null);
   const [openMap, setOpenMap] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     for (const n of TREE) init[n.label] = !!n.defaultOpen;
@@ -98,11 +106,73 @@ export function DocumentExaminer() {
     setMounted(true);
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === "closed") setWindowOpen(false);
+    const savedPos = localStorage.getItem(POS_KEY);
+    if (savedPos) {
+      try {
+        const p = JSON.parse(savedPos);
+        if (typeof p?.x === "number" && typeof p?.y === "number") setPos(p);
+      } catch {}
+    }
+    const mq = window.matchMedia(MQ_DESKTOP);
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
   }, []);
 
   useEffect(() => {
     if (mounted) localStorage.setItem(STORAGE_KEY, windowOpen ? "open" : "closed");
   }, [windowOpen, mounted]);
+
+  // Clamp position to viewport on window resize so it never escapes the screen.
+  useEffect(() => {
+    if (!mounted) return;
+    const clamp = () => {
+      setPos((p) => ({
+        x: Math.max(0, Math.min(p.x, window.innerWidth - WIN_W)),
+        y: Math.max(0, Math.min(p.y, window.innerHeight - 80)),
+      }));
+    };
+    window.addEventListener("resize", clamp);
+    return () => window.removeEventListener("resize", clamp);
+  }, [mounted]);
+
+  const onDragStart = useCallback(
+    (clientX: number, clientY: number) => {
+      dragOffset.current = { x: clientX - pos.x, y: clientY - pos.y };
+      setDragging(true);
+    },
+    [pos.x, pos.y],
+  );
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e: MouseEvent | TouchEvent) => {
+      const point = "touches" in e ? e.touches[0] : (e as MouseEvent);
+      if (!point || !dragOffset.current) return;
+      const nx = Math.max(0, Math.min(point.clientX - dragOffset.current.x, window.innerWidth - WIN_W));
+      const ny = Math.max(0, Math.min(point.clientY - dragOffset.current.y, window.innerHeight - 40));
+      setPos({ x: nx, y: ny });
+      if ("touches" in e) e.preventDefault();
+    };
+    const onUp = () => {
+      setDragging(false);
+      dragOffset.current = null;
+      try {
+        localStorage.setItem(POS_KEY, JSON.stringify(pos));
+      } catch {}
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+    };
+  }, [dragging, pos]);
 
   const isActive = (href?: string) => {
     if (!href) return false;
@@ -139,7 +209,7 @@ export function DocumentExaminer() {
     setQuery("");
   }
 
-  if (!mounted) return null;
+  if (!mounted || !isDesktop) return null;
 
   if (!windowOpen) {
     return (
@@ -147,6 +217,7 @@ export function DocumentExaminer() {
         type="button"
         onClick={() => setWindowOpen(true)}
         className="examiner-restore hover-morph-medium"
+        style={{ left: pos.x, top: pos.y }}
         aria-label="Open Document Examiner"
       >
         ≡ examiner
@@ -155,8 +226,25 @@ export function DocumentExaminer() {
   }
 
   return (
-    <aside className="examiner-window" aria-label="Document Examiner">
-      <div className="examiner-titlebar">
+    <aside
+      className="examiner-window"
+      aria-label="Document Examiner"
+      style={{ left: pos.x, top: pos.y, cursor: dragging ? "grabbing" : undefined }}
+    >
+      <div
+        className="examiner-titlebar"
+        onMouseDown={(e) => {
+          if ((e.target as HTMLElement).closest(".examiner-close")) return;
+          e.preventDefault();
+          onDragStart(e.clientX, e.clientY);
+        }}
+        onTouchStart={(e) => {
+          if ((e.target as HTMLElement).closest(".examiner-close")) return;
+          const t = e.touches[0];
+          if (t) onDragStart(t.clientX, t.clientY);
+        }}
+        style={{ cursor: dragging ? "grabbing" : "grab" }}
+      >
         <span className="examiner-titlebar-text hover-morph-subtle">
           DOCUMENT EXAMINER
         </span>
