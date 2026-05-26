@@ -46,6 +46,8 @@
     "iron-session": "^8.0.4",
     "lightweight-charts": "^5.1.0",
     "next": "16.1.6",
+    "ox": "^0.11.3",
+    "permissionless": "^0.3.5",
     "prisma": "^7.4.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
