@@ -58,19 +58,13 @@ interface ClosedPosition {
   };
 }
 
-// Matches the metrics API `open[]` shape (TraderOpenPositionMetric):
-// the position payload is nested, and PnL lives at the row level.
 interface OpenPosition {
-  position?: {
-    marketSymbol?: string;
-    symbol?: string;
-    direction?: "long" | "short";
-    leverage?: number;
-    entryPriceUsd?: number;
-  };
-  currentPriceUsd?: number | null;
-  unrealizedPnlUsd?: number | null;
-  unrealizedPnlPct?: number | null;
+  coin: string;
+  szi: string;
+  entryPx: string;
+  positionValue: string;
+  unrealizedPnl: string;
+  leverage: { type: string; value: number };
 }
 
 interface BusEvent {
@@ -664,18 +658,16 @@ function DeliberationCard({ deliberation: d }: { deliberation: DeliberationData 
 
 // ─── Position Entries ────────────────────────────────────────────────────────
 
-function PositionEntry({ position: row }: { position: OpenPosition }) {
-  const p = row.position ?? {};
-  const pnl = row.unrealizedPnlUsd ?? 0;
+function PositionEntry({ position }: { position: OpenPosition }) {
+  const pnl = parseFloat(position.unrealizedPnl);
   const isProfit = pnl >= 0;
-  const isLong = (p.direction ?? "long") !== "short";
-  const symbol = p.marketSymbol ?? p.symbol ?? "?";
-  const lev = typeof p.leverage === "number" && p.leverage > 0 ? p.leverage : null;
+  const size = parseFloat(position.szi);
+  const isLong = size > 0;
   return (
     <div className="flex items-center gap-2 border border-[var(--rule-light)] p-2">
-      <span className="font-mono text-[10px] font-bold text-[var(--ink)]">{symbol}</span>
+      <span className="font-mono text-[10px] font-bold text-[var(--ink)]">{position.coin}</span>
       <span className="font-mono text-[8px] font-bold uppercase" style={{ color: isLong ? "var(--accent-green)" : "var(--accent-red)" }}>
-        {isLong ? "Long" : "Short"}{lev ? ` ${lev}x` : ""}
+        {isLong ? "Long" : "Short"} {position.leverage.value}x
       </span>
       <span className="ml-auto font-mono text-[10px] font-bold" style={{ color: isProfit ? "var(--accent-green)" : "var(--accent-red)" }}>
         {isProfit ? "+" : ""}${pnl.toFixed(2)}

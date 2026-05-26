@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Playfair_Display, Libre_Baskerville, UnifrakturCook, Mona_Sans } from "next/font/google";
+import { Geist, Geist_Mono, Playfair_Display, Libre_Baskerville, UnifrakturCook } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers/WagmiProvider";
 import { ThemeProvider } from "@/lib/theme";
@@ -7,19 +7,14 @@ import { Header } from "@/components/layout/Header";
 import { MarqueeBanner } from "@/components/layout/MarqueeBanner";
 import { ExtensionBanner } from "@/components/layout/ExtensionBanner";
 import { SITE_URL, withBrand } from "@/lib/brand";
+import { InstallPrompt } from "@/components/layout/InstallPrompt";
+import { BetaToast } from "@/components/layout/BetaToast";
 import { PooterNotificationHub } from "@/components/notifications/PooterNotificationHub";
 import { DevBanner } from "@/components/layout/DevBanner";
-import { DocumentExaminer } from "@/components/layout/DocumentExaminer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-});
-
-const monaSans = Mona_Sans({
-  variable: "--font-mona-sans",
-  subsets: ["latin"],
-  axes: ["wdth"],
 });
 
 const geistMono = Geist_Mono({
@@ -90,7 +85,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${baskerville.variable} ${fraktur.variable} ${monaSans.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${baskerville.variable} ${fraktur.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
       >
         <ThemeProvider>
         <Providers>
@@ -98,8 +93,9 @@ export default function RootLayout({
           <MarqueeBanner />
           <ExtensionBanner />
           <Header />
-          <DocumentExaminer />
           <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-2">{children}</main>
+          <InstallPrompt />
+          <BetaToast />
           <PooterNotificationHub />
         </Providers>
         </ThemeProvider>

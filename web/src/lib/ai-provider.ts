@@ -240,25 +240,17 @@ async function generateOpenAICompatibleText(
 }
 
 function recordAIUsageSafely(input: Parameters<typeof recordAIUsage>[0]): void {
-  const persist = () => {
+  after(() => {
     recordAIUsage(input).catch((error) => {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(`[ai-provider] failed to persist AI usage: ${message}`);
     });
-  };
-  // `after()` defers persistence past the HTTP response in request context.
-  // Outside a request — the worker (trader council, swarm) — it throws, so fall
-  // back to firing immediately. Without this, no worker-side LLM call is metered.
-  try {
-    after(persist);
-  } catch {
-    persist();
-  }
+  });
 }
 
 // ─── Agent Hub (Groq free tier via centralized proxy) ────────────────────────
 
-async function tryAgentHub(request: AITextRequest): Promise<AIProviderResult | null> {
+async function tryAgentHub(request: AITextRequest): Promise<AITextResult | null> {
   const hubUrl = readEnv("AGENT_HUB_URL");
   if (!hubUrl) return null;
 
@@ -303,12 +295,6 @@ async function tryAgentHub(request: AITextRequest): Promise<AIProviderResult | n
       provider: "ollama" as AIProviderId, // track as free-tier provider
       model: payload.model ?? "hub",
       text,
-      usage: {
-        inputTokens: 0,
-        outputTokens: 0,
-        totalTokens: Math.max(0, Number(payload.usage?.totalTokens ?? 0)),
-      },
-      meta: { via: "agent-hub" },
     };
   } catch (err) {
     console.warn(`[ai-provider] hub failed: ${err instanceof Error ? err.message : err}`);
@@ -317,29 +303,9 @@ async function tryAgentHub(request: AITextRequest): Promise<AIProviderResult | n
 }
 
 export async function generateTextForTask(request: AITextRequest): Promise<AITextResult> {
-  // Try Agent Hub first (free Groq tier) — meter it like any other provider
-  const hubStartedAt = Date.now();
+  // Try Agent Hub first (free Groq tier)
   const hubResult = await tryAgentHub(request);
-  if (hubResult) {
-    recordAIUsageSafely({
-      task: request.task,
-      provider: hubResult.provider,
-      model: hubResult.model,
-      status: "success",
-      inputTokens: hubResult.usage.inputTokens,
-      outputTokens: hubResult.usage.outputTokens,
-      totalTokens: hubResult.usage.totalTokens,
-      latencyMs: Math.max(0, Date.now() - hubStartedAt),
-      estimatedCostMicrousd: estimateAIInvocationCostMicrousd({
-        provider: hubResult.provider,
-        model: hubResult.model,
-        inputTokens: hubResult.usage.inputTokens,
-        outputTokens: hubResult.usage.outputTokens,
-      }),
-      meta: { via: "agent-hub", maxTokens: request.maxTokens, temperature: request.temperature ?? 0 },
-    });
-    return { provider: hubResult.provider, model: hubResult.model, text: hubResult.text };
-  }
+  if (hubResult) return hubResult;
 
   const providers = getConfiguredProvidersForTask(request.task);
   if (providers.length === 0) {

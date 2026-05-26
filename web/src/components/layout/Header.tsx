@@ -104,7 +104,6 @@ const LOGO_MENU_ITEMS = [
   { href: "/write", label: "Create", desc: "Publish an article" },
   { href: "/subscribe", label: "The Daily Pooter", desc: "Morning intelligence brief" },
   { href: "/daily", label: "Daily Editions", desc: "Every front page, archived" },
-  { href: "/status", label: "System Status", desc: "Public health dashboard" },
   { href: "/architecture", label: "Architecture", desc: "System design docs" },
   { href: "/appendix", label: "Appendix", desc: "Contracts & API reference" },
   { href: "/style-guide", label: "Style Guide", desc: "Brand & design system" },
@@ -152,9 +151,9 @@ function LogoMenu() {
               key={href}
               href={href}
               onClick={() => setOpen(false)}
-              className="hover-morph-medium block border-b border-[var(--rule-light)] px-3 py-2 last:border-b-0 hover:bg-[var(--paper-dark)]"
+              className="block border-b border-[var(--rule-light)] px-3 py-2 transition-colors last:border-b-0 hover:bg-[var(--paper-dark)]"
             >
-              <span className="block text-[13px] tracking-[-0.005em] text-[var(--ink)]">
+              <span className="block font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--ink)]">
                 {label}
               </span>
               <span className="block font-mono text-[8px] tracking-[0.1em] text-[var(--ink-faint)]">
