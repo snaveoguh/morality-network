@@ -10,7 +10,8 @@
     "editorial": "tsx src/tasks/write-editorial.ts",
     "comment": "tsx src/tasks/comment.ts",
     "learn": "tsx src/tasks/learn.ts",
-    "farcaster-digest": "tsx src/tasks/farcaster-digest.ts"
+    "farcaster-digest": "tsx src/tasks/farcaster-digest.ts",
+    "mint-edition": "tsx src/tasks/mint-daily-edition.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.0.0",
