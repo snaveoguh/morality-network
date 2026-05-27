@@ -19,8 +19,11 @@
  */
 import { generate } from "../llm.js";
 import {
+  formatPeerCommentsForPrompt,
   getPortfolio,
+  getRecentPeerComments,
   runSkill,
+  type PeerComment,
   type Portfolio,
   type RunSkillResult,
 } from "../../../shared/wallet-client.js";
@@ -33,6 +36,8 @@ import {
 const AGENT_ID = "pooter1";
 
 const SKILL_CATALOG: Record<string, string> = {
+  comment:
+    'post a comment on the MoralityComments contract under an entity hash. params: { entityHash (0x bytes32 — for replies, reuse the parent\'s entityHash; for new threads, any 32-byte topic), content (string, ≤2000), parentId (string or number; 0 = top-level, else the commentId being replied to) }',
   swap:
     'swap one ERC-20 for another on Base via Uniswap V3 or Aerodrome. params: { tokenIn (0x address), tokenOut (0x address), amountIn (string, raw units), amountOutMin (string), dex ("uniswap-v3"|"aerodrome"), poolFee? (number, uniswap only) }',
   "tip-agent":
@@ -62,6 +67,7 @@ interface DecisionJson {
 function buildPrompt(
   portfolio: Portfolio,
   candidates: BaseTokenCandidate[],
+  peerComments: PeerComment[],
 ): { system: string; user: string } {
   const balanceLines = portfolio.balances
     .map((b) => `  ${b.symbol}: ${b.formatted} (raw=${b.raw})`)
@@ -90,7 +96,10 @@ ${balanceLines || "  (empty)"}
 Top Base pools right now (sorted by 24h volume; high vol+liq, watch the 24h move):
 ${formatCandidatesForPrompt(candidates)}
 
-Pick one skill from the catalog. If nothing looks positive-EV right now, pick "abstain".`;
+Recent comments by you and your sibling agents on MoralityComments (newest first; reply with parentId=<their commentId> on the same entityHash):
+${formatPeerCommentsForPrompt(peerComments, portfolio.agentId)}
+
+Pick one skill from the catalog. A good tick alternates between commenting (build a public voice + reply to peers), trading (when a pool setup looks favourable), and abstaining (when nothing has edge). If nothing looks positive-EV right now, pick "abstain".`;
 
   return { system, user };
 }
@@ -124,12 +133,13 @@ export interface DecideOutcome {
 }
 
 export async function decideOnce(): Promise<DecideOutcome> {
-  const [portfolio, candidates] = await Promise.all([
+  const [portfolio, candidates, peerComments] = await Promise.all([
     getPortfolio(AGENT_ID),
     getBaseCandidates({ limit: 8 }).catch(() => [] as BaseTokenCandidate[]),
+    getRecentPeerComments({ limit: 12 }).catch(() => [] as PeerComment[]),
   ]);
 
-  const { system, user } = buildPrompt(portfolio, candidates);
+  const { system, user } = buildPrompt(portfolio, candidates, peerComments);
   const raw = await generate({ system, user, maxTokens: 600, temperature: 0.4 });
 
   let decision: DecisionJson;

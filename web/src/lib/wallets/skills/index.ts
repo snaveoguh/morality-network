@@ -1,4 +1,5 @@
 import type { AnySkill, SkillHandler } from "./types";
+import { commentSkill } from "./comment";
 import { swapSkill } from "./swap";
 import { transferSkill } from "./transfer";
 import { tipAgentSkill } from "./tip-agent";
@@ -10,6 +11,7 @@ function register<P>(handler: SkillHandler<P>) {
   skills.set(handler.name, handler as unknown as AnySkill);
 }
 
+register(commentSkill);
 register(swapSkill);
 register(transferSkill);
 register(tipAgentSkill);

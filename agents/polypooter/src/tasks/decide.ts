@@ -14,8 +14,11 @@
  */
 import { generate } from "../llm.js";
 import {
+  formatPeerCommentsForPrompt,
   getPortfolio,
+  getRecentPeerComments,
   runSkill,
+  type PeerComment,
   type Portfolio,
   type RunSkillResult,
 } from "../../../shared/wallet-client.js";
@@ -30,6 +33,8 @@ import type { ArbOpportunity } from "../arb-detector.js";
 const AGENT_ID = "polypooter";
 
 const SKILL_CATALOG: Record<string, string> = {
+  comment:
+    'post a comment on the MoralityComments contract under an entity hash. params: { entityHash (0x bytes32 — reuse parent\'s for replies; pick any 32-byte topic for new threads), content (string, ≤2000), parentId (string or number; 0 = top-level, else commentId to reply to) }',
   swap:
     'swap one ERC-20 for another on Base via Uniswap V3 or Aerodrome. params: { tokenIn (0x address), tokenOut (0x address), amountIn (string, raw units), amountOutMin (string), dex ("uniswap-v3"|"aerodrome"), poolFee? (number) }',
   "tip-agent":
@@ -74,6 +79,7 @@ function buildPrompt(
   portfolio: Portfolio,
   candidates: BaseTokenCandidate[],
   arbs: ArbOpportunity[],
+  peerComments: PeerComment[],
 ): { system: string; user: string } {
   const balanceLines = portfolio.balances
     .map((b) => `  ${b.symbol}: ${b.formatted} (raw=${b.raw})`)
@@ -105,10 +111,14 @@ ${formatArbOpportunitiesForPrompt(arbs)}
 Top Base pools right now (sorted by 24h volume; high vol+liq, watch the 24h move):
 ${formatCandidatesForPrompt(candidates)}
 
+Recent comments by you and your sibling agents on MoralityComments (newest first; reply with parentId=<their commentId> on the same entityHash):
+${formatPeerCommentsForPrompt(peerComments, portfolio.agentId)}
+
 Pick one skill from the catalog. Arb opportunities can't be executed on-chain
-through these skills (they're CLOB-side); if you see strong arbs, your only
-move is to abstain or tip pooter1 to reinforce its trading capital. If the
-Base pools show a strong setup that fits your prediction-market view, swap.`;
+through these skills (they're CLOB-side); if you see strong arbs, comment
+about them to share intelligence with pooter1, or tip it to reinforce
+its capital. If the Base pools show a strong setup that fits your view,
+swap. Replying to pooter1's comments with a sharper take is high-value.`;
 
   return { system, user };
 }
@@ -141,13 +151,14 @@ export interface DecideOutcome {
 }
 
 export async function decideOnce(): Promise<DecideOutcome> {
-  const [portfolio, candidates] = await Promise.all([
+  const [portfolio, candidates, peerComments] = await Promise.all([
     getPortfolio(AGENT_ID),
     getBaseCandidates({ limit: 8 }).catch(() => [] as BaseTokenCandidate[]),
+    getRecentPeerComments({ limit: 12 }).catch(() => [] as PeerComment[]),
   ]);
   const arbs = getLastScanResults().opportunities;
 
-  const { system, user } = buildPrompt(portfolio, candidates, arbs);
+  const { system, user } = buildPrompt(portfolio, candidates, arbs, peerComments);
   const raw = await generate({ system, user, maxTokens: 600, temperature: 0.4 });
 
   let decision: DecisionJson;

@@ -181,4 +181,48 @@ export async function getPortfolio(
   return (await res.json()) as Portfolio;
 }
 
+// ─── Peer activity feed ─────────────────────────────────────────────────────
+
+export interface PeerComment {
+  commentId: string;
+  entityHash: `0x${string}`;
+  authorAgentId: string;
+  authorAddress: `0x${string}`;
+  parentId: string;
+  content: string;
+  timestamp: number;
+  blockNumber: string;
+  txHash: `0x${string}`;
+}
+
+export async function getRecentPeerComments(opts: {
+  lookbackBlocks?: number;
+  limit?: number;
+} = {}): Promise<PeerComment[]> {
+  const params = new URLSearchParams();
+  if (opts.lookbackBlocks) params.set("lookbackBlocks", String(opts.lookbackBlocks));
+  if (opts.limit) params.set("limit", String(opts.limit));
+  const qs = params.toString();
+  const url = `${baseUrl()}/api/v1/agents/recent-comments${qs ? `?${qs}` : ""}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(20_000) });
+  if (!res.ok) return [];
+  const body = (await res.json().catch(() => null)) as { comments?: PeerComment[] } | null;
+  return body?.comments ?? [];
+}
+
+export function formatPeerCommentsForPrompt(
+  comments: PeerComment[],
+  selfAgentId: string,
+): string {
+  if (comments.length === 0) return "(no peer comments in the recent window)";
+  return comments
+    .map((c) => {
+      const role = c.authorAgentId === selfAgentId ? "YOU" : c.authorAgentId;
+      const parent = c.parentId === "0" ? "top-level" : `reply→#${c.parentId}`;
+      const snippet = c.content.replace(/\s+/g, " ").slice(0, 140);
+      return `  #${c.commentId} [${role}] ${parent} entity=${c.entityHash.slice(0, 14)}…: "${snippet}"`;
+    })
+    .join("\n");
+}
+
 export const __replayWindowSeconds = REPLAY_WINDOW_SECONDS;
