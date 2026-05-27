@@ -24,6 +24,11 @@ import {
   type Portfolio,
   type RunSkillResult,
 } from "../../../shared/wallet-client.js";
+import {
+  formatCandidatesForPrompt,
+  getBaseCandidates,
+  type BaseTokenCandidate,
+} from "../../../shared/signals.js";
 
 const AGENT_ID = "pooter1";
 
@@ -54,7 +59,10 @@ interface DecisionJson {
   reasoning: string;
 }
 
-function buildPrompt(portfolio: Portfolio): { system: string; user: string } {
+function buildPrompt(
+  portfolio: Portfolio,
+  candidates: BaseTokenCandidate[],
+): { system: string; user: string } {
   const balanceLines = portfolio.balances
     .map((b) => `  ${b.symbol}: ${b.formatted} (raw=${b.raw})`)
     .join("\n");
@@ -78,6 +86,9 @@ RESPONSE FORMAT — strict JSON, no commentary, no markdown fences:
 
 Holdings:
 ${balanceLines || "  (empty)"}
+
+Top Base pools right now (sorted by 24h volume; high vol+liq, watch the 24h move):
+${formatCandidatesForPrompt(candidates)}
 
 Pick one skill from the catalog. If nothing looks positive-EV right now, pick "abstain".`;
 
@@ -113,9 +124,12 @@ export interface DecideOutcome {
 }
 
 export async function decideOnce(): Promise<DecideOutcome> {
-  const portfolio = await getPortfolio(AGENT_ID);
+  const [portfolio, candidates] = await Promise.all([
+    getPortfolio(AGENT_ID),
+    getBaseCandidates({ limit: 8 }).catch(() => [] as BaseTokenCandidate[]),
+  ]);
 
-  const { system, user } = buildPrompt(portfolio);
+  const { system, user } = buildPrompt(portfolio, candidates);
   const raw = await generate({ system, user, maxTokens: 600, temperature: 0.4 });
 
   let decision: DecisionJson;
