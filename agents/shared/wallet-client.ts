@@ -95,4 +95,90 @@ export async function sendTx(params: SendTxParams): Promise<SendTxResult> {
   return (await res.json()) as SendTxResult;
 }
 
+// ─── Skills ─────────────────────────────────────────────────────────────────
+
+export interface RunSkillParams {
+  agentId: string;
+  skill: string;
+  params: Record<string, unknown>;
+}
+
+export interface RunSkillResult {
+  agentId: string;
+  address: `0x${string}`;
+  skill: string;
+  txHash: `0x${string}`;
+  extraTxHashes?: `0x${string}`[];
+  meta?: Record<string, unknown>;
+  chainId: number;
+}
+
+export async function runSkill(args: RunSkillParams): Promise<RunSkillResult> {
+  const path = `/api/v1/agents/${encodeURIComponent(args.agentId)}/skill`;
+  const url = `${baseUrl()}${path}`;
+  const body = JSON.stringify({ skill: args.skill, params: args.params });
+  const ts = Math.floor(Date.now() / 1000);
+  const signature = sign("POST", path, body, ts);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-agent-timestamp": String(ts),
+      "x-agent-signature": signature,
+    },
+    body,
+    signal: AbortSignal.timeout(180_000),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`runSkill(${args.agentId}/${args.skill}) ${res.status}: ${text.slice(0, 300)}`);
+  }
+  return (await res.json()) as RunSkillResult;
+}
+
+export async function listAvailableSkills(): Promise<string[]> {
+  // Unauthenticated GET, intended for capability discovery.
+  const res = await fetch(`${baseUrl()}/api/v1/agents/_/skill`, {
+    signal: AbortSignal.timeout(10_000),
+  }).catch(() => null);
+  if (!res || !res.ok) return [];
+  const body = (await res.json().catch(() => null)) as { skills?: string[] } | null;
+  return body?.skills ?? [];
+}
+
+// ─── Portfolio ──────────────────────────────────────────────────────────────
+
+export interface TokenBalance {
+  token: `0x${string}` | "native";
+  symbol: string;
+  decimals: number;
+  raw: string;
+  formatted: string;
+}
+
+export interface Portfolio {
+  agentId: string;
+  address: `0x${string}`;
+  chainId: number;
+  balances: TokenBalance[];
+}
+
+export async function getPortfolio(
+  agentId: string,
+  extraTokens: `0x${string}`[] = [],
+): Promise<Portfolio> {
+  const params = new URLSearchParams();
+  for (const t of extraTokens) params.append("token", t);
+  const qs = params.toString();
+  const url = `${baseUrl()}/api/v1/agents/${encodeURIComponent(agentId)}/portfolio${qs ? `?${qs}` : ""}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`getPortfolio(${agentId}) ${res.status}: ${text.slice(0, 200)}`);
+  }
+  return (await res.json()) as Portfolio;
+}
+
 export const __replayWindowSeconds = REPLAY_WINDOW_SECONDS;

@@ -21,7 +21,11 @@ import { getAgentAddress } from "./onchain.js";
 import { learn } from "./tasks/learn.js";
 import { farcasterDigest } from "./tasks/farcaster-digest.js";
 import { scanAndReplyToMentions } from "./tasks/reply-to-mention.js";
+import { decideOnce } from "./tasks/decide.js";
 import { MENTION_POLL_INTERVAL_MS } from "./config.js";
+
+const DECIDE_ENABLED = process.env.DECIDE_ENABLED === "true";
+const DECIDE_INTERVAL_MS = parseInt(process.env.DECIDE_INTERVAL_MS || "900000", 10);
 
 const app = new Hono();
 
@@ -106,6 +110,16 @@ app.post("/tasks/mention-scan", requireAuth, async (c) => {
   }
 });
 
+// ── Task: Decide (autonomous skill-picker) ────────────────────────
+app.post("/tasks/decide", requireAuth, async (c) => {
+  try {
+    const outcome = await decideOnce();
+    return c.json({ status: "ok", task: "decide", outcome });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
 // ── Start ──────────────────────────────────────────────────────────
 const port = parseInt(process.env.PORT || "3001", 10);
 
@@ -123,4 +137,21 @@ serve({ fetch: app.fetch, port }, () => {
   console.log(
     `[${AGENT_NAME}] Mention scanner active (every ${MENTION_POLL_INTERVAL_MS / 1000}s)`,
   );
+
+  // Autonomous decide loop — picks one skill per tick using its smart wallet.
+  // Off by default; flip DECIDE_ENABLED=true on the service to enable.
+  if (DECIDE_ENABLED) {
+    setInterval(() => {
+      decideOnce().catch((err) =>
+        console.warn(`[${AGENT_NAME}] Decide tick error: ${err.message}`),
+      );
+    }, DECIDE_INTERVAL_MS);
+    console.log(
+      `[${AGENT_NAME}] Decide loop active (every ${DECIDE_INTERVAL_MS / 1000}s, dryRun=${process.env.DECIDE_DRY_RUN ?? "true"})`,
+    );
+  } else {
+    console.log(
+      `[${AGENT_NAME}] Decide loop disabled (DECIDE_ENABLED=true to enable)`,
+    );
+  }
 });
