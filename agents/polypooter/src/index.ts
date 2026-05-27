@@ -3,6 +3,10 @@ import { Hono } from "hono";
 import { getConfig } from "./config.js";
 import { scanMarkets, getLastScanResults } from "./tasks/scan-markets.js";
 import { generateReport } from "./tasks/report.js";
+import { decideOnce } from "./tasks/decide.js";
+
+const DECIDE_ENABLED = process.env.DECIDE_ENABLED === "true";
+const DECIDE_INTERVAL_MS = parseInt(process.env.DECIDE_INTERVAL_MS || "900000", 10);
 
 const config = getConfig();
 const app = new Hono();
@@ -79,6 +83,23 @@ app.get("/report", (c) => {
   return c.json(generateReport());
 });
 
+app.post("/tasks/decide", async (c) => {
+  if (!verifyAuth(c.req.header("Authorization"))) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  try {
+    const outcome = await decideOnce();
+    return c.json({ success: true, outcome });
+  } catch (err) {
+    console.error("[polypooter] Decide failed:", err);
+    return c.json(
+      { error: err instanceof Error ? err.message : "Decide failed" },
+      500,
+    );
+  }
+});
+
 // ── Background scanner (optional) ──
 
 let scanInterval: ReturnType<typeof setInterval> | null = null;
@@ -112,4 +133,17 @@ console.log(`[polypooter] Min liquidity: $${config.minLiquidityUsd}`);
 serve({ fetch: app.fetch, port: config.port }, () => {
   console.log(`[polypooter] Listening on http://localhost:${config.port}`);
   startBackgroundScanner();
+
+  if (DECIDE_ENABLED) {
+    setInterval(() => {
+      decideOnce().catch((err) =>
+        console.warn(`[polypooter] Decide tick error: ${err.message}`),
+      );
+    }, DECIDE_INTERVAL_MS);
+    console.log(
+      `[polypooter] Decide loop active (every ${DECIDE_INTERVAL_MS / 1000}s, dryRun=${process.env.DECIDE_DRY_RUN ?? "true"})`,
+    );
+  } else {
+    console.log(`[polypooter] Decide loop disabled (DECIDE_ENABLED=true to enable)`);
+  }
 });

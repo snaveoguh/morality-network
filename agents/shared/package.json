@@ -1,0 +1,7 @@
+{
+  "name": "@pooter/agent-shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared worker-side code for pooter agents: wallet client, signal feeds."
+}
