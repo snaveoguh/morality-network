@@ -58,7 +58,13 @@ body { background: var(--paper); color: var(--ink); }
 .font-masthead { font-family: var(--font-fraktur), 'Old English Text MT', serif; font-weight: 700; }
 .font-headline-serif { font-family: var(--font-playfair), 'Georgia', 'Times New Roman', serif; }
 .font-body-serif { font-family: var(--font-baskerville), 'Georgia', serif; }
-.font-headline { font-family: var(--font-playfair), 'Georgia', serif; font-weight: 900; letter-spacing: -0.01em; }
+.font-headline {
+  font-family: var(--font-archivo-black), 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.92;
+}
 .font-comic { font-family: 'Comic Neue', 'Comic Sans MS', cursive; }
 
 /* ── E-ink image filter ── */
