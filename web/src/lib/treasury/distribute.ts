@@ -18,6 +18,11 @@ import { privateKeyToAccount } from "viem/accounts";
 import { getAgentAddress } from "@/lib/wallets/factory";
 import { isAgentId } from "@/lib/wallets/agent-ids";
 import { BASE_USDC } from "./across";
+import {
+  getTreasurySafeAddress,
+  safeBatchTransfer,
+  treasurySafeConfigured,
+} from "./safe";
 
 const ERC20_ABI = [
   {
@@ -155,5 +160,105 @@ export async function executeDistribution(args: {
     transfers,
     operatorBalanceBeforeRaw: balance.toString(),
     totalDistributedRaw: total.toString(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Safe-routed distribution (Zodiac integration memo §6 / Week 1).
+//
+// Funds live in the Treasury Safe; the operator EOA is the sole signer and
+// authorises a single Safe transaction containing N ERC20 transfers (one per
+// agent). One on-chain tx, one signature, vs. N separate operator-EOA
+// transfers in the legacy path. Agent-side behaviour is unchanged — funds
+// land at the same SCW addresses.
+//
+// Use this once TREASURY_SAFE_ADDRESS_BASE is set in the environment and
+// the Safe has been funded (USDC + a small amount of ETH for gas isn't
+// required — the operator EOA pays gas, the Safe just holds the USDC).
+// ---------------------------------------------------------------------------
+
+export interface SafeDistributeResult {
+  status: "ok" | "dry-run";
+  source: "safe";
+  safeAddress: Address;
+  operator: Address;
+  baseUsdc: Address;
+  transfers: Array<{
+    agentId: string;
+    scwAddress: Address;
+    amountRaw: string;
+  }>;
+  safeBalanceBeforeRaw: string;
+  totalDistributedRaw: string;
+  txHash?: Hex;
+}
+
+export async function executeSafeDistribution(args: {
+  allocations: Allocation[];
+  dryRun?: boolean;
+}): Promise<SafeDistributeResult> {
+  if (!treasurySafeConfigured()) {
+    throw new Error(
+      "TREASURY_SAFE_ADDRESS_BASE not set — Safe path not available. " +
+        "Either configure the env var (after running scripts/deploy_treasury_safe.mjs) " +
+        "or fall back to executeDistribution() for the legacy operator-EOA path.",
+    );
+  }
+
+  const wallet = privateKeyToAccount(operatorKey());
+  const safeAddress = getTreasurySafeAddress();
+  const resolved = await resolveAllocations(args.allocations);
+  const total = resolved.reduce((s, a) => s + a.amountRaw, BigInt(0));
+
+  const publicClient = createPublicClient({ chain: base, transport: http(baseRpc()) });
+  const safeBalance = (await publicClient.readContract({
+    address: BASE_USDC,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: [safeAddress],
+  })) as bigint;
+
+  if (safeBalance < total) {
+    throw new Error(
+      `insufficient Safe USDC on Base: Safe ${safeAddress} has ${safeBalance}, need ${total}`,
+    );
+  }
+
+  if (args.dryRun) {
+    return {
+      status: "dry-run",
+      source: "safe",
+      safeAddress,
+      operator: wallet.address as Address,
+      baseUsdc: BASE_USDC,
+      transfers: resolved.map((a) => ({
+        agentId: a.agentId,
+        scwAddress: a.scwAddress,
+        amountRaw: a.amountRaw.toString(),
+      })),
+      safeBalanceBeforeRaw: safeBalance.toString(),
+      totalDistributedRaw: total.toString(),
+    };
+  }
+
+  const batch = await safeBatchTransfer({
+    transfers: resolved.map((a) => ({ to: a.scwAddress, amountRaw: a.amountRaw })),
+    token: BASE_USDC,
+  });
+
+  return {
+    status: "ok",
+    source: "safe",
+    safeAddress,
+    operator: wallet.address as Address,
+    baseUsdc: BASE_USDC,
+    transfers: resolved.map((a) => ({
+      agentId: a.agentId,
+      scwAddress: a.scwAddress,
+      amountRaw: a.amountRaw.toString(),
+    })),
+    safeBalanceBeforeRaw: safeBalance.toString(),
+    totalDistributedRaw: total.toString(),
+    txHash: batch.txHash,
   };
 }
