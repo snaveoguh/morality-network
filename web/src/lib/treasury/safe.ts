@@ -15,7 +15,15 @@
 // you then mirror that value into the env var above.
 
 import Safe from "@safe-global/protocol-kit";
-import { encodeFunctionData, type Address, type Hash } from "viem";
+import {
+  createPublicClient,
+  encodeFunctionData,
+  http,
+  type Address,
+  type Hash,
+} from "viem";
+import { base } from "viem/chains";
+import { privateKeyToAccount } from "viem/accounts";
 
 import { BASE_USDC } from "./across";
 
@@ -126,6 +134,17 @@ export async function safeBatchTransfer(args: {
     };
   }
 
+  // The operator EOA pays gas for the Safe tx. Bail early with a clear
+  // message if it can't, rather than failing opaquely at submission.
+  const publicClient = createPublicClient({ chain: base, transport: http(getBaseRpc()) });
+  const operator = privateKeyToAccount(getOperatorKey());
+  const operatorEth = await publicClient.getBalance({ address: operator.address });
+  if (operatorEth === BigInt(0)) {
+    throw new Error(
+      `operator EOA ${operator.address} has zero ETH on Base — cannot pay gas for the Safe tx`,
+    );
+  }
+
   const safeTransactionData = args.transfers.map((t) => ({
     to: token,
     value: "0",
@@ -140,6 +159,16 @@ export async function safeBatchTransfer(args: {
   const signedTx = await safe.signTransaction(tx);
   const executeResult = await safe.executeTransaction(signedTx);
   const txHash = executeResult.hash as Hash;
+
+  // Protocol Kit v7 returns as soon as the tx is broadcast — the hash does
+  // NOT mean it landed successfully. Wait for the receipt and require a
+  // successful status before reporting "ok", matching the legacy
+  // executeDistribution() path. Without this, a reverted tx would be
+  // reported as a successful distribution (treasury-accounting hazard).
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+  if (receipt.status !== "success") {
+    throw new Error(`Safe distribution tx reverted on-chain: ${txHash}`);
+  }
 
   return {
     status: "ok",

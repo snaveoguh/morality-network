@@ -23,10 +23,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+// protocol-kit only exists under the sibling web/node_modules (this script
+// lives in contracts/), so we point at its dist path directly rather than
+// resolving the package by name. The default export can arrive wrapped by
+// CJS/ESM interop depending on the loader; unwrap defensively.
 import SafeMod from "../../web/node_modules/@safe-global/protocol-kit/dist/esm/src/index.mjs";
 
-// Protocol Kit ships its default export under a CJS-interop wrapper when
-// loaded from an mjs file outside the package's `exports` map; unwrap.
 const Safe = SafeMod.default ?? SafeMod;
 import {
   createPublicClient,
