@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono, UnifrakturCook } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers/WagmiProvider";
 import { ThemeProvider } from "@/lib/theme";
@@ -21,6 +21,14 @@ const inter = Inter({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Old-English blackletter — kept ONLY for the article drop-cap (the one
+// surviving thread from the newspaper era).
+const fraktur = UnifrakturCook({
+  variable: "--font-fraktur",
+  subsets: ["latin"],
+  weight: "700",
 });
 
 export const metadata: Metadata = {
@@ -66,7 +74,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="light" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${geistMono.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
+        className={`${inter.variable} ${geistMono.variable} ${fraktur.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
       >
         <ThemeProvider>
         <Providers>

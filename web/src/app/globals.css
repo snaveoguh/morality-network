@@ -26,10 +26,11 @@
   --brand-blue-dark: #14528a;
   --brand-teal: #15d6b8;
   --brand-teal-dark: #0aa78e;
-  /* legacy font aliases → Inter (resolved lazily inside <body>) */
+  /* legacy font aliases → Inter (resolved lazily inside <body>).
+     --font-fraktur is NOT aliased: it stays the real UnifrakturCook
+     blackletter, used only by the article drop-cap. */
   --font-playfair: var(--font-inter);
   --font-baskerville: var(--font-inter);
-  --font-fraktur: var(--font-inter);
   --font-geist-sans: var(--font-inter);
   --background: var(--paper);
   --foreground: var(--ink);
@@ -120,14 +121,13 @@ body { background: var(--paper); color: var(--ink); }
 /* ── Drop cap — tall thin Baskerville serif ── */
 .drop-cap::first-letter {
   float: left;
-  font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif;
-  font-size: 4.6em;
-  line-height: 0.78;
-  padding-right: 10px;
-  padding-top: 4px;
-  font-weight: 800;
-  color: var(--brand-blue);
-  letter-spacing: -0.04em;
+  font-family: var(--font-fraktur), 'UnifrakturCook', 'Old English Text MT', serif;
+  font-size: 6.6em;
+  line-height: 0.7;
+  padding-right: 14px;
+  padding-top: 6px;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 /* ── Breaking tag — solid GOV.UK-style label ── */
