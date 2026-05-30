@@ -88,19 +88,14 @@ body { background: var(--paper); color: var(--ink); }
 .font-headline { font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-weight: 800; letter-spacing: -0.022em; }
 .font-comic { font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-weight: 600; }
 
-/* ── E-ink image filter ── */
-.newspaper-img { filter: grayscale(100%) contrast(1.2) brightness(1.05); mix-blend-mode: multiply; }
-[data-theme="dark"] .newspaper-img { mix-blend-mode: screen; filter: grayscale(100%) contrast(1.1) brightness(0.8); }
+/* ── Image treatment — full colour (GOV.UK uses colour imagery) ── */
+.newspaper-img { filter: none; mix-blend-mode: normal; }
+[data-theme="dark"] .newspaper-img { filter: brightness(0.95); mix-blend-mode: normal; }
 .newspaper-img-hero { position: relative; }
-.newspaper-img-hero::after {
-  content: ""; position: absolute; inset: 0;
-  background-image: radial-gradient(circle, var(--ink) 1px, transparent 1px);
-  background-size: 3px 3px; mix-blend-mode: screen; opacity: 0.1; pointer-events: none;
-}
 
 /* ── Newspaper grid ── */
-.newspaper-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-flow: dense; gap: 0; overflow: hidden; max-width: 100%; box-sizing: border-box; }
-.newspaper-cell { border-right: 1px solid var(--rule-light); border-bottom: 1px solid var(--rule-light); padding: 14px 16px; overflow-wrap: anywhere; min-width: 0; overflow: hidden; }
+.newspaper-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-flow: dense; gap: 12px; max-width: 100%; box-sizing: border-box; }
+.newspaper-cell { border: 1px solid var(--rule-light); border-radius: 10px; background: var(--paper); padding: 18px 20px; overflow-wrap: anywhere; min-width: 0; overflow: hidden; }
 .newspaper-hero     { grid-column: span 6; border-right: none; }
 .newspaper-major    { grid-column: span 3; }
 .newspaper-standard { grid-column: span 2; }
@@ -125,18 +120,18 @@ body { background: var(--paper); color: var(--ink); }
 /* ── Drop cap — tall thin Baskerville serif ── */
 .drop-cap::first-letter {
   float: left;
-  font-family: var(--font-baskerville), 'Georgia', serif;
-  font-size: 5.5em;
-  line-height: 0.72;
+  font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif;
+  font-size: 4.6em;
+  line-height: 0.78;
   padding-right: 10px;
-  padding-top: 6px;
-  font-weight: 400;
-  color: var(--ink);
-  letter-spacing: -0.02em;
+  padding-top: 4px;
+  font-weight: 800;
+  color: var(--brand-blue);
+  letter-spacing: -0.04em;
 }
 
-/* ── Breaking stamp ── */
-.breaking-stamp { position: absolute; top: 8px; right: 8px; transform: rotate(-3deg); border: 2px solid var(--accent-red); color: var(--accent-red); font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 2px 6px; background: var(--paper); }
+/* ── Breaking tag — solid GOV.UK-style label ── */
+.breaking-stamp { position: absolute; top: 8px; right: 8px; border: none; border-radius: 3px; color: #fff; background: var(--accent-red); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 7px; }
 
 /* ── Marquee ── */
 @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
