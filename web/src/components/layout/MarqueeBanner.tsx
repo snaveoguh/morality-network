@@ -174,7 +174,7 @@ export function MarqueeBanner() {
   }, [fetchQuotes]);
 
   return (
-    <div className="relative overflow-hidden bg-[var(--paper-dark)] py-1">
+    <div className="relative overflow-hidden bg-[var(--brand-navy)] py-1.5">
       <div className="flex items-center">
         <div className="overflow-hidden">
           <div className="animate-marquee whitespace-nowrap">
@@ -191,21 +191,21 @@ export function MarqueeBanner() {
                         href={quote.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]"
+                        className="text-white/80 transition-colors hover:text-white"
                       >
                         {quote.symbol} {formatUsd(quote.price)}{" "}
                         <span
                           className={
                             isUp
-                              ? "text-[var(--ink-faint)]"
-                              : "text-[var(--accent-red)]"
+                              ? "text-emerald-400"
+                              : "text-red-400"
                           }
                         >
                           {formatChange(quote.change24h)}
                         </span>
                       </a>
                       {i < quotes.length - 1 && (
-                        <span className="mx-3 text-[var(--rule-light)]">|</span>
+                        <span className="mx-3 text-white/20">|</span>
                       )}
                     </span>
                   );
