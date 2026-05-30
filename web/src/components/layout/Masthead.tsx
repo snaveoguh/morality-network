@@ -65,13 +65,13 @@ export function Masthead({
   }, []);
 
   return (
-    <div className="border-y border-[var(--rule)]">
+    <div className="overflow-hidden rounded-lg bg-[var(--brand-navy)] text-white">
       {/* Dateline — thin ruled bar */}
-      <div className="border-b border-[var(--rule-light)] py-[3px] text-center font-mono text-[8px] uppercase tracking-[0.22em] text-[var(--ink-faint)]">
+      <div className="border-b border-white/15 py-2 text-center text-[9px] font-semibold uppercase tracking-[0.2em] text-white/55">
         {dateStr} &middot;{" "}
         <button
           onClick={() => setShowEditions(true)}
-          className="cursor-pointer underline-offset-2 transition-colors hover:text-[var(--ink)] hover:underline"
+          className="cursor-pointer underline-offset-2 transition-colors hover:text-[var(--brand-teal)] hover:underline"
         >
           EDITION {editionNumber}
         </button>
@@ -85,29 +85,28 @@ export function Masthead({
         />
       )}
 
-      {/* Hero headline block */}
-      <div className="px-4 py-5 text-center sm:py-6">
+      {/* Hero headline block — left-aligned GOV.UK color band */}
+      <div className="px-6 py-9 sm:px-10 sm:py-12">
         {dailyHeadline && dailyHash ? (
           <>
-            {/* Daily title — small signal word above headline */}
+            {/* Daily title — teal eyebrow above headline */}
             {showDailyTitle && (
-              <p className="mb-2 font-mono text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--ink-faint)]">
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--brand-teal)]">
                 {normalizedDailyTitle}
               </p>
             )}
 
             {/* Hero headline — THE front page story */}
-            <Link
-              href={`/article/${dailyHash}`}
-              className="group block"
-            >
-              <h1 className="font-headline text-4xl font-bold leading-[1.15] text-[var(--ink)] transition-colors group-hover:text-[var(--accent-red)] sm:text-5xl lg:text-6xl">
+            <Link href={`/article/${dailyHash}`} className="group block">
+              <h1 className="font-headline max-w-5xl text-4xl font-extrabold leading-[1.04] tracking-tight text-white transition-colors group-hover:text-[var(--brand-teal)] sm:text-5xl lg:text-6xl">
                 {stripMd(dailyHeadline)}
               </h1>
             </Link>
 
+            <div className="mt-6 h-[5px] w-20 rounded bg-[var(--brand-teal)]" />
+
             {dailySubheadline && (
-              <p className="mx-auto mt-3 max-w-2xl font-body-serif text-sm italic leading-relaxed text-[var(--ink-light)] sm:text-base">
+              <p className="mt-6 max-w-3xl text-base leading-relaxed text-white/75 sm:text-lg">
                 {stripMd(dailySubheadline)}
               </p>
             )}
@@ -115,12 +114,13 @@ export function Masthead({
         ) : (
           <>
             {/* Fallback when no daily edition */}
-            <h1 className="font-headline text-4xl font-bold leading-none text-[var(--ink)] sm:text-5xl lg:text-6xl">
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--brand-teal)]">
               {BRAND_NAME}
-            </h1>
-            <p className="mt-2 font-body-serif text-xs italic text-[var(--ink-light)] sm:text-sm">
-              A public ledger of world events and their interpretation.
             </p>
+            <h1 className="font-headline max-w-5xl text-4xl font-extrabold leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-6xl">
+              A public ledger of world events and their interpretation.
+            </h1>
+            <div className="mt-6 h-[5px] w-20 rounded bg-[var(--brand-teal)]" />
           </>
         )}
       </div>

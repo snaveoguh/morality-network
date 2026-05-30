@@ -42,9 +42,9 @@ export function Header() {
   const isCoopActive = pathname === "/coop" || COOP_PLAYGROUND_LINKS.some(({ href }) => pathname.startsWith(href));
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--rule)] bg-[var(--paper)]">
-      <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4">
-        <div className="flex min-w-0 items-center gap-2">
+    <header className="sticky top-0 z-50 border-b-[3px] border-[var(--brand-teal)] bg-[var(--brand-navy)]">
+      <div className="mx-auto flex h-11 max-w-7xl items-center justify-between px-4">
+        <div className="flex min-w-0 items-center gap-3">
           <LogoMenu />
 
           <nav className="scrollbar-hide flex min-w-0 items-center gap-0 overflow-x-auto whitespace-nowrap">
@@ -53,10 +53,10 @@ export function Header() {
                 href === "/" ? pathname === "/" : pathname.startsWith(href);
               return (
                 <span key={href} className="flex items-center">
-                  {i > 0 && <span className="mx-2 text-[var(--rule-light)]">|</span>}
+                  {i > 0 && <span className="mx-2 text-white/25">|</span>}
                   <Link
                     href={href}
-                    className={`font-mono text-[9px] uppercase tracking-[0.16em] transition-colors ${
+                    className={`font-sans text-[11px] font-semibold uppercase tracking-[0.06em] transition-colors ${
                       isActive
                         ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-[1px] decoration-[var(--rule)]"
                         : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
@@ -70,13 +70,13 @@ export function Header() {
 
             {/* Co-op page link */}
             <span className="flex items-center">
-              <span className="mx-2 text-[var(--rule-light)]">|</span>
+              <span className="mx-2 text-white/25">|</span>
               <Link
                 href="/coop"
-                className={`font-mono text-[9px] uppercase tracking-[0.16em] transition-colors ${
+                className={`font-sans text-[11px] font-semibold uppercase tracking-[0.06em] transition-colors ${
                   isCoopActive
-                    ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-[1px] decoration-[var(--rule)]"
-                    : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+                    ? "text-white underline underline-offset-[7px] decoration-2 decoration-[var(--brand-teal)]"
+                    : "text-white/60 hover:text-white"
                 }`}
               >
                 Co-op
@@ -128,15 +128,18 @@ function LogoMenu() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex h-4 w-4 items-center justify-center transition-opacity hover:opacity-70"
+        className="flex items-center gap-2 transition-opacity hover:opacity-80"
         aria-label={`${BRAND_NAME} menu`}
         title={BRAND_NAME}
       >
         <img
           src="/hcp-logo.png"
           alt=""
-          className="h-4 w-4 object-contain"
+          className="h-6 w-6 shrink-0 object-contain"
         />
+        <span className="hidden font-sans text-[14px] font-extrabold lowercase tracking-tight text-white sm:inline">
+          pooter
+        </span>
       </button>
 
       {open && (
@@ -191,7 +194,7 @@ function MiniWalletButton() {
             <button
               type="button"
               onClick={openConnectModal}
-              className="h-5 border border-[var(--rule)] bg-[var(--ink)] px-2 font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)]"
+              className="h-6 rounded-md bg-[var(--brand-teal)] px-3 font-sans text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--brand-navy)] transition-opacity hover:opacity-85"
             >
               Connect
             </button>
