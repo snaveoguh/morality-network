@@ -11,6 +11,7 @@ import { TipButton } from "@/components/entity/TipButton";
 import { RatingWidget } from "@/components/entity/RatingWidget";
 import { CommentThread } from "@/components/entity/CommentThread";
 import { computeEntityHash } from "@/lib/entity";
+import { stripMd } from "@/lib/strip-md";
 import type { FeedItem } from "@/lib/rss";
 import type { EntityMention } from "@/lib/types/entities";
 import { EntityPopover } from "./EntityPopover";
@@ -333,7 +334,7 @@ export function ArticleTemplate({
           suppressContentEditableWarning
           className={`font-headline text-3xl leading-[1.1] text-[var(--ink)] sm:text-4xl lg:text-5xl ${editing ? "outline outline-1 outline-dashed outline-[var(--accent-red)] px-2 py-1" : ""}`}
         >
-          {primary.title}
+          {stripMd(primary.title)}
         </h1>
 
         {/* Subheadline — editorial, italic */}
@@ -343,12 +344,12 @@ export function ArticleTemplate({
           suppressContentEditableWarning
           className={`mt-3 font-body-serif text-base italic leading-relaxed text-[var(--ink-light)] sm:text-lg ${editing ? "outline outline-1 outline-dashed outline-[var(--accent-red)] px-2 py-1" : ""}`}
         >
-          {subheadline}
+          {stripMd(subheadline)}
         </p>
         {subheadlineEnglish &&
-          subheadlineEnglish.trim() !== subheadline.trim() && (
+          stripMd(subheadlineEnglish) !== stripMd(subheadline) && (
             <p className="mt-1 font-body-serif text-sm leading-relaxed text-[var(--ink-faint)] sm:text-base">
-              {subheadlineEnglish}
+              {stripMd(subheadlineEnglish)}
             </p>
           )}
 

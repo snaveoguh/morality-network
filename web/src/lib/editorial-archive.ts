@@ -6,6 +6,7 @@ import { keccak256, toBytes } from "viem";
 import type { ArticleContent } from "./article";
 import { fetchIndexerJson, getIndexerBackendUrl } from "./server/indexer-backend";
 import { reportWarn } from "./report-error";
+import { stripMd } from "./strip-md";
 import {
   recordSignalsBatch,
   type RecordSignalInput,
@@ -509,11 +510,6 @@ export interface PooterOriginal {
   dailyTitle?: string;
   tags: string[];
   editedBy?: string;
-}
-
-/** Strip stray markdown bold/italic/heading markers from AI-generated text */
-function stripMd(s: string): string {
-  return s.replace(/\*{1,3}/g, "").replace(/_{1,3}/g, "").replace(/^#+\s+/, "").trim();
 }
 
 function archivedToOriginal(item: ArchivedEditorial): PooterOriginal {

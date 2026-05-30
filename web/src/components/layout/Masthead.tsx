@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BRAND_NAME } from "@/lib/brand";
 import { CONTRACTS_CHAIN_ID } from "@/lib/contracts";
 import { EditionsPanel } from "@/components/editions/EditionsPanel";
+import { stripMd } from "@/lib/strip-md";
 
 // ============================================================================
 // MASTHEAD — Newspaper front-page banner
@@ -26,12 +27,6 @@ interface MastheadProps {
   dailyHeadline?: string | null;
   dailySubheadline?: string | null;
   dailyHash?: string | null;
-}
-
-/** Strip stray markdown bold/italic markers from AI-generated text */
-function stripMd(s: string | null | undefined): string | null | undefined {
-  if (!s) return s;
-  return s.replace(/\*{1,3}/g, "").replace(/_{1,3}/g, "").replace(/^#+\s+/, "");
 }
 
 export function Masthead({

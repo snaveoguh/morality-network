@@ -8,6 +8,7 @@ import { generateBiasDigest, type BiasDigest } from "./bias-digest";
 import { getSourceBias, type SourceBias, BIAS_LABELS } from "./bias";
 import { saveEditorial, getArchivedEditorial, type ArchivedEditorial } from "./editorial-archive";
 import { generateTextForTask } from "./ai-provider";
+import { stripMd } from "./strip-md";
 import { hasAIProviderForTask } from "./ai-models";
 import { buildAgentResearchPack } from "./agent-swarm";
 import { extractCanonicalClaim } from "./claim-extract";
@@ -458,6 +459,11 @@ async function generateDailyEdition(data: DailyEditionData): Promise<DailyEditio
       musicCommentary: musicCommentaryRaw?.trim() || "",
     };
   }
+
+  // Defensive cleanup — the writer/extractor occasionally leaks markdown bold
+  // (**…**) or a section label (HEADLINE:/SUBHEADLINE:) into these fields.
+  extracted.headline = stripMd(extracted.headline) || extracted.headline;
+  extracted.subheadline = stripMd(extracted.subheadline) || extracted.subheadline;
 
   // Build editorial body paragraphs
   const editorialBody = (editorialRaw || rawEditorial)
