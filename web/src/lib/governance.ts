@@ -21,7 +21,12 @@ import {
   lookupUser,
   type Cast,
 } from "./farcaster";
-import { fetchAllDivisions, type ParliamentDivision } from "./parliament";
+import {
+  fetchAllDivisions,
+  fetchCommonsDivisionById,
+  fetchLordsDivisionById,
+  type ParliamentDivision,
+} from "./parliament";
 import { getDaoPredictionKey } from "./proposal-entity";
 import { getPredictionMarketChain, getPredictionMarketRpcUrl } from "./rpc-urls";
 import { loadTtlValue, type TtlCacheEntry } from "./ttl-cache";
@@ -1742,6 +1747,26 @@ export async function fetchSingleProposal(
       const base = convertNounsToProposal(raw, anchor);
       return { ...base, onchainVotes: [] };
     } catch {
+      return null;
+    }
+  }
+
+  // UK Parliament divisions: "parliament-commons-123" / "parliament-lords-123".
+  // Fetch the specific division by id so permalinks stay durable after it
+  // rotates out of the live list.
+  const parlMatch = decodedId.match(/^parliament-(commons|lords)-(\d+)$/);
+  if (parlMatch) {
+    const house = parlMatch[1];
+    const divisionId = parseInt(parlMatch[2], 10);
+    try {
+      const division =
+        house === "commons"
+          ? await fetchCommonsDivisionById(divisionId)
+          : await fetchLordsDivisionById(divisionId);
+      if (!division) return null;
+      return { ...convertDivisionToProposal(division), onchainVotes: [] };
+    } catch (e) {
+      console.error(`[governance] Failed direct fetch for parliament-${house}-${divisionId}:`, e);
       return null;
     }
   }
