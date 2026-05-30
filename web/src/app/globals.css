@@ -218,9 +218,9 @@ body { background: var(--paper); color: var(--ink); }
 /* ── Intro Splash / Mission ── */
 .intro-lofi {
   background:
-    radial-gradient(circle at 16% 18%, rgba(245, 240, 232, 0.12), transparent 34%),
-    radial-gradient(circle at 84% 78%, rgba(245, 240, 232, 0.08), transparent 36%),
-    linear-gradient(135deg, #111111 0%, #1c1c1c 45%, #0f0f0f 100%);
+    radial-gradient(circle at 16% 18%, rgba(21, 214, 184, 0.16), transparent 36%),
+    radial-gradient(circle at 84% 82%, rgba(29, 112, 184, 0.20), transparent 42%),
+    linear-gradient(135deg, #0b1736 0%, #122042 52%, #0a1024 100%);
 }
 
 .intro-lofi::after {
