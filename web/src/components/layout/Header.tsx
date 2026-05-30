@@ -133,9 +133,9 @@ function LogoMenu() {
         title={BRAND_NAME}
       >
         <img
-          src="https://morality.s3.eu-west-2.amazonaws.com/brand/glyph.png"
+          src="/hcp-logo.png"
           alt=""
-          className="h-4 w-4 object-contain header-glyph"
+          className="h-4 w-4 object-contain"
         />
       </button>
 

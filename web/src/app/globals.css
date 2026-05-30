@@ -1,37 +1,57 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   E-INK NEWSPAPER — pooter world
+   GOV.UK-INSPIRED BRAND — pooter world
+   Deep navy + GOV.UK blue + a single bright teal accent. Bold white-on-color
+   sectioning, Inter throughout. Token names kept from the old newspaper theme
+   so the new palette cascades site-wide; semantics: --paper = surface,
+   --ink = text/ink, inverted .ink-block = navy band.
    ============================================================================ */
 
 :root, [data-theme="light"] {
-  --paper: #F5F0E8;
-  --paper-dark: #EDE6D6;
-  --paper-tint: #EDE6D6;
-  --ink: #1A1A1A;
-  --ink-light: #4A4A4A;
-  --ink-faint: #8A8A8A;
-  --rule: #2A2A2A;
-  --rule-light: #C8C0B0;
-  --accent-red: #8B0000;
-  --accent-green: #1A6B35;
-  --accent-amber: #8B6914;
+  --paper: #ffffff;
+  --paper-dark: #f3f6f9;
+  --paper-tint: #eef3f9;
+  --ink: #0b1736;
+  --ink-light: #39404e;
+  --ink-faint: #6a7180;
+  --rule: #0b1736;
+  --rule-light: #d6dde7;
+  --accent-red: #d4351c;
+  --accent-green: #00703c;
+  --accent-amber: #f47738;
+  /* brand */
+  --brand-navy: #0b1736;
+  --brand-blue: #1d70b8;
+  --brand-blue-dark: #14528a;
+  --brand-teal: #15d6b8;
+  --brand-teal-dark: #0aa78e;
+  /* legacy font aliases → Inter (resolved lazily inside <body>) */
+  --font-playfair: var(--font-inter);
+  --font-baskerville: var(--font-inter);
+  --font-fraktur: var(--font-inter);
+  --font-geist-sans: var(--font-inter);
   --background: var(--paper);
   --foreground: var(--ink);
 }
 
 [data-theme="dark"] {
-  --paper: #0A0A0A;
-  --paper-dark: #141414;
-  --paper-tint: #1A1A1A;
-  --ink: #E8E4DC;
-  --ink-light: #B0ACA4;
-  --ink-faint: #6A6A6A;
-  --rule: #D0CCC4;
-  --rule-light: #2A2A2A;
-  --accent-red: #CC3333;
-  --accent-green: #22C55E;
-  --accent-amber: #D4A017;
+  --paper: #0a1024;
+  --paper-dark: #0e1730;
+  --paper-tint: #122042;
+  --ink: #eaf0f8;
+  --ink-light: #b7c2d6;
+  --ink-faint: #7f8aa3;
+  --rule: #2a3a5e;
+  --rule-light: #1c2944;
+  --accent-red: #ff6961;
+  --accent-green: #2fd58f;
+  --accent-amber: #ff9d4d;
+  --brand-navy: #0a1024;
+  --brand-blue: #4aa3e6;
+  --brand-blue-dark: #1d70b8;
+  --brand-teal: #2ce6c8;
+  --brand-teal-dark: #15d6b8;
   --background: var(--paper);
   --foreground: var(--ink);
 }
@@ -39,27 +59,34 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-paper: #F5F0E8;
-  --color-paper-dark: #EDE6D6;
-  --color-ink: #1A1A1A;
-  --color-ink-light: #4A4A4A;
-  --color-ink-faint: #8A8A8A;
-  --color-rule: #2A2A2A;
-  --color-rule-light: #C8C0B0;
-  --color-accent-red: #8B0000;
-  --font-sans: var(--font-geist-sans);
+  --color-paper: var(--paper);
+  --color-paper-dark: var(--paper-dark);
+  --color-ink: var(--ink);
+  --color-ink-light: var(--ink-light);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-light: var(--rule-light);
+  --color-accent-red: var(--accent-red);
+  --color-accent-green: var(--accent-green);
+  --color-accent-amber: var(--accent-amber);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-dark: var(--brand-blue-dark);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-teal-dark: var(--brand-teal-dark);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
 
 html, body { overflow-x: hidden; max-width: 100vw; }
 body { background: var(--paper); color: var(--ink); }
 
-/* ── Fonts ── */
-.font-masthead { font-family: var(--font-fraktur), 'Old English Text MT', serif; font-weight: 700; }
-.font-headline-serif { font-family: var(--font-playfair), 'Georgia', 'Times New Roman', serif; }
-.font-body-serif { font-family: var(--font-baskerville), 'Georgia', serif; }
-.font-headline { font-family: var(--font-playfair), 'Georgia', serif; font-weight: 900; letter-spacing: -0.01em; }
-.font-comic { font-family: 'Comic Neue', 'Comic Sans MS', cursive; }
+/* ── Fonts — Inter throughout (GOV.UK-style single family, weight contrast) ── */
+.font-masthead { font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-weight: 800; letter-spacing: -0.02em; }
+.font-headline-serif { font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-weight: 700; letter-spacing: -0.015em; }
+.font-body-serif { font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-weight: 400; }
+.font-headline { font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-weight: 800; letter-spacing: -0.022em; }
+.font-comic { font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-weight: 600; }
 
 /* ── E-ink image filter ── */
 .newspaper-img { filter: grayscale(100%) contrast(1.2) brightness(1.05); mix-blend-mode: multiply; }
