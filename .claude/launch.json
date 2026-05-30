@@ -73,6 +73,12 @@
       "runtimeExecutable": "/bin/bash",
       "runtimeArgs": ["-c", "cd /Users/hugo/Downloads/morality.network-master/agents/pooter1 && PORT=3006 npx tsx src/index.ts"],
       "port": 3006
+    },
+    {
+      "name": "pooter-dev-main",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/hugo/dev/morality.network-master/web && npx next dev -p 3210"],
+      "port": 3210
     }
   ]
 }
