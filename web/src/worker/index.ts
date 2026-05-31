@@ -16,6 +16,7 @@ import { PositionStore } from "../lib/trading/position-store";
 import { runVaultRailKeeper } from "../lib/trading/vault-rail";
 import { runScoutCycle } from "../lib/trading/scout";
 import { installAgentLogShipper } from "../lib/server/agent-log-shipper";
+import { WORKER_VERSION } from "./version.generated";
 
 type WorkerTaskName = "scanner" | "swarm" | "trader" | "bridge" | "vault" | "scout";
 type PersistedAgentEvent = {
@@ -349,6 +350,7 @@ async function runTraderTask(): Promise<void> {
   try {
     await postIndexer("/api/v1/trading/state", {
       executionMode: "worker",
+      version: WORKER_VERSION,
       config: redactedConfigSummary(),
       report: cycles.primary,
       parallel: cycles.parallel,
@@ -543,6 +545,8 @@ async function main(): Promise<void> {
     once,
     indexer: getIndexerBaseUrl(),
     traderMode: getTraderExecutionMode(),
+    version: WORKER_VERSION.shaShort,
+    builtAt: WORKER_VERSION.builtAt,
   });
 
   if (runOnStart || once) {
