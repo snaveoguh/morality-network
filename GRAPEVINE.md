@@ -9,6 +9,29 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 18 · insurgent rebrand + live UK governance + ZK voting plumbing
+
+**when** — 2026-07-10 ~09:15 UTC
+**what** — Three commits on `feat/uk-governance` → prod:
+`dad1447` — full palette rebrand: black ink / warm newsprint / union red
+(#c8102e), Archivo Black headlines, dark theme as punk inversion. Kills the
+navy+teal "healthcare" look. `e8cdafc` — Phase 0 of the governance plan:
+live UK petitions + bills in /proposals with signature progress bars, stage
+labels, durable by-ID permalinks, momentum ranking; fixed the "everything says
+ENDED" bug (stale actives with expired endTime now demote; UK civic sources
+lead the live tier). `ec57b4c` — Phase 2A plumbing: MembershipRegistry.sol +
+PrivateBallot.sol (compile clean, NOT deployed) + circuits/vote/vote.circom —
+anonymous member voting scaffold (Semaphore-style, reuses the Groth16 stack).
+**why** — the political-party push: pooter as a UK-governance engagement PWA
+(stealth mode — party framing not public yet). User chose "insurgent
+broadsheet" direction + Phase 0 & 2A-plumbing scope.
+**where** — web tokens/layout, web/src/lib/governance.ts + proposals UI,
+contracts/src, circuits/vote. PWA manifest colors synced.
+**rollback** — revert the three commits individually; contracts/circuit are
+inert until a proving setup + deploy exist.
+
+---
+
 ## ▲ node 17 · cost cuts — duplicate agent stopped, dev re-paused
 
 **when** — 2026-07-10 ~08:10 UTC
