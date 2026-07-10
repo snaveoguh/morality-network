@@ -58,8 +58,8 @@ export function Header() {
                     href={href}
                     className={`font-sans text-[11px] font-semibold uppercase tracking-[0.06em] transition-colors ${
                       isActive
-                        ? "font-bold text-[var(--ink)] underline underline-offset-4 decoration-[1px] decoration-[var(--rule)]"
-                        : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
+                        ? "font-bold text-white underline underline-offset-[7px] decoration-2 decoration-[var(--brand-teal)]"
+                        : "text-white/60 hover:text-white"
                     }`}
                   >
                     {label}
@@ -137,7 +137,7 @@ function LogoMenu() {
           alt=""
           className="h-6 w-6 shrink-0 object-contain"
         />
-        <span className="hidden font-sans text-[14px] font-extrabold lowercase tracking-tight text-white sm:inline">
+        <span className="blackletter hidden text-[19px] leading-none text-white sm:inline">
           pooter
         </span>
       </button>
@@ -194,7 +194,7 @@ function MiniWalletButton() {
             <button
               type="button"
               onClick={openConnectModal}
-              className="h-6 rounded-md bg-[var(--brand-teal)] px-3 font-sans text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--brand-navy)] transition-opacity hover:opacity-85"
+              className="h-6 bg-[var(--brand-teal)] px-3 font-sans text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--brand-navy)] transition-opacity hover:opacity-85"
             >
               Connect
             </button>

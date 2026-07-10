@@ -60,7 +60,7 @@ export function Masthead({
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-lg bg-[var(--brand-navy)] text-white">
+    <div className="grain overflow-hidden border-b-4 border-[var(--brand-teal)] bg-[var(--brand-navy)] text-white">
       {/* Dateline — thin ruled bar */}
       <div className="border-b border-white/15 py-2 text-center text-[9px] font-semibold uppercase tracking-[0.2em] text-white/55">
         {dateStr} &middot;{" "}
@@ -98,7 +98,7 @@ export function Masthead({
               </h1>
             </Link>
 
-            <div className="mt-6 h-[5px] w-20 rounded bg-[var(--brand-teal)]" />
+            <div className="mt-6 h-[5px] w-20 bg-[var(--brand-teal)]" />
 
             {dailySubheadline && (
               <p className="mt-6 max-w-3xl text-base leading-relaxed text-white/75 sm:text-lg">
@@ -109,13 +109,13 @@ export function Masthead({
         ) : (
           <>
             {/* Fallback when no daily edition */}
-            <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--brand-teal)]">
+            <p className="blackletter mb-3 text-xl text-[var(--brand-teal)]">
               {BRAND_NAME}
             </p>
             <h1 className="font-headline max-w-5xl text-4xl font-extrabold leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-6xl">
               A public ledger of world events and their interpretation.
             </h1>
-            <div className="mt-6 h-[5px] w-20 rounded bg-[var(--brand-teal)]" />
+            <div className="mt-6 h-[5px] w-20 bg-[var(--brand-teal)]" />
           </>
         )}
       </div>
