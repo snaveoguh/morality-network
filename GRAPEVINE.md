@@ -9,6 +9,42 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 16 · brand pass — blackletter wordmark + brutalist edges
+
+**when** — 2026-07-10 ~07:40 UTC
+**what** — commit `f7c06c8` on `feat/uk-governance` → `dev`. Header wordmark set in
+UnifrakturCook blackletter (promotes the drop-cap letterform to the brand mark);
+masthead squared off (rounded-lg dropped) with a 4px teal base rule and subtle
+SVG-turbulence newsprint grain; sitewide teal-on-navy ::selection; Connect button
+and hero rules squared. Also fixed: active nav link was var(--ink) on navy —
+invisible in light theme — now white with teal underline.
+**why** — pre-party-launch "edgier/cooler" brand direction, building on the liked
+blackletter drop-cap motif.
+**where** — web/src/components/layout/Header.tsx, Masthead.tsx, app/globals.css
+**rollback** — `git revert f7c06c8`
+
+---
+
+## ▲ node 15 · CORRECTION to node 14 — indexer taken back DOWN
+
+**when** — 2026-07-10 ~07:45 UTC
+**what** — The node-14 indexer "restoration" was reverted (`railway down`). The
+rebuild only succeeded after setting `RAILPACK_NODE_VERSION=22` (builder is
+Railpack; NIXPACKS_* is ignored; a floating transitive prisma dep now requires
+Node ≥20.19). But the deployed snapshot turned out to be the WRONG codebase — a
+Next.js web-app image (registers trader/research-swarm/launch-scanner agents),
+not the Ponder indexer, likely from a wrong-directory `railway up` (cf. the
+2026-05-01 link-state incident). It 404s /api/v1/archive/* anyway, so running it
+gave zero benefit with nonzero side-effect risk. Service returned to its
+pre-session state: no active deployment.
+**why** — restoring the real indexer needs a deliberate deploy of `indexer/`
+(Ponder) with schema/data-preservation checks — spun off as its own task.
+**where** — Railway pooter-indexer/pooter-indexer. Env vars RAILPACK_NODE_VERSION,
+NIXPACKS_NODE_VERSION, NODE_VERSION (=22) left in place for the future deploy.
+**rollback** — n/a (service is down, as it was before this session)
+
+---
+
 ## ▲ node 14 · infrastructure resurrection — prod, dev, indexer all restored
 
 **when** — 2026-07-10 ~07:15–07:30 UTC
