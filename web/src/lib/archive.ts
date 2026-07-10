@@ -64,6 +64,22 @@ const CACHE_TTL_MS = 30_000;
 // will still reject the response — that's fine, it's only a perf nicety.
 // Re-evaluate if /archive starts looking too thin.
 const REMOTE_ARCHIVE_LIMIT = 5_000;
+// Hard bound on the LOCAL archive file. Unbounded growth is what OOM-crashed
+// prod on 2026-06-23: the indexer upsert 404s, every save falls through to the
+// local path, and JSON.stringify of the whole 23 MB file blows the heap.
+// The durable store is the indexer + Redis; the local file is a bounded cache.
+const LOCAL_ARCHIVE_LIMIT = 5_000;
+
+function pruneArchiveItems(
+  items: Record<string, ArchivedFeedItem>,
+): Record<string, ArchivedFeedItem> {
+  const entries = Object.entries(items);
+  if (entries.length <= LOCAL_ARCHIVE_LIMIT) return items;
+  entries.sort(([, a], [, b]) =>
+    (b.lastSeenAt || b.archivedAt || "").localeCompare(a.lastSeenAt || a.archivedAt || ""),
+  );
+  return Object.fromEntries(entries.slice(0, LOCAL_ARCHIVE_LIMIT));
+}
 
 /* ── Upstash Redis REST helpers (survives Vercel cold starts) ── */
 
@@ -187,7 +203,7 @@ async function loadArchive(): Promise<ArticleArchiveFile> {
         version: 1,
         updatedAt:
           typeof parsed.updatedAt === "string" ? parsed.updatedAt : "",
-        items: parsed.items as Record<string, ArchivedFeedItem>,
+        items: pruneArchiveItems(parsed.items as Record<string, ArchivedFeedItem>),
       };
     }
   } catch {
@@ -508,9 +524,12 @@ export async function autoArchiveBatch(items: FeedItem[]): Promise<void> {
 
       // Also write to disk (may fail on Vercel read-only FS)
       if (newCount > 0 || updatedCount > 0) {
+        archive.items = pruneArchiveItems(archive.items);
         const dir = path.dirname(ARCHIVE_FILE_PATH);
         await mkdir(dir, { recursive: true });
-        await writeFile(ARCHIVE_FILE_PATH, JSON.stringify(archive, null, 2), "utf8");
+        // Compact stringify — pretty-printing a multi-MB archive doubles the
+        // transient string and was part of the 2026-06-23 OOM.
+        await writeFile(ARCHIVE_FILE_PATH, JSON.stringify(archive), "utf8");
         reportWarn("archive", `+${newCount} new, +${updatedCount} updated (${Object.keys(archive.items).length} total)`);
       }
     } catch (err) {

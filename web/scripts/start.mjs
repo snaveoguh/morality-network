@@ -28,8 +28,12 @@ if (workerTasks) {
     stdio: "inherit",
     env: {
       ...process.env,
-      // Prevent OOM on Railway — default 512MB is too small for SSR with large archives
-      NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=1024"].filter(Boolean).join(" "),
+      // Prevent OOM on Railway — default 512MB is too small for SSR with large archives.
+      // In NODE_OPTIONS the LAST --max-old-space-size wins, so only append the fallback
+      // when the platform env hasn't already set one (Railway prod sets 4096).
+      NODE_OPTIONS: process.env.NODE_OPTIONS?.includes("--max-old-space-size")
+        ? process.env.NODE_OPTIONS
+        : [process.env.NODE_OPTIONS, "--max-old-space-size=2048"].filter(Boolean).join(" "),
     },
   });
 }
