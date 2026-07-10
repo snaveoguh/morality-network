@@ -15,6 +15,8 @@ interface ProposalRowProps {
 
 const GOV_FLAGS: Record<string, string> = {
   parliament: "🇬🇧",
+  "uk-petition": "🇬🇧",
+  "uk-bill": "🇬🇧",
   congress: "🇺🇸",
   eu: "🇪🇺",
   canada: "🇨🇦",
@@ -22,6 +24,12 @@ const GOV_FLAGS: Record<string, string> = {
   sec: "📊",
   hyperliquid: "💧",
 };
+
+function formatSignatureCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${Math.round(n / 1_000)}k`;
+  return String(n);
+}
 
 export function ProposalRow({ proposal }: ProposalRowProps) {
   const { forPct, againstPct } = getVotePercentage(
@@ -32,7 +40,9 @@ export function ProposalRow({ proposal }: ProposalRowProps) {
   const isCandidate = proposal.status === "candidate";
   const isDelegationActivity = isDelegationActivityProposal(proposal);
   const isParliament = proposal.source === "parliament";
-  const isGov = ["parliament", "congress", "eu", "canada", "australia", "hyperliquid"].includes(proposal.source);
+  const isPetition = proposal.source === "uk-petition";
+  const isBill = proposal.source === "uk-bill";
+  const isGov = ["parliament", "congress", "eu", "canada", "australia", "hyperliquid", "uk-petition", "uk-bill"].includes(proposal.source);
   const flag = GOV_FLAGS[proposal.source] || "";
   const hasDaoLogo = typeof proposal.daoLogo === "string" && proposal.daoLogo.trim().length > 0;
   const hasVotes = !isDelegationActivity && proposal.votesFor + proposal.votesAgainst > 0;
@@ -106,6 +116,20 @@ export function ProposalRow({ proposal }: ProposalRowProps) {
                 </span>
               </>
             )}
+            {isBill && proposal.uk?.stage && (
+              <>
+                <span>&middot;</span>
+                <span className="font-bold text-[var(--ink-light)]">{proposal.uk.stage}</span>
+              </>
+            )}
+            {isPetition && proposal.uk?.threshold && (
+              <>
+                <span>&middot;</span>
+                <span className="font-bold text-[var(--accent-red)]">
+                  {proposal.uk.threshold === 100_000 ? "→ debate at 100k" : "→ response at 10k"}
+                </span>
+              </>
+            )}
           </div>
         </div>
 
@@ -129,6 +153,24 @@ export function ProposalRow({ proposal }: ProposalRowProps) {
                 {proposal.candidateSignatures || 0} / {proposal.candidateThreshold || 0}
               </p>
             </>
+          ) : isPetition ? (
+            <>
+              <div className="flex h-1 overflow-hidden bg-[var(--paper-dark)]">
+                <div
+                  className="bg-[var(--accent-red)]"
+                  style={{
+                    width: `${
+                      proposal.uk?.threshold
+                        ? Math.min(100, Math.round(((proposal.uk?.signatureCount || 0) / proposal.uk.threshold) * 100))
+                        : 100
+                    }%`,
+                  }}
+                />
+              </div>
+              <p className="mt-0.5 text-center font-mono text-[8px] text-[var(--ink-faint)]">
+                {formatSignatureCount(proposal.uk?.signatureCount || 0)} signatures
+              </p>
+            </>
           ) : hasVotes ? (
             <>
               <div className="flex h-1 overflow-hidden bg-[var(--paper-dark)]">
@@ -150,7 +192,9 @@ export function ProposalRow({ proposal }: ProposalRowProps) {
             }`}
           >
             {isActive
-              ? getTimeRemaining(proposal.endTime)
+              ? proposal.endTime > 0
+                ? getTimeRemaining(proposal.endTime)
+                : "Live"
               : isCandidate
                 ? "Candidate"
                 : isDelegationActivity

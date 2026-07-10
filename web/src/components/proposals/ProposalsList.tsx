@@ -14,6 +14,8 @@ type StatusFilter =
   | "activity"
   | "candidates"
   | "pending"
+  | "petitions"
+  | "bills"
   | "parliament"
   | "hyperliquid"
   | "closed";
@@ -27,6 +29,8 @@ export function ProposalsList({ proposals }: ProposalsListProps) {
     if (statusFilter === "activity" && !isDelegationActivityProposal(p)) return false;
     if (statusFilter === "candidates" && p.status !== "candidate") return false;
     if (statusFilter === "pending" && p.status !== "pending") return false;
+    if (statusFilter === "petitions" && p.source !== "uk-petition") return false;
+    if (statusFilter === "bills" && p.source !== "uk-bill") return false;
     if (statusFilter === "parliament" && p.source !== "parliament") return false;
     if (statusFilter === "hyperliquid" && p.source !== "hyperliquid") return false;
     if (
@@ -52,6 +56,8 @@ export function ProposalsList({ proposals }: ProposalsListProps) {
   const activityCount = proposals.filter((p) => isDelegationActivityProposal(p)).length;
   const candidateCount = proposals.filter((p) => p.status === "candidate").length;
   const parliamentCount = proposals.filter((p) => p.source === "parliament").length;
+  const petitionCount = proposals.filter((p) => p.source === "uk-petition").length;
+  const billCount = proposals.filter((p) => p.source === "uk-bill").length;
   const hyperliquidCount = proposals.filter((p) => p.source === "hyperliquid").length;
 
   return (
@@ -70,6 +76,16 @@ export function ProposalsList({ proposals }: ProposalsListProps) {
         {activityCount > 0 && (
           <span className="border border-[var(--rule-light)] px-3 py-1.5 text-[var(--ink-light)]">
             {activityCount} Activity
+          </span>
+        )}
+        {petitionCount > 0 && (
+          <span className="border border-[var(--rule-light)] px-3 py-1.5 text-[var(--ink-light)]">
+            🇬🇧 {petitionCount} Petitions
+          </span>
+        )}
+        {billCount > 0 && (
+          <span className="border border-[var(--rule-light)] px-3 py-1.5 text-[var(--ink-light)]">
+            🇬🇧 {billCount} Bills
           </span>
         )}
         {parliamentCount > 0 && (
@@ -95,6 +111,8 @@ export function ProposalsList({ proposals }: ProposalsListProps) {
             ["active", "Active"],
             ["activity", "Activity"],
             ["candidates", "Candidates"],
+            ["petitions", "Petitions"],
+            ["bills", "Bills"],
             ["parliament", "Parliament"],
             ["hyperliquid", "Hyperliquid"],
             ["pending", "Pending"],

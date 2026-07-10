@@ -94,7 +94,9 @@ export interface Proposal {
     | "canada"
     | "australia"
     | "sec"
-    | "hyperliquid";
+    | "hyperliquid"
+    | "uk-petition"
+    | "uk-bill";
   isControversial: boolean; // close vote or high engagement
   tags: string[]; // auto-derived tags for filtering
   chain?: string;
@@ -112,6 +114,16 @@ export interface Proposal {
   // Parliament-specific fields
   chamber?: string; // "Commons" | "Lords"
   divisionId?: number;
+  // UK live-governance fields (petitions + bills)
+  uk?: {
+    kind: "petition" | "bill";
+    signatureCount?: number;
+    threshold?: number; // next signature threshold (10k response / 100k debate)
+    stage?: string; // bill current stage description
+    house?: string; // bill current house
+    sponsor?: string;
+    petitionState?: string;
+  };
 }
 
 export interface GovernanceSocialSignal {
@@ -667,6 +679,183 @@ function convertDivisionToProposal(d: ParliamentDivision): Proposal {
     divisionId: d.id,
     tags: enrichTagsFromTitle(['governance', 'uk', 'parliament'], d.title || ""),
   };
+}
+
+// ============================================================================
+// UK PETITIONS — live, open petitions (the "active supply" fix)
+// petition.parliament.uk JSON API. 10k signatures = government response,
+// 100k = considered for debate. Petitions run 6 months from opening.
+// ============================================================================
+
+interface UkPetition {
+  id: number;
+  attributes: {
+    action: string;
+    background: string | null;
+    additional_details: string | null;
+    state: string;
+    signature_count: number;
+    created_at: string;
+    opened_at: string | null;
+    response_threshold_reached_at: string | null;
+    debate_threshold_reached_at: string | null;
+  };
+}
+
+const UK_PETITION_RESPONSE_THRESHOLD = 10_000;
+const UK_PETITION_DEBATE_THRESHOLD = 100_000;
+const UK_PETITION_DURATION_S = 182 * 86_400; // 6 months
+
+function convertPetitionToProposal(p: UkPetition): Proposal {
+  const a = p.attributes;
+  const opened = a.opened_at ? Math.floor(new Date(a.opened_at).getTime() / 1000) : 0;
+  const threshold =
+    a.signature_count >= UK_PETITION_DEBATE_THRESHOLD
+      ? undefined
+      : a.signature_count >= UK_PETITION_RESPONSE_THRESHOLD
+        ? UK_PETITION_DEBATE_THRESHOLD
+        : UK_PETITION_RESPONSE_THRESHOLD;
+
+  return {
+    id: `uk-petition-${p.id}`,
+    title: a.action,
+    body: (a.background || "").slice(0, 300),
+    fullBody: [a.background, a.additional_details].filter(Boolean).join("\n\n"),
+    proposer: "",
+    dao: "UK Petitions",
+    daoLogo: "",
+    status: a.state === "open" ? "active" : "closed",
+    votesFor: a.signature_count,
+    votesAgainst: 0,
+    votesAbstain: 0,
+    quorum: threshold,
+    startTime: opened,
+    endTime: opened ? opened + UK_PETITION_DURATION_S : 0,
+    link: `https://petition.parliament.uk/petitions/${p.id}`,
+    source: "uk-petition",
+    isControversial: a.signature_count >= UK_PETITION_DEBATE_THRESHOLD,
+    tags: enrichTagsFromTitle(["governance", "uk", "petition"], a.action || ""),
+    uk: {
+      kind: "petition",
+      signatureCount: a.signature_count,
+      threshold,
+      petitionState: a.state,
+    },
+  };
+}
+
+async function fetchUkPetitions(): Promise<Proposal[]> {
+  const res = await fetchWithRetry(
+    "https://petition.parliament.uk/petitions.json?state=open",
+    { next: { revalidate: 300 } }
+  );
+  if (!res.ok) return [];
+  const json = await res.json();
+  const items: UkPetition[] = Array.isArray(json?.data) ? json.data : [];
+  return items
+    .filter((p) => p?.attributes?.action)
+    .sort(
+      (x, y) =>
+        (y.attributes.signature_count || 0) - (x.attributes.signature_count || 0)
+    )
+    .slice(0, 30)
+    .map(convertPetitionToProposal);
+}
+
+async function fetchUkPetitionById(id: number): Promise<Proposal | null> {
+  const res = await fetchWithRetry(
+    `https://petition.parliament.uk/petitions/${id}.json`,
+    { next: { revalidate: 300 } }
+  );
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (!json?.data?.attributes?.action) return null;
+  return convertPetitionToProposal(json.data as UkPetition);
+}
+
+// ============================================================================
+// UK BILLS — legislation in progress through parliament
+// bills-api.parliament.uk v1. A bill is "active" while progressing;
+// isAct → executed, isDefeated/withdrawn → defeated.
+// ============================================================================
+
+interface UkBill {
+  billId: number;
+  shortTitle: string;
+  summary?: string | null;
+  currentHouse: string;
+  originatingHouse: string;
+  lastUpdate: string;
+  isDefeated: boolean;
+  isAct: boolean;
+  billWithdrawn: string | null;
+  currentStage?: {
+    description?: string;
+    house?: string;
+  } | null;
+  sponsors?: Array<{ member?: { name?: string } | null }> | null;
+}
+
+function convertBillToProposal(b: UkBill): Proposal {
+  const updated = Math.floor(new Date(b.lastUpdate).getTime() / 1000) || 0;
+  const status: Proposal["status"] = b.isAct
+    ? "executed"
+    : b.isDefeated || b.billWithdrawn
+      ? "defeated"
+      : "active";
+  const stage = b.currentStage?.description || "";
+  const sponsor = b.sponsors?.[0]?.member?.name || "";
+
+  return {
+    id: `uk-bill-${b.billId}`,
+    title: b.shortTitle,
+    body: (b.summary || "").slice(0, 300),
+    fullBody: b.summary || "",
+    proposer: sponsor,
+    dao: "UK Bills",
+    daoLogo: "",
+    status,
+    votesFor: 0,
+    votesAgainst: 0,
+    votesAbstain: 0,
+    startTime: updated,
+    // No fixed deadline — a bill is live until it passes or falls. endTime 0
+    // means "undated live" in the aggregator sort.
+    endTime: 0,
+    link: `https://bills.parliament.uk/bills/${b.billId}`,
+    source: "uk-bill",
+    isControversial: false,
+    chamber: b.currentStage?.house || b.currentHouse,
+    tags: enrichTagsFromTitle(["governance", "uk", "bill", "legislation"], b.shortTitle || ""),
+    uk: {
+      kind: "bill",
+      stage,
+      house: b.currentStage?.house || b.currentHouse,
+      sponsor,
+    },
+  };
+}
+
+async function fetchUkBills(): Promise<Proposal[]> {
+  const res = await fetchWithRetry(
+    "https://bills-api.parliament.uk/api/v1/Bills?SortOrder=DateUpdatedDescending&Take=30&CurrentHouse=All",
+    { next: { revalidate: 300 } }
+  );
+  if (!res.ok) return [];
+  const json = await res.json();
+  const items: UkBill[] = Array.isArray(json?.items) ? json.items : [];
+  return items.filter((b) => b?.shortTitle).map(convertBillToProposal);
+}
+
+async function fetchUkBillById(id: number): Promise<Proposal | null> {
+  const res = await fetchWithRetry(
+    `https://bills-api.parliament.uk/api/v1/Bills/${id}`,
+    { next: { revalidate: 300 } }
+  );
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (!json?.shortTitle) return null;
+  return convertBillToProposal(json as UkBill);
 }
 
 // ============================================================================
@@ -1771,8 +1960,26 @@ export async function fetchSingleProposal(
     }
   }
 
+  // UK petitions / bills: "uk-petition-123" / "uk-bill-456" — both APIs serve
+  // single items by ID, so permalinks stay durable with no storage.
+  const ukMatch = decodedId.match(/^uk-(petition|bill)-(\d+)$/);
+  if (ukMatch) {
+    const numericId = parseInt(ukMatch[2], 10);
+    try {
+      const proposal =
+        ukMatch[1] === "petition"
+          ? await fetchUkPetitionById(numericId)
+          : await fetchUkBillById(numericId);
+      if (!proposal) return null;
+      return { ...proposal, onchainVotes: [] };
+    } catch (e) {
+      console.error(`[governance] Failed direct fetch for ${decodedId}:`, e);
+      return null;
+    }
+  }
+
   // Snapshot proposals (no prefix or hex-like)
-  if (!decodedId.match(/^(candidate-|parliament-|tally-|congress-|eu-|canada-|au-|sec-|hyper-)/)) {
+  if (!decodedId.match(/^(candidate-|parliament-|tally-|congress-|eu-|canada-|au-|sec-|hyper-|uk-)/)) {
     const direct = await fetchProposalById(decodedId);
     if (direct) return direct;
   }
@@ -1847,6 +2054,8 @@ async function fetchAllProposalsUncached(): Promise<Proposal[]> {
       fetchAllDivisions().then((ds) => ds.map(convertDivisionToProposal)),
       [] as Proposal[]
     ),
+    withSourceTimeout("uk-petitions", fetchUkPetitions(), [] as Proposal[]),
+    withSourceTimeout("uk-bills", fetchUkBills(), [] as Proposal[]),
     withSourceTimeout("tally", fetchTallyProposals(), [] as Proposal[]),
     withSourceTimeout("congress-bills", fetchCongressBills(), [] as Proposal[]),
     withSourceTimeout("congress-votes", fetchCongressVotes(), [] as Proposal[]),
@@ -1871,7 +2080,12 @@ async function fetchAllProposalsUncached(): Promise<Proposal[]> {
     }
   }
 
-  // Sort: active/candidate first, then by end time, then recent
+  // Sort: LIVE actives first (an "active" whose endTime already passed is a
+  // stale upstream flag — demote it to the closed tier so genuinely-live items
+  // top the page), then candidates/pending, then history by recency.
+  const nowS = Math.floor(Date.now() / 1000);
+  const isExpiredActive = (p: Proposal) =>
+    p.status === "active" && p.endTime > 0 && p.endTime < nowS;
   all.sort((a, b) => {
     const statusOrder: Record<string, number> = {
       active: 0,
@@ -1883,12 +2097,27 @@ async function fetchAllProposalsUncached(): Promise<Proposal[]> {
       executed: 6,
       defeated: 7,
     };
-    const aOrder = statusOrder[a.status] ?? 5;
-    const bOrder = statusOrder[b.status] ?? 5;
+    const aOrder = isExpiredActive(a) ? 5 : (statusOrder[a.status] ?? 5);
+    const bOrder = isExpiredActive(b) ? 5 : (statusOrder[b.status] ?? 5);
     if (aOrder !== bOrder) return aOrder - bOrder;
 
-    if (a.status === "active" && b.status === "active") {
-      return a.endTime - b.endTime;
+    if (aOrder === 0) {
+      // Live actives: UK civic sources lead (this is a UK governance platform),
+      // then dated deadlines (soonest ending), undated after, ranked by recency.
+      const ukTier = (p: Proposal) =>
+        p.source === "uk-petition" || p.source === "uk-bill" ? 0 : 1;
+      if (ukTier(a) !== ukTier(b)) return ukTier(a) - ukTier(b);
+      if (ukTier(a) === 0) {
+        // Within UK: petitions by momentum (signatures), bills by recency.
+        const aSig = a.uk?.signatureCount ?? -1;
+        const bSig = b.uk?.signatureCount ?? -1;
+        if (aSig !== bSig) return bSig - aSig;
+        return b.startTime - a.startTime;
+      }
+      const aKey = a.endTime > 0 ? a.endTime : Number.MAX_SAFE_INTEGER;
+      const bKey = b.endTime > 0 ? b.endTime : Number.MAX_SAFE_INTEGER;
+      if (aKey !== bKey) return aKey - bKey;
+      return b.startTime - a.startTime;
     }
 
     return b.startTime - a.startTime;
