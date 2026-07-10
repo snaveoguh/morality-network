@@ -9,6 +9,27 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 17 · cost cuts — duplicate agent stopped, dev re-paused
+
+**when** — 2026-07-10 ~08:10 UTC
+**what** — (1) Stopped `radiant-liberation` (faithful-purpose/production): it was a
+SECOND copy of the pooter1 agent, deployed 2026-05-25, error-looping on
+nextCommentId — the working pooter1 lives in pooter-indexer (running since
+March, actively commenting onchain). Duplicate = wasted memory + double-post
+risk. (2) Re-paused earnest-love/dev/morality-network after the staging gate was
+used — restores the 2026-06-23 cost pause; any push to `dev` redeploys it
+automatically. Prod verified 200 after both.
+**why** — user asked for drastic cost reduction; these two were safe unilateral
+cuts (~$20–25/mo). Bigger levers (nouns stack ~$45–50/mo, Netlify Pro $19/mo)
+left as user decisions.
+**where** — Railway `railway down` on faithful-purpose/radiant-liberation and
+earnest-love(dev)/morality-network. No code changes.
+**rollback** — push to `dev` (revives dev web); redeploy radiant-liberation from
+its Railway dashboard if the second pooter1 was intentional (it was broken, so
+probably don't).
+
+---
+
 ## ▲ node 16 · brand pass — blackletter wordmark + brutalist edges
 
 **when** — 2026-07-10 ~07:40 UTC
