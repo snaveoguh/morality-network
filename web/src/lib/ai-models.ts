@@ -11,6 +11,7 @@ export type AIModelTask =
   | "sentimentScoring"
   | "factExtraction"
   | "claimLedgerExtraction"
+  | "claimLedgerResolution"
   | "selfLearn"
   | "moralCompass"
   | "tradingPatternDetection"
@@ -119,6 +120,12 @@ export const AI_MODEL_POLICY: Record<AIModelTask, AIProviderTaskPolicy> = {
   // Claim Ledger: extraction quality > cost (spec §Risks). Premium order —
   // published claims carry the model stamp, so quality is auditable per model.
   claimLedgerExtraction: {
+    providers: PREMIUM_PROVIDER_ORDER,
+    models: PREMIUM_MODELS,
+  },
+  // Verdict proposals go to a human review queue, but a sloppy proposal
+  // wastes reviewer time — same premium bar as extraction.
+  claimLedgerResolution: {
     providers: PREMIUM_PROVIDER_ORDER,
     models: PREMIUM_MODELS,
   },
