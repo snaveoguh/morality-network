@@ -25,6 +25,9 @@ on:
     - cron: '30 16 * * *'
     # Claim Ledger Merkle batch — daily 6:10am UTC over yesterday's claims
     - cron: '10 6 * * *'
+    # Claim Ledger manifesto backfill — daily 5:30pm UTC, one manifesto per
+    # run from the registry; self-exhausting no-op once the corpus is in
+    - cron: '30 17 * * *'
   workflow_dispatch: # allow manual trigger
 
 jobs:
@@ -47,6 +50,7 @@ jobs:
             "0 15 * * 3")  ROUTE="/api/cron/ledger-resolve" ;;
             "30 16 * * *") ROUTE="/api/cron/ledger-backfill" ;;
             "10 6 * * *")  ROUTE="/api/cron/ledger-anchor" ;;
+            "30 17 * * *") ROUTE="/api/cron/ledger-manifesto" ;;
             *)             ROUTE="/api/cron/daily-edition" ;;
           esac
           echo "route=$ROUTE" >> "$GITHUB_OUTPUT"

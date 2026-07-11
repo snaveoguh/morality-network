@@ -43,7 +43,12 @@ export async function POST(request: Request) {
   const dbError = hasDb();
   if (dbError) return dbError;
 
-  let body: { resolutionId?: string; action?: string; note?: string };
+  let body: {
+    resolutionId?: string;
+    action?: string;
+    note?: string;
+    evidence?: Array<{ url?: string; excerpt?: string; kind?: string }>;
+  };
   try {
     body = await request.json();
   } catch {
@@ -58,12 +63,42 @@ export async function POST(request: Request) {
     );
   }
 
+  // Optional reviewer-curated evidence on approval (OBR reports, judgments,
+  // inquiries — spec's human-curated sources). Strictly validated.
+  const EVIDENCE_KINDS = new Set(["division", "ons", "hansard", "obr", "other"]);
+  let extraEvidence:
+    | Array<{ url: string; excerpt: string; kind: "division" | "ons" | "hansard" | "obr" | "other" }>
+    | undefined;
+  if (action === "approve" && Array.isArray(body.evidence)) {
+    extraEvidence = [];
+    for (const e of body.evidence.slice(0, 10)) {
+      const url = e.url?.trim();
+      const excerpt = e.excerpt?.trim();
+      const kind = e.kind?.trim();
+      if (
+        !url ||
+        !/^https:\/\//.test(url) ||
+        !excerpt ||
+        excerpt.length < 10 ||
+        excerpt.length > 600 ||
+        !kind ||
+        !EVIDENCE_KINDS.has(kind)
+      ) {
+        return NextResponse.json(
+          { error: "each evidence item needs https url, 10-600 char excerpt, valid kind" },
+          { status: 400 },
+        );
+      }
+      extraEvidence.push({ url, excerpt, kind: kind as never });
+    }
+  }
+
   const auth = await getOperatorAuthState(request);
   const reviewer = `human:${auth.address ?? auth.via ?? "operator"}`;
 
   const changed =
     action === "approve"
-      ? await approveResolution(resolutionId, reviewer, note)
+      ? await approveResolution(resolutionId, reviewer, note, extraEvidence)
       : await rejectResolution(resolutionId, reviewer, note);
 
   if (!changed) {

@@ -130,13 +130,20 @@ export async function approveResolution(
   resolutionId: string,
   reviewedBy: string,
   note?: string,
+  extraEvidence?: LedgerEvidence[],
 ): Promise<boolean> {
   if (!reviewedBy.startsWith("human:")) {
     throw new Error("approveResolution requires a human reviewer identity");
   }
+  // Reviewer-curated evidence (OBR evaluation reports, court judgments,
+  // inquiries) appends to the agent's chain — it never replaces it.
+  const extra =
+    extraEvidence && extraEvidence.length > 0
+      ? sql`evidence = evidence || ${sql.json(extraEvidence as unknown as Parameters<typeof sql.json>[0])},`
+      : sql``;
   const rows = await sql`
     UPDATE pooter.ledger_resolutions
-    SET status = 'published', reviewed_by = ${reviewedBy},
+    SET ${extra} status = 'published', reviewed_by = ${reviewedBy},
         review_note = ${note ?? null}, reviewed_at = NOW()
     WHERE id = ${resolutionId} AND status = 'proposed'
     RETURNING id, claim_id
