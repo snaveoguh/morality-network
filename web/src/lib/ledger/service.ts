@@ -1,0 +1,117 @@
+import "server-only";
+
+// Claim Ledger — Phase A service.
+// Pipeline (spec §Pipeline): ingest (Hansard) → extract → publish UNRESOLVED.
+// No verdicts exist anywhere in Phase A; there is nothing to review or score
+// yet, and the page renders sourced quotes only.
+
+import { unstable_cache } from "next/cache";
+import { hasAIProviderForTask } from "../ai-models";
+import { extractClaimsFromDebate } from "./extract";
+import { fetchLatestPmqs } from "./hansard";
+import type { HansardDebate, LedgerClaim, LedgerWeekSnapshot } from "./types";
+
+function buildSnapshot(
+  debate: HansardDebate,
+  claims: LedgerClaim[],
+  contributionsWithClaims: number,
+): LedgerWeekSnapshot {
+  return {
+    debate: {
+      extId: debate.extId,
+      title: debate.title,
+      house: debate.house,
+      date: debate.date,
+      sourceUrl: debate.sourceUrl,
+    },
+    claims,
+    contributionsScanned: debate.contributions.length,
+    contributionsWithClaims,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+async function tryDbClaims(debateExtId: string): Promise<LedgerClaim[] | null> {
+  if (!process.env.DATABASE_URL) return null;
+  try {
+    const { listLedgerClaimsForDebate } = await import("../db/ledger-claims");
+    const claims = await listLedgerClaimsForDebate(debateExtId);
+    return claims.length > 0 ? claims : null;
+  } catch (error) {
+    console.warn("[ledger] DB read failed, falling back to live:", error);
+    return null;
+  }
+}
+
+async function tryPersist(
+  claims: LedgerClaim[],
+  debateExtId: string,
+): Promise<boolean> {
+  if (!process.env.DATABASE_URL || claims.length === 0) return false;
+  try {
+    const { recordLedgerClaims } = await import("../db/ledger-claims");
+    await recordLedgerClaims(claims, debateExtId);
+    return true;
+  } catch (error) {
+    console.warn("[ledger] persist failed (claims still served live):", error);
+    return false;
+  }
+}
+
+/**
+ * Ingest the latest PMQs: fetch text, extract claims, persist when a DB is
+ * configured. Re-runnable — claim ids are deterministic and inserts are
+ * ON CONFLICT DO NOTHING.
+ */
+export async function ingestLatestPmqs(): Promise<
+  | { ok: true; snapshot: LedgerWeekSnapshot; persisted: boolean }
+  | { ok: false; reason: string }
+> {
+  const debate = await fetchLatestPmqs();
+  if (!debate) return { ok: false, reason: "no PMQs sitting found in window" };
+  if (!hasAIProviderForTask("claimLedgerExtraction")) {
+    return { ok: false, reason: "no AI provider configured for extraction" };
+  }
+
+  const { claims, contributionsWithClaims } =
+    await extractClaimsFromDebate(debate);
+  const persisted = await tryPersist(claims, debate.extId);
+  return {
+    ok: true,
+    snapshot: buildSnapshot(debate, claims, contributionsWithClaims),
+    persisted,
+  };
+}
+
+async function loadWeekSnapshotUncached(): Promise<LedgerWeekSnapshot | null> {
+  const debate = await fetchLatestPmqs();
+  if (!debate) return null;
+
+  // Prefer persisted claims (cron-ingested); fall back to live extraction.
+  const dbClaims = await tryDbClaims(debate.extId);
+  if (dbClaims) {
+    const withClaims = new Set(dbClaims.map((c) => c.contributionExternalId))
+      .size;
+    return buildSnapshot(debate, dbClaims, withClaims);
+  }
+
+  if (!hasAIProviderForTask("claimLedgerExtraction")) {
+    return buildSnapshot(debate, [], 0);
+  }
+
+  const { claims, contributionsWithClaims } =
+    await extractClaimsFromDebate(debate);
+  await tryPersist(claims, debate.extId);
+  return buildSnapshot(debate, claims, contributionsWithClaims);
+}
+
+const getCachedWeekSnapshot = unstable_cache(
+  loadWeekSnapshotUncached,
+  ["ledger-pmqs-week-v1"],
+  { revalidate: 21_600 }, // 6h — PMQs is weekly; cron ingest refreshes sooner
+);
+
+/** The current "this week's checkable claims" snapshot, cached. */
+export async function getLedgerWeekSnapshot(): Promise<LedgerWeekSnapshot | null> {
+  return getCachedWeekSnapshot();
+}
