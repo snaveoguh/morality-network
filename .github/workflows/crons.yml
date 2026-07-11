@@ -17,6 +17,9 @@ on:
     # Claim Ledger PMQs ingest — Wednesdays 2pm UTC (PMQs ends ~12:30 UK;
     # Hansard text lands within a few hours; endpoint is idempotent)
     - cron: '0 14 * * 3'
+    # Claim Ledger resolution pass — Wednesdays 3pm UTC (proposes verdicts
+    # for the day's new claims into the human review queue; never publishes)
+    - cron: '0 15 * * 3'
   workflow_dispatch: # allow manual trigger
 
 jobs:
@@ -36,6 +39,7 @@ jobs:
             "0 6 * * *")   ROUTE="/api/newsroom" ; METHOD="GET" ;;
             "15 7 * * *")  ROUTE="/api/newsletter/send" ; METHOD="POST" ;;
             "0 14 * * 3")  ROUTE="/api/cron/ledger-pmqs" ;;
+            "0 15 * * 3")  ROUTE="/api/cron/ledger-resolve" ;;
             *)             ROUTE="/api/cron/daily-edition" ;;
           esac
           echo "route=$ROUTE" >> "$GITHUB_OUTPUT"

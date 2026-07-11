@@ -1,6 +1,13 @@
 import Link from "next/link";
-import { getLedgerWeekSnapshot } from "@/lib/ledger/service";
-import type { LedgerClaim, LedgerWeekSnapshot } from "@/lib/ledger/types";
+import {
+  getLedgerWeekSnapshot,
+  getPublishedVerdicts,
+} from "@/lib/ledger/service";
+import type {
+  LedgerClaim,
+  LedgerResolution,
+  LedgerWeekSnapshot,
+} from "@/lib/ledger/types";
 import { BRAND_NAME, withBrand } from "@/lib/brand";
 
 export const revalidate = 1800; // 30 min ISR
@@ -56,7 +63,21 @@ function groupBySpeaker(claims: LedgerClaim[]): Array<[string, LedgerClaim[]]> {
   return [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
 }
 
-function ClaimRow({ claim }: { claim: LedgerClaim }) {
+// Published verdict vocabulary (spec Principles §4 — fixed, no motive).
+const VERDICT_LABEL: Record<LedgerResolution["verdict"], string> = {
+  true: "Resolved true",
+  false: "Resolved false",
+  partial: "Partially true",
+  unresolved: "Unresolved",
+};
+
+function ClaimRow({
+  claim,
+  resolution,
+}: {
+  claim: LedgerClaim;
+  resolution?: LedgerResolution;
+}) {
   return (
     <li className="py-5">
       <blockquote className="border-l-2 border-[var(--rule)] pl-4 font-body-serif text-base leading-relaxed text-[var(--ink)]">
@@ -68,9 +89,21 @@ function ClaimRow({ claim }: { claim: LedgerClaim }) {
       </p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2 pl-4 font-mono text-[9px] uppercase tracking-[0.2em]">
-        <span className="border border-[var(--ink)] px-1.5 py-0.5 font-bold text-[var(--ink)]">
-          {CLAIM_TYPE_LABEL[claim.claimType]}
-        </span>
+        {resolution ? (
+          <span
+            className={`border px-1.5 py-0.5 font-bold ${
+              resolution.verdict === "false" || resolution.verdict === "partial"
+                ? "border-[var(--accent-red)] bg-[var(--accent-red)] text-[var(--paper)]"
+                : "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
+            }`}
+          >
+            {VERDICT_LABEL[resolution.verdict]}
+          </span>
+        ) : (
+          <span className="border border-[var(--ink)] px-1.5 py-0.5 font-bold text-[var(--ink)]">
+            {CLAIM_TYPE_LABEL[claim.claimType]}
+          </span>
+        )}
         <span className="border border-[var(--rule-light)] px-1.5 py-0.5 text-[var(--ink-light)]">
           {TOPIC_LABEL[claim.topic]}
         </span>
@@ -94,6 +127,32 @@ function ClaimRow({ claim }: { claim: LedgerClaim }) {
           Source: Hansard
         </a>
       </div>
+
+      {resolution && resolution.evidence.length > 0 && (
+        <div className="mt-3 pl-4">
+          <p className="font-mono text-[8px] uppercase tracking-[0.25em] text-[var(--ink-faint)]">
+            Evidence
+          </p>
+          <ul className="mt-1 space-y-1">
+            {resolution.evidence.map((e, i) => (
+              <li
+                key={i}
+                className="font-body-serif text-xs leading-relaxed text-[var(--ink-light)]"
+              >
+                <a
+                  href={e.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--accent-red)] underline decoration-1 underline-offset-2"
+                >
+                  [{e.kind}]
+                </a>{" "}
+                {e.excerpt}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </li>
   );
 }
@@ -106,6 +165,7 @@ export default async function LedgerPage() {
   );
 
   const claims = snapshot?.claims ?? [];
+  const verdicts = await getPublishedVerdicts(claims.map((c) => c.id));
   const bySpeaker = groupBySpeaker(claims);
   const checkable = claims.filter((c) => c.claimType !== "unfalsifiable");
 
@@ -145,6 +205,11 @@ export default async function LedgerPage() {
             <span>
               <strong className="text-[var(--ink)]">{checkable.length}</strong>{" "}
               checkable
+            </span>
+            <span className="text-[var(--rule-light)]">|</span>
+            <span>
+              <strong className="text-[var(--ink)]">{verdicts.size}</strong>{" "}
+              resolved
             </span>
             <span className="text-[var(--rule-light)]">|</span>
             <span>
@@ -198,7 +263,11 @@ export default async function LedgerPage() {
               </div>
               <ul className="divide-y divide-[var(--rule-light)]">
                 {speakerClaims.map((claim) => (
-                  <ClaimRow key={claim.id} claim={claim} />
+                  <ClaimRow
+                    key={claim.id}
+                    claim={claim}
+                    resolution={verdicts.get(claim.id)}
+                  />
                 ))}
               </ul>
             </section>
