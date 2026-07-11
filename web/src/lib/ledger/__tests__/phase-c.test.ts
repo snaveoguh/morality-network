@@ -131,3 +131,23 @@ describe("oversized contribution splitting", () => {
     expect(chunks.every((c) => c.reduce((n, x) => n + x.text.length, 0) <= 7000)).toBe(true);
   });
 });
+
+describe("manifesto passage splitting", () => {
+  it("drops cover/TOC noise and bounds passages", async () => {
+    const { splitPageIntoPassages } = await import("../sources/manifestos");
+    expect(splitPageIntoPassages("CHANGE. Labour 2024")).toEqual([]);
+    const page = Array.from({ length: 60 }, (_, i) => `Commitment sentence ${i} about public services and spending.`).join(" ");
+    const passages = splitPageIntoPassages(page, 1400);
+    expect(passages.length).toBeGreaterThan(1);
+    expect(passages.every((p) => p.length <= 1400)).toBe(true);
+  });
+
+  it("registry entries are well-formed", async () => {
+    const { MANIFESTOS, manifestoDebateExtId } = await import("../sources/manifestos");
+    for (const m of MANIFESTOS) {
+      expect(m.url).toMatch(/^https:\/\/.+\.pdf$/);
+      expect(m.publishedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(manifestoDebateExtId(m.key)).toBe(`manifesto-${m.key}`);
+    }
+  });
+});

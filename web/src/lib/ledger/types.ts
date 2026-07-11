@@ -6,8 +6,8 @@
 /** How a claim can, in principle, be checked. */
 export type LedgerClaimType = "retrodictable" | "predictive" | "unfalsifiable";
 
-/** Where a claim was uttered. Tier 1 = pmqs; Tier 2 backfill starts with budget. */
-export type LedgerContext = "pmqs" | "budget";
+/** Where a claim was uttered. Tier 1 = pmqs; Tier 2 backfill adds budget + manifesto. */
+export type LedgerContext = "pmqs" | "budget" | "manifesto";
 
 /** Rough resolution category — drives which source resolves it in Phase B. */
 export type LedgerClaimTopic =
@@ -102,7 +102,9 @@ export interface LedgerEvidence {
   url: string;
   /** What the record shows, stated from the fetched data. */
   excerpt: string;
-  kind: "division" | "ons" | "hansard" | "other";
+  /** 'obr' and 'other' are human-curated at review time (spec: OBR
+   *  evaluation reports, court judgments, inquiries). */
+  kind: "division" | "ons" | "hansard" | "obr" | "other";
 }
 
 export interface LedgerResolution {

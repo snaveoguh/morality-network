@@ -75,6 +75,8 @@ const defaultGenerate: LedgerGenerate = async (req) => {
 const CONTEXT_LABEL: Record<string, string> = {
   pmqs: "Prime Minister's Questions",
   budget: "a Budget speech (Financial Statement)",
+  manifesto:
+    "a general-election manifesto (commitments are checkable claims: treat 'we will X' as predictive with the parliament as its horizon)",
 };
 
 const SYSTEM_PROMPT = `You extract CHECKABLE claims from UK parliamentary speech.

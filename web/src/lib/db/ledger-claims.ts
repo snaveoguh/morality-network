@@ -141,6 +141,20 @@ export async function listLedgerClaimsForMember(
   return rows.map(rowToClaim);
 }
 
+/** Claim counts per debate (manifesto/backfill listing pages). */
+export async function countClaimsByDebate(
+  extIds: string[],
+): Promise<Map<string, number>> {
+  if (extIds.length === 0) return new Map();
+  const rows = await sql<Array<{ debate_ext_id: string; n: number }>>`
+    SELECT debate_ext_id, COUNT(*)::int AS n
+    FROM pooter.ledger_claims
+    WHERE debate_ext_id IN ${sql(extIds)}
+    GROUP BY debate_ext_id
+  `;
+  return new Map(rows.map((r) => [r.debate_ext_id, r.n]));
+}
+
 /** Claims recorded on a given UTC day (Merkle batching). */
 export async function listLedgerClaimsCreatedOn(
   day: string,

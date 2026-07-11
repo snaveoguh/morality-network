@@ -169,6 +169,52 @@ export async function ingestNextBudget(): Promise<
   };
 }
 
+/**
+ * Ingest the next not-yet-ingested manifesto from the registry. Same
+ * self-exhausting daily-cron shape as the Budget backfill.
+ */
+export async function ingestNextManifesto(): Promise<
+  | { ok: true; done: boolean; manifesto?: string; claims?: number; persisted?: boolean }
+  | { ok: false; reason: string }
+> {
+  if (!process.env.DATABASE_URL) {
+    return { ok: false, reason: "backfill requires DATABASE_URL" };
+  }
+  if (!hasAIProviderForTask("claimLedgerExtraction")) {
+    return { ok: false, reason: "no AI provider configured for extraction" };
+  }
+
+  const { MANIFESTOS, fetchManifestoAsDebate, manifestoDebateExtId } =
+    await import("./sources/manifestos");
+  const { ingestedDebateExtIds, markDebateIngested } = await import(
+    "../db/ledger-claims"
+  );
+
+  const already = await ingestedDebateExtIds(
+    MANIFESTOS.map((m) => manifestoDebateExtId(m.key)),
+  );
+  const next = MANIFESTOS.find((m) => !already.has(manifestoDebateExtId(m.key)));
+  if (!next) return { ok: true, done: true };
+
+  const debate = await fetchManifestoAsDebate(next);
+  if (!debate) {
+    return { ok: false, reason: `manifesto ${next.key} fetch/parse failed` };
+  }
+
+  const { claims } = await extractClaimsFromDebate(debate, {
+    context: "manifesto",
+  });
+  const persisted = await tryPersist(claims, debate.extId);
+  await markDebateIngested({
+    debateExtId: debate.extId,
+    context: "manifesto",
+    sittingDate: debate.date,
+    claimsCount: claims.length,
+  }).catch((error) => console.warn("[ledger] markDebateIngested failed:", error));
+
+  return { ok: true, done: false, manifesto: next.key, claims: claims.length, persisted };
+}
+
 // ── Phase B: resolution ─────────────────────────────────────────────────────
 
 /**
