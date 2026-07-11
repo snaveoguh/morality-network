@@ -9,6 +9,37 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 23 · Phase C live + pw masthead — the time machine starts
+
+**when** — 2026-07-10 ~20:30–21:05 local (2026-07-11 ~02:30–03:05 UTC)
+**what** — Eight commits `8c9940d..4e3ef9a` through dev → main. (1) Tier 2
+backfill: context generalized (pmqs|budget), /api/cron/ledger-backfill
+ingests one "Financial Statement" sitting per daily run oldest-first,
+self-exhausting over the 20-speech 2010→now corpus; ONS registry gains PSNB
+(J5II) + net debt %GDP (HF6X). First live run exposed and fixed two bugs
+(4e3ef9a): 51k-char single-contribution speeches now split at sentence
+boundaries (verbatim guard still checks the full original), and ingest
+attempts are recorded in ledger_ingested_debates (migration 005) so
+zero-claim sittings don't retry forever. Re-run: 106 claims from Darling's
+2010-03-24 Budget, persisted. (2) /ledger/member/[id] entity pages with the
+n≥20 score gate (score withheld, progress shown; checkability rate always
+public). (3) Daily Merkle batches (migration 004, lib/ledger/merkle.ts,
+06:10 UTC cron) + contracts/src/LedgerAnchor.sol (minimal, non-upgradeable,
+compiles; NOT deployed — onchain anchoring awaits deploy + env). (4) Right
+of reply: /ledger/dispute form → rate-limited POST, operator moderation via
+PUT /api/ledger/dispute, answered disputes display inline. (5) Masthead:
+molecule logo sunset, blackletter "pw" on a paper square (inverse-WaPo),
+Header.tsx only — PWA icons untouched. Crons: daily backfill 16:30 UTC,
+daily anchor 06:10 UTC.
+**why** — Phase C per spec: the archive compounds (whoever has 3 years of
+scores owns the dataset), scores stay honest (n≥20), tamper evidence
+accumulates offchain until the anchor contract deploys, and right-of-reply
+is the legal + product loop.
+**where** — indexer Postgres (migrations 004+005, additive), web lib/app,
+contracts/src, crons.yml, Header.tsx.
+**rollback** — revert the eight commits; DROP the two new tables. The
+retired /hcp-logo.png asset stays in public/.
+
 ## ▲ node 22 · Claim Ledger Phase B — resolution + human review gate, live
 
 **when** — 2026-07-10 ~19:50–20:15 local (2026-07-11 ~01:50–02:15 UTC)
