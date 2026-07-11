@@ -3,6 +3,7 @@
 // enforced both here and by the DB CHECK constraint: publishing a 'false' or
 // 'partial' verdict without a reviewer is impossible at either layer.
 
+import { createHash } from "node:crypto";
 import { sql } from "../db";
 import { isoDateOnly } from "./ledger-claims";
 import type {
@@ -55,6 +56,125 @@ export async function recordProposal(r: LedgerResolution): Promise<boolean> {
     RETURNING id
   `;
   return rows.length > 0;
+}
+
+// ── Human-proposed resolutions ──────────────────────────────────────────────
+// The resolution agent only covers voting-record and statistics; operators
+// propose verdicts for everything else (policy-outcome, spending) from the
+// review UI. A manual proposal is still a proposal — it enters the same
+// queue and publishes only through approveResolution.
+
+export const MANUAL_RESOLVER_VERSION = "manual-v1";
+
+const VALID_VERDICTS = new Set<LedgerVerdict>([
+  "true",
+  "false",
+  "partial",
+  "unresolved",
+]);
+
+const EVIDENCE_KINDS = new Set<LedgerEvidence["kind"]>([
+  "division",
+  "ons",
+  "hansard",
+  "obr",
+  "other",
+]);
+
+/** Deterministic id — mirrors resolve.ts's resolutionId shape. */
+export function manualResolutionId(
+  claimId: string,
+  evidenceUrls: string[],
+): string {
+  return createHash("sha256")
+    .update(
+      `${claimId}\n${[...evidenceUrls].sort().join(",") || "none"}\n${MANUAL_RESOLVER_VERSION}`,
+    )
+    .digest("hex")
+    .slice(0, 32);
+}
+
+/**
+ * Validate a human proposal and assemble the resolution row. Pure — returns
+ * null when the verdict is outside the fixed vocabulary, the reasoning is
+ * out of bounds, an evidence entry is malformed, or a non-'unresolved'
+ * verdict carries no evidence (the document-chain rule, same as the DB
+ * constraint enforces at publication).
+ */
+export function validateManualResolution(params: {
+  claimId: string;
+  verdict: string;
+  evidence: LedgerEvidence[];
+  reasoning: string;
+  proposedBy: string;
+}): LedgerResolution | null {
+  const { claimId, evidence, proposedBy } = params;
+
+  if (!VALID_VERDICTS.has(params.verdict as LedgerVerdict)) return null;
+  const verdict = params.verdict as LedgerVerdict;
+
+  if (!proposedBy.startsWith("human:")) return null;
+
+  const reasoning = params.reasoning.trim();
+  if (reasoning.length < 20 || reasoning.length > 1200) return null;
+
+  if (!Array.isArray(evidence) || evidence.length > 10) return null;
+  for (const entry of evidence) {
+    if (
+      !/^https:\/\//.test(entry.url) ||
+      entry.excerpt.trim().length < 10 ||
+      entry.excerpt.trim().length > 600 ||
+      !EVIDENCE_KINDS.has(entry.kind)
+    ) {
+      return null;
+    }
+  }
+
+  // Every verdict except 'unresolved' needs a document chain.
+  if (verdict !== "unresolved" && evidence.length === 0) return null;
+
+  return {
+    id: manualResolutionId(claimId, evidence.map((e) => e.url)),
+    claimId,
+    verdict,
+    evidence,
+    reasoning,
+    resolvedBy: proposedBy,
+    reviewedBy: null,
+    status: "proposed",
+    reviewNote: null,
+    createdAt: new Date().toISOString(),
+    reviewedAt: null,
+  };
+}
+
+/**
+ * Queue a human proposal. Returns the resolution id, or null when the params
+ * fail validation, the claim does not exist, or the claim already has a live
+ * resolution (the partial unique index makes repeats no-ops).
+ */
+export async function createManualResolution(params: {
+  claimId: string;
+  verdict: string;
+  evidence: LedgerEvidence[];
+  reasoning: string;
+  proposedBy: string;
+}): Promise<string | null> {
+  const r = validateManualResolution(params);
+  if (!r) return null;
+  // Same claim-must-exist guard as createDispute.
+  const rows = await sql`
+    INSERT INTO pooter.ledger_resolutions (
+      id, claim_id, verdict, evidence, reasoning, resolved_by, status
+    )
+    SELECT ${r.id}, ${r.claimId}, ${r.verdict},
+           ${sql.json(r.evidence as unknown as Parameters<typeof sql.json>[0])},
+           ${r.reasoning}, ${r.resolvedBy}, ${"proposed"}
+    WHERE EXISTS (SELECT 1 FROM pooter.ledger_claims WHERE id = ${r.claimId})
+    ON CONFLICT DO NOTHING
+    RETURNING id
+  `;
+  return rows.length > 0 ? r.id : null;
 }
 
 /** Claim ids that already have a live (non-rejected) resolution. */
