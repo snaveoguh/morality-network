@@ -1,8 +1,10 @@
 import Link from "next/link";
 import {
+  getAnsweredDisputes,
   getLedgerWeekSnapshot,
   getPublishedVerdicts,
 } from "@/lib/ledger/service";
+import type { LedgerDispute } from "@/lib/db/ledger-disputes";
 import type {
   LedgerClaim,
   LedgerResolution,
@@ -74,9 +76,11 @@ const VERDICT_LABEL: Record<LedgerResolution["verdict"], string> = {
 function ClaimRow({
   claim,
   resolution,
+  disputes,
 }: {
   claim: LedgerClaim;
   resolution?: LedgerResolution;
+  disputes?: LedgerDispute[];
 }) {
   return (
     <li className="py-5">
@@ -126,7 +130,34 @@ function ClaimRow({
         >
           Source: Hansard
         </a>
+        <span className="text-[var(--rule-light)]">|</span>
+        <Link
+          href={`/ledger/dispute?claim=${claim.id}`}
+          className="text-[var(--ink-faint)] underline decoration-1 underline-offset-2 transition-colors hover:text-[var(--accent-red)]"
+        >
+          Dispute
+        </Link>
       </div>
+
+      {disputes && disputes.length > 0 && (
+        <div className="mt-3 border-l-2 border-[var(--accent-red)] pl-4">
+          {disputes.map((d) => (
+            <div key={d.id} className="mt-1">
+              <p className="font-mono text-[8px] uppercase tracking-[0.25em] text-[var(--accent-red)]">
+                Disputed — right of reply
+              </p>
+              <p className="mt-1 font-body-serif text-xs leading-relaxed text-[var(--ink-light)]">
+                {d.body}
+              </p>
+              {d.response && (
+                <p className="mt-1 font-body-serif text-xs italic leading-relaxed text-[var(--ink-faint)]">
+                  Ledger response: {d.response}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {resolution && resolution.evidence.length > 0 && (
         <div className="mt-3 pl-4">
@@ -165,7 +196,11 @@ export default async function LedgerPage() {
   );
 
   const claims = snapshot?.claims ?? [];
-  const verdicts = await getPublishedVerdicts(claims.map((c) => c.id));
+  const claimIds = claims.map((c) => c.id);
+  const [verdicts, disputes] = await Promise.all([
+    getPublishedVerdicts(claimIds),
+    getAnsweredDisputes(claimIds),
+  ]);
   const bySpeaker = groupBySpeaker(claims);
   const checkable = claims.filter((c) => c.claimType !== "unfalsifiable");
 
@@ -252,7 +287,16 @@ export default async function LedgerPage() {
             <section key={speaker}>
               <div className="mb-1 flex items-baseline justify-between border-b border-[var(--rule-light)] pb-2">
                 <h2 className="font-headline-serif text-xl font-bold text-[var(--ink)]">
-                  {speaker}
+                  {meta.memberId ? (
+                    <Link
+                      href={`/ledger/member/${meta.memberId}`}
+                      className="transition-colors hover:text-[var(--accent-red)]"
+                    >
+                      {speaker}
+                    </Link>
+                  ) : (
+                    speaker
+                  )}
                 </h2>
                 <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
                   {[meta.constituency, meta.party].filter(Boolean).join(" · ") ||
@@ -267,6 +311,7 @@ export default async function LedgerPage() {
                     key={claim.id}
                     claim={claim}
                     resolution={verdicts.get(claim.id)}
+                    disputes={disputes.get(claim.id)}
                   />
                 ))}
               </ul>
