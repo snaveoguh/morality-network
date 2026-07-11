@@ -16,6 +16,7 @@ import type {
   LedgerClaim,
   LedgerClaimTopic,
   LedgerClaimType,
+  LedgerContext,
   LedgerExtractorStamp,
 } from "./types";
 
@@ -71,7 +72,12 @@ const defaultGenerate: LedgerGenerate = async (req) => {
   return { text: result.text, provider: result.provider, model: result.model };
 };
 
-const SYSTEM_PROMPT = `You extract CHECKABLE claims from UK parliamentary speech (Prime Minister's Questions).
+const CONTEXT_LABEL: Record<string, string> = {
+  pmqs: "Prime Minister's Questions",
+  budget: "a Budget speech (Financial Statement)",
+};
+
+const SYSTEM_PROMPT = `You extract CHECKABLE claims from UK parliamentary speech.
 
 A checkable claim is a factual assertion that could in principle be verified against records: statistics ("inflation is at 2 per cent"), voting records ("he voted against the bill"), policy outcomes ("we have recruited 10,000 more police officers"), spending ("we invested £5 billion in the NHS"), or dated predictions ("waiting lists will fall by next year").
 
@@ -92,7 +98,7 @@ claim_type rules:
 - "predictive": asserts something about the future; set resolution_due when a timeframe is stated.
 - "unfalsifiable": sounds factual but no record could settle it. Extract these too — they are labelled and excluded from scoring.
 
-Return [] if a contribution contains no checkable claims. Quality over quantity: at PMQs most contributions contain 0-2 real claims.`;
+Return [] if a contribution contains no checkable claims. Quality over quantity: most contributions contain only a handful of real claims.`;
 
 /**
  * Whitespace-insensitive exact-substring check. Returns the matched substring
@@ -165,6 +171,7 @@ export function validateRawClaim(
   contribution: HansardContribution,
   debate: Pick<HansardDebate, "date">,
   stamp: LedgerExtractorStamp,
+  context: LedgerContext = "pmqs",
 ): LedgerClaim | null {
   if (!VALID_TYPES.has(raw.claim_type as LedgerClaimType)) return null;
 
@@ -199,7 +206,7 @@ export function validateRawClaim(
     sourceUrl: contribution.sourceUrl,
     contributionExternalId: contribution.externalId,
     utteredAt: debate.date,
-    context: "pmqs",
+    context,
     extractedBy: stamp,
     occurrences: 1,
   };
@@ -241,12 +248,15 @@ export function chunkContributions(
   return chunks;
 }
 
-function buildChunkPrompt(chunk: HansardContribution[]): string {
+function buildChunkPrompt(
+  chunk: HansardContribution[],
+  context: LedgerContext,
+): string {
   const blocks = chunk.map(
     (c) =>
       `[${c.externalId}] ${c.speaker.name}${c.speaker.party ? ` (${c.speaker.party})` : ""}:\n${c.text}`,
   );
-  return `Extract checkable claims from these PMQs contributions:\n\n${blocks.join("\n\n")}`;
+  return `Extract checkable claims from these contributions at ${CONTEXT_LABEL[context] ?? context}:\n\n${blocks.join("\n\n")}`;
 }
 
 /**
@@ -255,9 +265,10 @@ function buildChunkPrompt(chunk: HansardContribution[]): string {
  */
 export async function extractClaimsFromDebate(
   debate: HansardDebate,
-  options?: { generate?: LedgerGenerate },
+  options?: { generate?: LedgerGenerate; context?: LedgerContext },
 ): Promise<{ claims: LedgerClaim[]; contributionsWithClaims: number }> {
   const generate = options?.generate ?? defaultGenerate;
+  const context = options?.context ?? "pmqs";
   const byContribution = new Map(
     debate.contributions.map((c) => [c.externalId, c]),
   );
@@ -268,7 +279,7 @@ export async function extractClaimsFromDebate(
     try {
       response = await generate({
         system: SYSTEM_PROMPT,
-        user: buildChunkPrompt(chunk),
+        user: buildChunkPrompt(chunk, context),
         maxTokens: 3000,
         temperature: 0,
         timeoutMs: 60_000,
@@ -287,7 +298,7 @@ export async function extractClaimsFromDebate(
     for (const raw of parseExtractionResponse(response.text)) {
       const contribution = byContribution.get(raw.contribution_id);
       if (!contribution) continue;
-      const claim = validateRawClaim(raw, contribution, debate, stamp);
+      const claim = validateRawClaim(raw, contribution, debate, stamp, context);
       if (claim) all.push(claim);
     }
   }

@@ -6,6 +6,9 @@
 /** How a claim can, in principle, be checked. */
 export type LedgerClaimType = "retrodictable" | "predictive" | "unfalsifiable";
 
+/** Where a claim was uttered. Tier 1 = pmqs; Tier 2 backfill starts with budget. */
+export type LedgerContext = "pmqs" | "budget";
+
 /** Rough resolution category — drives which source resolves it in Phase B. */
 export type LedgerClaimTopic =
   | "statistics"
@@ -78,7 +81,7 @@ export interface LedgerClaim {
   contributionExternalId: string;
   /** ISO date of utterance (sitting date). */
   utteredAt: string;
-  context: "pmqs";
+  context: LedgerContext;
   extractedBy: LedgerExtractorStamp;
   /** Times the same normalized claim appeared in the session. */
   occurrences: number;

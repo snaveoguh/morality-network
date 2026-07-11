@@ -8,7 +8,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { hasAIProviderForTask } from "../ai-models";
 import { extractClaimsFromDebate } from "./extract";
-import { fetchLatestPmqs } from "./hansard";
+import { fetchDebate, fetchLatestPmqs, findBudgetSittings } from "./hansard";
 import type { HansardDebate, LedgerClaim, LedgerWeekSnapshot } from "./types";
 
 function buildSnapshot(
@@ -116,6 +116,48 @@ export async function getLedgerWeekSnapshot(): Promise<LedgerWeekSnapshot | null
   return getCachedWeekSnapshot();
 }
 
+// ── Phase C: Tier 2 backfill (Budget speeches, 2010 → now) ─────────────────
+
+/**
+ * Ingest the next not-yet-ingested Budget ("Financial Statement") sitting,
+ * oldest first. Self-exhausting: returns done=true once the corpus is in.
+ * Designed for a daily cron — ~20 sittings ≈ three weeks of quiet backfill.
+ */
+export async function ingestNextBudget(): Promise<
+  | { ok: true; done: boolean; debate?: { extId: string; date: string }; claims?: number; persisted?: boolean }
+  | { ok: false; reason: string }
+> {
+  if (!process.env.DATABASE_URL) {
+    return { ok: false, reason: "backfill requires DATABASE_URL" };
+  }
+  if (!hasAIProviderForTask("claimLedgerExtraction")) {
+    return { ok: false, reason: "no AI provider configured for extraction" };
+  }
+
+  const sittings = await findBudgetSittings(2010);
+  if (sittings.length === 0) return { ok: false, reason: "no Budget sittings found" };
+
+  const { ingestedDebateExtIds } = await import("../db/ledger-claims");
+  const already = await ingestedDebateExtIds(sittings.map((s) => s.extId));
+  const next = sittings.find((s) => !already.has(s.extId));
+  if (!next) return { ok: true, done: true };
+
+  const debate = await fetchDebate(next.extId);
+  if (!debate || debate.contributions.length === 0) {
+    return { ok: false, reason: `debate ${next.extId} (${next.date}) fetch failed or empty` };
+  }
+
+  const { claims } = await extractClaimsFromDebate(debate, { context: "budget" });
+  const persisted = await tryPersist(claims, debate.extId);
+  return {
+    ok: true,
+    done: false,
+    debate: { extId: debate.extId, date: debate.date },
+    claims: claims.length,
+    persisted,
+  };
+}
+
 // ── Phase B: resolution ─────────────────────────────────────────────────────
 
 /**
@@ -134,6 +176,20 @@ export async function getPublishedVerdicts(
     return await publishedResolutionsForClaims(claimIds);
   } catch (error) {
     console.warn("[ledger] verdict read failed:", error);
+    return new Map();
+  }
+}
+
+/** Answered (publicly displayable) disputes for the given claims. */
+export async function getAnsweredDisputes(
+  claimIds: string[],
+): Promise<Map<string, import("../db/ledger-disputes").LedgerDispute[]>> {
+  if (!process.env.DATABASE_URL || claimIds.length === 0) return new Map();
+  try {
+    const { answeredDisputesForClaims } = await import("../db/ledger-disputes");
+    return await answeredDisputesForClaims(claimIds);
+  } catch (error) {
+    console.warn("[ledger] dispute read failed:", error);
     return new Map();
   }
 }

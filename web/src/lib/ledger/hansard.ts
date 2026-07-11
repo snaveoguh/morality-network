@@ -222,6 +222,42 @@ export async function fetchDebate(extId: string): Promise<HansardDebate | null> 
   }
 }
 
+/**
+ * Budget speeches: Hansard titles them "Financial Statement" (older) or
+ * "Financial Statement and Budget Report" (2023+). One per fiscal event,
+ * 2010 → now ≈ 20 sittings. Oldest first so backfill compounds forward.
+ */
+export async function findBudgetSittings(
+  fromYear: number = 2010,
+): Promise<Array<{ extId: string; date: string }>> {
+  try {
+    const res = await fetchWithRetry(
+      `${HANSARD_API}/search/debates.json?queryParameters.searchTerm=${encodeURIComponent("Financial Statement")}&queryParameters.house=Commons&queryParameters.startDate=${fromYear}-01-01&queryParameters.endDate=${new Date().toISOString().slice(0, 10)}&queryParameters.orderBy=SittingDateDesc`,
+      { headers: { Accept: "application/json" }, next: { revalidate: 86_400 } },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const results: HansardSearchResult[] = Array.isArray(data?.Results)
+      ? data.Results
+      : [];
+    return results
+      .filter(
+        (r) =>
+          r?.DebateSectionExtId &&
+          r.House === "Commons" &&
+          /^Financial Statement/i.test((r.Title || "").trim()),
+      )
+      .map((r) => ({
+        extId: r.DebateSectionExtId,
+        date: r.SittingDate.slice(0, 10),
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  } catch (error) {
+    console.error("[ledger/hansard] budget search failed:", error);
+    return [];
+  }
+}
+
 /** Convenience: the most recent PMQs session with full text. */
 export async function fetchLatestPmqs(): Promise<HansardDebate | null> {
   const sittings = await findRecentPmqsSittings();

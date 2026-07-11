@@ -60,6 +60,24 @@ export const ONS_SERIES: OnsSeriesDef[] = [
     title: "Employment rate (16-64, seasonally adjusted)",
     unit: "%",
   },
+  // Fiscal series — the Budget-vs-outturn backbone (Tier 2 backfill).
+  // NOTE J5II sign convention: NEGATIVE values denote net borrowing.
+  {
+    key: "public-sector-net-borrowing",
+    seriesId: "j5ii",
+    dataset: "pusf",
+    path: "economy/governmentpublicsectorandtaxes/publicsectorfinance",
+    title: "Public sector net borrowing ex banks, £m (negative = borrowing)",
+    unit: "£m",
+  },
+  {
+    key: "public-sector-net-debt-gdp",
+    seriesId: "hf6x",
+    dataset: "pusf",
+    path: "economy/governmentpublicsectorandtaxes/publicsectorfinance",
+    title: "Public sector net debt ex banks, % of GDP",
+    unit: "%",
+  },
 ];
 
 export function onsSeriesUrl(def: OnsSeriesDef): string {

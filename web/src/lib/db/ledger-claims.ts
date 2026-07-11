@@ -3,7 +3,7 @@
 // /api/ledger/claims. Schema: web/migrations/002_claim_ledger.sql.
 
 import { sql } from "../db";
-import type { LedgerClaim } from "../ledger/types";
+import type { LedgerClaim, LedgerContext } from "../ledger/types";
 
 interface LedgerClaimRow {
   id: string;
@@ -19,6 +19,7 @@ interface LedgerClaimRow {
   source_url: string;
   contribution_ext_id: string;
   uttered_at: string;
+  context?: LedgerContext;
   extracted_by: LedgerClaim["extractedBy"];
   occurrences: number;
 }
@@ -50,7 +51,7 @@ function rowToClaim(row: LedgerClaimRow): LedgerClaim {
     sourceUrl: row.source_url,
     contributionExternalId: row.contribution_ext_id,
     utteredAt: isoDateOnly(row.uttered_at),
-    context: "pmqs",
+    context: row.context ?? "pmqs",
     extractedBy: row.extracted_by,
     occurrences: row.occurrences,
   };
@@ -78,7 +79,7 @@ export async function recordLedgerClaims(
         ${claim.claimType},
         ${claim.topic},
         ${claim.resolutionDue},
-        ${"hansard-pmqs"},
+        ${`hansard-${claim.context}`},
         ${claim.sourceUrl},
         ${claim.contributionExternalId},
         ${debateExtId},
@@ -92,6 +93,51 @@ export async function recordLedgerClaims(
   }
 }
 
+/** Debate ext ids that already have claims (used to skip ingested sittings). */
+export async function ingestedDebateExtIds(
+  extIds: string[],
+): Promise<Set<string>> {
+  if (extIds.length === 0) return new Set();
+  const rows = await sql<Array<{ debate_ext_id: string }>>`
+    SELECT DISTINCT debate_ext_id FROM pooter.ledger_claims
+    WHERE debate_ext_id IN ${sql(extIds)}
+  `;
+  return new Set(rows.map((r) => r.debate_ext_id));
+}
+
+/** All claims by one member, newest first (entity page). */
+export async function listLedgerClaimsForMember(
+  memberId: number,
+  limit = 500,
+): Promise<LedgerClaim[]> {
+  const rows = await sql<LedgerClaimRow[]>`
+    SELECT id, member_id, speaker_name, party, constituency, verbatim_quote,
+           normalized_claim, claim_type, topic, resolution_due, source_url,
+           contribution_ext_id, uttered_at, context, extracted_by, occurrences
+    FROM pooter.ledger_claims
+    WHERE member_id = ${memberId}
+    ORDER BY uttered_at DESC, created_at ASC
+    LIMIT ${Math.max(1, Math.min(2000, limit))}
+  `;
+  return rows.map(rowToClaim);
+}
+
+/** Claims recorded on a given UTC day (Merkle batching). */
+export async function listLedgerClaimsCreatedOn(
+  day: string,
+): Promise<LedgerClaim[]> {
+  const rows = await sql<LedgerClaimRow[]>`
+    SELECT id, member_id, speaker_name, party, constituency, verbatim_quote,
+           normalized_claim, claim_type, topic, resolution_due, source_url,
+           contribution_ext_id, uttered_at, context, extracted_by, occurrences
+    FROM pooter.ledger_claims
+    WHERE created_at >= ${`${day}T00:00:00Z`}
+      AND created_at < (${`${day}T00:00:00Z`}::timestamptz + interval '1 day')
+    ORDER BY id ASC
+  `;
+  return rows.map(rowToClaim);
+}
+
 /** Unresolved claims in resolvable topics, newest sittings first. */
 export async function listResolvableUnresolvedClaims(
   limit = 50,
@@ -99,7 +145,7 @@ export async function listResolvableUnresolvedClaims(
   const rows = await sql<LedgerClaimRow[]>`
     SELECT id, member_id, speaker_name, party, constituency, verbatim_quote,
            normalized_claim, claim_type, topic, resolution_due, source_url,
-           contribution_ext_id, uttered_at, extracted_by, occurrences
+           contribution_ext_id, uttered_at, context, extracted_by, occurrences
     FROM pooter.ledger_claims
     WHERE status = 'unresolved'
       AND claim_type = 'retrodictable'
@@ -116,7 +162,7 @@ export async function listLedgerClaimsForDebate(
   const rows = await sql<LedgerClaimRow[]>`
     SELECT id, member_id, speaker_name, party, constituency, verbatim_quote,
            normalized_claim, claim_type, topic, resolution_due, source_url,
-           contribution_ext_id, uttered_at, extracted_by, occurrences
+           contribution_ext_id, uttered_at, context, extracted_by, occurrences
     FROM pooter.ledger_claims
     WHERE debate_ext_id = ${debateExtId} AND status = 'unresolved'
     ORDER BY uttered_at DESC, speaker_name ASC
