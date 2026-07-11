@@ -14,6 +14,9 @@ on:
     - cron: '0 6 * * *'
     # The Daily Pooter newsletter — daily at 7:15am UTC (after all content generated)
     - cron: '15 7 * * *'
+    # Claim Ledger PMQs ingest — Wednesdays 2pm UTC (PMQs ends ~12:30 UK;
+    # Hansard text lands within a few hours; endpoint is idempotent)
+    - cron: '0 14 * * 3'
   workflow_dispatch: # allow manual trigger
 
 jobs:
@@ -32,6 +35,7 @@ jobs:
             "45 5 * * *")  ROUTE="/api/cron/daily-illustration" ;;
             "0 6 * * *")   ROUTE="/api/newsroom" ; METHOD="GET" ;;
             "15 7 * * *")  ROUTE="/api/newsletter/send" ; METHOD="POST" ;;
+            "0 14 * * 3")  ROUTE="/api/cron/ledger-pmqs" ;;
             *)             ROUTE="/api/cron/daily-edition" ;;
           esac
           echo "route=$ROUTE" >> "$GITHUB_OUTPUT"

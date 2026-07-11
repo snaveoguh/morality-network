@@ -20,6 +20,7 @@ const NAV_LINKS = [
   { href: "/originals", label: "Originals" },
   { href: "/archive", label: "Archive" },
   { href: "/proposals", label: "Governance" },
+  { href: "/ledger", label: "Ledger" },
 ];
 
 /** Playground links — used for active-state detection in nav. */
