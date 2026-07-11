@@ -9,6 +9,33 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 22 · Claim Ledger Phase B — resolution + human review gate, live
+
+**when** — 2026-07-10 ~19:50–20:15 local (2026-07-11 ~01:50–02:15 UTC)
+**what** — Five commits `fd02f0a..0820e87` through dev → main, all services
+green. Migration 003 applied (ledger_resolutions with the review gate AS A
+DB CONSTRAINT — false/partial cannot publish without reviewed_by; evidence
+required for any published verdict except unresolved; ledger_disputes for
+right-of-reply). Resolution agent (lib/ledger/resolve.ts + sources/): model
+chooses among server-fetched records only (Commons divisions incl.
+per-member votes; hand-verified ONS series registry), evidence assembled
+server-side, unknown citations void the proposal, <0.6 confidence dropped.
+Review queue /ledger/review (operator-gated) — the ONLY publication path.
+Verdict chips + evidence chains on /ledger. Wednesday 15:00 UTC resolve
+cron. docs/LEDGER_VERDICT_TEMPLATE.md ready for the media solicitor.
+Fixed in the process (0820e87): postgres-js returns DATE columns as Date
+objects — String().slice(0,10) gave "Thu Jul 08" and crashed the resolver;
+isoDateOnly() normalizer + regression test. First live pass: 6 resolvable
+claims scanned, 1 verdict proposed (Cleverly voting-record claim vs
+division 2401), 0 published — awaiting human review, as designed.
+**why** — Phase B per spec: verdicts only via document chains + human
+sign-off. Solicitor template review should happen before the first
+false/partial verdict is approved.
+**where** — indexer Postgres (additive DDL), web lib/app, crons.yml.
+**rollback** — revert the five commits; migration is additive
+(DROP TABLE pooter.ledger_resolutions, ledger_disputes). Unpublishing a
+verdict = UPDATE status back to 'proposed'/'rejected'.
+
 ## ▲ node 21 · ledger durability: DB + Wednesday cron + nav; worker deploy fixed
 
 **when** — 2026-07-10 ~18:40–18:58 local (2026-07-11 ~00:40–00:58 UTC)
