@@ -115,3 +115,73 @@ const getCachedWeekSnapshot = unstable_cache(
 export async function getLedgerWeekSnapshot(): Promise<LedgerWeekSnapshot | null> {
   return getCachedWeekSnapshot();
 }
+
+// ── Phase B: resolution ─────────────────────────────────────────────────────
+
+/**
+ * Published verdicts for the given claims. Read fresh (not inside the
+ * snapshot cache) so review-queue approvals surface at page revalidation.
+ * Returns an empty map without a DB — verdicts only exist with persistence.
+ */
+export async function getPublishedVerdicts(
+  claimIds: string[],
+): Promise<Map<string, import("./types").LedgerResolution>> {
+  if (!process.env.DATABASE_URL || claimIds.length === 0) return new Map();
+  try {
+    const { publishedResolutionsForClaims } = await import(
+      "../db/ledger-resolutions"
+    );
+    return await publishedResolutionsForClaims(claimIds);
+  } catch (error) {
+    console.warn("[ledger] verdict read failed:", error);
+    return new Map();
+  }
+}
+
+/**
+ * Resolution pass: propose verdicts for unresolved voting-record and
+ * statistics claims. Proposals land in the review queue; nothing publishes.
+ * Re-runnable — claims with a live proposal are skipped.
+ */
+export async function proposeResolutionsForUnresolved(
+  maxProposals = 12,
+): Promise<
+  | { ok: true; scanned: number; proposed: number; skipped: number }
+  | { ok: false; reason: string }
+> {
+  if (!process.env.DATABASE_URL) {
+    return { ok: false, reason: "resolution requires DATABASE_URL" };
+  }
+  if (!hasAIProviderForTask("claimLedgerResolution")) {
+    return { ok: false, reason: "no AI provider configured for resolution" };
+  }
+
+  const { listResolvableUnresolvedClaims } = await import("../db/ledger-claims");
+  const { claimIdsWithLiveResolution, recordProposal } = await import(
+    "../db/ledger-resolutions"
+  );
+  const { proposeResolution } = await import("./resolve");
+
+  const claims = await listResolvableUnresolvedClaims(100);
+  const alreadyLive = await claimIdsWithLiveResolution(claims.map((c) => c.id));
+
+  let proposed = 0;
+  let skipped = 0;
+  for (const claim of claims) {
+    if (proposed >= maxProposals) break;
+    if (alreadyLive.has(claim.id)) {
+      skipped += 1;
+      continue;
+    }
+    const proposal = await proposeResolution(claim);
+    if (!proposal) {
+      skipped += 1;
+      continue;
+    }
+    const queued = await recordProposal(proposal);
+    if (queued) proposed += 1;
+    else skipped += 1;
+  }
+
+  return { ok: true, scanned: claims.length, proposed, skipped };
+}
