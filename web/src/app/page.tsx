@@ -5,6 +5,7 @@ import { MastheadSkeleton } from "@/components/layout/MastheadSkeleton";
 import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
 import { AsyncMasthead } from "@/components/layout/AsyncMasthead";
 import { AsyncFeed } from "@/components/feed/AsyncFeed";
+import { LedgerStrip } from "@/components/ledger/LedgerStrip";
 import { getDailyEditionHash } from "@/lib/daily-edition";
 import { getArchivedEditorial, getRecentPooterOriginals } from "@/lib/editorial-archive";
 import { SITE_URL, withBrand } from "@/lib/brand";
@@ -95,6 +96,9 @@ export default function FeedPage() {
       <PooterTheme />
       <Suspense fallback={<MastheadSkeleton />}>
         <AsyncMasthead />
+      </Suspense>
+      <Suspense fallback={null}>
+        <LedgerStrip />
       </Suspense>
       <div className="mt-4">
         <Suspense fallback={<FeedSkeleton />}>
