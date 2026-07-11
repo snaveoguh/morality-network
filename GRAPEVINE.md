@@ -9,6 +9,29 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 28 · money map v1 — member interests + Who Funds the Parties
+
+**when** — 2026-07-11 ~12:15–17:20 local (~18:15–23:20 UTC)
+**what** — Two more parallel agents (this time Sonnet, orchestrated from the
+main Fable session) on the funding scaffold from node 27. `90a3c7f` member
+interests: every /ledger/member/[id] page gains a "Register of Members'
+Financial Interests" section, keyed by the SAME canonical Parliament id the
+page already uses — zero cross-registry name matching. Smoke-tested live
+against Starmer (4514): gift entries with a stated donor (Arsenal tickets)
+become edges, employment payments with no stated counterparty correctly
+stay excluded. `cac3387` /ledger/funding ("Who Funds the Parties"):
+trailing-12-month per-party donation totals + recent donations straight
+from the EC register, every row linking its ECRef document page (1993
+donations in-window live-verified: e.g. JCB->Conservatives £5,000,
+Scottish Parliament->Labour £56,216). Deliberately NO party-to-MP linkage
+— that needs inference the spec bans without a verified join. Linked from
+/ledger. Integration verified on prod against a member WITH claims
+(Cleverly, 4366 — first pick, Starmer 4514, has zero ledger claims so
+notFound() correctly fired; not a bug, wrong test subject).
+**where** — web/src/lib/funding/{member-profile,party-donations}.ts,
+member page, new /ledger/funding page, /ledger subnav.
+**rollback** — revert both commits; no schema/env changes.
+
 ## ▲ node 27 · parallel agent batch — manual verdicts, money-map scaffold, LibDem, solicitor PDF
 
 **when** — 2026-07-11 ~11:15–12:00 local (~17:15–18:00 UTC)
