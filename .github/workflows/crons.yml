@@ -20,6 +20,11 @@ on:
     # Claim Ledger resolution pass — Wednesdays 3pm UTC (proposes verdicts
     # for the day's new claims into the human review queue; never publishes)
     - cron: '0 15 * * 3'
+    # Claim Ledger Tier 2 backfill — daily 4:30pm UTC, one Budget speech per
+    # run oldest-first; self-exhausting no-op once the 2010→now corpus is in
+    - cron: '30 16 * * *'
+    # Claim Ledger Merkle batch — daily 6:10am UTC over yesterday's claims
+    - cron: '10 6 * * *'
   workflow_dispatch: # allow manual trigger
 
 jobs:
@@ -40,6 +45,8 @@ jobs:
             "15 7 * * *")  ROUTE="/api/newsletter/send" ; METHOD="POST" ;;
             "0 14 * * 3")  ROUTE="/api/cron/ledger-pmqs" ;;
             "0 15 * * 3")  ROUTE="/api/cron/ledger-resolve" ;;
+            "30 16 * * *") ROUTE="/api/cron/ledger-backfill" ;;
+            "10 6 * * *")  ROUTE="/api/cron/ledger-anchor" ;;
             *)             ROUTE="/api/cron/daily-edition" ;;
           esac
           echo "route=$ROUTE" >> "$GITHUB_OUTPUT"
