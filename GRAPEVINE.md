@@ -9,6 +9,30 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 25 · manifesto backfill live + reviewer-curated evidence (OBR lane)
+
+**when** — 2026-07-11 ~07:30–07:45 local (~13:30–13:45 UTC)
+**what** — Two commits `91932d2..284d4c1` through dev → main. (1) Manifesto
+backfill: unpdf PDF ingest (page-tracked, claims deep-link to #page=N),
+passages run through the unchanged extraction/validation pipeline, claims
+attribute to the PARTY (member_id null), commitments extract as predictive
+with the parliament as horizon. Registry: Labour/Conservative/Green 2024
+(LibDem URL rotted — re-point later). Daily 17:30 UTC cron, one per run,
+self-exhausting. Browse: /ledger/manifestos + per-manifesto pages. First
+ingest: 81 claims from Labour 2024 ("40,000 more appointments each week",
+GB Energy, etc.), persisted + verified rendering. (2) Reviewer-curated
+evidence on approval: the review API accepts validated extra evidence
+(new 'obr' kind; https + bounded excerpt) APPENDED to the agent's chain —
+the spec's human-curated lane for OBR evaluation reports, judgments,
+inquiries. No hand-entered data tables anywhere. Cost note: AI budgets cap
+direct spend at $0.20/day total; hub routing carries the rest; manifesto
+one-off ≈ $2-5. Real cost levers are dev env (unpaused today, was
+cost-paused in node 17) + radiant-liberation (audit chip filed).
+**where** — web lib/app (sources/manifestos.ts, cron, pages, review API),
+crons.yml, package.json (+unpdf).
+**rollback** — revert both commits; claims rows are data (delete by
+debate_ext_id LIKE 'manifesto-%' if ever needed).
+
 ## ▲ node 24 · LedgerAnchor deployed to Base + pw icons + first verdict public
 
 **when** — 2026-07-11 ~07:05–07:20 local (~13:05–13:20 UTC)
