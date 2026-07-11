@@ -1,0 +1,223 @@
+import Link from "next/link";
+import { getLedgerWeekSnapshot } from "@/lib/ledger/service";
+import type { LedgerClaim, LedgerWeekSnapshot } from "@/lib/ledger/types";
+import { BRAND_NAME, withBrand } from "@/lib/brand";
+
+export const revalidate = 1800; // 30 min ISR
+export const maxDuration = 120; // first render may run live extraction
+
+export const metadata = {
+  title: withBrand("The Claim Ledger"),
+  description:
+    "Checkable claims made at Prime Minister's Questions, quoted verbatim and linked to Hansard. No verdicts — sources only.",
+};
+
+// Ledger style is sworn: quote, source, date, classification. The copy on
+// this page must never editorialise a claim or infer motive (spec Principles).
+
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
+const CLAIM_TYPE_LABEL: Record<LedgerClaim["claimType"], string> = {
+  retrodictable: "Checkable now",
+  predictive: "Checkable later",
+  unfalsifiable: "Not checkable",
+};
+
+const TOPIC_LABEL: Record<LedgerClaim["topic"], string> = {
+  statistics: "Statistics",
+  "voting-record": "Voting record",
+  "policy-outcome": "Policy outcome",
+  spending: "Spending",
+  other: "Other",
+};
+
+function formatSittingDate(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function groupBySpeaker(claims: LedgerClaim[]): Array<[string, LedgerClaim[]]> {
+  const groups = new Map<string, LedgerClaim[]>();
+  for (const claim of claims) {
+    const key = claim.speaker.name;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(claim);
+  }
+  return [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
+}
+
+function ClaimRow({ claim }: { claim: LedgerClaim }) {
+  return (
+    <li className="py-5">
+      <blockquote className="border-l-2 border-[var(--rule)] pl-4 font-body-serif text-base leading-relaxed text-[var(--ink)]">
+        &ldquo;{claim.verbatimQuote}&rdquo;
+      </blockquote>
+
+      <p className="mt-2 pl-4 font-body-serif text-sm text-[var(--ink-light)]">
+        {claim.normalizedClaim}
+      </p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2 pl-4 font-mono text-[9px] uppercase tracking-[0.2em]">
+        <span className="border border-[var(--ink)] px-1.5 py-0.5 font-bold text-[var(--ink)]">
+          {CLAIM_TYPE_LABEL[claim.claimType]}
+        </span>
+        <span className="border border-[var(--rule-light)] px-1.5 py-0.5 text-[var(--ink-light)]">
+          {TOPIC_LABEL[claim.topic]}
+        </span>
+        {claim.resolutionDue && (
+          <span className="text-[var(--ink-faint)]">
+            due {claim.resolutionDue}
+          </span>
+        )}
+        {claim.occurrences > 1 && (
+          <span className="text-[var(--ink-faint)]">
+            repeated &times;{claim.occurrences}
+          </span>
+        )}
+        <span className="text-[var(--rule-light)]">|</span>
+        <a
+          href={claim.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[var(--accent-red)] underline decoration-1 underline-offset-2 transition-colors hover:text-[var(--ink)]"
+        >
+          Source: Hansard
+        </a>
+      </div>
+    </li>
+  );
+}
+
+export default async function LedgerPage() {
+  const snapshot = await withTimeout<LedgerWeekSnapshot | null>(
+    getLedgerWeekSnapshot(),
+    90_000,
+    null,
+  );
+
+  const claims = snapshot?.claims ?? [];
+  const bySpeaker = groupBySpeaker(claims);
+  const checkable = claims.filter((c) => c.claimType !== "unfalsifiable");
+
+  return (
+    <section className="mx-auto max-w-4xl py-8">
+      <header className="mb-8 border-b-2 border-[var(--rule)] pb-6">
+        <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--ink-faint)]">
+          <Link href="/" className="transition-colors hover:text-[var(--ink)]">
+            &larr; Front Page
+          </Link>
+          <span className="text-[var(--rule-light)]">|</span>
+          <span>The Claim Ledger</span>
+        </div>
+        <h1 className="font-headline text-4xl text-[var(--ink)] md:text-6xl">
+          This Week&rsquo;s Checkable Claims
+        </h1>
+        <p className="mt-3 max-w-2xl font-body-serif text-base leading-relaxed text-[var(--ink-light)]">
+          Claims made at Prime Minister&rsquo;s Questions, quoted verbatim and
+          linked to the official record. No verdicts are published here. Each
+          claim is classified by whether records could check it — resolution
+          against primary sources comes next.
+        </p>
+
+        {snapshot && (
+          <div className="mt-4 flex flex-wrap gap-4 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+            <span>
+              <strong className="text-[var(--ink)]">
+                {formatSittingDate(snapshot.debate.date)}
+              </strong>
+            </span>
+            <span className="text-[var(--rule-light)]">|</span>
+            <span>
+              <strong className="text-[var(--ink)]">{claims.length}</strong>{" "}
+              claims
+            </span>
+            <span className="text-[var(--rule-light)]">|</span>
+            <span>
+              <strong className="text-[var(--ink)]">{checkable.length}</strong>{" "}
+              checkable
+            </span>
+            <span className="text-[var(--rule-light)]">|</span>
+            <span>
+              <strong className="text-[var(--ink)]">
+                {snapshot.contributionsScanned}
+              </strong>{" "}
+              contributions scanned
+            </span>
+            <span className="text-[var(--rule-light)]">|</span>
+            <a
+              href={snapshot.debate.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--accent-red)] underline decoration-1 underline-offset-2"
+            >
+              Full transcript
+            </a>
+          </div>
+        )}
+      </header>
+
+      {claims.length === 0 && (
+        <div className="border border-[var(--rule-light)] bg-[var(--paper-dark)]/30 p-8 text-center">
+          <p className="font-headline-serif text-xl text-[var(--ink)]">
+            {snapshot
+              ? "Extraction for the latest session has not run yet."
+              : "The latest session is still being prepared."}
+          </p>
+          <p className="mt-2 font-body-serif text-sm italic text-[var(--ink-light)]">
+            Claims publish after each Prime Minister&rsquo;s Questions. Check
+            back shortly.
+          </p>
+        </div>
+      )}
+
+      <div className="space-y-10">
+        {bySpeaker.map(([speaker, speakerClaims]) => {
+          const meta = speakerClaims[0].speaker;
+          return (
+            <section key={speaker}>
+              <div className="mb-1 flex items-baseline justify-between border-b border-[var(--rule-light)] pb-2">
+                <h2 className="font-headline-serif text-xl font-bold text-[var(--ink)]">
+                  {speaker}
+                </h2>
+                <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+                  {[meta.constituency, meta.party].filter(Boolean).join(" · ") ||
+                    "—"}{" "}
+                  · {speakerClaims.length}{" "}
+                  {speakerClaims.length === 1 ? "claim" : "claims"}
+                </span>
+              </div>
+              <ul className="divide-y divide-[var(--rule-light)]">
+                {speakerClaims.map((claim) => (
+                  <ClaimRow key={claim.id} claim={claim} />
+                ))}
+              </ul>
+            </section>
+          );
+        })}
+      </div>
+
+      <footer className="mt-12 border-t-2 border-[var(--rule)] pt-4 pb-8">
+        <p className="text-center font-mono text-[8px] uppercase tracking-[0.3em] text-[var(--ink-faint)]">
+          {BRAND_NAME} &bull; the claim ledger &bull; quotes are verbatim from
+          Hansard &bull; classifications are machine-proposed
+          {claims[0] &&
+            ` (${claims[0].extractedBy.model}, ${claims[0].extractedBy.version})`}
+        </p>
+        <p className="mt-2 text-center font-mono text-[8px] uppercase tracking-[0.3em] text-[var(--ink-faint)]">
+          errors in extraction are visible by construction — every quote links
+          its source
+        </p>
+      </footer>
+    </section>
+  );
+}
