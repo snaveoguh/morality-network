@@ -133,13 +133,14 @@ function LogoMenu() {
         aria-label={`${BRAND_NAME} menu`}
         title={BRAND_NAME}
       >
-        <img
-          src="/hcp-logo.png"
-          alt=""
-          className="h-6 w-6 shrink-0 object-contain"
-        />
-        <span className="blackletter hidden text-[19px] leading-none text-white sm:inline">
-          pooter
+        {/* Masthead monogram — blackletter "pw" on a paper square, the
+            inverse of the black-square-white-letter newspaper app mark.
+            Replaces the retired molecule logo. */}
+        <span
+          aria-hidden
+          className="blackletter flex h-7 w-7 shrink-0 items-center justify-center bg-[#F4F1EA] pb-[3px] text-[17px] leading-none text-black"
+        >
+          pw
         </span>
       </button>
 
