@@ -137,7 +137,9 @@ export async function ingestNextBudget(): Promise<
   const sittings = await findBudgetSittings(2010);
   if (sittings.length === 0) return { ok: false, reason: "no Budget sittings found" };
 
-  const { ingestedDebateExtIds } = await import("../db/ledger-claims");
+  const { ingestedDebateExtIds, markDebateIngested } = await import(
+    "../db/ledger-claims"
+  );
   const already = await ingestedDebateExtIds(sittings.map((s) => s.extId));
   const next = sittings.find((s) => !already.has(s.extId));
   if (!next) return { ok: true, done: true };
@@ -149,6 +151,13 @@ export async function ingestNextBudget(): Promise<
 
   const { claims } = await extractClaimsFromDebate(debate, { context: "budget" });
   const persisted = await tryPersist(claims, debate.extId);
+  // Mark the attempt regardless of yield so the backfill always advances.
+  await markDebateIngested({
+    debateExtId: debate.extId,
+    context: "budget",
+    sittingDate: debate.date,
+    claimsCount: claims.length,
+  }).catch((error) => console.warn("[ledger] markDebateIngested failed:", error));
   return {
     ok: true,
     done: false,

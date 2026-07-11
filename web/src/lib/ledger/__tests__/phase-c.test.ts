@@ -106,3 +106,28 @@ describe("calibration score gate", () => {
     expect(computeCalibration(claims, new Map()).checkabilityRate).toBe(50);
   });
 });
+
+describe("oversized contribution splitting", () => {
+  it("splits a long speech into windows sharing the externalId", async () => {
+    const { splitOversizedContribution, chunkContributions } = await import("../extract");
+    const speech = makeClaim("speech");
+    const contribution = {
+      externalId: "SPEECH-1",
+      speaker: speech.speaker,
+      text: Array.from({ length: 400 }, (_, i) => `Sentence number ${i} about fiscal policy.`).join(" "),
+      orderInSection: 1,
+      sourceUrl: "https://hansard.parliament.uk/x#contribution-SPEECH-1",
+    };
+    const pieces = splitOversizedContribution(contribution, 7000);
+    expect(pieces.length).toBeGreaterThan(1);
+    expect(pieces.every((p) => p.externalId === "SPEECH-1")).toBe(true);
+    expect(pieces.every((p) => p.text.length <= 7000)).toBe(true);
+    // Nothing lost: pieces reassemble to the original text modulo whitespace.
+    expect(pieces.map((p) => p.text).join(" ").replace(/\s+/g, " ")).toBe(
+      contribution.text.replace(/\s+/g, " "),
+    );
+    // And chunking a debate containing it produces bounded chunks.
+    const chunks = chunkContributions([contribution], 7000);
+    expect(chunks.every((c) => c.reduce((n, x) => n + x.text.length, 0) <= 7000)).toBe(true);
+  });
+});

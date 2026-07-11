@@ -93,16 +93,35 @@ export async function recordLedgerClaims(
   }
 }
 
-/** Debate ext ids that already have claims (used to skip ingested sittings). */
+/**
+ * Debate ext ids already attempted (whether or not claims were found).
+ * Backed by ledger_ingested_debates so zero-claim sittings do not retry
+ * forever (migration 005).
+ */
 export async function ingestedDebateExtIds(
   extIds: string[],
 ): Promise<Set<string>> {
   if (extIds.length === 0) return new Set();
   const rows = await sql<Array<{ debate_ext_id: string }>>`
-    SELECT DISTINCT debate_ext_id FROM pooter.ledger_claims
+    SELECT debate_ext_id FROM pooter.ledger_ingested_debates
     WHERE debate_ext_id IN ${sql(extIds)}
   `;
   return new Set(rows.map((r) => r.debate_ext_id));
+}
+
+/** Record an ingest attempt, whatever it yielded. */
+export async function markDebateIngested(params: {
+  debateExtId: string;
+  context: LedgerContext;
+  sittingDate: string;
+  claimsCount: number;
+}): Promise<void> {
+  await sql`
+    INSERT INTO pooter.ledger_ingested_debates
+      (debate_ext_id, context, sitting_date, claims_count)
+    VALUES (${params.debateExtId}, ${params.context}, ${params.sittingDate}, ${params.claimsCount})
+    ON CONFLICT (debate_ext_id) DO NOTHING
+  `;
 }
 
 /** All claims by one member, newest first (entity page). */

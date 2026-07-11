@@ -227,15 +227,45 @@ export function dedupeClaims(claims: LedgerClaim[]): LedgerClaim[] {
   return [...byKey.values()];
 }
 
+/**
+ * Split one oversized contribution (e.g. a 50k-char Budget speech) into
+ * windows at sentence boundaries. Windows share the original externalId, so
+ * claims still cite the real contribution and verbatim validation runs
+ * against the FULL original text.
+ */
+export function splitOversizedContribution(
+  contribution: HansardContribution,
+  maxChars: number,
+): HansardContribution[] {
+  if (contribution.text.length <= maxChars) return [contribution];
+  const sentences = contribution.text.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) ?? [
+    contribution.text,
+  ];
+  const pieces: HansardContribution[] = [];
+  let buffer = "";
+  for (const sentence of sentences) {
+    if (buffer.length > 0 && buffer.length + sentence.length > maxChars) {
+      pieces.push({ ...contribution, text: buffer.trim() });
+      buffer = "";
+    }
+    buffer += sentence;
+  }
+  if (buffer.trim().length > 0) pieces.push({ ...contribution, text: buffer.trim() });
+  return pieces;
+}
+
 /** Group contributions into prompt chunks bounded by character budget. */
 export function chunkContributions(
   contributions: HansardContribution[],
   maxChars: number = 7000,
 ): HansardContribution[][] {
+  const pieces = contributions.flatMap((c) =>
+    splitOversizedContribution(c, maxChars),
+  );
   const chunks: HansardContribution[][] = [];
   let current: HansardContribution[] = [];
   let size = 0;
-  for (const c of contributions) {
+  for (const c of pieces) {
     if (current.length > 0 && size + c.text.length > maxChars) {
       chunks.push(current);
       current = [];
