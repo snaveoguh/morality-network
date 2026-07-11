@@ -179,9 +179,13 @@ function onsEvidence(series: OnsSeriesData): LedgerEvidence {
     .slice(-6)
     .map((o) => `${o.period}: ${o.value}${series.unit}`)
     .join("; ");
+  // Annual history from 2009 lets overdue commitments ("by 2015…") resolve.
+  const annual = series.annual
+    .map((o) => `${o.period}: ${o.value}`)
+    .join("; ");
   return {
     url: series.url,
-    excerpt: `ONS ${series.title} (series ${series.seriesId.toUpperCase()}) — ${recent}.`,
+    excerpt: `ONS ${series.title} (series ${series.seriesId.toUpperCase()}) — recent: ${recent}.${annual ? ` Annual (${series.unit}): ${annual}.` : ""}`,
     kind: "ons",
   };
 }
@@ -249,13 +253,25 @@ async function statisticsCandidates(): Promise<{
 
 export type ResolvableTopic = "voting-record" | "statistics";
 
+/** A predictive claim becomes resolvable once its horizon has passed. */
+export function isPastHorizon(
+  claim: Pick<LedgerClaim, "claimType" | "resolutionDue" | "utteredAt">,
+  today: string = new Date().toISOString().slice(0, 10),
+): boolean {
+  if (claim.claimType !== "predictive") return false;
+  if (claim.resolutionDue) return claim.resolutionDue <= today;
+  // No stated horizon: a parliament (5 years) is the outer bound.
+  const uttered = new Date(`${claim.utteredAt}T00:00:00Z`).getTime();
+  return Number.isFinite(uttered) && Date.now() - uttered > 5 * 365.25 * 86_400_000;
+}
+
 export function isResolvableClaim(claim: LedgerClaim): claim is LedgerClaim & {
   topic: ResolvableTopic;
 } {
-  return (
-    claim.claimType === "retrodictable" &&
-    (claim.topic === "voting-record" || claim.topic === "statistics")
-  );
+  if (claim.topic !== "voting-record" && claim.topic !== "statistics") {
+    return false;
+  }
+  return claim.claimType === "retrodictable" || isPastHorizon(claim);
 }
 
 /**
@@ -276,12 +292,18 @@ export async function proposeResolution(
       : await statisticsCandidates();
   if (!candidates) return null;
 
+  const overdue = isPastHorizon(claim);
   const user = [
     `CLAIM under review:`,
     `- Speaker: ${claim.speaker.name}${claim.speaker.party ? ` (${claim.speaker.party})` : ""}`,
-    `- Said on: ${claim.utteredAt} at Prime Minister's Questions`,
+    `- Said on: ${claim.utteredAt} (${claim.context})`,
     `- Verbatim: "${claim.verbatimQuote}"`,
     `- Normalized: ${claim.normalizedClaim}`,
+    ...(overdue
+      ? [
+          `- This was a PREDICTION whose horizon has passed${claim.resolutionDue ? ` (due ${claim.resolutionDue})` : ""}: judge whether the records show it came true by that horizon.`,
+        ]
+      : []),
     ``,
     candidates.prompt,
   ].join("\n");

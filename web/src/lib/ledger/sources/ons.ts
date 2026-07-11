@@ -24,7 +24,10 @@ export interface OnsObservation {
 export interface OnsSeriesData extends OnsSeriesDef {
   url: string;
   latest: OnsObservation | null;
-  recent: OnsObservation[]; // last 14 monthly observations
+  /** Last ~14 observations at the series' native frequency (months/quarters). */
+  recent: OnsObservation[];
+  /** Full annual history from 2009 — resolves claims about past horizons. */
+  annual: OnsObservation[];
 }
 
 export const ONS_SERIES: OnsSeriesDef[] = [
@@ -58,6 +61,14 @@ export const ONS_SERIES: OnsSeriesDef[] = [
     dataset: "lms",
     path: "employmentandlabourmarket/peopleinwork/employmentandemployeetypes",
     title: "Employment rate (16-64, seasonally adjusted)",
+    unit: "%",
+  },
+  {
+    key: "gdp-quarterly-growth",
+    seriesId: "ihyq",
+    dataset: "qna",
+    path: "economy/grossdomesticproductgdp",
+    title: "GDP quarter-on-quarter growth (CVM SA)",
     unit: "%",
   },
   // Fiscal series — the Budget-vs-outturn backbone (Tier 2 backfill).
@@ -94,16 +105,24 @@ export async function fetchOnsSeries(
     });
     if (!res.ok) return null;
     const data = await res.json();
-    const months: any[] = Array.isArray(data?.months) ? data.months : [];
-    const recent: OnsObservation[] = months.slice(-14).map((m) => ({
-      period: String(m.date || ""),
-      value: String(m.value ?? ""),
-    }));
+    const toObs = (arr: unknown): OnsObservation[] =>
+      (Array.isArray(arr) ? arr : []).map((m: any) => ({
+        period: String(m.date || ""),
+        value: String(m.value ?? ""),
+      }));
+
+    // Native frequency: months where published, else quarters (e.g. GDP).
+    const native = toObs(data?.months).length > 0 ? toObs(data?.months) : toObs(data?.quarters);
+    const recent = native.slice(-14);
+    const annual = toObs(data?.years).filter(
+      (o) => Number.parseInt(o.period, 10) >= 2009,
+    );
     return {
       ...def,
       url: onsSeriesUrl(def),
       latest: recent.length > 0 ? recent[recent.length - 1] : null,
       recent,
+      annual,
     };
   } catch (error) {
     console.error(`[ledger/ons] fetch failed for ${def.key}:`, error);

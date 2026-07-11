@@ -161,3 +161,56 @@ describe("isoDateOnly (postgres DATE handling)", () => {
     expect(isoDateOnly("2026-07-08")).toBe("2026-07-08");
   });
 });
+
+describe("isPastHorizon (overdue predictions become resolvable)", () => {
+  it("uses the stated due date when present", async () => {
+    const { isPastHorizon } = await import("../resolve");
+    const base = { claimType: "predictive" as const, utteredAt: "2024-03-06" };
+    expect(isPastHorizon({ ...base, resolutionDue: "2025-01-01" }, "2026-07-11")).toBe(true);
+    expect(isPastHorizon({ ...base, resolutionDue: "2029-01-01" }, "2026-07-11")).toBe(false);
+  });
+
+  it("falls back to a parliament (5y) when no horizon was stated", async () => {
+    const { isPastHorizon } = await import("../resolve");
+    expect(
+      isPastHorizon({ claimType: "predictive", resolutionDue: null, utteredAt: "2010-03-24" }),
+    ).toBe(true);
+    expect(
+      isPastHorizon({ claimType: "predictive", resolutionDue: null, utteredAt: "2025-11-26" }),
+    ).toBe(false);
+  });
+
+  it("never applies to retrodictable or unfalsifiable claims", async () => {
+    const { isPastHorizon } = await import("../resolve");
+    expect(
+      isPastHorizon({ claimType: "retrodictable", resolutionDue: "2011-01-01", utteredAt: "2010-03-24" }),
+    ).toBe(false);
+  });
+});
+
+describe("isResolvableClaim with overdue predictions", () => {
+  it("accepts an overdue predictive statistics claim", async () => {
+    const { isResolvableClaim } = await import("../resolve");
+    const claim = makeClaim({
+      topic: "statistics",
+      claimType: "predictive",
+      resolutionDue: "2015-04-01",
+      utteredAt: "2010-03-24",
+    });
+    expect(isResolvableClaim(claim)).toBe(true);
+  });
+
+  it("still rejects future predictions and non-resolvable topics", async () => {
+    const { isResolvableClaim } = await import("../resolve");
+    expect(
+      isResolvableClaim(
+        makeClaim({ topic: "statistics", claimType: "predictive", resolutionDue: "2029-01-01" }),
+      ),
+    ).toBe(false);
+    expect(
+      isResolvableClaim(
+        makeClaim({ topic: "policy-outcome", claimType: "retrodictable" }),
+      ),
+    ).toBe(false);
+  });
+});

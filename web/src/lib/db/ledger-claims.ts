@@ -181,8 +181,16 @@ export async function listResolvableUnresolvedClaims(
            contribution_ext_id, uttered_at, context, extracted_by, occurrences
     FROM pooter.ledger_claims
     WHERE status = 'unresolved'
-      AND claim_type = 'retrodictable'
       AND topic IN ('voting-record', 'statistics')
+      AND (
+        claim_type = 'retrodictable'
+        -- predictions whose horizon has passed (stated due date, or a
+        -- parliament's length when none was stated) are resolvable now
+        OR (claim_type = 'predictive' AND (
+          (resolution_due IS NOT NULL AND resolution_due <= CURRENT_DATE)
+          OR (resolution_due IS NULL AND uttered_at < CURRENT_DATE - INTERVAL '5 years')
+        ))
+      )
     ORDER BY uttered_at DESC, created_at ASC
     LIMIT ${Math.max(1, Math.min(200, limit))}
   `;
