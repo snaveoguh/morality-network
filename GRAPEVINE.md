@@ -9,6 +9,32 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 19 · Claim Ledger Phase A — PMQs vertical slice
+
+**when** — 2026-07-10 ~18:20 UTC
+**what** — Six commits on `feat/claim-ledger` (off `dev`, NOT yet merged):
+`2077a8d` — docs/CLAIM_LEDGER_SPEC.md v0.1 committed as source of truth.
+`cd3faa5` — lib/ledger Hansard client: finds "Engagements" sittings, segments
+debate text into attributed contributions with hansard.parliament.uk deep
+links. `982c43e` — extraction agent + `claimLedgerExtraction` AI task
+(premium provider order): verbatim-substring guard (fabricated quotes are
+dropped, never repaired) + motive-vocabulary guard (never "lie"). `b479b78` —
+golden set hand-labeled from the real 8 Jul 2026 PMQs + 27 unit tests + live
+benchmark (RUN_LEDGER_BENCHMARK=1); first run via local Agent Hub / Groq
+llama-3.3-70b: 100% recall, 78% precision, invariants clean. `26563ac` —
+pooter.ledger_claims migration (002), idempotent /api/cron/ledger-pmqs,
+/api/ledger/claims read API; works with or without DATABASE_URL. `70c04cc` —
+/ledger page: "This Week's Checkable Claims", sworn style, zero verdicts.
+**why** — Phase A per spec: unresolved claims only = immediate content, zero
+libel surface. UK first, PMQs slice, Tier 2 backfill is the launch strategy.
+**where** — web/src/lib/ledger/*, web/src/lib/db/ledger-claims.ts,
+web/migrations/002, web/src/app/ledger + api routes, ai-models.ts (new task),
+vitest.config.ts (new, with server-only stub). lib/claim-extract.ts (newsroom
+headline normalization) deliberately untouched.
+**rollback** — branch not merged; delete `feat/claim-ledger`. Migration 002 is
+additive (one table). Known quirk: hub-routed extractions stamp provider
+"ollama" (pre-existing ai-provider labeling; background task filed).
+
 ## ▲ node 18 · insurgent rebrand + live UK governance + ZK voting plumbing
 
 **when** — 2026-07-10 ~09:15 UTC
