@@ -9,6 +9,29 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 27 · parallel agent batch — manual verdicts, money-map scaffold, LibDem, solicitor PDF
+
+**when** — 2026-07-11 ~11:15–12:00 local (~17:15–18:00 UTC)
+**what** — Four agents run concurrently with strict file-ownership
+partitions, integrated + shipped as `da6540c..96b0386` (one dev→main pass;
+146 tests, only the known pre-existing agent-bus failure). (1) `96b0386`
+human-proposed resolutions: operators propose verdicts on ANY claim from
+/ledger/review with a validated document chain; same queue, same DB gate —
+unlocks policy-outcome/spending topics the agent can't resolve; the
+realistic path to the first n≥20 score. (2) `3e453d3` funding money-map
+scaffold: EC donations search API + Register of Members' Financial
+Interests API both live-verified unauthenticated; typed fetchers in
+web/src/lib/funding/; both registries supply Companies House numbers as
+join keys → no-inferred-edges holds structurally. Probe log + v1 model in
+docs/FUNDING_MAP_NOTES.md. Companies House needs a free key (enrichment).
+(3) `da6540c` LibDem 2024 manifesto found on party domain (117pp) —
+registry complete at four. (4) Solicitor handoff delivered as 6-page PDF
+(~/Downloads/pooter-ledger-solicitor-review.pdf): framework, safeguards,
+s.2/s.3/s.4 mapping, the three real specimens (Darling negatives marked
+HELD), five questions incl. the deceased-subject precedent question.
+**where** — web lib/app + docs; no env or DB changes.
+**rollback** — revert the three commits; the PDF is an artifact.
+
 ## ▲ node 26 · verdict supply unblocked + front-page strip; anchor key armed
 
 **when** — 2026-07-11 ~08:00–10:20 local (~14:00–16:20 UTC)
