@@ -1,0 +1,55 @@
+{
+  "transactions": [
+    {
+      "hash": "0xb6c5d00afb26ccd8c5447e9e4106494faa6e8c9dbe3d59a5bfa5a5b639118d6c",
+      "transactionType": "CALL",
+      "contractName": null,
+      "contractAddress": "0xd634aada5b43fb1cffbb67a6b635b2a8eb492933",
+      "function": null,
+      "arguments": null,
+      "transaction": {
+        "from": "0x38501deb0984e651fe5275359904c76e6f7f764d",
+        "to": "0xd634aada5b43fb1cffbb67a6b635b2a8eb492933",
+        "gas": "0x714d",
+        "value": "0x71afd498d0000",
+        "input": "0x",
+        "nonce": "0x2f",
+        "chainId": "0x2105"
+      },
+      "additionalContracts": [],
+      "isFixedGasLimit": false
+    }
+  ],
+  "receipts": [
+    {
+      "status": "0x1",
+      "cumulativeGasUsed": "0x9ead9a",
+      "logs": [],
+      "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "type": "0x2",
+      "transactionHash": "0xb6c5d00afb26ccd8c5447e9e4106494faa6e8c9dbe3d59a5bfa5a5b639118d6c",
+      "transactionIndex": "0x33",
+      "blockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": "0x2e3f266",
+      "gasUsed": "0x5208",
+      "effectiveGasPrice": "0x58b114",
+      "blobGasUsed": "0x39d0",
+      "from": "0x38501deb0984e651fe5275359904c76e6f7f764d",
+      "to": "0xd634aada5b43fb1cffbb67a6b635b2a8eb492933",
+      "contractAddress": null,
+      "daFootprintGasScalar": "0x94",
+      "l1BaseFeeScalar": "0x8dd",
+      "l1BlobBaseFee": "0x4ed420",
+      "l1BlobBaseFeeScalar": "0x101c12",
+      "l1Fee": "0x8632ca77",
+      "l1GasPrice": "0x6d28533",
+      "l1GasUsed": "0x640"
+    }
+  ],
+  "libraries": [],
+  "pending": [],
+  "returns": {},
+  "timestamp": 1783775661631,
+  "chain": 8453,
+  "commit": "ce02f3b"
+}

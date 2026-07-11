@@ -45,17 +45,20 @@ export async function GET(request: Request) {
     ON CONFLICT (day) DO NOTHING
   `;
 
-  const anchorConfigured = Boolean(
-    process.env.LEDGER_ANCHOR_ADDRESS && process.env.LEDGER_ANCHOR_PRIVATE_KEY,
+  // Onchain leg: anchor this root and any older unanchored ones to Base.
+  const { anchorPendingRoots, isAnchorConfigured } = await import(
+    "@/lib/ledger/anchor-onchain"
   );
-  return NextResponse.json({
-    ok: true,
-    day,
-    claims: count,
-    root,
-    anchored: false,
-    note: anchorConfigured
-      ? "onchain anchoring not yet implemented — root stored"
-      : "anchor contract not configured — root stored offchain",
-  });
+  if (!isAnchorConfigured()) {
+    return NextResponse.json({
+      ok: true,
+      day,
+      claims: count,
+      root,
+      anchored: [],
+      note: "anchor env not configured — root stored offchain, anchorable retroactively",
+    });
+  }
+  const { anchored, pending } = await anchorPendingRoots();
+  return NextResponse.json({ ok: true, day, claims: count, root, anchored, pending });
 }
