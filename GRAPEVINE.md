@@ -9,6 +9,29 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 24 · LedgerAnchor deployed to Base + pw icons + first verdict public
+
+**when** — 2026-07-11 ~07:05–07:20 local (~13:05–13:20 UTC)
+**what** — (1) Hugo published the first verdict from /ledger/review
+(Cleverly voting-record claim → Resolved true, reviewer stamped). It now
+displays on /ledger and /ledger/member/4366 with the division-2401 evidence
+chain. (2) LedgerAnchor deployed to Base mainnet:
+`0x1A55c83fb85D5d5Ab9415b016a47A56C0a54B99d` (non-upgradeable — immutability
+IS the feature; operator-only, holds no funds). Fresh operator key
+`0xd634…2933` generated to `~/.pooter-ledger-anchor.key` (chmod 600, never
+displayed) and funded 0.002 ETH from the deployer (~2 years of daily txs);
+deploy + funding via forge scripts reading env, no keys on argv. Anchor cron
+now sends unanchored roots onchain (oldest first, tx_hash written back) —
+ACTIVATES when Hugo pastes the key into Railway as
+LEDGER_ANCHOR_PRIVATE_KEY (LEDGER_ANCHOR_ADDRESS already set). (3) pw mark
+extended to favicon.ico + 192/512 PWA icons (same UnifrakturCook render;
+mascot SVG untouched). (4) Verdict template is with Hugo to send to a media
+solicitor.
+**where** — Base mainnet, contracts/script + broadcast records, web icons,
+anchor cron, prod Railway env, CLAUDE.md key-contracts list.
+**rollback** — contract is immutable; to abandon it just stop anchoring
+(delete the env vars). Icons: previous PNGs in git history.
+
 ## ▲ node 23 · Phase C live + pw masthead — the time machine starts
 
 **when** — 2026-07-10 ~20:30–21:05 local (2026-07-11 ~02:30–03:05 UTC)

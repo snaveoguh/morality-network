@@ -80,3 +80,4 @@ See `memory/railway_projects.md` for full service-level detail.
 - Prediction market proxy (Ethereum): `0x2ea7502c4db5b8cfb329d8a9866eb6705b036608`
 - Prediction market proxy (Base): `0x71b2e273727385c617fe254f4fb14a36a679b12a`
 - MO token (Base): `0x8729c70061739140ee6bE00A3875Cbf6d09A746C`
+- LedgerAnchor (Base): `0x1A55c83fb85D5d5Ab9415b016a47A56C0a54B99d` — Claim Ledger daily Merkle roots; NON-upgradeable by design; operator `0xd634Aada5b43FB1cFfBb67A6b635B2a8eB492933` (key on disk at `~/.pooter-ledger-anchor.key`, goes in `LEDGER_ANCHOR_PRIVATE_KEY` on the prod web service)
