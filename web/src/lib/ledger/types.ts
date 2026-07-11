@@ -84,6 +84,39 @@ export interface LedgerClaim {
   occurrences: number;
 }
 
+// ── Phase B: resolution ─────────────────────────────────────────────────────
+
+/** Ledger verdict vocabulary. Fixed by spec — never extended with motive. */
+export type LedgerVerdict = "true" | "false" | "partial" | "unresolved";
+
+export type LedgerResolutionStatus = "proposed" | "published" | "rejected";
+
+/**
+ * One link in a verdict's document chain. URLs are constructed server-side
+ * from records we fetched ourselves — never taken from model output.
+ */
+export interface LedgerEvidence {
+  url: string;
+  /** What the record shows, stated from the fetched data. */
+  excerpt: string;
+  kind: "division" | "ons" | "hansard" | "other";
+}
+
+export interface LedgerResolution {
+  id: string;
+  claimId: string;
+  verdict: LedgerVerdict;
+  evidence: LedgerEvidence[];
+  /** Agent's stated basis — shown to the human reviewer, not published. */
+  reasoning: string;
+  resolvedBy: string; // 'agent:<provider>/<model>@<version>' | 'human:<id>'
+  reviewedBy: string | null; // 'human:<id>' — REQUIRED to publish false/partial
+  status: LedgerResolutionStatus;
+  reviewNote: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+}
+
 export interface LedgerWeekSnapshot {
   debate: Pick<HansardDebate, "extId" | "title" | "house" | "date" | "sourceUrl">;
   claims: LedgerClaim[];

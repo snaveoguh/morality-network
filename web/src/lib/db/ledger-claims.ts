@@ -84,6 +84,24 @@ export async function recordLedgerClaims(
   }
 }
 
+/** Unresolved claims in resolvable topics, newest sittings first. */
+export async function listResolvableUnresolvedClaims(
+  limit = 50,
+): Promise<LedgerClaim[]> {
+  const rows = await sql<LedgerClaimRow[]>`
+    SELECT id, member_id, speaker_name, party, constituency, verbatim_quote,
+           normalized_claim, claim_type, topic, resolution_due, source_url,
+           contribution_ext_id, uttered_at, extracted_by, occurrences
+    FROM pooter.ledger_claims
+    WHERE status = 'unresolved'
+      AND claim_type = 'retrodictable'
+      AND topic IN ('voting-record', 'statistics')
+    ORDER BY uttered_at DESC, created_at ASC
+    LIMIT ${Math.max(1, Math.min(200, limit))}
+  `;
+  return rows.map(rowToClaim);
+}
+
 export async function listLedgerClaimsForDebate(
   debateExtId: string,
 ): Promise<LedgerClaim[]> {
