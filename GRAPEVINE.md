@@ -9,6 +9,30 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 20 · Claim Ledger + node-18 work promoted to prod
+
+**when** — 2026-07-10 ~18:37 UTC
+**what** — `feat/claim-ledger` fast-forwarded into `dev` (a4f003f→1601782),
+validated on dev.pooter.world, then `main` fast-forwarded from `dev`
+(36b138e→1601782). Prod auto-deployed via GitHub integration; all four
+Railway services green. NOTE: main had never been fast-forwarded for node 18,
+so this promotion also carried the rebrand + UK governance + ZK plumbing
+commits into main — prod runtime already had them (manual deploy), git now
+matches. Verified on pooter.world: /ledger 200 serving 44 claims from the
+8 Jul 2026 PMQs (claude-sonnet-4-6 via Agent Hub), zero motive-vocabulary
+violations, every claim deep-linked to Hansard; homepage + /proposals healthy.
+**why** — Phase A dev gate passed: live extraction on dev produced verbatim,
+sourced, verdict-free claims. No libel surface; ship and let the archive
+compound.
+**where** — GitHub `dev` + `main`; Railway earnest-love + faithful-purpose
+(auto-deploys). No env or DB changes — migration 002 NOT yet applied, so
+prod serves live-extracted (cache-refreshed 6h) claims until the cron +
+DATABASE_URL land. Discovered: faithful-purpose service `radiant-liberation`
+auto-builds from `dev` pushes (untracked in project map; audit chip filed).
+**rollback** — `git revert` the seven ledger commits on a branch → dev → main;
+or point main back to 36b138e is NOT an option (never force push). Page-level
+kill: delete web/src/app/ledger + api routes in a revert commit.
+
 ## ▲ node 19 · Claim Ledger Phase A — PMQs vertical slice
 
 **when** — 2026-07-10 ~18:20 UTC
