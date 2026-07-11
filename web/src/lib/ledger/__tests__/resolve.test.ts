@@ -152,3 +152,12 @@ describe("proposeResolution", () => {
     expect(result).toBeNull();
   });
 });
+
+describe("isoDateOnly (postgres DATE handling)", () => {
+  it("normalizes JS Date objects and ISO strings to YYYY-MM-DD", async () => {
+    const { isoDateOnly } = await import("../../db/ledger-claims");
+    expect(isoDateOnly(new Date("2026-07-08T00:00:00Z"))).toBe("2026-07-08");
+    expect(isoDateOnly("2026-07-08T00:00:00")).toBe("2026-07-08");
+    expect(isoDateOnly("2026-07-08")).toBe("2026-07-08");
+  });
+});

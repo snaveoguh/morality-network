@@ -4,6 +4,7 @@
 // 'partial' verdict without a reviewer is impossible at either layer.
 
 import { sql } from "../db";
+import { isoDateOnly } from "./ledger-claims";
 import type {
   LedgerEvidence,
   LedgerResolution,
@@ -114,7 +115,7 @@ export async function listReviewQueue(limit = 50): Promise<ReviewQueueItem[]> {
       verbatimQuote: row.verbatim_quote,
       normalizedClaim: row.normalized_claim,
       sourceUrl: row.source_url,
-      utteredAt: String(row.uttered_at).slice(0, 10),
+      utteredAt: isoDateOnly(row.uttered_at),
       topic: row.topic,
     },
   }));

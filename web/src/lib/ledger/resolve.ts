@@ -190,6 +190,10 @@ async function votingRecordCandidates(
   claim: LedgerClaim,
 ): Promise<{ prompt: string; evidence: Map<string, LedgerEvidence> } | null> {
   const uttered = new Date(`${claim.utteredAt}T00:00:00Z`);
+  if (Number.isNaN(uttered.getTime())) {
+    console.error(`[ledger/resolve] invalid utteredAt "${claim.utteredAt}" on ${claim.id}`);
+    return null;
+  }
   const windowStart = new Date(uttered.getTime() - 60 * 86_400_000)
     .toISOString()
     .slice(0, 10);

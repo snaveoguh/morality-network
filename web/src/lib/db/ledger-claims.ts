@@ -23,6 +23,16 @@ interface LedgerClaimRow {
   occurrences: number;
 }
 
+/**
+ * postgres-js returns DATE columns as JS Date objects (String() of which is
+ * NOT ISO — "Thu Jul 08 2026 …"). Normalize either representation to
+ * YYYY-MM-DD.
+ */
+export function isoDateOnly(value: unknown): string {
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return String(value).slice(0, 10);
+}
+
 function rowToClaim(row: LedgerClaimRow): LedgerClaim {
   return {
     id: row.id,
@@ -36,12 +46,10 @@ function rowToClaim(row: LedgerClaimRow): LedgerClaim {
     normalizedClaim: row.normalized_claim,
     claimType: row.claim_type,
     topic: row.topic,
-    resolutionDue: row.resolution_due
-      ? String(row.resolution_due).slice(0, 10)
-      : null,
+    resolutionDue: row.resolution_due ? isoDateOnly(row.resolution_due) : null,
     sourceUrl: row.source_url,
     contributionExternalId: row.contribution_ext_id,
-    utteredAt: String(row.uttered_at).slice(0, 10),
+    utteredAt: isoDateOnly(row.uttered_at),
     context: "pmqs",
     extractedBy: row.extracted_by,
     occurrences: row.occurrences,
