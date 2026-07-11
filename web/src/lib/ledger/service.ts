@@ -107,7 +107,9 @@ async function loadWeekSnapshotUncached(): Promise<LedgerWeekSnapshot | null> {
 
 const getCachedWeekSnapshot = unstable_cache(
   loadWeekSnapshotUncached,
-  ["ledger-pmqs-week-v1"],
+  // v2: resolved claims stay in the snapshot (they display their verdict —
+  // dropping them from the page on approval was a bug).
+  ["ledger-pmqs-week-v2"],
   { revalidate: 21_600 }, // 6h — PMQs is weekly; cron ingest refreshes sooner
 );
 

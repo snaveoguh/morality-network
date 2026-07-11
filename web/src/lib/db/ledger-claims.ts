@@ -183,7 +183,7 @@ export async function listLedgerClaimsForDebate(
            normalized_claim, claim_type, topic, resolution_due, source_url,
            contribution_ext_id, uttered_at, context, extracted_by, occurrences
     FROM pooter.ledger_claims
-    WHERE debate_ext_id = ${debateExtId} AND status = 'unresolved'
+    WHERE debate_ext_id = ${debateExtId}
     ORDER BY uttered_at DESC, speaker_name ASC
   `;
   return rows.map(rowToClaim);
