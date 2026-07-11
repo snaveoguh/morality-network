@@ -10,6 +10,7 @@ export type AIModelTask =
   | "entityScoring"
   | "sentimentScoring"
   | "factExtraction"
+  | "claimLedgerExtraction"
   | "selfLearn"
   | "moralCompass"
   | "tradingPatternDetection"
@@ -114,6 +115,12 @@ export const AI_MODEL_POLICY: Record<AIModelTask, AIProviderTaskPolicy> = {
   factExtraction: {
     providers: FAST_PROVIDER_ORDER,
     models: FAST_MODELS,
+  },
+  // Claim Ledger: extraction quality > cost (spec §Risks). Premium order —
+  // published claims carry the model stamp, so quality is auditable per model.
+  claimLedgerExtraction: {
+    providers: PREMIUM_PROVIDER_ORDER,
+    models: PREMIUM_MODELS,
   },
   selfLearn: {
     providers: FAST_PROVIDER_ORDER,
