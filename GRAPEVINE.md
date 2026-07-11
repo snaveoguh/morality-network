@@ -9,6 +9,29 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 26 · verdict supply unblocked + front-page strip; anchor key armed
+
+**when** — 2026-07-11 ~08:00–10:20 local (~14:00–16:20 UTC)
+**what** — (1) LEDGER_ANCHOR_PRIVATE_KEY set on prod via CLI with output
+suppressed (key never in transcript; verified by deriving the address from
+the Railway env — matches operator 0xd634…2933). First onchain anchor fires
+at the next 06:10 UTC cron. (2) `c980a4f` — overdue predictions resolve:
+predictive claims past their stated due date (or >5y old with none) are now
+resolvable; previously the 2010 Budget promises could NEVER resolve. ONS
+fetcher reads quarterly/annual observations (GDP is quarterly); evidence
+carries annual history from 2009; registry + GDP QoQ (IHYQ/QNA). KAC3
+earnings series failed verification — left out. (3) `ecc2a1d` — front-page
+Claim Ledger strip (live counts, one query). (4) Resolve pass over the
+widened backlog: 41 scanned (was 6), 2 proposed — BOTH 'false' against
+Darling's 2010 Budget forecasts (inflation, debt path) vs ONS annual
+outturns. These are the FIRST NEGATIVE verdicts: HELD in queue pending the
+media-solicitor response per spec §Legal guardrails. Note: Darling d. 2023;
+defamation of the deceased isn't actionable in England — lowest-risk
+precedent available. (5) Holders email drafted to
+~/Downloads/pooter-holders-email-claim-ledger.md.
+**where** — Railway env, web lib (resolve/ons/db), LedgerStrip + page.tsx.
+**rollback** — revert the two commits; unset the env vars to stop anchoring.
+
 ## ▲ node 25 · manifesto backfill live + reviewer-curated evidence (OBR lane)
 
 **when** — 2026-07-11 ~07:30–07:45 local (~13:30–13:45 UTC)
