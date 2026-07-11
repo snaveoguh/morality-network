@@ -224,6 +224,21 @@ export default async function LedgerPage() {
           against primary sources comes next.
         </p>
 
+        <div className="mt-3 flex gap-4 font-mono text-[10px] uppercase tracking-[0.2em]">
+          <Link
+            href="/ledger/manifestos"
+            className="text-[var(--accent-red)] underline decoration-1 underline-offset-2"
+          >
+            Manifesto commitments &rarr;
+          </Link>
+          <Link
+            href="/ledger/funding"
+            className="text-[var(--accent-red)] underline decoration-1 underline-offset-2"
+          >
+            Who funds the parties &rarr;
+          </Link>
+        </div>
+
         {snapshot && (
           <div className="mt-4 flex flex-wrap gap-4 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
             <span>
