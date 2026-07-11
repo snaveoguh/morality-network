@@ -9,6 +9,34 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 21 · ledger durability: DB + Wednesday cron + nav; worker deploy fixed
+
+**when** — 2026-07-10 ~18:40–18:58 local (2026-07-11 ~00:40–00:58 UTC)
+**what** — (1) migration 002 applied to the indexer Postgres via
+`railway run node web/scripts/migrate.js` (link verified: faithful-purpose /
+production / morality-network; 001 skipped as already recorded). (2) One
+manual authorized hit of /api/cron/ledger-pmqs → 43 claims persisted to
+pooter.ledger_claims (verified by direct count; 8 distinct member_ids).
+(3) `41b3148` — Wednesday 14:00 UTC slot added to .github/workflows/crons.yml
+(existing CRON_SECRET GitHub secret; idempotent endpoint) + "Ledger" nav link
+after Governance. (4) `c57e706` — fix(worker): two more extensionless dynamic
+imports in web/src/lib/trading/signals.ts (TS2835, same class as node 4's
+a9c6297) were failing disciplined-serenity's worker:build on every deploy —
+the worker had been riding its last good image. All four services green on
+c57e706; dev + prod verified.
+**why** — without the DB the page re-extracted live every 6h cache expiry and
+claim counts drifted between runs; the cron + table make the record stable
+and auditable. Worker fix unblocks all future deploys from main.
+**where** — indexer Postgres (pooter schema, additive DDL only), GitHub
+workflows, Header nav, signals.ts. NOTE: prod may serve the pre-migration
+44-claim live snapshot until ~06:35 UTC — Railway's build cache preserves
+.next/cache across deploys, so the old unstable_cache entry survives until
+its 6h revalidate; it then flips to the DB-backed 43.
+**rollback** — migration: `DROP TABLE pooter.ledger_claims` (additive, no
+other tables touch it). Cron: remove the two crons.yml lines. Nav: remove
+one line in Header.tsx. Worker fix: don't revert — the pre-fix state can't
+build.
+
 ## ▲ node 20 · Claim Ledger + node-18 work promoted to prod
 
 **when** — 2026-07-10 ~18:37 UTC
