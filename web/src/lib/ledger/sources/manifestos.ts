@@ -47,6 +47,15 @@ export const MANIFESTOS: ManifestoDef[] = [
     url: "https://greenparty.org.uk/app/uploads/2024/06/Green-Party-2024-General-Election-Manifesto-Long-version-with-cover.pdf",
     publishedAt: "2024-06-12",
   },
+  {
+    key: "libdem-2024",
+    party: "LD",
+    partyName: "Liberal Democrats",
+    year: 2024,
+    title: "For a Fair Deal — Liberal Democrat manifesto 2024",
+    url: "https://www.libdems.org.uk/fileadmin/groups/2_Federal_Party/Documents/PolicyPapers/Manifesto_2024/For_a_Fair_Deal_-_Liberal_Democrat_Manifesto_2024.pdf",
+    publishedAt: "2024-06-10",
+  },
 ];
 
 export function manifestoDebateExtId(key: string): string {
