@@ -9,6 +9,24 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 29 · /ledger nav — card grid instead of buried text links
+
+**when** — 2026-07-11 ~18:35 local
+**what** — `f006abe`: replaced the three small underlined text links under
+the /ledger intro (added in node 28) with a three-card grid — This Week's
+Claims / Manifesto Commitments / Who Funds the Parties — one click each
+from the hub page.
+**why** — user asked "how do I get to that via clicking?" — the text links
+were too easy to miss. Rather than invent a new top-nav dropdown, matched
+the pattern the codebase already settled on: Header.tsx has comments
+("CoopDropdown removed — Co-op is now a full page") documenting that a
+hover dropdown was tried for /coop and dropped in favor of a visible card
+grid on the hub page itself. Same fix here, no new precedent.
+**where** — web/src/app/ledger/page.tsx only. Top nav unchanged (still one
+"Ledger" link). Verified in the browser preview, light + dark mode.
+**rollback** — revert the commit; the three text links still work as a
+fallback pattern if reverted.
+
 ## ▲ node 28 · money map v1 — member interests + Who Funds the Parties
 
 **when** — 2026-07-11 ~12:15–17:20 local (~18:15–23:20 UTC)
