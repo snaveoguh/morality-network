@@ -224,18 +224,42 @@ export default async function LedgerPage() {
           against primary sources comes next.
         </p>
 
-        <div className="mt-3 flex gap-4 font-mono text-[10px] uppercase tracking-[0.2em]">
+        {/* Ledger section grid — same hub pattern as /coop's Playground:
+            a visible card grid beats a nav dropdown for a growing set of
+            sub-pages. */}
+        <div className="mt-5 grid grid-cols-1 gap-0 sm:grid-cols-3">
+          <Link
+            href="/ledger"
+            className="group border border-[var(--ink)] bg-[var(--ink)] p-4"
+          >
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--paper)]">
+              This Week&rsquo;s Claims
+            </span>
+            <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[var(--paper)]/70">
+              PMQs, quoted &amp; sourced
+            </p>
+          </Link>
           <Link
             href="/ledger/manifestos"
-            className="text-[var(--accent-red)] underline decoration-1 underline-offset-2"
+            className="group border border-l-0 border-[var(--rule-light)] p-4 transition-colors hover:bg-[var(--paper-dark)] sm:border-l"
           >
-            Manifesto commitments &rarr;
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink)] group-hover:underline">
+              Manifesto Commitments
+            </span>
+            <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+              What the parties wrote down
+            </p>
           </Link>
           <Link
             href="/ledger/funding"
-            className="text-[var(--accent-red)] underline decoration-1 underline-offset-2"
+            className="group border border-l-0 border-[var(--rule-light)] p-4 transition-colors hover:bg-[var(--paper-dark)] sm:border-l"
           >
-            Who funds the parties &rarr;
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink)] group-hover:underline">
+              Who Funds the Parties
+            </span>
+            <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+              Electoral Commission register
+            </p>
           </Link>
         </div>
 
