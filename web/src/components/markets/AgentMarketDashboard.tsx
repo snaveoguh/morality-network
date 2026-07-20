@@ -1935,11 +1935,7 @@ export function AgentMarketDashboard() {
         <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
           Open Positions ({filteredTotals?.openPositions ?? 0})
         </h2>
-        {!hasFullMarketAccess ? (
-          <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
-            Detailed open-position telemetry unlocks for the operator wallet or verified 100k MO holders. Connect your wallet to verify access.
-          </p>
-        ) : filteredOpen.length === 0 ? (
+        {filteredOpen.length === 0 ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
             No open positions.
           </p>
@@ -2018,11 +2014,7 @@ export function AgentMarketDashboard() {
         <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
           Closed Positions ({filteredTotals?.closedPositions ?? 0})
         </h2>
-        {!hasFullMarketAccess ? (
-          <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
-            Detailed trade history unlocks for the operator wallet or verified 100k MO holders. Connect your wallet to verify access.
-          </p>
-        ) : filteredClosed.length === 0 ? (
+        {filteredClosed.length === 0 ? (
           <p className="mt-2 font-body-serif text-sm text-[var(--ink-faint)]">
             No closed positions yet.
           </p>
