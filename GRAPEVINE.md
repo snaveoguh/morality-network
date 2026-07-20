@@ -9,6 +9,35 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 31 · trader rearmed — long-only probation, fresh book, ichimoku-forward
+
+**when** — 2026-07-20 ~afternoon local
+**what** — env-only change on `pooter-indexer / pooter-agent-worker` (no code
+deploy; stale-clone `technical.ts` already identical to repo — Ichimoku was
+already implemented at 20% of the technical vote). Set:
+`TRADER_DIRECTION_MODE=long-only`,
+`TRADER_POSITION_STORE_PATH=/tmp/pooter-trader-v5.json` (fresh Kelly book —
+old 94-trade history archived untouched at Redis `pooter:v4`),
+`SIGNAL_WEIGHT_TECHNICAL=0.40` (ichimoku-forward tilt, weights self-normalize),
+caps: position $150 / portfolio $300 / 2 open / 1 entry-per-cycle / 5x max
+leverage, gates: confidence 0.75 (was 0.6), agreement 2 (was 1), breaker 3
+losses (was 10). Prod web `morality-network` got the matching
+`TRADER_POSITION_STORE_PATH=v5` so /markets displays the new book.
+Worker redeployed (same image) so env bound.
+**why** — Kelly was correctly refusing to size on the old negative-edge book
+(94 closed, ~41% win, last close 2026-06-09) — 0.7-weighted history kept
+rawKelly < 0 forever. Fresh book → cold-start Kelly (winProb = composite
+confidence, quarter-Kelly, ~$150 notional at 3x on the $154 account).
+Account was flat on HL (verified) so the store move orphaned nothing.
+**where** — Railway env only, both services. Trader wallet
+`0x38501DEB0984E651fE5275359904C76e6F7f764d`, account value $153.95 at arm
+time. Known wart: worker's trader-state persist to indexer 404s
+("Application not found", non-fatal) — same dead INDEXER_BACKEND_URL as
+dev.pooter.world's metrics route.
+**rollback** — kill switch: `railway variables --set 'TRADER_DRY_RUN=true'`
+linked to pooter-agent-worker. Old book: set both
+`TRADER_POSITION_STORE_PATH` back to `/tmp/pooter-trader-v4.json`.
+
 ## ▲ node 30 · trading terminal spectator mode
 
 **when** — 2026-07-20 ~afternoon local
