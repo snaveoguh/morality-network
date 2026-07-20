@@ -470,6 +470,10 @@ function venueLabel(venue?: Position["venue"]): string {
 
 function symbolForPosition(position: Position): string {
   if (position.marketSymbol) return position.marketSymbol;
+  // Legacy/sanitized rows may carry `symbol` instead and lack tokenAddress
+  if (!position.tokenAddress) {
+    return (position as unknown as { symbol?: string }).symbol ?? "—";
+  }
   return KNOWN_TOKENS[position.tokenAddress.toLowerCase()] ?? shortHex(position.tokenAddress);
 }
 
@@ -2162,7 +2166,7 @@ export function AgentMarketDashboard() {
             realizedPnlUsd: combinedTotals?.realizedPnlUsd ?? 0,
             deployedUsd: combinedTotals?.deployedUsd ?? 0,
             positions: allOpen.map((o) => ({
-              symbol: o.position.marketSymbol ?? KNOWN_TOKENS[o.position.tokenAddress.toLowerCase()] ?? shortHex(o.position.tokenAddress),
+              symbol: symbolForPosition(o.position),
               entryPrice: o.position.entryPriceUsd,
               currentPrice: o.currentPriceUsd,
               unrealizedPnl: o.unrealizedPnlUsd,
