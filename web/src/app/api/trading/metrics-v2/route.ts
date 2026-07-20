@@ -137,26 +137,13 @@ function publicConfigSummary(config: unknown) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function sanitizePerformance(report: any) {
-  const sanitizedClosed = (report.closed ?? []).map((row: any) => ({
-    position: {
-      id: row.position?.id,
-      symbol: row.position?.marketSymbol ?? row.position?.symbol,
-      direction: row.position?.direction,
-      entryPrice: row.position?.entryPriceUsd,
-      exitPrice: row.position?.exitPriceUsd,
-      closedAt: row.position?.closedAt,
-      leverage: row.position?.leverage,
-    },
-    realizedPnlUsd: row.realizedPnlUsd ?? 0,
-    pnlUsd: row.realizedPnlUsd ?? 0,
-  }));
-
+  // Spectator view: the terminal is public. Full open/closed position
+  // telemetry (rows carry no account identifiers — tokenAddress here is a
+  // zero-address placeholder), but strip wallet addresses and balances.
   return {
     ...report,
     account: undefined,
     fundingAddress: undefined,
-    open: [],
-    closed: sanitizedClosed,
     readiness: {
       ...report.readiness,
       balances: [],
