@@ -45,6 +45,10 @@ export interface HyperliquidMarketSnapshot {
   maxLeverage: number | null;
   dayNotionalVolumeUsd: number | null;
   openInterest: number | null;
+  /** HIP-3 markets that only support isolated margin (updateLeverage must not use cross) */
+  onlyIsolated?: boolean;
+  /** builder dex this market lives on (undefined = main dex) */
+  dex?: string;
 }
 
 export interface HyperliquidOrderIntent {
@@ -139,7 +143,16 @@ async function fetchSpotUsdcBalance(config: TraderExecutionConfig, address: Addr
 }
 
 function normalizeTicker(value: string): string {
-  let next = value.trim().toUpperCase();
+  const trimmed = value.trim();
+  // HIP-3 builder-dex market ("xyz:TSLA") — the lowercase dex prefix is
+  // case-significant on HL, so normalize the parts separately.
+  const colonIdx = trimmed.indexOf(":");
+  if (colonIdx > 0) {
+    const dex = trimmed.slice(0, colonIdx).trim().toLowerCase();
+    const ticker = normalizeTicker(trimmed.slice(colonIdx + 1));
+    return dex && ticker ? `${dex}:${ticker}` : "";
+  }
+  let next = trimmed.toUpperCase();
   if (next.includes("/")) {
     next = next.split("/", 1)[0];
   }
@@ -150,6 +163,12 @@ function normalizeTicker(value: string): string {
   next = next.replace(/USD$/i, "");
   next = next.replace(/USDT$/i, "");
   return next.trim();
+}
+
+/** Dex prefix of a builder-dex symbol ("xyz:TSLA" → "xyz"), or null for main-dex symbols. */
+export function builderDexOfSymbol(symbol: string): string | null {
+  const colonIdx = symbol.indexOf(":");
+  return colonIdx > 0 ? symbol.slice(0, colonIdx) : null;
 }
 
 function normalizeDecimalString(value: string, maxDecimals: number): string {
@@ -272,24 +291,29 @@ export async function closeHyperliquidWs(): Promise<void> {
   }
 }
 
-function mapMetaAndCtxs(raw: unknown): Map<string, HyperliquidMarketSnapshot> {
+function mapMetaAndCtxs(
+  raw: unknown,
+  opts?: { assetIdOffset?: number; dex?: string }
+): Map<string, HyperliquidMarketSnapshot> {
   const markets = new Map<string, HyperliquidMarketSnapshot>();
   if (!Array.isArray(raw) || raw.length < 2) return markets;
 
-  const meta = raw[0] as { universe?: Array<{ name?: string; szDecimals?: number; maxLeverage?: number }> };
+  const meta = raw[0] as { universe?: Array<{ name?: string; szDecimals?: number; maxLeverage?: number; onlyIsolated?: boolean; isDelisted?: boolean }> };
   const ctxs = raw[1] as Array<{ midPx?: string | null; markPx?: string; dayNtlVlm?: string; openInterest?: string }>;
 
   const universe = Array.isArray(meta.universe) ? meta.universe : [];
   const contexts = Array.isArray(ctxs) ? ctxs : [];
+  const assetIdOffset = opts?.assetIdOffset ?? 0;
 
   for (const [index, asset] of universe.entries()) {
     const symbol = normalizeHyperliquidSymbol(asset?.name);
     if (!symbol) continue;
+    if (asset?.isDelisted === true) continue;
 
     const ctx = contexts[index];
     const snapshot: HyperliquidMarketSnapshot = {
       symbol,
-      marketId: index,
+      marketId: assetIdOffset + index,
       priceUsd: parsePositive(ctx?.midPx) ?? parsePositive(ctx?.markPx),
       szDecimals:
         typeof asset?.szDecimals === "number" && Number.isFinite(asset.szDecimals) && asset.szDecimals >= 0
@@ -298,12 +322,139 @@ function mapMetaAndCtxs(raw: unknown): Map<string, HyperliquidMarketSnapshot> {
       maxLeverage: parsePositive(asset?.maxLeverage),
       dayNotionalVolumeUsd: parsePositive(ctx?.dayNtlVlm),
       openInterest: parsePositive(ctx?.openInterest),
+      onlyIsolated: asset?.onlyIsolated === true ? true : undefined,
+      dex: opts?.dex,
     };
 
     markets.set(symbol, snapshot);
   }
 
   return markets;
+}
+
+/* ── HIP-3 builder-dex support ── */
+
+/** perpDexs() index per dex name; builder-dex asset ids are 100000 + index*10000 + i. */
+let builderDexIndexCache: { updatedAt: number; indices: Map<string, number> } | null = null;
+const BUILDER_DEX_INDEX_TTL_MS = 10 * 60_000;
+
+async function resolveBuilderDexIndices(config: TraderExecutionConfig): Promise<Map<string, number>> {
+  const now = Date.now();
+  if (builderDexIndexCache && now - builderDexIndexCache.updatedAt < BUILDER_DEX_INDEX_TTL_MS) {
+    return builderDexIndexCache.indices;
+  }
+  const response = await fetch(`${config.hyperliquid.apiUrl.replace(/\/+$/, "")}/info`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ type: "perpDexs" }),
+    signal: AbortSignal.timeout(8_000),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`Hyperliquid perpDexs API ${response.status}`);
+  }
+  const payload = (await response.json()) as Array<{ name?: string } | null>;
+  const indices = new Map<string, number>();
+  if (Array.isArray(payload)) {
+    for (const [index, entry] of payload.entries()) {
+      const name = entry?.name?.trim().toLowerCase();
+      if (name) indices.set(name, index);
+    }
+  }
+  builderDexIndexCache = { updatedAt: now, indices };
+  return indices;
+}
+
+/** Raw clearinghouseState fetch — supports the `dex` param for builder dexs. */
+async function fetchClearinghouseStateRaw(
+  config: TraderExecutionConfig,
+  address: Address,
+  dex?: string
+): Promise<{
+  marginSummary?: { accountValue?: string };
+  crossMarginSummary?: { accountValue?: string };
+  withdrawable?: string;
+  assetPositions?: unknown[];
+} | null> {
+  try {
+    const response = await fetch(`${config.hyperliquid.apiUrl.replace(/\/+$/, "")}/info`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ type: "clearinghouseState", user: address, ...(dex ? { dex } : {}) }),
+      signal: AbortSignal.timeout(8_000),
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as {
+      marginSummary?: { accountValue?: string };
+      crossMarginSummary?: { accountValue?: string };
+      withdrawable?: string;
+      assetPositions?: unknown[];
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** USDC token identifier ("USDC:0x…") for sendAsset, resolved from spot meta. */
+let usdcTokenIdCache: string | null = null;
+
+async function resolveUsdcSendToken(config: TraderExecutionConfig): Promise<string> {
+  if (usdcTokenIdCache) return usdcTokenIdCache;
+  const response = await fetch(`${config.hyperliquid.apiUrl.replace(/\/+$/, "")}/info`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ type: "spotMeta" }),
+    signal: AbortSignal.timeout(8_000),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`Hyperliquid spotMeta API ${response.status}`);
+  }
+  const payload = (await response.json()) as { tokens?: Array<{ name?: string; tokenId?: string }> };
+  const usdc = (payload.tokens ?? []).find((t) => (t.name ?? "").trim().toUpperCase() === "USDC");
+  if (!usdc?.tokenId) {
+    throw new Error("Hyperliquid spotMeta missing USDC tokenId");
+  }
+  usdcTokenIdCache = `USDC:${usdc.tokenId}`;
+  return usdcTokenIdCache;
+}
+
+/**
+ * Builder dexs keep their own collateral ledger. Ensure `requiredUsd` of
+ * withdrawable margin exists on `dex`, topping up from the main perp balance
+ * via sendAsset if needed. Throws when the main balance can't cover it.
+ */
+async function ensureBuilderDexMargin(
+  config: TraderExecutionConfig,
+  dex: string,
+  address: Address,
+  requiredUsd: number
+): Promise<void> {
+  const dexState = await fetchClearinghouseStateRaw(config, address, dex);
+  const withdrawable = parseNonNegative(dexState?.withdrawable) ?? 0;
+  if (withdrawable >= requiredUsd) return;
+
+  const shortfall = requiredUsd - withdrawable;
+  const mainState = await fetchClearinghouseStateRaw(config, address);
+  const mainWithdrawable = parseNonNegative(mainState?.withdrawable) ?? 0;
+  const transferAmount = Math.min(mainWithdrawable, shortfall * 1.02 + 0.5);
+  if (!Number.isFinite(transferAmount) || transferAmount < shortfall) {
+    throw new Error(
+      `Insufficient main-dex margin for ${dex} order: need $${shortfall.toFixed(2)} more, main withdrawable $${mainWithdrawable.toFixed(2)}`
+    );
+  }
+
+  const clients = getHyperliquidClients(config);
+  const token = await resolveUsdcSendToken(config);
+  await clients.exchangeClient.sendAsset({
+    destination: address as `0x${string}`,
+    sourceDex: "",
+    destinationDex: dex,
+    token,
+    amount: formatDecimal(transferAmount, 6),
+  });
+  console.log(`[hyperliquid] sendAsset $${transferAmount.toFixed(2)} USDC main → ${dex} dex for margin`);
 }
 
 function computeSizeFromNotional(notionalUsd: number, priceUsd: number, szDecimals: number): string {
@@ -382,6 +533,36 @@ export async function fetchHyperliquidMarkets(
   const response = await clients.infoClient.metaAndAssetCtxs();
   const markets = mapMetaAndCtxs(response as unknown);
 
+  // Merge HIP-3 builder-dex markets (keyed "dex:TICKER", offset asset ids).
+  const builderDexes = config.hyperliquid.builderDexes ?? [];
+  if (builderDexes.length > 0) {
+    try {
+      const dexIndices = await resolveBuilderDexIndices(config);
+      await Promise.all(
+        builderDexes.map(async (dex) => {
+          const dexIndex = dexIndices.get(dex);
+          if (dexIndex === undefined || dexIndex <= 0) {
+            console.warn(`[hyperliquid] unknown builder dex "${dex}" — skipping`);
+            return;
+          }
+          const dexResponse = await clients.infoClient.metaAndAssetCtxs({ dex });
+          const dexMarkets = mapMetaAndCtxs(dexResponse as unknown, {
+            assetIdOffset: 100000 + dexIndex * 10000,
+            dex,
+          });
+          for (const [symbol, snapshot] of dexMarkets) {
+            markets.set(symbol, snapshot);
+          }
+        })
+      );
+    } catch (error) {
+      // Builder-dex meta failure must not take out main-dex trading.
+      console.warn(
+        `[hyperliquid] builder-dex market fetch failed: ${error instanceof Error ? error.message : error}`
+      );
+    }
+  }
+
   marketCache = {
     updatedAt: now,
     markets,
@@ -430,12 +611,19 @@ export async function fetchHyperliquidLivePositions(
   address: Address
 ): Promise<HyperliquidLivePosition[]> {
   const clients = getHyperliquidClients(config);
-  const [state, markets] = await Promise.all([
+  const builderDexes = config.hyperliquid.builderDexes ?? [];
+  const [state, markets, ...dexStates] = await Promise.all([
     clients.infoClient.clearinghouseState({ user: address as `0x${string}` }),
     fetchHyperliquidMarkets(config),
+    ...builderDexes.map((dex) => fetchClearinghouseStateRaw(config, address, dex)),
   ]);
 
-  const rawPositions = Array.isArray(state.assetPositions) ? state.assetPositions : [];
+  const rawPositions = [
+    ...(Array.isArray(state.assetPositions) ? state.assetPositions : []),
+    ...dexStates.flatMap((dexState) =>
+      Array.isArray(dexState?.assetPositions) ? dexState.assetPositions : []
+    ),
+  ];
   const live: HyperliquidLivePosition[] = [];
 
   for (const rawPosition of rawPositions) {
@@ -496,6 +684,21 @@ export async function fetchHyperliquidAccountValueUsd(
     perpAccountValue = null;
   }
 
+  // Include collateral parked on builder dexs — it is still our capital.
+  const builderDexes = config.hyperliquid.builderDexes ?? [];
+  if (builderDexes.length > 0) {
+    const dexValues = await Promise.all(
+      builderDexes.map(async (dex) => {
+        const dexState = await fetchClearinghouseStateRaw(config, address, dex);
+        return parseNonNegative(dexState?.marginSummary?.accountValue) ?? 0;
+      })
+    );
+    const builderTotal = dexValues.reduce((sum, v) => sum + v, 0);
+    if (builderTotal > 0) {
+      perpAccountValue = (perpAccountValue ?? 0) + builderTotal;
+    }
+  }
+
   // If perp account has non-zero value, use it directly.
   if (perpAccountValue !== null && perpAccountValue > 0) {
     return perpAccountValue;
@@ -538,10 +741,10 @@ export async function fetchRecentCloseFill(
 
     // Find the most recent closing fill for this coin (has non-zero closedPnl)
     // Walk backwards (newest first)
-    const hlCoin = symbol.replace(/-PERP$/i, "").toUpperCase();
+    const hlCoin = normalizeHyperliquidSymbol(symbol) ?? symbol.replace(/-PERP$/i, "").toUpperCase();
     for (let i = fills.length - 1; i >= 0; i--) {
       const fill = fills[i] as Record<string, unknown>;
-      const coin = String(fill.coin ?? "").toUpperCase();
+      const coin = normalizeHyperliquidSymbol(String(fill.coin ?? "")) ?? "";
       const closedPnl = parseFloat(String(fill.closedPnl ?? "0"));
       if (coin === hlCoin && closedPnl !== 0) {
         const px = parseFloat(String(fill.px ?? "0"));
@@ -666,7 +869,8 @@ async function ensureLeverage(
 
   await clients.exchangeClient.updateLeverage({
     asset: market.marketId,
-    isCross: true,
+    // Some HIP-3 markets (e.g. xyz:MSTR) only support isolated margin.
+    isCross: market.onlyIsolated !== true,
     leverage: target,
   });
   clients.leverageByAsset.set(market.marketId, target);
@@ -738,6 +942,16 @@ export async function executeHyperliquidOrderLive(args: {
 
   if (!reduceOnly) {
     await ensureLeverage(args.config, args.market, args.leverage);
+  }
+
+  // HIP-3 markets margin against their own dex ledger — move USDC over first.
+  const builderDex = args.market.dex ?? builderDexOfSymbol(args.market.symbol);
+  if (!reduceOnly && builderDex) {
+    const walletAddress = privateKeyToAccount(args.config.privateKey).address as Address;
+    const accountAddress = resolveHyperliquidAccountAddress(args.config, walletAddress);
+    const estimatedNotional = args.notionalUsd ?? 0;
+    const requiredMarginUsd = (estimatedNotional / Math.max(1, args.leverage)) * 1.1 + 1;
+    await ensureBuilderDexMargin(args.config, builderDex, accountAddress, requiredMarginUsd);
   }
 
   const sizeStr = args.sizeRaw
@@ -879,7 +1093,8 @@ export async function fetchCandles(
     body: JSON.stringify({
       type: "candleSnapshot",
       req: {
-        coin: coin.toUpperCase(),
+        // Builder-dex coins ("xyz:TSLA") are case-significant — never blanket-uppercase.
+        coin: normalizeHyperliquidSymbol(coin) ?? coin.toUpperCase(),
         interval,
         startTime: endTime - intervalToMs(interval) * count,
         endTime,

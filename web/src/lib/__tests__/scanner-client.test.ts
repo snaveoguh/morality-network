@@ -55,6 +55,7 @@ const BASE_CONFIG: TraderExecutionConfig = {
     isTestnet: false,
     defaultMarket: "BTC",
     defaultLeverage: 2,
+    builderDexes: [],
     entryNotionalUsd: 50,
     minAccountValueUsd: 100,
     watchMarkets: ["BTC", "ETH", "SOL"],
