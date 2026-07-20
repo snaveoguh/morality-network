@@ -168,7 +168,10 @@ export default function PipePage() {
     if (deliberationRes.status === "fulfilled") setDeliberations(deliberationRes.value.data ?? []);
     if (metricsRes.status === "fulfilled") {
       const payload = metricsRes.value;
-      const m = payload.performance ?? payload;
+      // Guard against error payloads ({error: "..."} mid-deploy / backend down):
+      // only accept an object that actually looks like a performance report.
+      const candidate = payload.performance ?? payload;
+      const m = candidate && typeof candidate === "object" && candidate.totals ? candidate : null;
       if (m) {
         setMetrics(m);
         setPerf({ timestamp: m.timestamp ?? Date.now(), accountValueUsd: m.accountValueUsd ?? null, openPositionCount: m.open?.length ?? m.totals?.openPositions ?? 0 });
@@ -226,17 +229,17 @@ export default function PipePage() {
   }, [refresh]);
 
   // Derived metrics
-  const totalPnl = metrics?.totals.realizedPnlUsd ?? 0;
-  const totalTrades = metrics?.totals.closedPositions ?? 0;
-  const winRate = metrics?.totals.winRate ?? 0;
+  const totalPnl = metrics?.totals?.realizedPnlUsd ?? 0;
+  const totalTrades = metrics?.totals?.closedPositions ?? 0;
+  const winRate = metrics?.totals?.winRate ?? 0;
   const openCount = openPositions.length;
-  const unrealizedPnl = metrics?.totals.unrealizedPnlUsd ?? 0;
+  const unrealizedPnl = metrics?.totals?.unrealizedPnlUsd ?? 0;
   const accountValue = perf?.accountValueUsd ?? metrics?.accountValueUsd ?? 0;
   const isLive = metrics ? !metrics.dryRun : false;
 
   // Extract unique source names for globe visualization
   const activeSources = useMemo(
-    () => [...new Set(feed.map((f) => f.source))],
+    () => [...new Set(feed.map((f) => f.source).filter((s): s is string => typeof s === "string" && s.length > 0))],
     [feed],
   );
 

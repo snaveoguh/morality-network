@@ -147,7 +147,10 @@ interface NewsGlobeProps {
 }
 
 export default function NewsGlobe({ activeSources }: NewsGlobeProps) {
-  const activeSet = useMemo(() => new Set(activeSources.map((s) => s.toLowerCase())), [activeSources]);
+  const activeSet = useMemo(
+    () => new Set(activeSources.filter(Boolean).map((s) => String(s).toLowerCase())),
+    [activeSources]
+  );
 
   return (
     <div className="h-full w-full">
