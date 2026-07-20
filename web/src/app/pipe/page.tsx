@@ -58,13 +58,27 @@ interface ClosedPosition {
   };
 }
 
+/**
+ * Open-position row. The metrics API serves engine report rows
+ * ({ position: {...}, unrealizedPnlUsd }); the raw-HL fields are kept
+ * optional for backwards compatibility.
+ */
 interface OpenPosition {
-  coin: string;
-  szi: string;
-  entryPx: string;
-  positionValue: string;
-  unrealizedPnl: string;
-  leverage: { type: string; value: number };
+  position?: {
+    marketSymbol?: string;
+    symbol?: string;
+    direction?: "long" | "short";
+    leverage?: number;
+    entryPriceUsd?: number;
+    entryNotionalUsd?: number;
+  };
+  unrealizedPnlUsd?: number;
+  coin?: string;
+  szi?: string;
+  entryPx?: string;
+  positionValue?: string;
+  unrealizedPnl?: string;
+  leverage?: { type: string; value: number };
 }
 
 interface BusEvent {
@@ -662,15 +676,20 @@ function DeliberationCard({ deliberation: d }: { deliberation: DeliberationData 
 // ─── Position Entries ────────────────────────────────────────────────────────
 
 function PositionEntry({ position }: { position: OpenPosition }) {
-  const pnl = parseFloat(position.unrealizedPnl);
+  // Engine report rows nest the position; raw-HL rows are flat. Support both.
+  const p = position.position ?? {};
+  const pnlRaw = position.unrealizedPnlUsd ?? parseFloat(position.unrealizedPnl ?? "");
+  const pnl = Number.isFinite(pnlRaw) ? pnlRaw : 0;
   const isProfit = pnl >= 0;
-  const size = parseFloat(position.szi);
-  const isLong = size > 0;
+  const isLong = p.direction ? p.direction !== "short" : parseFloat(position.szi ?? "0") > 0;
+  const symbol = p.marketSymbol ?? p.symbol ?? position.coin ?? "?";
+  const levRaw = p.leverage ?? position.leverage;
+  const lev = typeof levRaw === "number" ? levRaw : levRaw?.value;
   return (
     <div className="flex items-center gap-2 border border-[var(--rule-light)] p-2">
-      <span className="font-mono text-[10px] font-bold text-[var(--ink)]">{position.coin}</span>
+      <span className="font-mono text-[10px] font-bold text-[var(--ink)]">{symbol}</span>
       <span className="font-mono text-[8px] font-bold uppercase" style={{ color: isLong ? "var(--accent-green)" : "var(--accent-red)" }}>
-        {isLong ? "Long" : "Short"} {position.leverage.value}x
+        {isLong ? "Long" : "Short"}{lev ? ` ${lev}x` : ""}
       </span>
       <span className="ml-auto font-mono text-[10px] font-bold" style={{ color: isProfit ? "var(--accent-green)" : "var(--accent-red)" }}>
         {isProfit ? "+" : ""}${pnl.toFixed(2)}
