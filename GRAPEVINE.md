@@ -9,6 +9,32 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 32 · strategy widened — both directions, 12-market universe, first trade
+
+**when** — 2026-07-20 ~evening local
+**what** — env-only on `pooter-agent-worker`: `TRADER_DIRECTION_MODE=both`
+(user: "sophisticated strategy"; shorts re-enabled under the node-31 tight
+gates — 0.75 confidence, 2-signal agreement, ichimoku-forward), and explicit
+`HYPERLIQUID_WATCH_MARKETS=BTC,ETH,SOL,ZEC,PAXG,SPX,HYPE,XRP,DOGE,LINK,AVAX,TAO`
+— adds gold (PAXG) and the S&P 500 index perp (SPX) alongside crypto.
+NOTE: `TRADER_WATCH_MARKETS` is dead config the engine ignores; the real
+var is `HYPERLIQUID_WATCH_MARKETS`. Individual equities (TSLA/NVDA/…) and
+silver exist only on HL's `xyz` builder dex (87 markets) which the deployed
+engine cannot address — future feature.
+**why** — user asked for a sophisticated multi-asset strategy ("shares,
+silver, btc, zcash"). Archived-book data corrected the "last 4 were shorts
+and won" recollection (last 4 were longs, 3 won) but trend-aligned
+both-ways beats a blanket direction ban under the new gates.
+**where** — Railway env, worker redeployed (deploy 22f6b59d). Minutes after
+binding: first live trade of the new era — SHORT TAO $150 notional 3x,
+composite 1.00, cold quarter-Kelly, entry $194.85. Verified on HL
+clearinghouseState. Also verified: /markets spectator mode live on prod for
+anonymous users — Closed Positions (1078) render from Postgres via
+metrics-v2, wallet fields redacted.
+**rollback** — `TRADER_DIRECTION_MODE=long-only` to re-restrict; kill
+switch stays `TRADER_DRY_RUN=true` (needs the web/-subdir deploy path,
+node 31).
+
 ## ▲ node 31 · trader rearmed — long-only probation, fresh book, ichimoku-forward
 
 **when** — 2026-07-20 ~afternoon local
