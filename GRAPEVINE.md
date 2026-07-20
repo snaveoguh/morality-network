@@ -9,6 +9,32 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 33 · HIP-3 builder-dex support — equities, gold, silver tradeable
+
+**when** — 2026-07-20 ~evening local
+**what** — `42b532b` (dev+main): the trading engine can now address HL's
+builder-deployed perp dexs (HIP-3). Markets named `dex:TICKER` (lowercase
+case-significant prefix), asset ids `100000 + dexIndex*10000 + i`, per-dex
+meta merged into the market map, case-preserving candles/fills,
+isolated-margin support, per-dex clearinghouse merged into positions +
+account value, and automatic USDC `sendAsset` into the builder dex's own
+collateral ledger before entries. Env: `HYPERLIQUID_BUILDER_DEXES=xyz`;
+watchlist now 17 markets incl. xyz:TSLA, xyz:NVDA, xyz:AAPL, xyz:GOLD,
+xyz:SILVER. Ported to the worker clone and deployed (14ad4e44, SUCCESS).
+Smoke test `web/scripts/smoke-builder-dex.mjs` verified live: 264 markets,
+TSLA marketId 110001, real prices, technical signal computes on equities
+(TSLA below red cloud at ship time).
+**why** — user: "def wana do this" — wants shares + silver. Main dex has
+neither; the xyz builder dex has 87 markets including both.
+**where** — web/src/lib/trading/{hyperliquid,config,types}.ts. Worker
+deployed from the clone's web/ subdir (node 31 procedure). NOTE: live
+composite evaluation of the new markets starts when a position slot frees
+(2/2 full at deploy). The one path only a real trade proves is the
+sendAsset margin hop — schema-verified, logs loudly.
+**rollback** — unset `HYPERLIQUID_BUILDER_DEXES` (prefixed watchlist
+entries then resolve to no market and are skipped); or revert `42b532b`
+and redeploy.
+
 ## ▲ node 32 · strategy widened — both directions, 12-market universe, first trade
 
 **when** — 2026-07-20 ~evening local
