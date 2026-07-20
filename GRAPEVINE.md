@@ -9,6 +9,24 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 30 · trading terminal spectator mode
+
+**when** — 2026-07-20 ~afternoon local
+**what** — `67338d4` (dev): /markets terminal open + closed position tables
+now render for everyone. `sanitizePerformance` in
+`web/src/app/api/trading/metrics/route.ts` no longer strips `open` rows or
+cripples `closed` rows — full position telemetry is public. Still gated:
+account address, funding address, readiness balances (operator/holder
+only), and chat + trade execution (unchanged, MO-holder/operator).
+**why** — user wants the trading terminal viewable to everyone. Position
+rows contain no account identifiers (tx hashes are onchain anyway), so
+spectator mode is safe; the wallet-identifying fields stay redacted.
+**where** — `web/src/app/api/trading/metrics/route.ts`,
+`web/src/components/markets/AgentMarketDashboard.tsx`. Via dev gate →
+dev.pooter.world, then main.
+**rollback** — revert `67338d4`; the old sanitizer stripped open/closed
+detail for non-holders.
+
 ## ▲ node 29 · /ledger nav — card grid instead of buried text links
 
 **when** — 2026-07-11 ~18:35 local
