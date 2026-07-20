@@ -9,6 +9,28 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 34 · /pipe rendering error — first public open positions crashed the page
+
+**when** — 2026-07-20 ~evening local
+**what** — `7a58c41` + `a53c657` (dev+main): three defensive fixes on /pipe.
+Root cause: `PositionEntry` was written for raw HL assetPosition rows
+(`coin`/`szi`/`leverage.value`) but /api/trading/metrics serves engine
+report rows (`{position:{...}, unrealizedPnlUsd}`). Until node 30 the
+public payload NEVER contained open rows, so the component never rendered
+— the moment the rearmed trader opened TAO+DOGE (node 32), every /pipe
+visitor crashed on `position.leverage.value` of undefined. Also hardened:
+metrics parsing no longer accepts `{error}` payloads as reports
+(`payload.performance ?? payload` trap), `totals` reads optional-chained,
+undefined feed sources filtered before NewsGlobe's toLowerCase.
+**why** — user reported RENDERING ERROR on /pipe. Verified fixed on prod:
+Active Positions renders "DOGE SHORT 3X / TAO SHORT 3X" anonymously.
+**where** — web/src/app/pipe/page.tsx, web/src/components/pipe/NewsGlobe.tsx.
+Known remaining cosmetic lie: header still says "DRY RUN / Account $0.00"
+because the web process reads its own inert trader config + throwaway
+wallet (documented pre-existing issue, not a crash).
+**rollback** — revert both commits; the crash returns whenever open
+positions exist publicly.
+
 ## ▲ node 33 · HIP-3 builder-dex support — equities, gold, silver tradeable
 
 **when** — 2026-07-20 ~evening local
