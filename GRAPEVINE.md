@@ -9,6 +9,38 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 35 · indexer revived after 10 days down — telemetry bus flowing again
+
+**when** — 2026-07-20 ~late evening local
+**what** — deployed the `indexer/` Ponder app (repo root) to the
+`pooter-indexer / pooter-indexer` service via `railway up` from the
+**indexer/ subdir** — first SUCCESS since Jul 10 (deploy 4665b58b).
+Root cause of the Jul-10 deaths: builds ran against the WRONG directory
+(web deps compiling on Node 18 → npm ci exit 1). Correct context =
+indexer/ alone; env (DATABASE_URL, PONDER_RPC_URL_*, contract addrs,
+INDEXER_WORKER_SECRET) was intact on the service the whole time.
+**why** — user asked why /bots Pipeline Health showed everything HUNG.
+The pipeline was fine (trades placed same day); the telemetry courier was
+dead. One dead service = five symptoms: health board blind, dev
+.pooter.world metrics hard-error, worker trader-state persist 404,
+worker swarm/latest 404, editorial-archive remote reads failing.
+**verified** — /api/v1/health 200; worker logs flipped to "trader
+snapshot persisted { openPositions: 2 }"; dev.pooter.world metrics
+serves the WORKER's real state (dryRun:false); console event bus
+flowing (emerging-event 32, trader-cycle-complete 4, swarm-snapshot 2
+per 15m). Follow-up commit `77d4d49`: spectator sanitizers now also
+redact readiness.account (the worker-state path exposed the trader
+address there).
+**warts left** — Ponder historical sync needs an archive-capable RPC
+(publicnode rejects old eth_getLogs; ~37m backfill est. when healthy);
+composite/mapping health boxes stay amber until a position slot frees
+(evaluation skipped at 2/2 open). Anonymous /bots shows UNKNOWN — the
+console API is operator-gated by design.
+**rollback** — none needed; to take the indexer down again, remove the
+service's active deployment. Deploy procedure: `railway link -p
+pooter-indexer -s pooter-indexer` from the repo's indexer/ dir, then
+`railway up`.
+
 ## ▲ node 34 · /pipe rendering error — first public open positions crashed the page
 
 **when** — 2026-07-20 ~evening local
