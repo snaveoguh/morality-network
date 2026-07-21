@@ -146,6 +146,7 @@ function sanitizePerformance(report: any) {
     fundingAddress: undefined,
     readiness: {
       ...report.readiness,
+      account: undefined,
       balances: [],
       reasons: report.readiness?.liveReady
         ? []
