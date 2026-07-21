@@ -62,6 +62,14 @@ const SYMBOL_PATTERNS: Array<{ symbol: string; pattern: RegExp }> = [
   { symbol: "OIL", pattern: /\b(oil|crude|wti|brent|petroleum|opec|energy\s*price|barrel|gas\s*price|natural\s*gas)\b/i },
   // Equities / risk-on-off
   { symbol: "SPX", pattern: /\b(stocks?|equit(?:y|ies)|s&p\s*500|nasdaq|dow\s*jones|sp500|risk.off|risk.on|market\s*crash|stock\s*market|wall\s*street|earnings?)\b/i },
+  // Individual equities + true silver — xyz builder-dex markets (HIP-3).
+  // Symbols must match the engine's watch-market names exactly.
+  { symbol: "xyz:TSLA", pattern: /\b(tesla|tsla)\b/i },
+  { symbol: "xyz:NVDA", pattern: /\b(nvidia|nvda)\b/i },
+  { symbol: "xyz:AAPL", pattern: /\b(apple|aapl|iphone)\b/i },
+  { symbol: "xyz:MSTR", pattern: /\b(microstrategy|mstr|saylor)\b/i },
+  { symbol: "xyz:COIN", pattern: /\b(coinbase)\b/i },
+  { symbol: "xyz:SILVER", pattern: /\b(silver|xag)\b/i },
 ];
 
 /**
