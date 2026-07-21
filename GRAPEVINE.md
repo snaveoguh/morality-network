@@ -9,6 +9,29 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 36 · 4 position slots + news→market mapping for equities & silver
+
+**when** — 2026-07-20 ~night local
+**what** — (a) env on worker: `TRADER_MAX_OPEN_POSITIONS=4`,
+`TRADER_MAX_POSITION_USD=100`, `TRADER_MAX_PORTFOLIO_USD=400` — more
+slots, smaller size, ~$133 total margin on the $153 account.
+(b) `f286882`: news extraction emits engine-exact xyz symbols
+(TSLA/NVDA/AAPL/MSTR/COIN/SILVER); killed dead GOLD/SILVER symbol
+outputs in signals.ts aggregation (gold→PAXG, silver→xyz:SILVER — silver
+news had been proxied to gold since before HIP-3); equity aliases added;
+specific-equity patterns before the SPX catch-all. Port also upgraded
+the worker's older swarm-signals (macro relay patterns + contradiction
+threshold 3→5). Deploy 7a57e740 SUCCESS.
+**verified live** — minutes after deploy: `composite xyz:SILVER: long
+conf=0.90` (engine evaluating real silver on a 14-year-high tape) and a
+third position opened at the NEW sizing: BTC long $100 @ 3x. Book: TAO
+short $150, DOGE short $135, BTC long $100 — 3/4 slots, $385 deployed.
+**where** — web/src/lib/trading/{signals,swarm-signals}.ts + worker env.
+Wart: market-signals OI fetch doesn't know builder-dex symbols
+("No OI data for xyz:SILVER") — graceful, OI signal just absent there.
+**rollback** — env back to 2/150/300; revert `f286882` and redeploy
+worker from the clone's web/ subdir.
+
 ## ▲ node 35 · indexer revived after 10 days down — telemetry bus flowing again
 
 **when** — 2026-07-20 ~late evening local
