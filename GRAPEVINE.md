@@ -9,6 +9,31 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 40 · backfilled 5 lost closes + widened book to 6×$40
+
+**when** — 2026-07-24
+**what** — (a) BACKFILL: ran `/app/backfill.mjs` inside the worker container —
+reconstructed the post-revival closed positions from HL fills and inserted 7
+rows (the 5 close events split across partial fills) into pooter.trade_decisions,
+idempotent (id=`backfill:<coin>:<openMs>`, ON CONFLICT DO NOTHING). Total
+realized backfilled **-$5.8418** (matches HL exactly): TAO -4.14/-0.08, BTC
++1.43, ZEC +2.43, ETH -2.77, HYPE -0.84/-1.87. /markets realized P&L now
+reflects real activity instead of the stale pre-April +$3.39. (No April→July
+gap to fill — the worker was dead then, no trades.) (b) SIZING: set worker env
+`TRADER_MAX_OPEN_POSITIONS=6`, `TRADER_MAX_POSITION_USD=40`,
+`TRADER_MAX_PORTFOLIO_USD=240` via `railway variables --set` (redeploys the
+7ec56f0 fix image + new caps). ~$80 margin at 3x on the ~$154 account. Lets
+equities/silver (xyz dex, already in the watchlist + signal fires) into the
+book as slots free.
+**why** — user: "both good to go let it rip." Backfill so the dashboard tells
+the truth; wider book so HIP-3 markets can actually take positions.
+**where** — DB write via container; worker env. NOTE: current open exposure
+(~$343 notional across 4 positions from the old 4/100/400 sizing) EXCEEDS the
+new $240 portfolio cap, so no NEW opens until existing crypto closes below 240
+— that first new open is also what verifies the recording fix end-to-end.
+**rollback** — env back to 4/100/400 (or 2/150/600 defaults); delete backfill
+rows via `DELETE FROM pooter.trade_decisions WHERE id LIKE 'backfill:%'`.
+
 ## ▲ node 39 · REAL root cause of the recording gap — BigInt in entry_rationale
 
 **when** — 2026-07-24
