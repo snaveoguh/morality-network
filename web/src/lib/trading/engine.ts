@@ -15,7 +15,7 @@ import {
 } from "./hyperliquid";
 import { fetchTokenMarketSnapshot, normalizeQuoteSymbol, type DexScreenerChainId } from "./market";
 import { PositionStore } from "./position-store";
-import { createTradeDecision, closeTradeDecisionByCloid, findOpenByWalletSymbol, closeTradeDecisionByWalletSymbolOpened, updateRuntimeStateByCloid, newCloid } from "../db/trade-decisions";
+import { createTradeDecision, updateRuntimeStateByCloid, newCloid, recordTradeDecisionClose } from "../db/trade-decisions";
 import { fetchScannerCandidates } from "./scanner-client";
 import { getAggregatedMarketSignals, type AggregatedMarketSignal } from "./signals";
 import { estimateAmountOutMin, executeSwap, readTokenDecimals, waitForSuccess } from "./swap";
@@ -359,7 +359,7 @@ class TraderEngine {
         closedAt: Date.now(),
         exitRationale: this.buildExitRationale(stored, exitNote, exitPriceUsd),
       });
-      this.mirrorCloseToPg(stored, "manual", exitPriceUsd);
+      await this.mirrorCloseToPg(stored, "manual", exitPriceUsd);
     }
 
     return positions;
@@ -927,37 +927,43 @@ class TraderEngine {
    * Uses cloid if available, falls back to (wallet, symbol, openedAt).
    * Fire-and-forget — never blocks the close path.
    */
-  private mirrorCloseToPg(
+  private async mirrorCloseToPg(
     position: Position,
     reason: string,
     exitPriceUsd: number,
-  ): void {
+  ): Promise<void> {
     const closeInput = {
       closedAt: new Date(),
       exitReason: reason,
       exitRationale: this.buildExitRationale(position, reason, exitPriceUsd),
     };
 
-    const doClose = async () => {
-      if (position.cloid) {
-        await closeTradeDecisionByCloid(position.cloid, closeInput);
-      } else if (position.marketSymbol) {
-        // Fallback for positions opened before cloid was added
-        const wallet = resolveHyperliquidAccountAddress(this.config, this.clients.address);
-        await closeTradeDecisionByWalletSymbolOpened(
+    try {
+      // cloid first, then wallet+symbol+openedAt. A cloid that finds nothing is
+      // the silent-loss mode that hid every close after the v5 rearm.
+      const wallet = resolveHyperliquidAccountAddress(this.config, this.clients.address);
+      const affected = await recordTradeDecisionClose(
+        {
+          cloid: position.cloid,
           wallet,
-          position.marketSymbol,
-          new Date(position.openedAt),
-          closeInput,
+          marketSymbol: position.marketSymbol,
+          openedAt: new Date(position.openedAt),
+        },
+        closeInput,
+      );
+      if (affected === 0) {
+        // The HL close already executed — this is a recording gap, not a
+        // trading failure. Loud so it can never vanish silently again; the
+        // reconcile script (scripts/reconcile-hl-fills.mjs) backfills it.
+        console.error(
+          `[trader] CLOSE NOT RECORDED in pooter.trade_decisions: ${position.marketSymbol ?? position.id} cloid=${position.cloid ?? "none"} openedAt=${new Date(position.openedAt).toISOString()} — HL close DID execute; no matching open row. Reconcile needed.`,
         );
       }
-    };
-
-    doClose().catch((err) => {
+    } catch (err) {
       console.error(
         `[trader] failed to close TradeDecision for ${position.marketSymbol ?? position.id}: ${err instanceof Error ? err.message : err}`,
       );
-    });
+    }
   }
 
   private async closePosition(
@@ -1049,7 +1055,7 @@ class TraderEngine {
         exitTxHash: syntheticHash(),
         exitRationale: this.buildExitRationale(position, reason, exitPriceUsd),
       });
-      this.mirrorCloseToPg(position, reason, exitPriceUsd);
+      await this.mirrorCloseToPg(position, reason, exitPriceUsd);
       return dryResult;
     }
 
@@ -1071,7 +1077,7 @@ class TraderEngine {
     });
 
     // Mirror close to pooter.trade_decisions (best-effort)
-    this.mirrorCloseToPg(position, reason, execution.fillPriceUsd);
+    await this.mirrorCloseToPg(position, reason, execution.fillPriceUsd);
 
     return closed;
   }
@@ -1125,7 +1131,7 @@ class TraderEngine {
           exitPriceUsd: currentPriceUsd,
           exitRationale: this.buildExitRationale(position, "take-profit (partial close completed)", currentPriceUsd),
         });
-        this.mirrorCloseToPg(position, "take-profit", currentPriceUsd);
+        await this.mirrorCloseToPg(position, "take-profit", currentPriceUsd);
       }
       return true;
     } catch (error) {
