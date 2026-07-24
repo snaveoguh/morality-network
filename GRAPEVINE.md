@@ -9,6 +9,31 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 37 · trader close-recording fix + real fee rate (dev, ledger-free branch)
+
+**when** — 2026-07-24
+**what** — three commits on `dev` (6fc3ca2, 8834b47, 6f9ee9f). (a) FIX: since
+the pooter:v5 rearm, closes executed on HL stopped recording in
+pooter.trade_decisions — `mirrorCloseToPg` (engine) + scalper/scout mirrors
+were fire-and-forget and `UPDATE … WHERE cloid=X AND closed_at IS NULL`
+matched nothing, threw nothing, logged nothing, never fell back. Now: close
+writers return rows-affected; shared `recordTradeDecisionClose()` (cloid →
+wallet+symbol+openedAt fallback); engine AWAITS the mirror; all three agents
+LOG LOUDLY on a 0-row close. (b) FIX: /markets fee display 0.00035→0.0009
+round-trip (observed 0.045%/side on real fills); engine hurdle 0.0007 flagged
+as low. (c) reconcile-hl-fills.mjs (read-only HL↔PG diff).
+**why** — user: /markets showed no closes since April while HL had 5 real
+closes 7/21–7/23 (net −$5.84); dashboard realized stale at +$3.39 (pre-April
+only). Proven from public HL fills. Kelly reads the Redis book (not PG) so its
+sizing was NOT starved — the bug blinded the dashboard, not the brain.
+**where** — web/src/lib/db/trade-decisions.ts, lib/trading/{engine,scout,
+scalper}.ts, app/api/trading/metrics-v2/route.ts, web/scripts/reconcile-hl-fills.mjs.
+Split OFF the ledger clearance-gate work (parked on branch
+`feat/claim-ledger-clearance`, needs migrations 006/007 before it can ship) so
+the trader fixes deploy without it. NOT backfilled: the 5 historical closes —
+run reconcile script + a one-time close of orphaned rows.
+**rollback** — revert the three commits; all additive, no migration.
+
 ## ▲ node 36 · 4 position slots + news→market mapping for equities & silver
 
 **when** — 2026-07-20 ~night local
