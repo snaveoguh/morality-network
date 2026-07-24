@@ -35,8 +35,14 @@ import type { Position, TraderPerformanceReport, TraderPerformanceTotals } from 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-// HL round-trip fee (maker + taker)
-const HL_ROUND_TRIP_FEE_RATE = 0.00035;
+// HL taker fee OBSERVED on this wallet's actual fills is 0.045% PER SIDE
+// → 0.09% round-trip (entry + exit). (e.g. ETH close 0.0517×$1884=$97.4
+// notional, fee $0.0438 = 0.045%.) The old 0.00035 here was a single side at
+// a stale rate. NB: the engine's fee-hurdle constant is 0.0007 — lower than
+// reality; worth aligning. This still excludes funding on multi-day holds and
+// HIP-3 builder fees on xyz:* markets — realized PnL is HL's net closedPnl,
+// but this ESTIMATE is a floor, not the full cost of carry.
+const HL_ROUND_TRIP_FEE_RATE = 0.0009;
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
