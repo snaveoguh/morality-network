@@ -10,6 +10,7 @@ import type {
   LedgerResolution,
   LedgerWeekSnapshot,
 } from "@/lib/ledger/types";
+import { VerdictBadge, VerdictRationale } from "@/components/ledger/Verdict";
 import { BRAND_NAME, withBrand } from "@/lib/brand";
 
 export const revalidate = 1800; // 30 min ISR
@@ -65,14 +66,6 @@ function groupBySpeaker(claims: LedgerClaim[]): Array<[string, LedgerClaim[]]> {
   return [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
 }
 
-// Published verdict vocabulary (spec Principles §4 — fixed, no motive).
-const VERDICT_LABEL: Record<LedgerResolution["verdict"], string> = {
-  true: "Resolved true",
-  false: "Resolved false",
-  partial: "Partially true",
-  unresolved: "Unresolved",
-};
-
 function ClaimRow({
   claim,
   resolution,
@@ -94,15 +87,7 @@ function ClaimRow({
 
       <div className="mt-3 flex flex-wrap items-center gap-2 pl-4 font-mono text-[9px] uppercase tracking-[0.2em]">
         {resolution ? (
-          <span
-            className={`border px-1.5 py-0.5 font-bold ${
-              resolution.verdict === "false" || resolution.verdict === "partial"
-                ? "border-[var(--accent-red)] bg-[var(--accent-red)] text-[var(--paper)]"
-                : "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
-            }`}
-          >
-            {VERDICT_LABEL[resolution.verdict]}
-          </span>
+          <VerdictBadge verdict={resolution.verdict} />
         ) : (
           <span className="border border-[var(--ink)] px-1.5 py-0.5 font-bold text-[var(--ink)]">
             {CLAIM_TYPE_LABEL[claim.claimType]}
@@ -138,6 +123,8 @@ function ClaimRow({
           Dispute
         </Link>
       </div>
+
+      <VerdictRationale resolution={resolution} />
 
       {disputes && disputes.length > 0 && (
         <div className="mt-3 border-l-2 border-[var(--accent-red)] pl-4">

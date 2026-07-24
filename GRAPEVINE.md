@@ -9,6 +9,45 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 37 · claim ledger — solicitor sign-off + negative-verdict clearance gate
+
+**when** — 2026-07-24
+**what** — solicitor returned a CONDITIONAL go-ahead on the held Darling
+negatives (see docs/LEDGER_VERDICT_TEMPLATE.md §Solicitor review outcome).
+Built to those conditions: (a) migration `006_negative_clearance.sql` — new
+`pooter.ledger_negative_clearance` allowlist + trigger
+`ledger_negative_clearance_gate` that BLOCKS any `false`/`partial` verdict
+about a natural-person subject (member_id NOT NULL) from publishing unless the
+subject is explicitly cleared — DB-enforced, un-bypassable, mirrors the
+human-review CHECK constraint. Negatives are now OFF by default. (b) migration
+`007_verdict_basis_summary.sql` — published `basis_summary` beside each label,
+reviewer-authored + motive-screened at approval. (c) shared
+`web/src/components/ledger/Verdict.tsx` — the ONE place a verdict renders:
+assessment framing ("the Claim Ledger's assessment against the linked public
+record"), the Partially-true qualifier, the basis summary. Wired into
+ledger/page, member/[memberId], manifestos/[key] (removed 3 divergent inline
+label maps). (d) review API returns a clean 409 `negative_clearance_required`;
+review page shows a block banner + basis input, disables Approve when blocked.
+**why** — solicitor: do NOT publish negative verdicts about LIVING persons on
+the current structure; deceased (Darling, no UK GDPR) may pilot first but only
+after the presentation fixes. The data model has no living/deceased signal, so
+the only safe rule is negatives-off-by-default + explicit audited clearance.
+**verified** — `tsc --noEmit` clean, `worker:build` clean, eslint clean on all
+touched files, ledger vitest 65 pass. NOT browser-verified (renders only for
+published verdicts behind prod DB + operator auth). Migrations NOT yet applied
+to prod; nothing published — pilot still gated on: apply 006/007, clear
+Darling's real member id, fix Specimen C fiscal-vs-calendar year, author basis
+summaries. Living-person negatives remain a full workstream (rectification
+route, restriction state, correction log, Article 14, lawful basis).
+**where** — web/migrations/006-007, web/src/components/ledger/Verdict.tsx,
+web/src/lib/db/ledger-resolutions.ts, web/src/lib/ledger/{types,resolve}.ts,
+web/src/app/ledger/{page,member/[memberId],manifestos/[key],review}, 
+web/src/app/api/ledger/review/route.ts, docs/LEDGER_VERDICT_TEMPLATE.md.
+Uncommitted on `dev` — not deployed.
+**rollback** — revert the commit; migrations 006/007 are additive (drop trigger
+`ledger_negative_clearance_gate` + table `ledger_negative_clearance`, column
+`ledger_resolutions.basis_summary`) if ever applied.
+
 ## ▲ node 36 · 4 position slots + news→market mapping for equities & silver
 
 **when** — 2026-07-20 ~night local

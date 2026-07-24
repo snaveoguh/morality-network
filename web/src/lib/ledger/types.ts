@@ -114,6 +114,12 @@ export interface LedgerResolution {
   evidence: LedgerEvidence[];
   /** Agent's stated basis — shown to the human reviewer, not published. */
   reasoning: string;
+  /**
+   * Published one-sentence basis shown beside the verdict label (solicitor
+   * requirement). Reviewer-authored at approval, motive-screened. Null on
+   * legacy verdicts — the UI falls back to the evidence chain.
+   */
+  basisSummary: string | null;
   resolvedBy: string; // 'agent:<provider>/<model>@<version>' | 'human:<id>'
   reviewedBy: string | null; // 'human:<id>' — REQUIRED to publish false/partial
   status: LedgerResolutionStatus;

@@ -32,6 +32,7 @@ function makeResolution(
     verdict,
     evidence: [{ url: "https://x", excerpt: "e", kind: "ons" }],
     reasoning: "basis",
+    basisSummary: null,
     resolvedBy: "agent:t/m@v",
     reviewedBy: "human:test",
     status: "published",

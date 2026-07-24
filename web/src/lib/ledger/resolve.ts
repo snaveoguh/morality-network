@@ -151,6 +151,7 @@ export function validateProposal(params: {
     verdict,
     evidence,
     reasoning: basis,
+    basisSummary: null,
     resolvedBy,
     reviewedBy: null,
     status: "proposed",

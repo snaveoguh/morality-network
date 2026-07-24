@@ -1,9 +1,15 @@
-# Claim Ledger — Verdict Publication Template (for solicitor review)
+# Claim Ledger — Verdict Publication Template
 
 Per CLAIM_LEDGER_SPEC.md §Legal guardrails: this template defines the exact
-structure of every published verdict. It is submitted for review by a media
-solicitor BEFORE first publication of any negative verdict. Nothing outside
-this structure is ever published about a claim.
+structure of every published verdict. Nothing outside this structure is ever
+published about a claim.
+
+**Reviewed by instructed media solicitor, 2026-07-24.** Outcome and the
+resulting build changes are in §Solicitor review outcome below. Bottom line:
+negative verdicts about **living** natural persons must NOT publish on the
+current structure; **deceased** subjects (no UK GDPR exposure) may pilot first,
+but only after the template/presentation fixes are in place. Those presentation
+fixes are now implemented; the living-person rectification workstream is not.
 
 ## Structure of a published verdict
 
@@ -23,7 +29,18 @@ Every published verdict consists of, and only of:
    `Partially true` / `Unresolved`. No other vocabulary exists in the
    system. The words "lie", "liar", "dishonest", "misleading" (as
    characterization) never appear.
-6. **Evidence chain** — one or more links to primary public records
+6. **Assessment framing** — every published label carries the caption
+   *"The Claim Ledger's assessment against the linked public record."* so the
+   label reads as reviewable opinion tied to the records (s.3 honest opinion),
+   not a bare factual adjudication. Rendered by one shared component
+   (`web/src/components/ledger/Verdict.tsx`) that every public surface consumes,
+   so the framing cannot be dropped on one page.
+7. **Partially-true qualifier** — wherever `Partially true` appears it carries
+   *"The records reviewed support part, but not all, of this claim."*
+8. **Basis summary** — one published neutral sentence beside the label,
+   authored by the reviewer at approval and motive-screened before storage
+   (distinct from the agent's internal reasoning, which is never published).
+9. **Evidence chain** — one or more links to primary public records
    (parliamentary division records at votes.parliament.uk, ONS statistical
    series at ons.gov.uk), each with a factual excerpt stating what the
    record shows. Evidence URLs are constructed by our systems from records
@@ -62,14 +79,54 @@ Every published verdict consists of, and only of:
 > Evidence:
 > - [official record] — excerpt stating what the record shows.
 
-## Questions for the solicitor
+## Solicitor review outcome (2026-07-24)
 
-1. Is the fixed verdict vocabulary (`Resolved true/false`, `Partially
-   true`, `Unresolved`) defensible as honest opinion / truth, given every
-   verdict links its records?
-2. Does the "Partially true" label need qualifying copy (e.g. "the records
-   support part of this claim") wherever displayed?
-3. Is the dispute/right-of-reply mechanism sufficient for the GDPR accuracy
-   obligation on per-person scores at the point scores go live (n≥20)?
-4. Any required changes to the corrections process before first negative
-   verdict publishes?
+Instructed media solicitor, England & Wales defamation + UK GDPR/ICO. Answers
+to the five questions put in the review pack:
+
+1. **Bare labels are NOT defensible.** `Resolved true/false` read as factual
+   adjudications unless expressly framed as the Ledger's assessment on the
+   linked record; s.3 honest opinion is the shelter, s.2 truth is weaker.
+   → **Done:** assessment framing on every label (structure item 6).
+2. **`Partially true` needs qualifying copy everywhere.** → **Done:** structure
+   item 7, the exact wording the solicitor supplied.
+3. **Post-publication right-of-reply is NOT enough** for the UK GDPR accuracy
+   principle on living-person n≥20 scores. → **Not yet.** Part of the
+   living-person workstream below. (No living-person score exists: the gate is
+   20 *published* verdicts for one member; the whole ledger has 1.)
+4. **Before any negative living-person verdict:** non-wallet rectification
+   route; a visible `disputed / under review` state that restricts/suppresses
+   the score while checked; a short basis summary beside every label (**done**,
+   item 8); an append-only correction log (current status first); a documented
+   one-month response timetable; manual pre-publication review (**already
+   enforced** by the DB constraint); downstream correction-notification if
+   syndicated. → basis summary done; the rest is the living-person workstream.
+5. **Deceased specimens may pilot first** — no UK GDPR issue — but only after
+   the template/presentation fixes above, not as a reason to leave the template
+   as-is.
+
+**Enforcement built (do not publish negative living-person verdicts on the
+current structure):** negative (`false`/`partial`) verdicts are blocked by
+default for any natural-person subject. A subject must be **explicitly cleared**
+in `pooter.ledger_negative_clearance` before a negative verdict about them can
+publish. Enforced at the DB layer by trigger `ledger_negative_clearance_gate`
+(un-bypassable, mirrors the human-review CHECK constraint) and pre-checked in
+`approveResolution` for a clean operator error. Clearing a subject is a
+deliberate, audited act — deceased, or a completed living-person legal pass.
+Migrations `006_negative_clearance.sql`, `007_verdict_basis_summary.sql`.
+
+## Remaining before verdicts publish
+
+- **Deceased Darling pilot (2 held specimens):** presentation fixes are done.
+  Still required: (a) add Darling's verified Members-API id to
+  `ledger_negative_clearance` as an audited clearance; (b) fix **Specimen C** —
+  the ONS HF6X figures are labelled bare (`2015: 81.7; 2016: 82.5`) but the
+  verdict depends on them being **financial** years 2015-16 / 2016-17; restate
+  the excerpt in the record's own period terms before it publishes; (c) author
+  a basis summary for each on approval.
+- **Living-person negatives / n≥20 scores (full workstream, blocked):**
+  non-wallet rectification route; `disputed / under review` restriction state
+  suppressing a contested score while checked; append-only correction log
+  (current status first); documented one-month response timetable; and a
+  separate legal pass on lawful basis, Article 14 notice, and criminal-offence
+  data. None of these are built.

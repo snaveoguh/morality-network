@@ -19,6 +19,7 @@ interface QueueItem {
   };
   claim: {
     id: string;
+    memberId: number | null;
     speakerName: string;
     party: string | null;
     verbatimQuote: string;
@@ -27,6 +28,7 @@ interface QueueItem {
     utteredAt: string;
     topic: string;
   };
+  negativeClearance: { required: boolean; blocked: boolean };
 }
 
 const VERDICT_LABEL: Record<string, string> = {
@@ -238,6 +240,8 @@ export default function LedgerReviewPage() {
   const [queue, setQueue] = useState<QueueItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  // Published basis summary drafted per proposal, keyed by resolution id.
+  const [basisById, setBasisById] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     try {
@@ -262,13 +266,24 @@ export default function LedgerReviewPage() {
   }, [load]);
 
   const decide = useCallback(
-    async (resolutionId: string, action: "approve" | "reject") => {
+    async (
+      resolutionId: string,
+      action: "approve" | "reject",
+      basisSummary?: string,
+    ) => {
       setBusy(resolutionId);
+      setError(null);
       try {
         const res = await fetch("/api/ledger/review", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ resolutionId, action }),
+          body: JSON.stringify({
+            resolutionId,
+            action,
+            ...(action === "approve" && basisSummary
+              ? { basisSummary }
+              : {}),
+          }),
         });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
@@ -326,7 +341,7 @@ export default function LedgerReviewPage() {
       )}
 
       <ul className="space-y-8">
-        {(queue ?? []).map(({ resolution, claim }) => (
+        {(queue ?? []).map(({ resolution, claim, negativeClearance }) => (
           <li key={resolution.id} className="border border-[var(--rule)] p-5">
             <div className="mb-3 flex flex-wrap items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em]">
               <span
@@ -394,10 +409,55 @@ export default function LedgerReviewPage() {
               </ul>
             </div>
 
+            {negativeClearance.blocked && (
+              <div className="mt-4 border border-[var(--accent-red)] bg-[var(--accent-red)]/5 p-3">
+                <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--accent-red)]">
+                  Negative verdict blocked — subject not cleared
+                </p>
+                <p className="mt-1 font-body-serif text-xs leading-relaxed text-[var(--ink-light)]">
+                  This is a {resolution.verdict === "false" ? "false" : "partial"}{" "}
+                  verdict about a natural person (member {claim.memberId}).
+                  Publication is refused until the subject is cleared. Living
+                  persons require the full rectification workstream (lawful
+                  basis, Article 14 notice, non-wallet rectification route,
+                  restriction state). A deceased subject must be added to{" "}
+                  <code>ledger_negative_clearance</code> as a deliberate,
+                  audited decision before approval will succeed.
+                </p>
+              </div>
+            )}
+
+            <div className="mt-4 border-t border-[var(--rule-light)] pt-3">
+              <label className={LABEL_CLASS} htmlFor={`basis-${resolution.id}`}>
+                Published basis summary (shown beside the verdict)
+              </label>
+              <textarea
+                id={`basis-${resolution.id}`}
+                value={basisById[resolution.id] ?? ""}
+                onChange={(e) =>
+                  setBasisById((m) => ({ ...m, [resolution.id]: e.target.value }))
+                }
+                rows={2}
+                placeholder="One neutral sentence stating what the records show against the claim. Motive vocabulary is rejected."
+                className={FIELD_CLASS}
+              />
+            </div>
+
             <div className="mt-4 flex gap-3">
               <button
-                onClick={() => decide(resolution.id, "approve")}
-                disabled={busy === resolution.id}
+                onClick={() =>
+                  decide(
+                    resolution.id,
+                    "approve",
+                    basisById[resolution.id]?.trim() || undefined,
+                  )
+                }
+                disabled={busy === resolution.id || negativeClearance.blocked}
+                title={
+                  negativeClearance.blocked
+                    ? "Subject not cleared for negative verdicts"
+                    : undefined
+                }
                 className="border border-[var(--ink)] px-4 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)] disabled:opacity-40"
               >
                 Approve &amp; publish

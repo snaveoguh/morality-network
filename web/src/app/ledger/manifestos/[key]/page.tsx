@@ -5,20 +5,14 @@ import {
   manifestoDebateExtId,
 } from "@/lib/ledger/sources/manifestos";
 import { getPublishedVerdicts } from "@/lib/ledger/service";
-import type { LedgerClaim, LedgerResolution } from "@/lib/ledger/types";
+import type { LedgerClaim } from "@/lib/ledger/types";
+import { VerdictBadge, VerdictRationale } from "@/components/ledger/Verdict";
 import { BRAND_NAME, withBrand } from "@/lib/brand";
 
 export const revalidate = 3600;
 
 export const metadata = {
   title: withBrand("Manifesto Record — The Claim Ledger"),
-};
-
-const VERDICT_LABEL: Record<LedgerResolution["verdict"], string> = {
-  true: "Resolved true",
-  false: "Resolved false",
-  partial: "Partially true",
-  unresolved: "Unresolved",
 };
 
 const CLAIM_TYPE_LABEL: Record<LedgerClaim["claimType"], string> = {
@@ -115,16 +109,7 @@ export default async function ManifestoRecordPage({
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2 pl-4 font-mono text-[9px] uppercase tracking-[0.2em]">
                 {resolution && resolution.verdict !== "unresolved" ? (
-                  <span
-                    className={`border px-1.5 py-0.5 font-bold ${
-                      resolution.verdict === "false" ||
-                      resolution.verdict === "partial"
-                        ? "border-[var(--accent-red)] bg-[var(--accent-red)] text-[var(--paper)]"
-                        : "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
-                    }`}
-                  >
-                    {VERDICT_LABEL[resolution.verdict]}
-                  </span>
+                  <VerdictBadge verdict={resolution.verdict} />
                 ) : (
                   <span className="border border-[var(--ink)] px-1.5 py-0.5 font-bold text-[var(--ink)]">
                     {CLAIM_TYPE_LABEL[claim.claimType]}
@@ -152,6 +137,7 @@ export default async function ManifestoRecordPage({
                   Dispute
                 </Link>
               </div>
+              <VerdictRationale resolution={resolution} />
               {resolution && resolution.evidence.length > 0 && (
                 <ul className="mt-2 space-y-1 pl-4">
                   {resolution.evidence.map((e, i) => (

@@ -6,6 +6,7 @@
 import { createHash } from "node:crypto";
 import { sql } from "../db";
 import { isoDateOnly } from "./ledger-claims";
+import { violatesLedgerVocabulary } from "../ledger/extract";
 import type {
   LedgerEvidence,
   LedgerResolution,
@@ -18,6 +19,7 @@ interface ResolutionRow {
   verdict: LedgerVerdict;
   evidence: LedgerEvidence[];
   reasoning: string;
+  basis_summary: string | null;
   resolved_by: string;
   reviewed_by: string | null;
   status: LedgerResolution["status"];
@@ -33,6 +35,7 @@ function rowToResolution(row: ResolutionRow): LedgerResolution {
     verdict: row.verdict,
     evidence: Array.isArray(row.evidence) ? row.evidence : [],
     reasoning: row.reasoning,
+    basisSummary: row.basis_summary ?? null,
     resolvedBy: row.resolved_by,
     reviewedBy: row.reviewed_by,
     status: row.status,
@@ -40,6 +43,51 @@ function rowToResolution(row: ResolutionRow): LedgerResolution {
     createdAt: new Date(row.created_at).toISOString(),
     reviewedAt: row.reviewed_at ? new Date(row.reviewed_at).toISOString() : null,
   };
+}
+
+/**
+ * Raised when a negative (false/partial) verdict is approved for a subject who
+ * is not on the negative-verdict clearance list. The DB trigger enforces this
+ * un-bypassably; the app check exists to fail early with a clean, typed error
+ * the review API can turn into a 409 instead of a raw trigger 500.
+ */
+export class NegativeClearanceError extends Error {
+  constructor(readonly memberId: number) {
+    super(
+      `negative verdict blocked: subject (member ${memberId}) is not cleared for negative verdicts`,
+    );
+    this.name = "NegativeClearanceError";
+  }
+}
+
+const NEGATIVE_VERDICTS = new Set<LedgerVerdict>(["false", "partial"]);
+
+/** Published basis summary bounds — one short sentence beside the label. */
+export const BASIS_SUMMARY_MAX = 300;
+export const BASIS_SUMMARY_MIN = 10;
+
+/**
+ * Subject clearance state for a proposal. `memberId` is null for
+ * party/institutional claims (manifesto lines), which are not natural-person
+ * verdicts and are never gated by the clearance list.
+ */
+export async function negativeClearanceForResolution(
+  resolutionId: string,
+): Promise<{ memberId: number | null; cleared: boolean }> {
+  const rows = await sql<Array<{ member_id: number | null; cleared: boolean }>>`
+    SELECT c.member_id,
+           (c.member_id IS NULL
+            OR EXISTS (
+              SELECT 1 FROM pooter.ledger_negative_clearance nc
+              WHERE nc.member_id = c.member_id
+            )) AS cleared
+    FROM pooter.ledger_resolutions r
+    JOIN pooter.ledger_claims c ON c.id = r.claim_id
+    WHERE r.id = ${resolutionId}
+  `;
+  const row = rows[0];
+  if (!row) return { memberId: null, cleared: false };
+  return { memberId: row.member_id, cleared: row.cleared };
 }
 
 /** Queue a proposal. No-op if the claim already has a live resolution. */
@@ -139,6 +187,7 @@ export function validateManualResolution(params: {
     verdict,
     evidence,
     reasoning,
+    basisSummary: null,
     resolvedBy: proposedBy,
     reviewedBy: null,
     status: "proposed",
@@ -193,6 +242,7 @@ export interface ReviewQueueItem {
   resolution: LedgerResolution;
   claim: {
     id: string;
+    memberId: number | null;
     speakerName: string;
     party: string | null;
     verbatimQuote: string;
@@ -201,6 +251,12 @@ export interface ReviewQueueItem {
     utteredAt: string;
     topic: string;
   };
+  /**
+   * Negative-verdict clearance state for this proposal. `required` is true for
+   * false/partial verdicts about a natural person; `blocked` means the subject
+   * is not cleared and approval will be refused.
+   */
+  negativeClearance: { required: boolean; blocked: boolean };
 }
 
 /** Proposals awaiting human review, oldest first, with their claims. */
@@ -208,6 +264,7 @@ export async function listReviewQueue(limit = 50): Promise<ReviewQueueItem[]> {
   const rows = await sql<
     Array<
       ResolutionRow & {
+        member_id: number | null;
         speaker_name: string;
         party: string | null;
         verbatim_quote: string;
@@ -215,30 +272,44 @@ export async function listReviewQueue(limit = 50): Promise<ReviewQueueItem[]> {
         source_url: string;
         uttered_at: string;
         topic: string;
+        subject_cleared: boolean;
       }
     >
   >`
-    SELECT r.*, c.speaker_name, c.party, c.verbatim_quote, c.normalized_claim,
-           c.source_url, c.uttered_at, c.topic
+    SELECT r.*, c.member_id, c.speaker_name, c.party, c.verbatim_quote,
+           c.normalized_claim, c.source_url, c.uttered_at, c.topic,
+           (c.member_id IS NULL
+            OR EXISTS (
+              SELECT 1 FROM pooter.ledger_negative_clearance nc
+              WHERE nc.member_id = c.member_id
+            )) AS subject_cleared
     FROM pooter.ledger_resolutions r
     JOIN pooter.ledger_claims c ON c.id = r.claim_id
     WHERE r.status = 'proposed'
     ORDER BY r.created_at ASC
     LIMIT ${Math.max(1, Math.min(200, limit))}
   `;
-  return rows.map((row) => ({
-    resolution: rowToResolution(row),
-    claim: {
-      id: row.claim_id,
-      speakerName: row.speaker_name,
-      party: row.party,
-      verbatimQuote: row.verbatim_quote,
-      normalizedClaim: row.normalized_claim,
-      sourceUrl: row.source_url,
-      utteredAt: isoDateOnly(row.uttered_at),
-      topic: row.topic,
-    },
-  }));
+  return rows.map((row) => {
+    const required = NEGATIVE_VERDICTS.has(row.verdict);
+    return {
+      resolution: rowToResolution(row),
+      claim: {
+        id: row.claim_id,
+        memberId: row.member_id,
+        speakerName: row.speaker_name,
+        party: row.party,
+        verbatimQuote: row.verbatim_quote,
+        normalizedClaim: row.normalized_claim,
+        sourceUrl: row.source_url,
+        utteredAt: isoDateOnly(row.uttered_at),
+        topic: row.topic,
+      },
+      negativeClearance: {
+        required,
+        blocked: required && !row.subject_cleared,
+      },
+    };
+  });
 }
 
 /**
@@ -251,19 +322,58 @@ export async function approveResolution(
   reviewedBy: string,
   note?: string,
   extraEvidence?: LedgerEvidence[],
+  basisSummary?: string,
 ): Promise<boolean> {
   if (!reviewedBy.startsWith("human:")) {
     throw new Error("approveResolution requires a human reviewer identity");
   }
+
+  // The published basis summary is motive-screened at the DB boundary too —
+  // it must never carry vocabulary the ledger forbids, whoever wrote it.
+  const basis = basisSummary?.trim() || null;
+  if (basis !== null) {
+    if (basis.length < BASIS_SUMMARY_MIN || basis.length > BASIS_SUMMARY_MAX) {
+      throw new Error(
+        `basis summary must be ${BASIS_SUMMARY_MIN}-${BASIS_SUMMARY_MAX} chars`,
+      );
+    }
+    if (violatesLedgerVocabulary(basis)) {
+      throw new Error("basis summary violates ledger vocabulary");
+    }
+  }
+
+  // Negative-verdict clearance gate (solicitor 2026-07-24). Fail early with a
+  // typed error before we touch the row; the DB trigger is the un-bypassable
+  // backstop for any path that skips this.
+  const gate = await sql<
+    Array<{ verdict: LedgerVerdict; member_id: number | null; cleared: boolean }>
+  >`
+    SELECT r.verdict, c.member_id,
+           (c.member_id IS NULL
+            OR EXISTS (
+              SELECT 1 FROM pooter.ledger_negative_clearance nc
+              WHERE nc.member_id = c.member_id
+            )) AS cleared
+    FROM pooter.ledger_resolutions r
+    JOIN pooter.ledger_claims c ON c.id = r.claim_id
+    WHERE r.id = ${resolutionId} AND r.status = 'proposed'
+  `;
+  const g = gate[0];
+  if (g && NEGATIVE_VERDICTS.has(g.verdict) && !g.cleared) {
+    throw new NegativeClearanceError(g.member_id as number);
+  }
+
   // Reviewer-curated evidence (OBR evaluation reports, court judgments,
   // inquiries) appends to the agent's chain — it never replaces it.
   const extra =
     extraEvidence && extraEvidence.length > 0
       ? sql`evidence = evidence || ${sql.json(extraEvidence as unknown as Parameters<typeof sql.json>[0])},`
       : sql``;
+  const basisSet =
+    basis !== null ? sql`basis_summary = ${basis},` : sql``;
   const rows = await sql`
     UPDATE pooter.ledger_resolutions
-    SET ${extra} status = 'published', reviewed_by = ${reviewedBy},
+    SET ${extra} ${basisSet} status = 'published', reviewed_by = ${reviewedBy},
         review_note = ${note ?? null}, reviewed_at = NOW()
     WHERE id = ${resolutionId} AND status = 'proposed'
     RETURNING id, claim_id

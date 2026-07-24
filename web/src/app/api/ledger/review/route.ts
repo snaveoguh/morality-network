@@ -14,11 +14,15 @@ import {
 } from "@/lib/operator-auth";
 import {
   approveResolution,
+  BASIS_SUMMARY_MAX,
+  BASIS_SUMMARY_MIN,
   claimIdsWithLiveResolution,
   createManualResolution,
   listReviewQueue,
+  NegativeClearanceError,
   rejectResolution,
 } from "@/lib/db/ledger-resolutions";
+import { violatesLedgerVocabulary } from "@/lib/ledger/extract";
 import type { LedgerEvidence } from "@/lib/ledger/types";
 
 export const dynamic = "force-dynamic";
@@ -84,6 +88,7 @@ export async function POST(request: Request) {
     resolutionId?: string;
     action?: string;
     note?: string;
+    basisSummary?: string;
     claimId?: string;
     verdict?: string;
     reasoning?: string;
@@ -171,21 +176,66 @@ export async function POST(request: Request) {
 
   // Optional reviewer-curated evidence on approval. Same strict validation.
   let extraEvidence: LedgerEvidence[] | undefined;
-  if (action === "approve" && Array.isArray(body.evidence)) {
-    const parsed = parseEvidence(body.evidence);
-    if (!parsed) {
-      return NextResponse.json(
-        { error: "each evidence item needs https url, 10-600 char excerpt, valid kind" },
-        { status: 400 },
-      );
+  let basisSummary: string | undefined;
+  if (action === "approve") {
+    if (Array.isArray(body.evidence)) {
+      const parsed = parseEvidence(body.evidence);
+      if (!parsed) {
+        return NextResponse.json(
+          { error: "each evidence item needs https url, 10-600 char excerpt, valid kind" },
+          { status: 400 },
+        );
+      }
+      extraEvidence = parsed;
     }
-    extraEvidence = parsed;
+
+    // Published basis summary — the short sentence shown beside the verdict
+    // label (solicitor requirement). Motive-screened like every published
+    // string; the reviewer's own words are not exempt.
+    const basis = body.basisSummary?.trim();
+    if (basis) {
+      if (basis.length < BASIS_SUMMARY_MIN || basis.length > BASIS_SUMMARY_MAX) {
+        return NextResponse.json(
+          { error: `basisSummary must be ${BASIS_SUMMARY_MIN}-${BASIS_SUMMARY_MAX} chars` },
+          { status: 400 },
+        );
+      }
+      if (violatesLedgerVocabulary(basis)) {
+        return NextResponse.json(
+          { error: "basisSummary uses vocabulary the ledger forbids" },
+          { status: 400 },
+        );
+      }
+      basisSummary = basis;
+    }
   }
 
-  const changed =
-    action === "approve"
-      ? await approveResolution(resolutionId, operator, note, extraEvidence)
-      : await rejectResolution(resolutionId, operator, note);
+  let changed: boolean;
+  try {
+    changed =
+      action === "approve"
+        ? await approveResolution(
+            resolutionId,
+            operator,
+            note,
+            extraEvidence,
+            basisSummary,
+          )
+        : await rejectResolution(resolutionId, operator, note);
+  } catch (err) {
+    if (err instanceof NegativeClearanceError) {
+      return NextResponse.json(
+        {
+          error:
+            "negative verdict blocked: this subject is not cleared for false/partial verdicts. Living-person negatives require the full rectification workstream; deceased subjects must be added to ledger_negative_clearance as a deliberate, audited decision.",
+          memberId: err.memberId,
+          code: "negative_clearance_required",
+        },
+        { status: 409 },
+      );
+    }
+    throw err;
+  }
 
   if (!changed) {
     return NextResponse.json(
