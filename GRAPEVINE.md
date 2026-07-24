@@ -9,6 +9,35 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 39 · REAL root cause of the recording gap — BigInt in entry_rationale
+
+**when** — 2026-07-24
+**what** — the recording bug was never the close path (node 37/38 fixed that
+but it was only half the story). Reconcile (run inside the worker container via
+`railway ssh`) showed **0 open rows AND 0 closed rows since 23 Apr** — writes
+stopped entirely. Ruled out (with live-DB tests): DB unreachable (reads + a
+manual insert both work), schema drift (27 cols correct), wallet mismatch
+(single wallet, since_may=0), missing code, indexer-routed writes (it's a
+direct `sql` insert; the indexer app being down is separate telemetry). Then
+reproduced the actual throw in-container: a **BigInt inside `entry_rationale`**
+→ `sql.json` → `TypeError: Do not know how to serialize a BigInt`, thrown
+inside `createTradeDecision`, swallowed by the caller's try/catch → no row,
+every open. (A red herring en route: NaN in the integer `leverage` col also
+throws 22P02, but the code can't actually produce NaN leverage — numberFromEnv
+is guarded — so that wasn't it.) FIX (`web/src/lib/db/trade-decisions.ts`):
+`createTradeDecision` now sanitizes at the DB boundary — `dbInt`/`dbNum` coerce
+non-finite→null (leverage rounded), and `dbJson` serializes BigInt→string and
+non-finite→null, never throwing. Verified the fixed path inserts cleanly
+against the live DB (BigInt stored as string).
+**why** — user asked to actually run the reconcile; it exposed that the fix so
+far was insufficient (open write, not close, was the failure point).
+**where** — trade-decisions.ts (createTradeDecision). Committed on `dev`; to be
+deployed to the worker. NOT backfilled: the ~months of missing rows +
+the 5 recent closes (reconcile lists them) still need a one-time backfill.
+NOTE the exact BigInt field isn't whaleNetExposure (typed number) — it's
+another rationale/deliberation value; the fix covers any BigInt regardless.
+**rollback** — revert the commit; the insert reverts to throwing on BigInt.
+
 ## ▲ node 38 · close-recording fix DEPLOYED to prod worker (surgical patch over uncommitted HIP-3)
 
 **when** — 2026-07-24 ~19:32 UTC

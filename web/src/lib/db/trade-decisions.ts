@@ -61,6 +61,40 @@ export interface CloseTradeDecisionInput {
 // Writes
 // ─────────────────────────────────────────────────────────────────────────
 
+// A single bad value from the composite/Kelly math must NEVER throw and lose
+// the whole audit row — that was the silent open-write bug (no trade_decisions
+// rows recorded since the v5 rearm; the insert threw and the caller's
+// try/catch swallowed it). Two known failure modes are hardened here:
+//   - a non-finite number in an integer column → "22P02 invalid input syntax"
+//   - a BigInt (e.g. whale-exposure) inside entry_rationale → JSON.stringify
+//     throws "Do not know how to serialize a BigInt".
+const dbNum = (n: number | null | undefined): number | null =>
+  typeof n === "number" && Number.isFinite(n) ? n : null;
+const dbInt = (n: number | null | undefined): number | null =>
+  typeof n === "number" && Number.isFinite(n) ? Math.round(n) : null;
+
+// BigInt-safe, non-finite-safe JSON for jsonb columns. Returns null (never
+// throws) so a malformed rationale degrades the metadata, not the whole row.
+function dbJson(
+  value: unknown,
+): ReturnType<typeof sql.json> | null {
+  if (value == null) return null;
+  try {
+    const safe = JSON.parse(
+      JSON.stringify(value, (_k, v) =>
+        typeof v === "bigint"
+          ? v.toString()
+          : typeof v === "number" && !Number.isFinite(v)
+            ? null
+            : v,
+      ),
+    );
+    return sql.json(safe as Parameters<typeof sql.json>[0]);
+  } catch {
+    return null;
+  }
+}
+
 export async function createTradeDecision(
   input: CreateTradeDecisionInput,
 ): Promise<TradeDecisionRow> {
@@ -81,21 +115,21 @@ export async function createTradeDecision(
       ${input.marketSymbol},
       ${input.venue},
       ${input.direction},
-      ${input.leverage ?? null},
+      ${dbInt(input.leverage)},
       ${input.openedAt},
-      ${input.entryNotionalUsd ?? null},
+      ${dbNum(input.entryNotionalUsd)},
       ${input.signalSource ?? null},
-      ${input.signalConfidence ?? null},
-      ${input.kellyFraction ?? null},
-      ${input.moralScore ?? null},
+      ${dbNum(input.signalConfidence)},
+      ${dbNum(input.kellyFraction)},
+      ${dbNum(input.moralScore)},
       ${input.moralJustification ?? null},
-      ${input.stopLossPct ?? null},
-      ${input.takeProfitPct ?? null},
-      ${input.trailingStopPct ?? null},
-      ${input.highWaterMark ?? null},
-      ${input.lowWaterMark ?? null},
-      ${input.dynamicTpLevels ? sql.json(input.dynamicTpLevels) : null},
-      ${input.entryRationale ? sql.json(input.entryRationale as Parameters<typeof sql.json>[0]) : null}
+      ${dbNum(input.stopLossPct)},
+      ${dbNum(input.takeProfitPct)},
+      ${dbNum(input.trailingStopPct)},
+      ${dbNum(input.highWaterMark)},
+      ${dbNum(input.lowWaterMark)},
+      ${dbJson(input.dynamicTpLevels?.filter((n) => Number.isFinite(n)))},
+      ${dbJson(input.entryRationale)}
     )
     RETURNING *
   `;
