@@ -88,6 +88,22 @@ function stringFromEnv(key: string, fallback: string): string {
   return raw && raw.trim().length > 0 ? raw.trim() : fallback;
 }
 
+/**
+ * Normalize a watch-market entry. Plain tickers uppercase ("btc" → "BTC");
+ * HIP-3 builder-dex markets keep their case-significant lowercase dex prefix
+ * ("XYZ:tsla" → "xyz:TSLA").
+ */
+function normalizeWatchMarket(value: string): string {
+  const trimmed = value.trim();
+  const colonIdx = trimmed.indexOf(":");
+  if (colonIdx > 0) {
+    const dex = trimmed.slice(0, colonIdx).trim().toLowerCase();
+    const ticker = trimmed.slice(colonIdx + 1).trim().toUpperCase();
+    return dex && ticker ? `${dex}:${ticker}` : "";
+  }
+  return trimmed.toUpperCase();
+}
+
 function optionalAddressFromEnv(key: string): Address | undefined {
   const raw = process.env[key];
   if (!raw) return undefined;
@@ -313,7 +329,8 @@ export function getTraderConfig(): TraderExecutionConfig {
       defaultLeverage: numberFromEnv("HYPERLIQUID_DEFAULT_LEVERAGE", 20),
       entryNotionalUsd: numberFromEnv("HYPERLIQUID_ENTRY_USD", 30),
       minAccountValueUsd: numberFromEnv("HYPERLIQUID_MIN_ACCOUNT_VALUE_USD", 100),
-      watchMarkets: stringFromEnv("HYPERLIQUID_WATCH_MARKETS", "BTC,ETH,SOL,HYPE,XRP,SUI,DOGE,LINK,AVAX,BNB,PAXG,TAO,ZEC,FET,BCH,WLD,AAVE,OP,ARB").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean),
+      watchMarkets: stringFromEnv("HYPERLIQUID_WATCH_MARKETS", "BTC,ETH,SOL,HYPE,XRP,SUI,DOGE,LINK,AVAX,BNB,PAXG,TAO,ZEC,FET,BCH,WLD,AAVE,OP,ARB").split(",").map((s) => normalizeWatchMarket(s)).filter(Boolean),
+      builderDexes: stringFromEnv("HYPERLIQUID_BUILDER_DEXES", "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
     },
     vaultStrategy: buildVaultStrategyConfig("TRADER"),
     vaultRail: buildVaultRailConfig("TRADER", rpcUrl),

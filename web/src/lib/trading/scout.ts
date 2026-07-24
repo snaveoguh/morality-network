@@ -299,15 +299,23 @@ async function maybeExitPosition(
   });
   globalPositionLock.recordClose(symbol, "scalper");
 
-  // Mirror close to pooter.trade_decisions (best-effort, fire-and-forget)
+  // Mirror close to pooter.trade_decisions (best-effort, fire-and-forget).
+  // A zero-row result means the HL close executed but nothing was recorded —
+  // log loudly so it can't vanish silently (see reconcile-hl-fills.mjs).
   if (position.cloid) {
     closeTradeDecisionByCloid(position.cloid, {
       closedAt: new Date(),
       exitReason,
       exitRationale: { trigger: exitReason, priceAtTrigger: currentPrice, holdDurationMs: Date.now() - position.openedAt },
-    }).catch((err) => {
-      log(`failed to close TradeDecision cloid=${position.cloid}: ${err instanceof Error ? err.message : err}`);
-    });
+    })
+      .then((affected) => {
+        if (affected === 0) {
+          log(`CLOSE NOT RECORDED in trade_decisions: ${symbol} cloid=${position.cloid} — HL close executed, no matching open row. Reconcile needed.`);
+        }
+      })
+      .catch((err) => {
+        log(`failed to close TradeDecision cloid=${position.cloid}: ${err instanceof Error ? err.message : err}`);
+      });
   }
 
   log(

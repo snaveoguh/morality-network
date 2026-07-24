@@ -159,6 +159,12 @@ export interface HyperliquidConfig {
   minAccountValueUsd: number;
   /** markets to scan each cycle (e.g., ["BTC","ETH","SOL"]) */
   watchMarkets: string[];
+  /**
+   * HIP-3 builder-deployed perp dexs to load markets from (e.g. ["xyz"]).
+   * Markets on these dexs are addressed as "<dex>:<TICKER>" (case-significant
+   * lowercase dex prefix) and use offset asset ids (100000 + dexIndex*10000 + i).
+   */
+  builderDexes: string[];
 }
 
 export interface VaultStrategyConfig {

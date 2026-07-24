@@ -117,11 +117,12 @@ export async function updateRuntimeStateByCloid(
   `;
 }
 
+/** Returns the number of rows closed (0 = no matching open row for this cloid). */
 export async function closeTradeDecisionByCloid(
   cloid: string,
   input: CloseTradeDecisionInput,
-): Promise<void> {
-  await sql`
+): Promise<number> {
+  const rows = await sql`
     UPDATE pooter.trade_decisions SET
       closed_at      = ${input.closedAt},
       exit_reason    = ${input.exitReason},
@@ -129,20 +130,23 @@ export async function closeTradeDecisionByCloid(
       updated_at     = NOW()
     WHERE cloid = ${cloid}
       AND closed_at IS NULL
+    RETURNING id
   `;
+  return rows.length;
 }
 
 /**
- * Fallback for legacy positions that have no cloid (created before this
- * refactor). Match by (wallet, marketSymbol, openedAt) — best we can do.
+ * Fallback for positions with no cloid, or whose cloid didn't match an open
+ * row. Match by (wallet, marketSymbol, openedAt) — best we can do.
+ * Returns the number of rows closed.
  */
 export async function closeTradeDecisionByWalletSymbolOpened(
   wallet: string,
   marketSymbol: string,
   openedAt: Date,
   input: CloseTradeDecisionInput,
-): Promise<void> {
-  await sql`
+): Promise<number> {
+  const rows = await sql`
     UPDATE pooter.trade_decisions SET
       closed_at      = ${input.closedAt},
       exit_reason    = ${input.exitReason},
@@ -152,7 +156,40 @@ export async function closeTradeDecisionByWalletSymbolOpened(
       AND market_symbol = ${marketSymbol}
       AND opened_at = ${openedAt}
       AND closed_at IS NULL
+    RETURNING id
   `;
+  return rows.length;
+}
+
+/**
+ * Close a trade_decisions row for a position/scalp: try the cloid first, then
+ * fall back to wallet+symbol+openedAt if the cloid matched no open row.
+ * Returns rows affected — 0 means nothing was recorded and the caller MUST log
+ * loudly (the HL close already happened). Shared by the engine, scalper and
+ * scout so the close-recording behaviour can't drift between them.
+ */
+export async function recordTradeDecisionClose(
+  target: {
+    cloid?: string | null;
+    wallet: string;
+    marketSymbol?: string | null;
+    openedAt: Date;
+  },
+  input: CloseTradeDecisionInput,
+): Promise<number> {
+  let affected = 0;
+  if (target.cloid) {
+    affected = await closeTradeDecisionByCloid(target.cloid, input);
+  }
+  if (affected === 0 && target.marketSymbol) {
+    affected = await closeTradeDecisionByWalletSymbolOpened(
+      target.wallet,
+      target.marketSymbol,
+      target.openedAt,
+      input,
+    );
+  }
+  return affected;
 }
 
 // ─────────────────────────────────────────────────────────────────────────

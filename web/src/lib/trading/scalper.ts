@@ -780,15 +780,23 @@ export class ScalperManager {
       this.closedScalps = this.closedScalps.slice(-200);
     }
 
-    // Mirror close to pooter.trade_decisions (best-effort, fire-and-forget)
+    // Mirror close to pooter.trade_decisions (best-effort, fire-and-forget).
+    // A zero-row result means the HL close executed but nothing was recorded —
+    // log loudly so it can't vanish silently (see reconcile-hl-fills.mjs).
     if (scalp.cloid) {
       closeTradeDecisionByCloid(scalp.cloid, {
         closedAt: new Date(scalp.closedAt ?? Date.now()),
         exitReason: reason,
         exitRationale: { trigger: reason, priceAtTrigger: exitPrice, pnlUsd: scalp.pnlUsd, holdDurationMs: (scalp.closedAt ?? Date.now()) - scalp.openedAt },
-      }).catch((err) => {
-        log(`failed to close TradeDecision cloid=${scalp.cloid}: ${err instanceof Error ? err.message : err}`);
-      });
+      })
+        .then((affected) => {
+          if (affected === 0) {
+            log(`CLOSE NOT RECORDED in trade_decisions: ${scalp.symbol} cloid=${scalp.cloid} — HL close executed, no matching open row. Reconcile needed.`);
+          }
+        })
+        .catch((err) => {
+          log(`failed to close TradeDecision cloid=${scalp.cloid}: ${err instanceof Error ? err.message : err}`);
+        });
     }
 
     const holdMs = (scalp.closedAt ?? Date.now()) - scalp.openedAt;
