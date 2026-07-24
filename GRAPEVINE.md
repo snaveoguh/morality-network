@@ -9,6 +9,31 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 38 · close-recording fix DEPLOYED to prod worker (surgical patch over uncommitted HIP-3)
+
+**when** — 2026-07-24 ~19:32 UTC
+**what** — shipped node-37's trader close-recording + fee fix to the live
+`pooter-agent-worker` (pooter-indexer/production, service dc970b4f) via
+`railway up` from the clone `~/Downloads/morality-network-latest/web`.
+DISCOVERY: that clone's "uncommitted patch" is not just the .js boot fix — it
+is the ENTIRE HIP-3 builder-dex impl (config/hyperliquid/types.ts, 397 lines)
+living ONLY as uncommitted edits on a stale main. A checkout/merge would have
+wiped live prod code. So shipped my fix as a SURGICAL `git apply` of a 5-file
+delta (trade-decisions/engine/scout/scalper/metrics-v2 + reconcile script),
+disjoint from the 6 HIP-3/boot files → they stayed untouched. Verified boot-tsc
+(`worker:build`) with HIP-3 + delta together before deploy; removed macOS
+node_modules pre-upload.
+**why** — make the close-recording fix actually run (node 37 was dev-only /
+not live; the worker has NO GitHub integration, deploys manually).
+**verified** — fresh boot: `worker:build` tsc clean, `Starting Container`,
+`[Worker] starting {tasks:[trader,swarm]}`, `[signals] using postgres: 5
+signals`. Zero downtime (old image traded through the build).
+**where** — clone web/ subdir; branch `dev` @ 01e040b is the committed source.
+TECH DEBT: the HIP-3 code must be committed to the repo — right now a stray
+`git checkout` in the Downloads clone erases prod HIP-3.
+**rollback** — redeploy the prior image from the Railway dashboard, or
+`git apply -R` the delta in the clone and `railway up` again.
+
 ## ▲ node 37 · trader close-recording fix + real fee rate (dev, ledger-free branch)
 
 **when** — 2026-07-24
