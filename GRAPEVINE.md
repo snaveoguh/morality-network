@@ -9,6 +9,34 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 41 · hyperstructure flywheel — public burn-vs-profit endpoint + /markets panel; indexer revived (RPC 403)
+
+**when** — 2026-07-27
+**what** — (a) NEW `/api/hyperstructure` (public, no auth): joins 24h inference
+burn (indexer AI-usage summary) with realized agent PnL (pooter.trade_decisions
+`exit_rationale.pnlUsd`) → self-funding ratio + verdict. (b) NEW
+`HyperstructurePanel` on /markets above Agent Trading — INFERENCE BURN /
+REALIZED PNL / FUNDING RATIO / STATUS tiles; status reads NOT SELF-FUNDING
+until the ratio actually crosses 1. (c) OPS: pooter-indexer was crash-looping
+— `base-rpc.publicnode.com` now returns 403 on archive `eth_getLogs` ("requires
+a personal token"). Redeployed the service and added fallback
+`PONDER_RPC_URL_3=https://base.drpc.org` via `railway variables --set`.
+**why** — "id rather just build it into fruition than talk about it" — the
+hyperstructure claim (platform funds its own inference off agent profit) is now
+measured in public instead of asserted.
+**where** — branch `feat/hyperstructure-flywheel` (off dev):
+`web/src/app/api/hyperstructure/route.ts`,
+`web/src/components/markets/HyperstructurePanel.tsx`,
+`web/src/app/markets/page.tsx`. Railway `pooter-indexer` service env.
+**known gaps** — (1) NO `AI_PRICE_*` env vars exist on any service → every
+recorded LLM call costs $0.00; burn will read $0 until rates are set (setting
+them on the worker restarts it — /tmp position store risk — deferred to Hugo).
+(2) telemetry recorded 0 invocations in the 24h the indexer was down (writes
+fail silently). (3) book PnL = recorded closes only (7 rows post-node-38/40);
+the pre-fix 1,085-trade history has no per-trade pnlUsd.
+**rollback** — revert the branch merge; `railway variables --set
+PONDER_RPC_URL_3=` (empty) to drop the RPC fallback.
+
 ## ▲ node 40 · backfilled 5 lost closes + widened book to 6×$40
 
 **when** — 2026-07-24

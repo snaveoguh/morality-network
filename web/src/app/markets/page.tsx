@@ -1,4 +1,5 @@
 import { AgentMarketDashboard } from "@/components/markets/AgentMarketDashboard";
+import { HyperstructurePanel } from "@/components/markets/HyperstructurePanel";
 import { NarrativeGrid } from "@/components/markets/NarrativeGrid";
 import { getLiveNarratives } from "@/lib/narratives";
 import { withBrand } from "@/lib/brand";
@@ -28,6 +29,9 @@ export default async function MarketsPage() {
         </div>
         <NarrativeGrid narratives={narratives} />
       </div>
+
+      {/* Hyperstructure flywheel — agent profit vs inference burn */}
+      <HyperstructurePanel />
 
       {/* Agent Trading Dashboard */}
       <div className="mb-4 border-b-2 border-[var(--rule)] pb-3">
