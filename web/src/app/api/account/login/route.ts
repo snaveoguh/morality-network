@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createLoginToken, getAccountByEmail, normalizeEmail } from "@/lib/accounts";
+import { createLoginToken, getOrCreateAccountByEmail, normalizeEmail } from "@/lib/accounts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,8 +35,10 @@ export async function POST(request: NextRequest) {
     message: "If that address has an account, a sign-in link is on its way.",
   });
 
-  const account = await getAccountByEmail(email);
-  if (!account) return generic;
+  // Sign-in and sign-up are the same action. An unrecognised address gets a
+  // new account opening at zero MO rather than a silently dropped request.
+  const { account, created } = await getOrCreateAccountByEmail(email);
+  if (created) console.info(`[account] new account created for ${email}`);
 
   const token = await createLoginToken(String(account.id));
   const link = `${SITE_URL}/api/account/callback?token=${encodeURIComponent(token)}`;

@@ -86,8 +86,9 @@ export function SignInForm() {
         <p className="mt-3 text-sm text-[var(--accent-red)]">{message}</p>
       )}
       <p className="mt-4 text-xs leading-relaxed text-[var(--ink-faint)]">
-        Use the address you registered with on morality.network. No password —
-        we send a one-time link.
+        No password — we send a one-time link. If you held MO on
+        morality.network, use that address and your balance will be waiting.
+        Otherwise this creates your account.
       </p>
     </form>
   );

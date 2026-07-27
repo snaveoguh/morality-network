@@ -4,7 +4,7 @@ import { SignInForm } from "@/components/account/SignInForm";
 import { SignOutButton } from "@/components/account/SignOutButton";
 import { WalletSetup } from "@/components/account/WalletSetup";
 import { getLinkedWallets } from "@/lib/account-wallets";
-import { formatMo, getAccountSummary, getLedger } from "@/lib/accounts";
+import { formatMo, getAccountSummary, getEthClaim, getLedger } from "@/lib/accounts";
 import { withBrand } from "@/lib/brand";
 import { getSession } from "@/lib/session";
 
@@ -55,8 +55,9 @@ export default async function AccountPage({
             </p>
           )}
           <p className="mb-6 max-w-xl text-base leading-relaxed text-[var(--ink-light)]">
-            If you held MO on morality.network, your balance has carried over.
-            Sign in with the email address you used there.
+            Sign in with your email — no password, no wallet needed. If you held
+            MO on morality.network, use that address and your balance has
+            carried over.
           </p>
           <SignInForm />
         </section>
@@ -81,12 +82,11 @@ async function SignedIn({
 }: {
   account: NonNullable<Awaited<ReturnType<typeof getAccountSummary>>>;
 }) {
-  const [ledger, wallets] = await Promise.all([
+  const [ledger, wallets, ethClaim] = await Promise.all([
     getLedger(account.id),
     getLinkedWallets(account.id),
+    getEthClaim(account.id),
   ]);
-  const mainnetMo = Number.parseFloat(account.legacyMainnetMo || "0");
-  const legacyEth = Number.parseFloat(account.legacyEth || "0");
 
   return (
     <>
@@ -112,35 +112,31 @@ async function SignedIn({
 
       <WalletSetup existing={wallets} />
 
-      {(mainnetMo > 0 || legacyEth > 0 || account.legacyAddress) && (
+      {/* Old mainnet MO is deliberately not shown. The platform balance above is
+          the single figure that counts going forward. */}
+      {(ethClaim || account.legacyAddress) && (
         <section className="mt-8">
           <h2 className="font-headline text-lg">From the old platform</h2>
           <dl className="mt-3 divide-y divide-[var(--rule-light)] border-y border-[var(--rule-light)]">
+            {ethClaim && (
+              <div className="flex flex-wrap items-baseline justify-between gap-2 py-3">
+                <dt className="text-sm text-[var(--ink-light)]">
+                  ETH we owe you
+                  <span className="mt-1 block text-xs text-[var(--ink-faint)]">
+                    {ethClaim.status === "paid"
+                      ? "Paid to your wallet."
+                      : "Left in the wallet we held for you. It will be sent to your own wallet above."}
+                  </span>
+                </dt>
+                <dd className="font-mono text-sm whitespace-nowrap">{ethClaim.amountEth} ETH</dd>
+              </div>
+            )}
             {account.legacyAddress && (
               <div className="flex flex-wrap items-baseline justify-between gap-2 py-3">
                 <dt className="text-sm text-[var(--ink-light)]">Old custodial wallet</dt>
                 <dd className="font-mono text-xs break-all text-[var(--ink-faint)]">
                   {account.legacyAddress}
                 </dd>
-              </div>
-            )}
-            {mainnetMo > 0 && (
-              <div className="flex flex-wrap items-baseline justify-between gap-2 py-3">
-                <dt className="text-sm text-[var(--ink-light)]">
-                  MO you moved to Ethereum mainnet
-                  <span className="mt-1 block text-xs text-[var(--ink-faint)]">
-                    Already in your own custody — not counted in the balance above.
-                  </span>
-                </dt>
-                <dd className="font-mono text-sm">{formatMo(account.legacyMainnetMo)}</dd>
-              </div>
-            )}
-            {legacyEth > 0 && (
-              <div className="flex flex-wrap items-baseline justify-between gap-2 py-3">
-                <dt className="text-sm text-[var(--ink-light)]">
-                  ETH left on the old wallet
-                </dt>
-                <dd className="font-mono text-sm">{legacyEth}</dd>
               </div>
             )}
           </dl>

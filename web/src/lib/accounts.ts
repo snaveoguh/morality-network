@@ -60,6 +60,30 @@ export async function getAccountByEmail(email: string): Promise<AccountRow | nul
   return rows[0] ?? null;
 }
 
+/**
+ * Fetch an account, creating it if this email has never been seen.
+ *
+ * There is deliberately no separate "sign up" flow: the same form does both.
+ * A legacy morality.network holder finds their existing row and their MO
+ * balance with it; anyone else gets a fresh account opening at zero. The user
+ * cannot tell which happened from the response, which is the point — the
+ * sign-in endpoint must not become a way to test whether an address is one of
+ * the 401 legacy holders.
+ */
+export async function getOrCreateAccountByEmail(
+  email: string,
+): Promise<{ account: AccountRow; created: boolean }> {
+  const normalized = normalizeEmail(email);
+  const rows = await sql<(AccountRow & { is_new: boolean })[]>`
+    INSERT INTO pooter.accounts (email)
+    VALUES (${normalized})
+    ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+    RETURNING *, (xmax = 0) AS is_new
+  `;
+  const { is_new, ...account } = rows[0];
+  return { account: account as AccountRow, created: is_new };
+}
+
 export async function getAccountById(id: string): Promise<AccountRow | null> {
   const rows = await sql<AccountRow[]>`
     SELECT * FROM pooter.accounts WHERE id = ${id} LIMIT 1
@@ -145,6 +169,46 @@ export async function consumeLoginToken(token: string): Promise<string | null> {
 
   await sql`UPDATE pooter.accounts SET last_login_at = NOW() WHERE id = ${accountId}`;
   return accountId;
+}
+
+export interface EthClaim {
+  amountWei: string;
+  amountEth: string;
+  status: "pending" | "recovered" | "paid" | "void";
+  legacyAddress: string;
+  paidTxHash: string | null;
+}
+
+/**
+ * The ETH this account is owed from the wallet the old platform held for them.
+ * Amounts are exact wei — formatted here rather than stored as a float.
+ */
+export async function getEthClaim(accountId: string): Promise<EthClaim | null> {
+  const rows = await sql<
+    { amount_wei: string; status: string; legacy_address: string; paid_tx_hash: string | null }[]
+  >`
+    SELECT amount_wei::TEXT, status, legacy_address, paid_tx_hash
+    FROM pooter.eth_claims
+    WHERE account_id = ${accountId} AND status <> 'void'
+    ORDER BY id
+    LIMIT 1
+  `;
+  const r = rows[0];
+  if (!r) return null;
+  const wei = BigInt(r.amount_wei);
+  return {
+    amountWei: r.amount_wei,
+    // 18 decimals, trailing zeros trimmed, never a float.
+    amountEth: (() => {
+      const s = wei.toString().padStart(19, "0");
+      const whole = s.slice(0, -18);
+      const frac = s.slice(-18).replace(/0+$/, "");
+      return frac ? `${whole}.${frac}` : whole;
+    })(),
+    status: r.status as EthClaim["status"],
+    legacyAddress: r.legacy_address,
+    paidTxHash: r.paid_tx_hash,
+  };
 }
 
 /** Format a NUMERIC(38,8) string for display — thousands separators, no dust. */
