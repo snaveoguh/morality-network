@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { SignInForm } from "@/components/account/SignInForm";
 import { SignOutButton } from "@/components/account/SignOutButton";
+import { WalletSetup } from "@/components/account/WalletSetup";
+import { getLinkedWallets } from "@/lib/account-wallets";
 import { formatMo, getAccountSummary, getLedger } from "@/lib/accounts";
 import { withBrand } from "@/lib/brand";
 import { getSession } from "@/lib/session";
@@ -79,7 +81,10 @@ async function SignedIn({
 }: {
   account: NonNullable<Awaited<ReturnType<typeof getAccountSummary>>>;
 }) {
-  const ledger = await getLedger(account.id);
+  const [ledger, wallets] = await Promise.all([
+    getLedger(account.id),
+    getLinkedWallets(account.id),
+  ]);
   const mainnetMo = Number.parseFloat(account.legacyMainnetMo || "0");
   const legacyEth = Number.parseFloat(account.legacyEth || "0");
 
@@ -104,6 +109,8 @@ async function SignedIn({
           </p>
         </div>
       </section>
+
+      <WalletSetup existing={wallets} />
 
       {(mainnetMo > 0 || legacyEth > 0 || account.legacyAddress) && (
         <section className="mt-8">

@@ -7,8 +7,15 @@
  *   2. morality_balance_sheet_*.csv  — audited balance sheet, Feb 2021, 140 rows
  *
  * Reconciliation rule (decided 2026-07-27):
- *   The 2021 balance sheet WINS for the 140 emails it covers — it is the
- *   audited figure. The 2024 profiles export fills in the other 261 accounts.
+ *   Take the HIGHER of the two recorded figures — the 2021 audited credit and
+ *   the 2024 virtual balance. No user's opening balance may be lower than the
+ *   last number the platform showed them, which the 2024 export is.
+ *
+ *   ONE EXCEPTION, by Hugo's decision: hugoevans92@gmail.com opens at ZERO.
+ *   The 2021 sheet records 696,638 MO against it and the 2024 export 430;
+ *   neither is a personal balance — it was the pre-distribution float, and
+ *   seeding it would have put 24.8% of supply on the founder's account.
+ *   Opening supply is therefore entirely user-held.
  *
  *   MainNetAmountMo is NOT credited. Those 10 users already moved that MO to
  *   Ethereum mainnet and hold it themselves; crediting it again would double-
@@ -107,13 +114,33 @@ const sheet = new Map();
 }
 
 // ── 3. Reconcile ───────────────────────────────────────────────────────────
+// The founder's account carried the pre-distribution float, not a personal
+// balance. It opens at zero so that all opening supply is user-held.
+const ZERO_OPENING_EMAIL = "hugoevans92@gmail.com";
+
 const emails = [...new Set([...profiles.keys(), ...sheet.keys()])].sort();
 const accounts = emails.map((email) => {
   const p = profiles.get(email);
   const s = sheet.get(email);
-  // 2021 audited sheet wins where it exists; 2024 export fills the gaps.
-  const source = s ? "balance_sheet_2021" : "account_profiles_2024";
-  const openingMo = s ? s.creditMo : p.virtualMo;
+
+  const sheetMo = s ? s.creditMo : null;
+  const profileMo = p ? p.virtualMo : null;
+
+  // Higher of the two, so nobody's opening balance is below the last figure
+  // the platform showed them.
+  let openingMo;
+  let source;
+  if (email === ZERO_OPENING_EMAIL) {
+    openingMo = 0;
+    source = "founder_zeroed";
+  } else if (sheetMo !== null && (profileMo === null || sheetMo >= profileMo)) {
+    openingMo = sheetMo;
+    source = "balance_sheet_2021";
+  } else {
+    openingMo = profileMo;
+    source = "account_profiles_2024";
+  }
+
   return {
     email,
     openingMo,
