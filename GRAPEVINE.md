@@ -9,6 +9,41 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 41 · legacy morality.network accounts recovered + MO dashboard
+
+**when** — 2026-07-27
+**what** — recovered the morality.network user list from disk (it was never in
+any database) and built an email-login dashboard on it. New:
+`web/migrations/006_platform_accounts.sql` (pooter.accounts, pooter.mo_ledger,
+pooter.login_tokens, pooter.mo_balances view), `web/src/lib/accounts.ts`,
+`/api/account/{login,callback,me,logout}`, `/account` page,
+`web/scripts/build-legacy-ledger.mjs` + `seed-legacy-accounts.mjs`.
+Migration 006 is APPLIED to the pooter-indexer Postgres; the seed has only
+been DRY-RUN — tables are still empty.
+**why** — Hugo is standing the old holder base back up ahead of the MO token
+redeploy. The user list exists only as two CSVs on the Mac: `~/account_profiles.csv`
+(388 accounts, Jul 2024 app export) and `~/Downloads/Telegram Desktop/
+morality_balance_sheet_2_18_2021.csv` (140 rows, Feb 2021 audited). Reconciled
+union = **401 accounts, 194 funded, 2,814,063.93910905 MO**. Rule: the 2021
+sheet wins where it exists, the 2024 export fills the rest; MainNetAmountMo
+(207,844 MO across 10 users) is NOT credited — already self-custodied.
+GOTCHA: the 2021 sheet's header is MISLABELLED — real column order is
+`Email, CreditAmountMo, MainNetAmountMo, EthereumAddress, AmountEth` (cols 4/5
+swapped). Onchain is useless as a source: a full scan of all 11.05M Base blocks
+since MO deployed found 42 transfers and 6 addresses, 3 of them the Uniswap v4
+pool and treasury.
+**where** — `web/migrations/006_platform_accounts.sql`, `web/src/lib/accounts.ts`,
+`web/src/app/account/`, `web/src/app/api/account/`, `web/src/components/account/`,
+`web/scripts/build-legacy-ledger.mjs`, `web/scripts/seed-legacy-accounts.mjs`.
+Branch `feat/account-dashboard`. Deliberately non-custodial — the 388
+EncryptedPrivateKey/Salt blobs in the CSV are never read or stored.
+**rollback** — `git revert` the branch merge; to undo the schema:
+`DROP VIEW pooter.mo_balances; DROP TABLE pooter.login_tokens, pooter.mo_ledger,
+pooter.accounts; DELETE FROM pooter.schema_migrations WHERE filename =
+'006_platform_accounts.sql';`
+
+---
+
 ## ▲ node 40 · backfilled 5 lost closes + widened book to 6×$40
 
 **when** — 2026-07-24
