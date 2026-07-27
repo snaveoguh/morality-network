@@ -9,6 +9,33 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 42 · 401 accounts loaded · non-custodial wallets · ETH sweep tooling
+
+**when** — 2026-07-27
+**what** — (a) SEEDED the legacy holders into pooter-indexer Postgres:
+**401 accounts, 202 funded, 2,119,829.39543229 MO**. (b) migration 007 +
+`/api/account/wallet/{nonce,link}` + `WalletSetup.tsx` — users generate a
+BIP-39 wallet in-browser, mnemonic never leaves the device, server stores only
+address + proof signature. (c) `web/scripts/sweep-legacy-eth.mjs`.
+Commits `d8fd1d2`, `97f1197` on `feat/account-dashboard`.
+**why** — standing the old holder base back up ahead of the MO redeploy.
+Reconciliation rule CHANGED from node 41: now takes the HIGHER of the 2021
+audited and 2024 exported figures (nobody's balance falls below what the
+platform last showed them), and `hugoevans92@gmail.com` opens at ZERO — the
+2021 sheet put 696,638 MO on it, which was the pre-distribution float, not a
+personal balance, and would have been 24.8% of supply.
+**where** — legacy custodial ETH: **0.2528 ETH across 12 of 388 wallets, all
+on Ethereum mainnet, nothing on Base.** Decryption scheme recovered from the
+2020 RateIt backend `BankUtility.cs`: AES-256-CBC, key AND iv from ONE
+PBKDF2-HMAC-SHA1(passphrase, ascii(salt), 1000, 48) derivation, UTF-16LE
+plaintext, base64. **BLOCKED: the passphrase is not on this machine** — it was
+in the old Web.config (gitignored) or the `rateit-kv` Azure Key Vault.
+**rollback** — `git revert 97f1197 d8fd1d2`. To unseed:
+`TRUNCATE pooter.mo_ledger, pooter.account_wallets, pooter.login_tokens,
+pooter.wallet_link_nonces, pooter.accounts CASCADE;`
+
+---
+
 ## ▲ node 41 · legacy morality.network accounts recovered + MO dashboard
 
 **when** — 2026-07-27
