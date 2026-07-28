@@ -467,6 +467,161 @@ export async function slashOverturned(
   });
 }
 
+// ── Enrolment ──────────────────────────────────────────────────────────────
+
+export interface ReviewerProfile {
+  accountId: string;
+  kind: ReviewerKind;
+  status: "active" | "paused" | "suspended";
+  modelId: string | null;
+  conflicts: string[];
+  reviewsTotal: number;
+  reviewsAgreed: number;
+  overturned: number;
+  joinedAt: string;
+}
+
+export async function getReviewerProfile(accountId: string): Promise<ReviewerProfile | null> {
+  const rows = await sql<
+    {
+      account_id: string; kind: ReviewerKind; status: string; model_id: string | null;
+      conflicts: string[]; reviews_total: number; reviews_agreed: number;
+      overturned: number; joined_at: Date;
+    }[]
+  >`
+    SELECT account_id::TEXT, kind, status, model_id, conflicts,
+           reviews_total, reviews_agreed, overturned, joined_at
+    FROM pooter.ledger_reviewers WHERE account_id = ${accountId}
+  `;
+  const r = rows[0];
+  if (!r) return null;
+  return {
+    accountId: r.account_id,
+    kind: r.kind,
+    status: r.status as ReviewerProfile["status"],
+    modelId: r.model_id,
+    conflicts: r.conflicts ?? [],
+    reviewsTotal: r.reviews_total,
+    reviewsAgreed: r.reviews_agreed,
+    overturned: r.overturned,
+    joinedAt: r.joined_at.toISOString(),
+  };
+}
+
+/**
+ * Enrol as a human reviewer.
+ *
+ * Requires enough MO to cover a stake — not as a qualification, but because a
+ * reviewer who cannot stake can never be assigned, and enrolling them would
+ * just produce rounds that fail to fill.
+ *
+ * Declared conflicts are honoured at assignment time: a party name or member
+ * id here means this reviewer is never shown that subject's claims.
+ */
+export async function enrolHuman(params: {
+  accountId: string;
+  conflicts: string[];
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const conflicts = params.conflicts.map((c) => c.trim()).filter(Boolean).slice(0, 50);
+
+  const balance = await balanceOf(params.accountId);
+  if (balance < Number.parseFloat(DEFAULT_STAKE_MO)) {
+    return {
+      ok: false,
+      error: `Reviewing requires at least ${DEFAULT_STAKE_MO.split(".")[0]} MO to stake.`,
+    };
+  }
+
+  await sql`
+    INSERT INTO pooter.ledger_reviewers (account_id, kind, conflicts)
+    VALUES (${params.accountId}, 'human', ${JSON.stringify(conflicts)}::jsonb)
+    ON CONFLICT (account_id) DO UPDATE
+      SET conflicts = EXCLUDED.conflicts, status = 'active'
+  `;
+  return { ok: true };
+}
+
+/**
+ * Register an agent reviewer under an operator.
+ *
+ * The agent gets its own account row so its votes are attributable, but the
+ * operator's MO is what gets staked and slashed — an agent cannot be made to
+ * care about being wrong, so the person running it must.
+ */
+export async function registerAgent(params: {
+  operatorAccountId: string;
+  modelId: string;
+  label: string;
+}): Promise<{ ok: true; agentAccountId: string } | { ok: false; error: string }> {
+  const modelId = params.modelId.trim();
+  // provider/model or provider/model@version
+  if (!/^[a-z0-9_.-]+\/[a-z0-9_.-]+(@[a-z0-9_.-]+)?$/i.test(modelId)) {
+    return { ok: false, error: "Model must look like 'provider/model' or 'provider/model@version'" };
+  }
+
+  const balance = await balanceOf(params.operatorAccountId);
+  if (balance < Number.parseFloat(DEFAULT_STAKE_MO)) {
+    return { ok: false, error: "The operator needs MO to stake behind the agent." };
+  }
+
+  const existing = await sql<{ account_id: string }[]>`
+    SELECT account_id::TEXT FROM pooter.ledger_reviewers
+    WHERE model_id = ${modelId} AND operator_account_id = ${params.operatorAccountId}
+  `;
+  if (existing.length > 0) {
+    return { ok: false, error: "You already run an agent on that model." };
+  }
+
+  return sql.begin(async (tx) => {
+    const [operator] = await tx<{ email: string }[]>`
+      SELECT email FROM pooter.accounts WHERE id = ${params.operatorAccountId}
+    `;
+    // Agent accounts get a non-deliverable address in a reserved subdomain:
+    // they must never be emailable or sign in.
+    const slug = params.label.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 32) || "agent";
+    const email = `${slug}.${Date.parse(operator.email) || ""}${Math.floor(Math.random() * 1e6)}@agent.pooter.invalid`;
+
+    const [agent] = await tx<{ id: string }[]>`
+      INSERT INTO pooter.accounts (email, display_name) VALUES (${email}, ${params.label.trim()})
+      RETURNING id::TEXT
+    `;
+    await tx`
+      INSERT INTO pooter.ledger_reviewers (account_id, kind, model_id, operator_account_id)
+      VALUES (${agent.id}, 'agent', ${modelId}, ${params.operatorAccountId})
+    `;
+    return { ok: true as const, agentAccountId: agent.id };
+  });
+}
+
+/**
+ * Open rounds for every resolution still awaiting review.
+ *
+ * Skips anything that cannot legally settle yet — a negative verdict with no
+ * eligible human returns its reason rather than opening a doomed round.
+ */
+export async function openPendingRounds(
+  limit = 20,
+): Promise<{ opened: string[]; skipped: { resolutionId: string; reason: string }[] }> {
+  const pending = await sql<{ id: string }[]>`
+    SELECT r.id
+    FROM pooter.ledger_resolutions r
+    LEFT JOIN pooter.ledger_review_rounds rr
+      ON rr.resolution_id = r.id AND rr.status = 'open'
+    WHERE r.status = 'proposed' AND rr.id IS NULL
+    ORDER BY r.created_at
+    LIMIT ${limit}
+  `;
+
+  const opened: string[] = [];
+  const skipped: { resolutionId: string; reason: string }[] = [];
+  for (const p of pending) {
+    const result = await openRound({ resolutionId: p.id });
+    if ("error" in result) skipped.push({ resolutionId: p.id, reason: result.error });
+    else opened.push(p.id);
+  }
+  return { opened, skipped };
+}
+
 /**
  * A reviewer's open work. Deliberately returns nothing about other reviewers'
  * votes — the round is blind until it settles.
