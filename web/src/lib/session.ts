@@ -10,6 +10,9 @@ export interface SessionData {
   siweIssuedAt?: string;
   terminalUsageMonthKey?: string;
   terminalUsageCount?: number;
+  /** Platform account (email magic-link login) — see lib/accounts.ts. */
+  accountId?: string;
+  accountEmail?: string;
 }
 
 /**

@@ -9,7 +9,92 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
-## ▲ node 41 · hyperstructure flywheel — public burn-vs-profit endpoint + /markets panel; indexer revived (RPC 403)
+## ▲ node 43 · feed spectrum balanced + account dashboard & peer review merged to dev/prod
+
+**when** — 2026-08-12
+**what** — (a) MERGED `feat/feed-balance` and `feat/account-dashboard` (9
+commits: email login, credited legacy MO, non-custodial wallets, staked peer
+review, reviewer enrolment) into `dev`, then promoted to `main`/prod. (b) FEED:
+added Fox News, NY Post, Telegraph, National Review, UnHerd (right) and RT,
+TASS, Sputnik, Xinhua, CGTN, Global Times, Press TV, TRT World as labelled
+state media — MBFC-composite bias/factuality + `state` funding on every tile;
+homepage distribution moved to 37% L / 39% C / 24% R across 76 sources.
+**why** — user feedback: the feed read too left; Ground News-style breadth
+instead of narrowing. And the 401 legacy holders need somewhere to log in.
+**where** — `web/src/lib/rss.ts`, `web/src/lib/bias.ts`, plus everything under
+nodes 41/42. Gotcha: presstv.ir unreachable — Press TV runs via
+presstv.co.uk/rss.xml; RT/Sputnik need direct RSS (Google News delisted them).
+**rollback** — tags `backup/prod-2026-08-12` (main) and `backup/dev-2026-08-12`
+(dev) pushed to origin before the merge: `git reset --hard backup/prod-2026-08-12`
+on main (or Railway dashboard → redeploy previous build). DB side per node 41/42
+rollback notes.
+
+---
+
+## ▲ node 42 · 401 accounts loaded · non-custodial wallets · ETH sweep tooling
+
+**when** — 2026-07-27
+**what** — (a) SEEDED the legacy holders into pooter-indexer Postgres:
+**401 accounts, 202 funded, 2,119,829.39543229 MO**. (b) migration 007 +
+`/api/account/wallet/{nonce,link}` + `WalletSetup.tsx` — users generate a
+BIP-39 wallet in-browser, mnemonic never leaves the device, server stores only
+address + proof signature. (c) `web/scripts/sweep-legacy-eth.mjs`.
+Commits `d8fd1d2`, `97f1197` on `feat/account-dashboard`.
+**why** — standing the old holder base back up ahead of the MO redeploy.
+Reconciliation rule CHANGED from node 41: now takes the HIGHER of the 2021
+audited and 2024 exported figures (nobody's balance falls below what the
+platform last showed them), and `hugoevans92@gmail.com` opens at ZERO — the
+2021 sheet put 696,638 MO on it, which was the pre-distribution float, not a
+personal balance, and would have been 24.8% of supply.
+**where** — legacy custodial ETH: **0.2528 ETH across 12 of 388 wallets, all
+on Ethereum mainnet, nothing on Base.** Decryption scheme recovered from the
+2020 RateIt backend `BankUtility.cs`: AES-256-CBC, key AND iv from ONE
+PBKDF2-HMAC-SHA1(passphrase, ascii(salt), 1000, 48) derivation, UTF-16LE
+plaintext, base64. **BLOCKED: the passphrase is not on this machine** — it was
+in the old Web.config (gitignored) or the `rateit-kv` Azure Key Vault.
+**rollback** — `git revert 97f1197 d8fd1d2`. To unseed:
+`TRUNCATE pooter.mo_ledger, pooter.account_wallets, pooter.login_tokens,
+pooter.wallet_link_nonces, pooter.accounts CASCADE;`
+
+---
+
+## ▲ node 41 · legacy morality.network accounts recovered + MO dashboard
+
+**when** — 2026-07-27
+**what** — recovered the morality.network user list from disk (it was never in
+any database) and built an email-login dashboard on it. New:
+`web/migrations/006_platform_accounts.sql` (pooter.accounts, pooter.mo_ledger,
+pooter.login_tokens, pooter.mo_balances view), `web/src/lib/accounts.ts`,
+`/api/account/{login,callback,me,logout}`, `/account` page,
+`web/scripts/build-legacy-ledger.mjs` + `seed-legacy-accounts.mjs`.
+Migration 006 is APPLIED to the pooter-indexer Postgres; the seed has only
+been DRY-RUN — tables are still empty.
+**why** — Hugo is standing the old holder base back up ahead of the MO token
+redeploy. The user list exists only as two CSVs on the Mac: `~/account_profiles.csv`
+(388 accounts, Jul 2024 app export) and `~/Downloads/Telegram Desktop/
+morality_balance_sheet_2_18_2021.csv` (140 rows, Feb 2021 audited). Reconciled
+union = **401 accounts, 194 funded, 2,814,063.93910905 MO**. Rule: the 2021
+sheet wins where it exists, the 2024 export fills the rest; MainNetAmountMo
+(207,844 MO across 10 users) is NOT credited — already self-custodied.
+GOTCHA: the 2021 sheet's header is MISLABELLED — real column order is
+`Email, CreditAmountMo, MainNetAmountMo, EthereumAddress, AmountEth` (cols 4/5
+swapped). Onchain is useless as a source: a full scan of all 11.05M Base blocks
+since MO deployed found 42 transfers and 6 addresses, 3 of them the Uniswap v4
+pool and treasury.
+**where** — `web/migrations/006_platform_accounts.sql`, `web/src/lib/accounts.ts`,
+`web/src/app/account/`, `web/src/app/api/account/`, `web/src/components/account/`,
+`web/scripts/build-legacy-ledger.mjs`, `web/scripts/seed-legacy-accounts.mjs`.
+Branch `feat/account-dashboard`. Deliberately non-custodial — the 388
+EncryptedPrivateKey/Salt blobs in the CSV are never read or stored.
+**rollback** — `git revert` the branch merge; to undo the schema:
+`DROP VIEW pooter.mo_balances; DROP TABLE pooter.login_tokens, pooter.mo_ledger,
+pooter.accounts; DELETE FROM pooter.schema_migrations WHERE filename =
+'006_platform_accounts.sql';`
+
+---
+---
+
+## ▲ node 41b · hyperstructure flywheel — public burn-vs-profit endpoint + /markets panel; indexer revived (RPC 403)
 
 **when** — 2026-07-27
 **what** — (a) NEW `/api/hyperstructure` (public, no auth): joins 24h inference

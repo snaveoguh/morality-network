@@ -40,3 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# legacy morality.network user exports — contain PII, never commit
+scripts/out/
+web/scripts/out/
