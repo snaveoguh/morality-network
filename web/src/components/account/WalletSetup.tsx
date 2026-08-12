@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { english, generateMnemonic, mnemonicToAccount } from "viem/accounts";
+import { deriveEvmAccount, generateMnemonic } from "@pooter/wallet";
 
 /**
- * In-browser, non-custodial wallet generation.
+ * In-browser, non-custodial wallet generation (via @pooter/wallet — the shared
+ * identity package; same derivation as the extension and mobile).
  *
  * The mnemonic is created here and NEVER leaves this component: it is not sent
  * to the server, not persisted, not put in localStorage, and it is dropped from
@@ -56,15 +57,15 @@ export function WalletSetup({ existing }: { existing: LinkedWallet[] }) {
 
   // Held outside React state so it can be cleared explicitly the moment the
   // address is recorded.
-  const accountRef = useRef<ReturnType<typeof mnemonicToAccount> | null>(null);
+  const accountRef = useRef<ReturnType<typeof deriveEvmAccount> | null>(null);
 
   const generate = useCallback(() => {
     setError("");
     setCheckError("");
     setCopied(false);
-    const phrase = generateMnemonic(english);
+    const phrase = generateMnemonic();
     const words = phrase.split(" ");
-    accountRef.current = mnemonicToAccount(phrase);
+    accountRef.current = deriveEvmAccount(phrase);
     setMnemonic(words);
     setAddress(accountRef.current.address);
     setChallenge(pickIndices(words.length, CONFIRM_COUNT));
