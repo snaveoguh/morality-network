@@ -9,6 +9,38 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 44 · platform v1 — bearer identity, extension v1, mobile v1, compliance baseline
+
+**when** — 2026-08-12
+**what** — four parallel worktree agents, merged clean and integrated:
+(a) IDENTITY: `@pooter/wallet` shared BIP-39 package (web/packages/wallet),
+`POST /api/auth/token` (SIWE or session → pat_ bearer, sha256-only storage,
+migration 011 APPLIED to shared Postgres), `getAuthContext` on account+review
+routes, SIWE↔account join via account_wallets. (b) EXTENSION 0.2.0: Base
+mainnet default (contracts verified onchain — DEPLOYMENTS.md testnet note is
+stale), BIP-39 wallets w/ legacy raw-key migration, externally_connectable,
+Daily Witness popup tab. (c) MOBILE: Expo SDK 57 (builds again after 4 months),
+tx-confirmation modal closes the WebView drainer hole, PBKDF2 PIN, fake ZK
+recovery cut, Daily Witness home, eas.json + privacy manifest. (d) COMPLIANCE:
+/privacy page, docs/SECURITY_BASELINE.md + ISO27001_GAP.md +
+APP_STORE_COMPLIANCE.md. Vote clients collect the written basis (>=20 chars)
+the staked-review invariant requires — canonical vocab approve/reject/
+more_evidence everywhere.
+**why** — the app-store / SSO / extension push: one identity (BIP-39 root,
+email attached), one API, three surfaces, "one simple daily action" =
+witnessing a claim.
+**where** — branches `feat/identity-core`, `feat/extension-v1`,
+`feat/mobile-v1`, `chore/compliance-baseline`, integrated via
+`feat/platform-v1-integration` → dev → main. Human-only remainders: Apple/
+Google dev accounts, eas init, Chrome Web Store listing assets, solicitor
+pass on /privacy.
+**rollback** — revert the integration merge on dev/main; token table:
+`DROP TABLE pooter.api_tokens; DELETE FROM pooter.schema_migrations WHERE
+filename='011_api_tokens.sql';` Extension/mobile ship nothing until store
+submission, so code revert suffices there.
+
+---
+
 ## ▲ node 43 · feed spectrum balanced + account dashboard & peer review merged to dev/prod
 
 **when** — 2026-08-12
