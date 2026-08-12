@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { linkWallet } from "@/lib/account-wallets";
-import { getSession } from "@/lib/session";
+import { getAccountById } from "@/lib/accounts";
+import { getAuthContext } from "@/lib/auth-context";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,10 +13,16 @@ export const dynamic = "force-dynamic";
  * Links a self-custody wallet. The body carries a public address and a
  * signature — never a private key or mnemonic. If a request ever arrives here
  * containing key material, that is a client bug and the key is burned.
+ *
+ * Session cookie or bearer token (identity contract v1).
  */
 export async function POST(request: NextRequest) {
-  const session = await getSession();
-  if (!session.accountId || !session.accountEmail) {
+  const auth = await getAuthContext(request);
+  if (!auth?.accountId) {
+    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  }
+  const account = await getAccountById(auth.accountId);
+  if (!account) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
 
@@ -33,8 +40,8 @@ export async function POST(request: NextRequest) {
   }
 
   const result = await linkWallet({
-    accountId: session.accountId,
-    email: session.accountEmail,
+    accountId: auth.accountId,
+    email: account.email,
     address,
     signature,
     nonce,

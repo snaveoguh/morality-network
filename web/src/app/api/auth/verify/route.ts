@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
-import { SiweMessage } from "siwe";
-import { getSession } from "@/lib/session";
 
+import { getSession } from "@/lib/session";
+import { siweLogin } from "@/lib/siwe-login";
+
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/**
+ * POST /api/auth/verify  { message, signature }
+ *
+ * SIWE cookie login. Verification itself lives in lib/siwe-login.ts, shared
+ * with POST /api/auth/token. If the address is linked to a platform account
+ * the session also carries accountId/accountEmail (identity contract v1).
+ */
 export async function POST(request: Request) {
   let session;
   try {
@@ -15,67 +24,29 @@ export async function POST(request: Request) {
     );
   }
 
+  let message: unknown;
+  let signature: unknown;
   try {
-    const { message, signature } = await request.json();
-    if (typeof message !== "string" || typeof signature !== "string") {
-      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-    }
+    ({ message, signature } = await request.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  if (typeof message !== "string" || typeof signature !== "string") {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
-    if (!session.nonce) {
-      return NextResponse.json(
-        { error: "Missing SIWE nonce — session cookie not found. Clear cookies and retry." },
-        { status: 400 },
-      );
-    }
-
-    const siweMessage = new SiweMessage(message);
-    const sessionNonce = session.nonce;
-
-    // Verify signature + nonce only. Skip domain verification because
-    // behind Cloudflare + Railway the server-side hostname often differs
-    // from the browser origin (pooter.world). The request is same-origin
-    // (enforced by SameSite cookie + CORS), so domain spoofing isn't a risk.
-    const result = await siweMessage.verify(
-      { signature, nonce: sessionNonce },
-      { suppressExceptions: true },
-    );
-
-    if (!result.success) {
-      session.destroy();
-      return NextResponse.json(
-        {
-          error: "Invalid signature",
-          debug: {
-            nonceMatch: sessionNonce === siweMessage.nonce,
-            sessionNonceLen: sessionNonce.length,
-            messageNonceLen: siweMessage.nonce?.length ?? 0,
-            messageDomain: siweMessage.domain,
-            verifyError: String(result.error?.type ?? result.error ?? "unknown"),
-          },
-        },
-        { status: 401 },
-      );
-    }
-
-    session.address = result.data.address;
-    session.chainId = result.data.chainId;
-    session.siweIssuedAt = result.data.issuedAt ?? new Date().toISOString();
-    delete session.nonce;
-    await session.save();
-
-    return NextResponse.json({
-      authenticated: true,
-      address: result.data.address,
-      chainId: result.data.chainId,
-    });
-  } catch (error) {
-    session.destroy();
+  const result = await siweLogin(session, message, signature);
+  if (!result.ok) {
     return NextResponse.json(
-      {
-        error: "Verification failed",
-        detail: error instanceof Error ? error.message : "unknown",
-      },
-      { status: 400 },
+      { error: result.error, ...(result.debug ? { debug: result.debug } : {}) },
+      { status: result.status },
     );
   }
+
+  return NextResponse.json({
+    authenticated: true,
+    address: result.address,
+    chainId: result.chainId,
+    accountId: result.accountId,
+  });
 }
