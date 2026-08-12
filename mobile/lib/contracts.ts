@@ -1,12 +1,24 @@
-// Direct copy from extension/src/shared/contracts.ts
+// ABIs are a direct copy from extension/src/shared/contracts.ts.
+// Addresses are the Base MAINNET deploys, copied from web/src/lib/contracts.ts
+// (the web app's defaults, verified onchain 2026-07-16) on 2026-08-12.
+// Chain id 8453 — always pin the chain: the same deployer+nonce holds
+// DIFFERENT contracts at the same address on Base Sepolia.
 import { type Address } from 'viem';
 
 export const CONTRACTS = {
-  registry:    '0x1c73efffeb89ad8699770921dbd860bb5da5b15a' as Address,
-  ratings:     '0x29f0235d74e09536f0b7df9c6529de17b8af5fc6' as Address,
-  comments:    '0x14a361454edcb477644eb82bf540a26e1cead72a' as Address,
-  tipping:     '0x71b2e273727385c617fe254f4fb14a36a679b12a' as Address,
-  leaderboard: '0x4b48d35e019129bb5a16920adc4cb7f445ec8ca5' as Address,
+  registry:    '0x2ea7502C4db5B8cfB329d8a9866EB6705b036608' as Address,
+  ratings:     '0x29F66D8b15326cE7232c0277DBc2CbFDaaf93405' as Address,
+  comments:    '0x66BA3cE1280bF86DFe957B52e9888A1De7F81d7b' as Address,
+  tipping:     '0x27c79A57BE68EB62c9C6bB19875dB76D33FD099B' as Address,
+  leaderboard: '0x29f0235d74E09536f0b7dF9C6529De17B8aF5Fc6' as Address,
+} as const;
+
+// MO token on Base mainnet — same source (web/src/lib/contracts.ts MO_TOKEN).
+export const MO_TOKEN = {
+  address: '0x8729c70061739140ee6bE00A3875Cbf6d09A746C' as Address,
+  symbol: 'MO',
+  name: 'mo',
+  decimals: 18,
 } as const;
 
 export const REGISTRY_ABI = [
