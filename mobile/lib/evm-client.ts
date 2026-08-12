@@ -6,8 +6,6 @@ import {
   createPublicClient,
   createWalletClient,
   http,
-  type PublicClient,
-  type WalletClient,
   type PrivateKeyAccount,
 } from 'viem';
 import { baseSepolia, base } from 'viem/chains';
@@ -22,7 +20,7 @@ import { computeEntityHashCandidates } from './entity';
 
 // ── Config ──────────────────────────────────────────────────────────
 
-const USE_MAINNET = false; // flip for production
+const USE_MAINNET = true; // Base mainnet — contracts in ./contracts.ts are mainnet deploys
 const CHAIN = USE_MAINNET ? base : baseSepolia;
 const DEFAULT_RPC = USE_MAINNET
   ? 'https://mainnet.base.org'
@@ -34,8 +32,11 @@ export function setRpcUrl(url: string) { rpcUrl = url; }
 export function getChainId(): number { return CHAIN.id; }
 
 // ── Clients ─────────────────────────────────────────────────────────
+// Return types are intentionally inferred: annotating with the bare
+// `PublicClient`/`WalletClient` generics erases the chain/account params and
+// breaks `writeContract`/`sendTransaction` type-checking under viem 2.5x.
 
-export function getPublicClient(): PublicClient {
+export function getPublicClient() {
   return createPublicClient({
     chain: CHAIN,
     transport: http(rpcUrl, { timeout: 10_000, retryCount: 1 }),
@@ -43,7 +44,7 @@ export function getPublicClient(): PublicClient {
   });
 }
 
-export function getWalletClient(account: PrivateKeyAccount): WalletClient {
+export function getWalletClient(account: PrivateKeyAccount) {
   return createWalletClient({
     account,
     chain: CHAIN,

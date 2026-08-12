@@ -14,16 +14,16 @@ import {
   getEvmAddress,
   getSolanaAddress,
   isLocked,
-  unlock,
-  lock,
 } from '../../lib/wallet';
 import { getBalance } from '../../lib/evm-client';
 import { getSolBalance } from '../../lib/solana-client';
 import { shortenAddress, formatEth, formatSol } from '../../lib/entity';
+import { getAccountMe, getStoredToken, signIn } from '../../lib/api';
 import { PublicKey } from '@solana/web3.js';
 
 const INK = '#1A1A1A';
 const PAPER = '#F5F0E8';
+const ACCENT = '#8B0000';
 
 export default function WalletTab() {
   const [evmAddr, setEvmAddr] = useState<string | null>(null);
@@ -32,6 +32,8 @@ export default function WalletTab() {
   const [solBalance, setSolBalance] = useState('0 SOL');
   const [locked, setLocked] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [points, setPoints] = useState<number | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
 
   const loadState = useCallback(async () => {
     setLocked(isLocked());
@@ -52,6 +54,16 @@ export default function WalletTab() {
         setSolBalance(formatSol(Math.round(bal * 1e9)));
       } catch { setSolBalance('? SOL'); }
     }
+
+    // Points — only meaningful once /api/auth/token + /api/account/me exist.
+    const token = await getStoredToken();
+    setSignedIn(!!token);
+    if (token) {
+      const me = await getAccountMe();
+      setPoints(me?.points ?? null);
+    } else {
+      setPoints(null);
+    }
   }, []);
 
   useEffect(() => { loadState(); }, [loadState]);
@@ -65,6 +77,19 @@ export default function WalletTab() {
   const copyAddr = async (addr: string) => {
     await Clipboard.setStringAsync(addr);
     Alert.alert('Copied', 'Address copied to clipboard');
+  };
+
+  const handleSignIn = async () => {
+    const result = await signIn();
+    if (result.ok) {
+      await loadState();
+    } else if (result.reason === 'unavailable') {
+      Alert.alert('Coming soon', 'Sign-in from mobile is not live yet.');
+    } else if (result.reason === 'locked') {
+      Alert.alert('Wallet locked', 'Unlock from Settings first.');
+    } else {
+      Alert.alert('Error', 'Sign-in failed. Try again later.');
+    }
   };
 
   if (locked) {
@@ -85,6 +110,19 @@ export default function WalletTab() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         <Text style={styles.header}>Wallet</Text>
+
+        {/* Points */}
+        <View style={[styles.card, styles.pointsCard]}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.pointsLabel}>WITNESS POINTS</Text>
+            <Text style={styles.pointsValue}>{points !== null ? points : '—'}</Text>
+          </View>
+          {!signedIn && (
+            <TouchableOpacity onPress={handleSignIn}>
+              <Text style={styles.signInText}>Sign in with this wallet to see your balance</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         {/* EVM (Base) */}
         <View style={styles.card}>
@@ -114,18 +152,8 @@ export default function WalletTab() {
           )}
         </View>
 
-        {/* Actions */}
-        <View style={styles.actions}>
-          <TouchableOpacity style={styles.actionBtn}>
-            <Text style={styles.actionText}>Send</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
-            <Text style={styles.actionText}>Bridge</Text>
-          </TouchableOpacity>
-        </View>
-
         <Text style={styles.freeLabel}>
-          Rating & commenting on Solana is free — we pay the fees.
+          Tap an address to copy it. Witness today's claim to earn points.
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -146,6 +174,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
+  pointsCard: { borderWidth: 2, borderColor: INK },
+  pointsLabel: { fontSize: 11, fontWeight: '900', letterSpacing: 1.5, color: ACCENT },
+  pointsValue: { fontSize: 26, fontWeight: '900', color: INK },
+  signInText: { fontSize: 13, color: '#666', marginTop: 8, textDecorationLine: 'underline' },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -154,15 +186,6 @@ const styles = StyleSheet.create({
   chainLabel: { fontSize: 14, fontWeight: '600', color: '#666' },
   balance: { fontSize: 22, fontWeight: '700', color: INK },
   address: { fontSize: 13, color: '#999', marginTop: 8, fontFamily: 'monospace' },
-  actions: { flexDirection: 'row', gap: 12 },
-  actionBtn: {
-    flex: 1,
-    backgroundColor: INK,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  actionText: { color: PAPER, fontSize: 16, fontWeight: '700' },
   freeLabel: {
     fontSize: 12,
     color: '#888',

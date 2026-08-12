@@ -2,6 +2,7 @@
  * Solana fee payer relay client.
  * User signs the tx, backend co-signs as fee payer and submits.
  */
+import { Buffer } from 'buffer';
 import { Transaction, type Keypair } from '@solana/web3.js';
 import { getConnection } from './solana-client';
 
