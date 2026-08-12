@@ -303,6 +303,22 @@ export default async function LedgerPage() {
             </a>
           </div>
         )}
+
+        {snapshot &&
+          Date.now() - new Date(snapshot.debate.date).getTime() >
+            13 * 24 * 60 * 60 * 1000 && (
+            <div className="mt-4 border-2 border-[var(--ink)] bg-[var(--paper-dark)]/40 px-4 py-3">
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+                The House is not sitting
+              </p>
+              <p className="mt-1 font-body-serif text-sm italic text-[var(--ink-light)]">
+                No Prime Minister&rsquo;s Questions has been held since{" "}
+                {formatSittingDate(snapshot.debate.date)} — the Commons is in
+                recess. The ledger checks Hansard every Wednesday and resumes
+                automatically at the next sitting PMQs.
+              </p>
+            </div>
+          )}
       </header>
 
       {claims.length === 0 && (
