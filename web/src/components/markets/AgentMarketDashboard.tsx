@@ -1238,7 +1238,7 @@ export function AgentMarketDashboard() {
     }).prepareMessage();
 
     const signature = await signMessageAsync({ message });
-    const verifyRes = await fetch("/api/auth/siwe-verify", {
+    const verifyRes = await fetch("/api/auth/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message, signature }),
