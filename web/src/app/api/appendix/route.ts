@@ -169,6 +169,7 @@ const APPENDIX = {
         { method: "POST", path: "/api/auth/nonce", description: "Generate SIWE nonce", auth: "PUBLIC" },
         { method: "POST", path: "/api/auth/verify", description: "Verify SIWE signature", auth: "PUBLIC" },
         { method: "GET", path: "/api/auth/session", description: "Session status", auth: "PUBLIC" },
+        { method: "POST", path: "/api/auth/token", description: "Mint bearer API token (SIWE proof or session)", auth: "AUTH" },
       ]},
       { category: "Pepe", routes: [
         { method: "GET", path: "/api/pepe/[asset]", description: "Asset detail", auth: "PUBLIC" },
