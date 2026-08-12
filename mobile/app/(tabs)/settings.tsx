@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { lock, getMnemonic, deleteWallet, isLocked, unlock } from '../../lib/wallet';
+import { lock, deleteWallet, isLocked, unlock } from '../../lib/wallet';
+import { clearAuthToken } from '../../lib/api';
 
 const INK = '#1A1A1A';
 const PAPER = '#F5F0E8';
@@ -19,14 +20,14 @@ const ACCENT = '#8B0000';
 export default function SettingsTab() {
   const router = useRouter();
   const [pin, setPin] = useState('');
-  const locked = isLocked();
+  const [locked, setLocked] = useState(isLocked());
 
   async function handleUnlock() {
     if (!pin) return;
     try {
       await unlock(pin);
       setPin('');
-      Alert.alert('Unlocked', 'Wallet unlocked successfully');
+      setLocked(false);
     } catch (e: any) {
       Alert.alert('Error', e.message);
     }
@@ -34,26 +35,13 @@ export default function SettingsTab() {
 
   function handleLock() {
     lock();
-    Alert.alert('Locked', 'Wallet locked');
-  }
-
-  async function handleShowMnemonic() {
-    if (!pin) {
-      Alert.alert('Enter PIN', 'Enter your PIN to reveal recovery phrase');
-      return;
-    }
-    try {
-      const mnemonic = await getMnemonic(pin);
-      Alert.alert('Recovery Phrase', mnemonic, [{ text: 'OK' }]);
-    } catch (e: any) {
-      Alert.alert('Error', e.message);
-    }
+    setLocked(true);
   }
 
   async function handleDeleteWallet() {
     Alert.alert(
       'Delete Wallet',
-      'This will permanently delete your wallet. Make sure you have backed up your recovery phrase!',
+      'This will permanently delete your wallet from this device. Your 12-word recovery phrase is the ONLY way to get it back. Have you written it down?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -61,6 +49,7 @@ export default function SettingsTab() {
           style: 'destructive',
           onPress: async () => {
             await deleteWallet();
+            await clearAuthToken();
             router.replace('/onboarding');
           },
         },
@@ -100,59 +89,14 @@ export default function SettingsTab() {
         {/* Backup */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Backup</Text>
-          <View style={styles.row}>
-            <TextInput
-              style={styles.input}
-              value={pin}
-              onChangeText={setPin}
-              placeholder="Enter PIN"
-              keyboardType="numeric"
-              secureTextEntry
-            />
-            <TouchableOpacity style={styles.btn} onPress={handleShowMnemonic}>
-              <Text style={styles.btnText}>Show Phrase</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* ZK Password Recovery */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ZK Password Recovery</Text>
-          <Text style={{ fontSize: 13, color: '#666', lineHeight: 18 }}>
-            Set a recovery password to recover your wallet without a seed phrase.
-            Uses zero-knowledge proofs — your password never touches the blockchain.
+          <Text style={styles.sectionHint}>
+            Your 12-word recovery phrase is the only way to restore this wallet.
           </Text>
           <TouchableOpacity
-            style={[styles.btn, { backgroundColor: '#2D5A8E' }]}
-            onPress={() => {
-              Alert.prompt(
-                'Set Recovery Password',
-                'Choose a strong password (8+ chars). This is different from your PIN.',
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  {
-                    text: 'Set Password',
-                    onPress: (pwd) => {
-                      if (!pwd || pwd.length < 8) {
-                        Alert.alert('Error', 'Password must be at least 8 characters');
-                        return;
-                      }
-                      // TODO: Wire up setupRecoveryPassword() + registerCommitment()
-                      Alert.alert('Coming Soon', 'ZK recovery will be active after contract deployment.');
-                    },
-                  },
-                ],
-                'secure-text',
-              );
-            }}
-          >
-            <Text style={styles.btnText}>Set Recovery Password</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
             style={styles.btn}
-            onPress={() => router.push('/recover')}
+            onPress={() => router.push('/reveal-seed')}
           >
-            <Text style={styles.btnText}>Recover Wallet</Text>
+            <Text style={styles.btnText}>Show Recovery Phrase</Text>
           </TouchableOpacity>
         </View>
 
@@ -179,6 +123,7 @@ const styles = StyleSheet.create({
   header: { fontSize: 28, fontFamily: 'serif', fontWeight: 'bold', color: INK },
   section: { gap: 10 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: INK },
+  sectionHint: { fontSize: 13, color: '#666', lineHeight: 18 },
   row: { flexDirection: 'row', gap: 8 },
   input: {
     flex: 1,
@@ -195,6 +140,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   btnText: { color: PAPER, fontWeight: '700', fontSize: 14 },
   version: { textAlign: 'center', color: '#999', fontSize: 12, marginTop: 40 },
