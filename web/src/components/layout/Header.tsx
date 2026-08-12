@@ -110,6 +110,7 @@ const LOGO_MENU_ITEMS = [
   { href: "/style-guide", label: "Style Guide", desc: "Brand & design system" },
   { href: "/typography", label: "Typography Lab", desc: "Variable-font candidates" },
   { href: "/zk-recovery", label: "ZK Recovery", desc: "Passwordless wallet recovery" },
+  { href: "/privacy", label: "Privacy", desc: "What we collect & why" },
 ];
 
 function LogoMenu() {
