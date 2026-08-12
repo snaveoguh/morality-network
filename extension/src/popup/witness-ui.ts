@@ -89,6 +89,11 @@ function renderRound(container: HTMLElement, feed: WitnessFeed, round: WitnessRo
         <button class="btn btn-primary witness-vote witness-vote-dispute" data-vote="reject">Dispute</button>
         <button class="btn btn-secondary witness-vote" data-vote="more_evidence">Can't verify</button>
       </div>
+      <div id="witness-basis-wrap" style="display:none; margin-top:8px;">
+        <textarea id="witness-basis" rows="2" placeholder="In a sentence: why?"
+          style="width:100%; box-sizing:border-box; font:inherit; padding:6px; border:1px solid var(--rule, #D4C9B8); background:var(--paper, #F5F0E8); color:inherit; resize:vertical;"></textarea>
+        <button id="witness-submit" class="btn btn-primary" style="margin-top:6px;">Submit verdict</button>
+      </div>
       <div id="witness-status"></div>
       ${statsHtml(feed)}
       ${remaining > 0 ? `<div class="witness-remaining">${remaining} more claim${remaining === 1 ? '' : 's'} waiting</div>` : ''}
@@ -98,18 +103,55 @@ function renderRound(container: HTMLElement, feed: WitnessFeed, round: WitnessRo
   const statusEl = container.querySelector('#witness-status');
   const buttons = container.querySelectorAll<HTMLButtonElement>('.witness-vote');
 
+  // Staked review requires a written basis on every vote: verdict click
+  // reveals the reason box; the submit button sends the vote.
+  const MIN_BASIS_CHARS = 20;
+  const basisWrap = container.querySelector<HTMLElement>('#witness-basis-wrap');
+  const basisInput = container.querySelector<HTMLTextAreaElement>('#witness-basis');
+  const submitBtn = container.querySelector<HTMLButtonElement>('#witness-submit');
+  let chosenVote: WitnessVoteChoice | null = null;
+
   buttons.forEach((btn) => {
     btn.addEventListener('click', () => {
+      chosenVote = btn.dataset.vote as WitnessVoteChoice;
+      buttons.forEach(b => b.classList.toggle('witness-vote-selected', b === btn));
+      if (basisWrap) basisWrap.style.display = '';
+      basisInput?.focus();
+      if (statusEl) {
+        statusEl.className = 'status';
+        statusEl.textContent = '';
+      }
+    });
+  });
+
+  submitBtn?.addEventListener('click', () => {
       void (async () => {
-        const vote = btn.dataset.vote as WitnessVoteChoice;
+        const vote = chosenVote;
+        const basis = (basisInput?.value ?? '').trim();
+        if (!vote) return;
+        if (basis.length < MIN_BASIS_CHARS) {
+          if (statusEl) {
+            statusEl.className = 'status error';
+            statusEl.textContent = 'A few more words — reviews need a written basis.';
+          }
+          return;
+        }
         buttons.forEach(b => { b.disabled = true; });
+        if (submitBtn) submitBtn.disabled = true;
         if (statusEl) {
           statusEl.className = 'status';
           statusEl.textContent = 'Recording your verdict…';
         }
 
         const res = await sendMessageSafe<{ settled: boolean | null; streak: number | null; points: number | null }>(
-          { type: 'WITNESS_VOTE', roundId: round.roundId, assignmentId: round.assignmentId, vote },
+          {
+            type: 'WITNESS_VOTE',
+            roundId: round.roundId,
+            assignmentId: round.assignmentId,
+            vote,
+            basis,
+            evidenceIndex: vote === 'approve' ? 0 : undefined,
+          },
           20000,
         );
 
@@ -119,6 +161,7 @@ function renderRound(container: HTMLElement, feed: WitnessFeed, round: WitnessRo
             statusEl.textContent = res.error;
           }
           buttons.forEach(b => { b.disabled = false; });
+          if (submitBtn) submitBtn.disabled = false;
           return;
         }
 
@@ -139,6 +182,5 @@ function renderRound(container: HTMLElement, feed: WitnessFeed, round: WitnessRo
           }
         }, 1600);
       })();
-    });
   });
 }

@@ -129,7 +129,13 @@ async function handleMessage(msg: Message): Promise<MessageResponse> {
       return { ok: true, data: rounds };
     }
     case 'WITNESS_VOTE': {
-      const result = await submitWitnessVote(msg.roundId, msg.assignmentId, msg.vote);
+      const result = await submitWitnessVote(
+        msg.roundId,
+        msg.assignmentId,
+        msg.vote,
+        msg.basis,
+        msg.evidenceIndex,
+      );
       if (!result.ok) return { ok: false, error: result.error };
       return { ok: true, data: result };
     }

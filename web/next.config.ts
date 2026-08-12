@@ -3,12 +3,11 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   turbopack: {
-    // Pin workspace root to the repo checkout so Turbopack can compile
-    // ../packages/wallet (aliased as @pooter/wallet in tsconfig paths).
-    // Dependency resolution for that package goes through the committed
-    // packages/wallet/node_modules -> ../../web/node_modules symlink, so
-    // everything still resolves from web/node_modules.
-    root: path.resolve(__dirname, ".."),
+    // Pin workspace root to web/ so Turbopack resolves node_modules
+    // from here instead of the parent morality.network-master/ dir.
+    // @pooter/wallet lives at web/packages/wallet (inside this root) so
+    // web-rooted Railway builds see it too.
+    root: path.resolve(__dirname),
   },
 };
 

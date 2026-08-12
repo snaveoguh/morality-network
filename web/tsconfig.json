@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@pooter/wallet": ["../packages/wallet/src/index.ts"]
+      "@pooter/wallet": ["./packages/wallet/src/index.ts"]
     }
   },
   "include": [

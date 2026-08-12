@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Linking,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -58,17 +59,22 @@ function timeAgo(dateStr: string): string {
 
 type WitnessState =
   | 'idle'
+  | 'reason'
   | 'submitting'
   | 'done'
   | 'coming_soon'
   | 'locked'
   | 'error';
 
+const MIN_BASIS_CHARS = 20;
+
 function TodayClaimCard() {
   const router = useRouter();
   const [rounds, setRounds] = useState<OpenRound[] | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [state, setState] = useState<WitnessState>('idle');
+  const [pendingVerdict, setPendingVerdict] = useState<Verdict | null>(null);
+  const [basis, setBasis] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -87,13 +93,24 @@ function TodayClaimCard() {
 
   const round = rounds[0];
 
-  async function witness(verdict: Verdict) {
+  function witness(verdict: Verdict) {
     if (isLocked()) {
       setState('locked');
       return;
     }
+    // Staked review requires a written basis for every vote — collect it first.
+    setPendingVerdict(verdict);
+    setState('reason');
+  }
+
+  async function submitWithBasis() {
+    if (!pendingVerdict || basis.trim().length < MIN_BASIS_CHARS) return;
     setState('submitting');
-    const result = await submitVote(round.id, verdict);
+    const result = await submitVote(round.id, pendingVerdict, {
+      basis: basis.trim(),
+      assignmentId: round.assignmentId,
+      evidenceIndex: pendingVerdict === 'support' ? 0 : undefined,
+    });
     if (result === 'ok') setState('done');
     else if (result === 'coming_soon') setState('coming_soon');
     else if (result === 'locked') setState('locked');
@@ -126,6 +143,48 @@ function TodayClaimCard() {
           >
             <Text style={claimStyles.btnTextDark}>Can't verify</Text>
           </TouchableOpacity>
+        </View>
+      )}
+
+      {state === 'reason' && (
+        <View style={{ marginTop: 12 }}>
+          <TextInput
+            style={claimStyles.basisInput}
+            placeholder="In a sentence: why?"
+            placeholderTextColor="#8A8A8A"
+            value={basis}
+            onChangeText={setBasis}
+            multiline
+            autoFocus
+          />
+          <View style={claimStyles.buttons}>
+            <TouchableOpacity
+              style={[
+                claimStyles.btn,
+                claimStyles.supportBtn,
+                basis.trim().length < MIN_BASIS_CHARS && { opacity: 0.4 },
+              ]}
+              disabled={basis.trim().length < MIN_BASIS_CHARS}
+              onPress={submitWithBasis}
+            >
+              <Text style={claimStyles.btnTextLight}>Submit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[claimStyles.btn, claimStyles.cantBtn]}
+              onPress={() => {
+                setPendingVerdict(null);
+                setBasis('');
+                setState('idle');
+              }}
+            >
+              <Text style={claimStyles.btnTextDark}>Back</Text>
+            </TouchableOpacity>
+          </View>
+          {basis.trim().length > 0 && basis.trim().length < MIN_BASIS_CHARS && (
+            <Text style={claimStyles.status}>
+              A few more words — reviews need a written basis.
+            </Text>
+          )}
         </View>
       )}
 
@@ -326,6 +385,16 @@ const claimStyles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 6,
     alignItems: 'center',
+  },
+  basisInput: {
+    borderWidth: 1,
+    borderColor: RULE,
+    backgroundColor: PAPER,
+    color: INK,
+    padding: 10,
+    minHeight: 60,
+    fontSize: 14,
+    textAlignVertical: 'top',
   },
   supportBtn: { backgroundColor: INK },
   disputeBtn: { backgroundColor: ACCENT },

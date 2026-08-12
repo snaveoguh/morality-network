@@ -114,10 +114,12 @@ export async function signIn(): Promise<SignInResult> {
 
 export interface OpenRound {
   id: string | number;
+  assignmentId?: string | number;
   claimText: string;
   entity?: string;
   source?: string;
   closesAt?: string;
+  evidence?: string[];
 }
 
 /**
@@ -134,11 +136,13 @@ export async function getOpenRounds(): Promise<OpenRound[] | null> {
     if (!Array.isArray(rounds)) return null;
     return rounds
       .map((r: any) => ({
-        id: r.id,
+        id: r.roundId ?? r.id,
+        assignmentId: r.assignmentId ?? undefined,
         claimText: r.claimText ?? r.claim_text ?? r.claim ?? '',
         entity: r.entity ?? r.entityName ?? undefined,
-        source: r.source ?? undefined,
+        source: r.source ?? r.sourceUrl ?? undefined,
         closesAt: r.closesAt ?? r.closes_at ?? undefined,
+        evidence: Array.isArray(r.evidence) ? r.evidence : undefined,
       }))
       .filter((r: OpenRound) => r.id != null && r.claimText);
   } catch {
@@ -148,9 +152,28 @@ export async function getOpenRounds(): Promise<OpenRound[] | null> {
 
 export type Verdict = 'support' | 'dispute' | 'cant_verify';
 
+/** Server vocabulary for staked review votes (see /api/review/vote). */
+const VERDICT_TO_VOTE: Record<Verdict, string> = {
+  support: 'approve',
+  dispute: 'reject',
+  cant_verify: 'more_evidence',
+};
+
 export type VoteResult = 'ok' | 'coming_soon' | 'locked' | 'error';
 
-export async function submitVote(roundId: string | number, verdict: Verdict): Promise<VoteResult> {
+export interface VoteOptions {
+  /** Reviewer's reasoning — server requires >= 20 chars (staked-review invariant). */
+  basis: string;
+  /** Required by the server when voting 'support' (approve): which evidence item backs it. */
+  evidenceIndex?: number;
+  assignmentId?: string | number;
+}
+
+export async function submitVote(
+  roundId: string | number,
+  verdict: Verdict,
+  opts: VoteOptions,
+): Promise<VoteResult> {
   const auth = await signIn();
   if (!auth.ok) {
     if (auth.reason === 'locked') return 'locked';
@@ -164,7 +187,13 @@ export async function submitVote(roundId: string | number, verdict: Verdict): Pr
         'Content-Type': 'application/json',
         Authorization: `Bearer ${auth.token}`,
       },
-      body: JSON.stringify({ roundId, verdict }),
+      body: JSON.stringify({
+        roundId,
+        assignmentId: opts.assignmentId,
+        vote: VERDICT_TO_VOTE[verdict],
+        basis: opts.basis,
+        evidenceIndex: opts.evidenceIndex,
+      }),
     });
     if (res.status === 404 || res.status === 405) return 'coming_soon';
     if (res.status === 401) {

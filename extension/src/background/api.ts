@@ -262,13 +262,23 @@ export async function submitWitnessVote(
   roundId: string,
   assignmentId: string | null,
   vote: WitnessVoteChoice,
+  basis: string,
+  evidenceIndex?: number,
 ): Promise<WitnessVoteResult> {
   let res: Response;
   try {
     res = await apiFetch('/api/review/vote', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ roundId, assignmentId: assignmentId ?? undefined, vote }),
+      body: JSON.stringify({
+        roundId,
+        assignmentId: assignmentId ?? undefined,
+        vote,
+        // Staked review requires a written basis (>= 20 chars) on every vote,
+        // and an evidenceIndex when approving.
+        basis,
+        evidenceIndex,
+      }),
     });
   } catch {
     return { ok: false, error: 'Could not reach pooter.world' };

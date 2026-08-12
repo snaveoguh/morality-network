@@ -116,7 +116,7 @@ export type Message =
   | { type: 'UNLINK_ACCOUNT' }
   // Daily Witness
   | { type: 'GET_OPEN_ROUNDS' }
-  | { type: 'WITNESS_VOTE'; roundId: string; assignmentId: string | null; vote: WitnessVoteChoice }
+  | { type: 'WITNESS_VOTE'; roundId: string; assignmentId: string | null; vote: WitnessVoteChoice; basis: string; evidenceIndex?: number }
   // EIP-1193 Provider
   | { type: 'EIP1193_REQUEST'; method: string; params: unknown[] };
 
