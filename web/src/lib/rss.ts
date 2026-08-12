@@ -254,7 +254,7 @@ export const DEFAULT_FEEDS: FeedSource[] = [
   { name: "Xinhua",            url: "https://news.google.com/rss/search?q=site:english.news.cn+when:1d&hl=en-US&gl=US&ceid=US:en", category: "World" },
   { name: "CGTN",              url: "https://www.cgtn.com/subscribe/rss/section/world.xml",        category: "World",  fallbackUrl: "https://news.google.com/rss/search?q=site:cgtn.com+when:1d&hl=en-US&gl=US&ceid=US:en" },
   { name: "Global Times",      url: "https://news.google.com/rss/search?q=site:globaltimes.cn+when:1d&hl=en-US&gl=US&ceid=US:en", category: "World" },
-  { name: "Press TV",          url: "https://www.presstv.ir/rss",                                  category: "World" },
+  { name: "Press TV",          url: "https://www.presstv.co.uk/rss.xml",                           category: "World",  fallbackUrl: "https://news.google.com/rss/search?q=site:presstv.co.uk+when:7d&hl=en-US&gl=US&ceid=US:en" },
   { name: "TRT World",         url: "https://news.google.com/rss/search?q=site:trtworld.com+when:1d&hl=en-US&gl=US&ceid=US:en", category: "World" },
 ];
 

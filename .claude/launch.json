@@ -69,6 +69,12 @@
       "port": 3005
     },
     {
+      "name": "pooter-dev-repo",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /Users/hugo/dev/morality.network-master/web && npm run dev -- -p 3007"],
+      "port": 3007
+    },
+    {
       "name": "valuebase-review",
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8899", "--directory", "/Users/hugo/Downloads/valuebase-concept-routes"],

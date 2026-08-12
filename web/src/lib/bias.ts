@@ -340,6 +340,11 @@ export const BIAS_DATABASE: Record<string, SourceBias> = {
     bias: "left", factuality: "low",
     ownership: "Iranian State (IRIB)", country: "Iran", fundingModel: "state",
   },
+  "presstv.co.uk": {
+    name: "Press TV", domain: "presstv.co.uk",
+    bias: "left", factuality: "low",
+    ownership: "Iranian State (IRIB)", country: "Iran", fundingModel: "state",
+  },
   "trtworld.com": {
     name: "TRT World", domain: "trtworld.com",
     bias: "center", factuality: "mixed",
