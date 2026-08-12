@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@pooter/wallet": ["../packages/wallet/src/index.ts"]
     }
   },
   "include": [
