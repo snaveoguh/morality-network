@@ -1,6 +1,7 @@
 import { renderEntityTab } from './entity-ui';
 import { renderWalletTab } from './wallet-ui';
 import { renderSettingsTab } from './settings-ui';
+import { renderWitnessTab } from './witness-ui';
 
 // Tab switching
 const tabs = document.querySelectorAll<HTMLButtonElement>('#tabs .tab');
@@ -26,6 +27,9 @@ function loadTab(name: string): void {
   if (!container) return;
 
   switch (name) {
+    case 'witness':
+      renderWitnessTab(container);
+      break;
     case 'entity':
       renderEntityTab(container);
       break;
@@ -54,8 +58,8 @@ if (dateline) {
   dateline.textContent = `${dayName}, ${monthName} ${date}, ${year}`;
 }
 
-// Load initial tab
-loadTab('entity');
+// Load initial tab — the Daily Witness is the default view
+loadTab('witness');
 
 // Pooter eye cursor tracking
 const pupilL = document.getElementById('pupil-l');
