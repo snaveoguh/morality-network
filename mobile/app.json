@@ -16,12 +16,30 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "world.pooter.app",
-      "infoPlist": {
-        "NSFaceIDUsageDescription": "Use Face ID to unlock your wallet"
+      "buildNumber": "1",
+      "privacyManifests": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyTrackingDomains": [],
+        "NSPrivacyCollectedDataTypes": [],
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": ["C617.1", "3B52.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": ["35F9.1"]
+          }
+        ]
       }
     },
     "android": {
       "package": "world.pooter.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#1A1A1A",
         "foregroundImage": "./assets/icon.png"
@@ -29,8 +47,10 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store",
-      "expo-local-authentication"
-    ]
+      "expo-secure-store"
+    ],
+    "extra": {
+      "TODO_eas_projectId": "Run `eas init` with the real Expo account to populate extra.eas.projectId — do not invent one"
+    }
   }
 }
