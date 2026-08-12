@@ -20,11 +20,11 @@ export default function TabLayout() {
         options={{ href: null }}
       />
       <Tabs.Screen
-        name="browser"
+        name="feed"
         options={{
-          title: 'Browse',
+          title: 'Today',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="compass-outline" size={size} color={color} />
+            <Ionicons name="newspaper-outline" size={size} color={color} />
           ),
         }}
       />
@@ -38,11 +38,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="feed"
+        name="browser"
         options={{
-          title: 'Feed',
+          title: 'Browse',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="newspaper-outline" size={size} color={color} />
+            <Ionicons name="compass-outline" size={size} color={color} />
           ),
         }}
       />
