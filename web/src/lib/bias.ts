@@ -249,6 +249,16 @@ export const BIAS_DATABASE: Record<string, SourceBias> = {
     bias: "lean-right", factuality: "high",
     ownership: "Dow Jones (News Corp)", country: "US", fundingModel: "corporate",
   },
+  "telegraph.co.uk": {
+    name: "The Telegraph", domain: "telegraph.co.uk",
+    bias: "lean-right", factuality: "mostly-factual",
+    ownership: "Telegraph Media Group", country: "UK", fundingModel: "corporate",
+  },
+  "unherd.com": {
+    name: "UnHerd", domain: "unherd.com",
+    bias: "lean-right", factuality: "mostly-factual",
+    ownership: "Independent (Paul Marshall)", country: "UK", fundingModel: "independent",
+  },
 
   // ===== RIGHT =====
   "freebeacon.com": {
@@ -270,6 +280,70 @@ export const BIAS_DATABASE: Record<string, SourceBias> = {
     name: "Guido Fawkes", domain: "order-order.com",
     bias: "right", factuality: "mixed",
     ownership: "Independent", country: "UK", fundingModel: "independent",
+  },
+  "foxnews.com": {
+    name: "Fox News", domain: "foxnews.com",
+    bias: "right", factuality: "mixed",
+    ownership: "Fox Corporation (Murdoch)", country: "US", fundingModel: "corporate",
+  },
+  "nypost.com": {
+    name: "New York Post", domain: "nypost.com",
+    bias: "right", factuality: "mixed",
+    ownership: "News Corp (Murdoch)", country: "US", fundingModel: "corporate",
+  },
+  "nationalreview.com": {
+    name: "National Review", domain: "nationalreview.com",
+    bias: "right", factuality: "mostly-factual",
+    ownership: "National Review Institute", country: "US", fundingModel: "nonprofit",
+  },
+
+  // ===== STATE MEDIA — RUSSIA / CHINA / IRAN / TURKEY =====
+  // Ratings follow MBFC/Ad Fontes composites. Included for spectrum coverage;
+  // the state fundingModel + factuality rating surface on every tile.
+  "rt.com": {
+    name: "RT", domain: "rt.com",
+    bias: "lean-right", factuality: "low",
+    ownership: "Russian State (TV-Novosti)", country: "Russia", fundingModel: "state",
+  },
+  "tass.com": {
+    name: "TASS", domain: "tass.com",
+    bias: "lean-right", factuality: "mixed",
+    ownership: "Russian State", country: "Russia", fundingModel: "state",
+  },
+  "sputnikglobe.com": {
+    name: "Sputnik", domain: "sputnikglobe.com",
+    bias: "right", factuality: "low",
+    ownership: "Russian State (Rossiya Segodnya)", country: "Russia", fundingModel: "state",
+  },
+  "english.news.cn": {
+    name: "Xinhua", domain: "english.news.cn",
+    bias: "lean-left", factuality: "mixed",
+    ownership: "Chinese State (State Council)", country: "China", fundingModel: "state",
+  },
+  "news.cn": {
+    name: "Xinhua", domain: "news.cn",
+    bias: "lean-left", factuality: "mixed",
+    ownership: "Chinese State (State Council)", country: "China", fundingModel: "state",
+  },
+  "cgtn.com": {
+    name: "CGTN", domain: "cgtn.com",
+    bias: "lean-left", factuality: "low",
+    ownership: "Chinese State (CCTV)", country: "China", fundingModel: "state",
+  },
+  "globaltimes.cn": {
+    name: "Global Times", domain: "globaltimes.cn",
+    bias: "lean-right", factuality: "low",
+    ownership: "People's Daily (CCP)", country: "China", fundingModel: "state",
+  },
+  "presstv.ir": {
+    name: "Press TV", domain: "presstv.ir",
+    bias: "left", factuality: "low",
+    ownership: "Iranian State (IRIB)", country: "Iran", fundingModel: "state",
+  },
+  "trtworld.com": {
+    name: "TRT World", domain: "trtworld.com",
+    bias: "center", factuality: "mixed",
+    ownership: "Turkish State (TRT)", country: "Turkey", fundingModel: "state",
   },
 
   // ===== CRYPTO (mostly center, tech-oriented) =====
