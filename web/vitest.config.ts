@@ -11,9 +11,13 @@ export default defineConfig({
         "src/lib/__tests__/stubs/server-only.ts",
       ),
       "@": path.resolve(__dirname, "src"),
+      "@pooter/wallet": path.resolve(__dirname, "packages/wallet/src/index.ts"),
     },
   },
   test: {
-    include: ["src/**/*.test.ts"],
+    // Includes the shared identity package's tests so one `vitest run` in
+    // web/ covers both (packages/wallet lives inside web/ so deps
+    // resolve from web/node_modules directly).
+    include: ["src/**/*.test.ts", "packages/wallet/src/**/*.test.ts"],
   },
 });

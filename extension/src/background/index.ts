@@ -1,15 +1,16 @@
-import { initRpc, setRpcUrl, getRpcUrl, getPublicClient } from '../shared/rpc';
+import { initRpc, setRpcUrl, getRpcUrl, getPublicClient, getChain, getNetwork, getNetworkId, setNetwork } from '../shared/rpc';
 import {
-  createNewWallet, importWallet, unlockWallet, lockWallet,
+  createNewWallet, importWallet, importMnemonic, unlockWallet, lockWallet,
   getWalletInfo, hasWallet, getAccount
 } from '../shared/wallet';
 import { fetchEntityData, fetchComments } from './rpc-handler';
 import { rateEntity, rateEntityWithReason, submitComment, tipEntity, tipComment, voteComment, sendEth } from './wallet-handler';
+import { linkAccount, getAuthStatus, clearAuth, fetchOpenRounds, submitWitnessVote, getApiTarget, setApiTarget } from './api';
 import type { Message, MessageResponse } from '../shared/types';
-import { CHAIN_ID } from '../shared/constants';
-import { baseSepolia } from 'viem/chains';
-import { formatEther, parseEther, type Hex } from 'viem';
+import { EXTENSION_VERSION, NETWORKS } from '../shared/constants';
+import { type Hex } from 'viem';
 import { createWallet as createWalletClient } from '../shared/rpc';
+import { clear as clearCache } from './cache';
 
 // Initialize RPC on service worker start
 initRpc();
@@ -84,7 +85,14 @@ async function handleMessage(msg: Message): Promise<MessageResponse> {
       return { ok: true, data: info };
     }
     case 'CREATE_WALLET': {
-      const address = await createNewWallet(msg.password);
+      // Returns the freshly generated mnemonic ONCE so the popup can run the
+      // backup flow. It is never returned by any other message and never
+      // stored in plaintext.
+      const { address, mnemonic } = await createNewWallet(msg.password);
+      return { ok: true, data: { address, mnemonic } };
+    }
+    case 'IMPORT_MNEMONIC': {
+      const address = await importMnemonic(msg.mnemonic, msg.password);
       return { ok: true, data: { address } };
     }
     case 'IMPORT_WALLET': {
@@ -100,13 +108,65 @@ async function handleMessage(msg: Message): Promise<MessageResponse> {
       return { ok: true };
     }
 
+    // ─── ACCOUNT LINK / AUTH ───
+    case 'LINK_ACCOUNT': {
+      const result = await linkAccount();
+      if (!result.ok) return { ok: false, error: result.error };
+      return { ok: true, data: result };
+    }
+    case 'GET_AUTH_STATUS': {
+      const status = await getAuthStatus();
+      return { ok: true, data: status };
+    }
+    case 'UNLINK_ACCOUNT': {
+      await clearAuth();
+      return { ok: true };
+    }
+
+    // ─── DAILY WITNESS ───
+    case 'GET_OPEN_ROUNDS': {
+      const rounds = await fetchOpenRounds();
+      return { ok: true, data: rounds };
+    }
+    case 'WITNESS_VOTE': {
+      const result = await submitWitnessVote(
+        msg.roundId,
+        msg.assignmentId,
+        msg.vote,
+        msg.basis,
+        msg.evidenceIndex,
+      );
+      if (!result.ok) return { ok: false, error: result.error };
+      return { ok: true, data: result };
+    }
+
     // ─── SETTINGS ───
     case 'SET_RPC_URL': {
       setRpcUrl(msg.url);
       return { ok: true };
     }
+    case 'SET_NETWORK': {
+      setNetwork(msg.networkId);
+      clearCache();
+      return { ok: true, data: { networkId: getNetworkId(), chainName: getChain().name } };
+    }
+    case 'SET_API_TARGET': {
+      await setApiTarget(msg.target);
+      return { ok: true };
+    }
     case 'GET_SETTINGS': {
-      return { ok: true, data: { rpcUrl: getRpcUrl() } };
+      return {
+        ok: true,
+        data: {
+          rpcUrl: getRpcUrl(),
+          networkId: getNetworkId(),
+          chainId: getChain().id,
+          chainName: getNetwork().name,
+          networks: Object.values(NETWORKS).map(n => ({ id: n.id, name: n.name, chainId: n.chainId })),
+          apiTarget: await getApiTarget(),
+          version: EXTENSION_VERSION,
+        },
+      };
     }
 
     // ─── EIP-1193 PROVIDER ───
@@ -127,7 +187,8 @@ async function handleMessage(msg: Message): Promise<MessageResponse> {
 async function handleEip1193(method: string, params: unknown[]): Promise<unknown> {
   const account = getAccount();
   const client = getPublicClient();
-  const chainIdHex = '0x' + CHAIN_ID.toString(16);
+  const chainId = getChain().id;
+  const chainIdHex = '0x' + chainId.toString(16);
 
   switch (method) {
     // ─── Account methods ───
@@ -142,7 +203,7 @@ async function handleEip1193(method: string, params: unknown[]): Promise<unknown
     }
 
     case 'net_version': {
-      return String(CHAIN_ID);
+      return String(chainId);
     }
 
     // ─── Signing ───
@@ -186,7 +247,7 @@ async function handleEip1193(method: string, params: unknown[]): Promise<unknown
       const walletClient = createWalletClient(account);
       const hash = await walletClient.sendTransaction({
         account,
-        chain: baseSepolia,
+        chain: getChain(),
         to: txParams.to as Hex,
         value: txParams.value ? BigInt(txParams.value) : undefined,
         data: txParams.data as Hex | undefined,
@@ -275,7 +336,7 @@ async function handleEip1193(method: string, params: unknown[]): Promise<unknown
     case 'wallet_switchEthereumChain': {
       const [{ chainId: requestedChainId }] = params as [{ chainId: string }];
       if (requestedChainId !== chainIdHex) {
-        throw { code: 4902, message: `pooter world only supports Base Sepolia (${chainIdHex})` };
+        throw { code: 4902, message: `pooter world is on ${getNetwork().name} (${chainIdHex}) — switch networks in the extension settings` };
       }
       return null;
     }

@@ -1,14 +1,12 @@
-import { getPublicClient } from '../shared/rpc';
-import { CONTRACTS, RATINGS_ABI, COMMENTS_ABI, TIPPING_ABI, LEADERBOARD_ABI } from '../shared/contracts';
+import { getPublicClient, getContracts, getNetworkId, isContractAvailable } from '../shared/rpc';
+import { RATINGS_ABI, COMMENTS_ABI, TIPPING_ABI, LEADERBOARD_ABI } from '../shared/contracts';
 import { computeEntityHashCandidates } from '../shared/entity';
 import { getSourceBias, type SourceBias } from '../shared/bias';
 import { get, set } from './cache';
 import type { EntityData, CommentData, BiasInfo } from '../shared/types';
 
-const ZERO_ADDR = '0x0000000000000000000000000000000000000000';
-
 function isDeployed(): boolean {
-  return CONTRACTS.ratings !== ZERO_ADDR;
+  return isContractAvailable('ratings');
 }
 
 function sourceBiasToInfo(sb: SourceBias): BiasInfo {
@@ -25,7 +23,8 @@ function sourceBiasToInfo(sb: SourceBias): BiasInfo {
 export async function fetchEntityData(identifier: string): Promise<EntityData> {
   const entityHashes = computeEntityHashCandidates(identifier);
   const primaryEntityHash = entityHashes[0];
-  const cacheKey = `entity:${primaryEntityHash}`;
+  // Cache is network-scoped: the same entity has different data per chain.
+  const cacheKey = `entity:${getNetworkId()}:${primaryEntityHash}`;
   const cached = get<EntityData>(cacheKey);
   if (cached) return cached;
 
@@ -52,6 +51,7 @@ export async function fetchEntityData(identifier: string): Promise<EntityData> {
 
   try {
     const client = getPublicClient();
+    const CONTRACTS = getContracts();
 
     const perHashStats = await Promise.all(
       entityHashes.map(async (entityHash) => {
@@ -129,6 +129,7 @@ export async function fetchComments(entityHash: string, offset: number, limit: n
 
   try {
     const client = getPublicClient();
+    const CONTRACTS = getContracts();
     const hash = entityHash as `0x${string}`;
 
     const commentIds = await client.readContract({

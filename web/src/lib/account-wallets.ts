@@ -23,6 +23,21 @@ export interface LinkedWallet {
 
 const NONCE_TTL_MINUTES = 15;
 
+/**
+ * The joining rule of identity contract v1: a wallet address that exists in
+ * pooter.account_wallets resolves to that account — one identity whether the
+ * user arrived via SIWE or via email login.
+ */
+export async function findAccountIdByAddress(address: string): Promise<string | null> {
+  if (!isAddress(address)) return null;
+  const rows = await sql<{ account_id: string }[]>`
+    SELECT account_id::TEXT FROM pooter.account_wallets
+    WHERE LOWER(address) = ${address.toLowerCase()}
+    LIMIT 1
+  `;
+  return rows[0]?.account_id ?? null;
+}
+
 export async function getLinkedWallets(accountId: string): Promise<LinkedWallet[]> {
   const rows = await sql<
     { id: string; address: string; is_primary: boolean; origin: string; linked_at: Date }[]

@@ -11,5 +11,5 @@ export default function Index() {
 
   if (walletExists === null) return null;
 
-  return <Redirect href={walletExists ? '/(tabs)/wallet' : '/onboarding'} />;
+  return <Redirect href={walletExists ? '/(tabs)/feed' : '/onboarding'} />;
 }

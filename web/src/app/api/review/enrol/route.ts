@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { enrolHuman, getReviewerProfile, registerAgent } from "@/lib/ledger/review-staking";
-import { getSession } from "@/lib/session";
+import { getAuthContext } from "@/lib/auth-context";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** GET /api/review/enrol — the signed-in account's reviewer profile, if any. */
-export async function GET() {
-  const session = await getSession();
-  if (!session.accountId) {
+/**
+ * GET /api/review/enrol — the signed-in account's reviewer profile, if any.
+ * Session cookie or bearer token.
+ */
+export async function GET(request: NextRequest) {
+  const auth = await getAuthContext(request);
+  if (!auth?.accountId) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
-  const profile = await getReviewerProfile(session.accountId);
+  const profile = await getReviewerProfile(auth.accountId);
   return NextResponse.json({ profile });
 }
 
@@ -25,8 +28,8 @@ export async function GET() {
  * their MO is what gets staked and slashed for its votes.
  */
 export async function POST(request: NextRequest) {
-  const session = await getSession();
-  if (!session.accountId) {
+  const auth = await getAuthContext(request);
+  if (!auth?.accountId) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
 
@@ -42,7 +45,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Agents need a modelId and a label" }, { status: 400 });
     }
     const result = await registerAgent({
-      operatorAccountId: session.accountId,
+      operatorAccountId: auth.accountId,
       modelId: body.modelId,
       label: body.label,
     });
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
   const conflicts = Array.isArray(body.conflicts)
     ? body.conflicts.filter((c): c is string => typeof c === "string")
     : [];
-  const result = await enrolHuman({ accountId: session.accountId, conflicts });
+  const result = await enrolHuman({ accountId: auth.accountId, conflicts });
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 });
   return NextResponse.json({ status: "enrolled" });
 }

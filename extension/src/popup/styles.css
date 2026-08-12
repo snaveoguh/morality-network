@@ -599,3 +599,217 @@ body {
   border-bottom: 1px solid var(--rule-light);
   background: transparent;
 }
+
+/* ============================================================================
+   0.2.0 — Daily Witness, mnemonic backup flow, selects/textareas
+   ========================================================================== */
+
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  background: var(--paper);
+  border: 1px solid var(--rule-light);
+  border-radius: 0;
+  padding: 8px 10px;
+  color: var(--ink);
+  font-family: monospace;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--rule);
+}
+
+.form-group textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* ── Daily Witness ── */
+.witness-round,
+.witness-notice {
+  padding: 16px;
+}
+
+.witness-kicker,
+.witness-notice-head {
+  font-family: monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--rule-light);
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+}
+
+.witness-notice p {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-light);
+  margin-bottom: 14px;
+}
+
+.witness-claim {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+  margin: 0 0 16px 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--ink);
+}
+
+.witness-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.witness-actions .btn + .btn {
+  margin-top: 0;
+}
+
+.witness-vote-dispute {
+  background: var(--accent-red);
+  color: var(--paper);
+}
+
+.witness-vote-dispute:hover:not(:disabled) {
+  background: var(--ink);
+}
+
+.witness-stats {
+  text-align: center;
+  font-family: monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  padding-top: 10px;
+  border-top: 1px solid var(--rule-light);
+}
+
+.witness-stat b {
+  color: var(--ink);
+}
+
+.witness-stat-sep {
+  margin: 0 6px;
+}
+
+.witness-remaining {
+  text-align: center;
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-style: italic;
+  font-size: 10px;
+  color: var(--ink-faint);
+  margin-top: 8px;
+}
+
+/* ── Mnemonic backup flow ── */
+.backup-section .backup-warning {
+  font-family: monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--accent-red);
+  margin-bottom: 8px;
+}
+
+.backup-copy {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--ink-light);
+  margin-bottom: 12px;
+}
+
+.mnemonic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px 16px;
+  list-style: none;
+  padding: 10px 12px;
+  margin: 0 0 10px 0;
+  border: 1px solid var(--rule-light);
+  background: var(--paper-dark);
+}
+
+.mnemonic-grid li {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+.mnemonic-grid .word-num {
+  display: inline-block;
+  width: 16px;
+  text-align: right;
+  margin-right: 6px;
+  color: var(--ink-faint);
+}
+
+.backup-ack {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink);
+  margin: 12px 0;
+  cursor: pointer;
+}
+
+.backup-ack input {
+  margin-top: 2px;
+  accent-color: var(--accent-red);
+}
+
+/* ── Wallet extras ── */
+.wallet-type-label {
+  text-align: center;
+  font-family: monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-faint);
+  margin-bottom: 10px;
+}
+
+.wallet-link {
+  padding: 12px 16px;
+  border-top: 1px solid var(--rule-light);
+}
+
+.wallet-section-head {
+  font-family: monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+  margin-bottom: 8px;
+}
+
+.wallet-link-copy {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink-light);
+  margin-bottom: 10px;
+}
+
+.wallet-link-status {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--ink);
+  margin-bottom: 8px;
+}

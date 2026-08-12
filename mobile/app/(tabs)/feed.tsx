@@ -1,3 +1,7 @@
+/**
+ * Today tab — the v1 home. One simple daily action: see today's claim,
+ * witness it (Support / Dispute / Can't verify), then read the feed.
+ */
 import { useEffect, useState, useCallback } from 'react';
 import {
   View,
@@ -9,13 +13,22 @@ import {
   ActivityIndicator,
   RefreshControl,
   Linking,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { isLocked } from '../../lib/wallet';
+import {
+  getOpenRounds,
+  submitVote,
+  type OpenRound,
+  type Verdict,
+} from '../../lib/api';
 
 const INK = '#1A1A1A';
 const PAPER = '#F5F0E8';
 const RULE = '#D4C9B8';
+const ACCENT = '#8B0000';
 const API_BASE = 'https://pooter.world';
 
 interface FeedItem {
@@ -42,26 +55,166 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(hrs / 24)}d`;
 }
 
-function StarRating({ onRate }: { onRate: (n: number) => void }) {
-  const [selected, setSelected] = useState(0);
+// ── Today's Claim (Daily Witness) ────────────────────────────────────
+
+type WitnessState =
+  | 'idle'
+  | 'reason'
+  | 'submitting'
+  | 'done'
+  | 'coming_soon'
+  | 'locked'
+  | 'error';
+
+const MIN_BASIS_CHARS = 20;
+
+function TodayClaimCard() {
+  const router = useRouter();
+  const [rounds, setRounds] = useState<OpenRound[] | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [state, setState] = useState<WitnessState>('idle');
+  const [pendingVerdict, setPendingVerdict] = useState<Verdict | null>(null);
+  const [basis, setBasis] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    getOpenRounds().then((r) => {
+      if (cancelled) return;
+      setRounds(r);
+      setLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Endpoint missing (feature off) or nothing open → no card at all.
+  if (!loaded || rounds === null || rounds.length === 0) return null;
+
+  const round = rounds[0];
+
+  function witness(verdict: Verdict) {
+    if (isLocked()) {
+      setState('locked');
+      return;
+    }
+    // Staked review requires a written basis for every vote — collect it first.
+    setPendingVerdict(verdict);
+    setState('reason');
+  }
+
+  async function submitWithBasis() {
+    if (!pendingVerdict || basis.trim().length < MIN_BASIS_CHARS) return;
+    setState('submitting');
+    const result = await submitVote(round.id, pendingVerdict, {
+      basis: basis.trim(),
+      assignmentId: round.assignmentId,
+      evidenceIndex: pendingVerdict === 'support' ? 0 : undefined,
+    });
+    if (result === 'ok') setState('done');
+    else if (result === 'coming_soon') setState('coming_soon');
+    else if (result === 'locked') setState('locked');
+    else setState('error');
+  }
+
   return (
-    <View style={styles.stars}>
-      {[1, 2, 3, 4, 5].map((n) => (
-        <TouchableOpacity
-          key={n}
-          onPress={() => { setSelected(n); onRate(n); }}
-          hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
-        >
-          <Ionicons
-            name={n <= selected ? 'star' : 'star-outline'}
-            size={18}
-            color={n <= selected ? '#D4A017' : '#999'}
+    <View style={claimStyles.card}>
+      <Text style={claimStyles.kicker}>TODAY'S CLAIM</Text>
+      <Text style={claimStyles.claim}>{round.claimText}</Text>
+      {round.entity ? <Text style={claimStyles.entity}>— {round.entity}</Text> : null}
+
+      {state === 'idle' && (
+        <View style={claimStyles.buttons}>
+          <TouchableOpacity
+            style={[claimStyles.btn, claimStyles.supportBtn]}
+            onPress={() => witness('support')}
+          >
+            <Text style={claimStyles.btnTextLight}>Support</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[claimStyles.btn, claimStyles.disputeBtn]}
+            onPress={() => witness('dispute')}
+          >
+            <Text style={claimStyles.btnTextLight}>Dispute</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[claimStyles.btn, claimStyles.cantBtn]}
+            onPress={() => witness('cant_verify')}
+          >
+            <Text style={claimStyles.btnTextDark}>Can't verify</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {state === 'reason' && (
+        <View style={{ marginTop: 12 }}>
+          <TextInput
+            style={claimStyles.basisInput}
+            placeholder="In a sentence: why?"
+            placeholderTextColor="#8A8A8A"
+            value={basis}
+            onChangeText={setBasis}
+            multiline
+            autoFocus
           />
+          <View style={claimStyles.buttons}>
+            <TouchableOpacity
+              style={[
+                claimStyles.btn,
+                claimStyles.supportBtn,
+                basis.trim().length < MIN_BASIS_CHARS && { opacity: 0.4 },
+              ]}
+              disabled={basis.trim().length < MIN_BASIS_CHARS}
+              onPress={submitWithBasis}
+            >
+              <Text style={claimStyles.btnTextLight}>Submit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[claimStyles.btn, claimStyles.cantBtn]}
+              onPress={() => {
+                setPendingVerdict(null);
+                setBasis('');
+                setState('idle');
+              }}
+            >
+              <Text style={claimStyles.btnTextDark}>Back</Text>
+            </TouchableOpacity>
+          </View>
+          {basis.trim().length > 0 && basis.trim().length < MIN_BASIS_CHARS && (
+            <Text style={claimStyles.status}>
+              A few more words — reviews need a written basis.
+            </Text>
+          )}
+        </View>
+      )}
+
+      {state === 'submitting' && <ActivityIndicator color={INK} style={{ marginTop: 12 }} />}
+
+      {state === 'done' && (
+        <Text style={claimStyles.status}>Witnessed. Thank you — points on their way.</Text>
+      )}
+      {state === 'coming_soon' && (
+        <Text style={claimStyles.status}>Witnessing from mobile is coming soon.</Text>
+      )}
+      {state === 'locked' && (
+        <TouchableOpacity onPress={() => router.push('/(tabs)/settings')}>
+          <Text style={[claimStyles.status, { color: ACCENT }]}>
+            Unlock your wallet in Settings to witness, then try again.
+          </Text>
         </TouchableOpacity>
-      ))}
+      )}
+      {state === 'error' && (
+        <TouchableOpacity onPress={() => setState('idle')}>
+          <Text style={[claimStyles.status, { color: ACCENT }]}>
+            Something went wrong. Tap to try again.
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
+
+// ── Feed ─────────────────────────────────────────────────────────────
 
 function FeedCard({ item }: { item: FeedItem }) {
   return (
@@ -103,37 +256,6 @@ function FeedCard({ item }: { item: FeedItem }) {
           ))}
         </View>
       )}
-
-      {/* Actions */}
-      <View style={styles.actions}>
-        <StarRating onRate={(n) => {
-          // TODO: call pooter SDK rate()
-          console.log(`Rated ${item.id}: ${n} stars`);
-        }} />
-
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={() => {
-              // TODO: open comment sheet
-              console.log(`Comment on ${item.id}`);
-            }}
-          >
-            <Ionicons name="chatbubble-outline" size={16} color="#666" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.tipBtn}
-            onPress={() => {
-              // TODO: call pooter SDK tipEntity()
-              console.log(`Tip ${item.id}`);
-            }}
-          >
-            <Ionicons name="gift-outline" size={14} color={PAPER} />
-            <Text style={styles.tipText}>Tip</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
     </View>
   );
 }
@@ -217,6 +339,7 @@ export default function FeedTab() {
           data={items}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => <FeedCard item={item} />}
+          ListHeaderComponent={<TodayClaimCard />}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={INK} />
           }
@@ -230,6 +353,56 @@ export default function FeedTab() {
     </SafeAreaView>
   );
 }
+
+const claimStyles = StyleSheet.create({
+  card: {
+    margin: 12,
+    marginBottom: 4,
+    padding: 16,
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: INK,
+    gap: 8,
+  },
+  kicker: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 2,
+    color: ACCENT,
+  },
+  claim: {
+    fontSize: 18,
+    fontFamily: 'serif',
+    fontWeight: '700',
+    color: INK,
+    lineHeight: 24,
+  },
+  entity: { fontSize: 13, color: '#666', fontStyle: 'italic' },
+  buttons: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  btn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  basisInput: {
+    borderWidth: 1,
+    borderColor: RULE,
+    backgroundColor: PAPER,
+    color: INK,
+    padding: 10,
+    minHeight: 60,
+    fontSize: 14,
+    textAlignVertical: 'top',
+  },
+  supportBtn: { backgroundColor: INK },
+  disputeBtn: { backgroundColor: ACCENT },
+  cantBtn: { borderWidth: 1.5, borderColor: INK },
+  btnTextLight: { color: PAPER, fontWeight: '700', fontSize: 13 },
+  btnTextDark: { color: INK, fontWeight: '700', fontSize: 13 },
+  status: { fontSize: 13, color: '#444', marginTop: 8, lineHeight: 18 },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAPER },
@@ -329,26 +502,6 @@ const styles = StyleSheet.create({
     color: '#888',
     fontStyle: 'italic',
   },
-
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  stars: { flexDirection: 'row', gap: 4 },
-  actionButtons: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  actionBtn: { padding: 4 },
-  tipBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: INK,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-  },
-  tipText: { color: PAPER, fontSize: 12, fontWeight: '700' },
 
   empty: {
     textAlign: 'center',

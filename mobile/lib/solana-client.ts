@@ -1,6 +1,10 @@
 /**
- * Solana client — Connection, PDA helpers, and program interaction.
- * PDA derivation ported from sdk/src/solana.ts
+ * Solana client — Connection and balance/transfer helpers.
+ *
+ * NOTE: the Morality program has never been deployed to Solana. The old
+ * MORALITY_PROGRAM_ID here was an invalid base58 placeholder and the PDA
+ * helpers that depended on it have been removed until a real program id
+ * exists. Only balance reads and plain SOL transfers remain.
  */
 import {
   Connection,
@@ -14,12 +18,7 @@ import { keccak_256 } from 'js-sha3';
 
 // ── Config ──────────────────────────────────────────────────────────
 
-export const MORALITY_PROGRAM_ID = new PublicKey(
-  'Mora1ityXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX', // placeholder until real deploy
-);
-
 const SOLANA_RPC_DEVNET = 'https://api.devnet.solana.com';
-const SOLANA_RPC_MAINNET = 'https://api.mainnet-beta.solana.com';
 
 let rpcUrl = SOLANA_RPC_DEVNET;
 let connection: Connection | null = null;
@@ -40,55 +39,6 @@ export function getConnection(): Connection {
 
 export function computeEntityHash(identifier: string): Uint8Array {
   return new Uint8Array(keccak_256.arrayBuffer(identifier));
-}
-
-// ── PDA derivation (ported from sdk/src/solana.ts) ──────────────────
-
-export function findEntityPDA(entityHash: Uint8Array): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from('entity'), Buffer.from(entityHash)],
-    MORALITY_PROGRAM_ID,
-  );
-}
-
-export function findRatingStatsPDA(entityHash: Uint8Array): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from('rating_stats'), Buffer.from(entityHash)],
-    MORALITY_PROGRAM_ID,
-  );
-}
-
-export function findUserRatingPDA(
-  entityHash: Uint8Array,
-  rater: PublicKey,
-): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from('user_rating'), Buffer.from(entityHash), rater.toBuffer()],
-    MORALITY_PROGRAM_ID,
-  );
-}
-
-export function findCommentPDA(commentId: bigint): [PublicKey, number] {
-  const buf = Buffer.alloc(8);
-  buf.writeBigUInt64LE(commentId);
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from('comment'), buf],
-    MORALITY_PROGRAM_ID,
-  );
-}
-
-export function findVaultPDA(entityHash: Uint8Array): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from('vault'), Buffer.from(entityHash)],
-    MORALITY_PROGRAM_ID,
-  );
-}
-
-export function findConfigPDA(): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from('config')],
-    MORALITY_PROGRAM_ID,
-  );
 }
 
 // ── Balance ─────────────────────────────────────────────────────────

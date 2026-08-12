@@ -4,7 +4,7 @@ import { setupTooltip } from './tooltip';
 import { setupBiasOverlay } from './bias-overlay';
 import { setupPanel } from './panel';
 import { runNlpScan } from './nlp';
-import { NLP_DELAY_MS } from '../shared/constants';
+import { NLP_DELAY_MS, EXTENSION_VERSION } from '../shared/constants';
 
 // ============================================================================
 // EIP-1193 PROVIDER BRIDGE
@@ -136,5 +136,5 @@ if (isPooterWorld) {
   });
 
   // Tell pooter.world that the extension is present
-  window.postMessage({ type: 'POOTER_EXTENSION_PRESENT', version: '0.1.0' }, '*');
+  window.postMessage({ type: 'POOTER_EXTENSION_PRESENT', version: EXTENSION_VERSION }, '*');
 }

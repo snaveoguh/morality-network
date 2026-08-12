@@ -656,3 +656,23 @@ export async function getMyAssignments(accountId: string): Promise<OpenAssignmen
     ORDER BY a.assigned_at
   `;
 }
+
+/**
+ * Resolve the caller's live assignment in a round — lets bearer clients vote
+ * by roundId alone (identity contract v1 reconciliation with the extension).
+ */
+export async function findMyAssignment(
+  accountId: string,
+  roundId: string,
+): Promise<{ assignmentId: string; state: string } | null> {
+  const rows = await sql<{ assignmentId: string; state: string }[]>`
+    SELECT a.id::TEXT AS "assignmentId", a.state
+    FROM pooter.ledger_review_assignments a
+    JOIN pooter.ledger_review_rounds rr ON rr.id = a.round_id
+    WHERE a.round_id = ${roundId} AND a.account_id = ${accountId}
+      AND a.state IN ('assigned', 'accepted')
+      AND rr.status = 'open' AND a.expires_at > NOW()
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
