@@ -1,13 +1,14 @@
-import { type Address } from 'viem';
+// Contract addresses live in shared/constants.ts, keyed by network — the same
+// address can hold a DIFFERENT contract on Base vs Base Sepolia, so they are
+// never listed here without a chain id. Use getContracts() from shared/rpc.ts
+// to get the active network's addresses.
 
-// Contract addresses — latest Base Sepolia deployment
-export const CONTRACTS = {
-  registry:    '0x1c73efffeb89ad8699770921dbd860bb5da5b15a' as Address,
-  ratings:     '0x29f0235d74e09536f0b7df9c6529de17b8af5fc6' as Address,
-  comments:    '0x14a361454edcb477644eb82bf540a26e1cead72a' as Address,
-  tipping:     '0x71b2e273727385c617fe254f4fb14a36a679b12a' as Address,
-  leaderboard: '0x4b48d35e019129bb5a16920adc4cb7f445ec8ca5' as Address,
-} as const;
+export const ERC20_ABI = [
+  { type: 'function', name: 'balanceOf', inputs: [{ name: 'account', type: 'address' }], outputs: [{ name: '', type: 'uint256' }], stateMutability: 'view' },
+  { type: 'function', name: 'transfer', inputs: [{ name: 'to', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [{ name: '', type: 'bool' }], stateMutability: 'nonpayable' },
+  { type: 'function', name: 'decimals', inputs: [], outputs: [{ name: '', type: 'uint8' }], stateMutability: 'view' },
+  { type: 'function', name: 'symbol', inputs: [], outputs: [{ name: '', type: 'string' }], stateMutability: 'view' },
+] as const;
 
 export const REGISTRY_ABI = [
   { type: 'function', name: 'registerEntity', inputs: [{ name: 'identifier', type: 'string' }, { name: 'entityType', type: 'uint8' }], outputs: [{ name: '', type: 'bytes32' }], stateMutability: 'nonpayable' },

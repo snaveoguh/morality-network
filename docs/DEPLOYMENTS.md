@@ -309,8 +309,10 @@ For pure dev/testnet rollouts, the Foundry scripts can deploy:
   from a `NEXT_PUBLIC_*` env var with a **Base mainnet** hardcoded fallback — so this file
   cannot tell you what a given environment resolves to. To know what prod actually points
   at, read the Railway env vars for `faithful-purpose / production / morality-network`.
-- Extension pins **Base Sepolia** addresses in `extension/src/shared/contracts.ts`. This is
-  testnet wiring on a shipped surface — re-point it at mainnet before any store release.
+- Extension (0.2.0+) defaults to **Base mainnet** with Base Sepolia selectable in its
+  settings. Per-network addresses are pinned by chain id in
+  `extension/src/shared/constants.ts` (NETWORKS) — never copy an address between the two
+  network blocks without verifying it onchain against the target chain id.
 
 ## Cron Schedule
 

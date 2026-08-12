@@ -1,15 +1,10 @@
-import { parseEther } from 'viem';
-import { baseSepolia } from 'viem/chains';
 import { getWalletClient, getAccount } from '../shared/wallet';
-import { getPublicClient } from '../shared/rpc';
-import { CONTRACTS, RATINGS_ABI, COMMENTS_ABI, TIPPING_ABI, REGISTRY_ABI } from '../shared/contracts';
-import { computeEntityHash, detectEntityType } from '../shared/entity';
-
-const ZERO_ADDR = '0x0000000000000000000000000000000000000000';
+import { getPublicClient, getChain, getContracts, isContractAvailable } from '../shared/rpc';
+import { RATINGS_ABI, COMMENTS_ABI, TIPPING_ABI } from '../shared/contracts';
 
 function requireDeployed(): void {
-  if (CONTRACTS.ratings === ZERO_ADDR) {
-    throw new Error('Contracts not deployed yet');
+  if (!isContractAvailable('ratings')) {
+    throw new Error(`Not available on ${getChain().name} — switch network in Settings`);
   }
 }
 
@@ -29,9 +24,9 @@ export async function rateEntity(entityHash: string, score: number): Promise<str
 
   const client = getWalletClient();
   const hash = await client.writeContract({
-    chain: baseSepolia,
+    chain: getChain(),
     account: getAccount()!,
-    address: CONTRACTS.ratings,
+    address: getContracts().ratings,
     abi: RATINGS_ABI,
     functionName: 'rate',
     args: [entityHash as `0x${string}`, score],
@@ -50,9 +45,9 @@ export async function rateEntityWithReason(entityHash: string, score: number, re
 
   const client = getWalletClient();
   const hash = await client.writeContract({
-    chain: baseSepolia,
+    chain: getChain(),
     account: getAccount()!,
-    address: CONTRACTS.ratings,
+    address: getContracts().ratings,
     abi: RATINGS_ABI,
     functionName: 'rateWithReason',
     args: [entityHash as `0x${string}`, score, trimmedReason],
@@ -67,9 +62,9 @@ export async function submitComment(entityHash: string, content: string, parentI
 
   const client = getWalletClient();
   const hash = await client.writeContract({
-    chain: baseSepolia,
+    chain: getChain(),
     account: getAccount()!,
-    address: CONTRACTS.comments,
+    address: getContracts().comments,
     abi: COMMENTS_ABI,
     functionName: 'comment',
     args: [entityHash as `0x${string}`, content, BigInt(parentId)],
@@ -84,9 +79,9 @@ export async function tipEntity(entityHash: string, amountWei: string): Promise<
 
   const client = getWalletClient();
   const hash = await client.writeContract({
-    chain: baseSepolia,
+    chain: getChain(),
     account: getAccount()!,
-    address: CONTRACTS.tipping,
+    address: getContracts().tipping,
     abi: TIPPING_ABI,
     functionName: 'tipEntity',
     args: [entityHash as `0x${string}`],
@@ -101,9 +96,9 @@ export async function tipComment(commentId: number, amountWei: string): Promise<
 
   const client = getWalletClient();
   const hash = await client.writeContract({
-    chain: baseSepolia,
+    chain: getChain(),
     account: getAccount()!,
-    address: CONTRACTS.tipping,
+    address: getContracts().tipping,
     abi: TIPPING_ABI,
     functionName: 'tipComment',
     args: [BigInt(commentId)],
@@ -119,9 +114,9 @@ export async function voteComment(commentId: number, vote: number): Promise<stri
 
   const client = getWalletClient();
   const hash = await client.writeContract({
-    chain: baseSepolia,
+    chain: getChain(),
     account: getAccount()!,
-    address: CONTRACTS.comments,
+    address: getContracts().comments,
     abi: COMMENTS_ABI,
     functionName: 'vote',
     args: [BigInt(commentId), vote],
@@ -134,7 +129,7 @@ export async function sendEth(to: string, amountWei: string): Promise<string> {
 
   const client = getWalletClient();
   const hash = await client.sendTransaction({
-    chain: baseSepolia,
+    chain: getChain(),
     account: getAccount()!,
     to: to as `0x${string}`,
     value: BigInt(amountWei),
