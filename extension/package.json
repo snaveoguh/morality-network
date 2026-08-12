@@ -1,12 +1,16 @@
 {
   "name": "pooter-world-extension",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "build": "node esbuild.config.mjs",
-    "watch": "node esbuild.config.mjs --watch"
+    "watch": "node esbuild.config.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "esbuild smoke-test.mts --bundle --platform=node --format=esm --outfile=dist/_smoke.mjs && node dist/_smoke.mjs && rm -f dist/_smoke.mjs"
   },
   "dependencies": {
+    "@scure/bip32": "^1.7.0",
+    "@scure/bip39": "^1.6.0",
     "compromise": "^14.15.0",
     "viem": "^2.21.0"
   },
