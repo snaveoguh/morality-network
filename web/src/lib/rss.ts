@@ -95,6 +95,20 @@ const SOURCE_TIER_MAP: Record<string, SourceTier> = {
   "Guardian Environment": "broadsheet",
   "Inside Climate News": "broadsheet",
   "Grist": "broadsheet",
+  // Right / conservative
+  "Fox News": "broadsheet",
+  "The Telegraph": "broadsheet",
+  "National Review": "broadsheet",
+  "UnHerd": "broadsheet",
+  // State media (below Western wires in dedup, above blogs)
+  "TASS": "broadsheet",
+  "Xinhua": "broadsheet",
+  "RT": "tabloid",
+  "Sputnik": "tabloid",
+  "CGTN": "tabloid",
+  "Global Times": "tabloid",
+  "Press TV": "tabloid",
+  "TRT World": "tabloid",
   // Government / Institutional
   "UN News": "wire",
   "WHO News": "wire",
@@ -223,6 +237,25 @@ export const DEFAULT_FEEDS: FeedSource[] = [
 
   // ─── CONFLICT / INDEPENDENT JOURNALISM ───
   { name: "Popular Front",     url: "https://popularfront.libsyn.com/rss",                         category: "World" },
+
+  // ─── RIGHT / MAINSTREAM CONSERVATIVE (balance vs the left column) ───
+  { name: "Fox News",          url: "https://moxie.foxnews.com/google-publisher/latest.xml",       category: "World" },
+  { name: "New York Post",     url: "https://nypost.com/feed/",                                    category: "World" },
+  { name: "The Telegraph",     url: "https://news.google.com/rss/search?q=site:telegraph.co.uk+when:1d&hl=en-GB&gl=GB&ceid=GB:en", category: "World" },
+  { name: "National Review",   url: "https://www.nationalreview.com/feed/",                        category: "Politics" },
+  { name: "UnHerd",            url: "https://unherd.com/feed/",                                    category: "Politics" },
+
+  // ─── STATE MEDIA — RUSSIA / CHINA / IRAN / TURKEY ───
+  // Included deliberately for spectrum coverage (Ground News-style).
+  // Bias, factuality, and state-funding labels surface on every tile via BiasPill.
+  { name: "RT",                url: "https://www.rt.com/rss/news/",                                category: "World" },
+  { name: "TASS",              url: "https://tass.com/rss/v2.xml",                                 category: "World" },
+  { name: "Sputnik",           url: "https://sputnikglobe.com/export/rss2/archive/index.xml",      category: "World" },
+  { name: "Xinhua",            url: "https://news.google.com/rss/search?q=site:english.news.cn+when:1d&hl=en-US&gl=US&ceid=US:en", category: "World" },
+  { name: "CGTN",              url: "https://www.cgtn.com/subscribe/rss/section/world.xml",        category: "World",  fallbackUrl: "https://news.google.com/rss/search?q=site:cgtn.com+when:1d&hl=en-US&gl=US&ceid=US:en" },
+  { name: "Global Times",      url: "https://news.google.com/rss/search?q=site:globaltimes.cn+when:1d&hl=en-US&gl=US&ceid=US:en", category: "World" },
+  { name: "Press TV",          url: "https://www.presstv.co.uk/rss.xml",                           category: "World",  fallbackUrl: "https://news.google.com/rss/search?q=site:presstv.co.uk+when:7d&hl=en-US&gl=US&ceid=US:en" },
+  { name: "TRT World",         url: "https://news.google.com/rss/search?q=site:trtworld.com+when:1d&hl=en-US&gl=US&ceid=US:en", category: "World" },
 ];
 
 // ============================================================================
