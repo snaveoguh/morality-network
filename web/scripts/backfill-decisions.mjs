@@ -32,6 +32,7 @@ const REDIS_KEYS = [
   "pooter:v2",
   "pooter:v3",
   "pooter:v4",
+  "pooter:v5",
   "pooter:scout-positions",
 ];
 
