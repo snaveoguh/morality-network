@@ -9,6 +9,32 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 45 · trade recording restored — worker had no DATABASE_URL since ~Aug 3
+
+**when** — 2026-08-23
+**what** — the executing HL worker (faithful-purpose/disciplined-serenity) was
+trading daily but writing nothing: `DATABASE_URL is not set` on every cycle
+since ~Aug 3. Fixed: env var copied from prod web (value never displayed),
+worker rebooted 21:28 UTC (positions safe in Redis pooter:v5), writes verified
+(14 signal rows within minutes). History restored two ways: (a)
+backfill-decisions.mjs now scans pooter:v5 — 174 rows inserted, 1,083 skipped;
+(b) NEW scripts/enrich-closes-from-fills.mjs — HL userFills is the PnL
+authority: enriched 55 rows w/ pnlUsd/feeUsd, reconstructed 22 closes that
+existed nowhere (id=backfill-fill:*). Final reconcile: HL 17.0623 = DB 17.0623,
+zero gap. NOTE: the "bot only loses" story was wrong — the unrecorded Aug 4-22
+stretch was +$17.06 realized.
+**why** — can't kill losing strategies or fund winning ones on a blind book.
+**where** — worker env (Railway), web/scripts/{backfill-decisions,
+enrich-closes-from-fills,reconcile-hl-fills}.mjs. Two workers exist: 
+pooter-agent-worker (pooter-indexer, has DB, entries 0) and disciplined-serenity
+(faithful-purpose, executes on HL). STILL SICK: the indexer API app 502s on
+every scanner/swarm/state/bridge call — next repair.
+**rollback** — `DELETE FROM pooter.trade_decisions WHERE id LIKE 'backfill-fill:%';`
+and strip `pnlSource='hl-fills-backfill'` keys; unset DATABASE_URL on the worker
+to restore the (broken) prior state.
+
+---
+
 ## ▲ node 44 · platform v1 — bearer identity, extension v1, mobile v1, compliance baseline
 
 **when** — 2026-08-12
