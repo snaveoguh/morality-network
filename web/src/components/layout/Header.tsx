@@ -21,6 +21,7 @@ const NAV_LINKS = [
   { href: "/archive", label: "Archive" },
   { href: "/proposals", label: "Governance" },
   { href: "/ledger", label: "Ledger" },
+  { href: "/account", label: "Account" },
 ];
 
 /** Playground links — used for active-state detection in nav. */
@@ -111,6 +112,7 @@ const LOGO_MENU_ITEMS = [
   { href: "/typography", label: "Typography Lab", desc: "Variable-font candidates" },
   { href: "/zk-recovery", label: "ZK Recovery", desc: "Passwordless wallet recovery" },
   { href: "/privacy", label: "Privacy", desc: "What we collect & why" },
+  { href: "/account", label: "Account", desc: "Sign in · legacy MO balance" },
 ];
 
 function LogoMenu() {
