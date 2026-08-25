@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { MoClaimPanel } from "@/components/account/MoClaimPanel";
 import { SignInForm } from "@/components/account/SignInForm";
 import { SignOutButton } from "@/components/account/SignOutButton";
 import { WalletSetup } from "@/components/account/WalletSetup";
@@ -111,6 +112,8 @@ async function SignedIn({
       </section>
 
       <WalletSetup existing={wallets} />
+
+      <MoClaimPanel />
 
       {/* Old mainnet MO is deliberately not shown. The platform balance above is
           the single figure that counts going forward. */}
