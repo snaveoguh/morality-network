@@ -9,6 +9,27 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 50 · phantom-close stragglers — live positions' records resurrected
+
+**when** — 2026-08-25
+**what** — Hugo spotted /markets listing xyz:GOLD/NVDA/SILVER as "closed
+8/22 19:28 UTC" while the same positions sat OPEN in the open-positions table.
+They were signal-sourced phantom rows the node-46 purge deliberately kept
+(real composite entries, fake "disappeared from HL" closes from the same mass
+sweep — GOLD's "exit" was literally its entry price). DB surgery (archived
+first): cleared the fake close on the 3 rows matching live HL positions —
+restoring them as PG open rows WITH their composite signal metadata (PG had
+ZERO open rows before this) — and deleted 1 duplicate NVDA row (engine's
+`:closed:` archive-suffix copy; its plain-"manual" trigger twin is why the
+purge filter missed it). Left alone: old AAPL short (different position than
+the current 8/23 short), TSLA + old SILVER rows (positions genuinely gone).
+Closed table 477→473. NOTE: `hl:<sym>:<id>` base ids are REUSED across
+position lifecycles — never assume a base id is free.
+**why** — the public book must not contradict the exchange.
+**where** — pooter.trade_decisions (indexer Postgres); copies in
+trade_decisions_phantom_archive. No code change.
+**rollback** — restore the 4 archived rows from the archive table.
+
 ## ▲ node 49 · MO claim stack built — Phase 1 of the token integration
 
 **when** — 2026-08-25
