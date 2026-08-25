@@ -9,6 +9,21 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 48 · /markets was blind to xyz builder-dex positions
+
+**when** — 2026-08-25
+**what** — prod web (faithful-purpose/morality-network) had no
+`HYPERLIQUID_BUILDER_DEXES` env var, so `/markets` queried only the main-dex
+clearinghouse: the 4 open xyz positions (GOLD/SILVER/TSLA/NVDA) and the ~$60
+of collateral on the xyz ledger were invisible in the UI — Hugo had no idea
+the positions existed. Set `HYPERLIQUID_BUILDER_DEXES=xyz` on the prod web
+service (env-only, auto-redeploy). The worker already had it; only the
+read-side was blind.
+**why** — the public terminal must reflect the whole book, not one ledger.
+**where** — Railway env on faithful-purpose/production/morality-network. No
+code change. NOTE dev web (earnest-love) likely needs the same var.
+**rollback** — unset the var (returns /markets to main-dex-only view).
+
 ## ▲ node 47 · spot→perp auto-sweep + caps raised for the $120 top-up
 
 **when** — 2026-08-25
