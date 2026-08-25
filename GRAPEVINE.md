@@ -9,6 +9,34 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 49 · MO claim stack built — Phase 1 of the token integration
+
+**when** — 2026-08-25
+**what** — full legacy-MO onchain claim stack on branch `feat/mo-claim`:
+`MoToken.sol` (fixed-supply OZ ERC-20, minted once to the treasury Safe, no
+owner/mint), `MoClaimDistributor.sol` (Merkle claim per epoch, root set only
+by the Safe, claimed-bitmap, recover-to-Safe; 9/9 forge tests),
+`DeployMoClaim.s.sol`, migration 012 (`mo_claim_epochs` + `mo_claim_leaves`,
+APPLIED to the indexer DB), `scripts/build-claim-snapshot.mjs` (OZ standard
+Merkle tree from `mo_ledger` balances × primary wallets; JS↔Solidity leaf
+encoding verified byte-identical), `/api/account/claim-proof` +
+`/api/account/claim-confirm` (verifies the Claimed event onchain, appends the
+`onchain_claim` mo_ledger debit idempotently), and `MoClaimPanel` on /account
+(wagmi claim tx; hidden until `NEXT_PUBLIC_MO_CLAIM_DISTRIBUTOR` is set and
+the account has a leaf). Epoch discipline: new epoch root + retire previous
+root in ONE Safe batch (trees are built from live balances).
+**why** — Phase 1 of the MO integration memo: honour the 2.81M reconciled
+legacy balances as onchain claims to signature-proven wallets.
+**where** — contracts/, web/migrations, web/scripts, web/src/app/api/account,
+web/src/components/account. DB fact at build time: 202 funded accounts, ZERO
+have linked a wallet yet — wallet-linking uptake is the gating step, not code.
+Onchain audit: old Base MO 0x8729…746C = 100B supply, founder wallet holds
+15.66B, no owner() — memo recommends clean fixed-supply redeploy (token
+address is env-swappable via NEXT_PUBLIC_MO_TOKEN_ADDRESS).
+**rollback** — code: revert the merge. DB: migration 012 is additive
+(DROP TABLE pooter.mo_claim_leaves, pooter.mo_claim_epochs to unwind).
+Nothing is deployed onchain yet; no envs set.
+
 ## ▲ node 48 · /markets was blind to xyz builder-dex positions
 
 **when** — 2026-08-25
