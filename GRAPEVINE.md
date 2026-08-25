@@ -9,6 +9,26 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 47 · spot→perp auto-sweep + caps raised for the $120 top-up
+
+**when** — 2026-08-25
+**what** — new `sweepSpotUsdcToPerp` (hyperliquid.ts): at the start of every
+live trader cycle, idle spot USDC ≥$2 is moved to the perp ledger via
+`usdClassTransfer`, so deposits sent to the account's spot balance become
+margin without logging in. (The existing insufficient-margin top-up only fired
+when an order bounced — Hugo's $1 + $120 sends landed spot-side and sat
+invisible to Kelly sizing.) Non-fatal on failure. Alongside: sizing caps raised
+`TRADER_MAX_POSITION_USD` 40→65, `TRADER_MAX_PORTFOLIO_USD` 240→390 (6 slots
+kept) to match ~$296 equity post-sweep — same ~1.35× notional/equity ratio as
+before.
+**why** — $122 idle in spot is dead capital; the caps were exactly saturated at
+6×$40=$240 so new money couldn't size up.
+**where** — `web/src/lib/trading/hyperliquid.ts`, `web/src/lib/trading/engine.ts`
+(dev), cherry-picked to the worker clone; env on
+pooter-indexer/production/pooter-agent-worker.
+**rollback** — revert the commit; env: set caps back to 40/240. Sweep kill:
+revert (no env flag — it's guarded by `!dryRun` + hyperliquid-perp venue).
+
 ## ▲ node 46 · phantom "disappeared from HL" churn — root-caused, fixed, purged
 
 **when** — 2026-08-24

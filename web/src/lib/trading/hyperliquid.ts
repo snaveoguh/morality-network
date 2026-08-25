@@ -396,6 +396,33 @@ async function fetchClearinghouseStateRaw(
   }
 }
 
+// Ignore spot dust below this when sweeping — a transfer this small isn't
+// worth the nonce, and HL rejects zero-ish amounts.
+const SPOT_SWEEP_MIN_USD = 2;
+
+/**
+ * Sweep idle spot USDC into the perp ledger so deposits sent to the account's
+ * spot balance become trading margin without a manual transfer. The existing
+ * insufficient-margin top-up in executeHyperliquidOrderLive only fires when an
+ * order bounces; this runs proactively at cycle start. Returns the amount
+ * moved (0 when below the dust threshold).
+ */
+export async function sweepSpotUsdcToPerp(config: TraderExecutionConfig): Promise<number> {
+  const clients = getHyperliquidClients(config);
+  const walletAddress = privateKeyToAccount(config.privateKey).address as Address;
+  const accountAddress = resolveHyperliquidAccountAddress(config, walletAddress);
+  const spotUsdc = await fetchSpotUsdcBalance(config, accountAddress);
+  if (!spotUsdc || spotUsdc < SPOT_SWEEP_MIN_USD) return 0;
+  // Floor to cents so rounding can never request more than the balance.
+  const amount = Math.floor(spotUsdc * 100) / 100;
+  await clients.exchangeClient.usdClassTransfer({
+    amount: formatDecimal(amount, 6),
+    toPerp: true,
+  });
+  console.log(`[hyperliquid] swept $${amount.toFixed(2)} spot USDC → perp margin`);
+  return amount;
+}
+
 /** USDC token identifier ("USDC:0x…") for sendAsset, resolved from spot meta. */
 let usdcTokenIdCache: string | null = null;
 

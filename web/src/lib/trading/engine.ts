@@ -12,6 +12,7 @@ import {
   resolveHyperliquidAccountAddress,
   resolveHyperliquidMarketForLaunch,
   simulateHyperliquidOrder,
+  sweepSpotUsdcToPerp,
   fetchRecentCloseFill,
 } from "./hyperliquid";
 import { fetchTokenMarketSnapshot, normalizeQuoteSymbol, type DexScreenerChainId } from "./market";
@@ -136,6 +137,18 @@ class TraderEngine {
       report.errors.push(`live-gate:${readiness.reasons.join(",")}`);
       report.finishedAt = Date.now();
       return report;
+    }
+
+    // Sweep idle spot USDC into perp margin so deposits become tradable —
+    // the insufficient-margin top-up only fires when an order bounces.
+    if (!this.config.dryRun && this.config.executionVenue === "hyperliquid-perp") {
+      try {
+        await sweepSpotUsdcToPerp(this.config);
+      } catch (error) {
+        console.warn(
+          `[trader] spot→perp sweep failed (non-fatal): ${error instanceof Error ? error.message : error}`,
+        );
+      }
     }
 
     // SOUL.md §Trading: Circuit breaker — 3 consecutive losses = pause
