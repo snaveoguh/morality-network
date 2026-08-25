@@ -606,10 +606,21 @@ export function resolveHyperliquidAccountAddress(
   return config.hyperliquid.accountAddress ?? fallbackAddress;
 }
 
-export async function fetchHyperliquidLivePositions(
+export interface HyperliquidLivePositionsSnapshot {
+  positions: HyperliquidLivePosition[];
+  /**
+   * Builder dexes whose clearinghouseState fetch FAILED (timeout / rate-limit /
+   * non-OK). A failed fetch means the positions on that dex are UNKNOWN, not
+   * absent — callers reconciling against this snapshot must not treat the
+   * dex's symbols as closed.
+   */
+  failedDexes: string[];
+}
+
+export async function fetchHyperliquidLivePositionsSnapshot(
   config: TraderExecutionConfig,
   address: Address
-): Promise<HyperliquidLivePosition[]> {
+): Promise<HyperliquidLivePositionsSnapshot> {
   const clients = getHyperliquidClients(config);
   const builderDexes = config.hyperliquid.builderDexes ?? [];
   const [state, markets, ...dexStates] = await Promise.all([
@@ -617,6 +628,8 @@ export async function fetchHyperliquidLivePositions(
     fetchHyperliquidMarkets(config),
     ...builderDexes.map((dex) => fetchClearinghouseStateRaw(config, address, dex)),
   ]);
+
+  const failedDexes = builderDexes.filter((_, index) => dexStates[index] === null);
 
   const rawPositions = [
     ...(Array.isArray(state.assetPositions) ? state.assetPositions : []),
@@ -665,7 +678,17 @@ export async function fetchHyperliquidLivePositions(
     });
   }
 
-  return live.sort((a, b) => b.positionValueUsd - a.positionValueUsd);
+  return {
+    positions: live.sort((a, b) => b.positionValueUsd - a.positionValueUsd),
+    failedDexes,
+  };
+}
+
+export async function fetchHyperliquidLivePositions(
+  config: TraderExecutionConfig,
+  address: Address
+): Promise<HyperliquidLivePosition[]> {
+  return (await fetchHyperliquidLivePositionsSnapshot(config, address)).positions;
 }
 
 export async function fetchHyperliquidAccountValueUsd(

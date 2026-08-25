@@ -4,9 +4,10 @@ import { ERC20_TRADE_ABI } from "./abi";
 import { createTraderClients } from "./clients";
 import { getParallelBaseConfig, getTraderConfig } from "./config";
 import {
+  builderDexOfSymbol,
   executeHyperliquidOrderLive,
   fetchHyperliquidAccountValueUsd,
-  fetchHyperliquidLivePositions,
+  fetchHyperliquidLivePositionsSnapshot,
   fetchHyperliquidMarketBySymbol,
   resolveHyperliquidAccountAddress,
   resolveHyperliquidMarketForLaunch,
@@ -60,6 +61,10 @@ interface VaultStateSnapshot {
 // Applied as estimated exchange cost on notional position value
 const HL_TAKER_FEE_PER_SIDE = 0.00035;
 const HL_ROUND_TRIP_FEE_RATE = HL_TAKER_FEE_PER_SIDE * 2; // 0.0007
+// A store-open position missing from HL without a confirming close fill is only
+// declared gone after this many consecutive misses spanning at least this window.
+const DISAPPEAR_MISS_THRESHOLD = 3;
+const DISAPPEAR_MIN_WINDOW_MS = 5 * 60_000;
 
 function computeHyperliquidMinOrderNotionalUsd(priceUsd: number, szDecimals: number): number {
   if (!Number.isFinite(priceUsd) || priceUsd <= 0) return Number.POSITIVE_INFINITY;
@@ -96,6 +101,10 @@ class TraderEngine {
   private readonly initPromise: Promise<void>;
   /** Circuit breaker pause timestamp — null = not paused */
   private circuitBreakerPauseUntil: number | null = null;
+  // Consecutive polls a store-open position has been missing from a successful
+  // HL snapshot without a confirming close fill. Guards against transient API
+  // gaps fabricating "disappeared" closes.
+  private disappearMisses = new Map<string, { count: number; firstAt: number }>();
 
   constructor(config: TraderExecutionConfig) {
     this.config = config;
@@ -244,7 +253,11 @@ class TraderEngine {
 
   private async getHyperliquidOpenPositionsFromVenue(): Promise<Position[]> {
     const accountAddress = resolveHyperliquidAccountAddress(this.config, this.clients.address);
-    const livePositions = await fetchHyperliquidLivePositions(this.config, accountAddress);
+    const { positions: livePositions, failedDexes } = await fetchHyperliquidLivePositionsSnapshot(
+      this.config,
+      accountAddress,
+    );
+    const failedDexSet = new Set(failedDexes.map((dex) => dex.toLowerCase()));
     const quoteTokenAddress = this.config.quoteTokens.USDC ?? ZERO_ADDRESS;
     const quoteTokenDecimals = this.config.quoteTokenDecimals.USDC ?? 6;
 
@@ -319,7 +332,19 @@ class TraderEngine {
     const liveSymbols = new Set(livePositions.map((lp) => lp.symbol.toUpperCase()));
     const storeOpen = this.store.getOpen().filter((p) => p.venue === "hyperliquid-perp");
     for (const stored of storeOpen) {
-      if (liveIds.has(stored.id)) continue;
+      if (liveIds.has(stored.id)) {
+        this.disappearMisses.delete(stored.id);
+        continue;
+      }
+
+      // A failed builder-dex fetch means positions on that dex are UNKNOWN, not
+      // gone — sweeping them here fabricated mass "disappeared" closes followed
+      // by re-adoption on the next successful poll.
+      const storedDex = stored.marketSymbol ? builderDexOfSymbol(stored.marketSymbol) : null;
+      if (storedDex && failedDexSet.has(storedDex.toLowerCase())) {
+        console.warn(`[trader] ${stored.marketSymbol}: ${storedDex} dex fetch failed — skipping disappeared-check`);
+        continue;
+      }
 
       // If this is a UUID-based entry and the same symbol is live under an hl: ID,
       // it's the same position — just remove the duplicate UUID entry, don't close it.
@@ -329,27 +354,44 @@ class TraderEngine {
         continue;
       }
 
-      // Position gone from HL — try to get ACTUAL exit price from HL fills
-      // instead of stale cached market price (which was wildly inaccurate at high leverage)
+      // Position missing from a successful snapshot. Close immediately only when
+      // a real close fill confirms the exit; otherwise require several
+      // consecutive misses spread over a few minutes before declaring it gone.
       let exitPriceUsd = stored.entryPriceUsd; // fallback
       let closedPnlFromHl: number | undefined;
+      let closeFill: { exitPriceUsd: number; closedPnlUsd: number } | null = null;
       try {
-        const closeFill = stored.marketSymbol
+        closeFill = stored.marketSymbol
           ? await fetchRecentCloseFill(this.config, accountAddress, stored.marketSymbol)
           : null;
-        if (closeFill) {
-          exitPriceUsd = closeFill.exitPriceUsd;
-          closedPnlFromHl = closeFill.closedPnlUsd;
-        } else {
-          // No recent fill found — fall back to market price (less accurate but better than entry)
+      } catch {
+        closeFill = null;
+      }
+
+      if (closeFill) {
+        exitPriceUsd = closeFill.exitPriceUsd;
+        closedPnlFromHl = closeFill.closedPnlUsd;
+      } else {
+        const miss = this.disappearMisses.get(stored.id) ?? { count: 0, firstAt: Date.now() };
+        miss.count += 1;
+        this.disappearMisses.set(stored.id, miss);
+        if (miss.count < DISAPPEAR_MISS_THRESHOLD || Date.now() - miss.firstAt < DISAPPEAR_MIN_WINDOW_MS) {
+          console.warn(
+            `[trader] ${stored.marketSymbol} missing from HL snapshot (miss ${miss.count}, no close fill) — keeping open`,
+          );
+          continue;
+        }
+        try {
           const currentPrice = await this.resolvePositionPriceUsd(stored);
           if (currentPrice && Number.isFinite(currentPrice) && currentPrice > 0) {
             exitPriceUsd = currentPrice;
           }
+        } catch {
+          // keep fallback
         }
-      } catch {
-        // keep fallback
       }
+
+      this.disappearMisses.delete(stored.id);
       const exitNote = closedPnlFromHl !== undefined
         ? `manual (disappeared from HL, actual fill PnL: $${closedPnlFromHl.toFixed(4)})`
         : "manual (disappeared from HL)";

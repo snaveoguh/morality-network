@@ -9,6 +9,34 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 46 · phantom "disappeared from HL" churn — root-caused, fixed, purged
+
+**when** — 2026-08-24
+**what** — 968 of 1,286 closed rows in `pooter.trade_decisions` (75%) were fake:
+a failed builder-dex `clearinghouseState` fetch (timeout/429 → silent `null` in
+`fetchClearinghouseStateRaw`) read as "no positions", so the engine mass-closed
+real open positions as `manual (disappeared from HL)` and re-adopted them next
+poll — the xyz:GOLD/SILVER/TSLA/NVDA lockstep batches on /markets. Three fixes:
+(1) `fetchHyperliquidLivePositionsSnapshot` now reports `failedDexes`, and the
+engine skips the disappeared-sweep for symbols on a failed dex; (2) without a
+confirming close fill, a position is only declared gone after 3 consecutive
+misses spanning ≥5 min; (3) NEW `scripts/purge-phantom-closes.mjs` archived +
+deleted the 787 adopted-and-vanished rows (signal_source IS NULL) →
+`pooter.trade_decisions_phantom_archive`; table now 499 rows. Signal-sourced
+rows (181) kept. Side finding: true lifetime HL PnL from fills = −$54 net, but
+−$69 of that is Mar–Apr fee churn; Jun+Jul+Aug = **+$24.6 net, three green
+months**.
+**why** — the phantom churn poisoned /markets closed history and could
+double-count realized PnL (stale-fill re-matching); worse, each flap risked the
+book losing real position state.
+**where** — `web/src/lib/trading/hyperliquid.ts`, `web/src/lib/trading/engine.ts`,
+`web/scripts/purge-phantom-closes.mjs`; DB surgery on the indexer Postgres.
+NOTE: env today says the executing trader is pooter-agent-worker
+(`TRADER_EXECUTION_MODE=worker`, dry_run=false, BUILDER_DEXES=xyz) and
+disciplined-serenity is disabled — node 45's executor note is stale.
+**rollback** — code: revert the commit. DB: `INSERT INTO pooter.trade_decisions
+SELECT * FROM pooter.trade_decisions_phantom_archive;`
+
 ## ▲ node 45 · trade recording restored — worker had no DATABASE_URL since ~Aug 3
 
 **when** — 2026-08-23
