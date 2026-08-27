@@ -9,6 +9,40 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 51 · trade recording deadlock broken + retired-model purge
+
+**when** — 2026-08-27
+**what** — /markets was missing every trade since Aug 22 (19 closes, net
+−$7.53 — Hugo's "missing $10"). Root cause: the node-45/50 backfills seeded
+Postgres rows onto the deterministic base ids (`hl:{symbol}:{marketId}`),
+which PG — unlike the Redis store — never archive-renames on close. Every
+open since then died on duplicate-pkey (logged but unseen), so every close
+matched nothing ("CLOSE NOT RECORDED"). Fixed three ways: (1) code, commit
+`89386bf` — createTradeDecision archive-renames any row occupying the id
+before insert; close-matching goes cloid → wallet+symbol+openedAt (now
+case-insensitive; both wallet casings exist) → latest-open-row fallback;
+reads case-insensitive so lowercase backfill rows render. Deployed to
+pooter-agent-worker (`railway up` from the stale clone's web/, deploy
+`afe91fbe`). (2) DB surgery — closed 2 stale-open rows (NVDA, old GOLD long)
+from HL fills, renamed 25 base-id closed rows (11 were duplicate imports of
+already-archived twins, suffixed `:dup`), seeded open rows for the 5 live
+positions PG had lost, ran enrich-closes-from-fills since Aug 22 → 16
+synthetic close rows. (3) commit `e614a19` — replaced retired Anthropic
+model ids (claude-3-haiku-20240307, claude-sonnet-4-20250514, ~1k failing
+req/day per Anthropic's emails; also the never-valid claude-haiku-4-20250414)
+with claude-haiku-4-5 / claude-sonnet-4-6, in code AND Railway env on
+morality-network + disciplined-serenity. Sonnet-4-6 not sonnet-5: the router
+sends `temperature`, which sonnet-5 rejects.
+**why** — the public book must not contradict the exchange, and prod must
+not burn ~1k dead API calls a day.
+**where** — web/src/lib/db/trade-decisions.ts; pooter.trade_decisions;
+web/src/lib/{ai-models,ai-router,terminal-llm}.ts,
+web/scripts/generate-editorials.mjs; Railway env faithful-purpose ×2.
+**rollback** — `git revert 89386bf e614a19`; DB renames are suffix-appends
+(strip `:closed:{ms}`/`:dup` to restore); synthetic rows are
+`backfill-fill:*`/seeded rows deletable by id; env vars back to the retired
+ids (pointless — the models are gone).
+
 ## ▲ node 50 · phantom-close stragglers — live positions' records resurrected
 
 **when** — 2026-08-25
