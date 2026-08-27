@@ -71,14 +71,14 @@ const PREMIUM_PROVIDER_ORDER = parseProviderOrder(
 );
 
 const FAST_MODELS: Record<AIProviderId, string> = {
-  anthropic: readModelEnv("ANTHROPIC_FAST_MODEL", "claude-haiku-4-20250414"),
+  anthropic: readModelEnv("ANTHROPIC_FAST_MODEL", "claude-haiku-4-5"),
   openai: readModelEnv("OPENAI_FAST_MODEL", "gpt-5-mini"),
   venice: readModelEnv("VENICE_FAST_MODEL", "qwen3-4b"),
   ollama: readModelEnv("OLLAMA_FAST_MODEL", "qwen2.5:7b-instruct"),
 };
 
 const PREMIUM_MODELS: Record<AIProviderId, string> = {
-  anthropic: readModelEnv("ANTHROPIC_PREMIUM_MODEL", "claude-sonnet-4-20250514"),
+  anthropic: readModelEnv("ANTHROPIC_PREMIUM_MODEL", "claude-sonnet-4-6"),
   openai: readModelEnv("OPENAI_PREMIUM_MODEL", "gpt-5"),
   venice: readModelEnv("VENICE_PREMIUM_MODEL", "llama-3.3-70b"),
   ollama: readModelEnv("OLLAMA_PREMIUM_MODEL", "qwen2.5:14b-instruct"),

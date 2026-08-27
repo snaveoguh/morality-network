@@ -83,8 +83,8 @@ const PROVIDER_REGISTRY: AIProviderConfig[] = [
     baseUrl: "https://llm.bankr.bot/v1/",
     apiKeyEnvVar: "BANKR_API_KEY",
     models: {
-      fast: process.env.BANKR_LLM_MODEL || "claude-sonnet-4-20250514",
-      premium: process.env.BANKR_LLM_MODEL || "claude-sonnet-4-20250514",
+      fast: process.env.BANKR_LLM_MODEL || "claude-sonnet-4-6",
+      premium: process.env.BANKR_LLM_MODEL || "claude-sonnet-4-6",
     },
     headers: (key) => ({
       Authorization: `Bearer ${key}`,
@@ -111,8 +111,8 @@ const PROVIDER_REGISTRY: AIProviderConfig[] = [
     baseUrl: "https://api.anthropic.com/",
     apiKeyEnvVar: "ANTHROPIC_API_KEY",
     models: {
-      fast: process.env.ANTHROPIC_FAST_MODEL || "claude-haiku-4-20250414",
-      premium: process.env.ANTHROPIC_PREMIUM_MODEL || "claude-sonnet-4-20250514",
+      fast: process.env.ANTHROPIC_FAST_MODEL || "claude-haiku-4-5",
+      premium: process.env.ANTHROPIC_PREMIUM_MODEL || "claude-sonnet-4-6",
     },
     native: "anthropic",
     free: false,

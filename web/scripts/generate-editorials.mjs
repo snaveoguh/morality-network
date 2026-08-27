@@ -29,7 +29,7 @@ const EDITORIAL_ARCHIVE_PATH = path.join(__dirname, "../src/data/editorial-archi
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const BATCH_SIZE = parseInt(process.env.EDITORIAL_BATCH_SIZE || "20", 10);
 const DELAY_MS = parseInt(process.env.EDITORIAL_DELAY_MS || "3000", 10);
-const MODEL = "claude-sonnet-4-20250514";
+const MODEL = "claude-sonnet-4-6";
 
 if (!ANTHROPIC_API_KEY) {
   console.error("[editorial] ANTHROPIC_API_KEY not set — aborting.");

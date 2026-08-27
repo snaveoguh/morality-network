@@ -26,7 +26,7 @@ const AGENT_HUB_SECRET = process.env.AGENT_HUB_SECRET || "";
 
 const BANKR_API_KEY = process.env.BANKR_API_KEY || "";
 const VENICE_API_KEY = process.env.VENICE_API_KEY || "";
-const BANKR_MODEL = process.env.BANKR_LLM_MODEL || "claude-sonnet-4-20250514";
+const BANKR_MODEL = process.env.BANKR_LLM_MODEL || "claude-sonnet-4-6";
 const VENICE_MODEL = process.env.VENICE_LLM_MODEL || "llama-3.3-70b";
 
 const STREAM_TIMEOUT_MS = 30_000;
