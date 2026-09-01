@@ -144,6 +144,12 @@ export interface TraderRiskConfig {
   maxHoldMs?: number;
   minHoldMs?: number;
   directionMode?: "long-only" | "short-only" | "both";
+  /** Per-symbol performance gate — stand down from symbols that keep losing */
+  symbolGateLookback?: number;
+  symbolGateMinTrades?: number;
+  symbolGateNetLossUsd?: number;
+  symbolGateLossStreak?: number;
+  symbolGateCooldownMs?: number;
 }
 
 export interface TraderSafetyConfig {

@@ -216,3 +216,82 @@ export function computePerformanceMetrics(
     worstTradeUsd: Math.min(...pnls, 0),
   };
 }
+
+/* ═══════════════════  Per-Symbol Performance Gate  ═══════════════════ */
+
+export interface SymbolGateOptions {
+  /** Judge each symbol on its last N closed trades */
+  lookbackTrades?: number;
+  /** Need at least this many closed trades before gating */
+  minTrades?: number;
+  /** Gate when net PnL over the window is at or below −this */
+  netLossUsd?: number;
+  /** Or when the trailing consecutive-loss streak reaches this */
+  lossStreak?: number;
+  /** Stand down this long after the symbol's most recent close */
+  cooldownMs?: number;
+}
+
+const SYMBOL_GATE_DEFAULTS = {
+  lookbackTrades: 5,
+  minTrades: 3,
+  netLossUsd: 2,
+  lossStreak: 3,
+  cooldownMs: 48 * 3_600_000,
+};
+
+/**
+ * Symbols the trader should stand down from because they keep losing.
+ *
+ * A symbol is gated when its recent window is net negative (or ends in a
+ * loss streak) AND its latest close is still inside the cooldown. Once the
+ * cooldown lapses the symbol gets one probe trade — if that loses too, the
+ * window stays negative and the gate re-arms from the new close.
+ *
+ * Returns a map of UPPERCASED symbol → human-readable gate reason.
+ */
+export function gatedSymbols(
+  journal: TradeJournalEntry[],
+  options: SymbolGateOptions = {},
+  now: number = Date.now(),
+): Map<string, string> {
+  const cfg = { ...SYMBOL_GATE_DEFAULTS };
+  for (const key of Object.keys(SYMBOL_GATE_DEFAULTS) as (keyof typeof SYMBOL_GATE_DEFAULTS)[]) {
+    const value = options[key];
+    if (typeof value === "number" && Number.isFinite(value)) cfg[key] = value;
+  }
+
+  const bySymbol = new Map<string, TradeJournalEntry[]>();
+  for (const entry of journal) {
+    const symbol = entry.symbol?.toUpperCase();
+    if (!symbol || entry.exitTimestamp === undefined) continue;
+    const list = bySymbol.get(symbol);
+    if (list) list.push(entry);
+    else bySymbol.set(symbol, [entry]);
+  }
+
+  const gated = new Map<string, string>();
+  for (const [symbol, entries] of bySymbol) {
+    entries.sort((a, b) => (a.exitTimestamp ?? 0) - (b.exitTimestamp ?? 0));
+    const window = entries.slice(-cfg.lookbackTrades);
+    if (window.length < cfg.minTrades) continue;
+
+    const lastExit = window[window.length - 1].exitTimestamp ?? 0;
+    if (now - lastExit >= cfg.cooldownMs) continue; // cooldown served — probe allowed
+
+    const netPnl = window.reduce((sum, t) => sum + (t.pnlUsd ?? 0), 0);
+    let streak = 0;
+    for (let i = window.length - 1; i >= 0; i--) {
+      if ((window[i].pnlUsd ?? 0) < 0) streak++;
+      else break;
+    }
+
+    const remainingH = ((cfg.cooldownMs - (now - lastExit)) / 3_600_000).toFixed(1);
+    if (netPnl <= -cfg.netLossUsd) {
+      gated.set(symbol, `net ${netPnl.toFixed(2)} USD over last ${window.length} trades, ${remainingH}h cooldown left`);
+    } else if (streak >= cfg.lossStreak) {
+      gated.set(symbol, `${streak} consecutive losses, ${remainingH}h cooldown left`);
+    }
+  }
+  return gated;
+}

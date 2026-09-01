@@ -316,6 +316,14 @@ export function getTraderConfig(): TraderExecutionConfig {
       maxHoldMs: numberFromEnv("TRADER_MAX_HOLD_MS", 604_800_000), // 7 days safety net — let winners ride
       minHoldMs: numberFromEnv("TRADER_MIN_HOLD_MS", 3_600_000), // 1 hour minimum hold — no position is the best position
       directionMode: (process.env.TRADER_DIRECTION_MODE ?? "both") as "long-only" | "short-only" | "both",
+      symbolGateLookback: numberFromEnv("TRADER_SYMBOL_GATE_LOOKBACK", 5),
+      symbolGateMinTrades: numberFromEnv("TRADER_SYMBOL_GATE_MIN_TRADES", 3),
+      // NB: journal pnlUsd is leverage-scaled (positionToJournalEntry multiplies
+      // notional×move by leverage even though notional is already full size),
+      // so this threshold is in journal units — ~3x cash at current 3x lev.
+      symbolGateNetLossUsd: numberFromEnv("TRADER_SYMBOL_GATE_NET_LOSS_USD", 6),
+      symbolGateLossStreak: numberFromEnv("TRADER_SYMBOL_GATE_LOSS_STREAK", 3),
+      symbolGateCooldownMs: numberFromEnv("TRADER_SYMBOL_GATE_COOLDOWN_MS", 172_800_000), // 48h stand-down, then one probe trade
     },
     safety: {
       minScannerCandidatesLive: numberFromEnv("TRADER_MIN_SCANNER_CANDIDATES_LIVE", 2),

@@ -24,7 +24,7 @@ import { estimateAmountOutMin, executeSwap, readTokenDecimals, waitForSuccess } 
 import { checkMoralGate, checkCircuitBreaker, logMoralGateDecision } from "./moral-gate";
 import { AGENT_VAULT_ABI, AGENT_VAULT_ADDRESS } from "../contracts";
 import { computeKelly, consecutiveLosses } from "./kelly";
-import { positionsToJournal } from "./trade-journal";
+import { gatedSymbols, positionsToJournal } from "./trade-journal";
 import { fetchTechnicalSignal } from "./technical";
 import { detectPatterns } from "./pattern-detector";
 import { computeCompositeSignal, type CompositeSignal } from "./composite-signal";
@@ -1448,6 +1448,22 @@ class TraderEngine {
     );
     const cooldownSymbols = new Set(recentlyClosed.map((p) => p.marketSymbol?.toUpperCase()).filter(Boolean));
 
+    // Per-symbol performance gate: stand down from symbols whose recent
+    // closes are net negative — persistent bleeders (ETH/HYPE/TAO-style)
+    // erase the book's whole edge a dollar at a time.
+    const performanceGate = gatedSymbols(
+      positionsToJournal(
+        this.store.getClosed().filter((p) => p.venue === "hyperliquid-perp"),
+      ),
+      {
+        lookbackTrades: this.config.risk.symbolGateLookback,
+        minTrades: this.config.risk.symbolGateMinTrades,
+        netLossUsd: this.config.risk.symbolGateNetLossUsd,
+        lossStreak: this.config.risk.symbolGateLossStreak,
+        cooldownMs: this.config.risk.symbolGateCooldownMs,
+      },
+    );
+
     // ── Cross-system awareness: include scalper positions from the store ──
     // Only match scalp: prefix — hl: positions are the engine's own.
     const storeOpen = this.store.getOpen();
@@ -1470,6 +1486,11 @@ class TraderEngine {
       }
       if (cooldownSymbols.has(symbol.toUpperCase())) {
         skippedReasons.push(`${symbol}: cooldown (closed <10min ago)`);
+        continue;
+      }
+      const gateReason = performanceGate.get(symbol.toUpperCase());
+      if (gateReason) {
+        skippedReasons.push(`${symbol}: performance gate (${gateReason})`);
         continue;
       }
       // Global cross-system cooldown (engine + scalper)
