@@ -9,6 +9,39 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 53 · per-symbol performance gate live on the worker
+
+**when** — 2026-09-01
+**what** — PnL audit (90d, HL-reconciled): +$16.60 realized on ~$383
+deployed, 54% wins, avg win +$1.24 vs avg loss −$1.20 → net edge ~$0.11
+per trade; ETH (−$6.30/11), HYPE (−$4.83/15), TAO (−$4.21/13) burned
+~$15.30 — nearly the whole edge — while DOGE/SOL/ZEC/XRP/GOLD earned
++$26.60. Nearly all profit is one hot month (Aug: +$16.40; last 7d:
+−$2.48). Shipped commit `fed845f`: `gatedSymbols()` in trade-journal.ts —
+a symbol whose last 5 closes are net ≤ −$6 journal-USD (~−$2 cash; journal
+pnl is leverage-inflated ~3x, pre-existing bug, spawn-task filed) OR end
+in a 3-loss streak is benched for 48h from its last close, then gets one
+probe trade; a losing probe re-arms the gate. Engine checks it in the
+composite entry loop next to the 10-min cooldown; skips log as
+`performance gate (...)`. Tunables: TRADER_SYMBOL_GATE_{LOOKBACK,
+MIN_TRADES,NET_LOSS_USD,LOSS_STREAK,COOLDOWN_MS}. Dry-run vs live book
+would currently gate ETH/HYPE/TRUMP/AAPL/TSLA/BTC (all cooldowns already
+served → each gets a probe first). Deployed to pooter-agent-worker via
+`railway up` from the Downloads clone — which was first HARD-SYNCED to
+origin/main `fed845f` (its uncommitted trade-decisions.ts patch was
+byte-identical to committed main, so nothing lost; clone is no longer
+stale, node_modules reinstalled). Boot clean, cycles running; no gate
+lines yet because all 6 position slots are full — the entry loop (where
+the gate sits) short-circuits at TRADER_MAX_OPEN_POSITIONS until a slot
+frees.
+**why** — three symbols were erasing the book's entire profit a dollar at
+a time; benching them roughly doubles net on paper.
+**where** — web/src/lib/trading/{trade-journal,engine,config,types}.ts;
+dev+main; worker deploy from ~/Downloads/morality-network-latest/web.
+**rollback** — `git revert fed845f` + redeploy worker; or instant
+kill-switch without deploy: `TRADER_SYMBOL_GATE_MIN_TRADES=999` on
+pooter-agent-worker (gate can never trigger).
+
 ## ▲ node 52 · closed-position entry prices no longer $0.00
 
 **when** — 2026-08-31
