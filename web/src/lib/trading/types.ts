@@ -83,6 +83,8 @@ export interface Position {
 }
 
 export interface EntryRationale {
+  /** Actual HL fill price at open — trade_decisions has no price column, so it rides in this JSON */
+  entryPriceUsd?: number;
   signalSymbol?: string;
   signalDirection?: string;
   signalScore?: number;

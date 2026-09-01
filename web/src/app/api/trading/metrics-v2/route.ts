@@ -375,7 +375,31 @@ export async function GET(request: Request) {
         realizedPnlUsd += pnlUsd;
       }
 
+      // Entry price: newer rows carry the actual fill price in entry_rationale;
+      // older rows never stored one, but since notional = entryPx × qty and
+      // pnl = ±(exitPx − entryPx) × qty, entry = exit / (1 ± pnl/notional).
+      // Uses HL's net closedPnl, so derived values are within fees of the fill.
+      const entryRationale = pgRow.entry_rationale as Record<string, unknown> | null;
+      let entryPriceUsd: number | undefined =
+        typeof entryRationale?.entryPriceUsd === "number" && entryRationale.entryPriceUsd > 0
+          ? entryRationale.entryPriceUsd
+          : undefined;
+      if (
+        entryPriceUsd === undefined &&
+        exitPriceUsd !== undefined &&
+        pnlUsd !== null &&
+        notionalUsd > 0
+      ) {
+        const returnOnNotional = pnlUsd / notionalUsd;
+        const denominator =
+          pgRow.direction === "short" ? 1 - returnOnNotional : 1 + returnOnNotional;
+        if (denominator > 0.01) {
+          entryPriceUsd = exitPriceUsd / denominator;
+        }
+      }
+
       const position = decisionToPosition(pgRow, {
+        entryPriceUsd: entryPriceUsd ?? 0,
         exitPriceUsd: exitPriceUsd ?? undefined,
       });
 

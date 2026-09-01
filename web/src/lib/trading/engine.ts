@@ -1859,6 +1859,7 @@ class TraderEngine {
       txHash: order.txHash,
       entryRationale: {
         ...entryRationale,
+        entryPriceUsd: order.fillPriceUsd,
         compositeDirection: composite.direction,
         compositeConfidence: Math.min(1, composite.confidence),
         compositeReasons: composite.reasons,
