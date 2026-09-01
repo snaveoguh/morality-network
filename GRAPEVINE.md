@@ -9,6 +9,32 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 52 · closed-position entry prices no longer $0.00
+
+**when** — 2026-08-31
+**what** — every row in /markets' closed-positions table showed ENTRY as
+$0.00. Not data loss: `trade_decisions` has never had an entry-price column
+("HL is the source of truth for prices"), and `EntryRationale` carried no
+price field either, so metrics-v2 defaulted `entryPriceUsd` to 0 and the
+dashboard rendered it. Commit `eb1c874`, two parts: (1) metrics-v2 derives
+entry for historical rows from exit price + realized PnL — since
+notional = entryPx × qty, entry = exit / (1 ± pnl/notional) — preferring a
+recorded fill price when present; uses HL's net closedPnl so derived values
+are within fees of the true fill. Verified against market prices (NVDA
+short 225.78→220.44 = the +2.37% shown). (2) engine persists
+`order.fillPriceUsd` into `entry_rationale` at open (JSONB, no migration),
+so new rows carry the exact fill. Covers 109/527 rows — the rest lack exit
+px/PnL entirely (old backfills, phantoms; their EXIT shows `--` too) and
+honestly stay $0. Bonus finding: dev.pooter.world auto-deploy from `dev` is
+now CONFIRMED (earnest-love picked up the push unaided, ~3min).
+**why** — the public book showed nonsense entries on every closed trade.
+**where** — web/src/app/api/trading/metrics-v2/route.ts,
+web/src/lib/trading/{engine,types}.ts; dev + main (auto-deploy), verified
+live on both. NOTE: the engine half only takes effect on pooter-agent-worker
+after its next `railway up` from the stale clone's web/ — until then new
+rows keep deriving (which works).
+**rollback** — `git revert eb1c874`
+
 ## ▲ node 51 · trade recording deadlock broken + retired-model purge
 
 **when** — 2026-08-27
