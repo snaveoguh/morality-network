@@ -107,7 +107,7 @@ async function generateAnthropicText(
       system: request.system,
       messages: [{ role: "user", content: request.user }],
     }),
-    signal: AbortSignal.timeout(request.timeoutMs ?? 30_000),
+    signal: AbortSignal.timeout(request.timeoutMs ?? 120_000), // long-form tasks need > 30s non-streaming
   });
 
   if (!response.ok) {
@@ -186,7 +186,7 @@ async function generateOpenAICompatibleText(
         { role: "user", content: request.user },
       ],
     }),
-    signal: AbortSignal.timeout(request.timeoutMs ?? 30_000),
+    signal: AbortSignal.timeout(request.timeoutMs ?? 120_000), // long-form tasks need > 30s non-streaming
   });
 
   if (!response.ok) {

@@ -34,8 +34,12 @@ import { UNDERGROUND_PLAYLIST, getDailyTrack, type YouTubeTrack } from "./music"
 
 const WRITER_MAX_TOKENS = 6144;
 const EXTRACTOR_MAX_TOKENS = 1024;
-const WRITER_TIMEOUT_MS = 40_000; // Must fit in Vercel 55s maxDuration (writer + extractor + save)
-const EXTRACTOR_TIMEOUT_MS = 10_000;
+// We run on Railway (no Vercel 55s cap). A 6k-token non-streaming editorial
+// from Sonnet takes 60-120s; the old 40s abort was cutting Anthropic off
+// every night and the cron reported a green "skipped". The GitHub cron job
+// allows 5 minutes per run.
+const WRITER_TIMEOUT_MS = 180_000;
+const EXTRACTOR_TIMEOUT_MS = 45_000;
 const DEFAULT_DAILY_TITLE = "DAILY EDITION";
 
 // ============================================================================
