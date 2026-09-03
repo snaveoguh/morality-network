@@ -75,6 +75,47 @@ function computeHyperliquidMinOrderNotionalUsd(priceUsd: number, szDecimals: num
   return minLots * lotStep * priceUsd;
 }
 
+/**
+ * Decide whether a scaled take-profit slice can actually be sent to Hyperliquid.
+ * HL rejects any order (reduce-only included) under $10 notional, so a 25% slice
+ * of a $40-65 position often fails silently and the position never scales out.
+ *   partial — slice and remainder are both above the exchange minimum
+ *   skip    — slice is under the minimum but the remainder is not; leave the
+ *             position intact and let a later tier / the full close handle it
+ *   full    — the remainder would be under the minimum too (or would be left as
+ *             unclosable dust), so close the whole position instead
+ */
+type PartialClosePlan = {
+  action: "partial" | "skip" | "full";
+  sliceNotionalUsd: number;
+  remainderNotionalUsd: number;
+  minNotionalUsd: number;
+};
+
+function planHyperliquidPartialClose(args: {
+  quantityRaw: bigint;
+  sliceRaw: bigint;
+  priceUsd: number;
+  szDecimals: number;
+}): PartialClosePlan {
+  const { quantityRaw, sliceRaw, priceUsd, szDecimals } = args;
+  const minNotionalUsd = computeHyperliquidMinOrderNotionalUsd(priceUsd, szDecimals);
+  const toNotional = (raw: bigint): number => {
+    if (raw <= BigInt(0) || !Number.isFinite(priceUsd) || priceUsd <= 0) return 0;
+    return Number(formatUnits(raw, Math.max(0, szDecimals))) * priceUsd;
+  };
+  const sliceNotionalUsd = toNotional(sliceRaw);
+  const remainderNotionalUsd = toNotional(quantityRaw - sliceRaw);
+  const base = { sliceNotionalUsd, remainderNotionalUsd, minNotionalUsd };
+  if (!Number.isFinite(minNotionalUsd)) {
+    // No usable price — don't guess; leave the position alone this cycle.
+    return { action: "skip", ...base };
+  }
+  if (remainderNotionalUsd < minNotionalUsd) return { action: "full", ...base };
+  if (sliceNotionalUsd < minNotionalUsd) return { action: "skip", ...base };
+  return { action: "partial", ...base };
+}
+
 function decimalStringToRaw(value: string, decimals: number): string {
   const normalized = value.trim();
   if (!/^\d+(\.\d+)?$/.test(normalized)) {
@@ -895,12 +936,27 @@ class TraderEngine {
               // Partial close 25% at this level
               const partialQty = (qty * BigInt(25)) / BigInt(100);
               if (partialQty > BigInt(0) && partialQty < qty) {
-                const partialClosed = await this.partialClosePosition(position, partialQty.toString(), currentPriceUsd);
-                if (partialClosed) {
-                  console.log(`[trader] dynamic-TP: partial close 25% of ${position.marketSymbol} at level $${hitLevel.toFixed(2)} (${remainingLevels.length} levels remain)`);
-                  // Update stored position to remove the hit level
+                const plan = await this.planPartialClose(position, qty, partialQty, currentPriceUsd);
+                if (plan.action === "full") {
+                  // Remainder would be under HL's minimum order value — scaling out is impossible, take it all
+                  console.log(`[trader] dynamic-TP: full close ${position.marketSymbol} at level $${hitLevel.toFixed(2)} — 25% slice $${plan.sliceNotionalUsd.toFixed(2)} / remainder $${plan.remainderNotionalUsd.toFixed(2)} under exchange min $${plan.minNotionalUsd.toFixed(2)}`);
+                  const closed = await this.closePosition(position, "dynamic-tp", currentPriceUsd);
+                  if (closed) report.exits.push(closed);
+                  continue;
+                }
+                if (plan.action === "skip") {
+                  // Slice too small to send — consume this level and let the next level / last-level full close handle it
+                  console.log(`[trader] dynamic-TP: skip level $${hitLevel.toFixed(2)} on ${position.marketSymbol} — 25% slice $${plan.sliceNotionalUsd.toFixed(2)} under exchange min $${plan.minNotionalUsd.toFixed(2)} (${remainingLevels.length} levels remain)`);
                   await this.store.upsert({ ...position, dynamicTpLevels: remainingLevels });
                   if (position.cloid) updateRuntimeStateByCloid(position.cloid, { dynamicTpLevels: remainingLevels }).catch(() => {});
+                } else {
+                  const partialClosed = await this.partialClosePosition(position, partialQty.toString(), currentPriceUsd);
+                  if (partialClosed) {
+                    console.log(`[trader] dynamic-TP: partial close 25% of ${position.marketSymbol} at level $${hitLevel.toFixed(2)} (${remainingLevels.length} levels remain)`);
+                    // Update stored position to remove the hit level
+                    await this.store.upsert({ ...position, dynamicTpLevels: remainingLevels });
+                    if (position.cloid) updateRuntimeStateByCloid(position.cloid, { dynamicTpLevels: remainingLevels }).catch(() => {});
+                  }
                 }
               }
               // Don't continue — let other exit checks run too
@@ -951,10 +1007,22 @@ class TraderEngine {
             const closed = await this.closePosition(position, "take-profit", currentPriceUsd);
             if (closed) report.exits.push(closed);
           } else {
-            // Partial close: reduce position, keep remainder open
-            const partialClosed = await this.partialClosePosition(position, partialQty.toString(), currentPriceUsd);
-            if (partialClosed) {
-              console.log(`[trader] ${tierHit.label}: partial close ${tierHit.closePct * 100}% of ${position.marketSymbol} at ${pnlPct > 0 ? "+" : ""}${(pnlPct * 100).toFixed(2)}%`);
+            // Partial close: reduce position, keep remainder open — but only if HL will accept the slice.
+            // HL rejects any order under $10 notional ("Order must have minimum value of $10"), reduce-only included.
+            const plan = await this.planPartialClose(position, qty, partialQty, currentPriceUsd);
+            if (plan.action === "full") {
+              // Remainder would be under the exchange minimum too — the position can't scale out, take it all
+              console.log(`[trader] ${tierHit.label}: full close ${position.marketSymbol} at ${pnlPct > 0 ? "+" : ""}${(pnlPct * 100).toFixed(2)}% — ${tierHit.closePct * 100}% slice $${plan.sliceNotionalUsd.toFixed(2)} / remainder $${plan.remainderNotionalUsd.toFixed(2)} under exchange min $${plan.minNotionalUsd.toFixed(2)}`);
+              const closed = await this.closePosition(position, "take-profit", currentPriceUsd);
+              if (closed) report.exits.push(closed);
+            } else if (plan.action === "skip") {
+              // Slice too small to send — leave the position intact; a later tier or TP-FULL closes it
+              console.log(`[trader] ${tierHit.label}: skip partial close of ${position.marketSymbol} — ${tierHit.closePct * 100}% slice $${plan.sliceNotionalUsd.toFixed(2)} under exchange min $${plan.minNotionalUsd.toFixed(2)}; riding to next tier`);
+            } else {
+              const partialClosed = await this.partialClosePosition(position, partialQty.toString(), currentPriceUsd);
+              if (partialClosed) {
+                console.log(`[trader] ${tierHit.label}: partial close ${tierHit.closePct * 100}% of ${position.marketSymbol} at ${pnlPct > 0 ? "+" : ""}${(pnlPct * 100).toFixed(2)}%`);
+              }
             }
           }
         }
@@ -1148,6 +1216,37 @@ class TraderEngine {
     await this.mirrorCloseToPg(position, reason, execution.fillPriceUsd);
 
     return closed;
+  }
+
+  /**
+   * Pre-flight for a scaled take-profit slice: checks the slice and the remainder
+   * against Hyperliquid's minimum order notional so we never submit an order the
+   * exchange will reject. Non-HL venues are returned as "partial" unchanged.
+   */
+  private async planPartialClose(
+    position: Position,
+    quantityRaw: bigint,
+    sliceRaw: bigint,
+    currentPriceUsd: number,
+  ): Promise<PartialClosePlan> {
+    const passthrough: PartialClosePlan = {
+      action: "partial",
+      sliceNotionalUsd: Number.NaN,
+      remainderNotionalUsd: Number.NaN,
+      minNotionalUsd: Number.NaN,
+    };
+    if (position.venue !== "hyperliquid-perp" || !position.marketSymbol) {
+      return passthrough;
+    }
+    const market = await fetchHyperliquidMarketBySymbol(this.config, position.marketSymbol);
+    if (!market) return passthrough;
+    const priceUsd = Number.isFinite(currentPriceUsd) && currentPriceUsd > 0 ? currentPriceUsd : (market.priceUsd ?? 0);
+    return planHyperliquidPartialClose({
+      quantityRaw,
+      sliceRaw,
+      priceUsd,
+      szDecimals: market.szDecimals,
+    });
   }
 
   /**
