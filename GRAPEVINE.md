@@ -9,6 +9,36 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 54 · closed PnL was leverage-inflated — /pipe and /markets now agree
+
+**when** — 2026-09-03
+**what** — Hugo spotted the ZEC long (826.94→937.93, 0.06 ZEC, $49.62
+notional) showing +$19.94 on /pipe but +$6.66 on /markets. /markets was
+right: it reads `metrics-v2` (Postgres rows reconciled against HL close
+fills); /pipe read the engine's v1 report, whose closed-position loop did
+`entryNotionalUsd × priceMove × leverage` — but notional is already the
+full position size, so the ×3 tripled every HL close. HL's own figure
+sat in the same row (`hlUnrealizedPnlUsd: 6.6594`). Same multiplier in
+`positionToJournalEntry`, which is what Kelly stats, self-learning,
+autoresearch and the node-53 performance gate consume. Headline /pipe
+realised PnL was ~$102 vs ~$24 real. Commit `4e54e66`: engine + journal
+now prefer `hlUnrealizedPnlUsd` captured at close, else notional × move
+(minus est. fees in the engine) — no leverage; journal `pnlPct` stays
+return-on-margin; `symbolGateNetLossUsd` default 6 → 2 (journal is cash
+now, gate behaves the same); /pipe fetches `metrics-v2` like /markets.
+Worker env still has no TRADER_SYMBOL_GATE_* override, so the new default
+applies. Also noted: public `config.dryRun: true` on the metrics payload
+comes from the web service's own env, not the worker (worker has
+TRADER_DRY_RUN=false) — cosmetic, unfixed.
+**why** — the dashboard, and every learning loop behind it, were scoring
+the book at 3× its real edge.
+**where** — `web/src/lib/trading/{engine,trade-journal,config}.ts`,
+`web/src/app/pipe/page.tsx`. Web via `dev` → `main` (GitHub auto-deploy);
+worker via `railway up` from the Downloads clone's `web/` after syncing
+it to `main` (pooter-indexer / production / pooter-agent-worker).
+**rollback** — `git revert 4e54e66`, redeploy web + worker. Reverting
+restores the tripled numbers, so don't unless the fix itself misbehaves.
+
 ## ▲ node 53 · per-symbol performance gate live on the worker
 
 **when** — 2026-09-01
