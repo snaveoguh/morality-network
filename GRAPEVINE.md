@@ -9,6 +9,34 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 56 · worker redeployed (nodes 54+55 live); feed outage diagnosed
+
+**when** — 2026-09-03 ~18:00 UTC
+**what** — pooter-agent-worker deploy `3448b127` (SUCCESS) via `railway up`
+from the Downloads clone's `web/`, clone hard-synced to `main` @ `e3a314b`.
+Trader booted `WORKER_TASKS=trader,swarm`; conviction rule dormant
+(`TRADER_CONVICTION_SYMBOLS` unset). Prod web at `e3a314b` too (/pipe reads
+metrics-v2, +$23.95 / 537 trades, matches /markets). Seen in boot log:
+`partial close failed: Order must have minimum value of $10` — the scaled
+take-profit's 25% partial closes are under HL's $10 minimum at current
+sizing; pre-existing, unfixed. Also ran `/api/cron/daily-edition` by hand
+against prod (with CRON_SECRET) to diagnose the stale front page: 200
+`{"status":"skipped"}` after 43s — no content written. Findings (no code
+change): (1) `pooter-indexer` has had NO deployment since 2026-07-27 —
+public URL returns Railway "Application not found"; the web falls back to
+the bundled March `editorial-archive.json`, hence "FROM THE ARCHIVE" +
+/originals showing only March. (2) Every AI provider fails: Agent Hub
+groq models `llama-3.3-70b-versatile`/`llama-3.1-8b-instant` no longer
+exist (key now sees `openai/gpt-oss-120b`, `qwen/qwen3.6-27b`, …),
+together 402, venice 402, openai 429 insufficient_quota; anthropic is LAST
+in `AI_PREMIUM_PROVIDER_ORDER=venice,ollama,openai,anthropic` and hits the
+55s route timeout. The GitHub cron shows green because "skipped" is a 200.
+**why** — Hugo: "main feed isn't generating stories / stuck on an old story".
+**where** — pooter-indexer/production/pooter-agent-worker (deploy);
+faithful-purpose/morality-network env (diagnosis only — nothing changed).
+**rollback** — worker: redeploy previous image `afe91fbe`-era or
+`git revert e3a314b 4e54e66` + `railway up`. Nothing to roll back on prod env.
+
 ## ▲ node 55 · conviction override — per-symbol size-up rule, OFF by default
 
 **when** — 2026-09-03
