@@ -9,6 +9,45 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 57 · feed generating again; indexer revived (serve-only); conviction ARMED
+
+**when** — 2026-09-03 22:50–23:15 UTC
+**what** — Hugo: "sort all out". Four live changes:
+(1) faithful-purpose/morality-network env: `AI_PREMIUM_PROVIDER_ORDER=
+anthropic,openai,venice,ollama`, `AI_FAST_PROVIDER_ORDER=anthropic,ollama,
+venice,openai` (was venice/ollama first; both dead). Redeployed. Anthropic
+key + models (claude-sonnet-4-6 / claude-haiku-4-5) verified working
+directly. Still failed: the writer's 40s AbortSignal (sized for Vercel's
+55s cap; we run on Railway) cut Sonnet off mid-editorial.
+(2) Commit `eb06340`: WRITER_TIMEOUT_MS 40s→180s, EXTRACTOR 10s→45s,
+ai-provider default 30s→120s. Manual `/api/cron/daily-edition` after
+deploy `c542b10d`: **200 "generated"** in 67s — "STATIC ON ALL CHANNELS /
+America is hemorrhaging women and nobody in power is embarrassed."
+(hash 0x051ccc…5530). The 05:30 UTC GitHub cron should now work daily.
+(3) Commit `4cc5642` + `railway up` from `indexer/` → pooter-indexer/
+production/pooter-indexer deploy `fc4f2bd7`: `indexer/railway.json`
+startCommand `npx ponder serve --port $PORT` — API + editorial archive
+back on `pooter-indexer-production.up.railway.app` with NO chain sync (the
+free-RPC crash loop is why it had been dead since Jul 27). Store holds 49
+editorials, newest 2026-06-06 — the March bundle (105) and Redis hold the
+rest; history is fragmented across three stores. Onchain indexing
+(ratings/comments/tips) stays OFF until a paid archive RPC is set and the
+start command goes back to `ponder start`.
+(4) pooter-indexer/production/pooter-agent-worker env — CONVICTION ARMED:
+`TRADER_CONVICTION_SYMBOLS=BTC,ZEC`, `MIN_CONFIDENCE=0.90`, `LEVERAGE=10`,
+`MARGIN_FRACTION=0.5`, `STOP_PRICE_PCT=0.02`, `TRAIL_PRICE_PCT=0.05`,
+`TP_PRICE_PCT=0`, `DIRECTION=long`. Worker redeployed (`b9251de0`). On
+today's $312 (main $244 + xyz $68): ~$156 margin → ~$1,560 notional at
+10x, 2% stop ≈ −$31, isolated liq ≈ 5% away. Note main-dex withdrawable
+was $164, so 0.5 is near the ceiling for a main-dex BTC order.
+**why** — front page stuck on a March story; Hugo wants size on
+high-confidence BTC/ZEC.
+**where** — prod web env + `main`; indexer service; worker env.
+**rollback** — feed: revert `eb06340` / restore old provider order (don't).
+Indexer: delete `indexer/railway.json` and redeploy (returns to dead).
+Conviction: `railway variables --set TRADER_CONVICTION_SYMBOLS= -s
+pooter-agent-worker` (instant disarm, no code change).
+
 ## ▲ node 56 · worker redeployed (nodes 54+55 live); feed outage diagnosed
 
 **when** — 2026-09-03 ~18:00 UTC
