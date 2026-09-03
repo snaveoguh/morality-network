@@ -9,6 +9,31 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 57 · scaled take-profit respects HL's $10 minimum order value
+
+**when** — 2026-09-03
+**what** — `web/src/lib/trading/engine.ts` @ `4d9887c` (branch
+`fix/scaled-tp-min-notional` off `dev`, NOT yet on dev/main, worker NOT
+redeployed). The scaled take-profit (TP1/TP2/TP3 = 25% slices, TP-FULL) and
+the dynamic-TP path both submitted 25% reduce-only slices blind; on the
+$40-65 positions the worker actually runs, a slice is $10-16 and after price
+movement often lands under Hyperliquid's $10 minimum, so HL rejected it every
+cycle (`partial close failed: Order 0: Order must have minimum value of $10.
+asset=12`, node 56) and the position never scaled out. New
+`planHyperliquidPartialClose()` + `planPartialClose()` pre-flight each slice
+against `computeHyperliquidMinOrderNotionalUsd(price, szDecimals)`:
+slice ≥ min and remainder ≥ min → partial close as before; slice < min but
+remainder ≥ min → **skip** the tier (logged) and ride to the next tier /
+TP-FULL (dynamic-TP also consumes the skipped level so it doesn't re-fire);
+remainder < min → **full close** via the existing `closePosition` path,
+which is unchanged. No price → skip, never guess. `tsc --noEmit` clean.
+**why** — Hugo: tiers silently fail and the position never scales out; the
+log in node 56 showed the rejection on every exit cycle.
+**where** — code only; nothing deployed. To ship: merge to `dev`, then
+`main`, then `railway up` the worker from the Downloads clone's `web/`
+(node 56 procedure).
+**rollback** — `git revert 4d9887c`.
+
 ## ▲ node 56 · worker redeployed (nodes 54+55 live); feed outage diagnosed
 
 **when** — 2026-09-03 ~18:00 UTC
