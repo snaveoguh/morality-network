@@ -9,6 +9,40 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 55 · conviction override — per-symbol size-up rule, OFF by default
+
+**when** — 2026-09-03
+**what** — Hugo wants the bot able to go in big on BTC/ZEC when a signal is
+exceptional (his own hand-trading ran $60→$2k at 40x). Live account read
+from HL: $244.07 (withdrawable $164.56, 4 positions at 3x). Built
+`TRADER_CONVICTION_*` (config.ts, types.ts `TraderConvictionConfig`,
+engine.ts `resolveConviction()`): when a listed symbol's composite
+confidence ≥ MIN_CONFIDENCE (default 0.90) and the direction is allowed
+(default long), the entry ignores Kelly (incl. a Kelly "no edge" skip),
+maxPositionUsd, maxPortfolioUsd and TRADER_MAX_LEVERAGE and sizes as
+account × MARGIN_FRACTION (0.5) × LEVERAGE (10, clamped to the HL
+market max: BTC 40 / ETH 25 / SOL 20 / ZEC+HYPE 10), optional
+MAX_NOTIONAL_USD ceiling. Stops are PRICE moves — STOP_PRICE_PCT 0.02,
+TRAIL_PRICE_PCT 0.05, TP_PRICE_PCT 0 (= no scaled TP tiers; trail
+decides) — stored on the position as pct × leverage because the exit
+loop divides by leverage. Entry rationale carries
+`convictionOverride`/`convictionReason`; worker logs `[trader]
+CONVICTION …` with the sizing and a rough isolated-liquidation distance.
+**Also fixed:** the HL re-sync path rebuilt every open position with the
+CONFIG stops each cycle, discarding the position's own
+stop/TP/trail — now `existing?.… ?? config`. Without this a conviction
+position's 2% price stop would have collapsed to 8%/lev on the next sync.
+/pipe: derive win rate from closed rows (metrics-v2 totals have none).
+**why** — "don't miss the next pump, need size" — but leverage doesn't
+multiply PnL (see node 54), notional does, and the generic 8% stop is a
+0.2% price move at 40x. This rule makes size + leverage + price-space
+stops one explicit, per-symbol decision instead of a global cap.
+**where** — code on `dev`→`main`; worker via `railway up` from the
+Downloads clone. NOT ARMED: `TRADER_CONVICTION_SYMBOLS` is unset on
+pooter-agent-worker, so behaviour is unchanged until Hugo sets it.
+**rollback** — unset `TRADER_CONVICTION_SYMBOLS` (instant, no deploy), or
+`git revert` the commit. Positions already open keep their stored stops.
+
 ## ▲ node 54 · closed PnL was leverage-inflated — /pipe and /markets now agree
 
 **when** — 2026-09-03

@@ -3,6 +3,7 @@ import { formatUnits, type Address, type Hash } from "viem";
 import { ERC20_TRADE_ABI } from "./abi";
 import { createTraderClients } from "./clients";
 import { getParallelBaseConfig, getTraderConfig } from "./config";
+import type { HyperliquidMarketSnapshot } from "./hyperliquid";
 import {
   builderDexOfSymbol,
   executeHyperliquidOrderLive,
@@ -314,13 +315,16 @@ class TraderEngine {
         quantityTokenRaw: quantityRaw,
         quoteSpentRaw,
         entryNotionalUsd,
-        stopLossPct: this.config.risk.stopLossPct,
-        takeProfitPct: this.config.risk.takeProfitPct,
+        // Preserve per-position stops — a conviction entry carries price-space
+        // stops that must survive every re-sync; resetting to config here
+        // would silently collapse them to the generic leveraged-PnL stops.
+        stopLossPct: existing?.stopLossPct ?? this.config.risk.stopLossPct,
+        takeProfitPct: existing?.takeProfitPct ?? this.config.risk.takeProfitPct,
         openedAt: existing?.openedAt ?? Date.now(),
         txHash: existing?.txHash,
         status: "open",
         direction: live.isShort ? "short" : "long",
-        trailingStopPct: this.config.risk.trailingStopPct,
+        trailingStopPct: existing?.trailingStopPct ?? this.config.risk.trailingStopPct,
         signalSource: existing?.signalSource,
         signalConfidence: existing?.signalConfidence,
         kellyFraction: existing?.kellyFraction,
@@ -1716,19 +1720,33 @@ class TraderEngine {
       stopDistancePct: this.config.risk.stopLossPct,
     });
 
-    if (kelly.skip) {
+    // ═══ CONVICTION OVERRIDE — per-symbol "size up when the signal is exceptional" ═══
+    // Off unless TRADER_CONVICTION_SYMBOLS is set. When it fires it replaces
+    // Kelly sizing, the per-position/portfolio caps and the leveraged-PnL stops
+    // with account-fraction sizing at the configured leverage and PRICE-space stops.
+    const conviction = this.resolveConviction(market, composite.confidence, direction, accountValueUsd);
+    if (conviction) {
+      console.log(`[trader] CONVICTION ${conviction.reason}`);
+    }
+
+    if (kelly.skip && !conviction) {
       console.log(`[trader] Kelly skip: ${kelly.skipReason}`);
       return null;
+    }
+    if (kelly.skip && conviction) {
+      console.log(`[trader] Kelly skip (${kelly.skipReason}) overridden by conviction rule`);
     }
 
     const convictionMultiplier = Math.min(1.5, Math.max(0.75, composite.confidence));
     const kellyNotionalUsd = kelly.positionNotionalUsd;
     const convictionNotionalUsd = this.config.hyperliquid.entryNotionalUsd * convictionMultiplier;
-    const requestedNotionalUsd = Math.min(
-      kellyNotionalUsd,
-      convictionNotionalUsd,
-      this.config.risk.maxPositionUsd
-    );
+    const requestedNotionalUsd = conviction
+      ? conviction.notionalUsd
+      : Math.min(
+          kellyNotionalUsd,
+          convictionNotionalUsd,
+          this.config.risk.maxPositionUsd
+        );
     if (!Number.isFinite(requestedNotionalUsd) || requestedNotionalUsd <= 0) {
       return null;
     }
@@ -1753,7 +1771,13 @@ class TraderEngine {
 
     const portfolioNotional = openPositions.reduce((sum, position) => sum + position.entryNotionalUsd, 0);
     if (portfolioNotional + notionalUsd > this.config.risk.maxPortfolioUsd) {
-      throw new Error("portfolio limit reached");
+      if (conviction) {
+        console.log(
+          `[trader] conviction: bypassing portfolio cap ($${(portfolioNotional + notionalUsd).toFixed(0)} > $${this.config.risk.maxPortfolioUsd}) — margin check happens at the exchange`,
+        );
+      } else {
+        throw new Error("portfolio limit reached");
+      }
     }
 
     console.log(
@@ -1762,7 +1786,12 @@ class TraderEngine {
     );
 
     const rawLeverage = kelly.leverage > 1 ? kelly.leverage : this.config.hyperliquid.defaultLeverage;
-    const orderLeverage = Math.min(rawLeverage, this.config.risk.maxLeverage);
+    // Conviction leverage is already clamped to the market's HL max and is
+    // deliberately NOT subject to TRADER_MAX_LEVERAGE (that cap is for the
+    // generic Kelly path).
+    const orderLeverage = conviction
+      ? conviction.leverage
+      : Math.min(rawLeverage, this.config.risk.maxLeverage);
 
     const quoteTokenAddress = this.config.quoteTokens.USDC ?? candidate.tokenAddress;
     const quoteDecimals = this.config.quoteTokenDecimals.USDC ?? 6;
@@ -1805,6 +1834,8 @@ class TraderEngine {
       whaleNetExposure: composite.components.walletFlow?.whaleNetExposure,
       agreementMet: composite.agreementMet,
       ...bestDeliberation,
+      convictionOverride: conviction ? true : undefined,
+      convictionReason: conviction?.reason,
     };
 
     const prePosition: Position = {
@@ -1825,12 +1856,14 @@ class TraderEngine {
       quantityTokenRaw: "0",
       quoteSpentRaw: "0",
       entryNotionalUsd: notionalUsd,
-      stopLossPct: this.config.risk.stopLossPct,
-      takeProfitPct: this.config.risk.takeProfitPct,
+      // Conviction stops are price-space × leverage so the exit loop's
+      // divide-by-leverage lands back on the intended price distance.
+      stopLossPct: conviction ? conviction.stopLossPct : this.config.risk.stopLossPct,
+      takeProfitPct: conviction ? conviction.takeProfitPct : this.config.risk.takeProfitPct,
       openedAt: Date.now(),
       status: "open",
       direction,
-      trailingStopPct: this.config.risk.trailingStopPct,
+      trailingStopPct: conviction ? conviction.trailingStopPct : this.config.risk.trailingStopPct,
       signalSource: `composite:${composite.direction}`,
       signalConfidence: Math.min(1, composite.confidence),
       kellyFraction: kelly.fraction,
@@ -1945,6 +1978,64 @@ class TraderEngine {
     }
 
     return opened;
+  }
+
+  /**
+   * Conviction override — decides whether this entry should ignore the
+   * generic sizing/caps and go in big. Returns null when the rule is off,
+   * the symbol isn't listed, confidence is below the bar, or the direction
+   * isn't allowed. Leverage is clamped to the market's Hyperliquid max
+   * (BTC 40, ETH 25, SOL 20, ZEC/HYPE 10). Stops come back already
+   * multiplied by leverage because the exit loop divides them by leverage
+   * to get a price move — so a 2% price stop is stored as 0.02 × lev.
+   */
+  private resolveConviction(
+    market: HyperliquidMarketSnapshot,
+    confidence: number,
+    direction: "long" | "short",
+    accountValueUsd: number,
+  ): {
+    leverage: number;
+    notionalUsd: number;
+    stopLossPct: number;
+    trailingStopPct: number;
+    takeProfitPct: number;
+    reason: string;
+  } | null {
+    const c = this.config.risk.conviction;
+    if (!c || c.symbols.length === 0) return null;
+    if (!c.symbols.includes(market.symbol.toUpperCase())) return null;
+    if (!(confidence >= c.minConfidence)) return null;
+    if (c.direction !== "both" && c.direction !== direction) return null;
+
+    const hlMax = market.maxLeverage && market.maxLeverage > 0 ? market.maxLeverage : c.leverage;
+    const leverage = Math.max(1, Math.floor(Math.min(c.leverage, hlMax)));
+    if (!Number.isFinite(accountValueUsd) || accountValueUsd <= 0) return null;
+    const marginUsd = accountValueUsd * Math.max(0, Math.min(1, c.marginFraction));
+    let notionalUsd = marginUsd * leverage;
+    if (c.maxNotionalUsd > 0) notionalUsd = Math.min(notionalUsd, c.maxNotionalUsd);
+    if (!Number.isFinite(notionalUsd) || notionalUsd <= 0) return null;
+
+    const stopLossPct = c.stopPricePct * leverage;
+    const trailingStopPct = c.trailPricePct * leverage;
+    // 0 = no scaled take-profit tiers; park the threshold out of reach so the
+    // trailing stop is what ends the trade.
+    const takeProfitPct = c.takeProfitPricePct > 0 ? c.takeProfitPricePct * leverage : 999;
+    const liqApprox = (1 / leverage) * 0.5; // rough isolated liquidation distance (maintenance = half initial)
+
+    return {
+      leverage,
+      notionalUsd,
+      stopLossPct,
+      trailingStopPct,
+      takeProfitPct,
+      reason:
+        `${market.symbol} ${direction} conf=${confidence.toFixed(2)}≥${c.minConfidence} ` +
+        `lev=${leverage}x (hl max ${hlMax}) margin=$${marginUsd.toFixed(0)} notional=$${notionalUsd.toFixed(0)} ` +
+        `stop=${(c.stopPricePct * 100).toFixed(2)}% trail=${(c.trailPricePct * 100).toFixed(2)}% ` +
+        `tp=${c.takeProfitPricePct > 0 ? (c.takeProfitPricePct * 100).toFixed(2) + "%" : "off"} (price-space) ` +
+        `~liq≈${(liqApprox * 100).toFixed(2)}% isolated`,
+    };
   }
 
   private async tryOpenSpotPosition(candidate: ScannerLaunch): Promise<Position | null> {

@@ -323,6 +323,28 @@ export function getTraderConfig(): TraderExecutionConfig {
       symbolGateNetLossUsd: numberFromEnv("TRADER_SYMBOL_GATE_NET_LOSS_USD", 2),
       symbolGateLossStreak: numberFromEnv("TRADER_SYMBOL_GATE_LOSS_STREAK", 3),
       symbolGateCooldownMs: numberFromEnv("TRADER_SYMBOL_GATE_COOLDOWN_MS", 172_800_000), // 48h stand-down, then one probe trade
+      // Conviction override — OFF until TRADER_CONVICTION_SYMBOLS is set.
+      // When a listed symbol's composite confidence clears MIN_CONFIDENCE, the
+      // entry ignores Kelly/maxPositionUsd/maxPortfolioUsd and sizes as
+      // account × MARGIN_FRACTION × LEVERAGE (leverage clamped to the HL
+      // market max: BTC 40, ETH 25, SOL 20, ZEC/HYPE 10). Stops are PRICE
+      // moves, not leveraged-PnL — a 2% stop is 2% of price at any leverage.
+      conviction: {
+        symbols: stringFromEnv("TRADER_CONVICTION_SYMBOLS", "")
+          .split(",")
+          .map((s) => s.trim().toUpperCase())
+          .filter(Boolean),
+        minConfidence: numberFromEnv("TRADER_CONVICTION_MIN_CONFIDENCE", 0.9),
+        leverage: numberFromEnv("TRADER_CONVICTION_LEVERAGE", 10),
+        marginFraction: numberFromEnv("TRADER_CONVICTION_MARGIN_FRACTION", 0.5),
+        maxNotionalUsd: numberFromEnv("TRADER_CONVICTION_MAX_NOTIONAL_USD", 0),
+        stopPricePct: numberFromEnv("TRADER_CONVICTION_STOP_PRICE_PCT", 0.02),
+        trailPricePct: numberFromEnv("TRADER_CONVICTION_TRAIL_PRICE_PCT", 0.05),
+        takeProfitPricePct: numberFromEnv("TRADER_CONVICTION_TP_PRICE_PCT", 0),
+        direction: (["long", "short", "both"].includes(process.env.TRADER_CONVICTION_DIRECTION ?? "")
+          ? process.env.TRADER_CONVICTION_DIRECTION
+          : "long") as "long" | "short" | "both",
+      },
     },
     safety: {
       minScannerCandidatesLive: numberFromEnv("TRADER_MIN_SCANNER_CANDIDATES_LIVE", 2),

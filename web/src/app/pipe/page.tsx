@@ -247,7 +247,12 @@ export default function PipePage() {
   // Derived metrics
   const totalPnl = metrics?.totals?.realizedPnlUsd ?? 0;
   const totalTrades = metrics?.totals?.closedPositions ?? 0;
-  const winRate = metrics?.totals?.winRate ?? 0;
+  // metrics-v2 totals carry no winRate — derive it from the closed rows we have.
+  const closedWithPnl = closedPositions.filter((c: any) => typeof c.realizedPnlUsd === "number");
+  const derivedWinRate = closedWithPnl.length > 0
+    ? closedWithPnl.filter((c: any) => c.realizedPnlUsd > 0).length / closedWithPnl.length
+    : 0;
+  const winRate = metrics?.totals?.winRate ?? derivedWinRate;
   const openCount = openPositions.length;
   const unrealizedPnl = metrics?.totals?.unrealizedPnlUsd ?? 0;
   const accountValue = perf?.accountValueUsd ?? metrics?.accountValueUsd ?? 0;

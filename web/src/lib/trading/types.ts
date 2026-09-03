@@ -116,6 +116,10 @@ export interface EntryRationale {
   deliberationKeyContention?: string;
   /** Whether council deliberation overrode composite direction */
   deliberationOverride?: boolean;
+  /** Conviction override fired: sized by TRADER_CONVICTION_* rather than Kelly/caps */
+  convictionOverride?: boolean;
+  /** Human-readable conviction sizing summary (leverage, notional, price-space stops) */
+  convictionReason?: string;
 }
 
 export interface ExitRationale {
@@ -150,6 +154,34 @@ export interface TraderRiskConfig {
   symbolGateNetLossUsd?: number;
   symbolGateLossStreak?: number;
   symbolGateCooldownMs?: number;
+  /**
+   * Conviction override — per-symbol "size up when the signal is exceptional".
+   * Off unless `symbols` is non-empty. Stops here are in PRICE space (the
+   * engine's generic stops are in leveraged-PnL space and would collapse to
+   * fractions of a percent at high leverage).
+   */
+  conviction?: TraderConvictionConfig;
+}
+
+export interface TraderConvictionConfig {
+  /** Uppercased symbols eligible for the override (e.g. BTC, ZEC). Empty = off. */
+  symbols: string[];
+  /** Composite confidence required to trigger (0-1). */
+  minConfidence: number;
+  /** Requested leverage; clamped to the market's Hyperliquid max. */
+  leverage: number;
+  /** Fraction of live account value posted as margin (notional = margin × leverage). */
+  marginFraction: number;
+  /** Absolute notional ceiling in USD; 0 = none. */
+  maxNotionalUsd: number;
+  /** Hard stop as a PRICE move from entry (0.02 = 2%). */
+  stopPricePct: number;
+  /** Trailing stop as a PRICE retrace from the high/low-water mark. */
+  trailPricePct: number;
+  /** First scaled take-profit tier as a PRICE move; 0 = no tiers, trail decides. */
+  takeProfitPricePct: number;
+  /** Which directions the override may fire for. */
+  direction: "long" | "short" | "both";
 }
 
 export interface TraderSafetyConfig {
