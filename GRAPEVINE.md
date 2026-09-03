@@ -9,6 +9,34 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 59 · conviction DISARMED — composite "confidence" is not what it claims
+
+**when** — 2026-09-04 ~00:05 UTC
+**what** — `TRADER_CONVICTION_SYMBOLS=OFF` on pooter-agent-worker (Railway
+ignores an empty value, so a sentinel that matches no market). Reason: I
+told Hugo a 0.90 bar "will fire rarely" because BTC scored 0.52. Wrong —
+BTC is the outlier. From the recorded entry rationales: 138 of 383 entries
+fired at ≥0.90; Sep so far 9 of 12; today xyz:GOLD short fired at
+confidence 1.00 with technical strength 0.23. How it's computed
+(`composite-signal.ts` + `technical.ts`): composite confidence is the
+weight-normalised MEAN of each source's own confidence; the technical
+source's confidence is `agreeingWeight / totalWeight` where an indicator
+with NO opinion (vote 0) counts as agreeing. With news mapping only BTC
+(everything else is technical-only), confidence collapses to "no indicator
+disagreed" — abstentions included — and ignores strength entirely. When a
+second source IS present (BTC news) its confidence is `score/2` (~0.2), so
+more information LOWERS confidence: BTC 0.52 vs ZEC 0.90 on the same day.
+The "agreement boost" in the comment was never implemented. Net: as armed,
+the rule would have sized ~$1,560 at 10x on routine ZEC technical signals.
+Also merged `fix/scaled-tp-min-notional` (node 58, other session) into
+dev → main, worker deploy `76cbc786` (+ this env change redeploys again).
+**why** — don't let a 10x rule key off a number that is mostly "nothing
+objected".
+**where** — worker env. Code untouched; conviction rule remains available.
+**rollback** — re-arm with `--set TRADER_CONVICTION_SYMBOLS=BTC,ZEC` once a
+real conviction score exists (proposal: strength × agreement over
+non-abstaining indicators, news as a multiplier not an average).
+
 ## ▲ node 58 · scaled take-profit respects HL's $10 minimum order value
 
 **when** — 2026-09-03
