@@ -171,7 +171,9 @@ export default function PipePage() {
         fetch("/api/agents").then((r) => r.json()),
         fetch("/api/agents/swarm").then((r) => r.json()),
         fetch("/api/trading/signals").then((r) => r.json()),
-        fetch("/api/trading/metrics").then((r) => r.json()),
+        // metrics-v2: Postgres rows reconciled against Hyperliquid close fills —
+        // the same source /markets uses, so both pages show the same numbers.
+        fetch("/api/trading/metrics-v2").then((r) => r.json()),
         fetch("/api/trading/deliberation/latest").then((r) => r.json()),
       ]);
 

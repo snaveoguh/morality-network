@@ -26,7 +26,16 @@ export function positionToJournalEntry(p: Position): TradeJournalEntry | null {
         : (exitPrice - entryPrice) / entryPrice
       : 0;
 
-  const pnlUsd = notionalUsd * priceMove * leverage;
+  // Cash PnL: notional is already the full position size, so no leverage
+  // multiplier (it used to be applied here too, inflating every journal
+  // entry — and therefore Kelly stats and the per-symbol gate — by the
+  // leverage factor). Prefer HL's own closed figure when the sync captured it.
+  const hlPnl = p.hlUnrealizedPnlUsd;
+  const pnlUsd =
+    typeof hlPnl === "number" && Number.isFinite(hlPnl)
+      ? hlPnl
+      : notionalUsd * priceMove;
+  // Return on margin (what the trader experiences), kept leverage-scaled.
   const pnlPct = priceMove * leverage;
 
   return {

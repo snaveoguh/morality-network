@@ -318,10 +318,9 @@ export function getTraderConfig(): TraderExecutionConfig {
       directionMode: (process.env.TRADER_DIRECTION_MODE ?? "both") as "long-only" | "short-only" | "both",
       symbolGateLookback: numberFromEnv("TRADER_SYMBOL_GATE_LOOKBACK", 5),
       symbolGateMinTrades: numberFromEnv("TRADER_SYMBOL_GATE_MIN_TRADES", 3),
-      // NB: journal pnlUsd is leverage-scaled (positionToJournalEntry multiplies
-      // notional×move by leverage even though notional is already full size),
-      // so this threshold is in journal units — ~3x cash at current 3x lev.
-      symbolGateNetLossUsd: numberFromEnv("TRADER_SYMBOL_GATE_NET_LOSS_USD", 6),
+      // Cash USD. (Journal pnlUsd used to be leverage-scaled, so this sat at 6
+      // to mean ~$2 real at 3x; the journal is cash now, so it is $2 directly.)
+      symbolGateNetLossUsd: numberFromEnv("TRADER_SYMBOL_GATE_NET_LOSS_USD", 2),
       symbolGateLossStreak: numberFromEnv("TRADER_SYMBOL_GATE_LOSS_STREAK", 3),
       symbolGateCooldownMs: numberFromEnv("TRADER_SYMBOL_GATE_COOLDOWN_MS", 172_800_000), // 48h stand-down, then one probe trade
     },

@@ -526,13 +526,22 @@ class TraderEngine {
         continue;
       }
 
-      const lev = position.leverage ?? 1;
+      // entryNotionalUsd is the FULL position size (qty × entry), so the
+      // price move on it is already the cash PnL — leverage only changes the
+      // margin posted, not the dollars won or lost. Multiplying by leverage
+      // here (as this used to) overstated every HL close by the leverage
+      // factor: ZEC long 826.94→937.93 on $49.62 notional showed +$19.94
+      // instead of the +$6.66 Hyperliquid actually credited.
+      // Prefer HL's own number when the sync captured it — it already
+      // includes funding and the real maker/taker fees.
+      const hlPnl = position.hlUnrealizedPnlUsd;
+      const hasHlPnl = typeof hlPnl === "number" && Number.isFinite(hlPnl);
       const priceMove = position.direction === "short"
         ? (position.entryPriceUsd - position.exitPriceUsd) / position.entryPriceUsd
         : (position.exitPriceUsd - position.entryPriceUsd) / position.entryPriceUsd;
-      // PnL includes leverage + estimated round-trip exchange fees
-      const grossPnl = position.entryNotionalUsd * priceMove * lev;
-      const pnlUsd = grossPnl - estFees;
+      const pnlUsd = hasHlPnl
+        ? hlPnl
+        : position.entryNotionalUsd * priceMove - estFees;
       const pnlPct = position.entryNotionalUsd > 0 ? pnlUsd / position.entryNotionalUsd : 0;
 
       realizedPnlUsd += pnlUsd;
