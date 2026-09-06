@@ -9,6 +9,38 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 60 · news signals reach the engine · High-Risk Beta toast retired → /terms
+
+**when** — 2026-09-06 ~08:30 UTC
+**what** — branch `fix/news-signal-reach` → `dev`, commits `946af08` + `63eb020`.
+(1) `web/src/lib/trading/engine-symbol.ts` is now the ONE ticker/asset →
+engine-symbol resolver. `persistEditorialSignals` (editorial-archive.ts)
+wrote rows with the LLM's raw ticker (`GOLD`, `XAU`, `CL`…) and the trader
+looked up `newsSignalMap.get("PAXG")` — never matched. It now writes engine
+symbols (`PAXG`, `xyz:SILVER`, `xyz:TSLA`…) and logs unmapped tickers.
+`fetchAggregatedNewsSignalsFromPostgres` used a flat 2h window: editorials
+are generated once a day (05:00 UTC), so they were invisible ~22h/day and
+the feed was 2 swarm rows per cycle (worker logs: "[signals] using postgres:
+2 signals"). Now producer-aware: editorial rows eligible for their 48h TTL
+with an 18h half-life decay, swarm rows keep 2h; legacy raw symbols are
+normalised on read; bullish/bearish weights are merged per symbol
+(contradiction-damped) instead of first-row-wins. Engine logs
+`[trader] news coverage: k/n watch markets` each cycle — the number to
+watch. (2) `BetaToast` removed from the layout; its risk wording lives in
+the new `/terms` page (Terms & Risk), linked from the logo menu.
+**why** — Hugo: "u sure about this? i wana fix that immediately." Node 59
+already recorded that news mapped only BTC; every open position today has
+`compositeReasons: ["Technical: …"]` only. The toast: Hugo asked to retire
+it and keep the disclosure in T&Cs.
+**where** — web (auto-deploys to dev.pooter.world on push); the WORKER
+(pooter-agent-worker) needs a `railway up` from the clone's web/ after
+syncing to this commit — NOT done in this node, awaiting Hugo's go.
+**verify** — worker logs should show `[swarm-signals] postgres feed: N rows
+→ M symbols […]` and `news coverage: k/17` with k > 1 after the 05:00 UTC
+editorial run.
+**rollback** — `git revert 63eb020 946af08`; redeploy worker from the prior
+clone commit.
+
 ## ▲ node 59 · conviction DISARMED — composite "confidence" is not what it claims
 
 **when** — 2026-09-04 ~00:05 UTC
