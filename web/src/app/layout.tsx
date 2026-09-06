@@ -8,7 +8,6 @@ import { MarqueeBanner } from "@/components/layout/MarqueeBanner";
 import { ExtensionBanner } from "@/components/layout/ExtensionBanner";
 import { SITE_URL, withBrand } from "@/lib/brand";
 import { InstallPrompt } from "@/components/layout/InstallPrompt";
-import { BetaToast } from "@/components/layout/BetaToast";
 import { PooterNotificationHub } from "@/components/notifications/PooterNotificationHub";
 import { DevBanner } from "@/components/layout/DevBanner";
 
@@ -90,7 +89,6 @@ export default function RootLayout({
           <Header />
           <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-2">{children}</main>
           <InstallPrompt />
-          <BetaToast />
           <PooterNotificationHub />
         </Providers>
         </ThemeProvider>
