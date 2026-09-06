@@ -5,6 +5,7 @@ import { listRecentMarketImpactRecords } from "../editorial-archive";
 import { computeEventShapedSentimentSnapshotFromFeeds } from "../event-corpus";
 import { DEFAULT_FEEDS, fetchAllFeeds, type FeedItem } from "../rss";
 import { TOPIC_TAXONOMY, matchesTopicDefinition } from "../sentiment";
+import { EXACT_ASSET_ALIASES, TICKER_ALIASES } from "./engine-symbol";
 
 // ============================================================================
 // AGGREGATED MARKET SIGNALS
@@ -61,73 +62,8 @@ interface SignalAccumulator {
 
 // ── Asset → HL ticker mapping ─────────────────────────────────────────────
 
-const TICKER_ALIASES: Record<string, string> = {
-  BTC: "BTC",
-  XBT: "BTC",
-  ETH: "ETH",
-  ZEC: "ZEC",
-  SOL: "SOL",
-  DOGE: "DOGE",
-  AVAX: "AVAX",
-  LINK: "LINK",
-  ARB: "ARB",
-  OP: "OP",
-  XAU: "PAXG",
-  GC: "PAXG",
-  GOLD: "PAXG",
-  PAXG: "PAXG",
-  // True silver trades on the xyz builder dex (was proxied to PAXG before HIP-3 support)
-  XAG: "xyz:SILVER",
-  SI: "xyz:SILVER",
-  SILVER: "xyz:SILVER",
-  // Equities via the xyz builder dex
-  TSLA: "xyz:TSLA",
-  NVDA: "xyz:NVDA",
-  AAPL: "xyz:AAPL",
-  MSTR: "xyz:MSTR",
-  COIN: "xyz:COIN",
-  CL: "OIL",
-  BRN: "OIL",
-  WTI: "OIL",
-  OIL: "OIL",
-  DXY: "DXY",
-  UST: "DXY",
-  US10Y: "DXY",
-  SPX: "SPX",
-  SPY: "SPX",
-  ES: "SPX",
-  NDX: "SPX",
-  QQQ: "SPX",
-};
-
-const EXACT_ASSET_ALIASES: Record<string, string> = {
-  "bitcoin": "BTC",
-  "ethereum": "ETH",
-  "zcash": "ZEC",
-  "solana": "SOL",
-  "gold": "PAXG",
-  "silver": "xyz:SILVER",
-  "tesla": "xyz:TSLA",
-  "nvidia": "xyz:NVDA",
-  "apple": "xyz:AAPL",
-  "microstrategy": "xyz:MSTR",
-  "coinbase": "xyz:COIN",
-  "crude oil": "OIL",
-  "us dollar index": "DXY",
-  "digital assets": "BTC",
-  "ai & semiconductor equities": "xyz:NVDA",
-  "healthcare & biotech": "SPX",
-  "global trade flows": "DXY",
-  "global macro": "DXY",
-  "defense & commodities": "OIL",
-  "energy transition": "OIL",
-  "political risk": "DXY",
-  "governance risk": "SPX",
-  "esg & social impact": "SPX",
-  "haleon plc": "SPX",
-  "uk consumer staples etf": "SPX",
-  "indian pharmaceutical index": "SPX",
-};
+// TICKER_ALIASES / EXACT_ASSET_ALIASES live in ./engine-symbol so every
+// producer (editorial, swarm, newsdesk) resolves to the same engine symbols.
 
 const SYMBOL_PATTERNS: Array<{ symbol: string; pattern: RegExp }> = [
   { symbol: "BTC", pattern: /\b(bitcoin|btc|xbt|digital assets?)\b/i },
@@ -209,7 +145,7 @@ function extractTickerFromAsset(asset: string): string | null {
   return null;
 }
 
-function mapAssetToSymbol(asset: string, ticker: string | null): string | null {
+export function mapAssetToSymbol(asset: string, ticker: string | null): string | null {
   const tickerAlias = TICKER_ALIASES[normalizeTicker(ticker) || ""];
   if (tickerAlias) return tickerAlias;
 

@@ -1543,6 +1543,19 @@ class TraderEngine {
       }
     }
 
+    // News coverage — how many of the markets we actually trade have a news
+    // signal this cycle. This is the number to watch when "news → trades"
+    // feels dead: 0/17 means the producers/symbol map are broken, not the engine.
+    {
+      const covered = watchMarkets.filter((m) => newsSignalMap.has(m));
+      const orphaned = Array.from(newsSignalMap.keys()).filter((k) => !watchMarkets.includes(k));
+      console.log(
+        `[trader] news coverage: ${covered.length}/${watchMarkets.length} watch markets` +
+          (covered.length ? ` [${covered.join(",")}]` : "") +
+          (orphaned.length ? ` | news for untraded symbols: [${orphaned.join(",")}]` : ""),
+      );
+    }
+
     let bestComposite: CompositeSignal | null = null;
     let bestMarket: Awaited<ReturnType<typeof fetchHyperliquidMarketBySymbol>> = null;
     let bestNewsSignal: AggregatedMarketSignal | null = null;

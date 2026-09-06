@@ -69,6 +69,12 @@
       "port": 3005
     },
     {
+      "name": "deck-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8123", "--directory", "/Users/hugo/Downloads"],
+      "port": 8123
+    },
+    {
       "name": "pooter-dev-repo",
       "runtimeExecutable": "/bin/bash",
       "runtimeArgs": ["-c", "cd /Users/hugo/dev/morality.network-master/web && npm run dev -- -p 3007"],
