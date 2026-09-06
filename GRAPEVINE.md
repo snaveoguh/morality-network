@@ -9,6 +9,25 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 62 · reviewer sign-in on /ledger/review
+
+**when** — 2026-09-06 ~10:45 UTC
+**what** — `web/src/components/ledger/ReviewerSignIn.tsx` (new): connect →
+SIWE nonce → sign → `/api/auth/verify`, plus sign-out. `/ledger/review` now
+reads the queue's auth outcome: 401 → "Verdicts are approved by named
+reviewers" panel with the sign-in button; 403 → "this wallet is not on the
+reviewer list" with sign-out; queue + propose form render only when
+authorised. `operator-auth.ts` `verifyOperatorAuth` returns 403 +
+`reason:"not-reviewer"` for a signed-in non-allowlisted address and 401 +
+`reason:"signin"` otherwise (error string unchanged).
+**why** — the only way to create the operator session was the "Hold 100k MO
+For Full Access" button in the /markets bot terminal, and anonymous
+visitors saw a raw red "Unauthorized" box (site audit P0-7). Hugo needs to
+approve 5 "true" verdicts waiting since 11 Jul.
+**where** — web; dev auto-deploys; promote to main after checking
+dev.pooter.world/ledger/review anonymous + signed-in.
+**rollback** — `git revert` this node's commit.
+
 ## ▲ node 61 · node-60 promoted to prod + worker · branch protection · ownership-migration script
 
 **when** — 2026-09-06 ~09:40 UTC

@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { ReviewerSignIn } from "@/components/ledger/ReviewerSignIn";
 
 interface QueueItem {
   resolution: {
@@ -238,10 +239,22 @@ export default function LedgerReviewPage() {
   const [queue, setQueue] = useState<QueueItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  // "loading" until the first fetch; "signin" = no session; "forbidden" =
+  // session exists but the address is not a reviewer; "ok" = queue visible.
+  const [access, setAccess] = useState<"loading" | "signin" | "forbidden" | "ok">("loading");
+  const [sessionAddress, setSessionAddress] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
       const res = await fetch("/api/ledger/review", { cache: "no-store" });
+      if (res.status === 401 || res.status === 403) {
+        const body = (await res.json().catch(() => ({}))) as { reason?: string; address?: string };
+        setAccess(res.status === 403 || body.reason === "not-reviewer" ? "forbidden" : "signin");
+        setSessionAddress(body.address ?? null);
+        setQueue([]);
+        setError(null);
+        return;
+      }
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         setError(body.error || `HTTP ${res.status}`);
@@ -249,6 +262,7 @@ export default function LedgerReviewPage() {
         return;
       }
       const body = await res.json();
+      setAccess("ok");
       setQueue(body.queue || []);
       setError(null);
     } catch {
@@ -308,13 +322,17 @@ export default function LedgerReviewPage() {
         </p>
       )}
 
-      {queue === null && (
+      {access === "loading" && queue === null && (
         <p className="font-mono text-xs uppercase tracking-widest text-[var(--ink-faint)]">
           Loading queue&hellip;
         </p>
       )}
 
-      {queue !== null && queue.length === 0 && !error && (
+      {(access === "signin" || access === "forbidden") && (
+        <ReviewerSignIn reason={access} sessionAddress={sessionAddress} onSignedIn={load} />
+      )}
+
+      {access === "ok" && queue !== null && queue.length === 0 && !error && (
         <div className="border border-[var(--rule-light)] bg-[var(--paper-dark)]/30 p-8 text-center">
           <p className="font-headline-serif text-xl text-[var(--ink)]">
             The queue is clear.
@@ -326,7 +344,7 @@ export default function LedgerReviewPage() {
       )}
 
       <ul className="space-y-8">
-        {(queue ?? []).map(({ resolution, claim }) => (
+        {(access === "ok" ? queue ?? [] : []).map(({ resolution, claim }) => (
           <li key={resolution.id} className="border border-[var(--rule)] p-5">
             <div className="mb-3 flex flex-wrap items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em]">
               <span
@@ -414,7 +432,7 @@ export default function LedgerReviewPage() {
         ))}
       </ul>
 
-      <ProposeVerdict onProposed={load} />
+      {access === "ok" && <ProposeVerdict onProposed={load} />}
     </section>
   );
 }

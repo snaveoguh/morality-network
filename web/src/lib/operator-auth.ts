@@ -98,8 +98,16 @@ export async function verifyOperatorAuth(
     );
   }
 
+  // Distinguish "no session" from "signed in but not a reviewer" so the UI
+  // can offer sign-in versus switch-wallet. The error string is unchanged.
+  if (state.address) {
+    return NextResponse.json(
+      { error: "Unauthorized", reason: "not-reviewer", address: state.address },
+      { status: 403 },
+    );
+  }
   return NextResponse.json(
-    { error: "Unauthorized" },
+    { error: "Unauthorized", reason: "signin" },
     { status: 401 },
   );
 }
