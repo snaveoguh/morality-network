@@ -9,6 +9,37 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 63 · honest PnL: net after exchange fees; every close records pnlUsd; hub calls priced
+
+**when** — 2026-09-06 ~11:30 UTC
+**what** — Hugo asked how Net PnL could be $27.55 with $19.51 of fees on the
+same row, and why the Hyperstructure panel showed $0.00 realized / 0 closes
+while the dashboard listed 4 closes today. Three causes, three fixes:
+(1) `netPnlAfterFeeUsd` was `gross − performance fee` in metrics-v2, the
+dashboard's client recompute and the engine report; the code comment assumed
+HL closedPnl is net of fees — it is not (fees are a separate fill field, and
+exit pnl uses HL unrealizedPnl). Now `gross − est. exchange fees − perf fee`;
+label "Net PnL (after fees)". Today's row goes ~$27.5 → ~$8.
+(2) `/api/hyperstructure` sums `exit_rationale.pnlUsd`, but the engine's
+`buildExitRationale` never wrote it — only backfill scripts did (102 of 552
+closed rows). Engine closes now record `pnlUsd` + `pnlSource` (hl-close-fill
+→ hl-unrealized → computed); the endpoint also reports `unpricedCloses` and
+the panel prints "· N unpriced" so the gap is visible instead of silent.
+Historical rows still need `enrich-closes-from-fills.mjs` to backfill.
+(3) Agent Hub results were stamped provider "ollama" (priced $0), so every
+hub-routed Claude call was free in the inference meter — the $0.21/day burn
+is mostly the direct OpenAI/Anthropic calls. Hub results now carry the
+provider the hub reports when it is anthropic/openai/venice; others stay
+ollama (free tier). Side effect: the ledger's public verdict stamp stops
+reading `agent:ollama/claude-sonnet-4-6`.
+**why** — the /markets numbers are the investor-facing scoreboard; two of
+the three were flattering by construction.
+**where** — web (`main`) + worker (`railway up` from the clone).
+**verify** — /markets "Net PnL (after fees)" ≈ gross − fees − perf;
+Hyperstructure "N closes" should match the dashboard's 24h closes once new
+closes land; inference burn should rise once hub calls are priced.
+**rollback** — `git revert` this node's commit; redeploy worker from prior clone commit.
+
 ## ▲ node 62 · reviewer sign-in on /ledger/review
 
 **when** — 2026-09-06 ~10:45 UTC

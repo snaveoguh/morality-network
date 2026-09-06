@@ -415,7 +415,11 @@ export async function GET(request: Request) {
     const grossPnlUsd = realizedPnlUsd + unrealizedPnlUsd;
     const performanceFeeUsd =
       realizedPnlUsd > 0 ? (realizedPnlUsd * config.performanceFeeBps) / 10_000 : 0;
-    const netPnlAfterFeeUsd = grossPnlUsd - performanceFeeUsd;
+    // Net = gross − estimated exchange fees − performance fee. HL's closedPnl
+    // and unrealizedPnl are BEFORE exchange fees (fees are a separate fill
+    // field), so the old "gross − perf fee" overstated net by the whole fee
+    // line the dashboard was already printing next to it.
+    const netPnlAfterFeeUsd = grossPnlUsd - estimatedTradingFeesUsd - performanceFeeUsd;
 
     const totals: TraderPerformanceTotals = {
       openPositions: livePositions.length,

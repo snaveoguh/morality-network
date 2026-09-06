@@ -26,24 +26,28 @@ const MAX_WINDOW_HOURS = 24 * 30;
 interface PnlAggregateRow {
   trades: number;
   pnl_usd: string | null; // numeric → string in postgres-js
+  unpriced: number; // closed rows with no recorded pnlUsd — invisible to this panel
 }
 
 async function fetchRealizedPnl(windowHours: number | null): Promise<{
   closedTrades: number;
   realizedPnlUsd: number;
+  unpricedCloses: number;
 } | null> {
   const rows = windowHours === null
     ? await sql<PnlAggregateRow[]>`
-        SELECT count(*)::int AS trades,
-               coalesce(sum((exit_rationale->>'pnlUsd')::numeric), 0) AS pnl_usd
+        SELECT count(*) FILTER (WHERE exit_rationale ? 'pnlUsd')::int AS trades,
+               coalesce(sum((exit_rationale->>'pnlUsd')::numeric) FILTER (WHERE exit_rationale ? 'pnlUsd'), 0) AS pnl_usd,
+               count(*) FILTER (WHERE NOT (exit_rationale ? 'pnlUsd'))::int AS unpriced
         FROM pooter.trade_decisions
-        WHERE closed_at IS NOT NULL AND exit_rationale ? 'pnlUsd'
+        WHERE closed_at IS NOT NULL
       `
     : await sql<PnlAggregateRow[]>`
-        SELECT count(*)::int AS trades,
-               coalesce(sum((exit_rationale->>'pnlUsd')::numeric), 0) AS pnl_usd
+        SELECT count(*) FILTER (WHERE exit_rationale ? 'pnlUsd')::int AS trades,
+               coalesce(sum((exit_rationale->>'pnlUsd')::numeric) FILTER (WHERE exit_rationale ? 'pnlUsd'), 0) AS pnl_usd,
+               count(*) FILTER (WHERE NOT (exit_rationale ? 'pnlUsd'))::int AS unpriced
         FROM pooter.trade_decisions
-        WHERE closed_at IS NOT NULL AND exit_rationale ? 'pnlUsd'
+        WHERE closed_at IS NOT NULL
           AND closed_at > now() - ${windowHours} * interval '1 hour'
       `;
   const row = rows[0];
@@ -52,6 +56,7 @@ async function fetchRealizedPnl(windowHours: number | null): Promise<{
   return {
     closedTrades: row.trades,
     realizedPnlUsd: Number.isFinite(pnl) ? pnl : 0,
+    unpricedCloses: row.unpriced ?? 0,
   };
 }
 

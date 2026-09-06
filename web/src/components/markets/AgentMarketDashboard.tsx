@@ -886,7 +886,8 @@ export function AgentMarketDashboard() {
     const grossPnlUsd = realizedPnlUsd + unrealizedPnlUsd;
     const feeBps = data?.performanceFeeBps ?? 500;
     const performanceFeeUsd = realizedPnlUsd > 0 ? (realizedPnlUsd * feeBps) / 10_000 : 0;
-    const netPnlAfterFeeUsd = grossPnlUsd - performanceFeeUsd;
+    // Net after estimated exchange fees AND performance fee (HL PnL is pre-fee).
+    const netPnlAfterFeeUsd = grossPnlUsd - estimatedTradingFeesUsd - performanceFeeUsd;
 
     return {
       ...combinedTotals,
@@ -1528,7 +1529,7 @@ export function AgentMarketDashboard() {
           value={formatUsd(filteredTotals?.performanceFeeUsd ?? 0)}
         />
         <MetricCard
-          label="Net PnL"
+          label="Net PnL (after fees)"
           value={formatUsd(filteredTotals?.netPnlAfterFeeUsd ?? 0)}
           valueClass={pnlClass(filteredTotals?.netPnlAfterFeeUsd ?? 0)}
         />

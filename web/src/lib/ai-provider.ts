@@ -291,8 +291,17 @@ async function tryAgentHub(request: AITextRequest): Promise<AITextResult | null>
     if (!text) return null;
 
     console.log(`[ai-provider] hub success for ${request.task} (${payload.provider}/${payload.model})`);
+    // Stamp the provider the hub actually used so the inference meter prices
+    // it (AI_PRICE_ANTHROPIC_* etc.). Everything was recorded as "ollama"
+    // (priced at $0), which made hub-routed Claude calls free on /markets.
+    // Providers outside our id union (groq, together…) stay "ollama" = free tier.
+    const hubProvider = (payload.provider ?? "").toLowerCase();
+    const KNOWN: ReadonlyArray<AIProviderId> = ["anthropic", "openai", "venice", "ollama"];
+    const provider = (KNOWN as ReadonlyArray<string>).includes(hubProvider)
+      ? (hubProvider as AIProviderId)
+      : ("ollama" as AIProviderId);
     return {
-      provider: "ollama" as AIProviderId, // track as free-tier provider
+      provider,
       model: payload.model ?? "hub",
       text,
     };

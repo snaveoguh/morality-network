@@ -459,7 +459,7 @@ class TraderEngine {
         closedAt: Date.now(),
         exitRationale: this.buildExitRationale(stored, exitNote, exitPriceUsd),
       });
-      await this.mirrorCloseToPg(stored, "manual", exitPriceUsd);
+      await this.mirrorCloseToPg(stored, "manual", exitPriceUsd, closedPnlFromHl);
     }
 
     return positions;
@@ -601,7 +601,8 @@ class TraderEngine {
     const grossPnlUsd = realizedPnlUsd + unrealizedPnlUsd;
     const performanceFeeUsd =
       realizedPnlUsd > 0 ? (realizedPnlUsd * this.config.performanceFeeBps) / 10_000 : 0;
-    const netPnlAfterFeeUsd = grossPnlUsd - performanceFeeUsd;
+    // HL PnL is pre-fee; net must take the estimated exchange fees too.
+    const netPnlAfterFeeUsd = grossPnlUsd - estimatedTradingFeesUsd - performanceFeeUsd;
 
     const totals: TraderPerformanceTotals = {
       openPositions: openPositions.length,
@@ -1045,8 +1046,29 @@ class TraderEngine {
     return market.priceUsd;
   }
 
-  private buildExitRationale(position: Position, reason: string, exitPriceUsd: number): Position["exitRationale"] {
+  private buildExitRationale(
+    position: Position,
+    reason: string,
+    exitPriceUsd: number,
+    closedPnlFromHl?: number,
+  ): Position["exitRationale"] {
     const hwm = position.highWaterMark;
+    // Record realized PnL on the close row. /api/hyperstructure sums
+    // exit_rationale.pnlUsd; before this only backfill scripts wrote it, so
+    // every engine close was invisible to the self-funding panel.
+    let pnlUsd: number | undefined;
+    let pnlSource: NonNullable<Position["exitRationale"]>["pnlSource"];
+    if (closedPnlFromHl !== undefined && Number.isFinite(closedPnlFromHl)) {
+      pnlUsd = closedPnlFromHl;
+      pnlSource = "hl-close-fill";
+    } else if (position.hlUnrealizedPnlUsd !== undefined && Number.isFinite(position.hlUnrealizedPnlUsd)) {
+      pnlUsd = position.hlUnrealizedPnlUsd;
+      pnlSource = "hl-unrealized";
+    } else if (position.entryPriceUsd > 0 && Number.isFinite(exitPriceUsd) && position.entryNotionalUsd > 0) {
+      const move = (exitPriceUsd - position.entryPriceUsd) / position.entryPriceUsd;
+      pnlUsd = position.entryNotionalUsd * move * (position.direction === "short" ? -1 : 1);
+      pnlSource = "computed";
+    }
     return {
       trigger: reason,
       priceAtTrigger: exitPriceUsd,
@@ -1055,6 +1077,7 @@ class TraderEngine {
         ? (hwm - exitPriceUsd) / hwm
         : undefined,
       holdDurationMs: Date.now() - position.openedAt,
+      ...(pnlUsd !== undefined ? { pnlUsd: Number(pnlUsd.toFixed(6)), pnlSource } : {}),
     };
   }
 
@@ -1067,11 +1090,12 @@ class TraderEngine {
     position: Position,
     reason: string,
     exitPriceUsd: number,
+    closedPnlFromHl?: number,
   ): Promise<void> {
     const closeInput = {
       closedAt: new Date(),
       exitReason: reason,
-      exitRationale: this.buildExitRationale(position, reason, exitPriceUsd),
+      exitRationale: this.buildExitRationale(position, reason, exitPriceUsd, closedPnlFromHl),
     };
 
     try {

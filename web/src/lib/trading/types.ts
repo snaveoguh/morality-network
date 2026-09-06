@@ -128,6 +128,9 @@ export interface ExitRationale {
   highWaterMark?: number;
   drawdownFromPeak?: number;
   holdDurationMs?: number;
+  /** Realized PnL at close (USD, before exchange fees). Read by /api/hyperstructure. */
+  pnlUsd?: number;
+  pnlSource?: "hl-close-fill" | "hl-unrealized" | "computed";
 }
 
 export interface TraderRiskConfig {

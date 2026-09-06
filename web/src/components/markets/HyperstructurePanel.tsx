@@ -17,8 +17,8 @@ interface HyperstructureData {
     totalTokens: number;
   } | null;
   trading: {
-    window: { closedTrades: number; realizedPnlUsd: number } | null;
-    book: { closedTrades: number; realizedPnlUsd: number } | null;
+    window: { closedTrades: number; realizedPnlUsd: number; unpricedCloses?: number } | null;
+    book: { closedTrades: number; realizedPnlUsd: number; unpricedCloses?: number } | null;
     openPositions: number | null;
   } | null;
   flywheel: {
@@ -125,7 +125,10 @@ export function HyperstructurePanel() {
           </p>
           <p className="font-mono text-[9px] text-[var(--ink-faint)]">
             {data?.trading?.window
-              ? `${data.trading.window.closedTrades} closes · ${data.trading.openPositions ?? "—"} open`
+              ? `${data.trading.window.closedTrades} closes · ${data.trading.openPositions ?? "—"} open` +
+                (data.trading.window.unpricedCloses
+                  ? ` · ${data.trading.window.unpricedCloses} unpriced`
+                  : "")
               : "no closes in window"}
           </p>
         </div>
