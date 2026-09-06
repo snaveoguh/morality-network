@@ -13,6 +13,7 @@
 
 import type { EmergingEventCluster, AgentContradictionFlag } from "../agent-swarm.js";
 import type { AggregatedMarketSignal } from "./signals.js";
+import { normalizeEngineSymbol } from "./engine-symbol.js";
 import {
   recordSignalsBatch,
   getRecentSignals,
@@ -375,61 +376,126 @@ export async function persistSwarmSignalsToPostgres(
  * Postgres carries every producer's output (swarm, editorial, council, …)
  * so the trader sees the full news picture from a single read.
  */
+/** How long each producer's rows stay eligible for the trader's news feed. */
+const PRODUCER_LOOKBACK_HOURS: Partial<Record<string, number>> = {
+  // Editorials are generated once a day (05:00 UTC pregenerate + newsroom
+  // runs). A 2h window made them invisible for ~22h/day. Their TTL is 48h.
+  editorial: 48,
+  newsdesk: 24,
+  council: 24,
+};
+/** Editorial signals decay toward 0.2× over their window so a day-old take can't outvote fresh wires. */
+const EDITORIAL_HALF_LIFE_HOURS = 18;
+
 export async function fetchAggregatedNewsSignalsFromPostgres(
   lookbackHours = 2,
 ): Promise<AggregatedMarketSignal[]> {
-  const rows = await getRecentSignals(lookbackHours, 500);
-  const bySymbol = new Map<string, AggregatedMarketSignal>();
+  const maxLookback = Math.max(
+    lookbackHours,
+    ...Object.values(PRODUCER_LOOKBACK_HOURS).map((h) => h ?? 0),
+  );
+  const rows = await getRecentSignals(maxLookback, 500);
+  const now = Date.now();
+
+  interface Acc {
+    bullishWeight: number;
+    bearishWeight: number;
+    observations: number;
+    latestTs: number;
+    claims: string[];
+    producers: Set<string>;
+  }
+  const bySymbol = new Map<string, Acc>();
+  let dropped = 0;
+  let unmapped = 0;
 
   for (const row of rows) {
     if (row.direction === "neutral") continue;
-    if (bySymbol.has(row.symbol)) continue; // rows are DESC by produced_at, first wins
+
+    // Producer-specific window: swarm/scanner rows use the caller's short
+    // window; editorial rows are eligible for their whole TTL.
+    const producer = String(row.produced_by ?? "");
+    const windowHours = PRODUCER_LOOKBACK_HOURS[producer] ?? lookbackHours;
+    const ageHours = (now - row.produced_at.getTime()) / 3_600_000;
+    if (ageHours > windowHours) {
+      dropped += 1;
+      continue;
+    }
+
+    // Legacy rows may carry a raw ticker ("GOLD", "XAU"); resolve to the
+    // engine symbol so `newsSignalMap.get(watchMarket)` can hit.
+    const symbol = normalizeEngineSymbol(row.symbol) ?? null;
+    if (!symbol) {
+      unmapped += 1;
+      continue;
+    }
 
     const detail = (row.source_detail ?? {}) as Record<string, unknown>;
-    const direction = row.direction;
-    const score = Math.max(0, Math.min(1, row.strength));
+    let score = Math.max(0, Math.min(1, row.strength));
+    if (producer === "editorial") {
+      score *= Math.max(0.2, Math.exp(-ageHours / EDITORIAL_HALF_LIFE_HOURS));
+    }
+    if (score <= 0) continue;
 
-    const observations =
-      typeof detail.observations === "number" ? detail.observations : 1;
-    const latestGeneratedAt =
-      typeof detail.latestGeneratedAt === "string"
-        ? detail.latestGeneratedAt
-        : row.produced_at.toISOString();
-    const supportingClaims = Array.isArray(detail.supportingClaims)
+    const acc = bySymbol.get(symbol) ?? {
+      bullishWeight: 0,
+      bearishWeight: 0,
+      observations: 0,
+      latestTs: 0,
+      claims: [],
+      producers: new Set<string>(),
+    };
+    const rowObservations =
+      typeof detail.observations === "number" && detail.observations > 0
+        ? detail.observations
+        : 1;
+    if (row.direction === "bullish") acc.bullishWeight += score;
+    else acc.bearishWeight += score;
+    acc.observations += rowObservations;
+    acc.latestTs = Math.max(acc.latestTs, row.produced_at.getTime());
+    acc.producers.add(producer);
+    const rowClaims = Array.isArray(detail.supportingClaims)
       ? (detail.supportingClaims as string[])
       : row.claim
         ? [row.claim]
         : [];
-    const bullishWeight =
-      typeof detail.bullishWeight === "number"
-        ? detail.bullishWeight
-        : direction === "bullish"
-          ? score
-          : 0;
-    const bearishWeight =
-      typeof detail.bearishWeight === "number"
-        ? detail.bearishWeight
-        : direction === "bearish"
-          ? score
-          : 0;
-    const contradictionPenalty =
-      typeof detail.contradictionPenalty === "number"
-        ? detail.contradictionPenalty
-        : 0;
-
-    bySymbol.set(row.symbol, {
-      symbol: row.symbol,
-      direction,
-      score,
-      observations,
-      latestGeneratedAt,
-      supportingClaims,
-      contradictionPenalty,
-      bullishWeight,
-      bearishWeight,
-      rawScore: row.score ?? (direction === "bullish" ? score : -score),
-    });
+    for (const c of rowClaims) {
+      if (acc.claims.length < 3 && !acc.claims.includes(c)) acc.claims.push(c);
+    }
+    bySymbol.set(symbol, acc);
   }
 
-  return Array.from(bySymbol.values());
+  const signals: AggregatedMarketSignal[] = [];
+  for (const [symbol, acc] of bySymbol) {
+    const net = acc.bullishWeight - acc.bearishWeight;
+    if (net === 0) continue; // perfectly split — not a direction
+    const maxW = Math.max(acc.bullishWeight, acc.bearishWeight);
+    const minW = Math.min(acc.bullishWeight, acc.bearishWeight);
+    const contradictionPenalty = maxW > 0 ? minW / maxW : 0;
+    const damped = Math.abs(net) * (1 - contradictionPenalty * 0.5);
+    signals.push({
+      symbol,
+      direction: net > 0 ? "bullish" : "bearish",
+      score: Math.min(1, damped),
+      observations: acc.observations,
+      latestGeneratedAt: new Date(acc.latestTs).toISOString(),
+      supportingClaims: acc.claims,
+      contradictionPenalty,
+      bullishWeight: acc.bullishWeight,
+      bearishWeight: acc.bearishWeight,
+      rawScore: net,
+    });
+  }
+  signals.sort((a, b) => b.score - a.score);
+
+  if (rows.length > 0) {
+    console.log(
+      `[swarm-signals] postgres feed: ${rows.length} rows → ${signals.length} symbols ` +
+        `(${dropped} outside window, ${unmapped} unmapped) [${signals
+          .slice(0, 12)
+          .map((s) => `${s.symbol}:${s.direction[0]}${s.score.toFixed(2)}`)
+          .join(" ")}]`,
+    );
+  }
+  return signals;
 }

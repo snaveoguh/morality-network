@@ -7,6 +7,7 @@ import type { ArticleContent } from "./article";
 import { fetchIndexerJson, getIndexerBackendUrl } from "./server/indexer-backend";
 import { reportWarn } from "./report-error";
 import { stripMd } from "./strip-md";
+import { normalizeEngineSymbol } from "./trading/engine-symbol";
 import {
   recordSignalsBatch,
   type RecordSignalInput,
@@ -402,19 +403,30 @@ async function persistEditorialSignals(
   const significanceWeight = Math.max(0, Math.min(100, impact.significance)) / 100;
 
   const rows: RecordSignalInput[] = [];
+  const seen = new Set<string>();
+  const unmapped: string[] = [];
   for (const market of impact.affectedMarkets) {
-    const ticker = (market.ticker ?? "").trim().toUpperCase();
-    if (!ticker) continue;
+    const rawTicker = (market.ticker ?? "").trim().toUpperCase();
+    // Resolve the LLM's ticker/asset to the exact symbol the engine trades.
+    // Before this, rows were written with the raw ticker ("GOLD", "XAU",
+    // "CL", …) and the trader's `newsSignalMap.get("PAXG")` never matched.
+    const symbol = normalizeEngineSymbol(rawTicker, market.asset);
+    if (!symbol) {
+      unmapped.push(rawTicker || market.asset || "?");
+      continue;
+    }
+    if (seen.has(symbol)) continue; // one row per engine symbol per editorial
+    seen.add(symbol);
 
     const direction = mapMarketImpactDirection(market.direction);
     const confidence = Math.max(0, Math.min(1, market.confidence ?? 0));
     if (confidence <= 0) continue;
 
     rows.push({
-      id: `editorial-${hash}-${ticker}`,
+      id: `editorial-${hash}-${symbol}`,
       producedAt,
       producedBy: "editorial",
-      symbol: ticker,
+      symbol,
       direction,
       strength: confidence,
       score: confidence * significanceWeight,
@@ -433,11 +445,17 @@ async function persistEditorialSignals(
         version: editorial.version,
         generatedBy: editorial.generatedBy,
         topicSlugs: impact.topicSlugs,
+        rawTicker,
       },
       ttlExpiresAt,
     });
   }
 
+  if (unmapped.length > 0) {
+    console.log(
+      `[editorial-archive] ${hash.slice(0, 10)} market impact: ${rows.length} mapped, unmapped=[${unmapped.join(",")}]`,
+    );
+  }
   if (rows.length === 0) return;
   await recordSignalsBatch(rows);
 }
