@@ -9,6 +9,34 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 61 · node-60 promoted to prod + worker · branch protection · ownership-migration script
+
+**when** — 2026-09-06 ~09:40 UTC
+**what** — (1) `main` fast-forwarded to `587ed4e` (node 60) — prod web
+auto-deployed: news-signal fix + `/terms` page, beta toast gone.
+(2) `pooter-agent-worker` redeployed via `railway up` from the clone's
+`web/` (clone synced to origin/main 587ed4e, tree clean; Railway project
+62fffe08 / service dc970b4f verified). First cycles on the new build:
+`[swarm-signals] postgres feed: 107 rows → 5 symbols (0 outside window,
+19 unmapped) [OIL PAXG DXY BTC ETH]` and `[trader] news coverage: 2/17
+watch markets [BTC,PAXG] | news for untraded symbols: [OIL,DXY]` — news
+now reaches the composite. (3) GitHub branch protection: `main` requires a
+PR for non-admins, no force-push/deletion; `dev` no force-push/deletion.
+Admin pushes still work (enforce_admins=false) so the dev→main
+fast-forward flow is unchanged. (4) `contracts/script/TransferOwnershipToSafe.s.sol`
+— moves owner() of all 9 Base proxies (+ L1 market) off the trader hot
+key; dry-run against Base passes (9 targets, ~421k gas). NOT broadcast:
+the nocguild Safe is 1-of-4 with three unidentified owners, so the target
+must be a fresh ≥2-of-3 Safe Hugo creates.
+**why** — Hugo: "u are the architect… make the decisions". Audit pack
+2026-09-06 (~/Downloads/pooter-diligence-2026-09-06) ranks the hot-key
+ownership as finding #1.
+**where** — GitHub repo settings; Railway pooter-indexer/pooter-agent-worker;
+`contracts/script/`.
+**rollback** — worker: redeploy the clone at `3fa3965`; prod web: revert
+node-60 commits on main; branch protection: `gh api -X DELETE
+repos/snaveoguh/morality-network/branches/{main,dev}/protection`.
+
 ## ▲ node 60 · news signals reach the engine · High-Risk Beta toast retired → /terms
 
 **when** — 2026-09-06 ~08:30 UTC
