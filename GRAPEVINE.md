@@ -9,6 +9,20 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 65 · gold regex false positive: bare "conflict" mapped sports to PAXG
+
+**when** — 2026-09-13 ~17:00 UTC
+**what** — first worker cycle on node 64 logged `safe-haven flip PAXG:
+bearish→bullish` on "Trinity Rodman set to miss … due to NWSL conflict".
+The swarm macro-proxy regex mapped bare `conflict` / `uncertainty` to PAXG,
+so a sports story became a gold signal and the new flip changed its sign.
+Proxy pattern now `war|armed conflict|geopolitical|sanctions|safe haven`;
+the safe-haven bid terms drop bare `conflict`, `tension`, `uncertainty`,
+`strike` and add `drone(s)`. Zaporizhzhia and Yemen still flip to bullish.
+**why** — a wrong-sign gold signal is worse than none.
+**where** — `web/src/lib/trading/swarm-signals.ts`; worker redeployed.
+**rollback** — `git revert` this node's commit.
+
 ## ▲ node 64 · gold hedged against itself: underlying-aware dedupe, safe-haven polarity, lone-source cap
 
 **when** — 2026-09-13 ~10:30 UTC

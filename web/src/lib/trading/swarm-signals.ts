@@ -49,7 +49,8 @@ const SYMBOL_PATTERNS: Array<{ symbol: string; pattern: RegExp }> = [
   { symbol: "BCH", pattern: /\b(bitcoin\s*cash|bch)\b/i },
   // Macro proxies — map geopolitical/economic events to tradeable assets
   { symbol: "BTC", pattern: /\b(inflation|money\s*printing|quantitative|central\s*bank|fed\b|monetary\s*policy)\b/i },
-  { symbol: "PAXG", pattern: /\b(war|conflict|geopolitical|sanctions?|safe\s*haven|uncertainty)\b/i },
+  // Bare "conflict"/"uncertainty" mapped sports and celebrity stories to gold (NWSL conflict, 2026-09-13).
+  { symbol: "PAXG", pattern: /\b(war|armed\s*conflict|geopolitical|sanctions?|safe\s*haven)\b/i },
   { symbol: "BTC", pattern: /\b(regulation|sec\b|crypto\s*ban|crypto\s*law|stablecoin\s*bill)\b/i },
   { symbol: "ETH", pattern: /\b(nft|web3|smart\s*contract|dao\b|governance\s*token)\b/i },
   // Extended macro → crypto/commodity relay patterns
@@ -180,7 +181,7 @@ export function detectClusterPolarity(
  * de-escalation language (bullish→bearish).
  */
 const SAFE_HAVEN_BID_TERMS =
-  /\b(war|warfare|attack(?:s|ed)?|strike(?:s)?|missile(?:s)?|nuclear|escalat\w*|invasion|invade\w*|conflict|hostilit\w*|military|troops|sanction(?:s|ed)?|geopolitic\w*|crisis|panic|contagion|default|bankrupt\w*|recession|turmoil|instability|uncertaint\w*|safe[\s-]*haven|tension(?:s)?)\b/i;
+  /\b(war|warfare|attack(?:s|ed)?|drone(?:s)?|missile(?:s)?|nuclear|escalat\w*|invasion|invade\w*|armed\s*conflict|hostilit\w*|military|troops|sanction(?:s|ed)?|geopolitic\w*|crisis|panic|contagion|default|bankrupt\w*|recession|turmoil|instability|safe[\s-]*haven)\b/i;
 const SAFE_HAVEN_SELL_TERMS =
   /\b(ceasefire|cease-fire|truce|peace\s*(?:deal|talks?|agreement|accord)|de-?escalat\w*|eases?|easing|calm(?:s|ed)?|risk[\s-]*on|rate\s*hikes?|hawkish|stronger\s+dollar|dollar\s+strength)\b/i;
 
