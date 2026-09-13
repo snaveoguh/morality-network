@@ -119,3 +119,46 @@ export function normalizeEngineSymbol(
   if (embedded && TICKER_ALIASES[embedded[1]]) return TICKER_ALIASES[embedded[1]];
   return null;
 }
+
+/* ═══════════════════  Underlying groups  ═══════════════════ */
+
+/**
+ * Engine symbols that are the same real-world asset listed twice on
+ * Hyperliquid (native perp vs HIP-3 builder dex). The engine must treat
+ * these as ONE market for open-position dedupe, cooldowns, performance
+ * gates and news routing — otherwise it happily runs a PAXG short against
+ * an xyz:GOLD long and pays fees twice for zero exposure (2026-09-13).
+ *
+ * Keys are upper-cased engine symbols; values are the underlying id.
+ */
+export const UNDERLYING_GROUPS: Record<string, string> = {
+  PAXG: "gold",
+  "XYZ:GOLD": "gold",
+  "XYZ:SILVER": "silver",
+  "XYZ:TSLA": "tsla",
+  "XYZ:NVDA": "nvda",
+  "XYZ:AAPL": "aapl",
+  "XYZ:MSTR": "mstr",
+  "XYZ:COIN": "coin",
+};
+
+/** Underlyings that trade as safe havens: conflict news is BULLISH for them. */
+export const SAFE_HAVEN_UNDERLYINGS = new Set<string>(["gold", "silver"]);
+
+/**
+ * The underlying id for an engine symbol. Symbols without a group entry
+ * are their own underlying (upper-cased), so `underlyingOf("BTC") === "BTC"`.
+ */
+export function underlyingOf(symbol: string | null | undefined): string {
+  const s = (symbol ?? "").trim().toUpperCase();
+  return UNDERLYING_GROUPS[s] ?? s;
+}
+
+export function sameUnderlying(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a || !b) return false;
+  return underlyingOf(a) === underlyingOf(b);
+}
+
+export function isSafeHavenSymbol(symbol: string | null | undefined): boolean {
+  return SAFE_HAVEN_UNDERLYINGS.has(underlyingOf(symbol));
+}

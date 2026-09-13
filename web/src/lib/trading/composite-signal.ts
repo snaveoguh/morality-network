@@ -211,7 +211,7 @@ export function computeCompositeSignal(args: {
   else if (weightedScore < -0.05) direction = "short";
 
   // Confidence = weighted confidence + boost from agreement
-  const confidence = Math.min(1, weightedConfidence);
+  let confidence = Math.min(1, weightedConfidence);
 
   // Agreement check: require 2+ sources to agree on direction
   const directions: Direction[] = [];
@@ -229,6 +229,25 @@ export function computeCompositeSignal(args: {
     directions.length <= 1 || // only 1 source = auto-agree
     (direction === "long" && longVotes >= minAgreement) ||
     (direction === "short" && shortVotes >= minAgreement);
+
+  // Lone source: cap confidence at that source's STRENGTH. Technical
+  // "confidence" is the share of indicators agreeing, so a limp 0.23-strength
+  // signal with every indicator nominally aligned used to come out at 1.00
+  // and open a full-size warm-Kelly position (xyz:GOLD, 2026-09-11).
+  if (directions.length === 1 && direction !== "neutral") {
+    const loneStrength =
+      hasTechnical && technical ? technical.strength
+      : hasPattern && pattern ? pattern.overallConfidence
+      : hasNews && newsSignal ? Math.min(1, newsSignal.score / 2)
+      : hasMarketData && marketDataCombined ? marketDataCombined.strength
+      : hasWalletFlow && walletFlow ? walletFlow.strength
+      : hasWebIntel && webIntelligence ? webIntelligence.strength
+      : confidence;
+    if (loneStrength < confidence) {
+      reasons.push(`Single source — confidence capped at its strength ${loneStrength.toFixed(2)} (was ${confidence.toFixed(2)})`);
+      confidence = loneStrength;
+    }
+  }
 
   // If no agreement, downgrade to neutral — no position is the best position
   if (!agreementMet) {

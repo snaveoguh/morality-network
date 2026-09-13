@@ -23,6 +23,7 @@ import {
 import { computeRSI, computeEMAs, computeBollinger } from "./technical";
 import { checkMoralGate, logMoralGateDecision } from "./moral-gate";
 import { globalPositionLock } from "./global-position-lock";
+import { sameUnderlying } from "./engine-symbol";
 import { createTradeDecision, closeTradeDecisionByCloid, newCloid } from "../db/trade-decisions";
 import type { ScalperConfig, ScalpSignal, ScalpPosition, TraderExecutionConfig, EntryRationale } from "./types";
 import { PositionStore } from "./position-store";
@@ -483,8 +484,9 @@ export class ScalperManager {
     // ── Cross-system awareness: check if trader engine has a position on this market ──
     if (this.store) {
       const traderPositions = this.store.getOpen();
+      // Same-underlying aware: an engine PAXG position blocks an xyz:GOLD scalp.
       const traderHasMarket = traderPositions.some(
-        (p) => p.marketSymbol?.toUpperCase() === market.toUpperCase() && !p.id.startsWith("scalp:"),
+        (p) => sameUnderlying(p.marketSymbol, market) && !p.id.startsWith("scalp:"),
       );
       if (traderHasMarket) {
         log(`SKIP ${market}: trader engine has open position — deferring`);
@@ -519,7 +521,7 @@ export class ScalperManager {
     // ── Direction conflict check: don't fight the trader engine's position ──
     if (this.store) {
       const traderPos = this.store.getOpen().find(
-        (p) => p.marketSymbol?.toUpperCase() === market.toUpperCase() && !p.id.startsWith("scalp:"),
+        (p) => sameUnderlying(p.marketSymbol, market) && !p.id.startsWith("scalp:"),
       );
       if (traderPos && traderPos.direction && traderPos.direction !== signal.direction) {
         log(`SKIP ${market} ${signal.direction}: conflicts with trader engine's ${traderPos.direction} position`);

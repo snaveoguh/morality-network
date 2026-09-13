@@ -9,6 +9,42 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 64 · gold hedged against itself: underlying-aware dedupe, safe-haven polarity, lone-source cap
+
+**when** — 2026-09-13 ~10:30 UTC
+**what** — /markets showed PAXG SHORT (opened 13 Sep) next to xyz:GOLD LONG
+(opened 11 Sep): the same metal both ways, ~$65 each at 3x, fees paid twice
+for zero exposure. Four causes, four fixes:
+(1) `engine-symbol.ts` gains `UNDERLYING_GROUPS` (PAXG + xyz:GOLD → gold,
+xyz:SILVER → silver, the xyz equities) with `underlyingOf` / `sameUnderlying`
+/ `isSafeHavenSymbol`. The engine entry loop's open-position, scalper,
+cooldown and performance-gate checks now compare underlyings instead of the
+raw `marketSymbol` string; the scalper's two cross-system checks do the same.
+(2) News only ever mapped to PAXG, so xyz:GOLD traded blind on technicals.
+`newsSignalFor(symbol)` in the engine falls back to any news signal on the
+same underlying; the coverage log counts by underlying too.
+(3) The swarm bag-of-words polarity has war/attack/escalation in the
+BEARISH list, so Zaporizhzhia nuclear-plant headlines shorted gold.
+`adjustPolarityForSymbol` in `swarm-signals.ts` flips bearish→bullish on
+conflict/crisis terms and bullish→bearish on ceasefire/de-escalation terms
+for safe-haven symbols only; flips are logged.
+(4) `composite-signal.ts`: a lone source auto-passed the agreement check
+and technical "confidence" (share of indicators agreeing) came out 1.00 on
+a 0.23-strength signal, opening a full-size warm-Kelly xyz:GOLD long.
+Single-source composites are now capped at that source's strength, so a
+weak lone technical falls under `TRADER_MIN_SIGNAL_CONFIDENCE` (0.82) and
+goes neutral; a strong one still trades.
+**why** — the two gold legs were structurally guaranteed by the exact-string
+dedupe plus two different information sets per ticker. They would recur.
+**where** — `web/src/lib/trading/{engine-symbol,engine,scalper,swarm-signals,composite-signal}.ts`.
+Worker code: needs `railway up` from the clone's web/ subdir after syncing.
+The existing PAXG/xyz:GOLD pair is NOT auto-closed; the fix stops the next one.
+**verify** — worker log should show `already have open position on same
+underlying via …` and `safe-haven flip PAXG: bearish→bullish` lines; no new
+opposite-side positions on one underlying; single-source entries only when
+strength ≥ 0.82.
+**rollback** — `git revert` this node's commit; redeploy worker from prior clone commit.
+
 ## ▲ node 63 · honest PnL: net after exchange fees; every close records pnlUsd; hub calls priced
 
 **when** — 2026-09-06 ~11:30 UTC

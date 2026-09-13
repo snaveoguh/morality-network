@@ -34,6 +34,7 @@ import { fetchWalletFlowSignal } from "./wallet-flow";
 import { fetchWebIntelligenceSignal, type WebIntelligenceSignal } from "./web-intelligence";
 import { runAutoresearchCycle, getExperimentOverrideWeights } from "./autoresearch";
 import { globalPositionLock } from "./global-position-lock";
+import { sameUnderlying, underlyingOf } from "./engine-symbol";
 import { runCouncilDeliberation, fetchCouncilSignal } from "./council-signal";
 import {
   computeVaultSettlementPlan,
@@ -1571,8 +1572,8 @@ class TraderEngine {
     // signal this cycle. This is the number to watch when "news → trades"
     // feels dead: 0/17 means the producers/symbol map are broken, not the engine.
     {
-      const covered = watchMarkets.filter((m) => newsSignalMap.has(m));
-      const orphaned = Array.from(newsSignalMap.keys()).filter((k) => !watchMarkets.includes(k));
+      const covered = watchMarkets.filter((m) => newsSignalMap.has(m) || Array.from(newsSignalMap.keys()).some((k) => sameUnderlying(k, m)));
+      const orphaned = Array.from(newsSignalMap.keys()).filter((k) => !watchMarkets.some((m) => sameUnderlying(k, m)));
       console.log(
         `[trader] news coverage: ${covered.length}/${watchMarkets.length} watch markets` +
           (covered.length ? ` [${covered.join(",")}]` : "") +
@@ -1595,7 +1596,8 @@ class TraderEngine {
     const recentlyClosed = this.store.getClosed().filter(
       (p) => p.venue === "hyperliquid-perp" && p.closedAt && (Date.now() - p.closedAt) < 600_000,
     );
-    const cooldownSymbols = new Set(recentlyClosed.map((p) => p.marketSymbol?.toUpperCase()).filter(Boolean));
+    // Keyed by UNDERLYING so a PAXG close also cools xyz:GOLD (and vice versa).
+    const cooldownSymbols = new Set(recentlyClosed.map((p) => underlyingOf(p.marketSymbol)).filter(Boolean));
 
     // Per-symbol performance gate: stand down from symbols whose recent
     // closes are net negative — persistent bleeders (ETH/HYPE/TAO-style)
@@ -1619,25 +1621,47 @@ class TraderEngine {
     const scalperSymbols = new Set(
       storeOpen
         .filter((p) => p.id.startsWith("scalp:"))
-        .map((p) => p.marketSymbol?.toUpperCase())
+        .map((p) => underlyingOf(p.marketSymbol))
         .filter(Boolean),
     );
 
+    // News lookup by underlying: the producers only ever emit PAXG for gold,
+    // so xyz:GOLD would otherwise trade blind while PAXG trades on the news.
+    const newsSignalFor = (symbol: string): AggregatedMarketSignal | null => {
+      const direct = newsSignalMap.get(symbol);
+      if (direct) return direct;
+      for (const [key, sig] of newsSignalMap) {
+        if (sameUnderlying(key, symbol)) return sig;
+      }
+      return null;
+    };
+
     for (const symbol of watchMarkets) {
       if (HL_SIGNAL_BLOCKLIST.has(symbol.toUpperCase())) continue;
-      if (openPositions.some((p) => p.marketSymbol === symbol)) {
-        skippedReasons.push(`${symbol}: already have open position (engine)`);
+      // Same-underlying dedupe: PAXG and xyz:GOLD are one market to us.
+      const sibling = openPositions.find((p) => sameUnderlying(p.marketSymbol, symbol));
+      if (sibling) {
+        skippedReasons.push(
+          sibling.marketSymbol === symbol
+            ? `${symbol}: already have open position (engine)`
+            : `${symbol}: already have open position on same underlying via ${sibling.marketSymbol} (engine)`,
+        );
         continue;
       }
-      if (scalperSymbols.has(symbol.toUpperCase())) {
+      if (scalperSymbols.has(underlyingOf(symbol))) {
         skippedReasons.push(`${symbol}: already have open position (scalper)`);
         continue;
       }
-      if (cooldownSymbols.has(symbol.toUpperCase())) {
+      if (cooldownSymbols.has(underlyingOf(symbol))) {
         skippedReasons.push(`${symbol}: cooldown (closed <10min ago)`);
         continue;
       }
-      const gateReason = performanceGate.get(symbol.toUpperCase());
+      let gateReason = performanceGate.get(symbol.toUpperCase());
+      if (!gateReason) {
+        for (const [gatedSym, reason] of performanceGate) {
+          if (sameUnderlying(gatedSym, symbol)) { gateReason = `${reason}; via ${gatedSym}`; break; }
+        }
+      }
       if (gateReason) {
         skippedReasons.push(`${symbol}: performance gate (${gateReason})`);
         continue;
@@ -1660,7 +1684,7 @@ class TraderEngine {
         console.warn(`[trader] technical signal failed for ${symbol}:`, err instanceof Error ? err.message : err);
       }
 
-      const newsSignal = newsSignalMap.get(symbol) ?? null;
+      const newsSignal = newsSignalFor(symbol);
 
       // Skip LLM pattern call if technical is neutral AND no news — save cost
       if ((!technicalSignal || technicalSignal.direction === "neutral") && !newsSignal) {

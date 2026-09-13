@@ -13,7 +13,7 @@
 
 import type { EmergingEventCluster, AgentContradictionFlag } from "../agent-swarm.js";
 import type { AggregatedMarketSignal } from "./signals.js";
-import { normalizeEngineSymbol } from "./engine-symbol.js";
+import { normalizeEngineSymbol, isSafeHavenSymbol } from "./engine-symbol.js";
 import {
   recordSignalsBatch,
   getRecentSignals,
@@ -167,6 +167,36 @@ export function detectClusterPolarity(
   return null;
 }
 
+
+/* ═══════════════════  Safe-haven polarity  ═══════════════════ */
+
+/**
+ * The bag-of-words detector reads "war / attack / escalation" as bearish.
+ * For gold and silver that sign is backwards: conflict and crisis are
+ * safe-haven BIDS, de-escalation is a safe-haven SELL. On 2026-09-13 the
+ * engine shorted PAXG on Zaporizhzhia nuclear-plant headlines because of
+ * exactly this. Flip the polarity for safe-haven symbols when the claim is
+ * driven by conflict / crisis language (bearish→bullish) or by
+ * de-escalation language (bullish→bearish).
+ */
+const SAFE_HAVEN_BID_TERMS =
+  /\b(war|warfare|attack(?:s|ed)?|strike(?:s)?|missile(?:s)?|nuclear|escalat\w*|invasion|invade\w*|conflict|hostilit\w*|military|troops|sanction(?:s|ed)?|geopolitic\w*|crisis|panic|contagion|default|bankrupt\w*|recession|turmoil|instability|uncertaint\w*|safe[\s-]*haven|tension(?:s)?)\b/i;
+const SAFE_HAVEN_SELL_TERMS =
+  /\b(ceasefire|cease-fire|truce|peace\s*(?:deal|talks?|agreement|accord)|de-?escalat\w*|eases?|easing|calm(?:s|ed)?|risk[\s-]*on|rate\s*hikes?|hawkish|stronger\s+dollar|dollar\s+strength)\b/i;
+
+export function adjustPolarityForSymbol(
+  symbol: string,
+  polarity: "bullish" | "bearish",
+  claim: string,
+): { polarity: "bullish" | "bearish"; flipped: boolean } {
+  if (!isSafeHavenSymbol(symbol)) return { polarity, flipped: false };
+  const bid = SAFE_HAVEN_BID_TERMS.test(claim);
+  const sell = SAFE_HAVEN_SELL_TERMS.test(claim);
+  if (polarity === "bearish" && bid && !sell) return { polarity: "bullish", flipped: true };
+  if (polarity === "bullish" && sell && !bid) return { polarity: "bearish", flipped: true };
+  return { polarity, flipped: false };
+}
+
 /* ═══════════════════  Source credibility  ═══════════════════ */
 
 const HIGH_TRUST_SOURCES = [
@@ -226,18 +256,27 @@ export function clusterToSignals(cluster: EmergingEventCluster): AggregatedMarke
     ...cluster.evidence.slice(0, 2).map((e) => e.summary || e.title),
   ].filter(Boolean);
 
-  return symbols.map((symbol) => ({
-    symbol,
-    direction: polarity,
-    score: finalScore,
-    observations: cluster.itemCount,
-    latestGeneratedAt: cluster.latestPubDate,
-    supportingClaims: claims.slice(0, 3),
-    contradictionPenalty,
-    bullishWeight: polarity === "bullish" ? finalScore : 0,
-    bearishWeight: polarity === "bearish" ? finalScore : 0,
-    rawScore: polarity === "bullish" ? finalScore : -finalScore,
-  }));
+  return symbols.map((symbol) => {
+    const adjusted = adjustPolarityForSymbol(symbol, polarity, cluster.canonicalClaim);
+    const dir = adjusted.polarity;
+    if (adjusted.flipped) {
+      console.log(
+        `[swarm-signals] safe-haven flip ${symbol}: ${polarity}→${dir} claim="${cluster.canonicalClaim.slice(0, 80)}"`,
+      );
+    }
+    return {
+      symbol,
+      direction: dir,
+      score: finalScore,
+      observations: cluster.itemCount,
+      latestGeneratedAt: cluster.latestPubDate,
+      supportingClaims: claims.slice(0, 3),
+      contradictionPenalty,
+      bullishWeight: dir === "bullish" ? finalScore : 0,
+      bearishWeight: dir === "bearish" ? finalScore : 0,
+      rawScore: dir === "bullish" ? finalScore : -finalScore,
+    };
+  });
 }
 
 /* ═══════════════════  Main aggregator  ═══════════════════ */
