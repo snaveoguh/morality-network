@@ -9,6 +9,22 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 67 · cover ranker: edition tags vs candidate titles, factuality weight
+
+**when** — 2026-09-13 ~20:00 UTC
+**what** — first forced re-pick of #552 under node 66 chose a New York
+Post crime photo over SCMP's Iran/Hormuz story by 0.02: the edition
+(generated before node 66) has no sourceRefs, edition tags are entities
+("iran", "us military") while feed auto-tags are themes ("war"), so nothing
+matched. `cover-image-rank.ts` now scores an edition tag token appearing in
+a candidate's title +4 each, reads 4 body paragraphs, and weights source
+factuality (very-high/high +1, mixed −2, low/very-low −4). Same candidates
+now rank SCMP 6.0 > AFP 2.0 > NY Post −1.0 > Defiant −12.0.
+**why** — the entity in the headline is the story; a tabloid with a
+"World" category label is not a wire photo.
+**where** — web; `?force=1` re-pick of #552 run after deploy.
+**rollback** — `git revert` this node's commit.
+
 ## ▲ node 66 · daily cover image: story-relevant pick, not "newest feed item"
 
 **when** — 2026-09-13 ~19:30 UTC

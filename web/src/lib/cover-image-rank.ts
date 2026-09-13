@@ -8,6 +8,7 @@
  * from #546 to #552 regardless of the headline (2026-09-13).
  */
 import type { FeedItem } from "./rss";
+import type { FactualityRating } from "./bias";
 
 export interface CoverCandidate {
   url: string;
@@ -18,6 +19,7 @@ export interface CoverCandidate {
   datedAtFetch?: boolean;
   /** true when the item was among the stories the edition was written from */
   fromEdition?: boolean;
+  factuality?: FactualityRating;
 }
 
 export interface RankedCoverCandidate extends CoverCandidate {
@@ -62,9 +64,14 @@ export function rankCoverCandidates(
   candidates: CoverCandidate[],
   edition: EditionContext,
 ): RankedCoverCandidate[] {
-  const storyText = [edition.headline, edition.subheadline ?? "", ...(edition.body ?? []).slice(0, 2)].join(" ");
+  const storyText = [edition.headline, edition.subheadline ?? "", ...(edition.body ?? []).slice(0, 4)].join(" ");
   const storyTokens = tokenize(storyText);
   const editionTags = new Set((edition.tags ?? []).map((t) => t.toLowerCase()));
+  // Edition tags are entities ("iran", "us military"); feed auto-tags are
+  // themes ("war"). The strongest story signal is an edition tag appearing
+  // in the candidate's own title.
+  const tagTokens = new Set<string>();
+  for (const t of editionTags) for (const w of tokenize(t)) tagTokens.add(w);
   const cryptoEdition = editionTags.has("crypto") || /\b(crypto|bitcoin|ethereum|stablecoin|defi)\b/i.test(storyText);
 
   const ranked = candidates.map((c, index): RankedCoverCandidate => {
@@ -76,6 +83,13 @@ export function rankCoverCandidates(
 
     const tagOverlap = (c.tags ?? []).filter((t) => editionTags.has(t.toLowerCase())).length;
     if (tagOverlap) { score += tagOverlap * 3; why.push(`tag overlap ${tagOverlap}`); }
+
+    const tagInTitle = [...tokenize(c.title)].filter((w) => tagTokens.has(w)).length;
+    if (tagInTitle) { score += tagInTitle * 4; why.push(`edition tag in title ${tagInTitle}`); }
+
+    if (c.factuality === "very-high" || c.factuality === "high") { score += 1; why.push(`factuality ${c.factuality}`); }
+    else if (c.factuality === "mixed") { score -= 2; why.push("factuality mixed"); }
+    else if (c.factuality === "low" || c.factuality === "very-low") { score -= 4; why.push(`factuality ${c.factuality}`); }
 
     if (c.fromEdition) { score += 2; why.push("in edition sources"); }
     if (c.category && PHOTO_CATEGORIES.has(c.category)) { score += 1; why.push(`photo category ${c.category}`); }
@@ -99,5 +113,6 @@ export function feedItemToCandidate(item: FeedItem, fromEdition: boolean): Cover
     tags: item.tags,
     datedAtFetch: item.datedAtFetch,
     fromEdition,
+    factuality: item.bias?.factuality,
   };
 }
