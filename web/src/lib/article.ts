@@ -90,6 +90,13 @@ export interface ArticleContent {
   claim: string;
   /** Related items from other sources covering the same/similar story */
   relatedSources: FeedItem[];
+  /**
+   * Daily editions only: the slimmed RSS items the edition was written from
+   * (title, link, source, category, tags, imageUrl). Kept separate from
+   * relatedSources so the article page layout is unchanged; the cover-image
+   * cron ranks these for a story-relevant photo.
+   */
+  sourceRefs?: FeedItem[];
   /** Contextual subheadline generated for this specific story */
   subheadline: string;
   /** English companion line for non-English stories */

@@ -9,6 +9,36 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 66 · daily cover image: story-relevant pick, not "newest feed item"
+
+**when** — 2026-09-13 ~19:30 UTC
+**what** — Editions #546–#552 (bar #549, hand-uploaded) all served The
+Defiant's "Revolut starts EURR rollout with Bridge" banknote illustration,
+byte-identical (md5 7ab617b5…). Chain: the daily edition saved
+`relatedSources: []` and a synthetic primary with no image, so the
+illustration cron's story-linked steps were always empty → fallback to
+`fetchAllFeeds()` newest-first → The Defiant stamps its pinned items with
+the fetch time so they always sort newest → first image that downloads wins.
+Fixes: (1) `rss.ts` `markFetchStampedDates` flags 2+ items in one feed
+sharing a pubDate within 15 min of now as `datedAtFetch`; `fetchAllFeeds`
+sorts those after every dated item. (2) `ArticleContent.sourceRefs` (new,
+optional): the daily edition stores slim copies of the 25 stories the LLM
+was shown, with imageUrl/tags — separate from `relatedSources` so the
+article page layout is untouched. (3) `lib/cover-image-rank.ts` scores
+candidates by title-token and tag overlap with the headline/subheadline/body,
++in-edition, +photo categories, −Crypto on a non-crypto edition,
+−marketing-art sources (The Defiant, Cointelegraph, Decrypt), −fetch-stamped.
+The cron ranks sourceRefs → relatedSources → primary, falls back to the
+ranked live feed, logs the top 3 with reasons, and returns them in the
+response. (4) cron accepts `?date=YYYY-MM-DD` and `?force=1` to re-pick.
+**why** — the cover is the first thing on the front page and it has been
+a DeFi press image on Iran/Yemen editions for a week.
+**where** — web (auto-deploy from `main`); worker redeployed for the feed
+sort. Past editions keep their bridge unless re-picked with `?date&force`.
+**verify** — tomorrow's cron log shows `N candidates; top: …` with a World
+source; `/api/edition/553/illustration` should not be md5 7ab617b5…
+**rollback** — `git revert` this node's commit.
+
 ## ▲ node 65 · gold regex false positive: bare "conflict" mapped sports to PAXG
 
 **when** — 2026-09-13 ~17:00 UTC

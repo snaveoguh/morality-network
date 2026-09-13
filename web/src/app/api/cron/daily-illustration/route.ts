@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { computeEntityHash } from "@/lib/entity";
 import { getArchivedEditorial, saveEditorial } from "@/lib/editorial-archive";
 import { pickSourceImage } from "@/lib/image-generation";
+import { feedItemToCandidate, rankCoverCandidates, type CoverCandidate } from "@/lib/cover-image-rank";
 import { getIllustration, saveIllustration } from "@/lib/illustration-store";
 import { verifyCronAuth } from "@/lib/cron-auth";
 import { fetchAllFeeds } from "@/lib/rss";
@@ -17,13 +18,21 @@ export const maxDuration = 55;
  * Images are served grayscale via CSS to match the newspaper aesthetic.
  *
  * Auth: Requires CRON_SECRET Bearer token.
+ * Query: ?date=YYYY-MM-DD (target another edition), ?force=1 (re-pick).
  */
 export async function GET(request: NextRequest) {
   const authError = verifyCronAuth(request);
   if (authError) return authError;
 
   try {
-    const today = new Date().toISOString().slice(0, 10);
+    // ?date=YYYY-MM-DD re-targets an edition; ?force=1 re-picks even when a
+    // cover already exists (used to replace a wrong or stale cover).
+    const url = new URL(request.url);
+    const dateParam = url.searchParams.get("date");
+    const force = url.searchParams.get("force") === "1";
+    const today = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)
+      ? dateParam
+      : new Date().toISOString().slice(0, 10);
     const dailyId = `pooter-daily-${today}`;
     const hash = computeEntityHash(dailyId);
 
@@ -38,7 +47,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if illustration already exists
-    if (editorial.hasIllustration) {
+    if (editorial.hasIllustration && !force) {
       const existing = await getIllustration(hash).catch(() => null);
       if (existing?.base64) {
         return NextResponse.json({
@@ -59,49 +68,29 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Gather candidate images from today's RSS articles
+    // Gather candidate images, then rank by relevance to the story.
     const headline = editorial.primary?.title || "Daily Edition";
     console.log(`[cron/daily-illustration] Picking source image for "${headline.slice(0, 60)}..."`);
 
-    // Build candidates from editorial's related sources first
-    const candidates: { url: string; source: string; title: string }[] = [];
+    const candidates: CoverCandidate[] = [];
+    const seen = new Set<string>();
+    const push = (c: CoverCandidate | null) => {
+      if (!c || seen.has(c.url)) return;
+      seen.add(c.url);
+      candidates.push(c);
+    };
 
-    // 1. Images from the editorial's own related sources
-    if (editorial.relatedSources && Array.isArray(editorial.relatedSources)) {
-      for (const src of editorial.relatedSources) {
-        if (src.imageUrl) {
-          candidates.push({
-            url: src.imageUrl,
-            source: src.source || src.sourceUrl || "unknown",
-            title: src.title || headline,
-          });
-        }
-      }
-    }
+    // 1. The stories the edition was written from (sourceRefs), then any
+    //    related sources — these are the only story-relevant images we have.
+    for (const item of editorial.sourceRefs ?? []) push(feedItemToCandidate(item, true));
+    for (const item of editorial.relatedSources ?? []) push(feedItemToCandidate(item, true));
+    if (editorial.primary?.imageUrl) push(feedItemToCandidate(editorial.primary, true));
 
-    // 2. Primary article image
-    if (editorial.primary?.imageUrl) {
-      candidates.unshift({
-        url: editorial.primary.imageUrl,
-        source: editorial.primary.source || "primary",
-        title: editorial.primary.title || headline,
-      });
-    }
-
-    // 3. Fallback: fetch fresh RSS and grab top images
-    if (candidates.length < 3) {
+    // 2. Fallback: the live feed, ranked the same way (never just "newest").
+    if (candidates.filter((c) => c.fromEdition).length < 3) {
       try {
         const feeds = await fetchAllFeeds();
-        const withImages = feeds
-          .filter((item: { imageUrl?: string }) => item.imageUrl)
-          .slice(0, 10);
-        for (const item of withImages) {
-          candidates.push({
-            url: item.imageUrl!,
-            source: item.source,
-            title: item.title,
-          });
-        }
+        for (const item of feeds.slice(0, 120)) push(feedItemToCandidate(item, false));
       } catch (err) {
         console.warn("[cron/daily-illustration] RSS fallback failed:", err);
       }
@@ -115,15 +104,26 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const ranked = rankCoverCandidates(candidates, {
+      headline,
+      subheadline: editorial.subheadline,
+      tags: editorial.primary?.tags ?? [],
+      body: editorial.editorialBody,
+    });
+    console.log(
+      `[cron/daily-illustration] ${ranked.length} candidates; top: ` +
+        ranked.slice(0, 3).map((r) => `${r.source} "${r.title.slice(0, 40)}" (${r.score.toFixed(1)}: ${r.why.join(", ")})`).join(" | "),
+    );
+
     // Pick the best image
-    const illustration = await pickSourceImage(candidates);
+    const illustration = await pickSourceImage(ranked);
 
     if (!illustration) {
       return NextResponse.json({
         status: "skipped",
         reason: "No suitable images could be downloaded",
         date: today,
-        candidatesChecked: candidates.length,
+        candidatesChecked: ranked.length,
       });
     }
 
@@ -154,6 +154,7 @@ export async function GET(request: NextRequest) {
       storePersisted,
       imageSource: illustration.prompt,
       originalUrl: illustration.revisedPrompt,
+      topCandidates: ranked.slice(0, 3).map((r) => ({ source: r.source, title: r.title, score: r.score, why: r.why })),
     });
   } catch (err) {
     console.error("[cron/daily-illustration] Failed:", err);

@@ -33,6 +33,12 @@ export interface FeedItem {
   sourceUrl: string;
   category: string;
   imageUrl?: string;
+  /**
+   * True when the feed stamped this item with the fetch time instead of a
+   * real publish time (The Defiant pins its lead stories this way). Such
+   * items sort after dated items and are demoted as cover-image candidates.
+   */
+  datedAtFetch?: boolean;
   bias?: SourceBias | null;
   tags?: string[];
   canonicalClaim?: string;
@@ -275,7 +281,7 @@ export async function fetchFeed(source: FeedSource): Promise<FeedItem[]> {
 
     const bias = getSourceBias(source.url) || getSourceBias(source.name);
 
-    return (feed.items || []).slice(0, 15).map((item) => {
+    const mapped = (feed.items || []).slice(0, 15).map((item) => {
       // guid can be a string or an object {$: {isPermaLink: "true"}, _: "..."} — normalize
       let id = item.link || `${source.name}-${item.title}`;
       if (typeof item.guid === "string") {
@@ -309,6 +315,7 @@ export async function fetchFeed(source: FeedSource): Promise<FeedItem[]> {
       if (tags.length > 0) feedItem.tags = tags;
       return feedItem;
     });
+    return markFetchStampedDates(mapped);
   } catch (error) {
     reportError(`RSS:${source.name}`, error, { severity: "error" });
     return [];
@@ -388,8 +395,13 @@ export async function fetchAllFeeds(
   // Deduplicate across sources (prefer wire > broadsheet > tabloid > blog)
   const deduped = deduplicateItems(items);
 
-  // Sort by date, newest first
-  deduped.sort((a, b) => parseTimestamp(b.pubDate) - parseTimestamp(a.pubDate));
+  // Sort by date, newest first — items stamped with the fetch time go after
+  // every genuinely dated item so a pinned feed cannot sit on top all day.
+  deduped.sort(
+    (a, b) =>
+      (a.datedAtFetch ? 1 : 0) - (b.datedAtFetch ? 1 : 0) ||
+      parseTimestamp(b.pubDate) - parseTimestamp(a.pubDate),
+  );
 
   // Cache results
   feedCache = { items: deduped, ts: Date.now() };
@@ -488,6 +500,31 @@ function deduplicateItems(items: FeedItem[]): FeedItem[] {
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim().slice(0, 300);
+}
+
+/**
+ * Some feeds (The Defiant) stamp their pinned lead stories with the time of
+ * the request rather than the publish time, so they sort "newest" forever.
+ * Signature: 2+ items in one feed sharing an identical pubDate within a few
+ * minutes of now. Flag them; sorting and the cover-image picker demote them.
+ */
+export function markFetchStampedDates(items: FeedItem[], now: number = Date.now()): FeedItem[] {
+  const WINDOW_MS = 15 * 60 * 1000;
+  const byDate = new Map<string, FeedItem[]>();
+  for (const item of items) {
+    if (!item.pubDate) continue;
+    const group = byDate.get(item.pubDate) ?? [];
+    group.push(item);
+    byDate.set(item.pubDate, group);
+  }
+  for (const [pubDate, group] of byDate) {
+    if (group.length < 2) continue;
+    const ts = parseTimestamp(pubDate);
+    if (ts && Math.abs(now - ts) <= WINDOW_MS) {
+      for (const item of group) item.datedAtFetch = true;
+    }
+  }
+  return items;
 }
 
 function parseTimestamp(value: string): number {

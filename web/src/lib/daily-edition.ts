@@ -508,10 +508,27 @@ async function generateDailyEdition(data: DailyEditionData): Promise<DailyEditio
   // Build article FIRST — save it before attempting illustration.
   // Illustration can take 10-20s (DALL-E) and Vercel maxDuration is 55s.
   // The editorial content is the priority; illustration is a nice-to-have.
+  // Slim copies of the stories the LLM was shown (same slice as topStories)
+  // so the cover-image cron can pick a photo from the actual coverage.
+  const sourceRefs: FeedItem[] = data.rssItems.slice(0, 25).map((item) => ({
+    id: item.id,
+    title: item.title,
+    link: item.link,
+    description: "",
+    pubDate: item.pubDate,
+    source: item.source,
+    sourceUrl: item.sourceUrl,
+    category: item.category,
+    ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
+    ...(item.tags?.length ? { tags: item.tags } : {}),
+    ...(item.datedAtFetch ? { datedAtFetch: true } : {}),
+  }));
+
   const article: ArticleContent = {
     primary: syntheticPrimary,
     claim: extracted.headline,
     relatedSources: [],
+    sourceRefs,
     subheadline: extracted.subheadline,
     subheadlineEnglish: null,
     editorialBody,
