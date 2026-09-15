@@ -110,7 +110,48 @@ function computeLocalDigest(sources: SourceBias[]): BiasDigest {
  * Generate an AI-powered bias digest using Claude Haiku.
  * Analyzes source distribution + recent headlines to produce an editorial bias note.
  */
+/* ── Digest cache ────────────────────────────────────────────────────────
+ * The front page asked for a fresh LLM digest on every render (8,754 calls
+ * in one week, one every ~70s, despite 15-min ISR). The digest only changes
+ * when the source mix or the headlines change, so cache by a key of both.
+ * Only AI results are cached: a computed fallback must not mask a provider
+ * that comes back next minute. */
+const DIGEST_CACHE_TTL_MS = Number(process.env.BIAS_DIGEST_CACHE_TTL_MS ?? 30 * 60 * 1000);
+const DIGEST_CACHE_MAX = 16;
+const digestCache = new Map<string, { value: BiasDigest; expiresAt: number }>();
+
+function digestCacheKey(sources: SourceBias[], headlines?: string[]): string {
+  const names = sources.map((s) => s.name).sort().join("|");
+  const heads = (headlines ?? []).slice(0, 15).join("|");
+  let h = 0;
+  for (const ch of `${names}#${heads}`) h = (h * 31 + ch.charCodeAt(0)) | 0;
+  return `${sources.length}:${(headlines ?? []).length}:${h}`;
+}
+
+export function clearBiasDigestCache(): void {
+  digestCache.clear();
+}
+
 export async function generateBiasDigest(
+  sources: SourceBias[],
+  headlines?: string[],
+): Promise<BiasDigest> {
+  const cacheKey = digestCacheKey(sources, headlines);
+  const cached = digestCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+
+  const digest = await generateBiasDigestUncached(sources, headlines);
+  if (digest.source === "ai") {
+    if (digestCache.size >= DIGEST_CACHE_MAX) {
+      const oldest = digestCache.keys().next().value;
+      if (oldest !== undefined) digestCache.delete(oldest);
+    }
+    digestCache.set(cacheKey, { value: digest, expiresAt: Date.now() + DIGEST_CACHE_TTL_MS });
+  }
+  return digest;
+}
+
+async function generateBiasDigestUncached(
   sources: SourceBias[],
   headlines?: string[],
 ): Promise<BiasDigest> {

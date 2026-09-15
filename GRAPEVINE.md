@@ -9,6 +9,37 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 68 · the $0.21 burn was a $0.20 cap: digest cache, provider cooldown, worker gets Claude
+
+**when** — 2026-09-15 ~10:00 UTC
+**what** — Hugo asked why inference burn read $0.21/day. Indexer usage
+summary: 1,673 calls in 24h, 72 succeeded (Haiku bias digests, $0.21),
+1,601 `budget-blocked` — the web service had `AI_BUDGET_TOTAL_USD=0.20`
+per 24h, so the "burn" was the cap. The front page regenerated the bias
+digest on every render (8,754 calls/week, one per ~70s despite 15-min
+ISR). The worker had only a Venice key with `AI_BUDGET_VENICE_USD=0` and
+Anthropic second in its order with no key, so pattern detection, council
+and web intelligence never ran: every composite in its log was
+`pat=neutral wi=n/a` — the trader has been technicals + regex news at $0.
+Code: `bias-digest.ts` caches AI digests 30 min keyed by source mix +
+headlines (`BIAS_DIGEST_CACHE_TTL_MS`); `ai-provider.ts` skips a provider
+for 10 min after 3 consecutive thrown errors (budget refusals don't count;
+`AI_PROVIDER_COOLDOWN_AFTER/_MS`).
+Env (via `railway variables --set`, values never printed): web
+`AI_BUDGET_TOTAL_USD=2`, `AI_BUDGET_ANTHROPIC_USD=2`; worker
+`ANTHROPIC_API_KEY` copied from the web service through a shell pipe,
+`AI_FAST/PREMIUM_PROVIDER_ORDER=anthropic,venice`,
+`AI_BUDGET_TOTAL_USD=3`, `AI_BUDGET_ANTHROPIC_USD=3`.
+Not fixed: the Agent Hub (heartfelt-flow) still reports a retired
+`claude-3-haiku-20240307` model (429 failed hub calls/week).
+**why** — the Hyperstructure panel's 10.77× "self-funding" divided profit
+by a burn that excluded the inference the trader is supposed to do.
+**where** — web (main) + worker (`railway up` from the clone).
+**verify** — /api/hyperstructure burn rises toward the caps; worker
+composites start showing `pat=long|short` and `wi=` values; usage summary
+tasks include tradingPatternDetection / councilDeliberation.
+**rollback** — `git revert`; reset the env vars (web total back to 0.20).
+
 ## ▲ node 67 · cover ranker: edition tags vs candidate titles, factuality weight
 
 **when** — 2026-09-13 ~20:00 UTC

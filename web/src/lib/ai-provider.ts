@@ -311,6 +311,34 @@ async function tryAgentHub(request: AITextRequest): Promise<AITextResult | null>
   }
 }
 
+/* ── Per-provider failure cooldown ───────────────────────────────────────
+ * A provider that has just thrown 3 times in a row (bad key, retired model
+ * id, outage) is skipped for a while instead of being retried on every
+ * single call. Budget refusals are not failures and do not count. */
+const PROVIDER_COOLDOWN_AFTER = Number(process.env.AI_PROVIDER_COOLDOWN_AFTER ?? 3);
+const PROVIDER_COOLDOWN_MS = Number(process.env.AI_PROVIDER_COOLDOWN_MS ?? 10 * 60 * 1000);
+const providerHealth = new Map<AIProviderId, { consecutiveFailures: number; coolingUntil: number }>();
+
+function providerCoolingDown(provider: AIProviderId): number {
+  const h = providerHealth.get(provider);
+  if (!h) return 0;
+  return h.coolingUntil > Date.now() ? h.coolingUntil - Date.now() : 0;
+}
+
+function noteProviderFailure(provider: AIProviderId): void {
+  const h = providerHealth.get(provider) ?? { consecutiveFailures: 0, coolingUntil: 0 };
+  h.consecutiveFailures += 1;
+  if (h.consecutiveFailures >= PROVIDER_COOLDOWN_AFTER) {
+    h.coolingUntil = Date.now() + PROVIDER_COOLDOWN_MS;
+    console.warn(`[ai-provider] ${provider} failed ${h.consecutiveFailures}x in a row — cooling down ${Math.round(PROVIDER_COOLDOWN_MS / 60000)}m`);
+  }
+  providerHealth.set(provider, h);
+}
+
+function noteProviderSuccess(provider: AIProviderId): void {
+  providerHealth.set(provider, { consecutiveFailures: 0, coolingUntil: 0 });
+}
+
 export async function generateTextForTask(request: AITextRequest): Promise<AITextResult> {
   // Try Agent Hub first (free Groq tier)
   const hubResult = await tryAgentHub(request);
@@ -325,6 +353,12 @@ export async function generateTextForTask(request: AITextRequest): Promise<AITex
   let lastError: Error | null = null;
   for (const [index, provider] of providers.entries()) {
     if (index >= maxAttempts) break;
+    const coolingMs = providerCoolingDown(provider);
+    if (coolingMs > 0) {
+      lastError = lastError ?? new Error(`${provider} cooling down after repeated failures`);
+      console.warn(`[ai-provider] ${provider} skipped for ${request.task}: cooling down ${Math.round(coolingMs / 1000)}s`);
+      continue;
+    }
     const budgetState = await getAIProviderBudgetState(provider, request.task).catch((error) => {
       console.warn(
         `[ai-provider] budget check failed for ${provider}/${request.task}: ${
@@ -399,9 +433,11 @@ export async function generateTextForTask(request: AITextRequest): Promise<AITex
         },
       });
 
+      noteProviderSuccess(provider);
       return { provider: result.provider, model: result.model, text: result.text };
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
+      noteProviderFailure(provider);
       const latencyMs = Math.max(0, Date.now() - startedAt);
       const model = getProviderModel(request.task, provider);
       recordAIUsageSafely({
