@@ -240,12 +240,21 @@ async function generateOpenAICompatibleText(
 }
 
 function recordAIUsageSafely(input: Parameters<typeof recordAIUsage>[0]): void {
-  after(() => {
+  const persist = () => {
     recordAIUsage(input).catch((error) => {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(`[ai-provider] failed to persist AI usage: ${message}`);
     });
-  });
+  };
+  // Next's after() defers the write past the response, but it throws
+  // outside a request scope — i.e. in the trader worker. Until 2026-09-15
+  // that throw fired on the SUCCESS path too, so every worker LLM call was
+  // billed, then discarded as a "failure", and never reached the meter.
+  try {
+    after(persist);
+  } catch {
+    persist();
+  }
 }
 
 // ─── Agent Hub (Groq free tier via centralized proxy) ────────────────────────

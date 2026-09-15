@@ -9,6 +9,27 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 69 · worker LLM calls were billed then discarded: Next `after()` outside a request
+
+**when** — 2026-09-15 ~16:30 UTC
+**what** — after node 68 gave the worker a Claude key, its composites still
+read `pat=neutral` and the meter had never seen a trading task. Reproduced
+under the worker env: every `generateTextForTask` threw "`after` was called
+outside a request scope". `recordAIUsageSafely` in `ai-provider.ts` wrapped
+the usage write in Next's `after()`, which only works inside a request. On
+the worker it threw on the SUCCESS path too, so each Anthropic (and before
+that Venice) call completed, was billed, then surfaced as a failure and was
+never recorded. That is why pattern detection, council and web intelligence
+have been dead on the worker for as long as that helper has existed. Fix:
+try `after()`, fall back to persisting immediately when it throws. Verified
+with the worker env: both trading tasks return via claude-haiku-4-5.
+**why** — the trader's LLM legs were never running; the meter could not
+show it because the same bug hid the calls.
+**where** — web (main) + worker (`railway up` from the clone).
+**verify** — worker composites show `pat=long|short` and `wi=` values;
+usage summary gains tradingPatternDetection / councilDeliberation rows.
+**rollback** — `git revert` this node's commit.
+
 ## ▲ node 68 · the $0.21 burn was a $0.20 cap: digest cache, provider cooldown, worker gets Claude
 
 **when** — 2026-09-15 ~10:00 UTC
