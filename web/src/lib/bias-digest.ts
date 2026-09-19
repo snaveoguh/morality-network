@@ -112,20 +112,27 @@ function computeLocalDigest(sources: SourceBias[]): BiasDigest {
  */
 /* ── Digest cache ────────────────────────────────────────────────────────
  * The front page asked for a fresh LLM digest on every render (8,754 calls
- * in one week, one every ~70s, despite 15-min ISR). The digest only changes
- * when the source mix or the headlines change, so cache by a key of both.
- * Only AI results are cached: a computed fallback must not mask a provider
- * that comes back next minute. */
-const DIGEST_CACHE_TTL_MS = Number(process.env.BIAS_DIGEST_CACHE_TTL_MS ?? 30 * 60 * 1000);
+ * in one week, one every ~70s, despite 15-min ISR). A first fix keyed the
+ * cache on the headline list, but headlines churn with every RSS refresh,
+ * so the key rarely hit: 15,612 digest calls in the 30 days to 2026-09-19.
+ * Now the key is the source mix + a UTC time bucket (default 6h) — at most
+ * four AI digests a day per feed variant — concurrent renders share one
+ * in-flight call, and a provider failure is remembered briefly so a dead
+ * key is not retried on every page view. */
+const DIGEST_CACHE_TTL_MS = Number(process.env.BIAS_DIGEST_CACHE_TTL_MS ?? 6 * 60 * 60 * 1000);
+const DIGEST_FAILURE_TTL_MS = Number(process.env.BIAS_DIGEST_FAILURE_TTL_MS ?? 10 * 60 * 1000);
 const DIGEST_CACHE_MAX = 16;
-const digestCache = new Map<string, { value: BiasDigest; expiresAt: number }>();
+const digestCache = new Map<
+  string,
+  { value?: BiasDigest; expiresAt: number; inFlight?: Promise<BiasDigest> }
+>();
 
-function digestCacheKey(sources: SourceBias[], headlines?: string[]): string {
+function digestCacheKey(sources: SourceBias[]): string {
   const names = sources.map((s) => s.name).sort().join("|");
-  const heads = (headlines ?? []).slice(0, 15).join("|");
   let h = 0;
-  for (const ch of `${names}#${heads}`) h = (h * 31 + ch.charCodeAt(0)) | 0;
-  return `${sources.length}:${(headlines ?? []).length}:${h}`;
+  for (const ch of names) h = (h * 31 + ch.charCodeAt(0)) | 0;
+  const bucket = Math.floor(Date.now() / DIGEST_CACHE_TTL_MS);
+  return `${sources.length}:${h}:${bucket}`;
 }
 
 export function clearBiasDigestCache(): void {
@@ -136,19 +143,25 @@ export async function generateBiasDigest(
   sources: SourceBias[],
   headlines?: string[],
 ): Promise<BiasDigest> {
-  const cacheKey = digestCacheKey(sources, headlines);
+  const cacheKey = digestCacheKey(sources);
+  const now = Date.now();
   const cached = digestCache.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) return cached.value;
+  if (cached?.value && cached.expiresAt > now) return cached.value;
+  if (cached?.inFlight) return cached.inFlight;
 
-  const digest = await generateBiasDigestUncached(sources, headlines);
-  if (digest.source === "ai") {
+  const inFlight = generateBiasDigestUncached(sources, headlines).then((digest) => {
     if (digestCache.size >= DIGEST_CACHE_MAX) {
       const oldest = digestCache.keys().next().value;
       if (oldest !== undefined) digestCache.delete(oldest);
     }
-    digestCache.set(cacheKey, { value: digest, expiresAt: Date.now() + DIGEST_CACHE_TTL_MS });
-  }
-  return digest;
+    digestCache.set(cacheKey, {
+      value: digest,
+      expiresAt: Date.now() + (digest.source === "ai" ? DIGEST_CACHE_TTL_MS : DIGEST_FAILURE_TTL_MS),
+    });
+    return digest;
+  });
+  digestCache.set(cacheKey, { expiresAt: now + DIGEST_CACHE_TTL_MS, inFlight });
+  return inFlight;
 }
 
 async function generateBiasDigestUncached(

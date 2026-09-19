@@ -83,9 +83,51 @@ Common patterns to look for: head_and_shoulders, inverse_head_and_shoulders, dou
 
 If no clear pattern exists, return overallDirection "neutral" with low confidence.`;
 
+/* ═══════════════════  Per-symbol cache  ═══════════════════ */
+/* The trader ticks every 60s but the candles are 15m. Until 2026-09-19 every
+ * directional tick re-asked the LLM the same question — ~670 calls/day at
+ * ~1.6k input tokens each — and the worker's meter priced it at $0, so the
+ * budget cap never fired. One verdict per symbol per candle interval is the
+ * most that can be useful; failures are held briefly so a dead provider is
+ * not retried on every tick. */
+const PATTERN_CACHE_TTL_MS = Number(process.env.TRADER_PATTERN_CACHE_MS ?? 15 * 60 * 1000);
+const PATTERN_FAILURE_TTL_MS = Number(process.env.TRADER_PATTERN_FAILURE_TTL_MS ?? 5 * 60 * 1000);
+const patternCache = new Map<
+  string,
+  { expiresAt: number; value?: PatternDetectionResult; inFlight?: Promise<PatternDetectionResult> }
+>();
+
+function patternCacheKey(symbol: string, tech: TechnicalSignal): string {
+  return `${symbol}:${tech.direction}`;
+}
+
 /* ═══════════════════  Main export  ═══════════════════ */
 
 export async function detectPatterns(
+  config: TraderExecutionConfig,
+  symbol: string,
+  technicalSignal: TechnicalSignal,
+  candles?: Candle[],
+): Promise<PatternDetectionResult> {
+  const key = patternCacheKey(symbol, technicalSignal);
+  const now = Date.now();
+  const cached = patternCache.get(key);
+  if (cached?.value && cached.expiresAt > now) return cached.value;
+  if (cached?.inFlight) return cached.inFlight;
+
+  const inFlight = detectPatternsUncached(config, symbol, technicalSignal, candles).then((result) => {
+    const failed = result.llmProvider === "none";
+    patternCache.set(key, {
+      value: result,
+      expiresAt: Date.now() + (failed ? PATTERN_FAILURE_TTL_MS : PATTERN_CACHE_TTL_MS),
+    });
+    return result;
+  });
+  patternCache.set(key, { expiresAt: now + PATTERN_CACHE_TTL_MS, inFlight });
+  return inFlight;
+}
+
+async function detectPatternsUncached(
   config: TraderExecutionConfig,
   symbol: string,
   technicalSignal: TechnicalSignal,

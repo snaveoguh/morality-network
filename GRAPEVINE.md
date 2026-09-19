@@ -9,6 +9,39 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 70 · Anthropic balance drained: unmetered trader calls + per-render bias digest
+
+**when** — 2026-09-19 ~17:30 UTC
+**what** — the shared prod Anthropic key hit "credit balance is too low" at
+10:05 UTC. Two burners. (1) The trader worker (`pooter-agent-worker`) got the
+key in node 68 but had no `AI_PRICE_*` vars, so the meter priced every call
+at $0 and its $3/day cap never fired; `detectPatterns` re-asked the LLM on
+every 60s tick per directional symbol against 15m candles (~670 calls/day,
+~1.6k in / 360 out tokens each, ≈$0.90/day at Haiku rates) plus council
+deliberations (≈$0.40/day), and everything before node 69 (Sep 15) was billed
+but never recorded. (2) The front page's bias digest was keyed on the
+headline list, which churns every RSS refresh, so the node-68 30m cache
+rarely hit: 15,612 digest calls in 30 days. Fixes in `web/src/lib`:
+`pattern-detector.ts` caches one verdict per symbol+direction for
+`TRADER_PATTERN_CACHE_MS` (15m; failures 5m) with single-flight;
+`bias-digest.ts` keys on source mix + 6h UTC bucket, single-flight, and
+remembers a failed provider for 10m; `ai-budget.ts` ships built-in list
+prices (Haiku 1/5, Sonnet 3/15, Opus 5/25, gpt-4o 2.5/10, mini 0.15/0.6,
+Venice 0.2) so a service with no price vars can no longer meter at $0;
+`ai-provider.ts` fails closed for anthropic/openai when a cap is configured
+but the meter is unreachable (`AI_BUDGET_FAIL_OPEN=true` overrides);
+`ai-models.ts` adds the `AI_DISABLED_PROVIDERS` kill switch. Railway: per-model
+`AI_PRICE_ANTHROPIC_CLAUDE_{HAIKU_4_5,SONNET_4_6}_*` set on pooter-agent-worker,
+morality-network (prod), disciplined-serenity and dev; dev's retired
+`claude-3-haiku-20240307` / `claude-sonnet-4-20250514` ids (the 404s in the
+meter) replaced with `claude-haiku-4-5` / `claude-sonnet-4-6`.
+**why** — the key was being "maxed out": ≈$1.75/day real spend with the
+worker invisible to its own cap, on a balance sized for cents.
+**where** — `web/src/lib/{ai-budget,ai-models,ai-provider,bias-digest}.ts`,
+`web/src/lib/trading/pattern-detector.ts`; Railway vars on four services.
+**rollback** — `git revert` this commit; unset the `AI_PRICE_ANTHROPIC_CLAUDE_*`
+vars (the built-in prices then still apply — that is the point).
+
 ## ▲ node 69 · worker LLM calls were billed then discarded: Next `after()` outside a request
 
 **when** — 2026-09-15 ~16:30 UTC

@@ -45,7 +45,17 @@ function parseProviderOrder(value: string | null, fallback: AIProviderId[]): AIP
   return parsed.length > 0 ? Array.from(new Set(parsed)) : fallback;
 }
 
+/** Kill switch: AI_DISABLED_PROVIDERS=anthropic,openai removes providers
+ * from every task without touching their keys. */
+const DISABLED_PROVIDERS = new Set(
+  (readEnv("AI_DISABLED_PROVIDERS") ?? "")
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter((entry) => entry.length > 0),
+);
+
 export function isProviderConfigured(provider: AIProviderId): boolean {
+  if (DISABLED_PROVIDERS.has(provider)) return false;
   if (provider === "anthropic") {
     return Boolean(readEnv("ANTHROPIC_API_KEY"));
   }

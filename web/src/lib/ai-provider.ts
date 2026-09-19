@@ -11,7 +11,11 @@ import {
   getAIProviderBudgetState,
   recordAIUsage,
 } from "./server/ai-telemetry";
-import { estimateAIInvocationCostMicrousd } from "./ai-budget";
+import {
+  budgetFailsOpen,
+  estimateAIInvocationCostMicrousd,
+  hasBudgetConfigured,
+} from "./ai-budget";
 
 export interface AITextRequest {
   task: AIModelTask;
@@ -376,6 +380,21 @@ export async function generateTextForTask(request: AITextRequest): Promise<AITex
       );
       return null;
     });
+
+    // Fail closed: a paid provider with a configured cap is not called while
+    // the meter cannot answer. Until 2026-09-19 an unreachable indexer meant
+    // "no budget state" meant "allowed", i.e. the cap silently vanished.
+    const PAID: ReadonlyArray<AIProviderId> = ["anthropic", "openai"];
+    if (
+      budgetState === null &&
+      PAID.includes(provider) &&
+      hasBudgetConfigured(provider) &&
+      !budgetFailsOpen()
+    ) {
+      lastError = new Error(`${provider} skipped: budget meter unavailable (set AI_BUDGET_FAIL_OPEN=true to override)`);
+      console.warn(`[ai-provider] ${lastError.message}`);
+      continue;
+    }
 
     if (budgetState && !budgetState.allowed) {
       const model = getProviderModel(request.task, provider);
