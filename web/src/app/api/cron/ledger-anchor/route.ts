@@ -1,12 +1,14 @@
 // Cron: daily Merkle batch. Computes the root over yesterday's recorded
-// claims and stores it in ledger_merkle_batches. The onchain anchor to Base
+// claims plus the Pledge Ledger states checked that day, and stores it in
+// ledger_merkle_batches. The onchain anchor to Base
 // (one tx/day, LedgerAnchor.sol) activates once LEDGER_ANCHOR_ADDRESS +
 // LEDGER_ANCHOR_PRIVATE_KEY are configured — until then roots accumulate
 // offchain and are anchorable retroactively.
 
 import { NextResponse } from "next/server";
 import { verifyCronAuth } from "@/lib/cron-auth";
-import { computeClaimsRoot } from "@/lib/ledger/merkle";
+import { computeLedgerDayRoot } from "@/lib/ledger/merkle";
+import { pledgesCheckedOn } from "@/lib/ledger/pledges";
 import { sql } from "@/lib/db";
 
 export const maxDuration = 60;
@@ -34,11 +36,14 @@ export async function GET(request: Request) {
 
   const { listLedgerClaimsCreatedOn } = await import("@/lib/db/ledger-claims");
   const claims = await listLedgerClaimsCreatedOn(day);
-  const { root, count } = computeClaimsRoot(claims);
+  const pledges = pledgesCheckedOn(day);
+  const { root, count, ...leaves } = computeLedgerDayRoot(claims, pledges);
   if (!root) {
-    return NextResponse.json({ ok: true, day, claims: 0, root: null, note: "no claims that day" });
+    return NextResponse.json({ ok: true, day, claims: 0, pledges: 0, root: null, note: "no claims or pledge checks that day" });
   }
 
+  // claim_count holds the total leaf count (claims + pledge states) — it is
+  // the batch size LedgerAnchor emits as event metadata.
   await sql`
     INSERT INTO pooter.ledger_merkle_batches (day, root, claim_count)
     VALUES (${day}, ${root}, ${count})
@@ -53,12 +58,12 @@ export async function GET(request: Request) {
     return NextResponse.json({
       ok: true,
       day,
-      claims: count,
+      ...leaves,
       root,
       anchored: [],
       note: "anchor env not configured — root stored offchain, anchorable retroactively",
     });
   }
   const { anchored, pending } = await anchorPendingRoots();
-  return NextResponse.json({ ok: true, day, claims: count, root, anchored, pending });
+  return NextResponse.json({ ok: true, day, ...leaves, root, anchored, pending });
 }

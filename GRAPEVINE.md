@@ -9,6 +9,41 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 71 · Pledge Ledger prototype: public-money pledges at /ledger/pledges
+
+**when** — 2026-10-20 ~21:30 UTC
+**what** — new `/ledger/pledges` list + `/ledger/pledges/[id]` detail pages
+recording what government and strategic authorities pledge with public money:
+amount, owner, date announced, verbatim quote + source URL, delivery status
+(announced / allocated / spent / delivered / unknown), evidence links,
+last-checked date. Seeded from `web/src/lib/ledger/sources/pledges.json` (12
+pledges): the MHCLG £210m high-streets package of 25 Sep 2026 and its four
+lines (£125m Derelict Buildings Fund, £65m community rescue, £10m High Street
+Rental Auctions, £10m Co-operative Development Programme), and Sussex &
+Brighton commitments (£1.14bn fund, £30.4m pre-election release, £9.0m
+capacity — status unknown, other releases say £4.5m — £117m four-year budget,
+£564k DfT bus appraisal, ~£455m transport plan / ~£100m buses). Every quote was
+checked verbatim against the fetched source on 2026-10-20; corrections to the
+brief are in the notes (the £65m names pubs and sports clubs, not shops; the
+£10m HSRA figure is derived from "£20 million … split equally"; the £210m is
+existing earmarked MHCLG money). Pledge states are hashed (domain-prefixed
+"pledge" leaves) into the same daily Merkle root as claims, on the day each is
+checked: `computeLedgerDayRoot` in `merkle.ts`, used by the
+`ledger-anchor` cron; `claim_count` now carries the total leaf count. No
+migration — the page renders from the seed with no `DATABASE_URL`. Declared-
+interest note on every pledge page: Morality Co-operative may apply to
+programmes it tracks. Nothing posted onchain; not deployed.
+**why** — demo for the JRRT / NLnet / SBSA pitches: a ledger of what is
+promised with public money and whether it is delivered, built on the Claim
+Ledger's verbatim-quote + daily-anchor discipline.
+**where** — `web/src/lib/ledger/{pledges.ts,sources/pledges.json,merkle.ts}`,
+`web/src/app/ledger/pledges/`, `web/src/app/ledger/page.tsx` (hub card),
+`web/src/app/api/cron/ledger-anchor/route.ts`; branch `feat/pledge-ledger`.
+Node number may renumber at merge (corrections register lands in parallel).
+**rollback** — `git revert` the feat/pledge-ledger commits. Days anchored while
+it was live include pledge leaves; their roots stay valid (recompute from the
+seed at that commit).
+
 ## ▲ node 70 · Anthropic balance drained: unmetered trader calls + per-render bias digest
 
 **when** — 2026-09-19 ~17:30 UTC

@@ -7,6 +7,7 @@
 
 import { createHash } from "node:crypto";
 import type { LedgerClaim } from "./types";
+import { pledgeLeafHash, type Pledge } from "./pledges";
 
 function sha256Hex(data: string | Buffer): string {
   return createHash("sha256").update(data).digest("hex");
@@ -52,5 +53,26 @@ export function computeClaimsRoot(claims: LedgerClaim[]): {
   return {
     root: merkleRoot(claims.map(claimLeafHash)),
     count: claims.length,
+  };
+}
+
+/**
+ * The day's anchored root: claims recorded that day plus pledge states checked
+ * that day, in one tree. Pledge leaves are domain-prefixed (see
+ * pledgeLeafHash), so the two kinds never collide. `count` is the total leaf
+ * count — what LedgerAnchor records as the batch size.
+ */
+export function computeLedgerDayRoot(
+  claims: LedgerClaim[],
+  pledges: Pledge[],
+): { root: string | null; claims: number; pledges: number; count: number } {
+  return {
+    root: merkleRoot([
+      ...claims.map(claimLeafHash),
+      ...pledges.map(pledgeLeafHash),
+    ]),
+    claims: claims.length,
+    pledges: pledges.length,
+    count: claims.length + pledges.length,
   };
 }
