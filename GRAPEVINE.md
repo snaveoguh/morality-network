@@ -9,6 +9,42 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 71 · corrections register prototype: how long ministers take to correct the record
+
+**when** — 2026-10-20 ~21:30 UTC (branch `feat/corrections-register`, not deployed)
+**what** — a prototype `/ledger/corrections` for the JRRT bid (evidence for a
+time-limited duty to correct). `lib/ledger/corrections.ts` reads three public
+sources with no auth and no AI: corrected written answers
+(questions-statements-api `correctedWhenFrom`: original answer date,
+correction date, original and corrected text); written statements titled
+"Correction …" (the `CorrectedStatement` link or an embedded Hansard link gives
+the original date; the Lords `JointStatement` copy is folded into the Commons
+one); and point-of-order oral self-corrections from Hansard contribution
+search. Oral hits are candidates only (strict first-person heuristic, interest
+rectifications excluded), always `needsReview`, and kept out of every figure.
+`corrections-match.ts` proposes correction↔claim matches: same speaker is
+required, then date, word overlap and shared figures. Every match is a
+proposal for review and never sets a verdict. "Corrections owed" lists only
+claims with a published false/partial verdict that has a human reviewer, and
+shows an empty state without a DB.
+Backfill `npm run ledger:backfill-corrections` (jiti) wrote
+`src/data/ledger-corrections-seed.json`, so the page renders without
+DATABASE_URL. Window 20 Oct 2025 – 20 Oct 2026: 195 corrections (183 written
+answers, 12 correction statements), median 12 days from statement to
+correction (written answers 11, statements 50), 29% over 30 days, longest
+1,443 days (PPE procurement); 8 oral candidates awaiting review.
+Migration `013_ministerial_corrections.sql` adds `ministerial_corrections` +
+`correction_claim_matches` (status proposed/confirmed/rejected).
+**why** — the Ministerial Code says "at the earliest opportunity"; nobody
+measured it. Prototype before the 2 Nov 2026 JRRT outline deadline.
+**where** — `web/src/lib/ledger/{corrections,corrections-match,corrections-service}.ts`,
+`web/src/lib/db/ledger-corrections.ts`, `web/src/app/ledger/corrections/page.tsx`,
+`web/scripts/backfill-corrections.ts`, `web/migrations/013_ministerial_corrections.sql`,
+hub card in `web/src/app/ledger/page.tsx`. Node number may need a renumber at
+merge (the pledge-ledger branch is also appending).
+**rollback** — `git revert` the branch commits; if 013 was applied,
+`DROP TABLE pooter.correction_claim_matches, pooter.ministerial_corrections;`.
+
 ## ▲ node 70 · Anthropic balance drained: unmetered trader calls + per-render bias digest
 
 **when** — 2026-09-19 ~17:30 UTC

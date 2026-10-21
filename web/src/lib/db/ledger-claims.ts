@@ -5,7 +5,7 @@
 import { sql } from "../db";
 import type { LedgerClaim, LedgerContext } from "../ledger/types";
 
-interface LedgerClaimRow {
+export interface LedgerClaimRow {
   id: string;
   member_id: number | null;
   speaker_name: string;
@@ -34,7 +34,7 @@ export function isoDateOnly(value: unknown): string {
   return String(value).slice(0, 10);
 }
 
-function rowToClaim(row: LedgerClaimRow): LedgerClaim {
+export function rowToClaim(row: LedgerClaimRow): LedgerClaim {
   return {
     id: row.id,
     speaker: {

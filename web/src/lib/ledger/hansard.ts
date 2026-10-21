@@ -39,7 +39,7 @@ const PARTY_CODES = new Set([
 // Chair contributions are procedural, never claims. Older records style the
 // chair as "Mr. Deputy Speaker (Sir Alan Haselhurst)" — allow the period and
 // the name parenthetical.
-const CHAIR_ATTRIBUTIONS = /^(mr\.?|madam)? ?(deputy )?speaker(\s*\([^)]*\))?$/i;
+export const CHAIR_ATTRIBUTIONS = /^(mr\.?|madam)? ?(deputy )?speaker(\s*\([^)]*\))?$/i;
 
 interface HansardSearchResult {
   DebateSectionExtId: string;
