@@ -227,7 +227,7 @@ export default async function LedgerPage() {
         {/* Ledger section grid — same hub pattern as /coop's Playground:
             a visible card grid beats a nav dropdown for a growing set of
             sub-pages. */}
-        <div className="mt-5 grid grid-cols-1 gap-0 sm:grid-cols-2 md:grid-cols-4">
+        <div className="mt-5 grid grid-cols-1 gap-0 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           <Link
             href="/ledger"
             className="group border border-[var(--ink)] bg-[var(--ink)] p-4"
@@ -270,6 +270,17 @@ export default async function LedgerPage() {
             </span>
             <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
               Public money, promised &amp; tracked
+            </p>
+          </Link>
+          <Link
+            href="/ledger/corrections"
+            className="group border border-l-0 border-[var(--rule-light)] p-4 transition-colors hover:bg-[var(--paper-dark)] sm:border-l"
+          >
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink)] group-hover:underline">
+              Corrections Register
+            </span>
+            <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+              Prototype &middot; days to correct the record
             </p>
           </Link>
         </div>
