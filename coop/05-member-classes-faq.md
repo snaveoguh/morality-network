@@ -68,7 +68,7 @@ Maybe, from year `[3]`, if the co-operative can afford it, at up to `[2]`% a yea
 
 ### Can I sell or give away my shares?
 
-No. Shares can't be sold or transferred, except to your estate when you die. If you want out, you withdraw them on the terms above.
+No. Shares can't be sold or transferred, except to your estate on death or as the rules allow. If you want out, you withdraw them on the terms above.
 
 ### Is there a token, NFT or crypto version of membership?
 
@@ -76,7 +76,7 @@ No. Your membership and shares are recorded in our register of members, like any
 
 ### Could the co-operative be sold, or could the founders cash out?
 
-No. Our new rules include an **asset lock**: the co-operative's assets can't be shared out among members or sold off. If it ever closes, anything left after paying its debts and repaying members' shares goes to another organisation with similar aims and its own asset lock. Changing the asset lock would need every class of member to agree and an outside guardian's consent.
+Our new rules make that very hard. They include an **asset lock**: the co-operative's assets can't be shared out among members, and it can't transfer its business to, merge with or convert into a body without an equally strong lock. If it ever closes, anything left after paying its debts and repaying members' shares goes to another organisation with similar aims and its own asset lock. The lock is an entrenched clause: changing it needs the process in rule 9.4, which is a special resolution at a general meeting, the agreement of a majority of each class of member voting separately, and the written consent of an outside Asset Guardian. It is a lock written into our rules, not a statutory asset lock.
 
 ### What happens to my personal details?
 

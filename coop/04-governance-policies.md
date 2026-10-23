@@ -108,20 +108,23 @@ A suspected breach is reported to the chair (or, if the chair is involved, to th
 
 ### C1. What we run onchain and why
 
-We use public blockchains only to **publish tamper-evident records**, for example anchoring a daily Merkle root of the Claim Ledger so anyone can check that past records have not been changed. These contracts:
+We use public blockchains mainly to **publish tamper-evident records**, for example anchoring a daily Merkle root of the Claim Ledger so anyone can check that past records have not been changed.
 
-- hold no member money and no share capital;
-- confer no membership, voting or financial rights in the co-operative (rule 3.2);
-- are not tokens of the co-operative.
+We also have **experimental prediction-market contracts**. They are experimental and are not part of any funded work.
 
-The old MO token and prediction-market contracts are outside this co-operative's share offer and membership entirely. This policy covers custody of any keys the co-operative controls.
+None of these contracts:
 
-### C2. Current position (October 2026) — to fix before the offer
+- holds member money or share capital;
+- confers membership, voting or financial rights in the co-operative (rule 3.2);
+- is a token of the co-operative.
 
-From the project's own records:
+The old MO token and the prediction-market contracts are outside this co-operative's share offer and membership entirely. This policy covers custody of any keys the co-operative controls.
 
-- **LedgerAnchor** (Base, `0x1A55c83fb85D5d5Ab9415b016a47A56C0a54B99d`) is non-upgradeable. Its operator address (`0xd634…2933`) is controlled by a single private key stored on one machine and in a hosting environment variable. That is a **single hot key**.
-- **Prediction market proxies** (Ethereum `0x2ea7…6608`, Base `0x71b2…12a`) are upgradeable. `[Confirm: who holds the owner/admin role today.]`
+### C2. Current position (October 2026)
+
+Our policy is that anything that matters is owned by a multisig, servers hold only low-privilege operator keys, and those keys are never stored with a hosting provider for longer than needed and are rotated after any provider incident. As of 22 October 2026, ownership of our prediction-market contracts has been transferred to a multi-signature Safe.
+
+We keep an internal custody register of contracts, privileged roles and key holders. It is held outside this repository and is not published.
 
 Before the share offer opens, the board will audit every contract the co-operative or its workers deployed, list who controls each privileged role, and move control under this policy or formally record why a contract is being retired.
 
@@ -134,8 +137,8 @@ Before the share offer opens, the board will audit every contract the co-operati
    - the multisig can replace it at any time;
    - it holds no more than `[£50]` of gas;
    - if it is stolen, the worst outcome is a bad record that can be spotted and superseded, not loss of control or funds.
-   For contracts like LedgerAnchor that cannot change operator, the board decides whether to redeploy with a multisig-controlled operator role.
-4. **Operator keys live in a secrets manager**, not in files on laptops. Rotated at least every `[12]` months and immediately when someone with access leaves.
+   For a contract that cannot change its operator, the board decides whether to redeploy it with a multisig-controlled operator role.
+4. **Operator keys live in a secrets manager**, not in files on laptops, and are never stored with a hosting provider for longer than needed. Rotated at least every `[12]` months, immediately when someone with access leaves, and after any security incident at a hosting or service provider.
 5. **Recovery:** the multisig signer list, threshold and recovery procedure are written down and held by the secretary. Seed phrases are never stored in plain text, email, chat or cloud documents. Each signer keeps their own backup in a separate physical location.
 6. **Changes are minuted.** Any multisig transaction other than routine operator top-ups needs a board decision first, and is logged with its transaction hash in the board minutes and the monthly report.
 7. **Leavers:** when a signer leaves the board or the co-operative, they are removed from the multisig within `[14]` days.

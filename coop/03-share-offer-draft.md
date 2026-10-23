@@ -19,7 +19,7 @@ This is a **time-bound offer**: it has a minimum target and a closing date. If w
 | Maximum investment | £`[25,000]` per member |
 | Offer opens | `[date, spring 2027]` |
 | Offer closes | `[date, 8–10 weeks later]` (the board may extend once by up to `[4]` weeks) |
-| Match funding | We have applied for up to £`[50,000]` match investment from Community Shares ICOF through the Booster Fund. See section 7. |
+| Match funding | We intend to apply for up to £`[50,000]` of match investment. Nothing has been applied for or agreed yet. See section 7. |
 
 ## Capital at risk: read this first
 
@@ -47,7 +47,7 @@ Morality Co-operative is a small worker co-operative, registered in 2019 and own
 
 Everything we publish is free to read and free to reuse. We do not sell advertising and we do not take money to change what we publish.
 
-In `[month 2027]` our members voted to change our rules so that **readers and local partners can become members** alongside our workers, and to add an **asset lock** so the co-operative can never be sold or its assets shared out among members.
+In `[month 2027]` our members voted to change our rules so that **readers and local partners can become members** alongside our workers, and to add an **asset lock**. The lock makes selling the co-operative or sharing out its assets among members very hard: it is an entrenched clause that can only be changed by the process in rule 9.4 (a special resolution, a majority of each member class voting separately, and the written consent of an outside Asset Guardian). It is a lock written into our rules, not a statutory asset lock.
 
 ## 2. What the money is for
 
@@ -69,7 +69,7 @@ The money will **not** be used to buy back founder shares, pay off founders, or 
 
 In plain words, these are the main ways this could go wrong.
 
-- **We might not earn enough.** Our income comes from grants, member shares, donations and paid data services to `[e.g. local media, researchers]`. Grants are competitive and can end. If income falls short, we may have to cut back, and in the worst case close. If that happens you may lose your money.
+- **We might not earn enough.** Our income comes from grants, donations and paid data services to `[e.g. local media, researchers]`. Member shares are capital, not income, and have to be repaid when members withdraw. Grants are competitive and can end. If income falls short, we may have to cut back, and in the worst case close. If that happens you may lose your money.
 - **We are small.** Three people do most of the work. If one leaves or falls ill, progress slows. The new money is partly to reduce this risk by hiring.
 - **Legal risk.** Publishing scores about politicians carries a risk of legal complaints, including defamation claims. We follow a published method, keep a corrections process and hold `[media liability insurance: confirm]`, but a large claim could be costly.
 - **Technology risk.** Our tools depend on public data sources (such as Hansard) that could change or become unavailable, and on cloud services we pay for.
@@ -87,8 +87,8 @@ In plain words, these are the main ways this could go wrong.
 - **Interest:** we aim to pay up to `[2]`% a year from year `[3]`, if the board decides the co-operative can afford it. The maximum rate in our rules is `[3]`%. Interest is the lowest rate needed to raise the capital, as the FCA expects ([RFCCBS 6.1](https://handbook.fca.org.uk/handbook/RFCCBS/6/1.html)). It is not a share of profits, and missed years are not made up later.
 - **Withdrawal:** no withdrawals for `[3]` years from the date shares are issued, except on death or in hardship, at the board's discretion. After that, give `[3]` months' written notice. We plan to allow withdrawals of up to `[5–10]`% of total share capital each year, paid from surplus or new share capital. The board can suspend withdrawals.
 - **Share value:** shares can only be withdrawn at or below what you paid. If the co-operative makes losses the board may reduce the value of shares.
-- **No transfer, no sale:** shares cannot be sold or given to anyone else. On death they can be paid out to your estate or transferred to a nominee.
-- **Tax:** we do not expect this offer to qualify for any tax relief. `[Check with the practitioner.]` Interest is paid gross; you must declare it.
+- **No transfer, no sale:** shares can't be sold or transferred, except to your estate on death or as the rules allow.
+- **Tax:** we do not expect this offer to qualify for any tax relief. `[Check with the practitioner.]` Interest is paid gross; you must declare it (to be confirmed with our accountant).
 - **Nothing digital stands in for your shares.** Your shareholding is recorded in our register of members. No token, NFT or other digital asset represents shares, votes or any right to the co-operative's money, and none ever will. The old MO token has no connection with this co-operative's shares or membership.
 
 ## 5. How the co-operative is run
@@ -96,7 +96,7 @@ In plain words, these are the main ways this could go wrong.
 - **Members:** workers, readers and partners. Each member has one vote at general meetings. Votes are weighted by class: workers `[50]`%, readers `[30]`%, partners `[20]`%. Workers keep control of day-to-day work; readers and partners have guaranteed seats on the board and must agree to any change to the asset lock, the editorial independence rule, the objects, the interest rate cap or a decision to close.
 - **Board:** `[5–9]` directors: a majority elected by workers, at least `[1–2]` elected by readers, at least 1 elected by partners. `[Names and short bios.]`
 - **Editorial independence:** our rules say no member, funder, partner or investor can direct or veto what we publish. Buying shares buys you a say in how the co-operative is run, not in what it says about anyone.
-- **Asset lock:** our assets can't be shared out among members or sold. If the co-operative closes, anything left after paying debts and repaying shares goes to another asset-locked body with similar aims.
+- **Asset lock:** our rules make selling the co-operative or sharing out its assets among members very hard. The lock is an entrenched clause that can only be changed by the process in rule 9.4. It is a lock written into our rules, not a statutory asset lock. If the co-operative closes, anything left after paying debts and repaying shares goes to another asset-locked body with similar aims.
 - **Reporting:** members get the annual accounts, a yearly report on finances and impact, and quarterly updates. Our rules and register of interests are published at pooter.world/coop.
 - **Policies:** editorial firewall, declared interests, treasury and spending approval, and key custody for our onchain records. See [04-governance-policies.md](04-governance-policies.md).
 
@@ -118,6 +118,9 @@ In plain words, these are the main ways this could go wrong.
 | Member services | £`[ ]` | £`[ ]` | £`[ ]` |
 | **Total costs** | £`[ ]` | £`[ ]` | £`[ ]` |
 | **Surplus / (deficit)** | £`[ ]` | £`[ ]` | £`[ ]` |
+| **Capital raised** (not income) | | | |
+| Member share capital from this offer | £`[ ]` | — | — |
+| Match investment, if agreed | £`[ ]` | — | — |
 | Share interest paid | — | — | £`[ ]` |
 | Share withdrawals allowed | — | — | £`[ ]` |
 | Match investment repayment | — | £`[ ]` | £`[ ]` |
@@ -129,11 +132,9 @@ Last filed accounts: year to 1 April `[2026]`, `[link]`.
 
 ## 7. Match funding
 
-We have applied to the **Booster Fund** for match investment. From April 2025 these investments are made by **Community Shares ICOF**, managed by Co-operative and Community Finance ([Booster Fund guidance](https://www.uk.coop/resources/booster-fund-application-guidance-cs); [Co-operative and Community Finance](https://coopfinance.coop/2025/03/07/were-thrilled-to-be-part-of-extended-funding-from-the-community-shares-booster-fund/)). Co-operatives UK announced in August 2026 that the investment function is moving to a new Community Shares ICOF fund.
+We intend to apply for match investment. Match investment for community share offers in England has been provided through the **Booster Fund**, with investments made since April 2025 by **Community Shares ICOF**, managed by Co-operative and Community Finance ([Booster Fund guidance](https://www.uk.coop/resources/booster-fund-application-guidance-cs); [Co-operative and Community Finance](https://coopfinance.coop/2025/03/07/were-thrilled-to-be-part-of-extended-funding-from-the-community-shares-booster-fund/)). Co-operatives UK announced in August 2026 that this is moving to a new Community Shares ICOF fund. The terms, including the amount (typically £10,000–£50,000) and conditions such as reaching our minimum target and holding the Standard Mark, are to be confirmed with the fund before we launch. An offer in principle is normally sought before the offer opens. Match investment is repayable, not a grant.
 
-- Typical match investment is £10,000–£50,000. It is a repayable investment, not a grant.
-- It is only confirmed after our offer closes and we hit our minimum target, and we need the Standard Mark.
-- If confirmed, Community Shares ICOF becomes a member and shareholder on the terms agreed with it. `[Set out terms once known.]`
+- If our application succeeds, Community Shares ICOF becomes a member and shareholder on the terms agreed with it. `[Set out terms once known.]`
 
 ## 8. How to join
 

@@ -9,6 +9,48 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 74 · co-op docs: review fixes before funders see them
+
+**when** — 2026-10-23
+**what** — fixes to the co-op conversion pack (`coop/01`–`05`) and the SBSA
+toolkit (`coop/toolkit/`) from an independent review: the rules-based asset
+lock is no longer described as making a sale impossible; the entrenchment
+rule now matches rule 9.4 everywhere; the worker-bonus surplus line is gone
+(no distributions to members); `04` no longer publishes key-custody details
+(addresses, where keys live) and states policy only; match-funding
+applications are conditional, not claimed; the toolkit's declared interest
+says plainly that the Pledge Ledger tracks SBSA's pledges and adds an
+outside-reviewer check; unsourced authority dates now cite the Devolution
+Priority Programme page; FSCS/FOS wording corrected in the start-up guide.
+Numbering note: dev already carries node 71 (Pledge Ledger) and node 72
+(corrections register); `feat/agent-arena` (unpushed) also wrote a node 71,
+so renumber that one to the next free number when it merges. Past nodes are
+not edited.
+**why** — these documents go to JRRT, NLnet, Co-operatives UK and the Sussex
+& Brighton Strategic Authority; overclaims and security detail had to go first.
+**where** — `coop/*.md`, `coop/toolkit/*`.
+**rollback** — `git revert` this commit.
+
+## ▲ node 73 · Railway breach response: trader key retired, proxies to the Safe
+
+**when** — 2026-10-22 00:00–01:00 UTC
+**what** — Railway disclosed on 21 Oct that customer environment variables
+were accessed and some decrypted. Every production secret lives there, so all
+are treated as stolen. Done so far: the Hyperliquid trading account
+(`0x3850…764d`) was closed out (5 positions) and its $354.56 sent to
+`0xae47…5fed` (a nocguild Safe owner); both prediction-market proxies
+(Base `0x71b2…12a`, Ethereum `0x2ea7…608`) had `transferOwnership` to the
+nocguild Safe `0xada3…8617`, verified onchain. The trader key is retired.
+Still to do: sweep dust off the trader and LedgerAnchor operator keys, revoke
+and replace every other Railway secret at its provider (AI keys first, then
+Cloudflare, database, AWS, Resend, Neynar, app secrets), and deploy a new
+LedgerAnchor with a fresh operator (the operator is immutable). The trader
+stays off until Railway's post-mortem.
+**why** — a stolen trader key could withdraw funds and upgrade both proxies.
+**where** — onchain and Hyperliquid; runbook in
+`reports/security/railway-incident-runbook.md` (local, not committed).
+**rollback** — none; ownership now sits with the Safe.
+
 ## ▲ node 72 · corrections register prototype: how long ministers take to correct the record
 
 **when** — 2026-10-20 ~21:30 UTC (branch `feat/corrections-register`, not deployed)

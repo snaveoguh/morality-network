@@ -45,9 +45,11 @@ Morality Co-operative Ltd is a small Sussex co-operative registered with the FCA
 
 ## Declared interest
 
-Morality Co-operative operates **pooter.world**, a news and commentary site that may report on SBSA, its councils and its spending. If we become a delivery partner we would have a financial relationship with SBSA. Our commitments:
+Morality Co-operative operates **pooter.world**, which includes a **Pledge Ledger** that records and tracks the public pledges of strategic authorities, including SBSA. pooter.world may also report on SBSA, its councils and its spending. If we become a delivery partner we would have a financial relationship with SBSA. Our commitments:
 
-- Every pooter.world item about SBSA or the programme carries a visible note of this interest.
+- The interest is declared on every relevant page: every pooter.world item and Pledge Ledger record about SBSA or the programme carries a visible note of it.
+- People who work on SBSA partnership work do not decide verdicts about SBSA.
+- An outside reviewer checks any verdict about SBSA before publication.
 - Coverage of SBSA is not shown to SBSA before publication and SBSA has no editorial say.
 - Corrections are logged in the public pooter.world corrections register.
 - Our own payments from the programme appear on the same public dashboard as everyone else's.

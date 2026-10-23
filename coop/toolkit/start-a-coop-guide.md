@@ -26,7 +26,7 @@ If the answers are shaky, spend a month on them before anything else. Plunkett U
 - Agree a short written purpose ("to keep the Red Lion open as a pub owned by the village") and how the group will make decisions until the co-op exists.
 - Open a simple shared record of decisions and money spent. You will need it later.
 
-**If the asset is under threat:** ask your district or unitary council to list the building as an **Asset of Community Value** (Localism Act 2011). If it is listed and the owner tries to sell, a community group can trigger a six-month moratorium to raise money and bid. The English Devolution and Community Empowerment Bill proposes a stronger community right to buy; check whether it is in force when you apply.
+**If the asset is under threat:** ask your district or unitary council to list the building as an **Asset of Community Value** (Localism Act 2011). If it is listed and the owner tries to sell, a community group can trigger a six-month moratorium to raise money and bid. The English Devolution and Community Empowerment Bill (check whether it has now received Royal Assent) proposes a stronger community right to buy; check whether it is in force when you apply.
 
 ## Step 2. Choose the legal form (weeks 2–6)
 
@@ -78,9 +78,9 @@ Community shares are withdrawable, non-transferable shares in a registered socie
 
 - Shares do not rise in value. Members may be paid modest interest once the business can afford it, and may be able to withdraw their money later on terms set by the board.
 - The law caps an individual's holding of withdrawable shares (currently £100,000 under the 2014 Act). Most offers set a minimum of £50–£250 and a much lower maximum.
-- Community share offers are largely exempt from FCA financial-promotion rules. That means members have **no** access to the Financial Ombudsman Service or the Financial Services Compensation Scheme. Your offer document must say so plainly.
+- Issuing withdrawable shares in a registered society is not a regulated activity. That means members have **no** access to the Financial Ombudsman Service or the Financial Services Compensation Scheme. Your offer document must say so plainly.
 - Follow the **Community Shares Handbook**. It separates what you *must* do by law from what you *should* do as good practice.
-- Consider applying for the **Community Shares Standard Mark**, awarded after independent assessment by a Licensed Community Shares Practitioner. Investors and match funders treat it as a sign the offer is sound. Smaller offers (under about £50,000) often do without it.
+- Consider applying for the **Community Shares Standard Mark**, awarded after independent assessment by a Licensed Community Shares Practitioner. Investors and match funders treat it as a sign the offer is sound. As a rule of thumb only, some smaller offers go ahead without it; check whether your match funders require it.
 - Check whether match funding or practitioner support is available, for example through Co-operatives UK.
 
 ## Step 7. Buy, open and trade (months 6–12)

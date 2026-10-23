@@ -30,7 +30,7 @@ Fixed limits we have set ourselves, and which the rules should reflect:
 
 - Shares are **withdrawable and non-transferable**. This keeps the offer within the exemption for society shares described in the [Community Shares Handbook, s.1.2](https://www.uk.coop/resources/community-shares-handbook/1-share-capital/12-share-offers-and-regulation-cs) and keeps any secondary market out of the picture. (The FCA treats a market in shares that allows capital gains as "normally inconsistent with registration": [RFCCBS 6.1.13](https://handbook.fca.org.uk/handbook/RFCCBS/6/1.html).)
 - **No profit-share tokens**, and **no tradeable token is ever equity** in the society or a claim on its surplus.
-- **No acquisition or exit.** The asset lock exists to make that impossible.
+- **No acquisition or exit.** The asset lock and its entrenchment clause exist to make that very hard.
 - The old **MO token is not part of this** in any form: not a share, not a membership credential, not a reward.
 
 ## What changes by rule amendment
@@ -51,7 +51,7 @@ A multi-stakeholder structure is consistent with the co-operative condition so l
 
 ### Asset lock
 
-As a co-operative society we can write a **non-statutory** asset lock into our rules. It is not as strong as the statutory lock available to community benefit societies: the [Community Shares Handbook](https://www.uk.coop/resources/community-shares-handbook/2-society-legislation-cs) and the FCA both note that a co-operative's rule-based lock "does not have the same effect" as a statutory one. A rule-based lock can in principle be removed by a later rule amendment, so the draft rules add an entrenchment clause (unanimous worker class vote plus a supermajority of every class, and consent of a named external asset guardian) to make it hard to undo. **Solicitor check:** how far a co-operative's rules can entrench a clause against future amendment.
+As a co-operative society we can write a **non-statutory** asset lock into our rules. It is not as strong as the statutory lock available to community benefit societies: the [Community Shares Handbook](https://www.uk.coop/resources/community-shares-handbook/2-society-legislation-cs) and the FCA both note that a co-operative's rule-based lock "does not have the same effect" as a statutory one. A rule-based lock can in principle be removed by a later rule amendment, so the draft rules add an entrenchment clause (rule 9.4 in [02](02-draft-rules-outline.md): a special resolution at a general meeting, the consent of a majority of each member class voting separately, and the prior written consent of a named external Asset Guardian) to make it hard to undo. **Solicitor check:** how far a co-operative's rules can entrench a clause against future amendment.
 
 The lock covers: no distribution of reserves to members; on dissolution, residual assets go to another asset-locked body with similar objects; no transfer of engagements or conversion to a company unless the receiving body has an equivalent or stronger lock.
 
@@ -76,7 +76,7 @@ Operational matters (hiring, editorial line, product decisions) sit with the wor
    - the completed form;
    - one signed copy of the new rules;
    - a marked-up copy showing changes against the sponsor's model rules;
-   - a statutory declaration.
+   - the declarations and signatures the FCA's complete amendment form asks for.
    A [partial amendment](https://www.fca.org.uk/publication/forms/partial-amendment-to-rules-1969-and-2014-act.docx) (signed by three members and the secretary) is the alternative for small changes, but this change is large enough that a complete amendment is cleaner.
 6. **FCA registers the amendment** if it is not contrary to the Act, and issues a sealed acknowledgement. The rule change has no effect until registered.
 7. **Update our public materials** (`/coop` page on pooter.world, membership forms, privacy notice) and open membership.

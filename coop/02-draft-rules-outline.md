@@ -94,10 +94,10 @@ Markers:
 - 6.7 **No capital gain:** shares can only ever be withdrawn at or below nominal value. The board may reduce share value if the society's losses require it. **[CUK]** Use model wording on share value reduction.
 - 6.8 **Interest:**
   - Interest may be paid on shares, but only where the society can afford it, and at no more than the rate sufficient to attract and keep the capital needed ([RFCCBS 6.1.21–6.1.25](https://handbook.fca.org.uk/handbook/RFCCBS/6/1.html)).
-  - Maximum rate: `[3]`% a year, or `[2]`% above Bank of England base rate if lower. Set in advance by the board and confirmed by all-class consent.
+  - Maximum rate: no more than the lower of `[3]`% a year or the Bank of England base rate plus `[2]`%. Set in advance by the board and confirmed by all-class consent. **[CUK]** Confirm the cap wording.
   - Interest is not cumulative: a missed year is not made up later.
   - Interest is not a share of profits. There is no dividend on shares.
-- 6.9 **Surplus:** applied, in order, to reserves; developing the society's work; a patronage or worker bonus within limits the members set; and donations to bodies with similar objects. **[CUK]** Whether a worker bonus is compatible with the asset lock wording below, and whether we want it at all.
+- 6.9 **Surplus:** applied, in order, to reserves; developing the society's work; and donations to bodies with similar objects. No surplus is distributed to members.
 
 ## 7. Borrowing
 
@@ -182,7 +182,8 @@ Draft wording, adapted for a co-operative society (we cannot use the statutory C
 | 5.3 Reserved matters | Fits with statutory special resolution | SOL |
 | 6.4 Max holding | Carve-out for institutional investor | CUK |
 | 6.7 Share value reduction | Model wording | CUK |
-| 6.9 Surplus / worker bonus | Compatible with lock | CUK |
+| 6.8 Interest cap | Cap wording (lower of fixed rate or base rate plus margin) | CUK |
+| 6.9 Surplus | Model wording for no distribution of surplus to members | CUK |
 | 8.4 Director pay | Model wording | CUK |
 | 9 Asset lock | Enforceability of entrenchment and Asset Guardian consent | SOL, CUK |
 | 10 Editorial | Compatibility with directors' duties | SOL |
