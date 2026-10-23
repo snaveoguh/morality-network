@@ -9,6 +9,18 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 75 · build: allow 180s per prerendered page
+
+**when** — 2026-10-23
+**what** — `staticPageGenerationTimeout: 180` in `web/next.config.ts`. The dev
+build after node 74 failed: during Railway's incident recovery the builder's
+outbound fetches (RSS, Google fonts, AI digests) were slow, and `/`,
+`/opengraph-image`, `/originals`, `/archive`, `/discuss` and
+`/ledger/corrections` each hit Next's default 60s prerender limit three times.
+**why** — one slow upstream should not fail the whole deploy.
+**where** — `web/next.config.ts`.
+**rollback** — remove the line.
+
 ## ▲ node 74 · co-op docs: review fixes before funders see them
 
 **when** — 2026-10-23
