@@ -6,6 +6,7 @@ import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
 import { AsyncMasthead } from "@/components/layout/AsyncMasthead";
 import { AsyncFeed } from "@/components/feed/AsyncFeed";
 import { LedgerStrip } from "@/components/ledger/LedgerStrip";
+import { HomeChartSlot, homeChartId } from "@/components/charts/HomeChartSlot";
 import { getDailyEditionHash } from "@/lib/daily-edition";
 import { getArchivedEditorial, getRecentPooterOriginals } from "@/lib/editorial-archive";
 import { SITE_URL, withBrand } from "@/lib/brand";
@@ -91,6 +92,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function FeedPage() {
+  const chartId = homeChartId();
   return (
     <>
       <PooterTheme />
@@ -100,6 +102,11 @@ export default function FeedPage() {
       <Suspense fallback={null}>
         <LedgerStrip />
       </Suspense>
+      {chartId && (
+        <Suspense fallback={null}>
+          <HomeChartSlot id={chartId} />
+        </Suspense>
+      )}
       <div className="mt-4">
         <Suspense fallback={<FeedSkeleton />}>
           <AsyncFeed />
