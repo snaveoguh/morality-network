@@ -1,6 +1,6 @@
 # Bearometer — China supply-chain signal layer
 
-Design note, 2026-10-28. Status: first slice built on `feat/bearometer-supply-chain`.
+Design note, 2026-10-28. Status: first slice built on `feat/bearometer-supply-chain` (ingest, tagging, record, panel). Not merged or deployed.
 
 ## What exists today
 
@@ -39,7 +39,7 @@ inherit retries, timeouts, `getSourceBias()` labels and error reporting.
 | China Daily | state media | Google News site + materials keywords | Old RSS paths 404 |
 | SCMP | independent (Alibaba-owned) | Google News site + materials keywords | Direct RSS 301s |
 | Caixin Global | independent | Google News site + keywords | Direct RSS 403s; low volume |
-| Wire sweep | aggregator | Google News keyword query (rare earth / gallium / …  + China) | Catches Reuters/Bloomberg pick-ups of MOFCOM notices |
+| Wire sweeps (×6) | aggregator | One Google News keyword query per group, 7 days | Catches Reuters/Bloomberg pick-ups of MOFCOM notices. A single OR query returned only rare-earth stories, so it is split per group |
 
 Every source gets a `BIAS_DATABASE` entry (state funding is labelled, as on
 the main feed). Government notices get a higher weight because they are the
@@ -103,17 +103,40 @@ list and against the exposed list; on `EASING` the reverse. That is the
 whole "who gains or loses" rule — it is shown as a direction on a watchlist,
 with the supporting headlines, never as a trade instruction.
 
+A request to ease ("Japan asks the US to help ease rare-earth curbs") does
+not count as easing; it falls through to the tightening patterns.
+
 ## LLM spend
 
-None in this slice. Tagging and direction are regex. This follows the
-2026-09-19 credit-drain rules by construction: nothing to meter.
+Off by default. Tagging and direction are regex; with the flag unset nothing
+here calls a model, so there is nothing to meter.
 
-The planned upgrade (stubbed, off by default): classify only items whose
-direction came back `neutral` but which hit a group, using the
-`editorialExtractor`-class fast model order, gated by
-`hasAIProviderForTask()` (respects `AI_DISABLED_PROVIDERS`) and the
-`ai-budget` caps, failing closed to the regex result. Results cached by item
-id so each headline is classified at most once.
+`lib/bearometer/supply-chain-llm.ts` is built and opt-in
+(`BEAROMETER_LLM_CLASSIFY=true`). It classifies only items that hit a group
+but came back `neutral`, one word out (`maxTokens: 4`), using the
+`editorialExtractor` fast model order. It is gated by `hasAIProviderForTask()`
+(respects `AI_DISABLED_PROVIDERS`) and goes through `generateTextForTask`, which
+enforces the fail-closed `ai-budget` caps. At most 8 calls per snapshot; the
+first error stops further calls for that snapshot. Answers are cached by item id
+in-process. Any failure keeps the regex result. Items it relabels show
+"AI-labelled" in the panel and `direction_by = 'llm'` in the record.
+
+## Signal record (for scoring later)
+
+Migration `014_bearometer_supply_chain.sql` adds two tables:
+
+- `pooter.bearometer_supply_items`: one row per tagged headline, keyed by a
+  hash of its link, with `first_seen_at` (when we knew it, which is the time a
+  backtest should use), source, kind, groups, direction and `direction_by`.
+- `pooter.bearometer_supply_indicators`: one row per group per snapshot
+  (`recorded_at`, label, pressure, activity, item count) with copies of both
+  ticker lists, so later taxonomy edits do not rewrite history.
+
+Written on each fresh snapshot, at most once every 20 minutes per process.
+Writes are skipped without `DATABASE_URL` and log a warning on error; they never
+break the page. These tables are deliberately not `pooter.signals`, which the
+trader reads. Nothing reads them yet: scoring against price moves is the next
+step.
 
 ## Caching
 
