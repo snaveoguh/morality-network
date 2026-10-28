@@ -9,6 +9,36 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 76 · direction C: mobile-first serif broadsheet front end
+
+**when** — 2026-10-28 (branch `claude/broadsheet-c-mobile-deaef4`, cut from
+`dev`; NOT merged, NOT deployed — Hugo reviews first)
+**what** — the front end rebuilt as "direction C" from the Design canvas
+(HomeC / TabletC / Search / More), following `.claude/skills/pooter-brand`
+(committed on this branch). Newsreader headlines, Inter body, blackletter only
+for the wordmark and "pw" mark, no red text or rules on black (`--brand-teal`
+is plain ink now), 4px double rules. Slim header (pw · wordmark · search;
+inline search + Menu at ≥1024), tagline "Accountability record", one plain
+Trending row, phone tab bar Feed / Search / Ledger / Signals / More. Front
+page: lead illustration above a serif headline, two secondaries, Claim Ledger
+as scroll-snap cards (right rail at ≥1024, speaker → quote → quiet status,
+no stamps), Bearometer card, cream feed-mix chart, plain Latest list. New
+`/search` (trending hashtags, collapsed Section / Region / Bias / Source rows,
+plus `/api/search` across the archive) and `/more` (every old nav and
+logo-menu link, wallet, chain, theme, translate, price row). `/signals` is
+titled Bearometer.
+**why** — Hugo: the site was too much and clunky; it should be a feed with
+the rest one tap away, mobile first.
+**where** — `web/src/app/{globals.css,layout.tsx,page.tsx,loading.tsx}`,
+`web/src/app/{search,more}/page.tsx`, `web/src/components/layout/*`,
+`web/src/components/feed/{AsyncFeed,FrontFeed,FeedSkeleton}.tsx`,
+`web/src/components/ledger/LedgerStrip.tsx`, `web/src/components/search/`,
+`web/src/lib/front.ts`, notification offsets. The front page no longer calls
+`generateBiasDigest` (one less AI call per render, see node 70) or fetches
+casts / proposals / videos; `TileFeed` and `BiasBar` stay in the repo unused.
+**rollback** — don't merge the branch; once merged, `git revert` the
+direction C commits (brand skill commit can stay).
+
 ## ▲ node 75 · build: allow 180s per prerendered page
 
 **when** — 2026-10-23
