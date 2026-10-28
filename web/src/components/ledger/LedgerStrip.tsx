@@ -8,8 +8,6 @@ import type { LedgerContext } from "@/lib/ledger/types";
 // stamps, no verdict seals (pooter-brand). One cheap query; without a DB or
 // on any failure the rail still renders as a plain link to /ledger.
 
-export const dynamic = "force-dynamic";
-
 const CONTEXT_LABEL: Record<LedgerContext, string> = {
   pmqs: "PMQs",
   budget: "Budget",
