@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { computeEntityHash } from "@/lib/entity";
 import { Redis } from "@upstash/redis";
+import { hasStyleErrors, lintCopy, tidyHeadline } from "@/lib/house-style";
 
 /**
  * POST /api/articles/publish
  * Creates a user-published article, stores it in Redis,
  * and returns an entity hash for on-chain ratings/tips/discussion.
  *
- * Body: { title, body, category, media: string[], author: string }
+ * Body: { title, body, category, media: string[], author: string,
+ *         styleLint?: "enforce" }
+ *
+ * Agents send styleLint: "enforce" to have the title checked against the
+ * house style (docs/STYLE_GUIDE.md); a failing title gets a 422 with the
+ * issues so the agent can try its next candidate. Human posts are not linted.
  */
 
 const REDIS_KEY_PREFIX = "user-article:";
@@ -29,7 +35,9 @@ function slugify(text: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, body, category, media, author } = await request.json();
+    const { title: rawTitle, body, category, media, author, styleLint } = await request.json();
+    const enforceStyle = styleLint === "enforce";
+    const title = enforceStyle && typeof rawTitle === "string" ? tidyHeadline(rawTitle) : rawTitle;
 
     if (!title?.trim() || !body?.trim()) {
       return NextResponse.json(
@@ -43,6 +51,16 @@ export async function POST(request: NextRequest) {
         { error: "Title too long (max 120 chars)" },
         { status: 400 },
       );
+    }
+
+    if (enforceStyle) {
+      const issues = lintCopy(title, "headline");
+      if (hasStyleErrors(issues)) {
+        return NextResponse.json(
+          { error: "Title fails house style", issues },
+          { status: 422 },
+        );
+      }
     }
 
     if (body.length > 10_000) {

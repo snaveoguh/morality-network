@@ -71,16 +71,23 @@ export async function writeEditorial(): Promise<void> {
     `Style: ${voice.style}`,
     `Avoid: ${voice.avoid}`,
     `Influences: ${voice.influences}`,
-    `Signature move: ${voice.signature}`,
     ``,
     `RULES:`,
     `- Write 3-5 paragraphs max`,
-    `- Pick the 2-3 most interesting stories and weave them into a take`,
+    `- Pick the 2-3 most interesting stories. Connect them only if the sources show a real link; otherwise take them one at a time`,
     `- Be opinionated. Take a stance. This is an editorial, not a summary.`,
-    `- End with your signature one-liner`,
+    `- End on a fact or on what happens next (a date, a vote, a figure), not on a one-line moral`,
     `- No headline — the system adds that`,
     `- Never use exclamation marks`,
     `- Reference historical parallels where relevant`,
+    ``,
+    // House style (docs/STYLE_GUIDE.md). These override the voice profile.
+    `HOUSE STYLE (overrides the voice above):`,
+    `- Plain, literal English. The opinion is in the argument, not in adjectives or metaphors`,
+    `- Attribute with "said". Never "slammed", "blasted", "admitted", "insisted"`,
+    `- Numbers with unit, period and source. Percentage points are not percentages`,
+    `- Never write: amid, a stark reminder, in a world where, lays bare, litmus test, cautionary tale, narrative, reshapes, underscores, not just X but Y, the same day/night, X leaves Y while Z, gamble, duel, fuels, sparks, whispers`,
+    `- One idea per sentence. Most sentences under 25 words`,
   ];
 
   // If council deliberation is available, add rhetoric instructions
@@ -123,34 +130,55 @@ export async function writeEditorial(): Promise<void> {
     return;
   }
 
-  // Generate a headline
-  const headlinePrompt = `Write a single punchy editorial headline (5-8 words, no quotes, no period) for this editorial:\n\n${editorial.slice(0, 500)}`;
-  const headline = await generate({
-    system: "You write newspaper headlines. Short, punchy, no clickbait. Return ONLY the headline.",
+  // Generate headline candidates in one call. The publish route lints each
+  // against the house style and 422s a failure, so we try them in order
+  // rather than paying for another generation.
+  const headlinePrompt = `Write 3 alternative headlines for this editorial, one per line, best first. Each: 6-12 words, one story, subject + active present-tense verb + the key fact. No quotes, no full stop, no numbering, no dashes, no comma lists, no metaphors.\n\n${editorial.slice(0, 500)}`;
+  const headlineRaw = await generate({
+    system: "You write news headlines in the style of Reuters and the BBC: literal, specific, active voice. Return ONLY the headlines, one per line.",
     user: headlinePrompt,
-    maxTokens: 50,
+    maxTokens: 120,
     temperature: 0.6,
   });
+  const headlineCandidates = headlineRaw
+    .split("\n")
+    .map((l) => l.trim().replace(/^(?:\d+[.)]|[-*•])\s*/, "").replace(/^["']|["']$/g, ""))
+    .filter(Boolean)
+    .slice(0, 3);
+  if (headlineCandidates.length === 0) {
+    console.warn("[pooter1] No headline generated, skipping");
+    return;
+  }
+  let headline = headlineCandidates[0];
 
-  // Publish to pooter.world
+  // Publish to pooter.world — first candidate that passes house style wins.
   try {
-    const res = await fetch(`${POOTER_API_URL}/api/articles/publish`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${CRON_SECRET}`,
-      },
-      body: JSON.stringify({
-        title: headline.trim().replace(/^["']|["']$/g, ""),
-        body: editorial,
-        category: "opinion",
-        author: "pooter1",
-        media: [],
-        deliberationId: deliberation?.id,
-        marketPosition: deliberation?.winningThesis?.position,
-        falsifiableAt: deliberation?.falsifiableAt,
-      }),
-    });
+    let res: Response | null = null;
+    for (const candidate of headlineCandidates) {
+      headline = candidate;
+      res = await fetch(`${POOTER_API_URL}/api/articles/publish`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${CRON_SECRET}`,
+        },
+        body: JSON.stringify({
+          title: candidate,
+          body: editorial,
+          category: "opinion",
+          author: "pooter1",
+          media: [],
+          styleLint: "enforce",
+          deliberationId: deliberation?.id,
+          marketPosition: deliberation?.winningThesis?.position,
+          falsifiableAt: deliberation?.falsifiableAt,
+        }),
+      });
+      if (res.status !== 422) break;
+      const detail = await res.json().catch(() => null);
+      console.warn(`[pooter1] Headline failed house style: "${candidate}"`, detail?.issues ?? "");
+    }
+    if (!res) return;
 
     if (res.ok) {
       const result = await res.json();
