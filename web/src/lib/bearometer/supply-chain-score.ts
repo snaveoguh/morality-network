@@ -73,7 +73,7 @@ export interface SupplyChainSnapshot {
 
 /** Google News titles end " - Publisher"; strip it for display and dedupe. */
 export function splitPublisher(title: string): { headline: string; publisher: string | null } {
-  const match = title.match(/^(.*\S)\s+-\s+([^-]{2,60})$/);
+  const match = title.match(/^(.*\S)\s+-\s+((?:(?!\s-\s).){2,60})$/);
   if (!match) return { headline: title.trim(), publisher: null };
   return { headline: match[1], publisher: match[2].trim() };
 }

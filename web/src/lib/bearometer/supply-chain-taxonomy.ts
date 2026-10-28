@@ -169,15 +169,19 @@ const EXPLICIT_EASING =
   /\b((?:suspend\w*|paus\w+|lift\w*|scrap\w*|drop\w*|roll\w* back|eas\w+|relax\w*)\s+(?:(?:the|its|some|new)\s+)?(?:rare[- ]earth\s+|export\s+)?(?:controls?|curbs?|restrictions?|bans?)|resum\w+\s+(?:[\w-]+\s+){0,3}(?:exports?|shipments?|supply)|(?:grant\w*|approv\w+|issu\w+)\s+(?:[\w-]+\s+){0,3}licen[cs]es?|general licen[cs]es?|exempt\w*|truce)\b/i;
 
 const TIGHTENING =
-  /\b(export (?:controls?|curbs?|restrictions?|bans?|licen[cs](?:e|es|ing))|restrict\w*|ban(?:s|ned)?|curb\w*|quotas? cuts?|cuts? (?:\w+ )?quotas?|suspend\w* (?:exports?|shipments?)|halt\w*|shortages?|harder to (?:get|obtain|source)|scarc\w+|price (?:rises?|hikes?|surges?|jumps?)|prices? (?:rise|rose|rising|surge\w*|jump\w*|soar\w*|spike\w*)|tighten\w*|crack\w* down|smuggl\w+|squeez\w+|weaponi[sz]\w+|chokehold)\b/i;
+  /\b(export (?:controls?|curbs?|restrictions?|bans?|licen[cs](?:e|es|ing))|restrict\w*|ban(?:s|ned)?|curb\w*|quotas? cuts?|cuts? (?:\w+ )?quotas?|suspend\w* (?:exports?|shipments?)|halt\w*|shortages?|harder to (?:get|obtain|source)|scarc\w+|price (?:rises?|hikes?|surges?|jumps?)|prices? (?:[\w-]+ ){0,5}(?:rise|rises|rose|rising|surge\w*|jump\w*|soar\w*|spike\w*|climb\w*)|tighten\w*|crack\w* down|smuggl\w+|squeez\w+|weaponi[sz]\w+|chokehold)\b/i;
 
 const WEAK_EASING =
-  /\b(prices? (?:fall\w*|fell|drop\w*|slump\w*|plung\w+|slid\w*|tumbl\w+)|price (?:falls?|drops?|slumps?)|oversupply|glut)\b/i;
+  /\b(prices? (?:[\w-]+ ){0,5}(?:fall|falls|falling|fell|drop\w*|slump\w*|plung\w+|slid\w*|tumbl\w+)|price (?:falls?|drops?|slumps?)|oversupply|glut)\b/i;
 
 export type SupplyDirection = "tightening" | "easing" | "neutral";
 
+/** Someone asking for controls to be eased is not an easing. */
+const REQUESTED_EASING =
+  /\b(?:request\w*|ask\w*|call\w*|urg\w+|press\w*|seek\w*|lobby\w*|plead\w*|help)\s+(?:[\w'-]+\s+){0,6}(?:to\s+)?(?:eas\w+|lift\w*|relax\w*|scrap\w*)\b/i;
+
 export function classifyDirection(text: string): SupplyDirection {
-  if (EXPLICIT_EASING.test(text)) return "easing";
+  if (EXPLICIT_EASING.test(text) && !REQUESTED_EASING.test(text)) return "easing";
   if (TIGHTENING.test(text)) return "tightening";
   if (WEAK_EASING.test(text)) return "easing";
   return "neutral";

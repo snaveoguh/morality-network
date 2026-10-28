@@ -39,11 +39,20 @@ describe("classifyDirection", () => {
   it("reads controls, shortages and price rises as tightening", () => {
     expect(classifyDirection("MOFCOM announces export controls on antimony")).toBe("tightening");
     expect(classifyDirection("Magnet maker raising prices as dysprosium harder to get")).toBe("tightening");
+    expect(classifyDirection("Germanium prices continue to break through and rise")).toBe("tightening");
+    expect(classifyDirection("Lithium carbonate prices in China fell again")).toBe("easing");
   });
 
   it("lets an explicit easing subject win over the control it names", () => {
     expect(classifyDirection("China suspends export controls on gallium")).toBe("easing");
     expect(classifyDirection("Beijing resumes rare earth exports to US")).toBe("easing");
+  });
+
+  it("does not read a request to ease curbs as easing", () => {
+    expect(
+      classifyDirection("FM on reported Japanese request for US help to ease rare-earth curbs"),
+    ).toBe("tightening");
+    expect(classifyDirection("EU urges Beijing to lift gallium export controls")).toBe("tightening");
   });
 
   it("is neutral without a direction cue", () => {
@@ -57,6 +66,7 @@ describe("splitPublisher", () => {
       headline: "China curbs graphite",
       publisher: "Reuters",
     });
+    expect(splitPublisher("Nexperia growth in Q3 - I-Connect007").publisher).toBe("I-Connect007");
   });
 });
 

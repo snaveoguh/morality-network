@@ -18,6 +18,15 @@ export interface SupplyChainSource extends FeedSource {
 const MATERIALS_QUERY =
   '(rare earth OR gallium OR germanium OR graphite OR antimony OR tungsten OR lithium OR Nexperia OR "export control")';
 
+const WIRE_SWEEPS: Array<[label: string, query: string]> = [
+  ["rare earths", '("rare earth" OR magnets) (export OR supply OR prices)'],
+  ["gallium/germanium", "(gallium OR germanium) (export OR supply OR prices)"],
+  ["graphite", "graphite (export OR anode OR supply OR prices)"],
+  ["antimony/tungsten", "(antimony OR tungsten) (export OR supply OR prices)"],
+  ["lithium", "(lithium OR LFP OR cathode) (export OR supply OR prices)"],
+  ["legacy chips", "(Nexperia OR \"legacy chips\" OR \"mature node\") (export OR supply)"],
+];
+
 function googleNews(query: string): string {
   return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
 }
@@ -33,8 +42,15 @@ export const SUPPLY_CHAIN_SOURCES: SupplyChainSource[] = [
   // Independent China coverage — prices, company reaction, enforcement.
   { name: "South China Morning Post", kind: "independent", category: "SupplyChain", url: googleNews(`site:scmp.com ${MATERIALS_QUERY} when:30d`) },
   { name: "Caixin Global", kind: "independent", category: "SupplyChain", url: googleNews(`site:caixinglobal.com ${MATERIALS_QUERY} when:30d`) },
-  // Wire pick-ups of MOFCOM notices (Reuters, Bloomberg, trade press).
-  { name: "Supply-chain wire sweep", kind: "aggregator", category: "SupplyChain", url: googleNews(`China ${MATERIALS_QUERY} supply when:7d`) },
+  // Wire pick-ups of MOFCOM notices (Reuters, Bloomberg, trade press). One
+  // sweep per group: a single OR query returned only rare-earth stories
+  // (checked 2026-10-28), leaving every other group QUIET.
+  ...WIRE_SWEEPS.map(([label, query]) => ({
+    name: `Wire sweep: ${label}`,
+    kind: "aggregator" as const,
+    category: "SupplyChain",
+    url: googleNews(`China ${query} when:7d`),
+  })),
 ];
 
 export const SOURCE_KIND_WEIGHT: Record<SupplyChainSourceKind, number> = {
