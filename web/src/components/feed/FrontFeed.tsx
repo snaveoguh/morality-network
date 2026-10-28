@@ -24,7 +24,9 @@ import { biasBucket, biasWords, tagLabel, timeAgo, topTags } from "@/lib/front";
 const LATEST_COUNT = 30;
 
 export function FrontGrid({ children }: { children: React.ReactNode }) {
-  return <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-x-6">{children}</div>;
+  // Row 3 is 1fr so the ledger rail (rows 2-3) grows the secondaries row,
+  // never the lead row.
+  return <div className="flex flex-col lg:grid lg:grid-cols-12 lg:grid-rows-[auto_auto_1fr] lg:gap-x-6">{children}</div>;
 }
 
 function sourceLine(item: FeedItem): string {

@@ -88,7 +88,7 @@ export function PooterMascot() {
   }, [bubbleVisible, sassyMessage]);
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-50 lg:bottom-4">
       <SpeechBubble message={sassyMessage} visible={bubbleVisible} />
       <button
         onClick={() => setPanelOpen(!panelOpen)}

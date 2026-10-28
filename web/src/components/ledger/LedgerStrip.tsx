@@ -125,7 +125,7 @@ export function LedgerFrame({ meta, children }: { meta: React.ReactNode; childre
 const SCROLLER =
   "scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 lg:flex-col lg:gap-0 lg:overflow-visible lg:px-0";
 const CARD =
-  "flex w-[280px] shrink-0 snap-start flex-col gap-2 border border-[var(--rule-light)] bg-[var(--paper-dark)] p-4 lg:w-auto lg:border-0 lg:border-b lg:bg-transparent lg:px-0 lg:py-3.5";
+  "flex w-[280px] shrink-0 snap-start flex-col gap-2 border border-[var(--rule-light)] bg-[var(--paper-dark)] p-4 lg:w-auto lg:border-0 lg:border-b lg:bg-transparent lg:px-0 lg:py-3.5 lg:[&:nth-child(n+5)]:hidden";
 
 export function LedgerCardsSkeleton() {
   return (
