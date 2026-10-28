@@ -116,7 +116,7 @@ export function InstallPrompt() {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t-2 border-[var(--rule)] bg-[var(--paper)] px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] lg:hidden">
+    <div className="fixed bottom-[calc(68px+env(safe-area-inset-bottom))] left-0 right-0 z-50 border-t-2 border-[var(--rule)] bg-[var(--paper)] px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] lg:hidden">
       <div className="mx-auto flex max-w-lg items-center gap-3">
         <PooterIcon className="h-10 w-10 shrink-0" />
 

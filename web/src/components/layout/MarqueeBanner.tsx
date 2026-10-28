@@ -111,7 +111,12 @@ function formatChange(change: number | null): string {
   return `${sign}${change.toFixed(1)}%`;
 }
 
-export function MarqueeBanner() {
+/**
+ * Price ticker. `variant="row"` is the direction C version used in More: a
+ * still row of quotes in plain ink (no red/green, no scrolling). The
+ * scrolling marquee is kept for any page that still wants it.
+ */
+export function MarqueeBanner({ variant = "marquee" }: { variant?: "marquee" | "row" } = {}) {
   const [quotes, setQuotes] = useState<Quote[]>(FALLBACK_QUOTES);
 
   const fetchQuotes = useCallback(async () => {
@@ -172,6 +177,29 @@ export function MarqueeBanner() {
     const timer = setInterval(fetchQuotes, POLL_MS);
     return () => clearInterval(timer);
   }, [fetchQuotes]);
+
+  if (variant === "row") {
+    return (
+      <ul className="grid grid-cols-2 gap-x-6 sm:grid-cols-4">
+        {quotes.map((quote) => (
+          <li key={quote.symbol} className="border-b border-[var(--rule-light)]">
+            <a
+              href={quote.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-12 items-center justify-between gap-2 text-[15px] text-[var(--ink)]"
+            >
+              <span className="font-semibold">{quote.symbol}</span>
+              <span className="text-[13px] text-[var(--ink-light)]">
+                {formatUsd(quote.price)}{" "}
+                <span className="text-[var(--ink-faint)]">{formatChange(quote.change24h)}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    );
+  }
 
   return (
     <div className="relative overflow-hidden bg-[var(--brand-navy)] py-1.5">

@@ -2,245 +2,92 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useState, useEffect } from "react";
-// CoopDropdown removed — Co-op is now a full page at /coop
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { ChainSwitcher } from "@/components/shared/ChainSwitcher";
-import { SearchBar } from "@/components/layout/SearchBar";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { BRAND_NAME } from "@/lib/brand";
+import { MissionStatement } from "@/components/layout/MissionStatement";
+import { SearchIcon } from "@/components/layout/icons";
 
-/** Core navigation — the engine. */
-const NAV_LINKS = [
-  { href: "/", label: "Feed" },
-  { href: "/pipe", label: "Pipe" },
-  { href: "/markets", label: "Markets" },
-  { href: "/bots", label: "Agents" },
-  { href: "/sentiment", label: "Index" },
-  { href: "/originals", label: "Originals" },
-  { href: "/archive", label: "Archive" },
-  { href: "/proposals", label: "Governance" },
-  { href: "/ledger", label: "Ledger" },
-  { href: "/account", label: "Account" },
-];
+// ============================================================================
+// HEADER — direction C slim bar
+//
+//   phone   [pw]        pooter world        [search]
+//   ≥1024   [pw]        pooter world   [ search… ] [Menu]
+//
+// The big nav lives in /more (the More tab on phone, "Menu" on desktop).
+// The tagline sits under the bar on the front page only; inner pages keep
+// the bar slim.
+// ============================================================================
 
-/** Playground links — used for active-state detection in nav. */
-const COOP_PLAYGROUND_LINKS = [
-  { href: "/signals", label: "Signals", desc: "Raw trading signals" },
-  { href: "/predictions", label: "Predictions", desc: "Binary outcome markets" },
-  { href: "/predictions/arb", label: "Arb Scanner", desc: "Polymarket arbitrage" },
-  { href: "/nouns", label: "Nouns", desc: "NFT marketplace" },
-  { href: "/pepe", label: "Pepe", desc: "Rare Pepe exchange" },
-  { href: "/music", label: "Music", desc: "Taste-aware discovery" },
-  { href: "/discuss", label: "Discuss", desc: "Onchain discussion" },
-  { href: "/registry", label: "Registry", desc: "Entity morality scores" },
-  { href: "/vault", label: "Vault", desc: "Capital management" },
-  { href: "/terminal", label: "Terminal", desc: "AI trading chat" },
-  { href: "/stumble", label: "Stumble", desc: "Random article discovery" },
-];
+/** The blackletter "pw" mark — paper square, ink letters. */
+export function PwMark({ size = "sm" }: { size?: "sm" | "lg" }) {
+  const box = size === "lg" ? "h-10 w-10 text-[24px]" : "h-8 w-8 text-[19px]";
+  return (
+    <span
+      aria-hidden
+      className={`blackletter flex shrink-0 items-center justify-center bg-[var(--ink)] pb-[3px] leading-none text-[var(--paper)] ${box}`}
+    >
+      pw
+    </span>
+  );
+}
 
 export function Header() {
   const pathname = usePathname();
-  const isCoopActive = pathname === "/coop" || COOP_PLAYGROUND_LINKS.some(({ href }) => pathname.startsWith(href));
+  const isFront = pathname === "/";
 
   return (
-    <header className="sticky top-0 z-50 border-b-[3px] border-[var(--brand-teal)] bg-[var(--brand-navy)]">
-      <div className="mx-auto flex h-11 max-w-7xl items-center justify-between px-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <LogoMenu />
-
-          <nav className="scrollbar-hide flex min-w-0 items-center gap-0 overflow-x-auto whitespace-nowrap">
-            {NAV_LINKS.map(({ href, label }, i) => {
-              const isActive =
-                href === "/" ? pathname === "/" : pathname.startsWith(href);
-              return (
-                <span key={href} className="flex items-center">
-                  {i > 0 && <span className="mx-2 text-white/25">|</span>}
-                  <Link
-                    href={href}
-                    className={`font-sans text-[11px] font-semibold uppercase tracking-[0.06em] transition-colors ${
-                      isActive
-                        ? "font-bold text-white underline underline-offset-[7px] decoration-2 decoration-[var(--brand-teal)]"
-                        : "text-white/60 hover:text-white"
-                    }`}
-                  >
-                    {label}
-                  </Link>
-                </span>
-              );
-            })}
-
-            {/* Co-op page link */}
-            <span className="flex items-center">
-              <span className="mx-2 text-white/25">|</span>
-              <Link
-                href="/coop"
-                className={`font-sans text-[11px] font-semibold uppercase tracking-[0.06em] transition-colors ${
-                  isCoopActive
-                    ? "text-white underline underline-offset-[7px] decoration-2 decoration-[var(--brand-teal)]"
-                    : "text-white/60 hover:text-white"
-                }`}
-              >
-                Co-op
-              </Link>
-            </span>
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <div className="hidden md:block">
-            <SearchBar />
-          </div>
-          <ThemeToggle />
-          <ChainSwitcher />
-          <MiniWalletButton />
-        </div>
-      </div>
-    </header>
-  );
-}
-
-// CoopDropdown removed — Co-op is now a dedicated page at /coop
-
-const LOGO_MENU_ITEMS = [
-  { href: "/write", label: "Create", desc: "Publish an article" },
-  { href: "/subscribe", label: "The Daily Pooter", desc: "Morning intelligence brief" },
-  { href: "/daily", label: "Daily Editions", desc: "Every front page, archived" },
-  { href: "/architecture", label: "Architecture", desc: "System design docs" },
-  { href: "/appendix", label: "Appendix", desc: "Contracts & API reference" },
-  { href: "/style-guide", label: "Style Guide", desc: "Brand & design system" },
-  { href: "/typography", label: "Typography Lab", desc: "Variable-font candidates" },
-  { href: "/zk-recovery", label: "ZK Recovery", desc: "Passwordless wallet recovery" },
-  { href: "/privacy", label: "Privacy", desc: "What we collect & why" },
-  { href: "/terms", label: "Terms & Risk", desc: "Experimental · unaudited · not advice" },
-  { href: "/account", label: "Account", desc: "Sign in · legacy MO balance" },
-];
-
-function LogoMenu() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    if (open) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
-
-  return (
-    <div ref={ref} className="relative shrink-0">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 transition-opacity hover:opacity-80"
-        aria-label={`${BRAND_NAME} menu`}
-        title={BRAND_NAME}
-      >
-        {/* Masthead monogram — blackletter "pw" on a paper square, the
-            inverse of the black-square-white-letter newspaper app mark.
-            Replaces the retired molecule logo. */}
-        <span
-          aria-hidden
-          className="blackletter flex h-7 w-7 shrink-0 items-center justify-center bg-[#F4F1EA] pb-[3px] text-[17px] leading-none text-black"
-        >
-          pw
-        </span>
-      </button>
-
-      {open && (
-        <div className="absolute left-0 top-full z-[999] mt-2 w-52 border border-[var(--rule)] bg-[var(--paper)] shadow-lg">
-          <div className="border-b border-[var(--rule)] px-3 py-2">
-            <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-              {BRAND_NAME}
-            </span>
-          </div>
-          {LOGO_MENU_ITEMS.map(({ href, label, desc }) => (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setOpen(false)}
-              className="block border-b border-[var(--rule-light)] px-3 py-2 transition-colors last:border-b-0 hover:bg-[var(--paper-dark)]"
-            >
-              <span className="block font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--ink)]">
-                {label}
-              </span>
-              <span className="block font-mono text-[8px] tracking-[0.1em] text-[var(--ink-faint)]">
-                {desc}
-              </span>
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MiniWalletButton() {
-  return (
-    <ConnectButton.Custom>
-      {({
-        account,
-        chain,
-        openAccountModal,
-        openChainModal,
-        openConnectModal,
-        authenticationStatus,
-        mounted,
-      }) => {
-        const ready = mounted && authenticationStatus !== "loading";
-        const connected =
-          ready &&
-          account &&
-          chain &&
-          (!authenticationStatus || authenticationStatus === "authenticated");
-
-        if (!connected) {
-          return (
-            <button
-              type="button"
-              onClick={openConnectModal}
-              className="h-6 bg-[var(--brand-teal)] px-3 font-sans text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--brand-navy)] transition-opacity hover:opacity-85"
-            >
-              Connect
-            </button>
-          );
-        }
-
-        if (chain.unsupported) {
-          return (
-            <button
-              type="button"
-              onClick={openChainModal}
-              className="h-5 border border-[var(--accent-red)] bg-[var(--paper)] px-2 font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--accent-red)] transition-colors hover:bg-[var(--accent-red)] hover:text-[var(--paper)]"
-            >
-              Wrong Net
-            </button>
-          );
-        }
-
-        return (
-          <button
-            type="button"
-            onClick={openAccountModal}
-            className="inline-flex h-5 items-center gap-1 border border-[var(--rule)] bg-[var(--paper)] px-1.5 font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--ink)] transition-colors hover:bg-[var(--paper-dark)]"
+    <>
+      <header className="sticky top-0 z-50 border-b border-[var(--rule-light)] bg-[var(--paper)]">
+        <div className="mx-auto grid h-[60px] max-w-7xl grid-cols-[44px_1fr_44px] items-center px-4 lg:h-[72px] lg:grid-cols-3">
+          <Link
+            href="/"
+            aria-label={`${BRAND_NAME} home`}
+            className="flex h-11 w-11 items-center"
           >
-            {chain.hasIcon && chain.iconUrl ? (
-              <span
-                className="inline-flex h-2 w-2 overflow-hidden rounded-full"
-                style={{ background: chain.iconBackground }}
-              >
-                <img
-                  alt={chain.name ?? "chain"}
-                  src={chain.iconUrl}
-                  className="h-2 w-2"
+            <PwMark />
+          </Link>
+
+          <Link
+            href="/"
+            className="blackletter truncate text-center text-[28px] leading-none text-[var(--ink)] sm:text-[32px] lg:text-[40px]"
+          >
+            {BRAND_NAME}
+          </Link>
+
+          {/* Phone + tablet: icon to the search page */}
+          <Link
+            href="/search"
+            aria-label="Search"
+            className="flex h-11 w-11 items-center justify-center justify-self-end text-[var(--ink)] lg:hidden"
+          >
+            <SearchIcon className="h-[22px] w-[22px]" />
+          </Link>
+
+          {/* Desktop: inline search box + Menu */}
+          <div className="hidden items-center justify-end gap-2.5 lg:flex">
+            <form action="/search" method="get" role="search" className="w-[220px]">
+              <label className="flex h-11 items-center gap-2 border border-[var(--rule)] px-3">
+                <SearchIcon className="h-4 w-4 shrink-0 text-[var(--ink)]" />
+                <input
+                  type="search"
+                  name="q"
+                  placeholder="Search"
+                  aria-label="Search"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-[var(--ink)] outline-none placeholder:text-[var(--ink-faint)]"
                 />
-              </span>
-            ) : null}
-            <span>{account.displayName}</span>
-          </button>
-        );
-      }}
-    </ConnectButton.Custom>
+              </label>
+            </form>
+            <Link
+              href="/more"
+              className={`flex h-11 items-center border px-4 text-sm font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--paper-dark)] ${
+                pathname === "/more" ? "border-[var(--ink)]" : "border-[var(--rule)]"
+              }`}
+            >
+              Menu
+            </Link>
+          </div>
+        </div>
+      </header>
+      {isFront && <MissionStatement />}
+    </>
   );
 }
