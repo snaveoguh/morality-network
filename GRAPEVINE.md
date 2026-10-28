@@ -9,10 +9,11 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
-## ▲ node 76 · house style + AI-tell lint for generated copy
+## ▲ node 78 · house style + AI-tell lint for generated copy
 
 **when** — 2026-10-28
-**what** — branch `chore/house-style` (not merged to `dev` or `main`, not deployed).
+**what** — branch `chore/house-style`, merged to `dev` (not on `main`). It was numbered
+76 on the branch and renumbered to 78 at merge, because dev already had 76 and 77.
 New `docs/STYLE_GUIDE.md` sets the house style in two registers: Record (Claim
 Ledger and MP pages, written to the Commons Library standard) and News (feed and
 editions, written to the Reuters and BBC standard). The old visual guide moves
@@ -37,6 +38,56 @@ Parliament.
 **rollback** — `git revert` the branch's commits. The lint only chooses
 between copy we already have, so reverting just the prompt commits restores
 the old voice.
+
+## ▲ node 77 · MP Record: token-gated staging preview (review fixes)
+
+**when** — 2026-10-28
+**what** — review of node 76 before merge. `MP_RECORD_PREVIEW=true` alone made
+the unreviewed record reachable by anyone on dev.pooter.world, and the
+client-only reply page had no gate. The gate now runs in `middleware.ts` for
+every `/mp` and `/api/mp` route: staging also needs `MP_RECORD_PREVIEW_TOKEN`
+(≥24 chars), granted once via `?preview=<token>` into an httpOnly cookie; no
+token = 404 (fail closed). `/api/mp/*` responses are `private, no-store` until
+sign-off so a CDN can't replay a preview response. Also: the `mp_ties` view and
+`/api/mp/*/ties` now carry `payment_regularity` for register category 1.2 —
+a live ingest showed a £52,000 *yearly* salary listed as a bare £52,000.
+Verified: all 14 migrations apply on PGlite, live ingest of 5028/5122/4366,
+a re-run writes nothing, UPDATE/DELETE are rejected by the triggers.
+**why** — a public staging URL is arguably publication; the record must not be
+reachable before the solicitor signs off.
+**where** — `web/src/lib/mp-record/launch-gate.ts`, `web/src/middleware.ts`,
+`web/src/lib/mp-record/api.ts`, launch-gate tests, `docs/MP_RECORD_SPEC.md`,
+`docs/API_REFERENCE.md`, `web/migrations/014_mp_record.sql` (ties view; 014
+has not been applied to any shared database), `web/src/lib/db/mp-record.ts`,
+`web/src/app/mp/[memberId]/page.tsx`, `web/src/app/api/mp/[memberId]/ties/route.ts`.
+**rollback** — `git revert` this commit (restores the env-flag-only preview).
+
+## ▲ node 76 · MP Record: per-MP register database (pre-launch, legal review open)
+
+**when** — 2026-10-28
+**what** — branch `feat/mp-ties-db` (not merged, not deployed). Spec
+`docs/MP_RECORD_SPEC.md`; migration `014_mp_record.sql` (append-only versioned
+`pooter.mp_*` tables with a trigger rejecting UPDATE/DELETE, raw API bodies in
+`mp_raw_fetches`, human-reviewed identity links, `mp_ties` view);
+`web/src/lib/mp-record/` (parsers, differ, rate-limited resumable ingest,
+reproducible stats with permalinks and citations); `npm run mp:ingest`;
+CORS read API `/api/mp/*`; sober page `/mp/[memberId]` with no ticker, wallet
+or chain controls. Built: Members API, Register of Interests, Electoral
+Commission export. Stubbed: Companies House (needs API key), APPGs.
+**why** — a per-MP dataset good enough to be cited in Parliament: every number
+traceable to a register entry and reproducible for any as-of date.
+**where** — `docs/MP_RECORD_SPEC.md`, `docs/API_REFERENCE.md`,
+`web/migrations/014_mp_record.sql`, `web/src/lib/mp-record/`,
+`web/src/lib/db/mp-record.ts`, `web/scripts/mp-ingest.ts`, `web/src/app/mp/`,
+`web/src/app/api/mp/`, `web/src/components/mp/`, `web/src/app/layout.tsx`,
+`web/src/components/layout/{Header,HideOnSoberRoutes}.tsx`.
+**gate** — production 404s `/mp/*` and `/api/mp/*` until
+`MP_RECORD_LEGAL_SIGNOFF` holds the solicitor's sign-off reference; set
+`MP_RECORD_PREVIEW=true` on dev only. No migration has been run on any
+shared database.
+**rollback** — `git revert` the branch's commits. If 014 was applied, the
+`pooter.mp_*` objects are new and unused elsewhere; drop them only after
+exporting `mp_raw_fetches`.
 
 ## ▲ node 75 · build: allow 180s per prerendered page
 

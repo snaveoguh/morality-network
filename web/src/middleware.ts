@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isMpRoute, MP_PREVIEW_COOKIE, MP_PREVIEW_PARAM, mpRouteAccess } from "@/lib/mp-record/launch-gate";
 
 /**
  * Next.js Edge Middleware — runs before every matched route.
@@ -68,7 +69,44 @@ const SENSITIVE_GET_PATHS = new Set([
   "/api/agents/console",
 ]);
 
+// ── MP Record launch gate ────────────────────────────────────────────────────
+// Unreviewed register data must not be reachable on a public URL
+// (MP_RECORD_SPEC §12). Pages and API routes also check the gate; this
+// covers every /mp route, including client-only pages.
+
+function mpGate(request: NextRequest): NextResponse | null {
+  const { pathname, searchParams } = request.nextUrl;
+  if (!isMpRoute(pathname)) return null;
+  const access = mpRouteAccess(process.env, {
+    cookie: request.cookies.get(MP_PREVIEW_COOKIE)?.value,
+    param: searchParams.get(MP_PREVIEW_PARAM),
+  });
+  if (access === "deny") {
+    return new NextResponse("Not found", {
+      status: 404,
+      headers: { ...SECURITY_HEADERS, "X-Robots-Tag": "noindex", "Cache-Control": "no-store" },
+    });
+  }
+  if (access === "grant-preview") {
+    const clean = request.nextUrl.clone();
+    clean.searchParams.delete(MP_PREVIEW_PARAM);
+    const redirect = NextResponse.redirect(clean);
+    redirect.cookies.set(MP_PREVIEW_COOKIE, searchParams.get(MP_PREVIEW_PARAM)!, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    });
+    return redirect;
+  }
+  return null;
+}
+
 export function middleware(request: NextRequest) {
+  const blocked = mpGate(request);
+  if (blocked) return blocked;
+
   const response = NextResponse.next();
 
   // Apply security headers to all responses

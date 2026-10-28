@@ -136,6 +136,58 @@ Returns historical sentiment data. ISR: 5 min.
 
 ---
 
+## MP Record (research API)
+
+Per-MP register facts: identity, Claim Ledger claims, Register of Members'
+Financial Interests, Electoral Commission donations and register-stated ties.
+Spec: `docs/MP_RECORD_SPEC.md`. **Pre-launch:** these routes return 404 in
+production until legal sign-off (`MP_RECORD_LEGAL_SIGNOFF`). On staging
+(`MP_RECORD_PREVIEW=true`) they answer only to a browser holding the preview
+cookie (see the spec's launch gate). Until sign-off, responses carry
+`X-Robots-Tag: noindex` and `Cache-Control: private, no-store`.
+
+All GET routes are CORS-open (`Access-Control-Allow-Origin: *`, `OPTIONS`
+supported), rate-limited to 60 requests/minute per IP, cached
+`s-maxage=1800`. Every response is `{ meta, data }`; `meta` carries the
+dataset name, spec link, licences (Open Parliament Licence, Open Government
+Licence) and the legal-review status. Every fact carries `provenance`:
+`sourceRecordId` (the register's own id), `sourceUrl`, `sourceApiUrl`,
+`retrievedAt`, `contentHash` (sha256, recipe `mp-record-hash-v1`), `version`.
+Money is an exact decimal string (`"5950.00"`); dates are `YYYY-MM-DD`.
+
+### `GET /api/mp/:memberId`
+`memberId` is the Parliament Members API id. Returns `profile`, `periods`
+(party, constituency, posts, committees with dates), `interests` (every
+register field verbatim, child payments flattened with `parentInterestId`),
+`noLongerInRegister`, `donations` (Electoral Commission rows linked to the
+Member by a named human reviewer only), `identityLinksAwaitingReview`,
+`claims`, `stats`, `sourceChecks`, `corrections`, `replies`.
+400 for a malformed id, 404 if the Member has not been ingested.
+
+### `GET /api/mp/:memberId/ties`
+Rows of the `pooter.mp_ties` view: `tieType` (`interest:<category>`,
+`ec_donation`, `directorship`, `appg_officer`), `counterpartyName`,
+`counterpartyKind` (from the register's own status field), `valueGbp`,
+`periodStart`, `periodEnd`, `registerWording`, `sourceUrl`,
+`sourceRecordId`, `sourceTable`, `retrievedAt`, `contentHash`.
+
+### `GET /api/mp/:memberId/stats/:statId?asOf=YYYY-MM-DD`
+One reproducible figure: `interests-value-12m`, `interests-value-parliament`,
+`interests-count`, `donations-ec-12m`, `claims-by-status`. Computed from the
+register versions stored at the end of `asOf` (UTC; default today), so the
+same URL gives the same answer forever. Returns `headline`, `valuePence`,
+`breakdown`, `notes` (what was excluded and why), `rowsUsed` (every entry
+summed), `methodology`, `window`, `dataAsOf`, `permalink` and `citation`.
+400 for an invalid or future `asOf`; 404 for an unknown stat.
+
+### `POST /api/mp/:memberId/reply`
+Right of reply. Body: `{ body (20–4000 chars), contact, identity?,
+subjectTable?, subjectRecord? }`. Rate-limited 5/hour. Not displayed until an
+operator verifies the sender's office and answers; `contact` is never
+published.
+
+---
+
 ## Trading
 
 ### `GET /api/trading/signals`
