@@ -207,7 +207,8 @@ export function NewsChart({ chart }: { chart: ChartSpec }) {
           {chart.dek}
         </p>
       )}
-      <div className="mt-3">
+      {/* Cap the drawing so viewBox scaling never pushes type past ~1.3x. */}
+      <div className="mt-3 max-w-[480px]">
         {data.length === 0 ? (
           <p className="py-6 text-sm" style={{ color: FAINT }}>No data yet.</p>
         ) : kind === "bar" ? (

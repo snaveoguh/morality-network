@@ -103,16 +103,20 @@ export async function feedBiasChart(): Promise<ChartSpec | null> {
   const right = agg.byBias["far-right"] + agg.byBias.right + agg.byBias["lean-right"];
   const centre = agg.byBias.center;
   const sides = [
-    { name: "Left-leaning outlets", n: left },
-    { name: "Centre outlets", n: centre },
-    { name: "Right-leaning outlets", n: right },
+    { name: "left-leaning", n: left },
+    { name: "centre", n: centre },
+    { name: "right-leaning", n: right },
   ].sort((a, b) => b.n - a.n);
+  const [lead, ...others] = sides;
   const title =
     rated > 0
-      ? `${sides[0].name} supply ${pct(sides[0].n, rated)}% of today's rated stories; ${sides[2].name.toLowerCase()}, ${pct(sides[2].n, rated)}%`
+      ? `${lead.name[0].toUpperCase()}${lead.name.slice(1)} outlets supply ${pct(lead.n, rated)}% of today's rated stories; ${others.map((o) => `${o.name} ${pct(o.n, rated)}%`).join(", ")}`
       : "No story in today's feed comes from a rated outlet";
 
-  const data: ChartPoint[] = BIAS_ORDER.map((b) => ({ label: BIAS_LABELS[b], value: agg.byBias[b] }));
+  const data: ChartPoint[] = BIAS_ORDER.map((b) => ({
+    label: b === "center" ? "Centre" : BIAS_LABELS[b],
+    value: agg.byBias[b],
+  }));
   if (agg.unrated > 0) data.push({ label: "Unrated", value: agg.unrated });
 
   return {

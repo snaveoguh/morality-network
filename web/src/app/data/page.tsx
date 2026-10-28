@@ -45,7 +45,7 @@ export default function DataPage() {
           <div className="space-y-8">
             {section.ids.map((id) => (
               <Suspense key={id} fallback={<ChartSkeleton />}>
-                <AsyncChart id={id} />
+                <AsyncChart id={id} emptyText={`${id}: data unavailable right now`} />
               </Suspense>
             ))}
           </div>

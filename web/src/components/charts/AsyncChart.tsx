@@ -3,11 +3,18 @@ import { NewsChart } from "./NewsChart";
 
 // Async server wrapper: runs one cached chart query and renders it, or
 // nothing when its data is unavailable. Wrap in <Suspense> so a slow feed
-// read never holds up the rest of the page.
+// read never holds up the rest of the page. emptyText, when given, stands in
+// for a chart whose data is unavailable.
 
-export async function AsyncChart({ id }: { id: ChartId }) {
+export async function AsyncChart({ id, emptyText }: { id: ChartId; emptyText?: string }) {
   const chart = await CHARTS[id]();
-  if (!chart) return null;
+  if (!chart) {
+    return emptyText ? (
+      <p className="mx-auto max-w-2xl font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--ink-faint)]">
+        {emptyText}
+      </p>
+    ) : null;
+  }
   return <NewsChart chart={chart} />;
 }
 
