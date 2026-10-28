@@ -9,6 +9,33 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 76 · MP Record: per-MP register database (pre-launch, legal review open)
+
+**when** — 2026-10-28
+**what** — branch `feat/mp-ties-db` (not merged, not deployed). Spec
+`docs/MP_RECORD_SPEC.md`; migration `014_mp_record.sql` (append-only versioned
+`pooter.mp_*` tables with a trigger rejecting UPDATE/DELETE, raw API bodies in
+`mp_raw_fetches`, human-reviewed identity links, `mp_ties` view);
+`web/src/lib/mp-record/` (parsers, differ, rate-limited resumable ingest,
+reproducible stats with permalinks and citations); `npm run mp:ingest`;
+CORS read API `/api/mp/*`; sober page `/mp/[memberId]` with no ticker, wallet
+or chain controls. Built: Members API, Register of Interests, Electoral
+Commission export. Stubbed: Companies House (needs API key), APPGs.
+**why** — a per-MP dataset good enough to be cited in Parliament: every number
+traceable to a register entry and reproducible for any as-of date.
+**where** — `docs/MP_RECORD_SPEC.md`, `docs/API_REFERENCE.md`,
+`web/migrations/014_mp_record.sql`, `web/src/lib/mp-record/`,
+`web/src/lib/db/mp-record.ts`, `web/scripts/mp-ingest.ts`, `web/src/app/mp/`,
+`web/src/app/api/mp/`, `web/src/components/mp/`, `web/src/app/layout.tsx`,
+`web/src/components/layout/{Header,HideOnSoberRoutes}.tsx`.
+**gate** — production 404s `/mp/*` and `/api/mp/*` until
+`MP_RECORD_LEGAL_SIGNOFF` holds the solicitor's sign-off reference; set
+`MP_RECORD_PREVIEW=true` on dev only. No migration has been run on any
+shared database.
+**rollback** — `git revert` the branch's commits. If 014 was applied, the
+`pooter.mp_*` objects are new and unused elsewhere; drop them only after
+exporting `mp_raw_fetches`.
+
 ## ▲ node 75 · build: allow 180s per prerendered page
 
 **when** — 2026-10-23

@@ -4,7 +4,7 @@
 // only after an operator verifies the sender's office; the contact address is
 // never published.
 
-import { use, useState } from "react";
+import { Suspense, use, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -13,6 +13,14 @@ const labelClass = "font-mono text-[10px] uppercase tracking-[0.2em] text-[var(-
 
 export default function MpReplyPage({ params }: { params: Promise<{ memberId: string }> }) {
   const { memberId } = use(params);
+  return (
+    <Suspense fallback={null}>
+      <ReplyForm memberId={memberId} />
+    </Suspense>
+  );
+}
+
+function ReplyForm({ memberId }: { memberId: string }) {
   const search = useSearchParams();
   const [subjectRecord, setSubjectRecord] = useState(search.get("entry") ?? "");
   const [body, setBody] = useState("");
