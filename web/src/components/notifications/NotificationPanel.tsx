@@ -27,7 +27,7 @@ export function NotificationPanel() {
       />
 
       {/* Panel */}
-      <div className="fixed bottom-28 right-4 z-50 w-80 border-2 border-[var(--rule)] bg-[var(--paper)] shadow-xl lg:bottom-28 lg:right-4 max-lg:inset-x-4 max-lg:bottom-4 max-lg:w-auto">
+      <div className="fixed bottom-28 right-4 z-50 w-80 border-2 border-[var(--rule)] bg-[var(--paper)] shadow-xl lg:bottom-28 lg:right-4 max-lg:inset-x-4 max-lg:bottom-[calc(80px+env(safe-area-inset-bottom))] max-lg:w-auto">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--rule)] px-3 py-2">
           <span className="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink)]">

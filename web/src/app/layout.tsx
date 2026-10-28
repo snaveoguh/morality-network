@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono, UnifrakturCook, Archivo_Black } from "next/font/google";
+import { Inter, Geist_Mono, UnifrakturCook, Archivo_Black, Newsreader } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers/WagmiProvider";
 import { ThemeProvider } from "@/lib/theme";
 import { Header } from "@/components/layout/Header";
-import { MarqueeBanner } from "@/components/layout/MarqueeBanner";
+import { TabBar } from "@/components/layout/TabBar";
 import { ExtensionBanner } from "@/components/layout/ExtensionBanner";
 import { SITE_URL, withBrand } from "@/lib/brand";
 import { InstallPrompt } from "@/components/layout/InstallPrompt";
@@ -23,14 +23,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Old-English blackletter — the brand letterform (wordmark, drop caps).
+// Old-English blackletter — ONLY the "pooter world" wordmark and "pw" mark.
 const fraktur = UnifrakturCook({
   variable: "--font-fraktur",
   subsets: ["latin"],
   weight: "700",
 });
 
-// Tabloid headline face — insurgent broadsheet punch.
+// Serif headline face — direction C broadsheet (headlines, section labels).
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+});
+
+// Tabloid headline face — retired from the front page, still used by
+// older inner pages via .font-headline.
 const archivo = Archivo_Black({
   variable: "--font-archivo",
   subsets: ["latin"],
@@ -54,7 +63,7 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
-    "theme-color": "#0b1736",
+    "theme-color": "#0d0d0d",
   },
   openGraph: {
     type: "website",
@@ -80,17 +89,19 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="light" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${geistMono.variable} ${fraktur.variable} ${archivo.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
+        className={`${inter.variable} ${geistMono.variable} ${fraktur.variable} ${archivo.variable} ${newsreader.variable} min-h-screen overflow-x-hidden bg-[var(--paper)] font-sans text-[var(--ink)] antialiased`}
       >
         <ThemeProvider>
         <Providers>
           <DevBanner />
           <HideOnSoberRoutes>
-            <MarqueeBanner />
             <ExtensionBanner />
           </HideOnSoberRoutes>
           <Header />
           <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-2">{children}</main>
+          <HideOnSoberRoutes>
+            <TabBar />
+          </HideOnSoberRoutes>
           <InstallPrompt />
           <HideOnSoberRoutes>
             <PooterNotificationHub />

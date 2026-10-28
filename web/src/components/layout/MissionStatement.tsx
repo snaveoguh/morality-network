@@ -1,11 +1,10 @@
+// The tagline under the wordmark (pooter-brand: "Accountability record").
+// Serif, upright, slightly letter-spaced, secondary ink, centred. Static —
+// the "Record accountability" swap is for marketing pieces only.
 export function MissionStatement() {
   return (
-    <section className="border-b border-[var(--rule-light)] bg-[var(--paper-dark)]">
-      <div className="mx-auto max-w-7xl px-4 py-2">
-        <p className="text-center font-headline text-lg font-black leading-tight text-[var(--ink)] sm:text-xl">
-          A public ledger of world events and their interpretation.
-        </p>
-      </div>
-    </section>
+    <p className="font-news mx-4 mb-3 mt-1.5 text-center text-[15px] tracking-[0.04em] text-[var(--ink-light)] lg:mb-3 lg:mt-0 lg:text-base">
+      Accountability record
+    </p>
   );
 }
