@@ -3,6 +3,13 @@ import {
   getLastNewsdeskResponse,
 } from "@/lib/trading/signals";
 import { SignalDashboard } from "@/components/trading/SignalDashboard";
+import { withBrand } from "@/lib/brand";
+
+export const metadata = {
+  title: withBrand("Bearometer"),
+  description:
+    "Directional market signals and China supply-chain pressure on rare earths, chip metals and battery materials. Signals and data, not financial advice.",
+};
 
 export const revalidate = 3600; // 1 hour ISR
 
@@ -23,7 +30,7 @@ export default async function SignalsPage() {
       {/* Page header — newspaper style */}
       <div className="mb-6 border-b-2 border-[var(--rule)] pb-4">
         <h1 className="font-headline text-3xl text-[var(--ink)]">
-          Trading Signals
+          Bearometer
         </h1>
         <p className="mt-1 font-body-serif text-sm italic text-[var(--ink-light)]">
           Directional market signals aggregated from AI-generated editorial

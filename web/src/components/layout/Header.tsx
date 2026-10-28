@@ -26,7 +26,7 @@ const NAV_LINKS = [
 
 /** Playground links — used for active-state detection in nav. */
 const COOP_PLAYGROUND_LINKS = [
-  { href: "/signals", label: "Signals", desc: "Raw trading signals" },
+  { href: "/signals", label: "Bearometer", desc: "Market + supply-chain signals" },
   { href: "/predictions", label: "Predictions", desc: "Binary outcome markets" },
   { href: "/predictions/arb", label: "Arb Scanner", desc: "Polymarket arbitrage" },
   { href: "/nouns", label: "Nouns", desc: "NFT marketplace" },
