@@ -983,7 +983,12 @@ export async function generateAIEditorial(
   // House-style gate (docs/STYLE_GUIDE.md): if the writer's subheadline fails
   // the lint, fall back to the first sentence of its own wire summary. No new
   // LLM call; if both fail, keep the one with fewer errors and log it.
-  const wireLead = writerOutput.wireSummary?.match(/^.+?[.!?](?=\s|$)/)?.[0] ?? null;
+  // First sentence of the wire summary. Skip abbreviation stops ("The U.S.",
+  // "Mr.") by requiring a lowercase/digit word before the full stop, and drop
+  // fragments under eight words so a stub never becomes the dek.
+  const wireLeadRaw =
+    writerOutput.wireSummary?.match(/^.+?(?:[a-z0-9)\]'’"”]{2}[.!?]|[!?])(?=\s|$)/)?.[0] ?? null;
+  const wireLead = wireLeadRaw && wireLeadRaw.trim().split(/\s+/).length >= 8 ? wireLeadRaw : null;
   const dekPick = pickCleanCopy([writerOutput.subheadline, wireLead], "dek", {
     marketStory: /market|crypto|financ|business|econom/i.test(primary.category ?? ""),
   });

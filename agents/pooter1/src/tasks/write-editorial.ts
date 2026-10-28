@@ -154,29 +154,38 @@ export async function writeEditorial(): Promise<void> {
   // Publish to pooter.world — first candidate that passes house style wins.
   try {
     let res: Response | null = null;
-    for (const candidate of headlineCandidates) {
-      headline = candidate;
-      res = await fetch(`${POOTER_API_URL}/api/articles/publish`, {
+    const publish = (title: string, styleLint?: "enforce") =>
+      fetch(`${POOTER_API_URL}/api/articles/publish`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${CRON_SECRET}`,
         },
         body: JSON.stringify({
-          title: candidate,
+          title,
           body: editorial,
           category: "opinion",
           author: "pooter1",
           media: [],
-          styleLint: "enforce",
+          styleLint,
           deliberationId: deliberation?.id,
           marketPosition: deliberation?.winningThesis?.position,
           falsifiableAt: deliberation?.falsifiableAt,
         }),
       });
+    for (const candidate of headlineCandidates) {
+      headline = candidate;
+      res = await publish(candidate, "enforce");
       if (res.status !== 422) break;
       const detail = await res.json().catch(() => null);
       console.warn(`[pooter1] Headline failed house style: "${candidate}"`, detail?.issues ?? "");
+    }
+    // Every candidate tripped the lint: the editorial is already paid for, so
+    // publish the first headline unenforced rather than drop it.
+    if (res?.status === 422) {
+      headline = headlineCandidates[0];
+      console.warn(`[pooter1] All headlines failed house style; publishing unenforced: "${headline}"`);
+      res = await publish(headline);
     }
     if (!res) return;
 

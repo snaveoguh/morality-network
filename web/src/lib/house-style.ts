@@ -87,7 +87,7 @@ const PHRASE_RULES: PhraseRule[] = [
   },
   {
     rule: "scene-setting-when",
-    pattern: /^\s*(?:when|as|behind|beneath|in the (?:wake|shadow) of)\b/i,
+    pattern: /^\s*(?:when|as(?! (?:many|much|few|little|of|well)\b)|behind(?! the scenes)|beneath|in the (?:wake|shadow) of)\b/i,
     message: "Scene-setting opener. Lead with the subject and the verb.",
     severity: { headline: "error", dek: "error" },
   },
@@ -116,7 +116,7 @@ const PHRASE_RULES: PhraseRule[] = [
   {
     rule: "purple",
     pattern:
-      /\b(?:lullaby|funeral pyre|bodies cool|bleed(?:s|ing)? (?:people|out)|run red|screams?|echo(?:es)? of|whispers?|haunt\w*|grapples?|grappling|reckoning|duel(?:s|ling)?|squabbl\w*|gambit|gamble[sd]?|scrambl\w*|teeter\w*|ignit\w*|fuels?|fuelled|fueling|fuelling|sparks?|sparked|cull|carnage|massacre[sd]?|shreds?|erases?|cages?|sleek|fragile modernity|indifferent calculus|bruised democracy)\b/i,
+      /\b(?:lullaby|funeral pyre|bodies cool|bleed(?:s|ing)? (?:people|out)|run red|screams?|echo(?:es)? of|whispers?|haunt\w*|grapples?|grappling|reckoning|duel(?:s|ling)?|squabbl\w*|gambit|gamble[sd]?|teeter\w*|ignit\w*|fuels|fuelled|fueling|fuelling|sparks|sparked|carnage|shreds?|erases?|cages?|sleek|fragile modernity|indifferent calculus|bruised democracy)\b/i,
     message: "Figurative or emotive word. Use the plain literal verb or noun.",
     severity: { headline: "error", dek: "error", body: "warn" },
   },
@@ -135,7 +135,7 @@ const PHRASE_RULES: PhraseRule[] = [
   },
   {
     rule: "loaded-verb",
-    pattern: /\b(?:slam(?:s|med)?|blasted|rips into|ripped|hits? out|lash(?:es|ed)? out|savag\w*|destroy(?:s|ed)? |eviscerat\w*|admits?|admitted|insists?|insisted|boasts?|boasted|concedes?|conceded)\b/i,
+    pattern: /\b(?:slam(?:s|med)?|blasted|rips into|ripped|hits? out|lash(?:es|ed)? out|savag\w*|destroy(?:s|ed)? |eviscerat\w*|insists?|insisted|boasts?|boasted)\b/i,
     message: "Loaded attribution verb. Use 'said', 'told', 'wrote' or 'voted'.",
     severity: { headline: "error", dek: "error", body: "warn", ledger: "error" },
   },
