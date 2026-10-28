@@ -96,6 +96,13 @@ For example (this is the structure only, from
 
 Rules:
 
+- **Cite Hansard in the standard (OSCOLA) form**: *HC Deb 8 July 2026, vol
+  N, col N*, with a link. Before publishing, check whether the member has
+  since corrected the record. Since 2024 any MP can correct Hansard, not only
+  ministers.
+- **Avoid other loaded words**: "regime" (write "government"), "terrorist"
+  without attribution, "only" and "very few". Each one puts a judgement in a
+  word.
 - **Quote Hansard verbatim and in full.** The quote must be an exact
   substring, and it must be the whole sentence, never a spliced fragment. If
   the context changes the meaning, include the context. Link to the
@@ -147,7 +154,8 @@ pieces may argue, but the argument is carried by facts, not adjectives.
 
 ### Headlines
 
-- **6–12 words, at most 75 characters.** Longer headlines truncate in search
+- **6–12 words, at most 75 characters, and aim for 60.** The BBC keeps story
+  headlines to about 55 characters. Longer headlines truncate in search
   results, push alerts and social cards.
 - **Subject + active verb + fact, in the present tense**: "Two high-speed
   trains collide in Spain, killing at least 30".
@@ -165,7 +173,8 @@ pieces may argue, but the argument is carried by facts, not adjectives.
 
 ### Standfirst (subheadline / dek)
 
-- **One sentence of up to 28 words, about the same story.** It adds the next
+- **One sentence of up to 28 words and 160 characters, about the same
+  story.** It adds the next
   most important fact: who said what, the figure, what happens next.
 - It never adds a second story, and it never "reframes". No "When X, Y", no
   "turns X into Y".

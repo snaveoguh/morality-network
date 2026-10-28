@@ -182,6 +182,7 @@ const WORD_LIMITS: Record<CopyKind, { warn: number; error: number } | null> = {
   ledger: { warn: 35, error: 50 },
 };
 const HEADLINE_CHAR_WARN = 75;
+const DEK_CHAR_WARN = 160;
 /** "…in the U.S." — a trailing abbreviation, not a full stop. */
 const ABBREV_END = /\b[A-Z]\.\s*$/;
 
@@ -242,6 +243,9 @@ export function lintCopy(text: string, kind: CopyKind, opts: LintOptions = {}): 
     }
   }
 
+  if (kind === "dek" && t.length > DEK_CHAR_WARN) {
+    issues.push({ rule: "chars", severity: "warn", match: `${t.length} chars`, message: `Over ${DEK_CHAR_WARN} characters; search snippets and cards cut it off.` });
+  }
   if (kind === "dek" && (t.match(/,/g) ?? []).length >= 3) {
     issues.push({ rule: "stacked-clauses", severity: "warn", match: ",", message: "Three or more clauses. Split or cut." });
   }
