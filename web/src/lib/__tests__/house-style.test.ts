@@ -65,7 +65,7 @@ describe("lintCopy — house-style copy passes", () => {
 
   it.each([
     "Prime Minister Pedro Sánchez spoke about the collision as the reported death toll rose during the day.",
-    "Also today: a Serbian police officer shot dead a man who attacked him with a knife outside Israel's embassy in Belgrade.",
+    "Also today: a Serbian police officer killed a knife attacker outside Israel's embassy in Belgrade, Reuters reported.",
     "The government said 4.2 million households would receive the £100 payment by March 2027.",
   ])("dek %s", (dek) => {
     expect(hasStyleErrors(lintCopy(dek, "dek"))).toBe(false);

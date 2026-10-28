@@ -127,7 +127,8 @@ compositeScore = (onchainRating x 0.4) + (aiScore x 0.3) + (tipVolume x 0.2) + (
 - [API Reference](docs/API_REFERENCE.md) — Endpoint documentation
 - [Deployments](docs/DEPLOYMENTS.md) — Deployment procedures
 - [Launch Hardening](docs/LAUNCH_HARDENING.md) — Production checklist
-- [Style Guide](docs/STYLE_GUIDE.md) — UI/UX design system
+- [Design System](docs/DESIGN_SYSTEM.md) — UI/UX visual language
+- [House Style](docs/STYLE_GUIDE.md) — how pooter writes: headlines, ledger copy, banned AI phrasing
 - [Contributing](docs/CONTRIBUTING.md) — Contribution guidelines
 
 ## Deployment
