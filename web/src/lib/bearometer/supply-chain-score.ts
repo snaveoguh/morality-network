@@ -42,6 +42,8 @@ export interface TaggedSupplyChainItem {
   bias: SourceBias | null;
   groups: SupplyChainGroupId[];
   direction: SupplyDirection;
+  /** "llm" only when the gated classifier overrode a neutral regex result. */
+  directionBy: "regex" | "llm";
   weight: number;
 }
 
@@ -116,6 +118,7 @@ export function tagItems(items: RawSupplyChainItem[], now: number): TaggedSupply
       bias: item.bias ?? null,
       groups,
       direction: classifyDirection(text),
+      directionBy: "regex",
       weight: SOURCE_KIND_WEIGHT[item.sourceKind] * decay,
     };
 

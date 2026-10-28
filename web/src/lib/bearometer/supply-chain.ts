@@ -10,12 +10,13 @@ import {
   type SupplyChainSnapshot,
 } from "./supply-chain-score";
 import { SUPPLY_CHAIN_SOURCES } from "./supply-chain-sources";
+import { refineNeutralDirections } from "./supply-chain-llm";
+import { recordSupplyChainSnapshot } from "./supply-chain-record";
 
 // ============================================================================
 // BEAROMETER — SUPPLY-CHAIN SNAPSHOT
-// Fetch → tag → score, cached in-process. Deterministic: no LLM calls, so
-// nothing here can touch the AI budget (see docs/BEAROMETER_SUPPLY_CHAIN.md
-// for the gated LLM upgrade that is not built yet).
+// Fetch → tag → score → record, cached in-process. Deterministic by default;
+// the LLM fallback for neutral headlines is opt-in and gated (supply-chain-llm).
 // ============================================================================
 
 const CACHE_TTL_MS = 30 * 60 * 1000;
@@ -55,10 +56,13 @@ async function buildSnapshot(): Promise<SupplyChainSnapshot> {
     }
   });
 
-  const tagged = tagItems(raw, Date.now());
+  const tagged = await refineNeutralDirections(tagItems(raw, Date.now()));
+  const generatedAt = new Date().toISOString();
+  const indicators = scoreGroups(tagged);
+  await recordSupplyChainSnapshot(generatedAt, tagged, indicators);
   return {
-    generatedAt: new Date().toISOString(),
-    indicators: scoreGroups(tagged),
+    generatedAt,
+    indicators,
     itemsScanned: raw.length,
     itemsTagged: tagged.length,
     sourcesOk,
