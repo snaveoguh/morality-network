@@ -9,6 +9,29 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 76 · own-models plan + disabled "analyst" provider
+
+**when** — 2026-10-28
+**what** — `docs/own-models-plan.md`: how LLM calls route today (hub →
+provider chain → budget/price/cooldown/meter), four analyst jobs (TA, supply
+chain, PM, person/MP), base models, hosting costs, retrieval vs fine-tune per
+job, phased path. Commit `b86c6d6` adds the `analyst` provider (four models
+on any OpenAI-compatible endpoint, off unless `ANALYST_ENABLED` and
+`ANALYST_BASE_URL` are set; obeys `AI_DISABLED_PROVIDERS=analyst`, budget,
+built-in $0.90/1M price). Conclusion: current spend ≈ $55/mo; an always-on
+GPU is ≥ $600/mo, so Phase 1 is retrieval (pgvector, CPU embeddings) on
+serverless open-weight APIs through the stub; LoRA served serverless next;
+own GPU only above ~50M tokens/day. Found: hub calls answered by
+groq/together are metered as `ollama` at $0; `entity-scorer.ts` uses the
+old `ai-router.ts` and bypasses budget and meter.
+**why** — Hugo wants own open-weight models; the North Star means they must
+cost less than they save.
+**where** — `docs/own-models-plan.md`, `web/src/lib/{ai-models,ai-provider,ai-budget}.ts`,
+`web/src/lib/__tests__/ai-analyst.test.ts`. Branch `feat/own-models-plan`;
+not merged or deployed.
+**rollback** — `git revert` both commits; with no `ANALYST_*` vars set the
+stub is already inert.
+
 ## ▲ node 75 · build: allow 180s per prerendered page
 
 **when** — 2026-10-23
