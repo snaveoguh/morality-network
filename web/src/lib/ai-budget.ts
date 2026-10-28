@@ -45,6 +45,10 @@ const BUILTIN_PRICES: Array<{
   { provider: "openai", match: /./, input: 2.5, output: 10 },
   { provider: "venice", match: /./, input: 0.2, output: 0.2 },
   { provider: "ollama", match: /./, input: 0, output: 0 },
+  // Our own analysts: priced like a ~70B serverless open-weight model so a
+  // fresh service never meters them at $0. Set AI_PRICE_ANALYST_* to the
+  // real rate (or 0 on a flat-rate GPU box) once hosting is chosen.
+  { provider: "analyst", match: /./, input: 0.9, output: 0.9 },
 ];
 
 function getBuiltinRate(
