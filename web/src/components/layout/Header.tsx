@@ -8,6 +8,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ChainSwitcher } from "@/components/shared/ChainSwitcher";
 import { SearchBar } from "@/components/layout/SearchBar";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { isSoberRoute } from "@/components/layout/HideOnSoberRoutes";
 import { BRAND_NAME } from "@/lib/brand";
 
 /** Core navigation — the engine. */
@@ -92,8 +93,13 @@ export function Header() {
             <SearchBar />
           </div>
           <ThemeToggle />
-          <ChainSwitcher />
-          <MiniWalletButton />
+          {/* No wallet or chain controls beside MP Record facts (MP_RECORD_SPEC §1). */}
+          {!isSoberRoute(pathname) && (
+            <>
+              <ChainSwitcher />
+              <MiniWalletButton />
+            </>
+          )}
         </div>
       </div>
     </header>

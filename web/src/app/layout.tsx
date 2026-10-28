@@ -10,6 +10,7 @@ import { SITE_URL, withBrand } from "@/lib/brand";
 import { InstallPrompt } from "@/components/layout/InstallPrompt";
 import { PooterNotificationHub } from "@/components/notifications/PooterNotificationHub";
 import { DevBanner } from "@/components/layout/DevBanner";
+import { HideOnSoberRoutes } from "@/components/layout/HideOnSoberRoutes";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -84,12 +85,16 @@ export default function RootLayout({
         <ThemeProvider>
         <Providers>
           <DevBanner />
-          <MarqueeBanner />
-          <ExtensionBanner />
+          <HideOnSoberRoutes>
+            <MarqueeBanner />
+            <ExtensionBanner />
+          </HideOnSoberRoutes>
           <Header />
           <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-2">{children}</main>
           <InstallPrompt />
-          <PooterNotificationHub />
+          <HideOnSoberRoutes>
+            <PooterNotificationHub />
+          </HideOnSoberRoutes>
         </Providers>
         </ThemeProvider>
       </body>

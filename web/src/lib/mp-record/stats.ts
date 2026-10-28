@@ -138,7 +138,8 @@ export interface StatResult {
   dataAsOf: string | null;
   available: boolean;
   unavailableReason?: string;
-  window: { from: string | null; to: string; basis: string };
+  /** from is exclusive unless fromInclusive; to is inclusive. */
+  window: { from: string | null; fromInclusive: boolean; to: string; basis: string };
   headline: string;
   valuePence?: number;
   count?: number;
@@ -231,7 +232,7 @@ function unavailable(reason: string, window: StatResult["window"]): Core {
 
 function interestsValue(inputs: StatInputs, asOf: string, from: string | null, fromInclusive: boolean): Core {
   const cutoff = asOfEnd(asOf);
-  const window = { from, to: asOf, basis: "register registration date" };
+  const window = { from, fromInclusive, to: asOf, basis: "register registration date" };
   const dataAsOf = latestCheck(inputs.checks, "interests", `member:${inputs.memberId}`, cutoff);
   if (!dataAsOf) return unavailable("no complete check of the register for this Member on or before this date", window);
 
@@ -289,7 +290,7 @@ function interestsValue(inputs: StatInputs, asOf: string, from: string | null, f
 
 function interestsCount(inputs: StatInputs, asOf: string): Core {
   const cutoff = asOfEnd(asOf);
-  const window = { from: null, to: asOf, basis: "entries present in the register on the as-of date" };
+  const window = { from: null, fromInclusive: false, to: asOf, basis: "entries present in the register on the as-of date" };
   const dataAsOf = latestCheck(inputs.checks, "interests", `member:${inputs.memberId}`, cutoff);
   if (!dataAsOf) return unavailable("no complete check of the register for this Member on or before this date", window);
   const rows = snapshotAsOf(inputs.interests, cutoff).filter((v) => v.data.parentInterestId === null);
@@ -315,7 +316,7 @@ function interestsCount(inputs: StatInputs, asOf: string): Core {
 function donationsEc(inputs: StatInputs, asOf: string): Core {
   const cutoff = asOfEnd(asOf);
   const from = oneYearBefore(asOf);
-  const window = { from, to: asOf, basis: "Electoral Commission accepted date" };
+  const window = { from, fromInclusive: false, to: asOf, basis: "Electoral Commission accepted date" };
   const links = inputs.ecLinks.filter((l) => Date.parse(l.reviewedAt) <= cutoff.getTime());
   if (links.length === 0) {
     return unavailable("no Electoral Commission record confirmed as this Member by a reviewer on or before this date", window);
@@ -380,7 +381,7 @@ const VERDICT_LABEL: Record<string, string> = {
 
 function claimsByStatus(inputs: StatInputs, asOf: string): Core {
   const cutoff = asOfEnd(asOf).getTime();
-  const window = { from: null, to: asOf, basis: "date the claim was recorded on the ledger" };
+  const window = { from: null, fromInclusive: false, to: asOf, basis: "date the claim was recorded on the ledger" };
   const claims = inputs.claims.filter((c) => Date.parse(c.createdAt) <= cutoff);
   const rows = new Map<string, number>();
   for (const c of claims) {

@@ -11,6 +11,7 @@ import { contentHash } from "../hash";
 import {
   moneyToDecimal,
   nonEmpty,
+  obj,
   parseIntOrNull,
   parseRegisterDate,
 } from "../parse-utils";
@@ -61,12 +62,12 @@ export function topLevelCategory(categoryNumber: string | null): string | null {
 
 function mapFields(raw: unknown): RegisterField[] {
   if (!Array.isArray(raw)) return [];
-  return raw.map((f: any) => ({
-    name: String(f?.name ?? ""),
-    description: String(f?.description ?? ""),
-    type: String(f?.type ?? ""),
-    currencyCode: nonEmpty(f?.typeInfo?.currencyCode),
-    value: f?.value ?? null,
+  return raw.map(obj).map((f) => ({
+    name: String(f.name ?? ""),
+    description: String(f.description ?? ""),
+    type: String(f.type ?? ""),
+    currencyCode: nonEmpty(obj(f.typeInfo).currencyCode),
+    value: f.value ?? null,
   }));
 }
 
@@ -123,17 +124,18 @@ function payerOf(categoryTop: string | null, fields: RegisterField[]): { name: s
 }
 
 function parseOne(
-  item: Record<string, any>,
+  item: Record<string, unknown>,
   parent: ParentContext | null,
   rawFetchId: number | null,
 ): FactRecord<"mp_interests"> {
   const interestId = parseIntOrNull(item.id);
   if (interestId === null) throw new Error("parseInterests: entry without numeric id");
-  const memberId = parseIntOrNull(item.member?.id) ?? parent?.memberId ?? null;
+  const memberId = parseIntOrNull(obj(item.member).id) ?? parent?.memberId ?? null;
+  const category = obj(item.category);
   if (memberId === null) throw new Error(`parseInterests: entry ${interestId} has no member id`);
 
   const fields = mapFields(item.fields);
-  const categoryNumber = nonEmpty(item.category?.number);
+  const categoryNumber = nonEmpty(category.number);
   const top = topLevelCategory(categoryNumber);
   const own = payerOf(top, fields);
   const useParent = own.name === null && parent?.payer != null;
@@ -146,9 +148,9 @@ function parseOne(
     memberId,
     interestId,
     parentInterestId: parseIntOrNull(item.parentInterestId),
-    categoryId: parseIntOrNull(item.category?.id),
+    categoryId: parseIntOrNull(category.id),
     categoryNumber,
-    categoryName: nonEmpty(item.category?.name),
+    categoryName: nonEmpty(category.name),
     summary: nonEmpty(item.summary),
     payerOrDonorName: useParent ? parent!.payer : own.name,
     payerFromParent: useParent,
@@ -200,12 +202,12 @@ export interface InterestsPage {
  * its own carries the payer named on its parent (payerFromParent = true).
  */
 export function parseInterestsPage(json: unknown, rawFetchId: number | null = null): InterestsPage {
-  const body = json as Record<string, any> | null;
-  if (!body || !Array.isArray(body.items) || typeof body.totalResults !== "number") {
+  const body = obj(json);
+  if (!Array.isArray(body.items) || typeof body.totalResults !== "number") {
     throw new Error("parseInterestsPage: response is not an interests page");
   }
   const records: FactRecord<"mp_interests">[] = [];
-  for (const item of body.items) {
+  for (const item of body.items.map(obj)) {
     const parentRecord = parseOne(item, null, rawFetchId);
     records.push(parentRecord);
     const ctx: ParentContext = {
@@ -213,7 +215,7 @@ export function parseInterestsPage(json: unknown, rawFetchId: number | null = nu
       kind: parentRecord.data.counterpartyKind,
       memberId: parentRecord.data.memberId,
     };
-    for (const child of Array.isArray(item.childInterests) ? item.childInterests : []) {
+    for (const child of (Array.isArray(item.childInterests) ? item.childInterests : []).map(obj)) {
       records.push(parseOne(child, ctx, rawFetchId));
     }
   }

@@ -3,7 +3,7 @@
 // FactRecords out. The Synopsis endpoint is NOT used (generated prose).
 
 import { contentHash } from "../hash";
-import { nonEmpty, parseIntOrNull, parseRegisterDate } from "../parse-utils";
+import { nonEmpty, obj, parseIntOrNull, parseRegisterDate } from "../parse-utils";
 import type {
   FactRecord,
   MemberData,
@@ -42,11 +42,12 @@ export function parseMember(
   json: unknown,
   rawFetchId: number | null = null,
 ): FactRecord<"mp_members"> {
-  const v = (json as { value?: Record<string, any> } | null)?.value;
-  const memberId = parseIntOrNull(v?.id);
-  if (!v || memberId === null) throw new Error("parseMember: response has no value.id");
-  const hm = v.latestHouseMembership ?? {};
-  const status = hm.membershipStatus ?? {};
+  const v = obj(obj(json).value);
+  const memberId = parseIntOrNull(v.id);
+  if (memberId === null) throw new Error("parseMember: response has no value.id");
+  const hm = obj(v.latestHouseMembership);
+  const status = obj(hm.membershipStatus);
+  const party = obj(v.latestParty);
   const data: MemberData = {
     memberId,
     nameDisplay: nonEmpty(v.nameDisplayAs),
@@ -55,8 +56,8 @@ export function parseMember(
     nameAddressAs: nonEmpty(v.nameAddressAs),
     gender: nonEmpty(v.gender),
     house: houseName(hm.house),
-    latestPartyId: parseIntOrNull(v.latestParty?.id),
-    latestPartyName: nonEmpty(v.latestParty?.name),
+    latestPartyId: parseIntOrNull(party.id),
+    latestPartyName: nonEmpty(party.name),
     constituencyId: parseIntOrNull(hm.membershipFromId),
     constituencyName: nonEmpty(hm.membershipFrom),
     membershipStartDate: parseRegisterDate(hm.membershipStartDate),
@@ -99,12 +100,13 @@ export function parseBiography(
   memberId: number,
   rawFetchId: number | null = null,
 ): FactRecord<"mp_member_periods">[] {
-  const v = (json as { value?: Record<string, unknown> } | null)?.value;
-  if (!v || typeof v !== "object") throw new Error("parseBiography: response has no value");
+  const raw = obj(json).value;
+  if (raw === null || typeof raw !== "object") throw new Error("parseBiography: response has no value");
+  const v = obj(raw);
   const out: FactRecord<"mp_member_periods">[] = [];
   const seen = new Map<string, number>();
   for (const [section, kind] of BIOGRAPHY_SECTIONS) {
-    const items = Array.isArray(v[section]) ? (v[section] as Record<string, any>[]) : [];
+    const items = Array.isArray(v[section]) ? (v[section] as unknown[]).map(obj) : [];
     for (const item of items) {
       const data: MemberPeriodData = {
         memberId,

@@ -82,6 +82,11 @@ export function parseBool(value: unknown): boolean | null {
   return null;
 }
 
+/** Treat an unknown JSON value as an object (or an empty one) for safe property reads. */
+export function obj(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
 /** Empty / whitespace-only strings → null; other strings trimmed. */
 export function nonEmpty(value: unknown): string | null {
   if (typeof value !== "string") return null;

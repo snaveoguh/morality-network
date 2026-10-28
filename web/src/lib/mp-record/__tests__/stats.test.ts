@@ -103,7 +103,7 @@ describe("interests value stats", () => {
       "Not converted and not included: USD 100.00 (entry 6).",
     ]);
     expect(s.rowsUsed.map((r) => r.sourceRecordId).sort()).toEqual(["1", "2", "3"]);
-    expect(s.window).toEqual({ from: "2025-06-30", to: "2026-06-30", basis: "register registration date" });
+    expect(s.window).toEqual({ from: "2025-06-30", fromInclusive: false, to: "2026-06-30", basis: "register registration date" });
   });
 
   it("uses an exclusive lower bound for 12 months and inclusive for the Parliament window", () => {
