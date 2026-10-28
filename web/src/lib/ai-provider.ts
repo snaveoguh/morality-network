@@ -370,7 +370,9 @@ export async function generateTextForTask(request: AITextRequest): Promise<AITex
   // Try Agent Hub first (free Groq tier) — unless one of our own analysts
   // is enabled for this task, in which case the analyst goes first and the
   // hub would only shadow it.
+  let hubTried = false;
   if (!analystHandlesTask(request.task)) {
+    hubTried = true;
     const hubResult = await tryAgentHub(request);
     if (hubResult) return hubResult;
   }
@@ -384,6 +386,13 @@ export async function generateTextForTask(request: AITextRequest): Promise<AITex
   let lastError: Error | null = null;
   for (const [index, provider] of providers.entries()) {
     if (index >= maxAttempts) break;
+    // The analyst went first and failed: the free hub comes before any paid
+    // provider, exactly as it would have without the analyst.
+    if (provider !== "analyst" && !hubTried) {
+      hubTried = true;
+      const hubResult = await tryAgentHub(request);
+      if (hubResult) return hubResult;
+    }
     const coolingMs = providerCoolingDown(provider);
     if (coolingMs > 0) {
       lastError = lastError ?? new Error(`${provider} cooling down after repeated failures`);

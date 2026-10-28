@@ -261,7 +261,11 @@ export const AI_MODEL_POLICY = Object.fromEntries(
 ) as Record<AIModelTask, AIProviderTaskPolicy>;
 
 export function getConfiguredProvidersForTask(task: AIModelTask): AIProviderId[] {
-  return AI_MODEL_POLICY[task].providers.filter((provider) => isProviderConfigured(provider));
+  // "analyst" is configured per task: an endpoint for one analyst must not
+  // put it in front of a task whose analyst has none.
+  return AI_MODEL_POLICY[task].providers.filter(
+    (provider) => isProviderConfigured(provider) && (provider !== "analyst" || analystHandlesTask(task)),
+  );
 }
 
 export function hasAIProviderForTask(task: AIModelTask): boolean {
