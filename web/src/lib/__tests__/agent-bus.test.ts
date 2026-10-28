@@ -63,7 +63,8 @@ describe("message bus persistence", () => {
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     const [url, init] = fetchSpy.mock.calls[0]!;
     expect(String(url)).toBe("https://indexer.example.com/api/v1/agents/events");
-    expect(init?.method).toBe("POST");
+    // Ponder 0.7.x registers ponder.post() routes via hono.put().
+    expect(init?.method).toBe("PUT");
 
     const body = JSON.parse(String(init?.body));
     expect(body.source).toBe("request-runtime");
