@@ -323,7 +323,7 @@ function Ties({ ties, memberId }: { ties: MpTie[]; memberId: number }) {
             <p className="font-body-serif text-sm text-[var(--ink)]">{t.counterpartyName}</p>
             <p className="mt-1 font-mono text-[11px] leading-relaxed text-[var(--ink-light)]">
               {tieLabel(t.tieType)}
-              {gbp(t.valueGbp) ? ` · ${gbp(t.valueGbp)}` : ""}
+              {gbp(t.valueGbp) ? ` · ${gbp(t.valueGbp)}${t.paymentRegularity ? `, regularity of payment: ${t.paymentRegularity}` : ""}` : ""}
               {t.periodStart ? ` · ${d(t.periodStart)}${t.periodEnd ? ` – ${d(t.periodEnd)}` : ""}` : ""} · <SourceLink href={t.sourceUrl}>Source</SourceLink>
             </p>
           </li>

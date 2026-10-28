@@ -25,7 +25,8 @@ export function jsonResponse(body: unknown, status = 200, cache = status === 200
     status,
     headers: {
       ...CORS_HEADERS,
-      "Cache-Control": cache ? CACHE : "no-store",
+      // Before sign-off, never let a shared cache hold a token-gated preview response.
+      "Cache-Control": cache && gate.signedOff ? CACHE : "private, no-store",
       ...(gate.signedOff ? {} : { "X-Robots-Tag": "noindex" }),
     },
   });

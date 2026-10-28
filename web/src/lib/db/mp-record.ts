@@ -419,6 +419,8 @@ export interface MpTie {
   counterpartyName: string | null;
   counterpartyKind: string;
   valueGbp: string | null;
+  /** Category 1.2 only: valueGbp is per this period (e.g. "Monthly"), not a total. */
+  paymentRegularity: string | null;
   periodStart: string | null;
   periodEnd: string | null;
   registerWording: string | null;
@@ -439,6 +441,7 @@ export async function getMpTies(memberId: number): Promise<MpTie[]> {
     counterpartyName: (r.counterparty_name as string) ?? null,
     counterpartyKind: String(r.counterparty_kind),
     valueGbp: (r.value_gbp as string) ?? null,
+    paymentRegularity: (r.payment_regularity as string) ?? null,
     periodStart: r.period_start ? isoDateOnly(r.period_start) : null,
     periodEnd: r.period_end ? isoDateOnly(r.period_end) : null,
     registerWording: (r.register_wording as string) ?? null,

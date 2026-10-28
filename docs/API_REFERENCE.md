@@ -141,9 +141,10 @@ Returns historical sentiment data. ISR: 5 min.
 Per-MP register facts: identity, Claim Ledger claims, Register of Members'
 Financial Interests, Electoral Commission donations and register-stated ties.
 Spec: `docs/MP_RECORD_SPEC.md`. **Pre-launch:** these routes return 404 in
-production until legal sign-off (`MP_RECORD_LEGAL_SIGNOFF`), or on staging
-with `MP_RECORD_PREVIEW=true`. Responses carry `X-Robots-Tag: noindex` until
-then.
+production until legal sign-off (`MP_RECORD_LEGAL_SIGNOFF`). On staging
+(`MP_RECORD_PREVIEW=true`) they answer only to a browser holding the preview
+cookie (see the spec's launch gate). Until sign-off, responses carry
+`X-Robots-Tag: noindex` and `Cache-Control: private, no-store`.
 
 All GET routes are CORS-open (`Access-Control-Allow-Origin: *`, `OPTIONS`
 supported), rate-limited to 60 requests/minute per IP, cached

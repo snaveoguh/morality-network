@@ -415,7 +415,12 @@ CREATE OR REPLACE VIEW pooter.mp_ties AS
          end_date AS period_end,
          summary AS register_wording,
          source_url, source_record_id, 'mp_interests' AS source_table,
-         retrieved_at, content_hash
+         retrieved_at, content_hash,
+         -- Category 1.2 values are per period (e.g. monthly), never a total.
+         CASE WHEN is_regular_payment THEN COALESCE(
+           (SELECT f->>'value' FROM jsonb_array_elements(fields) f
+             WHERE f->>'name' = 'RegularityOfPayment' LIMIT 1),
+           'not stated') END AS payment_regularity
   FROM pooter.mp_interests_current
   WHERE payer_or_donor_name IS NOT NULL
   UNION ALL
@@ -428,7 +433,7 @@ CREATE OR REPLACE VIEW pooter.mp_ties AS
          NULL::date,
          COALESCE(nature_of_donation, purpose_of_visit, donation_type),
          source_url, source_record_id, 'mp_donations',
-         retrieved_at, content_hash
+         retrieved_at, content_hash, NULL::text
   FROM pooter.mp_donations_public
   UNION ALL
   SELECT member_id,
@@ -440,7 +445,7 @@ CREATE OR REPLACE VIEW pooter.mp_ties AS
          resigned_on,
          officer_role,
          source_url, source_record_id, 'mp_directorships',
-         retrieved_at, content_hash
+         retrieved_at, content_hash, NULL::text
   FROM pooter.mp_directorships_public
   UNION ALL
   SELECT member_id,
@@ -452,7 +457,7 @@ CREATE OR REPLACE VIEW pooter.mp_ties AS
          NULL::date,
          officer_role,
          source_url, source_record_id, 'mp_appgs',
-         retrieved_at, content_hash
+         retrieved_at, content_hash, NULL::text
   FROM pooter.mp_appgs_public;
 
 -- ── Immutability ────────────────────────────────────────────────────────────

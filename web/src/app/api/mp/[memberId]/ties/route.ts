@@ -27,6 +27,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ memb
         tieType: "'interest:<register category number>' | 'ec_donation' | 'directorship' | 'appg_officer'",
         counterpartyKind: "from the register's own status field: organisation | person | unknown",
         valueGbp: "stated value, exact decimal string; null = not stated in the register",
+        paymentRegularity: "set for register category 1.2 (ongoing paid employment): valueGbp is per this period (e.g. 'Monthly'), NOT a total; null = one-off value",
         registerWording: "the register's own words for the entry",
       },
     },

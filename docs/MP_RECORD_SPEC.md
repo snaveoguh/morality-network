@@ -12,7 +12,7 @@ the same answer from the same documents. If a number cannot survive that, it doe
 > **LAUNCH GATE — open.** The MP Record must not be public until a media solicitor has
 > reviewed the page template, the stat methodology and this document, and signed off in
 > writing. Until then production returns 404 for `/mp/*` and `/api/mp/*` unless
-> `MP_RECORD_PREVIEW=true` (staging only), and every page shows a "pending legal review"
+> `MP_RECORD_PREVIEW=true` plus the preview token (staging only), and every page shows a "pending legal review"
 > banner and carries `noindex`. Sign-off is recorded by setting `MP_RECORD_LEGAL_SIGNOFF` to
 > the sign-off reference (e.g. `2026-11-14 Smith & Co ref 1234`) — see §Launch gate.
 
@@ -335,7 +335,11 @@ CORS-open (`Access-Control-Allow-Origin: *`, `GET, OPTIONS`), JSON, rate-limited
 ## 12. Launch gate
 
 - `MP_RECORD_LEGAL_SIGNOFF` unset → production 404s `/mp/*` and `/api/mp/*`, unless
-  `MP_RECORD_PREVIEW=true` (set on dev/staging only). Pages show a banner: "Pre-launch: this
+  `MP_RECORD_PREVIEW=true` (set on dev/staging only). Staging is still a public URL, so
+  preview also needs `MP_RECORD_PREVIEW_TOKEN` (at least 24 characters): open any `/mp`
+  page once with `?preview=<token>` and the middleware sets an httpOnly `mp_preview` cookie
+  for 30 days. Without the cookie, or with no token configured, staging 404s too. API
+  responses are `private, no-store` until sign-off so no shared cache holds them. Pages show a banner: "Pre-launch: this
   record is pending legal review and is not published", and carry `robots: noindex`.
 - `MP_RECORD_LEGAL_SIGNOFF` set → public; the footer shows "Legal review: <reference>".
 
@@ -350,8 +354,10 @@ DATABASE_URL='<dev database url>' npm run mp:ingest -- --list-links --status pro
 DATABASE_URL='<dev database url>' npm run mp:ingest -- --confirm-link <id> --reviewer "<name>"
 ```
 
-Set `MP_RECORD_PREVIEW=true` on the dev web service so `/mp/*` responds there
-(dev runs with `NODE_ENV=production`). Migration 014 only creates new objects
+Set `MP_RECORD_PREVIEW=true` and a random `MP_RECORD_PREVIEW_TOKEN` (e.g.
+`openssl rand -hex 24`) on the dev web service, then open
+`https://dev.pooter.world/mp/4366?preview=<token>` once (dev runs with
+`NODE_ENV=production`). Share the token only with reviewers. Migration 014 only creates new objects
 (`pooter.mp_*` tables, views, one trigger function) and touches no existing table.
 To log a correction until an operator UI exists, insert into `pooter.mp_corrections`
 (append-only) with `corrected_by` set to a named person.
