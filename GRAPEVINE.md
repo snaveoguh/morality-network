@@ -9,6 +9,35 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 76 · house style + AI-tell lint for generated copy
+
+**when** — 2026-10-28
+**what** — branch `chore/house-style` (not merged to `dev` or `main`, not deployed).
+New `docs/STYLE_GUIDE.md` sets the house style in two registers: Record (Claim
+Ledger and MP pages, written to the Commons Library standard) and News (feed and
+editions, written to the Reuters and BBC standard). The old visual guide moves
+to `docs/DESIGN_SYSTEM.md`. New `docs/writing-research.md` holds the research,
+with sources and a teardown of the 28 Oct front-page lead. New
+`web/src/lib/house-style.ts` is a regex and phrase-list lint with tests and
+makes no LLM call. It is wired into `daily-edition.ts` and `claude-editorial.ts`
+(it picks between text we already have and logs `[house-style]` on failure),
+and into `/api/articles/publish` (`styleLint: "enforce"` returns a 422). pooter1
+now asks for three headline candidates in one call and tries each in turn. The
+writer prompts lose "slightly unhinged", "make it cut", the forced
+juxtapositions and the crypto angle in standfirsts.
+**why** — the AI copy read as AI ("A Spanish train wreck leaves a mother's
+lullaby on the tracks while…"). pooter's figures have to be quotable in
+Parliament.
+**where** — `docs/STYLE_GUIDE.md`, `docs/DESIGN_SYSTEM.md`,
+`docs/writing-research.md`, `web/src/lib/house-style.ts` and its test,
+`web/src/lib/daily-edition.ts`, `web/src/lib/claude-editorial.ts`,
+`web/src/app/api/articles/publish/route.ts`,
+`agents/pooter1/src/tasks/write-editorial.ts`, `README.md`, `docs/README.md`,
+`docs/style-guide.html`.
+**rollback** — `git revert` the branch's commits. The lint only chooses
+between copy we already have, so reverting just the prompt commits restores
+the old voice.
+
 ## ▲ node 75 · build: allow 180s per prerendered page
 
 **when** — 2026-10-23
