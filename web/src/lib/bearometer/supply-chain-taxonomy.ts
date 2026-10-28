@@ -166,7 +166,7 @@ export const SUPPLY_CHAIN_GROUPS: SupplyChainGroup[] = [
 
 /** Explicit easing — wins even when the same headline names the control it eases. */
 const EXPLICIT_EASING =
-  /\b((?:suspend\w*|paus\w+|lift\w*|scrap\w*|drop\w*|roll\w* back|eas\w+|relax\w*)\s+(?:(?:the|its|some|new)\s+)?(?:rare[- ]earth\s+|export\s+)?(?:controls?|curbs?|restrictions?|bans?)|resum\w+\s+(?:\w+\s+)?(?:exports?|shipments?|supply)|(?:grant\w*|approv\w+|issu\w+)\s+(?:\w+\s+)?(?:export\s+)?licen[cs]es?|general licen[cs]es?|exempt\w*|truce)\b/i;
+  /\b((?:suspend\w*|paus\w+|lift\w*|scrap\w*|drop\w*|roll\w* back|eas\w+|relax\w*)\s+(?:(?:the|its|some|new)\s+)?(?:rare[- ]earth\s+|export\s+)?(?:controls?|curbs?|restrictions?|bans?)|resum\w+\s+(?:[\w-]+\s+){0,3}(?:exports?|shipments?|supply)|(?:grant\w*|approv\w+|issu\w+)\s+(?:[\w-]+\s+){0,3}licen[cs]es?|general licen[cs]es?|exempt\w*|truce)\b/i;
 
 const TIGHTENING =
   /\b(export (?:controls?|curbs?|restrictions?|bans?|licen[cs](?:e|es|ing))|restrict\w*|ban(?:s|ned)?|curb\w*|quotas? cuts?|cuts? (?:\w+ )?quotas?|suspend\w* (?:exports?|shipments?)|halt\w*|shortages?|harder to (?:get|obtain|source)|scarc\w+|price (?:rises?|hikes?|surges?|jumps?)|prices? (?:rise|rose|rising|surge\w*|jump\w*|soar\w*|spike\w*)|tighten\w*|crack\w* down|smuggl\w+|squeez\w+|weaponi[sz]\w+|chokehold)\b/i;
