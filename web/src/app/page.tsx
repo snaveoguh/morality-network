@@ -5,7 +5,8 @@ import { MastheadSkeleton } from "@/components/layout/MastheadSkeleton";
 import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
 import { AsyncMasthead } from "@/components/layout/AsyncMasthead";
 import { AsyncFeed } from "@/components/feed/AsyncFeed";
-import { LedgerStrip } from "@/components/ledger/LedgerStrip";
+import { LedgerStrip, LedgerCardsSkeleton } from "@/components/ledger/LedgerStrip";
+import { FrontGrid } from "@/components/feed/FrontFeed";
 import { getDailyEditionHash } from "@/lib/daily-edition";
 import { getArchivedEditorial, getRecentPooterOriginals } from "@/lib/editorial-archive";
 import { SITE_URL, withBrand } from "@/lib/brand";
@@ -17,8 +18,9 @@ export const maxDuration = 30;
 // FEED PAGE — instant shell, data streams in via Suspense
 //
 // The page shell (PooterTheme + skeleton placeholders) renders immediately.
-// AsyncMasthead and AsyncFeed are async server components that fetch data
-// independently — each streams into its Suspense boundary as soon as ready.
+// AsyncMasthead, AsyncFeed and LedgerStrip are async server components that
+// fetch data independently — each streams into its Suspense boundary as soon
+// as ready.
 //
 // Result: user sees the newspaper layout + lofi skeletons in <100ms,
 // content fills in progressively over the next few seconds.
@@ -91,20 +93,22 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function FeedPage() {
+  // Three independent Suspense boundaries share one grid: the feed's blocks,
+  // the lead story and the ledger rail each place themselves (see FrontFeed).
   return (
     <>
       <PooterTheme />
-      <Suspense fallback={<MastheadSkeleton />}>
-        <AsyncMasthead />
-      </Suspense>
-      <Suspense fallback={null}>
-        <LedgerStrip />
-      </Suspense>
-      <div className="mt-4">
+      <FrontGrid>
         <Suspense fallback={<FeedSkeleton />}>
           <AsyncFeed />
         </Suspense>
-      </div>
+        <Suspense fallback={<MastheadSkeleton />}>
+          <AsyncMasthead />
+        </Suspense>
+        <Suspense fallback={<LedgerCardsSkeleton />}>
+          <LedgerStrip />
+        </Suspense>
+      </FrontGrid>
     </>
   );
 }

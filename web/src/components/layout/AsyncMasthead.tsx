@@ -16,7 +16,19 @@ type MastheadEdition = {
   headline: string;
   subheadline: string;
   generatedAt: string;
+  imageUrl: string | null;
 };
+
+// Edition illustrations are served by token id: days since 11 Mar 2025 + 1
+// (same epoch as /api/edition/[tokenId]/illustration and the article page).
+const EDITION_EPOCH_MS = 1741651200 * 1000;
+
+function editionIllustrationUrl(generatedAt: string | undefined): string | null {
+  const ts = generatedAt ? new Date(generatedAt).getTime() : Date.now();
+  if (!Number.isFinite(ts)) return null;
+  const days = Math.floor((ts - EDITION_EPOCH_MS) / 86400000);
+  return days >= 0 ? `/api/edition/${days + 1}/illustration` : null;
+}
 
 /** Race a promise against a timeout — returns null on timeout */
 function withTimeout<T>(promise: Promise<T | null>, ms: number): Promise<T | null> {
@@ -38,6 +50,7 @@ async function resolveMasthead(): Promise<MastheadEdition | null> {
         headline: cached.primary.title,
         subheadline: cached.subheadline,
         generatedAt: cached.generatedAt,
+        imageUrl: cached.hasIllustration ? editionIllustrationUrl(cached.generatedAt) : null,
       };
     }
   } catch {
@@ -55,6 +68,7 @@ async function resolveMasthead(): Promise<MastheadEdition | null> {
         headline: best.title,
         subheadline: best.subheadline,
         generatedAt: best.generatedAt,
+        imageUrl: best.isDailyEdition && best.hasIllustration ? editionIllustrationUrl(best.generatedAt) : null,
       };
     }
   } catch {
@@ -74,6 +88,7 @@ async function resolveMasthead(): Promise<MastheadEdition | null> {
         headline: pick.title,
         subheadline: pick.subheadline,
         generatedAt: pick.generatedAt,
+        imageUrl: pick.isDailyEdition && pick.hasIllustration ? editionIllustrationUrl(pick.generatedAt) : null,
       };
     }
   } catch {
@@ -93,6 +108,7 @@ export async function AsyncMasthead() {
       dailyHeadline={dailyEdition?.headline}
       dailySubheadline={dailyEdition?.subheadline}
       dailyHash={dailyEdition?.hash}
+      imageUrl={dailyEdition?.imageUrl}
     />
   );
 }

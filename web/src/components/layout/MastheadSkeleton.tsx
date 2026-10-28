@@ -1,43 +1,30 @@
 // ============================================================================
-// MASTHEAD SKELETON — instant lofi placeholder while daily edition loads
+// MASTHEAD SKELETON — placeholder for the lead story while the edition loads
+// Same placement as <Masthead>: image above headline on phone, text 4 +
+// image 5 of the page's first 9 columns at ≥1024.
 // ============================================================================
 
-import { CONTRACTS_CHAIN_ID } from "@/lib/contracts";
+const BAR = "animate-pulse bg-[var(--rule-light)]";
 
 export function MastheadSkeleton() {
-  // Static dateline — no data dependency
-  const today = new Date();
-  const editionNumber =
-    Math.floor(
-      (today.getTime() - new Date("2026-03-11T00:00:00Z").getTime()) / 86400000
-    ) + 1;
-  const dateStr = today
-    .toLocaleDateString("en-GB", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    })
-    .toUpperCase();
-  const chainTag = CONTRACTS_CHAIN_ID === 84532 ? "BASE SEPOLIA" : "BASE L2";
-  const dateline = `${dateStr} · EDITION ${editionNumber} · ${chainTag}`;
-
   return (
-    <div className="border-y border-[var(--rule)]">
-      {/* Real dateline — no data needed */}
-      <div className="border-b border-[var(--rule-light)] py-[3px] text-center font-mono text-[8px] uppercase tracking-[0.22em] text-[var(--ink-faint)]">
-        {dateline}
+    <div
+      aria-hidden
+      className="order-1 flex flex-col pt-[18px] lg:col-span-9 lg:row-start-2 lg:grid lg:grid-cols-9 lg:gap-x-6 lg:pt-7"
+    >
+      <div className="flex min-h-11 items-center gap-2 pb-1 text-[15px] font-bold text-[var(--ink)] lg:col-span-4 lg:row-start-1 lg:min-h-0 lg:items-start">
+        <span className="h-2.5 w-2.5 bg-[var(--ink)]" />
+        Today&rsquo;s edition ›
       </div>
-
-      {/* Pulsing headline skeleton */}
-      <div className="px-4 py-5 text-center sm:py-6">
-        {/* Daily title bar */}
-        <div className="mx-auto mb-3 h-2 w-24 animate-pulse bg-[var(--rule-light)]" />
-        {/* Headline bars */}
-        <div className="mx-auto mb-2 h-7 w-4/5 animate-pulse bg-[var(--rule-light)] sm:h-9" />
-        <div className="mx-auto mb-3 h-7 w-3/5 animate-pulse bg-[var(--rule-light)] sm:h-9" />
-        {/* Subheadline */}
-        <div className="mx-auto h-4 w-2/5 animate-pulse bg-[var(--rule-light)]/60" />
+      <div className="-mx-4 lg:col-span-5 lg:col-start-5 lg:row-span-2 lg:row-start-1 lg:mx-0">
+        <div className="halftone aspect-[3/2] w-full lg:aspect-[4/3]" />
+      </div>
+      <div className="flex flex-col gap-2.5 pt-3.5 lg:col-span-4 lg:row-start-2 lg:border-r lg:border-[var(--rule-light)] lg:pr-6 lg:pt-3">
+        <div className={`h-8 w-11/12 ${BAR}`} />
+        <div className={`h-8 w-4/5 ${BAR}`} />
+        <div className={`h-8 w-3/5 ${BAR}`} />
+        <div className={`mt-1 h-4 w-full ${BAR} opacity-60`} />
+        <div className={`h-4 w-2/3 ${BAR} opacity-60`} />
       </div>
     </div>
   );

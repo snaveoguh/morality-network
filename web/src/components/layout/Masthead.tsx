@@ -2,24 +2,22 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { BRAND_NAME } from "@/lib/brand";
-import { CONTRACTS_CHAIN_ID } from "@/lib/contracts";
 import { EditionsPanel } from "@/components/editions/EditionsPanel";
 import { stripMd } from "@/lib/strip-md";
 
 // ============================================================================
-// MASTHEAD — Newspaper front-page banner
+// MASTHEAD — the front-page lead story (direction C)
 //
-// ┌─────────────────────────────────────────┐
-// │  WED, 11 MAR 2026 · EDITION 801 · BASE L2 │
-// │─────────────────────────────────────────│
-// │  Iran's shadow war meets the fruit     │  ← Daily headline (the hero)
-// │  fly's digital brain while oil chokes  │
-// │  the global throat.                     │
-// │                                         │
-// │  Three cargo ships struck, one          │  ← Subheadline
-// │  synthetic brain walking.               │
-// └─────────────────────────────────────────┘
+// phone                         ≥1024 (9 of the page's 12 columns)
+// ┌───────────────────────┐     ┌──────────────┬───────────────────┐
+// │ Today's edition ›     │     │ Today's ed. ›│                   │
+// │ ▓▓▓▓ lead image ▓▓▓▓▓ │     │ Headline     │   lead image      │
+// │ caption               │     │ dek          │                   │
+// │ Headline (serif)      │     │ byline       │   caption         │
+// │ dek · byline          │     └──────────────┴───────────────────┘
+// └───────────────────────┘
+// The lead image sits above the headline (pooter-brand). No image → no
+// placeholder; the text takes the full width.
 // ============================================================================
 
 interface MastheadProps {
@@ -27,6 +25,7 @@ interface MastheadProps {
   dailyHeadline?: string | null;
   dailySubheadline?: string | null;
   dailyHash?: string | null;
+  imageUrl?: string | null;
 }
 
 export function Masthead({
@@ -34,6 +33,7 @@ export function Masthead({
   dailyHeadline,
   dailySubheadline,
   dailyHash,
+  imageUrl,
 }: MastheadProps) {
   const normalizedDailyTitle = (dailyTitle || "").trim();
   const showDailyTitle =
@@ -48,29 +48,89 @@ export function Masthead({
     const num = Math.floor(
       (today.getTime() - new Date("2026-03-11T00:00:00Z").getTime()) / 86400000
     ) + 1;
-    const ds = today
-      .toLocaleDateString("en-GB", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-      .toUpperCase();
+    const ds = today.toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
     return { dateStr: ds, editionNumber: num };
   }, []);
 
+  const href = dailyHash ? `/article/${dailyHash}` : "/daily";
+  const hasStory = Boolean(dailyHeadline && dailyHash);
+
   return (
-    <div className="grain overflow-hidden border-b-4 border-[var(--brand-teal)] bg-[var(--brand-navy)] text-white">
-      {/* Dateline — thin ruled bar */}
-      <div className="border-b border-white/15 py-2 text-center text-[9px] font-semibold uppercase tracking-[0.2em] text-white/55">
-        {dateStr} &middot;{" "}
-        <button
-          onClick={() => setShowEditions(true)}
-          className="cursor-pointer underline-offset-2 transition-colors hover:text-[var(--brand-teal)] hover:underline"
+    <article
+      aria-label="Lead story"
+      className="order-1 flex flex-col pt-[18px] lg:col-span-9 lg:row-start-2 lg:grid lg:grid-cols-9 lg:gap-x-6 lg:pt-7"
+    >
+      {/* Image first on phone, right-hand column at ≥1024 */}
+      {hasStory && imageUrl && (
+        <figure className="order-2 -mx-4 mb-0 flex flex-col gap-2 lg:order-none lg:col-span-5 lg:col-start-5 lg:row-start-1 lg:mx-0">
+          <Link href={href} className="block" tabIndex={-1} aria-hidden>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageUrl}
+              alt=""
+              className="newspaper-img halftone aspect-[3/2] w-full object-cover lg:aspect-[4/3]"
+              fetchPriority="high"
+            />
+          </Link>
+          <figcaption className="px-4 text-xs text-[var(--ink-faint)] lg:px-0">
+            Illustration for today&rsquo;s edition
+          </figcaption>
+        </figure>
+      )}
+
+      <div
+        className={`contents lg:flex lg:flex-col lg:gap-3.5 ${
+          hasStory && imageUrl
+            ? "lg:col-span-4 lg:row-start-1 lg:border-r lg:border-[var(--rule-light)] lg:pr-6"
+            : "lg:col-span-9"
+        }`}
+      >
+        <Link
+          href={href}
+          className="order-1 flex min-h-11 items-center gap-2 pb-1 text-[15px] font-bold text-[var(--ink)] lg:min-h-0 lg:pb-0"
         >
-          EDITION {editionNumber}
-        </button>
-        {" "}&middot; {CONTRACTS_CHAIN_ID === 84532 ? "BASE SEPOLIA" : "BASE L2"}
+          <span aria-hidden className="h-2.5 w-2.5 bg-[var(--ink)]" />
+          {showDailyTitle ? normalizedDailyTitle : "Today’s edition"} ›
+        </Link>
+
+        <div className="order-3 flex flex-col gap-2.5 pt-3.5 lg:pt-0">
+          {hasStory ? (
+            <>
+              <Link href={href} className="group">
+                <h1 className="news-head text-[32px] leading-[1.12] text-[var(--ink)] group-hover:underline group-hover:decoration-[var(--ink-faint)] group-hover:decoration-1 group-hover:underline-offset-4 lg:text-[34px] lg:leading-[1.1]">
+                  {stripMd(dailyHeadline!)}
+                </h1>
+              </Link>
+              {dailySubheadline && (
+                <p className="text-base leading-normal text-[var(--ink-light)]">
+                  {stripMd(dailySubheadline)}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="news-head text-2xl leading-tight text-[var(--ink)]">
+              Today&rsquo;s edition is not out yet.{" "}
+              <Link href="/daily" className="underline decoration-[var(--ink-faint)] underline-offset-4">
+                Read earlier editions
+              </Link>
+              .
+            </p>
+          )}
+          <p className="text-[13px] text-[var(--ink-faint)]">
+            By pooter world &middot; {dateStr} &middot;{" "}
+            <button
+              type="button"
+              onClick={() => setShowEditions(true)}
+              className="underline-offset-2 hover:text-[var(--ink)] hover:underline"
+            >
+              Edition {editionNumber}
+            </button>
+          </p>
+        </div>
       </div>
 
       {showEditions && (
@@ -79,46 +139,6 @@ export function Masthead({
           onClose={() => setShowEditions(false)}
         />
       )}
-
-      {/* Hero headline block — left-aligned GOV.UK color band */}
-      <div className="px-6 py-9 sm:px-10 sm:py-12">
-        {dailyHeadline && dailyHash ? (
-          <>
-            {/* Daily title — teal eyebrow above headline */}
-            {showDailyTitle && (
-              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--brand-teal)]">
-                {normalizedDailyTitle}
-              </p>
-            )}
-
-            {/* Hero headline — THE front page story */}
-            <Link href={`/article/${dailyHash}`} className="group block">
-              <h1 className="font-headline max-w-5xl text-4xl font-extrabold leading-[1.04] tracking-tight text-white transition-colors group-hover:text-[var(--brand-teal)] sm:text-5xl lg:text-6xl">
-                {stripMd(dailyHeadline)}
-              </h1>
-            </Link>
-
-            <div className="mt-6 h-[5px] w-20 bg-[var(--brand-teal)]" />
-
-            {dailySubheadline && (
-              <p className="mt-6 max-w-3xl text-base leading-relaxed text-white/75 sm:text-lg">
-                {stripMd(dailySubheadline)}
-              </p>
-            )}
-          </>
-        ) : (
-          <>
-            {/* Fallback when no daily edition */}
-            <p className="blackletter mb-3 text-xl text-[var(--brand-teal)]">
-              {BRAND_NAME}
-            </p>
-            <h1 className="font-headline max-w-5xl text-4xl font-extrabold leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-6xl">
-              A public ledger of world events and their interpretation.
-            </h1>
-            <div className="mt-6 h-[5px] w-20 bg-[var(--brand-teal)]" />
-          </>
-        )}
-      </div>
-    </div>
+    </article>
   );
 }

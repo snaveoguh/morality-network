@@ -48,7 +48,7 @@ export function Header() {
 
           <Link
             href="/"
-            className="blackletter truncate text-center text-[28px] leading-none text-[var(--ink)] sm:text-[32px] lg:text-[40px]"
+            className="blackletter flex h-11 items-center justify-center truncate text-center text-[28px] leading-none text-[var(--ink)] sm:text-[32px] lg:text-[40px]"
           >
             {BRAND_NAME}
           </Link>
