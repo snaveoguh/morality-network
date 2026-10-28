@@ -6,7 +6,8 @@ This folder is the source of truth for architecture, style, deployments, and pub
 
 - Style guide web page: `docs/style-guide.html`
 - In-app style guide route: `web/src/app/style-guide/page.tsx` (visit `/style-guide`)
-- Style guide markdown: `docs/STYLE_GUIDE.md`
+- Design system markdown: `docs/DESIGN_SYSTEM.md`
+- House (writing) style: `docs/STYLE_GUIDE.md`
 - API reference: `docs/API_REFERENCE.md`
 - Architecture overview: `docs/ARCHITECTURE.md`
 - Board-facing architecture report: `docs/POOTER_WORLD_ARCHITECTURE_REPORT.md`

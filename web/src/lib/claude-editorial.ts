@@ -20,6 +20,7 @@ import { extractEntities, enrichEntities } from "./entity-extract";
 import { extractCanonicalClaim } from "./claim-extract";
 import { fetchMarkdown, isCloudflareAvailable } from "./cloudflare-crawl";
 import { reportError, reportWarn } from "./report-error";
+import { HOUSE_STYLE_PROMPT, formatIssues, pickCleanCopy } from "./house-style";
 
 // ============================================================================
 // TWO-PASS CLAUDE EDITORIAL ENGINE
@@ -50,7 +51,7 @@ const MAX_SCRAPED_CHARS = 8000; // per source — CF markdown is cleaner, Claude
 
 const WRITER_SYSTEM_PROMPT = `You are the lead editorial writer for pooter.world, a broadsheet newspaper for the internet age. You write with the precision of the Financial Times, the narrative instinct of The New Yorker, and the adversarial skepticism of I.F. Stone.
 
-Your job: given a primary news article and related multi-source coverage, write an ORIGINAL EDITORIAL that makes the reader smarter — and makes them feel something.
+Your job: given a primary news article and related multi-source coverage, write an ORIGINAL EDITORIAL that makes the reader better informed: what happened, what the sources show, what is still unknown.
 
 YOUR VOICE:
 - Third person, active voice, present tense where possible
@@ -60,12 +61,12 @@ YOUR VOICE:
 - Short punchy sentences mixed with longer analytical ones
 - Each paragraph should make exactly one argument, supported by evidence from the sources
 - Use the identifiable victim effect: one person's concrete story hits harder than abstract statistics. When the story has a human at its center, lead with them.
-- Vary your emotional register. Some stories call for fury. Some for dark humor. Some for quiet devastation. Match the tone to the material, don't flatten everything into the same "skeptical analyst" voice.
+- Match the tone to the material through what you report, not through adjectives or metaphors.
 
 STRUCTURE (write these sections with the headers shown):
 
 SUBHEADLINE:
-One sentence (max 30 words). This is NOT a summary and NOT a restatement of the headline. It's the editorial angle — the thought the reader wouldn't have on their own. It must contain information or framing that the headline does not. If the headline says what happened, the subheadline says why it matters or what it reveals.
+One sentence (max 28 words) about the SAME story as the headline. Not a restatement: add the next most important fact — who said what, the figure, the date, what happens next. Plain literal words, no metaphor ("lays bare", "turns X into a flashpoint", "a gamble"). Do not mention crypto, Bitcoin, "risk-off" or "safe haven" here unless the story itself is about markets; that belongs in MARKET IMPACT.
 
 EDITORIAL:
 6-10 paragraphs. This is the main body. Write it as continuous flowing prose — NO section headers, NO bold labels. Just paragraphs that naturally transition between these concerns:
@@ -148,7 +149,10 @@ RULES:
 - If only the primary article is usable, write a narrower primary-source editorial rather than refusing.
 - Never answer with an explanation of why you cannot write, why the sources are insufficient, or what additional material you would need.
 - Never pad with generalities. Every sentence should carry information.
-- NEVER invent, guess, or hallucinate financial prices, market caps, or trading volumes. If CURRENT MARKET DATA is provided below the source material, use ONLY those figures for any price references. If no market data is provided and no price appears in the source material, do not mention specific prices at all.`;
+- NEVER invent, guess, or hallucinate financial prices, market caps, or trading volumes. If CURRENT MARKET DATA is provided below the source material, use ONLY those figures for any price references. If no market data is provided and no price appears in the source material, do not mention specific prices at all.
+- Keep the crypto transmission analysis inside MARKET IMPACT. The SUBHEADLINE and EDITORIAL report the story on its own terms.
+
+${HOUSE_STYLE_PROMPT}`;
 
 // ============================================================================
 // PASS 2 — EXTRACTOR PROMPT
@@ -976,11 +980,23 @@ export async function generateAIEditorial(
     reportWarn("editorial:market", `Market impact: significance=${marketImpact.significance}, ${marketImpact.affectedMarkets.length} markets`);
   }
 
+  // House-style gate (docs/STYLE_GUIDE.md): if the writer's subheadline fails
+  // the lint, fall back to the first sentence of its own wire summary. No new
+  // LLM call; if both fail, keep the one with fewer errors and log it.
+  const wireLead = writerOutput.wireSummary?.match(/^.+?[.!?](?=\s|$)/)?.[0] ?? null;
+  const dekPick = pickCleanCopy([writerOutput.subheadline, wireLead], "dek", {
+    marketStory: /market|crypto|financ|business|econom/i.test(primary.category ?? ""),
+  });
+  const subheadline = dekPick?.text ?? writerOutput.subheadline;
+  if (dekPick?.rejected) {
+    reportWarn("house-style", `editorial subheadline failed lint: "${dekPick.text}" — ${formatIssues(dekPick.issues)}`);
+  }
+
   return {
     primary,
     claim: extractorOutput.claim,
     relatedSources: relevantRelated,
-    subheadline: writerOutput.subheadline,
+    subheadline,
     subheadlineEnglish: null,
     editorialBody: writerOutput.editorialBody,
     editorialBodyEnglish: undefined,
