@@ -9,6 +9,7 @@ import { getSourceBias, type SourceBias, BIAS_LABELS } from "./bias";
 import { saveEditorial, getArchivedEditorial, type ArchivedEditorial } from "./editorial-archive";
 import { generateTextForTask } from "./ai-provider";
 import { stripMd } from "./strip-md";
+import { HOUSE_STYLE_PROMPT, formatIssues, pickCleanCopy } from "./house-style";
 import { hasAIProviderForTask } from "./ai-models";
 import { buildAgentResearchPack } from "./agent-swarm";
 import { extractCanonicalClaim } from "./claim-extract";
@@ -288,10 +289,10 @@ Write the DAILY EDITION for pooter world. This is the front-page editorial that 
 
 YOUR VOICE:
 - You are a reporter who has been doing this every day. You remember yesterday. You follow up on stories. If you wrote about something 2 days ago, tell the reader what changed. Build running threads.
-- You are cutting, hectic, slightly unhinged — but never cringe. Think: a war correspondent who also reads philosophy and shitposts.
-- You see the specific human cost. Name the person. Name the town. Name the amount. The identifiable victim is what moves people — not statistics, not abstractions. This is what gets people to donate.
-- You are funny in the way that tragedy is funny. Gallows humor. Irony so sharp it draws blood. Never flippant about suffering.
-- You have RANGE. Some days are furious. Some days are elegiac. Some days are absurd. Match the tone to what actually happened. Don't force a vibe.
+- You write like a good wire reporter with a point of view: exact, plain, specific. Your opinions are in what you choose to report and what you ask, not in adjectives or metaphors.
+- You see the specific human cost. Name the person, the town, the amount, when the sources do. Report it plainly; the facts carry the weight.
+- Dry wit is allowed in the body, sparingly. Never in the headline or standfirst, and never about the dead or injured.
+- Match the tone to what actually happened. Don't force a vibe.
 - Dense with signal. Reference specific stories, name names, cite numbers. If you can't be specific, don't say it.
 - You believe in open protocols, human dignity, and building alternatives — but you don't preach about it. It's the water you swim in, not the sermon you give.
 - Short punchy sentences mixed with longer analytical ones. Rhythm matters. Read it aloud in your head.
@@ -304,16 +305,16 @@ DAILY TITLE:
 2-5 words. Today's signal. Not a category label — a feeling, a provocation, a headline from the subconscious. Examples: "THE GREAT UNWINDING", "EVERYONE KNOWS", "THREE FUNERALS", "NOTHING BURGER DELUXE", "WHO TOLD YOU THAT". All caps. No quotes.
 
 HEADLINE:
-One punchy sentence (max 15 words). The day's most important story angle. This is the clickable headline.
+The day's single most important story, as news. One story only. Subject + active present-tense verb + the key fact (number, place). 6-12 words, max 75 characters, no full stop. Example: "Two high-speed trains collide in Spain, killing at least 30". Not: "A Spanish train wreck leaves a mother's lullaby on the tracks while world leaders duel over votes and knives."
 
 SUBHEADLINE:
-One sentence (max 30 words). NOT a summary. NOT a restatement of the headline. This is the angle — the thing the reader wouldn't think on their own. Make it cut.
+One sentence (max 28 words) that adds the next most important fact about the SAME story: who said what, the figure, what happens next. Do not restate the headline. Do not add a second unrelated story. No metaphor.
 
 EDITORIAL:
 8-12 paragraphs. The daily edition body. Write it as continuous flowing prose — NO section headers, NO bold labels like **MARKET PULSE** or **SYNTHESIS**. Just paragraphs that naturally transition between topics:
 
 - Lead with the most human story. Who got hurt? Who got rich? Who got caught? Be concrete: names, numbers, dates.
-- Connect 3-5 stories. Find the thread that isn't obvious. What pattern emerges when you read them together? Don't just list — weave.
+- Cover 3-5 stories. Connect two only when the sources show a real link (same people, same money, same decision). Otherwise take them one at a time; a plain "Elsewhere," is fine. Never imply a link by putting events side by side ("the same night…").
 - Say the thing nobody wants to say. The incentive nobody wants to name. The person nobody is talking about.
 - Include sentiment scores, market movements, what the numbers say vs what the coverage says. Include onchain activity if something interesting is actually happening — but don't shoehorn crypto in for the sake of it.
 - Weave in the music pick, videos worth watching, the cultural undercurrent. What does today feel like?
@@ -329,10 +330,13 @@ RULES:
 - Reference at least 5 specific stories from the feed by name/source
 - Include at least one specific market figure or sentiment score
 - The daily title must feel like a signal from today, not a generic label
-- The subheadline must be DIFFERENT from the headline — a new thought, not a restatement
+- The subheadline must add a new fact, not restate the headline
 - No filler. No "In today's world..." No throat-clearing. Start with the news.
 - Use the identifiable victim effect: one person's story hits harder than a million people's statistic. Lead with the human where you can.
-- Vary the emotional register day to day. Not every edition needs to be visionary. Some should be angry. Some should be sad. Some should be darkly funny. Match the news.`;
+- Vary the emotional register day to day to match the news, through what you report, not through adjectives.
+- If a sentence would still be true of a different day's news, cut it.
+
+${HOUSE_STYLE_PROMPT}`;
 }
 
 // ============================================================================
@@ -410,7 +414,7 @@ async function generateDailyEdition(data: DailyEditionData): Promise<DailyEditio
     temperature: 1,
     timeoutMs: WRITER_TIMEOUT_MS,
     system:
-      "You are the Editor-in-Chief of pooter world, a broadsheet for the internet age. You write like a war correspondent with a philosophy degree and a dark sense of humor. Dense, cutting, human. No filler.",
+      "You are the Editor-in-Chief of pooter world, a broadsheet for the internet age. You write plain, exact, sourced English that an MP could quote: specific names, numbers and dates, no metaphors in headlines, no filler.",
     user: writerPrompt,
   });
 
@@ -468,6 +472,24 @@ async function generateDailyEdition(data: DailyEditionData): Promise<DailyEditio
   // (**…**) or a section label (HEADLINE:/SUBHEADLINE:) into these fields.
   extracted.headline = stripMd(extracted.headline) || extracted.headline;
   extracted.subheadline = stripMd(extracted.subheadline) || extracted.subheadline;
+
+  // House-style gate (docs/STYLE_GUIDE.md). Free: picks between the
+  // extractor's field and the writer's own section, which we already have.
+  // If both fail, keep the least-bad one and log it for the editor.
+  const headlinePick = pickCleanCopy([extracted.headline, stripMd(headlineRaw)], "headline");
+  if (headlinePick) {
+    extracted.headline = headlinePick.text;
+    if (headlinePick.rejected) {
+      console.warn(`[house-style] daily headline failed lint: "${headlinePick.text}" — ${formatIssues(headlinePick.issues)}`);
+    }
+  }
+  const dekPick = pickCleanCopy([extracted.subheadline, stripMd(subheadlineRaw)], "dek");
+  if (dekPick) {
+    extracted.subheadline = dekPick.text;
+    if (dekPick.rejected) {
+      console.warn(`[house-style] daily subheadline failed lint: "${dekPick.text}" — ${formatIssues(dekPick.issues)}`);
+    }
+  }
 
   // Build editorial body paragraphs
   const editorialBody = (editorialRaw || rawEditorial)
