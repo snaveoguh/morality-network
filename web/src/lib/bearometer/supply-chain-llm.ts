@@ -66,12 +66,11 @@ export async function refineNeutralDirections(
           timeoutMs: 15_000,
           maxAttempts: 2,
         });
-        const parsed = parse(result.text);
-        if (parsed) {
-          direction = parsed;
-          if (cache.size >= CACHE_MAX) cache.clear();
-          cache.set(item.id, parsed);
-        }
+        // Cache unparseable answers as neutral so the same headline is not
+        // paid for again on every snapshot.
+        direction = parse(result.text) ?? "neutral";
+        if (cache.size >= CACHE_MAX) cache.clear();
+        cache.set(item.id, direction);
       } catch (error) {
         // Budget blocked, provider down, kill switch: stop calling this snapshot.
         console.warn(
