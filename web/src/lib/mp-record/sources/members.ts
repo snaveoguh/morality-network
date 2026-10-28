@@ -135,3 +135,19 @@ export function parseBiography(
   }
   return out;
 }
+
+/** GET /Members/Search?House=1&IsCurrentMember=true page → member ids + total. */
+export function currentCommonsSearchUrl(skip: number, take = 20): string {
+  return `${MEMBERS_API}/Members/Search?House=1&IsCurrentMember=true&skip=${skip}&take=${take}`;
+}
+
+export function parseMemberSearchPage(json: unknown): { memberIds: number[]; totalResults: number } {
+  const body = json as { items?: Array<{ value?: { id?: unknown } }>; totalResults?: unknown } | null;
+  if (!body || !Array.isArray(body.items) || typeof body.totalResults !== "number") {
+    throw new Error("parseMemberSearchPage: not a search page");
+  }
+  const memberIds = body.items
+    .map((i) => parseIntOrNull(i?.value?.id))
+    .filter((id): id is number => id !== null);
+  return { memberIds, totalResults: body.totalResults };
+}
