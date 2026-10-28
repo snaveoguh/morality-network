@@ -350,6 +350,23 @@ export const BIAS_DATABASE: Record<string, SourceBias> = {
     bias: "center", factuality: "mixed",
     ownership: "Turkish State (TRT)", country: "Turkey", fundingModel: "state",
   },
+  "chinadaily.com.cn": {
+    name: "China Daily", domain: "chinadaily.com.cn",
+    bias: "lean-left", factuality: "mixed",
+    ownership: "Chinese State (CCP Publicity Dept)", country: "China", fundingModel: "state",
+  },
+  // Government primary sources (Bearometer supply-chain layer). The rating
+  // describes the notice text — the regulation itself — not an editorial line.
+  "mofcom.gov.cn": {
+    name: "MOFCOM", domain: "mofcom.gov.cn",
+    bias: "center", factuality: "high",
+    ownership: "Chinese State (Ministry of Commerce)", country: "China", fundingModel: "state",
+  },
+  "customs.gov.cn": {
+    name: "China Customs (GACC)", domain: "customs.gov.cn",
+    bias: "center", factuality: "high",
+    ownership: "Chinese State (General Administration of Customs)", country: "China", fundingModel: "state",
+  },
 
   // ===== CRYPTO (mostly center, tech-oriented) =====
   "coindesk.com": {
@@ -415,6 +432,11 @@ export const BIAS_DATABASE: Record<string, SourceBias> = {
     name: "South China Morning Post", domain: "scmp.com",
     bias: "center", factuality: "high",
     ownership: "Alibaba Group", country: "Hong Kong", fundingModel: "corporate",
+  },
+  "caixinglobal.com": {
+    name: "Caixin Global", domain: "caixinglobal.com",
+    bias: "center", factuality: "high",
+    ownership: "Caixin Media", country: "China", fundingModel: "corporate",
   },
 
   // ===== USER-GENERATED / FORUMS =====

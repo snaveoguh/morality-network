@@ -9,6 +9,33 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 80 · Bearometer: China supply-chain indicators (branch only)
+
+**when**: 2026-10-28
+**what**: The signals page is renamed **Bearometer** (route stays `/signals`;
+`/bearometer` redirects). It gains a "Supply chain — China" panel. Sources:
+MOFCOM, GACC, Xinhua, Global Times, China Daily, SCMP and Caixin, plus six
+per-group wire sweeps, all via Google News RSS through `fetchFeed()`, with
+`BIAS_DATABASE` labels. Headlines are tagged by regex into six component
+groups (rare earths → magnets, gallium/germanium → chips, graphite → anodes,
+antimony/tungsten → defence, lithium → batteries, legacy chips). Each group
+gets a tightening/easing pressure score, shown against ex-China and exposed
+ticker watchlists. Every snapshot is recorded with timestamps
+(`pooter.bearometer_supply_*`, migration 015) for scoring later. An optional
+LLM fallback for neutral headlines is off by default.
+**why**: Matt/Hugo: Chinese notices and press on critical minerals reach
+component makers before Western earnings do. The indicator is untested
+(the arena backtest found only trend-following profitable), so it is recorded
+and shown as signals and data, never traded on or framed as advice.
+**where**: `web/src/lib/bearometer/`, `web/src/components/bearometer/`,
+`web/src/app/api/bearometer/supply-chain/`, `web/src/app/signals/page.tsx`,
+`web/src/app/bearometer/`, `web/src/lib/bias.ts`,
+`web/migrations/015_bearometer_supply_chain.sql`,
+`docs/BEAROMETER_SUPPLY_CHAIN.md`. On `feat/bearometer-supply-chain` only:
+not merged, not deployed, migration not applied.
+**rollback**: do not merge the branch. Once merged, revert its commits; the
+migration only adds tables (`DROP TABLE pooter.bearometer_supply_items,
+pooter.bearometer_supply_indicators`).
 ## ▲ node 79 · house style + AI-tell lint for generated copy
 
 **when** — 2026-10-28

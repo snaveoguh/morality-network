@@ -3,6 +3,18 @@ import {
   getLastNewsdeskResponse,
 } from "@/lib/trading/signals";
 import { SignalDashboard } from "@/components/trading/SignalDashboard";
+import { withBrand } from "@/lib/brand";
+import { Suspense } from "react";
+import {
+  SupplyChainPanel,
+  SupplyChainPanelSkeleton,
+} from "@/components/bearometer/SupplyChainPanel";
+
+export const metadata = {
+  title: withBrand("Bearometer"),
+  description:
+    "Directional market signals and China supply-chain pressure on rare earths, chip metals and battery materials. Signals and data, not financial advice.",
+};
 
 export const revalidate = 3600; // 1 hour ISR
 
@@ -30,7 +42,15 @@ export default async function SignalsPage() {
           analysis — weighted by recency, conviction, and significance across{" "}
           {totalObservations} observations
         </p>
+        <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+          Signals and data only &mdash; not financial advice or a
+          recommendation to buy or sell.
+        </p>
       </div>
+
+      <Suspense fallback={<SupplyChainPanelSkeleton />}>
+        <SupplyChainPanel />
+      </Suspense>
 
       {/* Newsdesk narrative banner (when LLM synthesis is active) */}
       {newsdesk?.narrative && (
