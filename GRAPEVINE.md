@@ -9,6 +9,33 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 76 · newspaper charts: /data page + flagged home slot
+
+**when** — 2026-10-28
+**what** — a small chart system with no new dependencies.
+`web/src/lib/charts/types.ts` defines a typed `ChartSpec` (bar, column or
+line; a title that states the finding; source; as-of time).
+`web/src/components/charts/NewsChart.tsx` draws it server-side as SVG: cream
+panel, black marks, one ink colour, and a source line with the date plus
+"updates live". It sizes for a phone first.
+`web/src/lib/charts/queries.ts` holds five cached queries:
+`feed-bias` and `feed-category` read the live feed (15 min cache);
+`claims-per-pmqs`, `claims-by-party` and `ledger-growth` read
+`pooter.ledger_claims` and `pooter.ledger_ingested_debates` (30 min cache).
+Each title is worked out from the data. The new `/data` page lists every
+chart. The home page gets one chart slot, off unless
+`HOME_CHART_ENABLED=true`; `HOME_CHART_ID` picks which chart.
+**why** — to make WaPo-style charts from data we already crawl and record,
+refreshed without anyone touching them.
+**where** — `web/src/lib/charts/`, `web/src/components/charts/`,
+`web/src/app/data/page.tsx`, `web/src/app/page.tsx` (slot only).
+**chart-worthy data not yet charted** — trader decisions
+(`pooter.trade_decisions`), signals by producer and direction
+(`pooter.signals`), party donations (`lib/funding/party-donations.ts`), ledger
+verdicts and corrections, and prediction-market volume (indexer).
+**rollback** — revert the branch's commits. To pull the home chart alone,
+unset `HOME_CHART_ENABLED`.
+
 ## ▲ node 75 · build: allow 180s per prerendered page
 
 **when** — 2026-10-23
