@@ -3,6 +3,8 @@ import "server-only";
 import { after } from "next/server";
 import {
   AI_MODEL_POLICY,
+  analystHandlesTask,
+  getAnalystBaseUrl,
   getConfiguredProvidersForTask,
   type AIModelTask,
   type AIProviderId,
@@ -54,7 +56,14 @@ function getProviderModel(task: AIModelTask, provider: AIProviderId): string {
   return AI_MODEL_POLICY[task].models[provider];
 }
 
-function getOpenAICompatibleBaseUrl(provider: "openai" | "venice" | "ollama"): string {
+type OpenAICompatibleProvider = "openai" | "venice" | "ollama" | "analyst";
+
+function getOpenAICompatibleBaseUrl(provider: OpenAICompatibleProvider, task: AIModelTask): string {
+  if (provider === "analyst") {
+    const url = getAnalystBaseUrl(task);
+    if (!url) throw new Error(`analyst has no endpoint for task "${task}"`);
+    return url;
+  }
   if (provider === "openai") {
     return (readEnv("OPENAI_BASE_URL") || "https://api.openai.com/v1").replace(/\/$/, "");
   }
@@ -64,7 +73,8 @@ function getOpenAICompatibleBaseUrl(provider: "openai" | "venice" | "ollama"): s
   return (readEnv("OLLAMA_BASE_URL") || "http://127.0.0.1:11434/v1").replace(/\/$/, "");
 }
 
-function getProviderApiKey(provider: "openai" | "venice" | "ollama"): string | null {
+function getProviderApiKey(provider: OpenAICompatibleProvider): string | null {
+  if (provider === "analyst") return readEnv("ANALYST_API_KEY");
   if (provider === "openai") return readEnv("OPENAI_API_KEY");
   if (provider === "venice") return readEnv("VENICE_API_KEY");
   return readEnv("OLLAMA_API_KEY");
@@ -164,7 +174,7 @@ async function generateAnthropicText(
 }
 
 async function generateOpenAICompatibleText(
-  provider: "openai" | "venice" | "ollama",
+  provider: OpenAICompatibleProvider,
   task: AIModelTask,
   request: AITextRequest,
 ): Promise<AIProviderResult> {
@@ -177,7 +187,7 @@ async function generateOpenAICompatibleText(
     headers.authorization = `Bearer ${apiKey}`;
   }
 
-  const response = await fetch(`${getOpenAICompatibleBaseUrl(provider)}/chat/completions`, {
+  const response = await fetch(`${getOpenAICompatibleBaseUrl(provider, task)}/chat/completions`, {
     method: "POST",
     headers,
     body: JSON.stringify({
@@ -210,7 +220,11 @@ async function generateOpenAICompatibleText(
     };
   };
 
-  const text = coerceMessageContent(payload.choices?.[0]?.message?.content).trim();
+  let text = coerceMessageContent(payload.choices?.[0]?.message?.content).trim();
+  // Open-weight reasoning models (Qwen3, DeepSeek) may emit <think> blocks.
+  if (provider === "analyst") {
+    text = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  }
   if (!text) {
     throw new Error(`${provider} returned no text`);
   }
@@ -353,9 +367,13 @@ function noteProviderSuccess(provider: AIProviderId): void {
 }
 
 export async function generateTextForTask(request: AITextRequest): Promise<AITextResult> {
-  // Try Agent Hub first (free Groq tier)
-  const hubResult = await tryAgentHub(request);
-  if (hubResult) return hubResult;
+  // Try Agent Hub first (free Groq tier) — unless one of our own analysts
+  // is enabled for this task, in which case the analyst goes first and the
+  // hub would only shadow it.
+  if (!analystHandlesTask(request.task)) {
+    const hubResult = await tryAgentHub(request);
+    if (hubResult) return hubResult;
+  }
 
   const providers = getConfiguredProvidersForTask(request.task);
   if (providers.length === 0) {
@@ -384,7 +402,8 @@ export async function generateTextForTask(request: AITextRequest): Promise<AITex
     // Fail closed: a paid provider with a configured cap is not called while
     // the meter cannot answer. Until 2026-09-19 an unreachable indexer meant
     // "no budget state" meant "allowed", i.e. the cap silently vanished.
-    const PAID: ReadonlyArray<AIProviderId> = ["anthropic", "openai"];
+    // Analysts count as paid: serverless endpoints bill per token.
+    const PAID: ReadonlyArray<AIProviderId> = ["anthropic", "openai", "analyst"];
     if (
       budgetState === null &&
       PAID.includes(provider) &&

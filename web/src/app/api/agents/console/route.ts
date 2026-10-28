@@ -281,7 +281,7 @@ export async function GET(request: Request) {
       console.warn("[API /agents/console] AI telemetry unavailable:", error);
       aiSummary = null;
     }
-    const providerIds: AIProviderId[] = ["anthropic", "openai", "venice", "ollama"];
+    const providerIds: AIProviderId[] = ["anthropic", "openai", "venice", "ollama", "analyst"];
     const providerBudgets = await Promise.all(
       providerIds.map(async (provider) => ({
         provider,
