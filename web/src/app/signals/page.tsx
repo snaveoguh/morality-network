@@ -22,10 +22,10 @@ export default async function SignalsPage() {
     <div>
       {/* Page header — newspaper style */}
       <div className="mb-6 border-b-2 border-[var(--rule)] pb-4">
-        <h1 className="font-headline text-3xl text-[var(--ink)]">
-          Trading Signals
+        <h1 className="news-label text-[28px] leading-tight text-[var(--ink)] sm:text-[34px]">
+          Bearometer
         </h1>
-        <p className="mt-1 font-body-serif text-sm italic text-[var(--ink-light)]">
+        <p className="mt-1 text-sm leading-normal text-[var(--ink-light)]">
           Directional market signals aggregated from AI-generated editorial
           analysis — weighted by recency, conviction, and significance across{" "}
           {totalObservations} observations

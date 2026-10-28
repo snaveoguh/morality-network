@@ -61,3 +61,25 @@ export function topTags(items: Array<{ tags?: string[] }>, limit: number): strin
     .slice(0, limit)
     .map(([tag]) => tag);
 }
+
+/** Region filter for Search — story countries (ISO) grouped by region. */
+export const REGIONS: Array<{ value: string; label: string; iso: string[] }> = [
+  { value: "uk", label: "UK", iso: ["GB"] },
+  { value: "us", label: "US", iso: ["US"] },
+  { value: "europe", label: "Europe", iso: ["FR", "DE", "ES", "IT", "NL", "SE", "PL", "NO", "FI", "BE", "IE"] },
+  { value: "ukraine", label: "Ukraine", iso: ["UA"] },
+  { value: "mideast", label: "Middle East", iso: ["IL", "PS", "IR", "SA", "IQ", "SY", "YE", "LB", "QA", "EG", "TR"] },
+  { value: "asia", label: "Asia", iso: ["CN", "JP", "KR", "TW", "IN", "PH", "ID", "TH", "SG", "MY", "VN", "HK", "MM", "KP", "AF", "PK"] },
+  { value: "africa", label: "Africa", iso: ["NG", "ZA", "KE", "ET", "SD", "CD", "SO"] },
+  { value: "americas", label: "Americas", iso: ["CA", "BR", "AR", "MX", "CO", "VE", "CU", "CL", "PE"] },
+  { value: "oceania", label: "Oceania", iso: ["AU", "NZ"] },
+];
+
+/** Bias filter for Search, in plain words. */
+export const BIAS_OPTIONS: Array<{ value: string; label: string; match: BiasRating[] }> = [
+  { value: "left", label: "Left", match: ["far-left", "left"] },
+  { value: "lean-left", label: "Lean left", match: ["lean-left"] },
+  { value: "center", label: "Centre", match: ["center"] },
+  { value: "lean-right", label: "Lean right", match: ["lean-right"] },
+  { value: "right", label: "Right", match: ["right", "far-right"] },
+];

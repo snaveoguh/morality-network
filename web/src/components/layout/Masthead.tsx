@@ -35,7 +35,13 @@ export function Masthead({
   dailyHash,
   imageUrl,
 }: MastheadProps) {
-  const normalizedDailyTitle = (dailyTitle || "").trim();
+  // Fallback titles arrive in caps ("FROM THE ARCHIVE"); C sets them in
+  // sentence case.
+  const rawTitle = (dailyTitle || "").trim();
+  const normalizedDailyTitle =
+    rawTitle && rawTitle === rawTitle.toUpperCase()
+      ? rawTitle.charAt(0) + rawTitle.slice(1).toLowerCase()
+      : rawTitle;
   const showDailyTitle =
     normalizedDailyTitle.length > 0 &&
     !/^daily edition$/i.test(normalizedDailyTitle) &&
