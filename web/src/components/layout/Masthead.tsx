@@ -26,6 +26,7 @@ interface MastheadProps {
   dailySubheadline?: string | null;
   dailyHash?: string | null;
   imageUrl?: string | null;
+  imageCaption?: string | null;
 }
 
 export function Masthead({
@@ -34,6 +35,7 @@ export function Masthead({
   dailySubheadline,
   dailyHash,
   imageUrl,
+  imageCaption,
 }: MastheadProps) {
   // Fallback titles arrive in caps ("FROM THE ARCHIVE"); C sets them in
   // sentence case.
@@ -82,9 +84,9 @@ export function Masthead({
               fetchPriority="high"
             />
           </Link>
-          <figcaption className="px-4 text-xs text-[var(--ink-faint)] lg:px-0">
-            Illustration for today&rsquo;s edition
-          </figcaption>
+          {imageCaption && (
+            <figcaption className="px-4 text-xs text-[var(--ink-faint)] lg:px-0">{imageCaption}</figcaption>
+          )}
         </figure>
       )}
 

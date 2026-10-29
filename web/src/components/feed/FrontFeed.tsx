@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { FeedItem } from "@/lib/rss";
+import type { Cast } from "@/lib/farcaster";
+import type { PooterOriginal } from "@/lib/editorial-archive";
 import { computeEntityHash } from "@/lib/entity";
 import { biasBucket, biasWords, tagLabel, timeAgo, topTags } from "@/lib/front";
 
@@ -17,8 +19,10 @@ import { biasBucket, biasWords, tagLabel, timeAgo, topTags } from "@/lib/front";
 //   2 Two secondary stories              row 3  Secondaries ─ 9 │ rail
 //   3 Claim Ledger cards (LedgerStrip)   then   ═══ double rule ═══
 //   4 Bearometer card                           Data: text 4 │ chart 8
-//   5 Feed-mix chart                            Bearometer 4 │ Latest 8
-//   6 Latest list
+//   5 Feed-mix chart                            Bearometer   │ Latest 8
+//   6 Latest list                               Conversation │
+//   7 Pooter originals (sideways cards)         Originals ─────────── 12
+//   8 Conversation (Farcaster)
 // ============================================================================
 
 const LATEST_COUNT = 30;
@@ -89,7 +93,7 @@ function SecondaryStory({ item, wide }: { item: FeedItem; wide: boolean }) {
           src={item.imageUrl}
           alt=""
           loading="lazy"
-          className="newspaper-img halftone h-24 w-24 shrink-0 object-cover lg:hidden"
+          className="newspaper-img halftone h-24 w-24 shrink-0 object-cover lg:order-first lg:mb-2 lg:aspect-[3/2] lg:h-auto lg:w-full"
         />
       )}
     </Link>
@@ -182,12 +186,23 @@ function LatestList({ items, total }: { items: FeedItem[]; total: number }) {
           <Link
             key={item.id}
             href={articleHref(item)}
-            className="group flex flex-col gap-1.5 border-b border-[var(--rule-light)] py-3.5"
+            className="group flex gap-3.5 border-b border-[var(--rule-light)] py-3.5"
           >
-            <span className="text-xs text-[var(--ink-faint)]">{sourceLine(item)}</span>
-            <span className="news-head text-xl leading-[1.22] text-[var(--ink)] group-hover:underline group-hover:decoration-[var(--ink-faint)] group-hover:decoration-1 group-hover:underline-offset-4">
-              {item.title}
+            <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <span className="text-xs text-[var(--ink-faint)]">{sourceLine(item)}</span>
+              <span className="news-head text-xl leading-[1.22] text-[var(--ink)] group-hover:underline group-hover:decoration-[var(--ink-faint)] group-hover:decoration-1 group-hover:underline-offset-4">
+                {item.title}
+              </span>
             </span>
+            {item.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.imageUrl}
+                alt=""
+                loading="lazy"
+                className="newspaper-img halftone h-[72px] w-[72px] shrink-0 object-cover"
+              />
+            )}
           </Link>
         ))}
       </div>
@@ -201,14 +216,82 @@ function LatestList({ items, total }: { items: FeedItem[]; total: number }) {
   );
 }
 
+// ── Pooter originals (sideways cards, like the ledger) ──────────────────────
+
+function OriginalsRow({ originals }: { originals: PooterOriginal[] }) {
+  return (
+    <section aria-label="Pooter originals" className="order-[7] -mx-4 pt-7 lg:order-[14] lg:col-span-12 lg:mx-0">
+      <Link href="/originals" className="px-4 pb-3 text-[15px] font-bold text-[var(--ink)] lg:px-0">
+        Pooter originals ›
+      </Link>
+      <div className="scrollbar-hide mt-3 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0">
+        {originals.map((o) => (
+          <Link
+            key={o.hash}
+            href={`/article/${o.hash}`}
+            className="group flex w-[240px] shrink-0 snap-start flex-col gap-2 lg:w-auto"
+          >
+            {o.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={o.imageUrl} alt="" loading="lazy" className="newspaper-img halftone aspect-[3/2] w-full object-cover" />
+            ) : (
+              <span aria-hidden className="halftone aspect-[3/2] w-full" />
+            )}
+            <span className="text-xs text-[var(--ink-faint)]">
+              {[o.source, timeAgo(o.generatedAt)].filter(Boolean).join(" · ")}
+            </span>
+            <span className="news-head line-clamp-3 text-lg leading-[1.22] text-[var(--ink)] group-hover:underline group-hover:decoration-[var(--ink-faint)] group-hover:decoration-1 group-hover:underline-offset-4">
+              {o.title}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ── Conversation (Farcaster) ────────────────────────────────────────────────
+
+function Conversation({ casts }: { casts: Cast[] }) {
+  return (
+    <section aria-label="Conversation" className="order-[8] flex flex-col pt-7">
+      <Link href="/discuss" className="pb-1 text-[15px] font-bold text-[var(--ink)]">
+        Conversation ›
+      </Link>
+      {casts.map((c) => (
+        <a
+          key={c.hash}
+          href={`https://warpcast.com/${c.author.username}/${c.hash.slice(0, 10)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex flex-col gap-1.5 border-b border-[var(--rule-light)] py-3.5"
+        >
+          <span className="text-xs text-[var(--ink-faint)]">
+            {[`@${c.author.username}`, timeAgo(c.timestamp), c.replies ? `${c.replies} ${c.replies === 1 ? "reply" : "replies"}` : null]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
+          <span className="line-clamp-4 text-[15px] leading-normal text-[var(--ink)] group-hover:underline group-hover:decoration-[var(--ink-faint)] group-hover:underline-offset-4">
+            {c.text}
+          </span>
+        </a>
+      ))}
+    </section>
+  );
+}
+
 // ── Composition ─────────────────────────────────────────────────────────────
 
 export function FrontFeed({
   rssItems,
   publishedHashes,
+  originals = [],
+  casts = [],
 }: {
   rssItems: FeedItem[];
   publishedHashes: Set<string>;
+  originals?: PooterOriginal[];
+  casts?: Cast[];
 }) {
   // Secondaries: today's newsroom picks first, then the freshest story with
   // an image, then simply the freshest.
@@ -241,9 +324,15 @@ export function FrontFeed({
       )}
 
       <hr className="rule-double hidden lg:order-[10] lg:col-span-12 lg:mt-8 lg:block" />
-      <BearometerCard />
       <FeedMixChart items={rssItems} />
+      {/* Left column at ≥1024 (Bearometer over Conversation, beside Latest);
+          on phone the wrapper vanishes and each block takes its own order. */}
+      <div className="contents lg:order-[12] lg:col-span-4 lg:flex lg:flex-col lg:self-start">
+        <BearometerCard />
+        {casts.length > 0 && <Conversation casts={casts.slice(0, 5)} />}
+      </div>
       {latest.length > 0 && <LatestList items={latest} total={rssItems.length} />}
+      {originals.length > 0 && <OriginalsRow originals={originals.slice(0, 8)} />}
     </>
   );
 }

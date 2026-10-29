@@ -17,7 +17,15 @@ type MastheadEdition = {
   subheadline: string;
   generatedAt: string;
   imageUrl: string | null;
+  imageCaption: string | null;
 };
+
+/** Edition illustration if there is one, else the source story's photo. */
+function pickImage(illustration: string | null, photo: string | undefined, source: string | undefined) {
+  if (illustration) return { imageUrl: illustration, imageCaption: "Illustration for today’s edition" };
+  if (photo) return { imageUrl: photo, imageCaption: source ? `Photo: ${source}` : null };
+  return { imageUrl: null, imageCaption: null };
+}
 
 // Edition illustrations are served by token id: days since 11 Mar 2025 + 1
 // (same epoch as /api/edition/[tokenId]/illustration and the article page).
@@ -50,7 +58,11 @@ async function resolveMasthead(): Promise<MastheadEdition | null> {
         headline: cached.primary.title,
         subheadline: cached.subheadline,
         generatedAt: cached.generatedAt,
-        imageUrl: cached.hasIllustration ? editionIllustrationUrl(cached.generatedAt) : null,
+        ...pickImage(
+          cached.hasIllustration ? editionIllustrationUrl(cached.generatedAt) : null,
+          cached.primary.imageUrl,
+          cached.primary.source,
+        ),
       };
     }
   } catch {
@@ -68,7 +80,11 @@ async function resolveMasthead(): Promise<MastheadEdition | null> {
         headline: best.title,
         subheadline: best.subheadline,
         generatedAt: best.generatedAt,
-        imageUrl: best.isDailyEdition && best.hasIllustration ? editionIllustrationUrl(best.generatedAt) : null,
+        ...pickImage(
+          best.isDailyEdition && best.hasIllustration ? editionIllustrationUrl(best.generatedAt) : null,
+          best.imageUrl,
+          best.source,
+        ),
       };
     }
   } catch {
@@ -88,7 +104,11 @@ async function resolveMasthead(): Promise<MastheadEdition | null> {
         headline: pick.title,
         subheadline: pick.subheadline,
         generatedAt: pick.generatedAt,
-        imageUrl: pick.isDailyEdition && pick.hasIllustration ? editionIllustrationUrl(pick.generatedAt) : null,
+        ...pickImage(
+          pick.isDailyEdition && pick.hasIllustration ? editionIllustrationUrl(pick.generatedAt) : null,
+          pick.imageUrl,
+          pick.source,
+        ),
       };
     }
   } catch {
@@ -109,6 +129,7 @@ export async function AsyncMasthead() {
       dailySubheadline={dailyEdition?.subheadline}
       dailyHash={dailyEdition?.hash}
       imageUrl={dailyEdition?.imageUrl}
+      imageCaption={dailyEdition?.imageCaption}
     />
   );
 }

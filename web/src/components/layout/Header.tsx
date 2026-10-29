@@ -3,18 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BRAND_NAME } from "@/lib/brand";
-import { MissionStatement } from "@/components/layout/MissionStatement";
 import { SearchIcon } from "@/components/layout/icons";
 
 // ============================================================================
 // HEADER — direction C slim bar
 //
-//   phone   [pw]        pooter world        [search]
-//   ≥1024   [pw]        pooter world   [ search… ] [Menu]
+//   phone   [pw]   Accountability record    [search]
+//   ≥1024   [pw]   Accountability record   [ search… ] [Menu]
 //
 // The big nav lives in /more (the More tab on phone, "Menu" on desktop).
-// The tagline sits under the bar on the front page only; inner pages keep
-// the bar slim.
 // ============================================================================
 
 /** The blackletter "pw" mark — paper square, ink letters. */
@@ -32,12 +29,11 @@ export function PwMark({ size = "sm" }: { size?: "sm" | "lg" }) {
 
 export function Header() {
   const pathname = usePathname();
-  const isFront = pathname === "/";
 
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-[var(--rule-light)] bg-[var(--paper)]">
-        <div className="mx-auto grid h-[60px] max-w-7xl grid-cols-[44px_1fr_44px] items-center px-4 lg:h-[72px] lg:grid-cols-3">
+        <div className="mx-auto grid h-[56px] max-w-7xl grid-cols-[44px_1fr_44px] items-center px-4 lg:h-[64px] lg:grid-cols-3">
           <Link
             href="/"
             aria-label={`${BRAND_NAME} home`}
@@ -46,11 +42,12 @@ export function Header() {
             <PwMark />
           </Link>
 
+          {/* No wordmark: the pw glyph is the brand; the tagline sits centre. */}
           <Link
             href="/"
-            className="blackletter flex h-11 items-center justify-center truncate text-center text-[28px] leading-none text-[var(--ink)] sm:text-[32px] lg:text-[40px]"
+            className="font-news flex h-11 items-center justify-center truncate text-center text-[17px] tracking-[0.04em] text-[var(--ink)] lg:text-[19px]"
           >
-            {BRAND_NAME}
+            Accountability record
           </Link>
 
           {/* Phone + tablet: icon to the search page */}
@@ -87,7 +84,6 @@ export function Header() {
           </div>
         </div>
       </header>
-      {isFront && <MissionStatement />}
     </>
   );
 }

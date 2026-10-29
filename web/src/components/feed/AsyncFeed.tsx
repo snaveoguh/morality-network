@@ -11,7 +11,10 @@
 import { after } from "next/server";
 import { FrontFeed } from "./FrontFeed";
 import { fetchAllFeeds } from "@/lib/rss";
-import { autoArchiveBatch, getArchivedFeedItemByHash } from "@/lib/archive";
+import { autoArchiveBatch, getArchivedFeedItemByHash, getLocalArchivedFeedItems } from "@/lib/archive";
+import { fetchFarcasterContent, type Cast } from "@/lib/farcaster";
+import { getRecentPooterOriginals, type PooterOriginal } from "@/lib/editorial-archive";
+import type { FeedItem } from "@/lib/rss";
 import { computeEntityHash } from "@/lib/entity";
 import { getTodayPublishedHashes } from "@/lib/newsroom-edition";
 
@@ -24,10 +27,23 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 }
 
 export async function AsyncFeed() {
-  const [rssItems, publishedHashes] = await Promise.all([
-    withTimeout(fetchAllFeeds(), 8000, []),
+  const [liveItems, publishedHashes, originals, casts] = await Promise.all([
+    withTimeout(fetchAllFeeds(), 12000, [] as FeedItem[]),
     withTimeout(getTodayPublishedHashes(), 3000, new Set<string>()),
+    withTimeout(getRecentPooterOriginals(false), 3000, [] as PooterOriginal[]),
+    withTimeout(fetchFarcasterContent("pip"), 5000, [] as Cast[]),
   ]);
+
+  // A cold or slow crawl must never cache an empty front page for the whole
+  // ISR window: fall back to the newest stories in the local archive.
+  let rssItems = liveItems;
+  if (rssItems.length === 0) {
+    console.warn("[AsyncFeed] live feed empty; serving archived stories");
+    const archived = await withTimeout(getLocalArchivedFeedItems(), 3000, [] as FeedItem[]);
+    rssItems = archived
+      .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
+      .slice(0, 200);
+  }
 
   // Inject published stories that rotated out of the live RSS feed
   if (publishedHashes.size > 0) {
@@ -47,10 +63,10 @@ export async function AsyncFeed() {
 
   // Archive all feed items after response is sent (ISR-safe)
   after(() => {
-    autoArchiveBatch(rssItems).catch((err) => {
+    autoArchiveBatch(liveItems).catch((err) => {
       console.warn("[AsyncFeed] archive batch failed:", err);
     });
   });
 
-  return <FrontFeed rssItems={rssItems} publishedHashes={publishedHashes} />;
+  return <FrontFeed rssItems={rssItems} publishedHashes={publishedHashes} originals={originals} casts={casts} />;
 }

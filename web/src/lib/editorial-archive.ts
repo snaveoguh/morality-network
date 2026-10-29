@@ -528,6 +528,8 @@ export interface PooterOriginal {
   dailyTitle?: string;
   tags: string[];
   editedBy?: string;
+  /** Photo from the source story the original was written about. */
+  imageUrl?: string;
 }
 
 function archivedToOriginal(item: ArchivedEditorial): PooterOriginal {
@@ -542,6 +544,7 @@ function archivedToOriginal(item: ArchivedEditorial): PooterOriginal {
     isDailyEdition: !!item.isDailyEdition,
     dailyTitle: item.dailyTitle,
     tags: item.tags ?? [],
+    imageUrl: item.primary.imageUrl,
     editedBy: item.editedBy,
   };
 }
