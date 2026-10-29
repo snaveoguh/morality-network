@@ -9,6 +9,12 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 86 · Stumble shows only pages that render; big Stumble button
+- **when** — 2026-10-29
+- **what** — Root cause: our own CSP `frame-src` (middleware) only allowed YouTube/Spotify/Apple Podcasts/WalletConnect, so every curated Stumble site (nullschool, Radio Garden, …) was blocked by the browser. HN (`DENY`), neal.fun and NTS (`SAMEORIGIN`) refuse framing anyway, and Reddit/HN links to arbitrary sites fell back to a "blocked" preview card. New `lib/stumble-embeds.ts` holds the hosts checked to frame from a pooter.world origin; it feeds both `frame-src` (site-wide, because CSP is per document and client-side links into /stumble keep the old policy) and `canRenderStumble`, which filters the batch server- and client-side. HN fetch, neal.fun, NTS and WindowSwap are removed; Silk, This Is Sand, Koalas to the Max, Stellarium Web and Music Lab Kandinsky added. The preview card is gone. A 56px "Stumble →" button with a back arrow sits bottom right (above the phone tab bar, left of the desktop mascot). Title, rating, "Open site", "Discuss" and "Hide" are one card.
+- **why** — Hugo: "lots of sites don't render? If they don't render don't want them shown" and "a better / bigger button to stumble especially mobile, bottom right".
+- **where** — `web/src/lib/stumble-embeds.ts`, `web/src/lib/stumble.ts`, `web/src/middleware.ts`, `web/src/components/stumble/StumbleView.tsx`, `web/src/app/globals.css` (`.stumble-frame`); branch `fix/stumble-embeds` off `dev`.
+- **rollback** — `git revert` the commit. To add a site, check it loads in an iframe from pooter.world, then add its host to `STUMBLE_FRAME_HOSTS`.
 ## ▲ node 84 · daily edition: live prices only, price guard
 - **when** — 2026-10-29
 - **what** — `fetchMarketData` keeps CoinGecko's USD price (was discarded) and adds solana. The daily-edition writer gets a CURRENT PRICES block and is told never to quote a price from memory. Council debates older than 36h are left out. New `web/src/lib/price-guard.ts` cuts any body sentence giving a BTC/ETH/SOL price more than 10% from the live one (or with no live price); tests in `price-guard.test.ts`.

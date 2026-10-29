@@ -5,9 +5,9 @@ import { useAccount } from "wagmi";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { StumbleItem } from "@/lib/stumble";
 import {
-  canRenderStumbleInline,
+  canRenderStumble,
   getEmbeddableUrl,
-  isDirectImageUrl,
+  isStumbleImage,
   normalizeStumbleUrl,
 } from "@/lib/stumble";
 import { computeEntityHash } from "@/lib/entity";
@@ -31,7 +31,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export function StumbleView({ initialItems }: StumbleViewProps) {
   const { isConnected } = useAccount();
-  const [items, setItems] = useState<StumbleItem[]>(initialItems);
+  const [items, setItems] = useState<StumbleItem[]>(() => initialItems.filter(canRenderStumble));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [history, setHistory] = useState<number[]>([0]);
@@ -46,16 +46,11 @@ export function StumbleView({ initialItems }: StumbleViewProps) {
     () => (canonicalUrl ? getEmbeddableUrl(canonicalUrl) : ""),
     [canonicalUrl],
   );
-  const renderMode = useMemo(() => {
-    if (!canonicalUrl) return "preview" as const;
-    if (currentItem?.type === "image" && (isDirectImageUrl(canonicalUrl) || !!currentItem.imageUrl)) {
-      return "image" as const;
-    }
-    if (canRenderStumbleInline(canonicalUrl)) {
-      return "embed" as const;
-    }
-    return "preview" as const;
-  }, [canonicalUrl, currentItem]);
+  // Items are pre-filtered with canRenderStumble, so it is an image or a frame.
+  const showImage = useMemo(
+    () => (currentItem ? isStumbleImage(currentItem) : false),
+    [currentItem],
+  );
   const entityHash = useMemo(
     () => (canonicalUrl ? computeEntityHash(canonicalUrl) : null),
     [canonicalUrl],
@@ -95,8 +90,9 @@ export function StumbleView({ initialItems }: StumbleViewProps) {
     setIsRefreshing(true);
     fetch("/api/stumble", { cache: "no-store" })
       .then((res) => res.json())
-      .then((newItems: StumbleItem[]) => {
-        if (Array.isArray(newItems) && newItems.length > 0) {
+      .then((res: StumbleItem[]) => {
+        const newItems = Array.isArray(res) ? res.filter(canRenderStumble) : [];
+        if (newItems.length > 0) {
           setItems(newItems);
           setCurrentIndex(0);
           setHistory([0]);
@@ -119,16 +115,17 @@ export function StumbleView({ initialItems }: StumbleViewProps) {
   if (!currentItem || !entityHash) {
     return (
       <div className="stumble-page flex items-center justify-center px-4">
-        <div className="max-w-xl border-2 border-[var(--rule)] bg-[var(--paper)] p-6 text-center">
-          <h2 className="font-headline text-2xl text-[var(--ink)]">Stumble is empty</h2>
-          <p className="mt-2 font-body-serif text-sm text-[var(--ink-light)]">
-            Could not load random pages right now. Try another jump.
+        <div className="max-w-xl border border-[var(--rule)] bg-[var(--paper)] p-6 text-center">
+          <h2 className="news-head text-2xl text-[var(--ink)]">Nothing to stumble on</h2>
+          <p className="mt-2 text-sm text-[var(--ink-light)]">
+            We could not load any pages right now.
           </p>
           <button
             onClick={stumble}
-            className="mt-4 border border-[var(--rule)] bg-[var(--ink)] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)]"
+            disabled={isRefreshing}
+            className="mt-4 min-h-12 bg-[var(--ink)] px-6 text-[15px] font-semibold text-[var(--paper)] disabled:opacity-50"
           >
-            Load Stumble
+            {isRefreshing ? "Loading…" : "Try again"}
           </button>
         </div>
       </div>
@@ -139,18 +136,8 @@ export function StumbleView({ initialItems }: StumbleViewProps) {
 
   return (
     <div className="stumble-page relative overflow-hidden bg-[var(--paper-dark)]">
-      {renderMode === "embed" ? (
-        <iframe
-          key={embedUrl}
-          src={embedUrl}
-          title={currentItem.title}
-          className="h-[calc(100vh-3rem)] w-full border-0 bg-white"
-          loading="eager"
-          referrerPolicy="no-referrer"
-          allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
-        />
-      ) : renderMode === "image" ? (
-        <div className="relative h-[calc(100vh-3rem)] w-full bg-[var(--paper-dark)]">
+      {showImage ? (
+        <div className="stumble-frame relative w-full bg-[var(--paper-dark)]">
           <img
             src={currentItem.imageUrl || canonicalUrl}
             alt={currentItem.title}
@@ -159,151 +146,91 @@ export function StumbleView({ initialItems }: StumbleViewProps) {
           />
         </div>
       ) : (
-        <div className="relative flex h-[calc(100vh-3rem)] w-full items-center justify-center overflow-hidden bg-[var(--paper-dark)] px-4 py-8 sm:px-8">
-          {currentItem.imageUrl ? (
-            <>
-              <img
-                src={currentItem.imageUrl}
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover opacity-20 blur-sm"
-                loading="eager"
-              />
-              <div className="absolute inset-0 bg-[var(--paper-dark)]/80" />
-            </>
-          ) : (
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.14),_transparent_45%),linear-gradient(135deg,_rgba(255,255,255,0.06),_transparent_55%)]" />
-          )}
-
-          <div className="relative z-10 w-full max-w-3xl border-2 border-[var(--rule)] bg-[var(--paper)]/92 p-5 shadow-2xl sm:p-8">
-            <div className="mb-4 flex flex-wrap items-center gap-2 font-mono text-[9px] uppercase tracking-[0.22em] text-[var(--ink-faint)]">
-              <span>Stumble Preview</span>
-              <span>&bull;</span>
-              <span>{typeLabel}</span>
-              <span>&bull;</span>
-              <span>{currentItem.source}</span>
-            </div>
-
-            <h1 className="font-headline-serif text-3xl leading-tight text-[var(--ink)] sm:text-4xl">
-              {currentItem.title}
-            </h1>
-
-            {currentItem.description && (
-              <p className="mt-4 max-w-2xl font-body-serif text-base leading-relaxed text-[var(--ink-light)] sm:text-lg">
-                {currentItem.description}
-              </p>
-            )}
-
-            <p className="mt-5 max-w-2xl font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">
-              This site blocks in-app embeds, so Stumble is showing a preview instead.
-            </p>
-
-            <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-[var(--rule-light)] pt-4">
-              <a
-                href={canonicalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border border-[var(--rule)] bg-[var(--ink)] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)]"
-              >
-                Open Original
-              </a>
-              {entityContextHref && (
-                <Link
-                  href={entityContextHref}
-                  className="border border-[var(--rule)] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--ink)] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)]"
-                >
-                  Discuss On MO
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
+        <iframe
+          key={embedUrl}
+          src={embedUrl}
+          title={currentItem.title}
+          className="stumble-frame w-full border-0 bg-white"
+          loading="eager"
+          referrerPolicy="no-referrer"
+          allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
+        />
       )}
 
-      <div className="pointer-events-none absolute inset-0 p-3 sm:p-4">
-        <div className="pointer-events-auto flex items-start justify-between gap-3">
-          <div className="w-[min(22rem,72vw)] border border-[var(--rule)] bg-[var(--paper)]/32 p-2 shadow-sm backdrop-blur-[1px] transition-all duration-200 hover:bg-[var(--paper)]/74 hover:shadow-lg sm:w-[min(24rem,56vw)] sm:p-2.5">
-            <div className="mb-1 flex items-center gap-1.5 font-mono text-[7px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-              <span>Stumble</span>
-              <span>&bull;</span>
-              <span>{typeLabel}</span>
-              <span>&bull;</span>
-              <span>{currentItem.source}</span>
+      {/* Info card — what this is, where it's from, rate it */}
+      {panelOpen ? (
+        <div className="absolute left-3 top-3 w-[min(22rem,calc(100%-1.5rem))] border border-[var(--rule)] bg-[var(--paper)]/95 p-3 shadow-lg">
+          <p className="article-byline">
+            {typeLabel} &middot; {currentItem.source}
+          </p>
+          <h1 className="news-head mt-0.5 line-clamp-2 text-xl leading-[1.2] text-[var(--ink)]">
+            {currentItem.title}
+          </h1>
+          {currentItem.description && (
+            <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-[var(--ink-light)]">
+              {currentItem.description}
+            </p>
+          )}
+
+          <div className="mt-2 flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <RatingWidget entityHash={entityHash} />
             </div>
-
-            <h1 className="line-clamp-2 font-headline-serif text-base font-bold leading-snug text-[var(--ink)] sm:text-lg">
-              {currentItem.title}
-            </h1>
-
-            {currentItem.description && (
-              <p className="mt-1 line-clamp-2 font-body-serif text-[11px] leading-snug text-[var(--ink-light)]">
-                {currentItem.description}
-              </p>
-            )}
-
-            <div className="mt-1.5 border-t border-[var(--rule-light)] pt-1.5 font-mono text-[7px] text-[var(--ink-faint)]">
-              Asset hash: {entityHash.slice(0, 12)}...{entityHash.slice(-8)}
-            </div>
+            {isConnected && <TipButton entityHash={entityHash} />}
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <button
-              onClick={goBack}
-              disabled={history.length <= 1}
-              className="pointer-events-auto border border-[var(--rule)] bg-[var(--paper)]/38 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink)] transition-all duration-200 hover:bg-[var(--paper)]/78 disabled:opacity-40"
-            >
-              Back
-            </button>
-            <button
-              onClick={stumble}
-              disabled={isRefreshing}
-              className="pointer-events-auto border border-[var(--rule)] bg-[var(--ink)]/72 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--paper)] transition-all duration-200 hover:bg-[var(--ink)]/90 disabled:opacity-40"
-            >
-              {isRefreshing ? "Loading" : "Stumble"}
-            </button>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 border-t border-[var(--rule-light)] pt-1 text-[13px] text-[var(--ink)]">
             <a
               href={canonicalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="pointer-events-auto border border-[var(--rule-light)] bg-[var(--paper)]/32 px-2 py-1 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink)] transition-all duration-200 hover:border-[var(--rule)] hover:bg-[var(--paper)]/72"
+              className="flex min-h-11 items-center hover:underline hover:underline-offset-4"
             >
-              Open Source
+              Open site &#8599;
             </a>
             {entityContextHref && (
               <Link
                 href={entityContextHref}
-                className="pointer-events-auto border border-[var(--rule-light)] bg-[var(--paper)]/32 px-2 py-1 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink)] transition-all duration-200 hover:border-[var(--rule)] hover:bg-[var(--paper)]/72"
+                className="flex min-h-11 items-center hover:underline hover:underline-offset-4"
               >
-                Entity
+                Discuss
               </Link>
             )}
             <button
-              onClick={() => setPanelOpen((p) => !p)}
-              className="pointer-events-auto border border-[var(--rule-light)] bg-[var(--paper)]/32 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink)] transition-all duration-200 hover:border-[var(--rule)] hover:bg-[var(--paper)]/72"
+              onClick={() => setPanelOpen(false)}
+              className="ml-auto flex min-h-11 items-center text-[var(--ink-faint)] hover:text-[var(--ink)]"
             >
-              {panelOpen ? "Hide Panel" : "Show Panel"}
+              Hide
             </button>
           </div>
         </div>
+      ) : (
+        <button
+          onClick={() => setPanelOpen(true)}
+          className="absolute left-3 top-3 min-h-11 border border-[var(--rule)] bg-[var(--paper)]/95 px-4 text-[13px] font-semibold text-[var(--ink)] shadow-lg"
+        >
+          Info
+        </button>
+      )}
 
-        {panelOpen && (
-          <aside className="pointer-events-auto absolute bottom-20 right-3 max-h-[15vh] w-[min(20rem,72vw)] overflow-y-auto border border-[var(--rule)] bg-[var(--paper)]/30 p-2 shadow-sm backdrop-blur-[1px] transition-all duration-200 hover:bg-[var(--paper)]/80 hover:shadow-xl">
-            <div className="mb-1.5 flex items-center justify-between">
-              <h2 className="font-mono text-[7px] uppercase tracking-[0.22em] text-[var(--ink)]">
-                Onchain Layer
-              </h2>
-              <span className="font-mono text-[7px] text-[var(--ink-faint)]">
-                #{currentIndex + 1}/{items.length}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="min-w-0 flex-1 border border-[var(--rule-light)] bg-[var(--paper)]/65 p-1.5">
-                <RatingWidget entityHash={entityHash} />
-              </div>
-              {isConnected && <TipButton entityHash={entityHash} />}
-            </div>
-          </aside>
-        )}
+      {/* Stumble controls — bottom right, thumb reach on phone; left of the
+          desktop mascot (fixed bottom-4 right-4) on lg */}
+      <div className="absolute bottom-4 right-4 flex items-center gap-2 lg:right-28">
+        <button
+          onClick={goBack}
+          disabled={history.length <= 1}
+          aria-label="Previous page"
+          className="flex h-14 w-14 items-center justify-center border border-[var(--rule)] bg-[var(--paper)] text-xl text-[var(--ink)] shadow-lg disabled:opacity-40"
+        >
+          &larr;
+        </button>
+        <button
+          onClick={stumble}
+          disabled={isRefreshing}
+          className="flex h-14 min-w-[9.5rem] items-center justify-center gap-2 bg-[var(--ink)] px-6 text-[17px] font-semibold text-[var(--paper)] shadow-lg transition-opacity hover:opacity-90 disabled:opacity-60"
+        >
+          {isRefreshing ? "Loading…" : <>Stumble <span aria-hidden>&rarr;</span></>}
+        </button>
       </div>
     </div>
   );

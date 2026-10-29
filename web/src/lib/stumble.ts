@@ -1,5 +1,8 @@
 // Stumble — random discovery engine
-// Feeds a "StumbleUpon-style" mix of creative sites, videos, music, and discussions.
+// Feeds a "StumbleUpon-style" mix of creative sites, videos, music, and images.
+// Only items that render inside the page are returned (canRenderStumble).
+
+import { isStumbleFrameable } from "./stumble-embeds";
 
 export type StumbleType =
   | "article"
@@ -38,29 +41,12 @@ interface CuratedSeed {
 
 const REDDIT_ICON =
   "https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png";
-const HN_ICON = "https://news.ycombinator.com/y18.svg";
 const WIKI_ICON = "https://en.wikipedia.org/static/apple-touch/wikipedia.png";
 const YT_ICON = "https://www.youtube.com/s/desktop/aa57fb97/img/favicon_144x144.png";
 const CHROME_ICON = "https://www.google.com/chrome/static/images/chrome-logo.svg";
 const WEB_ICON = "https://www.google.com/s2/favicons?sz=128&domain=";
 
 const CURATED_SEEDS: CuratedSeed[] = [
-  {
-    type: "tool",
-    title: "Neal.fun",
-    description: "Playful, weird interactive explainers and internet toys.",
-    url: "https://neal.fun/",
-    source: "Neal.fun",
-    sourceIcon: `${WEB_ICON}neal.fun`,
-  },
-  {
-    type: "tool",
-    title: "WindowSwap",
-    description: "Teleport to random windows around the world.",
-    url: "https://www.window-swap.com/Window",
-    source: "WindowSwap",
-    sourceIcon: `${WEB_ICON}window-swap.com`,
-  },
   {
     type: "tool",
     title: "Patatap",
@@ -120,14 +106,6 @@ const CURATED_SEEDS: CuratedSeed[] = [
     imageUrl: "https://i.ytimg.com/vi/3Q4L5R5lWvE/hqdefault.jpg",
   },
   {
-    type: "music",
-    title: "NTS Radio",
-    description: "Independent internet radio with deep cuts and DJ sets.",
-    url: "https://www.nts.live/",
-    source: "NTS",
-    sourceIcon: `${WEB_ICON}nts.live`,
-  },
-  {
     type: "tool",
     title: "A Soft Murmur",
     description: "Ambient noise mixer for focus and writing sessions.",
@@ -142,6 +120,46 @@ const CURATED_SEEDS: CuratedSeed[] = [
     url: "https://pointerpointer.com/",
     source: "Pointer Pointer",
     sourceIcon: `${WEB_ICON}pointerpointer.com`,
+  },
+  {
+    type: "tool",
+    title: "Silk",
+    description: "Draw symmetrical generative art with your finger or mouse.",
+    url: "https://weavesilk.com/",
+    source: "Silk",
+    sourceIcon: `${WEB_ICON}weavesilk.com`,
+  },
+  {
+    type: "tool",
+    title: "This Is Sand",
+    description: "Pour coloured sand and build a picture grain by grain.",
+    url: "https://thisissand.com/",
+    source: "This Is Sand",
+    sourceIcon: `${WEB_ICON}thisissand.com`,
+  },
+  {
+    type: "tool",
+    title: "Koalas to the Max",
+    description: "Split circles with your cursor until a picture appears.",
+    url: "https://www.koalastothemax.com/",
+    source: "Koalas to the Max",
+    sourceIcon: `${WEB_ICON}koalastothemax.com`,
+  },
+  {
+    type: "tool",
+    title: "Stellarium Web",
+    description: "The night sky above you right now, in the browser.",
+    url: "https://stellarium-web.org/",
+    source: "Stellarium",
+    sourceIcon: `${WEB_ICON}stellarium-web.org`,
+  },
+  {
+    type: "music",
+    title: "Chrome Music Lab — Kandinsky",
+    description: "Draw shapes and hear them play.",
+    url: "https://musiclab.chromeexperiments.com/Kandinsky/",
+    source: "Chrome Experiments",
+    sourceIcon: CHROME_ICON,
   },
 ];
 
@@ -219,40 +237,24 @@ export function getEmbeddableUrl(rawUrl: string): string {
   return normalized;
 }
 
-const INLINE_EMBED_HOSTS = [
-  "youtube.com",
-  "youtu.be",
-  "vimeo.com",
-  "soundcloud.com",
-  "musiclab.chromeexperiments.com",
-  "neal.fun",
-  "window-swap.com",
-  "patatap.com",
-  "earth.nullschool.net",
-  "radio.garden",
-  "thispersondoesnotexist.com",
-  "asoftmurmur.com",
-  "pointerpointer.com",
-  "nts.live",
-];
-
+/** True when the page's iframe can show this URL (see lib/stumble-embeds). */
 export function canRenderStumbleInline(rawUrl: string): boolean {
-  const normalized = normalizeStumbleUrl(rawUrl);
-  try {
-    const u = new URL(normalized);
-    const host = u.hostname.toLowerCase().replace(/^www\./, "");
-
-    return INLINE_EMBED_HOSTS.some(
-      (candidate) => host === candidate || host.endsWith(`.${candidate}`),
-    );
-  } catch {
-    return false;
-  }
+  return isStumbleFrameable(getEmbeddableUrl(rawUrl));
 }
 
 export function isDirectImageUrl(rawUrl: string): boolean {
   const normalized = normalizeStumbleUrl(rawUrl);
   return /\.(avif|gif|jpe?g|png|webp|svg)(?:\?.*)?$/i.test(normalized);
+}
+
+/** Show an image post as an image, anything else only if it can be framed. */
+export function isStumbleImage(item: Pick<StumbleItem, "type" | "url" | "imageUrl">): boolean {
+  return isDirectImageUrl(item.url) || (item.type === "image" && !!item.imageUrl);
+}
+
+/** Stumble only shows what renders in place: no "blocked" previews. */
+export function canRenderStumble(item: StumbleItem): boolean {
+  return isStumbleImage(item) || canRenderStumbleInline(item.url);
 }
 
 function buildCuratedItems(): StumbleItem[] {
@@ -349,56 +351,6 @@ async function fetchRedditTrending(): Promise<StumbleItem[]> {
 }
 
 // ============================================================================
-// HACKER NEWS — top/best stories (free, no key)
-// ============================================================================
-
-async function fetchHNStories(): Promise<StumbleItem[]> {
-  try {
-    const endpoints = ["topstories", "beststories", "showstories"];
-    const endpoint = endpoints[Math.floor(Math.random() * endpoints.length)];
-
-    const idsRes = await fetch(
-      `https://hacker-news.firebaseio.com/v0/${endpoint}.json`,
-      { next: { revalidate: 300 } },
-    );
-    if (!idsRes.ok) return [];
-    const ids = (await idsRes.json()) as number[];
-
-    const shuffled = shuffle(ids.slice(0, 60));
-    const selected = shuffled.slice(0, 12);
-
-    const stories = await Promise.all(
-      selected.map(async (id) => {
-        const res = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, {
-          next: { revalidate: 300 },
-        });
-        if (!res.ok) return null;
-        return res.json();
-      }),
-    );
-
-    return stories
-      .filter((s): s is NonNullable<typeof s> => !!s && !!s.title && !s.dead && !s.deleted)
-      .map((s) => ({
-        id: `hn-${s.id}`,
-        type: "discussion" as const,
-        title: s.title,
-        description: compactDescription(s.text, 300),
-        url: normalizeStumbleUrl(s.url || `https://news.ycombinator.com/item?id=${s.id}`),
-        source: "Hacker News",
-        sourceIcon: HN_ICON,
-        score: s.score || 0,
-        commentCount: s.descendants || 0,
-        author: s.by,
-        timestamp: new Date(s.time * 1000).toISOString(),
-      }));
-  } catch (error) {
-    console.error("HN fetch failed:", error);
-    return [];
-  }
-}
-
-// ============================================================================
 // WIKIPEDIA — random articles
 // ============================================================================
 
@@ -452,7 +404,6 @@ export async function fetchStumbleContent(): Promise<StumbleItem[]> {
   const results = await Promise.allSettled([
     Promise.resolve(buildCuratedItems()),
     fetchRedditTrending(),
-    fetchHNStories(),
     fetchWikipediaRandom(),
   ]);
 
@@ -463,7 +414,7 @@ export async function fetchStumbleContent(): Promise<StumbleItem[]> {
     }
   }
 
-  return shuffle(dedupeByUrl(all));
+  return shuffle(dedupeByUrl(all).filter(canRenderStumble));
 }
 
 export async function getRandomStumbleItem(): Promise<StumbleItem | null> {
