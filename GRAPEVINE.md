@@ -9,6 +9,12 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 83 · pooter1 comments to house style; mobile mascot removed
+- **when** — 2026-10-29
+- **what** — `agents/pooter1/src/comment-style.ts`: regex lint + prompt block for on-chain comments (invented vignettes, "X watches Y while Z", stock phrases, over 60 words, more than one dash). `tasks/comment.ts` adds the prompt, retries once with the lint's complaints, and skips the article if the retry still fails. `PooterMascot` now renders only at ≥1024px.
+- **why** — pooter1's comments went onto the front page ("pooter1 on the news") on 2026-10-28 and read as purple AI prose ("A mother in Detroit watches her grocery bill climb while…"). Node 79's lint only covered headlines and standfirsts. The mobile mascot covered content and did little.
+- **where** — `agents/pooter1/src/comment-style.ts`, `agents/pooter1/src/tasks/comment.ts`, `web/src/components/notifications/PooterMascot.tsx`. pooter1 deploys separately (pooter-indexer / pooter1).
+- **rollback** — `git revert` this commit; comments already on-chain stay.
 ## ▲ node 82 · trending tags filter the front page; Close on search + menu
 
 **when** — 2026-10-29

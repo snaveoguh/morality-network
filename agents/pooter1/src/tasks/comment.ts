@@ -12,6 +12,7 @@ import {
 } from "../memory.js";
 import { commentOnChain, entityHash, getEthBalance } from "../onchain.js";
 import { bridge } from "../bridge.js";
+import { lintComment, formatCommentIssues, COMMENT_STYLE_PROMPT } from "../comment-style.js";
 import { POOTER_API_URL, CRON_SECRET, MAX_COMMENTS_PER_DAY } from "../config.js";
 
 /** Minimum ETH balance to attempt on-chain comments (0.0005 ETH) */
@@ -110,9 +111,10 @@ export async function commentOnArticles(): Promise<void> {
       `You are pooter1, commenting on a news article.`,
       `Your tone: ${voice.tone}`,
       `Your style: ${voice.style}`,
-      `Keep comments to 1-3 sentences. Be insightful, not verbose.`,
       `Never start with "I think" or "This is interesting".`,
-      `Add value — connect to other events, challenge assumptions, or highlight what's missing from the coverage.`,
+      ``,
+      COMMENT_STYLE_PROMPT,
+      ``,
       `Reply with ONLY the comment text. No reasoning, no preamble, no XML tags.`,
     ].join("\n");
 
@@ -125,7 +127,21 @@ export async function commentOnArticles(): Promise<void> {
     ].join("\n");
 
     try {
-      const comment = await generate({ system, user, maxTokens: 500, temperature: 0.8 });
+      // One retry with the lint's complaints; if that fails too, skip the
+      // article. Comments go on-chain and on the front page, so a missed
+      // comment is better than a purple one.
+      let comment = (await generate({ system, user, maxTokens: 300, temperature: 0.6 })).trim();
+      let issues = lintComment(comment);
+      if (issues.length) {
+        console.warn(`[pooter1] Comment failed house style: ${formatCommentIssues(issues)}`);
+        const retryUser = `${user}\n\nYour last draft broke the house style (${formatCommentIssues(issues)}):\n"${comment}"\nRewrite it plainly.`;
+        comment = (await generate({ system, user: retryUser, maxTokens: 300, temperature: 0.4 })).trim();
+        issues = lintComment(comment);
+      }
+      if (issues.length) {
+        console.warn(`[pooter1] Skipping "${article.title.slice(0, 40)}": retry still failed (${formatCommentIssues(issues)})`);
+        continue;
+      }
 
       if (!comment || comment.length < 20) continue;
 

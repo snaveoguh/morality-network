@@ -65,8 +65,8 @@ function SpeechBubble({ message, visible }: { message: string; visible: boolean 
 
 /**
  * Pooter mascot — fixed bottom-right corner.
- * Desktop (≥1024px): 48×48 Three.js Canvas with kawaii 3D printer bot.
- * Mobile  (<1024px): 48×48 2D fallback.
+ * Desktop (≥1024px) only: 48×48 Three.js Canvas with kawaii 3D printer bot.
+ * Hidden below 1024px, where it sat over the content and did little.
  * Occasionally shows sassy messages telling you to go outside.
  */
 export function PooterMascot() {
@@ -88,7 +88,7 @@ export function PooterMascot() {
   }, [bubbleVisible, sassyMessage]);
 
   return (
-    <div className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-50 lg:bottom-4">
+    <div className="fixed bottom-4 right-4 z-50 hidden lg:block">
       <SpeechBubble message={sassyMessage} visible={bubbleVisible} />
       <button
         onClick={() => setPanelOpen(!panelOpen)}
@@ -96,17 +96,10 @@ export function PooterMascot() {
         aria-label={panelOpen ? "Close notification panel" : "Open notification panel"}
         title="pooter notifications"
       >
-        {/* Desktop: Three.js 3D Canvas (lazy loaded, with error boundary) */}
-        <div className="hidden lg:block">
-          <ThreeErrorBoundary fallback={<Pooter2D />}>
-            <Pooter3DCanvas mood={pooterMood} onSassyMessage={handleSassyMessage} />
-          </ThreeErrorBoundary>
-        </div>
-
-        {/* Mobile: 2D fallback icon */}
-        <div className="lg:hidden">
-          <Pooter2D />
-        </div>
+        {/* Three.js 3D Canvas (lazy loaded, with error boundary) */}
+        <ThreeErrorBoundary fallback={<Pooter2D />}>
+          <Pooter3DCanvas mood={pooterMood} onSassyMessage={handleSassyMessage} />
+        </ThreeErrorBoundary>
 
         {/* Notification count badge */}
         {unreadCount > 0 && (
