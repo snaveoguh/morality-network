@@ -25,6 +25,8 @@ import { NewsSection, type NewsItem, type NewsTab } from "./NewsSection";
 // ============================================================================
 
 const NEWS_PER_TAB = 60;
+/** A trending tag needs this many stories among the newest 200 to be offered. */
+const MIN_TRENDING_STORIES = 5;
 
 const TABS: NewsTab[] = [
   { value: "latest", label: "Latest", categories: [] },
@@ -182,7 +184,7 @@ export function FrontFeed({
   publishedHashes: Set<string>;
   originals?: PooterOriginal[];
 }) {
-  const tags = topTags(rssItems.slice(0, 200), 6);
+  const tags = topTags(rssItems.slice(0, 200), 6, MIN_TRENDING_STORIES);
   const news = newsItems(rssItems, publishedHashes, tags);
   // Only offer tabs that have something in them today.
   const tabs = TABS.filter(

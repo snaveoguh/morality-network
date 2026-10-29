@@ -3,6 +3,7 @@ import { getSourceBias, type SourceBias } from "./bias";
 import { fetchRedditFeeds, fetchChanFeeds } from "./scrapers";
 import { extractCanonicalClaim } from "./claim-extract";
 import { reportError, reportWarn } from "./report-error";
+import { assignTopicTags } from "./topic-tags";
 
 const parser = new Parser({
   timeout: 5000,
@@ -48,8 +49,8 @@ export interface FeedItem {
 }
 
 // ============================================================================
-// KEYWORD PATTERNS — auto-tag articles by scanning title + description
-// Each key is a tag name, value is a regex pattern (case-insensitive)
+// KEYWORD PATTERNS — topic regexes for sentiment.ts. Story tags come from
+// topic-tags.ts (whole words, headline-weighted), not from these.
 // ============================================================================
 
 export const KEYWORD_PATTERNS: Record<string, RegExp> = {
@@ -420,14 +421,7 @@ export async function fetchAllFeeds(
 // ============================================================================
 
 function autoAssignTags(item: FeedItem): string[] {
-  const text = `${item.title} ${item.description}`.toLowerCase();
-  const tags: string[] = [];
-  for (const [tag, pattern] of Object.entries(KEYWORD_PATTERNS)) {
-    if (pattern.test(text)) {
-      tags.push(tag);
-    }
-  }
-  return tags;
+  return assignTopicTags(item.title, item.description);
 }
 
 // ============================================================================

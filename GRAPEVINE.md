@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 87 · trending tags: whole-word topic matching
+- **when** — 2026-10-29
+- **what** — Story tags now come from `web/src/lib/topic-tags.ts`. A tag is set when the headline names the topic, or the standfirst names it twice, or once by a strong term (e.g. "drone strike", "Ebola"). Words match whole; acronyms (WHO, AI, ETH, GDP, NATO) match case-sensitively. Loose terms such as "who", "carbon", "solar", "oil", "intelligence", "token", "campaign", "probe" and "freedom" are gone or narrowed to phrases. `topTags` takes a minimum count: Trending needs ≥5 of the newest 200 stories, and /search ≥5. `KEYWORD_PATTERNS` in `rss.ts` is unchanged and now only feeds `sentiment.ts`.
+- **why** — Hugo: "when I click health filter it shows stuff nothing related to health". `health` matched the word "who", so 50 of the 60 stories under Health were off-topic. In a hand audit of the live feed, precision across all tags rose from 67% (173 of 529 stories wrong) to 93% (30 of 424).
+- **where** — `web/src/lib/{topic-tags,rss,front}.ts`, `web/src/components/feed/FrontFeed.tsx`, `web/src/app/search/page.tsx`, `web/src/lib/__tests__/topic-tags.test.ts`. Branch `fix/trending-tag-accuracy` off `dev`. Tags are set at fetch time, so they change once the feed cache refreshes.
+- **rollback** — `git revert` this commit.
+
 ## ▲ node 84 · daily edition: live prices only, price guard
 - **when** — 2026-10-29
 - **what** — `fetchMarketData` keeps CoinGecko's USD price (was discarded) and adds solana. The daily-edition writer gets a CURRENT PRICES block and is told never to quote a price from memory. Council debates older than 36h are left out. New `web/src/lib/price-guard.ts` cuts any body sentence giving a BTC/ETH/SOL price more than 10% from the live one (or with no live price); tests in `price-guard.test.ts`.
