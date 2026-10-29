@@ -47,8 +47,9 @@ export function tagLabel(tag: string): string {
   return tag.charAt(0).toUpperCase() + tag.slice(1).replace(/[-_]/g, " ");
 }
 
-/** Most frequent tags across items, highest count first. */
-export function topTags(items: Array<{ tags?: string[] }>, limit: number): string[] {
+/** Most frequent tags across items, highest count first. A tag on fewer
+ *  than `minCount` items is left out so the filter never shows a near-empty list. */
+export function topTags(items: Array<{ tags?: string[] }>, limit: number, minCount = 1): string[] {
   const counts = new Map<string, number>();
   for (const item of items) {
     for (const tag of item.tags ?? []) {
@@ -57,6 +58,7 @@ export function topTags(items: Array<{ tags?: string[] }>, limit: number): strin
     }
   }
   return [...counts.entries()]
+    .filter(([, n]) => n >= minCount)
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)
     .map(([tag]) => tag);
