@@ -521,7 +521,7 @@ async function generateDailyEdition(data: DailyEditionData): Promise<DailyEditio
     .map((p) => p.trim())
     .filter((p) => p.length > 30 && !p.match(/^(DAILY TITLE|HEADLINE|SUBHEADLINE|MUSIC COMMENTARY):/i))
     // Price guard: cut any sentence quoting a BTC/ETH/SOL price that is not
-    // within 20% of the live one (the model fills gaps from training data).
+    // within 10% of the live one (the model fills gaps from training data).
     .map((p) => {
       const guarded = stripStalePrices(p, data.livePrices);
       for (const r of guarded.removed) console.warn(`[price-guard] daily edition: dropped "${r}"`);

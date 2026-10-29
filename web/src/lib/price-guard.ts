@@ -12,7 +12,7 @@
  * Deterministic and free: regexes only.
  */
 
-export const PRICE_TOLERANCE = 0.2;
+export const PRICE_TOLERANCE = 0.1;
 
 /** Keys match CoinGecko ids, so `MarketData.prices` can be passed straight in. */
 const ASSETS: Array<{ key: string; pattern: RegExp }> = [

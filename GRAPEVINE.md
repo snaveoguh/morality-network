@@ -11,7 +11,7 @@ Each node carries: **when · what · why · where · rollback**.
 
 ## ▲ node 84 · daily edition: live prices only, price guard
 - **when** — 2026-10-29
-- **what** — `fetchMarketData` keeps CoinGecko's USD price (was discarded) and adds solana. The daily-edition writer gets a CURRENT PRICES block and is told never to quote a price from memory. Council debates older than 36h are left out. New `web/src/lib/price-guard.ts` cuts any body sentence giving a BTC/ETH/SOL price more than 20% from the live one (or with no live price); tests in `price-guard.test.ts`.
+- **what** — `fetchMarketData` keeps CoinGecko's USD price (was discarded) and adds solana. The daily-edition writer gets a CURRENT PRICES block and is told never to quote a price from memory. Council debates older than 36h are left out. New `web/src/lib/price-guard.ts` cuts any body sentence giving a BTC/ETH/SOL price more than 10% from the live one (or with no live price); tests in `price-guard.test.ts`.
 - **why** — the 2026-10-29 edition (Afghan opium lead) said Bitcoin was "hovering around $31,800" and Ethereum "near $1,950": mid-2023 prices from the model's memory. The prompt demanded "a specific market figure" but gave it no prices.
 - **where** — `web/src/lib/sentiment.ts`, `web/src/lib/daily-edition.ts`, `web/src/lib/price-guard.ts`. Takes effect from the next edition; the 29 Oct edition is already stored.
 - **rollback** — `git revert` this commit.

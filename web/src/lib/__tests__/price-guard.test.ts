@@ -19,6 +19,10 @@ describe("stripStalePrices", () => {
     expect(stripStalePrices(text, live).removed).toEqual([]);
   });
 
+  it("drops a 16%-off Ether price on its own (29 Oct: $1,950 vs $2,326 live)", () => {
+    expect(stripStalePrices("Ethereum remains near $1,950.", { ethereum: 2_326 }).removed).toHaveLength(1);
+  });
+
   it("drops a price when there is no live price for that asset", () => {
     expect(stripStalePrices("Bitcoin sat at $112,000.", {}).removed).toHaveLength(1);
   });
