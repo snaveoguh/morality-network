@@ -210,7 +210,10 @@ body { background: var(--paper); color: var(--ink); }
 }
 ::selection { background: var(--ink); color: var(--paper); }
 
-.stumble-page { min-height: calc(100vh - 5rem); }
+/* Stumble fills the screen between the header (65px phone / 73px desktop,
+   plus main's 8px bottom padding) and, on phone, the 68px tab bar. */
+.stumble-frame { height: calc(100dvh - 141px - env(safe-area-inset-bottom)); min-height: 360px; }
+@media (min-width: 1024px) { .stumble-frame { height: calc(100dvh - 84px); } }
 
 /* ── MO Heartbeat Loader ── */
 @keyframes mo-heartbeat {

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { STUMBLE_FRAME_SRC } from "@/lib/stumble-embeds";
 import { isMpRoute, MP_PREVIEW_COOKIE, MP_PREVIEW_PARAM, mpRouteAccess } from "@/lib/mp-record/launch-gate";
 
 /**
@@ -37,8 +38,11 @@ const CSP_DIRECTIVES = [
   "font-src 'self' https://fonts.gstatic.com",
   // Broad img-src: many CDN sources for articles, NFTs, favicons, etc.
   "img-src 'self' data: blob: https:",
-  // Embedded media: YouTube, Spotify, Apple Podcasts, WalletConnect
-  "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com https://open.spotify.com https://embed.podcasts.apple.com https://*.walletconnect.com",
+  // Embedded media: YouTube, Spotify, Apple Podcasts, WalletConnect, plus the
+  // hosts Stumble frames (lib/stumble-embeds). Site-wide, not just /stumble:
+  // CSP is per document, so a client-side link into /stumble keeps the
+  // policy of the page it came from.
+  `frame-src 'self' https://open.spotify.com https://embed.podcasts.apple.com https://*.walletconnect.com ${STUMBLE_FRAME_SRC}`,
   // Client-side fetches: own API, WalletConnect relay, RPC endpoints
   [
     "connect-src 'self'",
