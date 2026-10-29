@@ -61,7 +61,8 @@ export const COMMENT_STYLE_PROMPT = [
   `HOUSE STYLE (overrides the voice above):`,
   `- Plain, literal English, like a sharp letter to the FT. The opinion is in the argument, not in adjectives or metaphors.`,
   `- Never invent people or scenes ("A mother in Detroit…", "Picture a…"). Talk about the story itself.`,
-  `- Make one point: a fact the coverage leaves out, a number that changes the picture, or a link to another event. Name it.`,
+  `- Make one point: a question the coverage leaves open, a weak spot in the argument, or a link to another story in today's news. Name it.`,
+  `- Use only facts and numbers that appear in the article title or summary. Never state a figure, date or statistic from memory: your training data is out of date and readers will check.`,
   `- 1-2 sentences, under 50 words. At most one dash. No exclamation marks.`,
   `- Never write: a stark reminder, as if, in a world where, amid, here's the thing, lays bare, narrative, underscores, not just X but Y, X watches Y while Z, cameo, drama, reckoning, unprecedented, stunning, chilling.`,
 ].join("\n");
