@@ -9,8 +9,8 @@ export default function ArticleNotFound() {
 
   return (
     <div className="mx-auto max-w-3xl py-16 text-center">
-      <h1 className="font-headline text-4xl text-[var(--ink)]">
-        Article Not Yet Recovered
+      <h1 className="article-title">
+        Article not yet recovered
       </h1>
       <p className="mt-3 font-body-serif text-sm italic text-[var(--ink-light)]">
         We attempted automatic recovery from archive + onchain registry, but this
@@ -38,7 +38,7 @@ export default function ArticleNotFound() {
         )}
         <Link
           href="/"
-          className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink)] underline underline-offset-4 decoration-[var(--rule)] transition-colors hover:text-[var(--accent-red)]"
+          className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink)] underline underline-offset-4 decoration-[var(--rule)] transition-colors hover:text-[var(--ink)]"
         >
           &larr; Return to Front Page
         </Link>

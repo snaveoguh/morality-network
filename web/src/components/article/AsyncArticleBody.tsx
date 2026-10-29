@@ -153,17 +153,17 @@ export async function AsyncArticleBody({ hash }: { hash: string }) {
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[var(--ink-faint)]">
             Not Yet Archived
           </p>
-          <h1 className="mt-1 font-headline text-3xl leading-tight text-[var(--ink)] md:text-4xl">
+          <h1 className="mt-1 article-title">
             Article not yet archived
           </h1>
-          <p className="mt-3 max-w-3xl font-body-serif text-base leading-relaxed text-[var(--ink-light)]">
+          <p className="mt-3 max-w-3xl article-dek">
             This hash has not been matched to a known article in our archive.
             Ratings and comments can still be submitted &mdash; they will persist onchain.
           </p>
           <div className="mt-4 flex flex-wrap gap-4">
             <Link
               href={`/entity/${hash}`}
-              className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink)] underline underline-offset-4 decoration-[var(--rule)] transition-colors hover:text-[var(--accent-red)]"
+              className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink)] underline underline-offset-4 decoration-[var(--rule)] transition-colors hover:text-[var(--ink)]"
             >
               Open Entity Ledger
             </Link>
@@ -240,15 +240,15 @@ export async function AsyncArticleBody({ hash }: { hash: string }) {
       <section className="mx-auto max-w-3xl py-10">
         <div className="border-b-2 border-[var(--rule)] pb-4 mb-6">
           <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-            <span className="font-bold text-[var(--accent-red)]">{primary.category}</span>
+            <span className="article-kicker">{primary.category}</span>
             <span className="mx-2">&middot;</span>
             <span>{primary.source}</span>
           </div>
-          <h1 className="font-headline text-3xl leading-[1.1] text-[var(--ink)] sm:text-4xl">
+          <h1 className="article-title">
             {primary.title}
           </h1>
           {primary.description && (
-            <p className="mt-3 font-body-serif text-base leading-relaxed text-[var(--ink-light)]">
+            <p className="mt-3 article-dek">
               {primary.description}
             </p>
           )}

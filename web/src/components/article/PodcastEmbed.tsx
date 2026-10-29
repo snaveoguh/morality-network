@@ -78,8 +78,8 @@ export function PodcastEmbed({ episode, sourceName }: PodcastEmbedProps) {
   }, [episode.embedScriptUrl, hasDirectIframeEmbed, targetId]);
 
   return (
-    <section className="mb-8 border-t border-[var(--rule-light)] pt-6">
-      <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
+    <section className="mb-8 article-section">
+      <h2 className="mb-3 article-section-head">
         Listen
       </h2>
 
@@ -100,7 +100,7 @@ export function PodcastEmbed({ episode, sourceName }: PodcastEmbedProps) {
               {duration ? ` · ${duration}` : ""}
             </p>
 
-            <h3 className="mt-1 font-headline text-2xl leading-tight text-[var(--ink)]">
+            <h3 className="mt-1 news-head text-[21px] leading-[1.2] text-[var(--ink)]">
               {episode.title}
             </h3>
 

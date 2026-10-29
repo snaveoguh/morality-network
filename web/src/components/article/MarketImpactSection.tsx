@@ -37,11 +37,11 @@ export function MarketImpactSection({ impact }: MarketImpactSectionProps) {
   const { significance, headline, affectedMarkets, transmissionMechanism, topicSlugs } = impact;
 
   return (
-    <section className="mb-8 border-t-2 border-[var(--rule)] pt-4">
+    <section className="mb-8 article-section">
       {/* Header row */}
       <div className="mb-3 flex items-center gap-3">
-        <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
-          Market Impact
+        <h2 className="article-section-head">
+          Market impact
         </h2>
 
         {/* Significance gauge */}

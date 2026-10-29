@@ -209,7 +209,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[var(--ink-faint)]">
                   {userArticle.source || "pooter.world"} · {userArticle.category?.toUpperCase() || "GENERAL"}
                 </p>
-                <h1 className="mt-1 font-headline text-3xl leading-tight text-[var(--ink)] md:text-4xl">
+                <h1 className="mt-1 article-title">
                   {userArticle.title}
                 </h1>
                 <p className="mt-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
@@ -225,7 +225,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 </div>
               )}
 
-              <article className="prose-pooter mt-6 whitespace-pre-wrap font-body-serif text-base leading-relaxed">
+              <article className="prose-pooter mt-6 whitespace-pre-wrap article-body">
                 {userArticle.body}
               </article>
 
@@ -248,10 +248,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[var(--ink-faint)]">
             Permanent Record
           </p>
-          <h1 className="mt-1 font-headline text-3xl leading-tight text-[var(--ink)] md:text-4xl">
+          <h1 className="mt-1 article-title">
             Awaiting content
           </h1>
-          <p className="mt-3 max-w-3xl font-body-serif text-base leading-relaxed text-[var(--ink-light)]">
+          <p className="mt-3 max-w-3xl article-dek">
             This hash is a permanent address on {BRAND_NAME}. Content has not yet been
             matched to it &mdash; but once it is, it stays forever. Ratings, comments,
             and claims submitted here persist onchain regardless.
@@ -276,7 +276,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <div className="mt-4 flex flex-wrap gap-4">
             <Link
               href={buildEntityUrl(hash as `0x${string}`)}
-              className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink)] underline underline-offset-4 decoration-[var(--rule)] transition-colors hover:text-[var(--accent-red)]"
+              className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--ink)] underline underline-offset-4 decoration-[var(--rule)] transition-colors hover:text-[var(--ink)]"
             >
               Entity Ledger &rsaquo;
             </Link>
@@ -304,7 +304,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // ═══ CACHE-ONLY: no AI generation on click. Editorials are pre-generated
   // by the newsroom cron. If no editorial exists yet, show raw feed data. ═══
   // Re-use earlyEditorial from the parallel fetch above (no duplicate request)
-  let article = earlyEditorial
+  const article = earlyEditorial
     ? await enrichArticleEmbeds(earlyEditorial.primary, earlyEditorial)
     : null;
 
@@ -315,18 +315,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       <section className="mx-auto max-w-3xl py-10">
         <div className="border-b-2 border-[var(--rule)] pb-4 mb-6">
           <div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-            <span className="font-bold text-[var(--accent-red)]">{primary.category}</span>
+            <span className="article-kicker">{primary.category}</span>
             <span>&middot;</span>
             <span>{primary.source}</span>
             <span className="ml-auto border border-[var(--ink-faint)] px-1.5 py-0.5 text-[8px]">
               Editorial Pending
             </span>
           </div>
-          <h1 className="font-headline text-3xl leading-[1.1] text-[var(--ink)] sm:text-4xl">
+          <h1 className="article-title">
             {primary.title}
           </h1>
           {primary.description && (
-            <p className="mt-3 font-body-serif text-base leading-relaxed text-[var(--ink-light)]">
+            <p className="mt-3 article-dek">
               {primary.description}
             </p>
           )}

@@ -9,6 +9,12 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 85 · article pages in the direction C type
+- **when** — 2026-10-29
+- **what** — Shared `article-*` utilities in `globals.css` (`article-title`, `article-dek`, `article-kicker`, `article-byline`, `article-body`, `article-section`, `article-section-head`, `article-link-head`) built on the front page's Newsreader headline. The article reader (`ArticleTemplate` + its section components), the `/article/[hash]` fallback states, `/entity/[hash]`, `/originals` and `/archive` now use them: the h1 is Newsreader 500 (32px phone, 44px desktop) in place of Archivo Black, the standfirst is a roman serif, section heads are serif labels under a 4px double rule, and related-story links are serif. Red category kickers, red "What's missing" rule and red hovers are now ink.
+- **why** — Hugo: "when u click into articles it doesnt actually maintain the style? h1 is still old ones rather than the new serif font".
+- **where** — `web/src/app/globals.css`, `web/src/components/article/*`, `web/src/app/{article,entity}/[hash]/*`, `web/src/app/{originals,archive}/*`, `web/src/components/archive/AsyncArchiveList.tsx`, `web/src/components/entity/EntityProfile.tsx`; branch `feat/article-style` off `dev`.
+- **rollback** — `git revert` the commit.
 ## ▲ node 84 · daily edition: live prices only, price guard
 - **when** — 2026-10-29
 - **what** — `fetchMarketData` keeps CoinGecko's USD price (was discarded) and adds solana. The daily-edition writer gets a CURRENT PRICES block and is told never to quote a price from memory. Council debates older than 36h are left out. New `web/src/lib/price-guard.ts` cuts any body sentence giving a BTC/ETH/SOL price more than 10% from the live one (or with no live price); tests in `price-guard.test.ts`.

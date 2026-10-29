@@ -38,7 +38,7 @@ export async function AsyncArchiveList() {
       {categories.map(([category, catItems]) => (
         <section key={category} className="mb-8">
           <div className="mb-3 flex items-center gap-2 border-b border-[var(--rule-light)] pb-2">
-            <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
+            <h2 className="article-section-head">
               {category}
             </h2>
             <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
@@ -68,7 +68,7 @@ export async function AsyncArchiveList() {
                   <div className="min-w-0 flex-1">
                     <Link
                       href={`/article/${item.hash}`}
-                      className="font-headline-serif text-sm font-bold leading-snug text-[var(--ink)] transition-colors hover:text-[var(--accent-red)]"
+                      className="article-link-head hover:underline hover:decoration-[var(--ink-faint)] hover:decoration-1 hover:underline-offset-4"
                     >
                       {item.title}
                     </Link>

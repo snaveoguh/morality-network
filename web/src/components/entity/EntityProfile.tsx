@@ -176,11 +176,11 @@ export function EntityProfile({ entityHash, initialContext = null, entityContext
                   </div>
                 )}
 
-                <h1 className="font-headline text-xl leading-tight text-[var(--ink)] sm:text-2xl">
+                <h1 className="news-head text-2xl leading-[1.18] text-[var(--ink)] [overflow-wrap:anywhere] sm:text-[28px]">
                   {resolvedTitle}
                 </h1>
                 {stumbleContext?.source && (
-                  <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
+                  <p className="mt-1 article-byline">
                     {stumbleContext.source}
                     {stumbleContext.type && stumbleContext.type !== "link" && (
                       <> &middot; {stumbleContext.type}</>

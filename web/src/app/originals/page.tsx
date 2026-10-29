@@ -69,10 +69,10 @@ export default async function OriginalsPage() {
           <span className="text-[var(--rule-light)]">|</span>
           <span>Pooter Originals</span>
         </div>
-        <h1 className="font-headline text-4xl text-[var(--ink)] md:text-6xl">
+        <h1 className="article-title">
           Pooter Originals
         </h1>
-        <p className="mt-3 max-w-2xl font-body-serif text-base italic leading-relaxed text-[var(--ink-light)]">
+        <p className="mt-3 max-w-2xl article-dek">
           Every editorial written by the {BRAND_NAME} AI desk. Includes daily
           editions, market commentary, and one-off long reads.
         </p>
@@ -97,7 +97,7 @@ export default async function OriginalsPage() {
       {/* Empty state */}
       {sorted.length === 0 && (
         <div className="border border-[var(--rule-light)] bg-[var(--paper-dark)]/30 p-8 text-center">
-          <p className="font-headline-serif text-xl text-[var(--ink)]">
+          <p className="news-head text-xl text-[var(--ink)]">
             No originals cached yet.
           </p>
           <p className="mt-2 font-body-serif text-sm italic text-[var(--ink-light)]">
@@ -111,7 +111,7 @@ export default async function OriginalsPage() {
         {Array.from(byMonth.entries()).map(([month, items]) => (
           <section key={month}>
             <div className="mb-4 flex items-baseline justify-between border-b border-[var(--rule-light)] pb-2">
-              <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
+              <h2 className="article-section-head">
                 {month}
               </h2>
               <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
@@ -133,7 +133,7 @@ export default async function OriginalsPage() {
                         <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
                           {weekday}
                         </p>
-                        <p className="font-headline text-2xl leading-none text-[var(--ink)]">
+                        <p className="news-head text-2xl leading-none text-[var(--ink)]">
                           {day}
                         </p>
                         <p className="font-mono text-[8px] font-bold uppercase tracking-wider text-[var(--ink-light)]">
@@ -146,7 +146,7 @@ export default async function OriginalsPage() {
                         {/* Tags row */}
                         <div className="mb-1 flex flex-wrap items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.2em]">
                           {item.isDailyEdition && (
-                            <span className="border border-[var(--accent-red)] bg-[var(--accent-red)] px-1.5 py-0.5 font-bold text-[var(--paper)]">
+                            <span className="font-bold text-[var(--ink)]">
                               Daily
                             </span>
                           )}
@@ -176,13 +176,13 @@ export default async function OriginalsPage() {
                         </div>
 
                         {/* Title */}
-                        <h3 className="font-headline-serif text-lg font-bold leading-snug text-[var(--ink)] transition-colors group-hover:text-[var(--accent-red)] md:text-xl">
+                        <h3 className="news-head text-xl leading-[1.22] text-[var(--ink)] group-hover:underline group-hover:decoration-[var(--ink-faint)] group-hover:decoration-1 group-hover:underline-offset-4">
                           {item.title}
                         </h3>
 
                         {/* Subheadline */}
                         {item.subheadline && (
-                          <p className="mt-1 line-clamp-2 font-body-serif text-sm italic leading-relaxed text-[var(--ink-light)]">
+                          <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-[var(--ink-light)]">
                             {item.subheadline}
                           </p>
                         )}
