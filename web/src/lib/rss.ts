@@ -99,6 +99,8 @@ const SOURCE_TIER_MAP: Record<string, SourceTier> = {
   "Mongabay": "broadsheet",
   "Yale E360": "broadsheet",
   "Guardian Environment": "broadsheet",
+  "BBC Sport": "broadsheet",
+  "Guardian Sport": "broadsheet",
   "Inside Climate News": "broadsheet",
   "Grist": "broadsheet",
   // Right / conservative
@@ -231,6 +233,10 @@ export const DEFAULT_FEEDS: FeedSource[] = [
   { name: "Earth.org",         url: "https://earth.org/feed/",                                     category: "Environment" },
   { name: "Inside Climate News", url: "https://insideclimatenews.org/feed/",                       category: "Environment" },
   { name: "Grist",             url: "https://grist.org/feed/",                                     category: "Environment" },
+
+  // ─── SPORT ───
+  { name: "BBC Sport",         url: "https://feeds.bbci.co.uk/sport/rss.xml",                      category: "Sport" },
+  { name: "Guardian Sport",    url: "https://www.theguardian.com/uk/sport/rss",                    category: "Sport" },
 
   // ─── GOVERNMENT / INSTITUTIONAL ───
   { name: "UN News",           url: "https://news.un.org/feed/subscribe/en/news/all/rss.xml",      category: "Governance" },

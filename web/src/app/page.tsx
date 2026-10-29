@@ -7,6 +7,8 @@ import { AsyncMasthead } from "@/components/layout/AsyncMasthead";
 import { AsyncFeed } from "@/components/feed/AsyncFeed";
 import { LedgerStrip, LedgerCardsSkeleton } from "@/components/ledger/LedgerStrip";
 import { FrontGrid } from "@/components/feed/FrontFeed";
+import { AsyncSignals, SignalsSkeleton } from "@/components/feed/AsyncSignals";
+import { AsyncCommentary, CommentarySkeleton } from "@/components/feed/AsyncCommentary";
 import { getDailyEditionHash } from "@/lib/daily-edition";
 import { getArchivedEditorial, getRecentPooterOriginals } from "@/lib/editorial-archive";
 import { SITE_URL, withBrand } from "@/lib/brand";
@@ -93,8 +95,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function FeedPage() {
-  // Three independent Suspense boundaries share one grid: the feed's blocks,
-  // the lead story and the ledger rail each place themselves (see FrontFeed).
+  // Independent Suspense boundaries share one grid: the feed's blocks, the
+  // lead story, the ledger rail, the Bearometer signals and the commentary
+  // column each place themselves (see FrontFeed).
   return (
     <>
       <PooterTheme />
@@ -107,6 +110,12 @@ export default function FeedPage() {
         </Suspense>
         <Suspense fallback={<LedgerCardsSkeleton />}>
           <LedgerStrip />
+        </Suspense>
+        <Suspense fallback={<SignalsSkeleton />}>
+          <AsyncSignals />
+        </Suspense>
+        <Suspense fallback={<CommentarySkeleton />}>
+          <AsyncCommentary />
         </Suspense>
       </FrontGrid>
     </>

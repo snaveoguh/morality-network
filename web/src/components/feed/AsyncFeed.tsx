@@ -12,7 +12,6 @@ import { after } from "next/server";
 import { FrontFeed } from "./FrontFeed";
 import { fetchAllFeeds } from "@/lib/rss";
 import { autoArchiveBatch, getArchivedFeedItemByHash, getLocalArchivedFeedItems } from "@/lib/archive";
-import { fetchFarcasterContent, type Cast } from "@/lib/farcaster";
 import { getRecentPooterOriginals, type PooterOriginal } from "@/lib/editorial-archive";
 import type { FeedItem } from "@/lib/rss";
 import { computeEntityHash } from "@/lib/entity";
@@ -27,11 +26,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 }
 
 export async function AsyncFeed() {
-  const [liveItems, publishedHashes, originals, casts] = await Promise.all([
+  const [liveItems, publishedHashes, originals] = await Promise.all([
     withTimeout(fetchAllFeeds(), 12000, [] as FeedItem[]),
     withTimeout(getTodayPublishedHashes(), 3000, new Set<string>()),
     withTimeout(getRecentPooterOriginals(false), 3000, [] as PooterOriginal[]),
-    withTimeout(fetchFarcasterContent("pip"), 5000, [] as Cast[]),
   ]);
 
   // A cold or slow crawl must never cache an empty front page for the whole
@@ -68,5 +66,5 @@ export async function AsyncFeed() {
     });
   });
 
-  return <FrontFeed rssItems={rssItems} publishedHashes={publishedHashes} originals={originals} casts={casts} />;
+  return <FrontFeed rssItems={rssItems} publishedHashes={publishedHashes} originals={originals} />;
 }
