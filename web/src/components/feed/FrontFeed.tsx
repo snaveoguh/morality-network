@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { FeedItem } from "@/lib/rss";
 import type { PooterOriginal } from "@/lib/editorial-archive";
 import { computeEntityHash } from "@/lib/entity";
-import { biasBucket, biasWords, tagLabel, timeAgo, topTags } from "@/lib/front";
+import { biasBucket, biasWords, timeAgo, topTags } from "@/lib/front";
 import { NewsSection, type NewsItem, type NewsTab } from "./NewsSection";
 
 // ============================================================================
@@ -14,7 +14,7 @@ import { NewsSection, type NewsItem, type NewsTab } from "./NewsSection";
 // (lead, Bearometer signals, ledger, commentary):
 //
 //   phone (flex column, by `order`)      ≥1024 (12-col grid)
-//   0 Trending row                       row 1  Trending ─────────── 12
+//   0 Trending row (NewsSection)         row 1  Trending ─────────── 12
 //   1 Lead story        (AsyncMasthead)  row 2  Lead ──────── 9 │ Ledger 3
 //   2 Bearometer signals (AsyncSignals)  row 3  Signals ───── 9 │ rail
 //   3 Claim Ledger cards (LedgerStrip)   then   ═══ double rule ═══
@@ -46,28 +46,6 @@ function sourceLine(item: FeedItem): string {
   return [item.source, biasWords(item.bias?.bias), timeAgo(item.pubDate)]
     .filter(Boolean)
     .join(" · ");
-}
-
-// ── Trending ────────────────────────────────────────────────────────────────
-
-export function TrendingRow({ tags }: { tags: string[] }) {
-  return (
-    <nav
-      aria-label="Trending"
-      className="order-0 -mx-4 flex h-11 items-center gap-[18px] overflow-x-auto whitespace-nowrap border-y border-[var(--rule-light)] px-4 text-sm scrollbar-hide lg:col-span-12 lg:row-start-1 lg:mx-0 lg:h-12 lg:justify-center lg:gap-6 lg:text-[15px]"
-    >
-      <span className="font-bold text-[var(--ink)]">Trending</span>
-      {tags.map((tag) => (
-        <Link
-          key={tag}
-          href={`/search?tag=${encodeURIComponent(tag)}`}
-          className="flex h-11 min-w-11 items-center justify-center text-[var(--ink-light)] hover:text-[var(--ink)] hover:underline hover:underline-offset-4"
-        >
-          {tagLabel(tag)}
-        </Link>
-      ))}
-    </nav>
-  );
 }
 
 // ── Feed-mix chart (cream panel, one ink colour) ────────────────────────────
@@ -160,8 +138,9 @@ function OriginalsRow({ originals }: { originals: PooterOriginal[] }) {
 
 // ── Composition ─────────────────────────────────────────────────────────────
 
-/** Newest stories per tab, newsroom picks first in Latest, as plain data. */
-function newsItems(rssItems: FeedItem[], publishedHashes: Set<string>): NewsItem[] {
+/** Newest stories per tab and per trending tag, newsroom picks first in
+ *  Latest, as plain data. */
+function newsItems(rssItems: FeedItem[], publishedHashes: Set<string>, trending: string[]): NewsItem[] {
   const toNews = (item: FeedItem): NewsItem => ({
     id: item.id,
     href: `/article/${computeEntityHash(item.link)}`,
@@ -169,18 +148,26 @@ function newsItems(rssItems: FeedItem[], publishedHashes: Set<string>): NewsItem
     meta: sourceLine(item),
     imageUrl: item.imageUrl || undefined,
     category: item.category,
+    tags: (item.tags ?? []).map((t) => t.toLowerCase()),
   });
   const picked = rssItems.filter((i) => publishedHashes.has(computeEntityHash(i.link)));
   const ordered = [...picked, ...rssItems.filter((i) => !picked.includes(i))];
-  // Keep the payload small: at most NEWS_PER_TAB per category, plus the
-  // newest NEWS_PER_TAB overall for Latest.
-  const perCategory = new Map<string, number>();
+  // Keep the payload small: at most NEWS_PER_TAB per category and per
+  // trending tag, plus the newest NEWS_PER_TAB overall for Latest.
+  const perGroup = new Map<string, number>();
   const keep = new Set<FeedItem>(ordered.slice(0, NEWS_PER_TAB));
-  for (const item of ordered) {
-    const n = perCategory.get(item.category) ?? 0;
+  const take = (key: string, item: FeedItem) => {
+    const n = perGroup.get(key) ?? 0;
     if (n < NEWS_PER_TAB) {
       keep.add(item);
-      perCategory.set(item.category, n + 1);
+      perGroup.set(key, n + 1);
+    }
+  };
+  for (const item of ordered) {
+    take(`c:${item.category}`, item);
+    for (const tag of item.tags ?? []) {
+      const key = tag.toLowerCase();
+      if (trending.includes(key)) take(`t:${key}`, item);
     }
   }
   return ordered.filter((i) => keep.has(i)).map(toNews);
@@ -196,7 +183,7 @@ export function FrontFeed({
   originals?: PooterOriginal[];
 }) {
   const tags = topTags(rssItems.slice(0, 200), 6);
-  const news = newsItems(rssItems, publishedHashes);
+  const news = newsItems(rssItems, publishedHashes, tags);
   // Only offer tabs that have something in them today.
   const tabs = TABS.filter(
     (t) => t.categories.length === 0 || news.filter((n) => t.categories.includes(n.category)).length >= 3,
@@ -204,10 +191,9 @@ export function FrontFeed({
 
   return (
     <>
-      {tags.length > 0 && <TrendingRow tags={tags} />}
       <hr className="rule-double hidden lg:order-[10] lg:col-span-12 lg:mt-8 lg:block" />
       <FeedMixChart items={rssItems} />
-      {news.length > 0 && <NewsSection items={news} tabs={tabs} total={rssItems.length} />}
+      {news.length > 0 && <NewsSection items={news} tabs={tabs} trending={tags} total={rssItems.length} />}
       {originals.length > 0 && <OriginalsRow originals={originals.slice(0, 8)} />}
     </>
   );

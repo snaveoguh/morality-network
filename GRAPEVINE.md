@@ -9,6 +9,22 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 82 · trending tags filter the front page; Close on search + menu
+
+**when** — 2026-10-29
+**what** — The Trending row moved into `NewsSection` (client): a tag now
+filters the front-page news in place (photo cards + list), sets `?tag=` via
+`replaceState`, scrolls to the news, and shows "Health · n stories / Show
+all ×". `FrontFeed.newsItems` also keeps up to 60 stories per trending tag
+so the filter isn't starved by the per-category cap. Header: on `/search`
+and `/more` the right-hand control becomes Close (× on phone, "× Close" on
+desktop) — `router.back()` if we arrived from another in-site page, else `/`.
+**why** — Hugo: tags dumped you on /search, and neither /search nor the
+Menu page had an obvious way back.
+**where** — `web/src/components/feed/{NewsSection,FrontFeed}.tsx`,
+`web/src/components/layout/Header.tsx`; branch `fix/feed-tag-filter` off `dev`
+**rollback** — `git revert` the commit
+
 ## ▲ node 81 · own-models plan + disabled "analyst" provider
 
 **when** — 2026-10-28
