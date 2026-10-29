@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 85 · Bearometer: supply chain goes global (by region)
+- **when** — 2026-10-29
+- **what** — The `/signals` supply-chain panel is now **Supply chain — global**: eight regions (global shipping and food, Middle East and Red Sea, Europe, Americas, East Asia, South and Southeast Asia, Africa, Black Sea), 27 data indicators and 8 regional news sweeps. The China critical-minerals cards sit unchanged inside East Asia. Data comes from free, keyless sources checked live on 2026-10-29: IMF PortWatch daily chokepoint transits (Hormuz, Bab el-Mandeb, Suez, Panama, Taiwan, Korea, Malacca, Cape, Bosporus), Yahoo Finance closes (BDRY, BWET, Brent, TTF, Henry Hub, copper, wheat, LIT), OECD manufacturing confidence (stands in for PMIs, which are not free), the FAO Food Price Index and the EIA's weekly SPR stocks. Every reading is scored −1…+1 by `tanh(polarity × change / scale)` against its own baseline. A region is the plain mean of its readings. Each indicator lists the Bearometer assets it may bear on, tagged documented, plausible or speculative. Readings are recorded in new tables (migration 016, not applied). No LLM calls: news direction is regex only, and `BEAROMETER_LLM_CLASSIFY` still covers only the China layer.
+- **why** — Hugo: "supply chain isnt only china right, we should get supply chain stuff from all over the globe and how it may affect stuff". Untested, like node 80: shown as signals and data and never traded on.
+- **where** — `web/src/lib/bearometer/global-supply*.ts`, `web/src/components/bearometer/GlobalSupplyChainPanel.tsx`, `web/src/components/bearometer/SupplyChainPanel.tsx` (China body exported for reuse), `web/src/app/signals/page.tsx`, `web/src/app/api/bearometer/global-supply-chain/route.ts`, `web/src/app/coop/page.tsx`, `web/migrations/016_bearometer_global_supply.sql`, `web/src/lib/__tests__/bearometer-global-supply.test.ts`, `docs/BEAROMETER_SUPPLY_CHAIN.md`.
+- **rollback** — `git revert` this commit. `/signals` goes back to the China-only panel. Once 016 has run: `DROP TABLE pooter.bearometer_global_readings, pooter.bearometer_global_items`.
+
 ## ▲ node 84 · daily edition: live prices only, price guard
 - **when** — 2026-10-29
 - **what** — `fetchMarketData` keeps CoinGecko's USD price (was discarded) and adds solana. The daily-edition writer gets a CURRENT PRICES block and is told never to quote a price from memory. Council debates older than 36h are left out. New `web/src/lib/price-guard.ts` cuts any body sentence giving a BTC/ETH/SOL price more than 10% from the live one (or with no live price); tests in `price-guard.test.ts`.

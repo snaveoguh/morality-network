@@ -2,6 +2,7 @@ import { getSupplyChainSnapshot } from "@/lib/bearometer/supply-chain";
 import type {
   PressureLabel,
   SupplyChainIndicator,
+  SupplyChainSnapshot,
   TaggedSupplyChainItem,
 } from "@/lib/bearometer/supply-chain-score";
 import type { WatchTicker } from "@/lib/bearometer/supply-chain-taxonomy";
@@ -120,20 +121,10 @@ function IndicatorCard({ indicator }: { indicator: SupplyChainIndicator }) {
   );
 }
 
-export async function SupplyChainPanel() {
-  const snapshot = await getSupplyChainSnapshot();
+/** China cards, intro and source notes, without the section heading. Reused by the global panel. */
+export function ChinaSupplyChainBody({ snapshot }: { snapshot: SupplyChainSnapshot }) {
   return (
-    <section className="mb-8">
-      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--rule)] pb-2">
-        <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
-          Supply chain — China
-        </h2>
-        <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-          {snapshot.itemsTagged} tagged of {snapshot.itemsScanned} headlines · {snapshot.sourcesOk.length}/
-          {snapshot.sourcesOk.length + snapshot.sourcesEmpty.length} sources ·{" "}
-          {new Date(snapshot.generatedAt).toUTCString().slice(5, 22)} UTC
-        </p>
-      </div>
+    <>
       <p className="mb-3 font-body-serif text-xs italic text-[var(--ink-light)]">
         Chinese government notices and press on rare earths, chip metals and battery materials, grouped by the
         components they feed. Pressure runs from easing (−1) to tightening (+1), weighted toward official notices
@@ -158,6 +149,30 @@ export async function SupplyChainPanel() {
           No items this cycle from: {snapshot.sourcesEmpty.join(", ")}
         </p>
       )}
+    </>
+  );
+}
+
+export function chinaSnapshotMeta(snapshot: SupplyChainSnapshot): string {
+  return (
+    `${snapshot.itemsTagged} tagged of ${snapshot.itemsScanned} headlines · ${snapshot.sourcesOk.length}/` +
+    `${snapshot.sourcesOk.length + snapshot.sourcesEmpty.length} sources`
+  );
+}
+
+export async function SupplyChainPanel() {
+  const snapshot = await getSupplyChainSnapshot();
+  return (
+    <section className="mb-8">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--rule)] pb-2">
+        <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
+          Supply chain — China
+        </h2>
+        <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+          {chinaSnapshotMeta(snapshot)} · {new Date(snapshot.generatedAt).toUTCString().slice(5, 22)} UTC
+        </p>
+      </div>
+      <ChinaSupplyChainBody snapshot={snapshot} />
     </section>
   );
 }

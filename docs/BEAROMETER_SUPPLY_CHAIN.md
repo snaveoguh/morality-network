@@ -161,3 +161,56 @@ feed cannot hold up the existing dashboard.
 
 The supply-chain indicator does not feed `getAggregatedMarketSignals()` or
 the trader. Wiring it in should be a separate, reviewed change.
+
+## Global layer (2026-10-29)
+
+The panel on `/signals` is now **Supply chain — global**, grouped by region.
+The China layer above is unchanged and is shown inside East Asia. Code:
+`web/src/lib/bearometer/global-supply-*.ts`, taxonomy in
+`global-supply-taxonomy.ts` (edit indicators there; scoring does not change).
+
+### Scoring
+
+- Data indicator: `pressure = tanh(polarity × change / scale)`, −1…+1.
+  `change` is a percentage against the indicator's own baseline (3-month
+  mean for daily prices, same 14 days a year earlier for transits, a year
+  earlier for FAO, 13 weeks earlier for the SPR). For OECD confidence it is
+  points from the long-run mean of 100. `polarity` is +1 when a rise means
+  strain (prices, freight, Cape rerouting) and −1 when a rise means relief
+  (transits, reserve stocks, confidence). `scale` is the size of a normal swing.
+- News indicator: same formula as the China layer: Σ ±weight × 72h-half-life
+  decay, divided by 2, then tanh. Regex direction (`classifyDisruption`):
+  disrupting, easing or neutral. A call to reopen does not count as a reopening.
+- Labels: |pressure| ≥ 0.25 → Strained / Easing, otherwise Steady. Data older
+  than `maxAgeDays` → Out of date. Out-of-date data is shown but not scored.
+- Region: the unweighted mean of its scored readings.
+
+### Asset read-across
+
+Each indicator lists Bearometer engine symbols (BTC, ETH, SOL, PAXG/gold,
+DXY, SPX, OIL, NVDA, AAPL, TSLA), the direction each has tended to move when
+the indicator shows strain, and how much weight the link can bear:
+documented, plausible or speculative. None of these links is backtested,
+and the panel says so.
+
+### Sources (checked live 2026-10-29)
+
+| Source | Used for | Note |
+|---|---|---|
+| IMF PortWatch `Daily_Chokepoints_Data` (ArcGIS) | transits at 9 chokepoints | Only statistics queries work; about half its server instances reject queries, so each call retries up to 5 times |
+| Yahoo Finance chart API | BDRY, BWET, BZ=F, TTF=F, NG=F, HG=F, ZW=F, LIT | Unofficial but keyless |
+| OECD SDMX `DSD_STES@DF_CLI` BCICP | manufacturing confidence: EA20, DEU, USA, MEX, CHN, JPN, KOR, IND | Free stand-in for PMIs. India last updated Feb 2026; Vietnam not covered |
+| UN FAO Food Price Index CSV | world food prices | Monthly |
+| US EIA WCSSTUS1 history page | SPR stocks | HTML table, parsed |
+| Google News RSS, one query per region | news sweeps | Through `fetchFeed()` |
+
+Checked and left out: FRED (404s and timeouts from our hosts), GIE AGSI EU gas
+storage (needs an API key), Drewry WCI container rates (429), DBnomics IMF
+commodity prices (last value June 2025), NY Fed GSCPI (legacy .xls only), S&P
+Global and ISM PMIs (not free to republish).
+
+### Record
+
+Migration `016_bearometer_global_supply.sql` adds
+`pooter.bearometer_global_readings` (one row per indicator per snapshot) and
+`pooter.bearometer_global_items` (headlines, first seen). Not applied yet.
