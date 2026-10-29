@@ -9,6 +9,12 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 85 · header: dated notice line + impact-ranked news ticker
+- **when** — 2026-10-29
+- **what** — Header reads "Accountability record · Thu 29 Oct" (London date, set on the client) with a strip below it: the day's top 8 stories, scrolling right to left, each linking to its `/article/<hash>` page. Stories touching a Bearometer asset carry the asset in small mono ("BTC", "Gold", "DXY", "Supply chain"). Ranking is `web/src/lib/impact.ts`: title-overlap clusters scored by outlets × recency (8h half-life) × source tier × category × 1.35 signal boost; no model call, memoised per cached feed. Served by `/api/ticker`. CSS-only animation; pauses on hover, stops on keyboard focus, static first story under `prefers-reduced-motion`. `rss.ts` now exports `getSourceTier`/`SourceTier`.
+- **why** — Hugo: the static tagline should become a dated notice of the day's most important news, weighted for what matters to signals.
+- **where** — `web/src/lib/impact.ts` (+ `__tests__/impact.test.ts`), `web/src/app/api/ticker/route.ts`, `web/src/components/layout/{Header,HeaderTicker}.tsx`, `web/src/app/globals.css` (`.ticker*`).
+- **rollback** — `git revert` this commit.
 ## ▲ node 84 · daily edition: live prices only, price guard
 - **when** — 2026-10-29
 - **what** — `fetchMarketData` keeps CoinGecko's USD price (was discarded) and adds solana. The daily-edition writer gets a CURRENT PRICES block and is told never to quote a price from memory. Council debates older than 36h are left out. New `web/src/lib/price-guard.ts` cuts any body sentence giving a BTC/ETH/SOL price more than 10% from the live one (or with no live price); tests in `price-guard.test.ts`.

@@ -73,7 +73,7 @@ export const KEYWORD_PATTERNS: Record<string, RegExp> = {
 // Higher tier = preferred when same story appears from multiple sources
 // ============================================================================
 
-type SourceTier = "wire" | "broadsheet" | "tabloid" | "blog";
+export type SourceTier = "wire" | "broadsheet" | "tabloid" | "blog";
 
 const SOURCE_TIER_MAP: Record<string, SourceTier> = {
   "Reuters": "wire",
@@ -134,7 +134,7 @@ const TIER_PRIORITY: Record<SourceTier, number> = {
   blog: 1,
 };
 
-function getSourceTier(sourceName: string): SourceTier {
+export function getSourceTier(sourceName: string): SourceTier {
   return SOURCE_TIER_MAP[sourceName] || "tabloid";
 }
 
