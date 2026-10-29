@@ -9,12 +9,20 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 84 · daily edition: live prices only, price guard
+- **when** — 2026-10-29
+- **what** — `fetchMarketData` keeps CoinGecko's USD price (was discarded) and adds solana. The daily-edition writer gets a CURRENT PRICES block and is told never to quote a price from memory. Council debates older than 36h are left out. New `web/src/lib/price-guard.ts` cuts any body sentence giving a BTC/ETH/SOL price more than 20% from the live one (or with no live price); tests in `price-guard.test.ts`.
+- **why** — the 2026-10-29 edition (Afghan opium lead) said Bitcoin was "hovering around $31,800" and Ethereum "near $1,950": mid-2023 prices from the model's memory. The prompt demanded "a specific market figure" but gave it no prices.
+- **where** — `web/src/lib/sentiment.ts`, `web/src/lib/daily-edition.ts`, `web/src/lib/price-guard.ts`. Takes effect from the next edition; the 29 Oct edition is already stored.
+- **rollback** — `git revert` this commit.
+
 ## ▲ node 83 · pooter1 comments to house style; mobile mascot removed
 - **when** — 2026-10-29
 - **what** — `agents/pooter1/src/comment-style.ts`: regex lint + prompt block for on-chain comments (invented vignettes, "X watches Y while Z", stock phrases, over 60 words, more than one dash). `tasks/comment.ts` adds the prompt, retries once with the lint's complaints, and skips the article if the retry still fails. `PooterMascot` now renders only at ≥1024px.
 - **why** — pooter1's comments went onto the front page ("pooter1 on the news") on 2026-10-28 and read as purple AI prose ("A mother in Detroit watches her grocery bill climb while…"). Node 79's lint only covered headlines and standfirsts. The mobile mascot covered content and did little.
 - **where** — `agents/pooter1/src/comment-style.ts`, `agents/pooter1/src/tasks/comment.ts`, `web/src/components/notifications/PooterMascot.tsx`. pooter1 deploys separately (pooter-indexer / pooter1).
 - **rollback** — `git revert` this commit; comments already on-chain stay.
+
 ## ▲ node 82 · trending tags filter the front page; Close on search + menu
 
 **when** — 2026-10-29

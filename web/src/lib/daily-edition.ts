@@ -10,6 +10,7 @@ import { saveEditorial, getArchivedEditorial, type ArchivedEditorial } from "./e
 import { generateTextForTask } from "./ai-provider";
 import { stripMd } from "./strip-md";
 import { HOUSE_STYLE_PROMPT, formatIssues, pickCleanCopy } from "./house-style";
+import { stripStalePrices } from "./price-guard";
 import { hasAIProviderForTask } from "./ai-models";
 import { buildAgentResearchPack } from "./agent-swarm";
 import { extractCanonicalClaim } from "./claim-extract";
@@ -133,6 +134,8 @@ interface DeliberationSummary {
 
 interface DailyEditionData {
   rssItems: FeedItem[];
+  /** CoinGecko id → live USD price (plus fresh council prices). The only prices the writer may quote. */
+  livePrices: Record<string, number>;
   sentiment: ReturnType<typeof computeSentimentSnapshot>;
   videos: VideoItem[];
   biasDigest: BiasDigest | null;
@@ -151,6 +154,9 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
   ]);
 }
 
+const DELIBERATION_MAX_AGE_MS = 36 * 60 * 60 * 1000;
+const COUNCIL_TO_COINGECKO: Record<string, string> = { BTC: "bitcoin", ETH: "ethereum", SOL: "solana" };
+
 async function fetchDeliberations(): Promise<DeliberationSummary[]> {
   try {
     const { getLatestDeliberation } = await import("./trading/deliberation");
@@ -158,7 +164,9 @@ async function fetchDeliberations(): Promise<DeliberationSummary[]> {
     const results = await Promise.all(
       symbols.map(async (symbol) => {
         const record = await getLatestDeliberation(symbol);
-        if (!record) return null;
+        // A stale debate carries a stale price; leave it out rather than let
+        // the writer quote it as today's.
+        if (!record || Date.now() - record.timestamp > DELIBERATION_MAX_AGE_MS) return null;
         const bullArg = record.arguments.find((a) => a.position === "LONG");
         const bearArg = record.arguments.find((a) => a.position === "SHORT");
         return {
@@ -209,7 +217,15 @@ async function gatherDailyEditionData(): Promise<DailyEditionData> {
 
   const musicPick = getDailyMusicPick();
 
-  return { rssItems, sentiment, videos, biasDigest, sources, headlines, musicPick, previousEditions, deliberations };
+  // CoinGecko first; a fresh council price fills any gap.
+  const livePrices: Record<string, number> = {};
+  for (const d of deliberations) {
+    const id = COUNCIL_TO_COINGECKO[d.symbol];
+    if (id && d.price > 0) livePrices[id] = d.price;
+  }
+  Object.assign(livePrices, marketData.prices ?? {});
+
+  return { rssItems, livePrices, sentiment, videos, biasDigest, sources, headlines, musicPick, previousEditions, deliberations };
 }
 
 // ============================================================================
@@ -217,7 +233,11 @@ async function gatherDailyEditionData(): Promise<DailyEditionData> {
 // ============================================================================
 
 function buildWriterPrompt(data: DailyEditionData): string {
-  const { rssItems, sentiment, videos, biasDigest, sources, headlines, musicPick, previousEditions, deliberations } = data;
+  const { rssItems, livePrices, sentiment, videos, biasDigest, sources, headlines, musicPick, previousEditions, deliberations } = data;
+
+  const priceList = Object.entries(livePrices)
+    .map(([id, usd]) => `${id}: $${Math.round(usd).toLocaleString("en-US")}`)
+    .join("\n");
 
   // Top stories — group by category, pick top articles
   const topStories = rssItems.slice(0, 25).map((item) => {
@@ -265,6 +285,10 @@ ${topTopics}
 
 === MARKET SIGNALS ===
 ${marketTopics || "No market data available"}
+
+=== CURRENT PRICES (USD, live at writing) ===
+${priceList || "None available. Do not quote any asset price."}
+These are the only asset prices you may quote. Never give a price from memory: your training data is years out of date.
 
 ${deliberations.length > 0 ? `=== COUNCIL DELIBERATION ===
 The trading council debated these markets today. These are the actual arguments, not just signals. You have access to the council's internal debate. Use it. Tell the reader what the bulls and bears are actually arguing about — not just which way the market moved. Name the specific data points. This is what makes your market analysis different from everyone else's.
@@ -328,7 +352,7 @@ MUSIC COMMENTARY:
 
 RULES:
 - Reference at least 5 specific stories from the feed by name/source
-- Include at least one specific market figure or sentiment score
+- Include at least one specific market figure or sentiment score, taken only from the data above
 - The daily title must feel like a signal from today, not a generic label
 - The subheadline must add a new fact, not restate the headline
 - No filler. No "In today's world..." No throat-clearing. Start with the news.
@@ -495,7 +519,15 @@ async function generateDailyEdition(data: DailyEditionData): Promise<DailyEditio
   const editorialBody = (editorialRaw || rawEditorial)
     .split(/\n\n+/)
     .map((p) => p.trim())
-    .filter((p) => p.length > 30 && !p.match(/^(DAILY TITLE|HEADLINE|SUBHEADLINE|MUSIC COMMENTARY):/i));
+    .filter((p) => p.length > 30 && !p.match(/^(DAILY TITLE|HEADLINE|SUBHEADLINE|MUSIC COMMENTARY):/i))
+    // Price guard: cut any sentence quoting a BTC/ETH/SOL price that is not
+    // within 20% of the live one (the model fills gaps from training data).
+    .map((p) => {
+      const guarded = stripStalePrices(p, data.livePrices);
+      for (const r of guarded.removed) console.warn(`[price-guard] daily edition: dropped "${r}"`);
+      return guarded.text;
+    })
+    .filter((p) => p.length > 30);
 
   // Build the ArticleContent
   const musicPick = data.musicPick;

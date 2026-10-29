@@ -151,6 +151,10 @@ export interface SentimentSnapshot {
 export interface MarketData {
   /** Map of CoinGecko ID → 24h price change % */
   priceChanges: Record<string, number>;
+  /** Map of CoinGecko ID → current USD price. Absent when the fetch failed. */
+  prices?: Record<string, number>;
+  /** When `prices` was fetched (ISO). */
+  pricesAt?: string;
 }
 
 // ── Factuality Weights ──────────────────────────────────────────────────────
@@ -529,13 +533,15 @@ export function computeSentimentSnapshot(
 
 // ── Market Data Fetcher ─────────────────────────────────────────────────────
 
-const COINGECKO_IDS = TOPIC_TAXONOMY
-  .filter((t) => t.marketId)
-  .map((t) => t.marketId!)
-  .join(",");
+// Solana has no sentiment topic but the trading council covers it, so its
+// price is fetched for the daily edition's price guard.
+const COINGECKO_IDS = [...new Set([
+  ...TOPIC_TAXONOMY.filter((t) => t.marketId).map((t) => t.marketId!),
+  "solana",
+])].join(",");
 
 /**
- * Fetch 24h price changes from CoinGecko.
+ * Fetch current prices and 24h changes from CoinGecko.
  */
 async function fetchMarketDataUncached(): Promise<MarketData> {
   if (!COINGECKO_IDS) return { priceChanges: {} };
@@ -549,16 +555,20 @@ async function fetchMarketDataUncached(): Promise<MarketData> {
 
     if (!res.ok) return { priceChanges: {} };
 
-    const data = await res.json() as Record<string, { usd_24h_change?: number }>;
+    const data = await res.json() as Record<string, { usd?: number; usd_24h_change?: number }>;
     const priceChanges: Record<string, number> = {};
+    const prices: Record<string, number> = {};
 
     for (const [id, info] of Object.entries(data)) {
       if (typeof info?.usd_24h_change === "number") {
         priceChanges[id] = info.usd_24h_change;
       }
+      if (typeof info?.usd === "number" && info.usd > 0) {
+        prices[id] = info.usd;
+      }
     }
 
-    return { priceChanges };
+    return { priceChanges, prices, pricesAt: new Date().toISOString() };
   } catch {
     return { priceChanges: {} };
   }
