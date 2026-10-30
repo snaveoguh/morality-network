@@ -11,7 +11,9 @@ Reference mockups: the Design canvas "Pooter Mobile-First Redesign" (claude.ai/a
 
 ## Direction (2026-10-28)
 - **Mobile first.** Design at 390 px first, then tablet (820 portrait / 1024), then desktop.
-- **Keep it simple: a feed first.** The home page is a newspaper feed. Every other feature (Pipe, Agents, Index, Originals, Archive, Governance, Co-op, Markets, wallet, chain, theme, translate) sits one tap away in **More**, not on the front page.
+- **A record with news, not news with a record** (Hugo, 2026-10-30; replaces "a feed first"). pooter world is a global public information source that helps people understand politics, vote and get involved. The home page opens with an **Accountability record** band (live Corrections Register figures, this week's claims, pledges) above the fold, and the news feed sits underneath. Why: funders and new readers judge the site by its first screen, and the record is what makes it different.
+- **No crypto or market headlines at the top of the site** (Hugo, 2026-10-30): not in the header ticker, the trending row or the lead slot. They live in Signals/Bearometer and their own sections.
+- Every other feature (Pipe, Agents, Index, Originals, Archive, Governance, Co-op, Markets, wallet, chain, theme, translate) sits one tap away in **More**, not on the front page.
 - **Direction C, the serif broadsheet, is CHOSEN** (2026-10-28). Use canvas artboards `HomeC` (phone) and `TabletC` (tablet, ledger as a right-hand rail) as the reference. A and B are retired.
 - Bottom tab bar on phone: **Feed / Search / Ledger / Signals / More**.
 
