@@ -84,7 +84,7 @@
       "text": "Trump moved to end H-1B visa deference (Times of India)",
       "status": "supported",
       "evidence": "sourceRefs[20]",
-      "note": "Body says 'deference to H-1B visa holders'; source says 'H-1B visa deference' (USCIS deferring to earlier approvals on renewals). Close enough to pass; reviewer may prefer 'moved to end deference to earlier H-1B visa approvals' only if confirmed from the article."
+      "note": "Body says 'deference to H-1B visa holders'; source says 'H-1B visa deference', which may mean deference to earlier approvals rather than to visa holders (not checked: article not fetched). Minor; passes, but a reviewer may prefer the source wording 'moved to end H-1B visa deference'."
     }
   ]
 }
