@@ -1,18 +1,23 @@
 import { AgentMarketDashboard } from "@/components/markets/AgentMarketDashboard";
+import { LiquidationMap } from "@/components/markets/LiquidationMap";
 import { HyperstructurePanel } from "@/components/markets/HyperstructurePanel";
 import { NarrativeGrid } from "@/components/markets/NarrativeGrid";
 import { getLiveNarratives } from "@/lib/narratives";
 import { withBrand } from "@/lib/brand";
+import { getLiquidationMaps } from "@/lib/liquidation-map-data";
 
 export const revalidate = 300; // 5 min — live narratives from swarm
 export const metadata = {
   title: withBrand("Agent Markets"),
   description:
-    "Macro narratives, market sentiment, and live agent trading telemetry.",
+    "Macro narratives, estimated liquidation levels, market sentiment, and live agent trading telemetry.",
 };
 
 export default async function MarketsPage() {
-  const narratives = await getLiveNarratives();
+  const [narratives, liquidationMaps] = await Promise.all([
+    getLiveNarratives(),
+    getLiquidationMaps(),
+  ]);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
@@ -29,6 +34,9 @@ export default async function MarketsPage() {
         </div>
         <NarrativeGrid narratives={narratives} />
       </div>
+
+      {/* Liquidation map — estimated from Hyperliquid open interest */}
+      <LiquidationMap snapshot={liquidationMaps} />
 
       {/* Hyperstructure flywheel — agent profit vs inference burn */}
       <HyperstructurePanel />
