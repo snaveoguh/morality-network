@@ -49,7 +49,7 @@ export default async function SearchPage() {
 
   return (
     <Suspense fallback={null}>
-      <SearchView items={items} trending={topTags(feed, 12)} />
+      <SearchView items={items} trending={topTags(feed, 12, { includeMarkets: true })} />
     </Suspense>
   );
 }

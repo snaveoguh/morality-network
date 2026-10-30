@@ -2,6 +2,7 @@
 // Pure functions only — safe on the server and in client components.
 
 import type { BiasRating } from "./bias";
+import { isFrontTag } from "./front-filter";
 
 /** Rated bias in plain words (pooter-brand: no red/blue colour coding). */
 const BIAS_WORDS: Record<BiasRating, string> = {
@@ -47,12 +48,19 @@ export function tagLabel(tag: string): string {
   return tag.charAt(0).toUpperCase() + tag.slice(1).replace(/[-_]/g, " ");
 }
 
-/** Most frequent tags across items, highest count first. */
-export function topTags(items: Array<{ tags?: string[] }>, limit: number): string[] {
+/** Most frequent tags across items, highest count first. Crypto and market
+ *  tags are left out (they don't trend on the front page) unless
+ *  `includeMarkets` is set, as Search does. */
+export function topTags(
+  items: Array<{ tags?: string[] }>,
+  limit: number,
+  { includeMarkets = false }: { includeMarkets?: boolean } = {},
+): string[] {
   const counts = new Map<string, number>();
   for (const item of items) {
     for (const tag of item.tags ?? []) {
       const key = tag.toLowerCase();
+      if (!includeMarkets && !isFrontTag(key)) continue;
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
   }

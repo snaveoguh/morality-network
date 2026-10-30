@@ -6,6 +6,10 @@
 // Streams into the page as soon as the feed sources resolve (or time out).
 // The busier tile feed (casts, proposals, videos, filters) is retired from
 // the front page; filters live in /search and the rest in /more.
+//
+// Crypto and market stories (lib/front-filter.ts) are ordered after the rest
+// and never count as newsroom picks here, so they can't lead Latest or the
+// Trending row. They stay in the data for the Business & markets tab.
 // ============================================================================
 
 import { after } from "next/server";
@@ -16,6 +20,7 @@ import { getRecentPooterOriginals, type PooterOriginal } from "@/lib/editorial-a
 import type { FeedItem } from "@/lib/rss";
 import { computeEntityHash } from "@/lib/entity";
 import { getTodayPublishedHashes } from "@/lib/newsroom-edition";
+import { frontFirst, isMarketStory } from "@/lib/front-filter";
 
 /** Race a promise against a timeout — returns fallback on timeout */
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
@@ -66,5 +71,10 @@ export async function AsyncFeed() {
     });
   });
 
-  return <FrontFeed rssItems={rssItems} publishedHashes={publishedHashes} originals={originals} />;
+  // Same items, front-eligible first. Market stories lose newsroom-pick
+  // priority, which would otherwise put them at the head of Latest.
+  const marketHashes = new Set<string>(rssItems.filter(isMarketStory).map((i) => computeEntityHash(i.link)));
+  const frontPicks = new Set([...publishedHashes].filter((h) => !marketHashes.has(h)));
+
+  return <FrontFeed rssItems={frontFirst(rssItems)} publishedHashes={frontPicks} originals={originals} />;
 }

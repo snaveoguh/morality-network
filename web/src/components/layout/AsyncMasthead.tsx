@@ -4,11 +4,15 @@
 // CACHE-ONLY: never generates AI content. Daily editions are pre-generated
 // by the newsroom cron. If no daily edition exists, falls back to the most
 // recent Pooter Original so the masthead is never empty.
+//
+// The lead is never a crypto or market story (lib/front-filter.ts) while a
+// politics or news original is available; one is used only as a last resort.
 // ============================================================================
 
 import { Masthead } from "./Masthead";
 import { getDailyEditionHash } from "@/lib/daily-edition";
-import { getArchivedEditorial, getRecentPooterOriginals } from "@/lib/editorial-archive";
+import { getArchivedEditorial, getRecentPooterOriginals, type PooterOriginal } from "@/lib/editorial-archive";
+import { isFrontStory } from "@/lib/front-filter";
 
 type MastheadEdition = {
   hash: string;
@@ -46,13 +50,31 @@ function withTimeout<T>(promise: Promise<T | null>, ms: number): Promise<T | nul
   ]);
 }
 
+function originalToEdition(o: PooterOriginal, dailyTitle: string): MastheadEdition {
+  return {
+    hash: o.hash,
+    dailyTitle: o.dailyTitle ?? dailyTitle,
+    headline: o.title,
+    subheadline: o.subheadline,
+    generatedAt: o.generatedAt,
+    ...pickImage(
+      o.isDailyEdition && o.hasIllustration ? editionIllustrationUrl(o.generatedAt) : null,
+      o.imageUrl,
+      o.source,
+    ),
+  };
+}
+
 async function resolveMasthead(): Promise<MastheadEdition | null> {
+  // A crypto or market lead, held back in case nothing else turns up.
+  let marketLead: MastheadEdition | null = null;
+
   // 1. Try today's daily edition (3s cap — don't block the page)
   try {
     const hash = getDailyEditionHash();
     const cached = await withTimeout(getArchivedEditorial(hash), 3000);
     if (cached?.isDailyEdition) {
-      return {
+      const edition: MastheadEdition = {
         hash,
         dailyTitle: cached.dailyTitle ?? "DAILY EDITION",
         headline: cached.primary.title,
@@ -64,32 +86,24 @@ async function resolveMasthead(): Promise<MastheadEdition | null> {
           cached.primary.source,
         ),
       };
+      if (isFrontStory({ title: edition.headline, category: cached.primary.category })) return edition;
+      marketLead = edition;
     }
   } catch {
     // Cache miss
   }
 
-  // 2. Fallback: most recent Pooter Original within 7 days (2s cap)
+  // 2. Fallback: most recent front-eligible Pooter Original within 7 days (2s cap)
   try {
     const originals = await withTimeout(getRecentPooterOriginals(false), 2000);
-    const best = originals?.[0];
-    if (best) {
-      return {
-        hash: best.hash,
-        dailyTitle: best.dailyTitle ?? "POOTER ORIGINAL",
-        headline: best.title,
-        subheadline: best.subheadline,
-        generatedAt: best.generatedAt,
-        ...pickImage(
-          best.isDailyEdition && best.hasIllustration ? editionIllustrationUrl(best.generatedAt) : null,
-          best.imageUrl,
-          best.source,
-        ),
-      };
-    }
+    const best = originals?.find(isFrontStory);
+    if (best) return originalToEdition(best, "POOTER ORIGINAL");
+    if (!marketLead && originals?.[0]) marketLead = originalToEdition(originals[0], "POOTER ORIGINAL");
   } catch {
     // No originals available
   }
+
+  if (marketLead) return marketLead;
 
   // 3. Last resort: any-age Pooter Original — masthead must NEVER be empty
   // Give 3s — inner indexer fetch has its own 2s cap, so local JSON always
@@ -97,20 +111,7 @@ async function resolveMasthead(): Promise<MastheadEdition | null> {
   try {
     const anyAge = await withTimeout(getRecentPooterOriginals(false, 1, true), 3000);
     const pick = anyAge?.[0];
-    if (pick) {
-      return {
-        hash: pick.hash,
-        dailyTitle: pick.dailyTitle ?? "FROM THE ARCHIVE",
-        headline: pick.title,
-        subheadline: pick.subheadline,
-        generatedAt: pick.generatedAt,
-        ...pickImage(
-          pick.isDailyEdition && pick.hasIllustration ? editionIllustrationUrl(pick.generatedAt) : null,
-          pick.imageUrl,
-          pick.source,
-        ),
-      };
-    }
+    if (pick) return originalToEdition(pick, "FROM THE ARCHIVE");
   } catch {
     // Archive unavailable — Masthead will show brand fallback
   }
