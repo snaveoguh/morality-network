@@ -5,12 +5,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BRAND_NAME } from "@/lib/brand";
 import { CloseIcon, SearchIcon } from "@/components/layout/icons";
+import { HeaderTicker, useLondonDate } from "@/components/layout/HeaderTicker";
 
 // ============================================================================
 // HEADER — direction C slim bar
 //
-//   phone   [pw]   Accountability record    [search]
-//   ≥1024   [pw]   Accountability record   [ search… ] [Menu]
+//   phone   [pw] Accountability record · Thu 29 Oct          [search]
+//   ≥1024   [pw] Accountability record · Thu 29 Oct   [ search… ] [Menu]
+//           ‹ top stories by impact, scrolling right to left ›
 //
 // The big nav lives in /more (the More tab on phone, "Menu" on desktop).
 // On /search and /more the right-hand control becomes Close, which returns
@@ -36,6 +38,7 @@ export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const overlay = OVERLAY_PATHS.has(pathname);
+  const today = useLondonDate();
 
   // Remember whether we arrived here by navigating inside the site, so Close
   // can go back (keeping scroll position) rather than reloading the front.
@@ -67,7 +70,7 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-[var(--rule-light)] bg-[var(--paper)]">
-        <div className="mx-auto grid h-[56px] max-w-7xl grid-cols-[44px_1fr_44px] items-center px-4 lg:h-[64px] lg:grid-cols-3">
+        <div className="mx-auto grid h-[56px] max-w-7xl grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-x-2 px-4 lg:h-[64px] lg:gap-x-3">
           <Link
             href="/"
             aria-label={`${BRAND_NAME} home`}
@@ -76,12 +79,20 @@ export function Header() {
             <PwMark />
           </Link>
 
-          {/* No wordmark: the pw glyph is the brand; the tagline sits centre. */}
+          {/* No wordmark: the pw glyph is the brand. The notice line is dated. */}
           <Link
             href="/"
-            className="font-news flex h-11 items-center justify-center truncate text-center text-[17px] tracking-[0.04em] text-[var(--ink)] lg:text-[19px]"
+            className="flex h-11 min-w-0 items-baseline gap-1 self-center overflow-hidden whitespace-nowrap pt-[11px] text-[var(--ink)] lg:pt-[10px]"
           >
-            Accountability record
+            <span className="font-news shrink-0 text-[15px] tracking-[0.02em] sm:text-[17px] sm:tracking-[0.04em] lg:text-[19px]">
+              Accountability record
+            </span>
+            {today && (
+              <time dateTime={today.iso} className="truncate text-[12px] text-[var(--ink-faint)] sm:text-[13px] lg:text-sm">
+                <span aria-hidden>· </span>
+                {today.label}
+              </time>
+            )}
           </Link>
 
           {overlay ? (
@@ -120,6 +131,9 @@ export function Header() {
               </div>
             </>
           )}
+        </div>
+        <div className="mx-auto max-w-7xl border-t border-[var(--rule-light)] px-4">
+          <HeaderTicker />
         </div>
       </header>
     </>

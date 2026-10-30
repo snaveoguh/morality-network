@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 89 · header: dated notice line + impact-ranked news ticker
+- **when** — 2026-10-29
+- **what** — Header reads "Accountability record · Thu 29 Oct" (London date, set on the client) with a strip below it: the day's top 8 stories, scrolling right to left, each linking to its `/article/<hash>` page. Stories touching a Bearometer asset carry the asset in small mono ("BTC", "Gold", "DXY", "Supply chain"). Ranking is `web/src/lib/impact.ts`: title-overlap clusters scored by outlets × recency (8h half-life) × source tier × category × 1.35 signal boost; no model call, memoised per cached feed. Served by `/api/ticker`. CSS-only animation; pauses on hover, stops on keyboard focus, static first story under `prefers-reduced-motion`. `rss.ts` now exports `getSourceTier`/`SourceTier`.
+- **why** — Hugo: the static tagline should become a dated notice of the day's most important news, weighted for what matters to signals.
+- **where** — `web/src/lib/impact.ts` (+ `__tests__/impact.test.ts`), `web/src/app/api/ticker/route.ts`, `web/src/components/layout/{Header,HeaderTicker}.tsx`, `web/src/app/globals.css` (`.ticker*`).
+- **rollback** — `git revert` this commit.
+
 ## ▲ node 88 · /markets: estimated liquidation map (crypto + stock perps)
 - **when** — 2026-10-30
 - **what** — New "Liquidation map" section on `/markets`. For 8 crypto perps (BTC, ETH, SOL, HYPE, XRP, ZEC, BNB, DOGE) and 8 HIP-3 stock/index perps on Hyperliquid's `xyz` dex (S&P 500, XYZ100, NVDA, GOOGL, AAPL, META, MSFT, TSLA) it estimates where longs and shorts would be liquidated: open interest spread over 7 days of volume-weighted 1h entry prices and an assumed leverage mix (5x 30%, 10x 30%, 25x 25%, 50x 10%, 100x 5%, clamped to each asset's max), liquidation prices with maintenance margin = 1/(2 × max leverage), positions already wiped since entry dropped. Bars by price bucket, current-price marker, asset picker, biggest-cluster callouts. Support and resistance from swing highs/lows in the same candles (a turn = high/low beyond the 6 hours either side; turns within 0.6% merged; top 2 by turns per side), drawn as dashed lines and listed in plain text (`price-levels.ts`, vitest). Pure maths in `liquidation-map.ts` (vitest), Hyperliquid fetch + 5-min in-memory cache in `liquidation-map-data.ts`. No LLM calls, no keys.
