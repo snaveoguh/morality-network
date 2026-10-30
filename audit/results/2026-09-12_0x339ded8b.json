@@ -1,0 +1,217 @@
+{
+ "hash": "0x339ded8bbe3801c0529fcc1adc0cb2a659ed85ecd4382721e105122e5848a8c1",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Luis Ramirez woke on 9 September with a crater in his right thigh; Jordanian Ministry of Health confirmed his prosthetic will be fitted next week",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented person (recurring). US officials said no American personnel were killed in the 8 September Jordan base attack (https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/)."
+  },
+  {
+   "text": "Prosthetic paid for by the same US humanitarian package that shipped IRGC-grade rockets to a Saudi-backed proxy in Yemen",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented causal link; no source."
+  },
+  {
+   "text": "$2.3 billion aid bill, $4 million prosthetic, $150 million weapons shipment",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found. Invented figures."
+  },
+  {
+   "text": "Press TV / Yemen Armed Forces reclaimed a stretch of Red Sea coastline",
+   "status": "supported",
+   "evidence": "https://www.tasnimnews.ir/en/news/2026/09/10/3693598/yemeni-forces-take-control-of-strategic-red-sea-port-city",
+   "note": "Tasnim (not Press TV) reported Yemeni (Houthi-led) forces took Mokha and two areas in Hudaydah on 10 September. No Press TV article found."
+  },
+  {
+   "text": "Killing 'scores of Saudi mercenaries'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "'Young Arab Front' tightens grip on Bab al-Mandab",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such group found."
+  },
+  {
+   "text": "Saudi Arabia shut its key oil pipeline after drone strikes launched from Iraq",
+   "status": "supported",
+   "evidence": "https://aljazeera.com/news/2026/9/11/saudi-arabia-says-east-west-pipeline-hit-by-drones-launched-from-iraq",
+   "note": "Al Jazeera, 11 September: East-West pipeline hit in Riyadh and Medina areas; Energy Ministry official said it was stopped as a precaution."
+  },
+  {
+   "text": "Pipeline shutdown nudged Brent to $106 a barrel",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No dated source for $106; Al Jazeera gives no price. Causal link unsupported."
+  },
+  {
+   "text": "Trump said he doesn't regret the war on Iran",
+   "status": "supported",
+   "evidence": "https://www.businesstoday.in/world/story/would-do-exactly-as-i-did-donald-trump-says-he-doesnt-regret-the-iran-war-554745-2026-09-11",
+   "note": "Business Today, 11 September, citing a Fox News interview: 'I don't believe in the word regret'."
+  },
+  {
+   "text": "Trump said it 'perched on a plane to Ireland'; called it the 'terrorist war on Iran'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Business Today attributes the remarks to a Fox News interview with no location. 'Terrorist war' is not Trump's phrase. Trump did travel to Ireland (https://von.gov.ng/trump-arrives-in-ireland-for-talks-amid-iran-war/)."
+  },
+  {
+   "text": "Tehran's Foreign Ministry warned the US of 'blowback' and the IAEA's politicisation",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found for the date."
+  },
+  {
+   "text": "Modi hosted BRICS at Bharat Mandapam, New Delhi, with Xi attending",
+   "status": "supported",
+   "evidence": "https://www.businesstoday.in/india/story/brics-summit-2026-consensus-reached-as-leaders-prepare-to-pass-new-delhi-joint-declaration-555109-2026-09-12",
+   "note": "Summit 12-13 September; New Delhi Declaration adopted. Anwar Ibrahim was listed as expected by Anadolu."
+  },
+  {
+   "text": "Joint declaration 'pretended to bridge Iran-Saudi rivalry' and cemented a trade network that sidesteps the dollar",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Characterisation not supported; reports say India tried to bridge Iran-UAE differences."
+  },
+  {
+   "text": "Pezeshkian urged BRICS to expand national-currency use",
+   "status": "supported",
+   "evidence": "https://dailypioneer.com/news/pezeshkian-calls-local-currencies-brics-trade",
+   "note": "Said at BRICS Business Forum, New Delhi, 11 September. Attributed in edition to Press TV; found in The Pioneer and others."
+  },
+  {
+   "text": "US funds both prosthetics and missiles",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented link."
+  },
+  {
+   "text": "The Defiant: Revolut's EURR rollout with Bridge as regulated issuer",
+   "status": "supported",
+   "evidence": "https://thedefiant.io/converge/tradfi-and-fintech/revolut-starts-eurr-rollout-with-bridge-as-regulated-issuer",
+   "note": ""
+  },
+  {
+   "text": "SEC crypto-custody rewrite under White House review",
+   "status": "supported",
+   "evidence": "https://thedefiant.io/converge/regulation/sec-crypto-custody-rewrite-enters-white-house-review",
+   "note": ""
+  },
+  {
+   "text": "Bitcoin sentiment 60, signal 50; Ethereum sentiment 61, signal 55",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores; no public source."
+  },
+  {
+   "text": "Bitcoin hovering around $28,000; Ethereum near $1,800",
+   "status": "wrong",
+   "evidence": "https://www.octagonai.co/markets/crypto/hourly/btc-price-on-sep-11-2026-at-5pm-edt.md",
+   "note": "These are 2023 prices. A prediction-market settlement page puts BTC around $77,800 on 11 September 2026 (thin source, but $28,000 is far off)."
+  },
+  {
+   "text": "Inside Climate News: Alabama woman handcuffed over a trash bill",
+   "status": "supported",
+   "evidence": "https://insideclimatenews.org/news/12092026/alabama-county-arrests-citizens-nonpayment-trash-bills/",
+   "note": "ICN, 12 September 2026: Winston County, Alabama; Pam Benton, 59, sat handcuffed to a bench inside the Winston County Courthouse."
+  },
+  {
+   "text": "Philippine ferry fire left at least 35 dead, as reported by SCMP",
+   "status": "wrong",
+   "evidence": "https://aljazeera.com/news/2026/9/11/philippines-ferry-fire-death-toll-rises-to-35-after-bodies-recovered",
+   "note": "Toll of 35 is correct (Al Jazeera, AP, 11 September; M/V June Aster off Coron, Palawan; 54 missing). No SCMP article found; attribution unsupported."
+  },
+  {
+   "text": "In Miami, a jet linked to Amazon crashed",
+   "status": "supported",
+   "evidence": "https://www.foxbusiness.com/markets/amazon-says-its-working-closely-authorities-after-cargo-plane-crash-kills-5",
+   "note": "Prime Air Flight 7598, a 21 Air Boeing 767, overran the runway at Miami International Airport in early September, killing at least five."
+  },
+  {
+   "text": "Amazon profits from delivering aid to war zones",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented link."
+  },
+  {
+   "text": "AI sentiment 62, health optimism 62, global conflict sentiment 44, average sentiment 56, feed tilt -0.16",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores; no public source."
+  },
+  {
+   "text": "Broken ribs of a fisherman in Mokha",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "Sputnik: Russia hopes US peacemaking in Ukraine will bear fruit",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No Sputnik report found around 12 September 2026."
+  },
+  {
+   "text": "New suspected Epstein recruiters in France (RT)",
+   "status": "supported",
+   "evidence": "https://www.cp24.com/news/world/2026/09/10/frances-epstein-probe-identifies-potential-recruiters/",
+   "note": "AFP via CP24, 10 September: Paris prosecutor Laure Beccuau said investigators had names of other potential recruiters. Not 'in French courts'; no RT report found."
+  },
+  {
+   "text": "King Gizzard live set on KEXP",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Feed video; not a news claim. Removed."
+  },
+  {
+   "text": "US Senate debates the SEC custody rewrite on 20 September",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source; the SEC rule is in OIRA review, not before the Senate. The Senate had a cloture vote on market-structure legislation scheduled for 15 September (per search summaries), not this rule."
+  },
+  {
+   "text": "Saudi Arabia promises to repair pipeline by early October",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Al Jazeera says the closure was temporary; no restart date found."
+  },
+  {
+   "text": "Expected surge in Iranian missile sales to proxy forces; $50 donation to Jordanian field hospital",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "(rewrite) Saudi Foreign Ministry said it would not retaliate for now at Baghdad's request; Iraq PM office said drones launched from Maysan and dismissed the commander there",
+   "status": "supported",
+   "evidence": "https://aljazeera.com/news/2026/9/11/saudi-arabia-says-east-west-pipeline-hit-by-drones-launched-from-iraq",
+   "note": ""
+  },
+  {
+   "text": "(rewrite) Trump said he believes the war will end right after the midterm election",
+   "status": "supported",
+   "evidence": "https://www.businesstoday.in/world/story/would-do-exactly-as-i-did-donald-trump-says-he-doesnt-regret-the-iran-war-554745-2026-09-11",
+   "note": ""
+  }
+ ],
+ "edits": {
+  "headline": "Saudi Arabia shuts East-West oil pipeline after drone attack from Iraq",
+  "subheadline": "The Saudi foreign ministry said drones from Iraq hit the pipeline in the Riyadh and Medina areas, causing injuries and damage.",
+  "editorialBody": [
+   "Saudi Arabia temporarily shut its East-West oil pipeline as a precaution after drones launched from Iraq hit it, an Energy Ministry official said, Al Jazeera reported on 11 September.",
+   "The Saudi Foreign Ministry said it would not retaliate for now, at Baghdad's request. Iraq's prime minister's office said the drones were launched from Maysan province and dismissed the commander of operations there.",
+   "US President Donald Trump told Fox News he did not regret the war with Iran, Business Today reported on 11 September. \"I don't believe in the word 'regret',\" he said. He said he believed the war would end right after the November midterm elections.",
+   "Iranian President Masoud Pezeshkian urged BRICS members to expand trade in national currencies at the BRICS Business Forum in New Delhi on 11 September, The Pioneer reported.",
+   "The death toll from a fire on the ferry M/V June Aster off Coron in Palawan, the Philippines, rose to 35, with 54 people missing, Al Jazeera reported on 11 September.",
+   "Paris prosecutor Laure Beccuau said investigators had obtained the names of other potential recruiters for Jeffrey Epstein, AFP reported on 10 September.",
+   "Inside Climate News reported that Winston County, Alabama, has arrested residents over unpaid trash bills. One of them, Pam Benton, 59, sat handcuffed to a bench inside the Winston County Courthouse."
+  ]
+ }
+}

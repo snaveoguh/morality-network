@@ -1,0 +1,162 @@
+{
+ "hash": "0x2ce5e8a6238a2544ec7b180cb089f017482c7668d17481395e2c5a1c5ebabe55",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "A Chinese son's video of his mother's final 14 days before her sudden leukaemia death moved people online (SCMP)",
+   "status": "supported",
+   "evidence": "sourceRefs[14]",
+   "note": "SCMP headline."
+  },
+  {
+   "text": "Son named Liang Wei; hospital in Guangzhou; September 20; she whispered her last wishes",
+   "status": "wrong",
+   "evidence": "https://www.scmp.com/news/people-culture/trending-china/article/3368371/chinese-sons-video-mums-final-14-days-sudden-leukaemia-death-moves-hearts-online",
+   "note": "SCMP summary says the man is in northern China (an Asianet report says Inner Mongolia); no name, date or Guangzhou given. Name and scene invented."
+  },
+  {
+   "text": "Montage 'posted by SCMP yesterday' and has three million views",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "SCMP reported on the video; it did not post it. No view count found."
+  },
+  {
+   "text": "DW News said male infertility is 'grossly underreported'",
+   "status": "supported",
+   "evidence": "sourceRefs[21]",
+   "note": "DW headline."
+  },
+  {
+   "text": "'The same platform streamed a report on male infertility' two days earlier",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented link to SCMP; DW is a different outlet."
+  },
+  {
+   "text": "DW cites a WHO estimate that 7% of men worldwide face sterility",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in the headline; DW article could not be fetched (dw.com blocked). No WHO 7% sterility estimate found."
+  },
+  {
+   "text": "Research funding lags maternal health by a factor of ten",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "Binance probed by US federal prosecutors for sanctions violations, as Bloomberg relayed via CoinDesk",
+   "status": "supported",
+   "evidence": "sourceRefs[1]",
+   "note": "CoinDesk headline citing Bloomberg. (Edition reversed the direction: CoinDesk relayed Bloomberg.)"
+  },
+  {
+   "text": "Probe led by the US attorney's office in Manhattan; concerns Iran sanctions; Binance spokesperson: 'a zero-tolerance policy for sanctions violations'",
+   "status": "supported",
+   "evidence": "https://www.coindesk.com/policy/2026/09/22/binance-probed-by-u-s-federal-prosecutors-for-sanctions-violations-bloomberg",
+   "note": "Added in rewrite."
+  },
+  {
+   "text": "Binance's token price dipped 4% on the news",
+   "status": "unsupported",
+   "evidence": "https://www.coindesk.com/policy/2026/09/22/binance-probed-by-u-s-federal-prosecutors-for-sanctions-violations-bloomberg",
+   "note": "CoinDesk article does not mention BNB or any price move."
+  },
+  {
+   "text": "Bitcoin sentiment 71, market signal 54; AI sentiment 65",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores; no public source."
+  },
+  {
+   "text": "Crypto market cap reclaimed $3 trillion",
+   "status": "supported",
+   "evidence": "sourceRefs[24]",
+   "note": "Cointelegraph headline: crypto market cap reclaims $3 trillion as Bitcoin, altcoins rally."
+  },
+  {
+   "text": "Average retail trader loses $2,400 a year to hidden fees, according to a recent Cointelegraph analysis",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in Cointelegraph sourceRefs; no such analysis found."
+  },
+  {
+   "text": "TASS: Iran and Russia counter a 'one-sided news flow' within OANA",
+   "status": "supported",
+   "evidence": "sourceRefs[0]",
+   "note": "TASS headline (an ambassador said)."
+  },
+  {
+   "text": "Brussels officials, as quoted by TASS, remain 'hyped' over frozen Russian assets",
+   "status": "wrong",
+   "evidence": "sourceRefs[4]",
+   "note": "TASS headline attributes this to Russia's SVR intelligence service about Brussels, not to Brussels officials."
+  },
+  {
+   "text": "Li Mei, 80, swindled of HK$6 million: police seized the alleged mastermind's laptop",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such report found; the 80-year-old victim was never named (SCMP, 21 Sep)."
+  },
+  {
+   "text": "A broader 'investment-guru' syndicate siphoned over HK$200 million from seniors across three districts; an arrest",
+   "status": "unsupported",
+   "evidence": "https://scmp.com/news/hong-kong/law-and-crime/article/3368267/hong-kong-woman-80-loses-hk6-million-fake-online-investment-expert",
+   "note": "No such syndicate or arrest found. Reports said Hong Kong police received more than 50 investment scam reports in a week with losses of about HK$30 million."
+  },
+  {
+   "text": "Rest of World: America is in the wrong AI race with China",
+   "status": "supported",
+   "evidence": "sourceRefs[22]",
+   "note": "Rest of World headline."
+  },
+  {
+   "text": "US venture capital poured $12 billion into AI startups last quarter (Rest of World)",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in headline; no source found."
+  },
+  {
+   "text": "WHO budget committees cite 'uncertain ROI' on male infertility research",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented quote."
+  },
+  {
+   "text": "US Attorney's Office hearing on October 15 on Binance compliance failures",
+   "status": "unsupported",
+   "evidence": "https://www.coindesk.com/policy/2026/09/22/binance-probed-by-u-s-federal-prosecutors-for-sanctions-violations-bloomberg",
+   "note": "CoinDesk/Bloomberg report a probe, not charges or a hearing; no date."
+  },
+  {
+   "text": "WHO to release a revised fertility report on October 3",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "Chinese Ministry of Health promised tighter reporting of leukaemia cases by month end",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source; China's health body is the National Health Commission."
+  },
+  {
+   "text": "Causal links (data pipelines pump hype into Binance and mute male infertility; crypto scams and frozen assets)",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented links between unrelated stories."
+  }
+ ],
+ "edits": {
+  "headline": "US prosecutors investigate Binance over Iran sanctions",
+  "subheadline": "The US attorney's office in Manhattan is responsible for the investigation, CoinDesk reported, citing Bloomberg.",
+  "editorialBody": [
+   "US federal prosecutors are investigating whether Binance broke US sanctions on Iran, CoinDesk reported on 22 September, citing Bloomberg.",
+   "The US attorney's office in Manhattan is responsible for the investigation, Bloomberg's sources said. A Binance spokesperson said the company has \"a zero-tolerance policy for sanctions violations\".",
+   "The total value of the crypto market reclaimed $3 trillion as Bitcoin and other tokens rallied, Cointelegraph reported.",
+   "A man in northern China posted a video of his mother's final 14 days before her sudden death from leukaemia, and it moved many people online, the South China Morning Post reported.",
+   "Male infertility is \"grossly underreported\", DW News reported.",
+   "Russia's SVR foreign intelligence service said Brussels was still intent on misappropriating Russian assets frozen in the EU, TASS reported."
+  ]
+ }
+}

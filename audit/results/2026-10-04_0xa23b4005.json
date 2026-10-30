@@ -1,0 +1,161 @@
+{
+  "hash": "0xa23b4005122bf1136394c327b4ae7e311bb5c513567dbb1dd60805513fcdcd11",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Phoenix police arrested Victor 'Vinnie' Ramos, 32, for the murder of Megan Alvarez; husband Carlos on 27th Street; quote 'Justice is a slow horse'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No such case, names or arrest found (searched Phoenix/Ahwatukee murder and 911 call, Oct 2026). The 3 Oct edition's Alvarez story was itself unsupported."
+    },
+    {
+      "text": "Week of dead-ends, city-wide manhunt, viral TikTok of him buying rope; victim a kindergarten teacher",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Nothing found; also internally inconsistent (murder said to be on 3 Oct, arrest 'after a week' on 4 Oct)."
+    },
+    {
+      "text": "Preliminary hearing for Ramos set for October 10",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Nothing found."
+    },
+    {
+      "text": "Kerala Home Minister ordered a vigilance enquiry into CEC Gyanesh Kumar over alleged 2006 PWD bribery",
+      "status": "supported",
+      "evidence": "https://www.onmanorama.com/news/kerala/2026/10/04/chennithala-orders-vigilance-probe-corruption-allegations-cec-gyanesh-kumar-kerala-pwd-secretary.html",
+      "note": "Home Minister Ramesh Chennithala ordered a vigilance probe into corruption allegations from Kumar's time as Kerala PWD secretary (2006, Kerala State Transport Project)."
+    },
+    {
+      "text": "Junior clerk Anil Pillai found dead in a drainage ditch, death ruled 'suspicious'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not found. The 2006 case concerns the suicide of a Malaysian engineer, not a clerk."
+    },
+    {
+      "text": "Kerala vigilance panel to report by October 20",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No date found."
+    },
+    {
+      "text": "DW broadcast revealed Russia's covert training of Afghan Taliban fighters with night-vision goggles and drone lessons",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No DW report found for Oct 2026; DW covered a Russia-Taliban weapons repair deal earlier in 2026."
+    },
+    {
+      "text": "Drones over Kabul were once sold to a crypto exchange that collapsed after a $2.4bn hack last spring",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented link; nothing found."
+    },
+    {
+      "text": "Bitcoin and Ethereum at 51 on sentiment and market signal",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal scores."
+    },
+    {
+      "text": "Ethereum around $1,830",
+      "status": "wrong",
+      "evidence": "https://cryptoticker.io/en/ethereum-price-prediction-october-record-last-two-lower/",
+      "note": "ETH was about $2,690 on 4 Oct 2026 (CryptoTicker citing CoinGecko)."
+    },
+    {
+      "text": "Bitcoin around $28,000",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No dated source; figure is a 2023 level. CoinDesk (1 Oct) reported bitcoin rose about 40% in Q3 2026, inconsistent with $28,000."
+    },
+    {
+      "text": "On-chain activity spiked 12% in wallets linked to the Russian-Afghan training programme",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented."
+    },
+    {
+      "text": "Trump posted Tom Cotton's personal phone number over daylight saving time",
+      "status": "supported",
+      "evidence": "https://www.ajc.com/news/2026/10/trump-posts-cell-phone-number-of-arkansas-sen-tom-cotton-in-fight-over-daylight-saving-time/",
+      "note": "Posted on 3 Oct 2026 over the Sunshine Protection Act."
+    },
+    {
+      "text": "'Former President Trump'",
+      "status": "wrong",
+      "evidence": "https://www.ajc.com/news/2026/10/trump-posts-cell-phone-number-of-arkansas-sen-tom-cotton-in-fight-over-daylight-saving-time/",
+      "note": "Trump is the sitting president."
+    },
+    {
+      "text": "Polling shows 47% voter fatigue and 58% desire for 'real accountability'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No poll found."
+    },
+    {
+      "text": "BJP nominated former Trinamool MP Koel Mallick to the Rajya Sabha",
+      "status": "supported",
+      "evidence": "https://www.theweek.in/news/india/2026/10/05/koel-mallick-joins-bjp-files-rajya-sabha-nomination.html",
+      "note": "BJP named her as its candidate for a West Bengal Rajya Sabha by-election (announced 4 Oct; she joined the BJP and filed on 5 Oct). Poll on 16 Oct. 'Nominated to' overstates: she was a candidate."
+    },
+    {
+      "text": "Described as 'fresh blood' and criticised as patronage sidestepping anti-corruption reforms",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Some BJP veterans objected (Deccan Chronicle), but the quoted phrases were not found."
+    },
+    {
+      "text": "Ghazipur, Uttar Pradesh health camp examined 35,000 patients and performed 346 surgeries",
+      "status": "supported",
+      "evidence": "https://easternherald.com/2026/10/06/six-day-free-mega-health-camp-brings-doctors-from-across-india-to-ghazipur-serving-over-35200-patients-and-completing-346-surgeries/",
+      "note": "More than 35,200 patients and 346 surgeries, 26 Sept to 1 Oct 2026."
+    },
+    {
+      "text": "Government refused an additional ₹2 billion for a permanent district hospital",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Nothing found."
+    },
+    {
+      "text": "ABC News clip of a diver rescuing a stingray tangled in a tire off Florida",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Searched; no such clip found."
+    },
+    {
+      "text": "King Gizzard & The Lizard Wizard 'Full Performance (Live on KEXP)'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal feed item; irrelevant."
+    },
+    {
+      "text": "UN special session on 'Digital Weaponization' on October 15",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Nothing found."
+    },
+    {
+      "text": "AP called the number and no one answered; voicemail full; Cotton restated opposition in his own post",
+      "status": "supported",
+      "evidence": "https://www.ajc.com/news/2026/10/trump-posts-cell-phone-number-of-arkansas-sen-tom-cotton-in-fight-over-daylight-saving-time/",
+      "note": "Added."
+    },
+    {
+      "text": "Sunshine Protection Act passed the House in July and has stalled in the Senate",
+      "status": "supported",
+      "evidence": "https://www.ajc.com/news/2026/10/trump-posts-cell-phone-number-of-arkansas-sen-tom-cotton-in-fight-over-daylight-saving-time/",
+      "note": "Added."
+    }
+  ],
+  "edits": {
+    "headline": "Trump posts Senator Tom Cotton's phone number in daylight saving row",
+    "subheadline": "Trump urged Arkansans to press Cotton to back the Sunshine Protection Act, which passed the House in July but has stalled in the Senate.",
+    "editorialBody": [
+      "President Donald Trump posted what he said was the mobile number of Senator Tom Cotton, an Arkansas Republican, on social media on 3 October, the Associated Press reported.",
+      "Trump urged Arkansans to press Cotton to pass a bill making daylight saving time permanent. Cotton restated his opposition in his own post. When the AP called the number, no one answered and the voicemail was full.",
+      "Kerala Home Minister Ramesh Chennithala ordered a vigilance probe into corruption allegations from Chief Election Commissioner Gyanesh Kumar's time as the state's Public Works Department secretary in 2006, Onmanorama reported.",
+      "The BJP named actor and former Trinamool Congress MP Koel Mallick as its candidate for a Rajya Sabha by-election in West Bengal, The Week reported. Polling is set for 16 October.",
+      "A free health camp in Ghazipur, Uttar Pradesh, saw more than 35,200 patients and carried out 346 surgeries between 26 September and 1 October, the Eastern Herald reported."
+    ]
+  }
+}

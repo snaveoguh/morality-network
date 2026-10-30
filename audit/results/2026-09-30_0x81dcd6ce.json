@@ -1,0 +1,223 @@
+{
+  "hash": "0x81dcd6ced8baed9fb25d3a338f4ba69ada1fc9bc2fff3a1b5532e82b9ccd2afb",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Headline: a pilot's bloodied hands, a student's shattered silence, and a tech titan's AI gamble",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Comma-list headline joining three stories; 'tech titan's AI gamble' not supported."
+    },
+    {
+      "text": "Subheadline: a mid-air stabbing, a courtroom voice-clone and a billionaire's brunch converge",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source for a 'billionaire's brunch'; joins unrelated stories."
+    },
+    {
+      "text": "Israeli officials said the diverted flydubai incident may be an attempted 'terror attack' (Reuters)",
+      "status": "supported",
+      "evidence": "sourceRefs[4]",
+      "note": "Reuters full text via https://www.al-monitor.com/originals/2026/09/israeli-officials-say-diverted-flydubai-incident-may-be-attempted-terror-attack"
+    },
+    {
+      "text": "Ahmed Al-Fahim, whose last flight it was",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No such person in Reuters report. Captain is an Indian national, not named; invented."
+    },
+    {
+      "text": "Flight FZ1073 on 30 September",
+      "status": "supported",
+      "evidence": "https://www.al-monitor.com/originals/2026/09/israeli-officials-say-diverted-flydubai-incident-may-be-attempted-terror-attack",
+      "note": "Reuters: flydubai FZ1073, Dubai to Tel Aviv."
+    },
+    {
+      "text": "Flight descended over the Persian Gulf",
+      "status": "wrong",
+      "evidence": "https://www.al-monitor.com/originals/2026/09/israeli-officials-say-diverted-flydubai-incident-may-be-attempted-terror-attack",
+      "note": "Reuters: diverted while flying over Jordanian airspace and landed in Tabuk, Saudi Arabia; jet dropped nearly 14,000 ft."
+    },
+    {
+      "text": "A passenger's knife turned the cockpit into a crime scene",
+      "status": "wrong",
+      "evidence": "https://www.al-monitor.com/originals/2026/09/israeli-officials-say-diverted-flydubai-incident-may-be-attempted-terror-attack",
+      "note": "Reuters: the co-pilot allegedly stabbed the pilot; passengers and crew subdued him."
+    },
+    {
+      "text": "The pilot managed an emergency landing in Dubai",
+      "status": "wrong",
+      "evidence": "https://www.al-monitor.com/originals/2026/09/israeli-officials-say-diverted-flydubai-incident-may-be-attempted-terror-attack",
+      "note": "A second pair of flydubai pilots on board landed the plane in Tabuk, Saudi Arabia."
+    },
+    {
+      "text": "Saving the remaining 165 souls",
+      "status": "wrong",
+      "evidence": "https://www.al-monitor.com/originals/2026/09/israeli-officials-say-diverted-flydubai-incident-may-be-attempted-terror-attack",
+      "note": "Netanyahu said 174 people were on board."
+    },
+    {
+      "text": "Incident under Israeli investigation as possible terror plot",
+      "status": "supported",
+      "evidence": "https://www.al-monitor.com/originals/2026/09/israeli-officials-say-diverted-flydubai-incident-may-be-attempted-terror-attack",
+      "note": "Israeli officials said it may be a terror attack; motive under investigation."
+    },
+    {
+      "text": "Scar on the aircraft's left wing",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not reported."
+    },
+    {
+      "text": "Tokyo court ruled for actor Hiroshi Tanaka",
+      "status": "wrong",
+      "evidence": "sourceRefs[5]",
+      "note": "The actor is Kenjiro Tsuda (Guardian URL; AP https://ny1.com/nyc/all-boroughs/ap-top-news/2026/10/01/tokyo-court-grants-legal-protection-to-human-voices-in-ai-clone-case)."
+    },
+    {
+      "text": "Voice harvested by a Japanese AI startup; court found the company's replica violated his rights",
+      "status": "wrong",
+      "evidence": "https://ny1.com/nyc/all-boroughs/ap-top-news/2026/10/01/tokyo-court-grants-legal-protection-to-human-voices-in-ai-clone-case",
+      "note": "The suit was against TikTok over videos by an anonymous account. Tokyo District Court recognised voice as protected under publicity rights but dismissed the takedown request because the videos were already deleted."
+    },
+    {
+      "text": "Guardian: AI tool that copied actor's 'lustrous' voice violated his rights, says Tokyo court",
+      "status": "supported",
+      "evidence": "sourceRefs[5]",
+      "note": ""
+    },
+    {
+      "text": "Precedent could reverberate through the global AI market",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Opinion/speculation."
+    },
+    {
+      "text": "Trump-hosted tech summit in Palm Beach",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "CNBC headline mentions Trump's meeting with tech leaders; no location given and Palm Beach not confirmed."
+    },
+    {
+      "text": "CNBC: Trump's meeting with tech leaders leaves AI safety more unsettled than ever",
+      "status": "supported",
+      "evidence": "sourceRefs[6]",
+      "note": ""
+    },
+    {
+      "text": "Apple's HomePad will launch on 13 October (The Verge)",
+      "status": "supported",
+      "evidence": "sourceRefs[2]",
+      "note": "Verge headline says 'will reportedly launch'; the edition dropped 'reportedly'."
+    },
+    {
+      "text": "HomePad promises a seamless blend of iOS and home automation",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not in headline."
+    },
+    {
+      "text": "Moderna stock rose more than 600% before Citi told investors to sell (MarketWatch)",
+      "status": "supported",
+      "evidence": "sourceRefs[1]",
+      "note": ""
+    },
+    {
+      "text": "Global optimism score 59",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal score; no public source."
+    },
+    {
+      "text": "Bitget hackers moved $4 million into Zcash's privacy pool, making funds harder to trace (CoinDesk)",
+      "status": "supported",
+      "evidence": "sourceRefs[15]",
+      "note": "CoinDesk: 2,746 ZEC, about $3.9m, into the Ironwood shielded pool."
+    },
+    {
+      "text": "Bitcoin sentiment 68, Ethereum 67, signals 50 and 48",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal scores; no public source."
+    },
+    {
+      "text": "Mia Chen given a platform; bruised wrist visible in a courtroom sketch",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented person carried from the 28 Sept edition; no court hearing reported."
+    },
+    {
+      "text": "Cornell student journalists 'relentlessly' reporting on campus rape (France 24)",
+      "status": "supported",
+      "evidence": "sourceRefs[10]",
+      "note": ""
+    },
+    {
+      "text": "Iran's navy kept the Hormuz Strait open (Press TV)",
+      "status": "wrong",
+      "evidence": "sourceRefs[0]",
+      "note": "Headline: President Pezeshkian said Iran's strong maritime presence in Hormuz kept vital national lifelines moving. It does not say the strait was kept open for tankers generally."
+    },
+    {
+      "text": "Putin congratulated the nation on the Day of Reunification of new regions with Russia",
+      "status": "supported",
+      "evidence": "sourceRefs[3]",
+      "note": "Source is Sputnik; the edition gave no outlet."
+    },
+    {
+      "text": "Climate and environment sentiment 59",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal score."
+    },
+    {
+      "text": "Music pick: Mitsune 'Full Performance (Live on KEXP)'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not checked against a dated source; not news."
+    },
+    {
+      "text": "ICAO emergency session on cockpit security tomorrow / 5 October",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented future event."
+    },
+    {
+      "text": "Apple will unveil HomePad pricing tomorrow",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not sourced."
+    },
+    {
+      "text": "US Senate committee will hear from the Japanese AI court's judges",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented."
+    },
+    {
+      "text": "Congress will vote on the AI Rights Amendment on 21 October",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented; no such amendment found."
+    },
+    {
+      "text": "Netanyahu said 174 people were on board, most of them Israeli nationals; Netanyahu called it 'a serious security incident'",
+      "status": "supported",
+      "evidence": "https://www.al-monitor.com/originals/2026/09/israeli-officials-say-diverted-flydubai-incident-may-be-attempted-terror-attack",
+      "note": "Added in rewrite."
+    }
+  ],
+  "edits": {
+    "headline": "Israeli officials say diverted flydubai flight may be terror attack",
+    "subheadline": "The co-pilot of flight FZ1073 from Dubai to Tel Aviv allegedly stabbed the captain before the plane landed in Saudi Arabia, Reuters reported.",
+    "editorialBody": [
+      "Israeli officials said an incident on a flydubai flight from Dubai to Tel Aviv on 30 September may have been an attempted \"terror attack\", Reuters reported.",
+      "The co-pilot of flight FZ1073 allegedly stabbed the captain. A second pair of flydubai pilots on board landed the plane in Tabuk, Saudi Arabia, Reuters reported.",
+      "Prime Minister Benjamin Netanyahu said 174 people were on board, most of them Israeli nationals. He called it \"a serious security incident\".",
+      "A Tokyo court ruled that an AI tool that copied the voice of actor Kenjiro Tsuda violated his rights, The Guardian reported. The case was brought against TikTok, the Associated Press reported.",
+      "Hackers behind the Bitget breach moved about $4m into Zcash's private pool, making the funds harder to trace, CoinDesk reported.",
+      "Citi told investors to sell Moderna shares after gains of more than 600%, MarketWatch reported.",
+      "Apple's HomePad smart home hub will reportedly launch on 13 October, The Verge reported."
+    ]
+  }
+}

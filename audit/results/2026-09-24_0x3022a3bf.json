@@ -1,0 +1,176 @@
+{
+ "hash": "0x3022a3bfc31304a410e4c33e47b2b9d22ca1f47010b672937fe9cca6beb53d73",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Askar Nurgaliyev, 24, of Aktau, pulled from the sea on September 23 as the sole survivor",
+   "status": "wrong",
+   "evidence": "https://tass.com/world/2192125",
+   "note": "TASS names no one; ministry said three servicemen were rescued. Name, age, hometown and 'sole survivor' invented."
+  },
+  {
+   "text": "Nine killed in incident during Kazakh naval exercise in the Caspian Sea (TASS, Defence Ministry)",
+   "status": "supported",
+   "evidence": "sourceRefs[2]; https://tass.com/world/2192125",
+   "note": "TASS 24 Sept: nine dead, 19 swept out to sea, three rescued, one hospitalised, search ongoing, Mangystau Region."
+  },
+  {
+   "text": "A Kazakh frigate erupted in a blast, killing eight comrades",
+   "status": "wrong",
+   "evidence": "https://tass.com/world/2192125",
+   "note": "TASS reports servicemen swept out to sea, nine dead; no frigate or blast mentioned."
+  },
+  {
+   "text": "TASS report listed his rank and hometown",
+   "status": "wrong",
+   "evidence": "https://tass.com/world/2192125",
+   "note": "TASS gives no names, ranks or hometowns."
+  },
+  {
+   "text": "UN General Assembly Day 2 debate took place",
+   "status": "supported",
+   "evidence": "sourceRefs[0]; https://news.un.org/feed/view/en/story/2026/09/1168421",
+   "note": ""
+  },
+  {
+   "text": "UN takeaway noted 'no concrete financing mechanism was agreed'; climate pledges",
+   "status": "wrong",
+   "evidence": "https://news.un.org/feed/view/en/story/2026/09/1168421",
+   "note": "The UN News Day 2 recap contains no such quote and does not discuss financing."
+  },
+  {
+   "text": "World optimism score 60/100",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal sentiment score; no public source."
+  },
+  {
+   "text": "China confirms first AI talks with U.S., hints at trade truce extension (CNBC)",
+   "status": "supported",
+   "evidence": "sourceRefs[1]",
+   "note": ""
+  },
+  {
+   "text": "Both sides cite 'responsible development'; link to 2027 Fed rate hikes",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Quote not in sourceRefs; link invented."
+  },
+  {
+   "text": "CoinDesk: traders price in four Fed hikes by June 2027 as bitcoin slides below $83,000",
+   "status": "supported",
+   "evidence": "sourceRefs[6]; https://www.coindesk.com/markets/2026/09/24/traders-are-pricing-in-4-fed-rate-hikes-as-bitcoin-slides-below-usd83-000",
+   "note": "CoinDesk 24 Sept, citing CME FedWatch."
+  },
+  {
+   "text": "Crypto sentiment 66; net on-chain outflow of $1.2 billion in 24 hours",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal score; outflow figure has no source."
+  },
+  {
+   "text": "Li Mei, 80, lost HK$6 million; Hong Kong police arrested 'guru' Chan Kai, 32",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found; a March 2026 case involved a 66-year-old retiree losing HK$6.6m, no arrest named."
+  },
+  {
+   "text": "Hong Kong authorities won't appeal court halt to 12,000-flat golf-course project (SCMP)",
+   "status": "supported",
+   "evidence": "sourceRefs[4]",
+   "note": ""
+  },
+  {
+   "text": "Developers already line up new proposals",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in sourceRefs."
+  },
+  {
+   "text": "Saudi-backed forces say they repelled a Houthi advance on the Aden supply route (Middle East Eye)",
+   "status": "supported",
+   "evidence": "sourceRefs[3]",
+   "note": "Headline attributes the claim to the Saudi-backed forces."
+  },
+  {
+   "text": "A single convoy escorted by Yemeni navy vessels survived the attack; aid for millions at risk",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in sourceRefs headline; no detail checked."
+  },
+  {
+   "text": "AI sentiment 65, crypto 66, global economy 66",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores."
+  },
+  {
+   "text": "Bond sell-off deepens as oil climbs to $105 (FT)",
+   "status": "supported",
+   "evidence": "sourceRefs[15]",
+   "note": ""
+  },
+  {
+   "text": "The FT note sent Wall Street veterans into a panic",
+   "status": "wrong",
+   "evidence": "sourceRefs[19]",
+   "note": "MarketWatch item is one Wall Street veteran saying a bond-market warning signal is back; no panic, not an FT note."
+  },
+  {
+   "text": "DW: Spain's PM says it is 'time for a woman to serve' as UN secretary-general",
+   "status": "supported",
+   "evidence": "https://www.lamoncloa.gob.es/lang/en/presidente/news/paginas/2026/20260923-un-general-assembly.aspx",
+   "note": "La Moncloa 23 Sept: Sánchez called for a Latin American woman to lead the UN. DW video not checked; not in sourceRefs."
+  },
+  {
+   "text": "Footage of an 87-year-old evicted in Madrid",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Divide and Dissolve live KEXP set",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Search found a KEXP session recorded Sept 2024, none for Sept 2026."
+  },
+  {
+   "text": "UN vote on a climate finance mechanism on September 30",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in UN News recap; nothing found."
+  },
+  {
+   "text": "Second US-China AI roundtable in early October",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in sourceRefs."
+  },
+  {
+   "text": "Fed minutes on rate policy on October 1",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source; not checked against the Fed calendar."
+  },
+  {
+   "text": "Kremlin still denying any nuclear threat",
+   "status": "wrong",
+   "evidence": "sourceRefs[13]",
+   "note": "Headline is a Russian envoy saying Russia poses no threat to nuclear facilities in Ukraine, not the Kremlin on a nuclear threat."
+  }
+ ],
+ "edits": {
+  "headline": "Nine killed during Kazakh naval exercise in Caspian Sea",
+  "subheadline": "Kazakhstan's Defence Ministry said 19 servicemen were swept out to sea and three were rescued, TASS reported.",
+  "editorialBody": [
+   "Nine servicemen were killed during Kazakh naval exercises in the Caspian Sea, Kazakhstan's Defence Ministry said, TASS reported on 24 September.",
+   "The ministry said 19 servicemen were swept out to sea during the drills in Mangystau Region. Three were rescued and one was taken to hospital. A search for the others was continuing.",
+   "China confirmed that its first talks with the United States on artificial intelligence have taken place and hinted at an extension of the trade truce, CNBC reported.",
+   "Bitcoin fell below $83,000 on 24 September, CoinDesk reported. Traders priced in four Federal Reserve rate rises by June 2027, according to CME FedWatch data cited by CoinDesk.",
+   "A global bond sell-off deepened as oil climbed back to $105, the Financial Times reported.",
+   "Hong Kong authorities will not appeal a court ruling that halted a 12,000-flat housing project on a golf course, the South China Morning Post reported.",
+   "Saudi-backed forces in Yemen said they had repelled a Houthi advance on the Aden supply route, Middle East Eye reported.",
+   "Spanish Prime Minister Pedro Sánchez told the UN General Assembly that the next secretary-general should be a Latin American woman, the Spanish government said."
+  ]
+ }
+}
