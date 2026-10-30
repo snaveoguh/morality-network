@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 95 · music pick: 147 verified tracks, no KEXP every day
+- **when** — 2026-10-30
+- **what** — `UNDERGROUND_PLAYLIST` grows from 12 tracks (10 of them KEXP) to 147 across ten sources, none over 15%: official artist/label videos 21, KEXP 18, NPR Tiny Desk 18, Cercle 17, COLORS 16, Audiotree 16, Boiler Room 15, KCRW 10, BBC 6 Music 9, La Blogothèque 7. Includes artists from Niger, Mali, Ghana, Nigeria, Turkey, Azerbaijan, Morocco, Thailand, Japan, Korea, Brazil, Mexico, Chile, Argentina, Cuba and elsewhere. Every track has a new `source` field; the unverified `duration` field is gone (nothing read it). `getDailyTrack(date?)` now counts UTC days from 2026-01-01 and deals seeded shuffles of the whole list, taking each day the next track whose source and artist both differ from yesterday's. `npm run music:verify` re-checks every ID against YouTube oEmbed (200, artist in title or channel, title in video title, session tracks on the session's own channel). Vitest: no duplicate IDs, every entry has artist/title/source, no source over 15%, no repeated source/artist on consecutive days over six years, every track plays within a year.
+- **why** — Hugo asked why the daily edition's music pick is always KEXP: the list was 12 tracks, 10 KEXP, repeating every 12 days. All 147 IDs were found through YouTube search and checked against oEmbed on 2026-10-30 (147/147 pass); candidates whose title or channel did not match were dropped.
+- **where** — `web/src/lib/music.ts`, `web/src/lib/__tests__/music.test.ts`, `web/scripts/verify-music-playlist.ts`, `web/package.json` (`music:verify`).
+- **rollback** — `git revert` this commit. No data stored; the pick is chosen when the edition is generated.
+
 ## ▲ node 94 · editorials keep their original date when re-saved
 - **when** — 2026-10-30
 - **what** — `saveEditorial` keeps a `generatedAt` that the caller passes (archived records carry one) instead of stamping the save time. `/api/editorial/edit` keeps the record's date and accepts a `generatedAt` correction.

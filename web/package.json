@@ -17,6 +17,7 @@
     "editorial:generate": "node ./scripts/generate-editorials.mjs",
     "ledger:backfill-corrections": "jiti ./scripts/backfill-corrections.ts",
     "mp:ingest": "jiti ./scripts/mp-ingest.ts",
+    "music:verify": "jiti ./scripts/verify-music-playlist.ts",
     "redteam:local": "node ./scripts/red-team-local.mjs",
     "smoke:prod": "bash ./scripts/smoke-check.sh https://pooter.world",
     "smoke:local": "bash ./scripts/smoke-check.sh http://localhost:3000",
