@@ -1,0 +1,148 @@
+{
+  "hash": "0x9abaed7f11719a0565071a6021d4bf3227c9549082cc1fc8b397e3270e857e9e",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Headline: US blockades Iranian ports, oil surges",
+      "status": "supported",
+      "evidence": "https://abc17news.com/money/cnn-business-consumer/2026/04/13/oil-prices-jump-on-us-plans-to-blockade-iranian-ports-in-strait-of-hormuz/",
+      "note": "CNN (Hanna Ziady) via CNN Newsource, 13 April: US Central Command said on 12 April it would block all maritime traffic entering and exiting Iranian ports from 10am ET on Monday 13 April; Brent rose 7% to $102 and WTI 7.8% to $104. Not ships bound for non-Iranian ports. Headline reworded (comma list)."
+    },
+    {
+      "text": "Subheadline: as global markets panic, Peter Magyar's victory offers a rare glimmer of democratic hope",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Editorial framing ('panic', 'glimmer of hope'). Replaced."
+    },
+    {
+      "text": "According to CNBC, the surge could deepen the world's worst energy crisis",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No CNBC article with this framing found. The 'worst energy crisis' phrase traces to IEA chief Fatih Birol in early April, not to CNBC on this date. Removed."
+    },
+    {
+      "text": "Potentially catastrophic consequences for global markets",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source. Removed."
+    },
+    {
+      "text": "Peter Magyar won the Hungarian election",
+      "status": "supported",
+      "evidence": "https://www.egyptindependent.com/who-is-peter-magyar-the-candidate-who-ousted-hungarys-orban/",
+      "note": "CNN (Christian Edwards), republished by Egypt Independent: Magyar was projected to end Viktor Orban's 16-year tenure as prime minister after Sunday's (12 April) parliamentary election. 'Stunning' removed."
+    },
+    {
+      "text": "The Associated Press reports that European leaders are celebrating Magyar's victory",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not verified: the shared web-search budget ran out before this could be searched. The CNN piece found carries no European government statements. Removed; recheck before treating as invented."
+    },
+    {
+      "text": "Magyar, a former Fidesz insider, has vowed to dismantle the Orban system \"brick by brick\", as reported by AFP / France 24",
+      "status": "supported",
+      "evidence": "https://www.manchestertimes.com/?p=109928",
+      "note": "AFP profile of 12 April, 'Peter Magyar: former govt insider promising system change' (also listed at terradaily.com/afp/260412041222.v4wxinw5.html): he vowed to dismantle 'brick by brick' Orban's whole political system. The quote was seen in a search snippet of the AFP text; the syndicated page was paywalled. France 24 page itself not read, so copy attributes AFP."
+    },
+    {
+      "text": "TOTO will stop taking orders for its system baths due to supply chain disruptions, as reported by NHK World",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not verified: the shared web-search budget ran out before this could be searched. Causal link to the blockade is in any case unsupported (blockade was announced 12 April). Removed; recheck before treating as invented."
+    },
+    {
+      "text": "Takashi Nakamura, a 35-year-old father of two who was planning to install a new bathroom",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented private individual; no source. Removed."
+    },
+    {
+      "text": "Bloomberg reporting a surge of over 10% in oil prices in the past 24 hours",
+      "status": "wrong",
+      "evidence": "https://abc17news.com/money/cnn-business-consumer/2026/04/13/oil-prices-jump-on-us-plans-to-blockade-iranian-ports-in-strait-of-hormuz/",
+      "note": "CNN: Brent rose 7% to $102 a barrel and WTI 7.8% to $104. No Bloomberg report of a 10% rise found."
+    },
+    {
+      "text": "Global sentiment score 59/100; global economy sentiment 55/100",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "Bitcoin sentiment 64, market signal 47; Ethereum sentiment 62, market signal 47",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "JD Vance's negotiations with Iranian officials ended in failure",
+      "status": "supported",
+      "evidence": "https://www.ksat.com/gallery/news/2026/04/12/the-latest-us-vice-president-vance-leaves-pakistan-after-talks-with-iran-end-without-agreement",
+      "note": "AP, 12 April: Vance left Pakistan after talks with Iran ended without agreement."
+    },
+    {
+      "text": "Self-reference to previous edition \"SPLASH AND BURN\" and Artemis II juxtaposition",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Rhetorical self-reference, not news. Removed."
+    },
+    {
+      "text": "According to Bloomberg, State Street has advised further de-risking amid inflation threats",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not verified: the shared web-search budget ran out before this could be searched. Removed; recheck before treating as invented."
+    },
+    {
+      "text": "Dehd's \"Full Performance (Live on KEXP)\"",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news"
+    },
+    {
+      "text": "As reported by the Associated Press, Magyar has vowed to introduce a new era of transparency and accountability",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not verified: the shared web-search budget ran out before this could be searched. Removed."
+    },
+    {
+      "text": "The Lufthansa pilot strike, set to cancel hundreds of flights, according to Bloomberg",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not verified: the shared web-search budget ran out before this could be searched. Removed; recheck before treating as invented."
+    },
+    {
+      "text": "The airline industry struggles to cope with the fallout from the blockade; the strike could have significant implications for the global economy",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Causal link between a pilot strike and a blockade announced the day before has no source. Removed."
+    },
+    {
+      "text": "As reported by DW News, the US military has announced plans to blockade Iranian ports",
+      "status": "supported",
+      "evidence": "https://abc17news.com/money/cnn-business-consumer/2026/04/13/oil-prices-jump-on-us-plans-to-blockade-iranian-ports-in-strait-of-hormuz/",
+      "note": "Announcement confirmed by CNN (CENTCOM statement, 12 April). DW's own report not checked (search budget exhausted), so copy attributes CNN."
+    },
+    {
+      "text": "The blockade has been met with widespread criticism and a wave of protests",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source. Iran vowed to retaliate against military vessels (AP via search summary), but no protests found. Removed."
+    },
+    {
+      "text": "The blockade will be the spark that sets off a global crisis or a catalyst for diplomacy; only time will tell",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Rhetorical questions and speculation. Removed."
+    }
+  ],
+  "edits": {
+    "headline": "Oil prices jump on US plan to blockade Iranian ports",
+    "subheadline": "Brent crude rose 7% to $102 a barrel after the US said it would block shipping to and from Iranian ports, CNN reported.",
+    "editorialBody": [
+      "US Central Command said on 12 April that naval forces would block all maritime traffic entering and leaving Iranian ports from 10am ET on 13 April, CNN reported. Ships travelling through the Strait of Hormuz to and from other countries' ports would not be stopped, it said.",
+      "Brent crude rose 7% to $102 a barrel and West Texas Intermediate rose 7.8% to $104, CNN reported.",
+      "The announcement came after talks between the US and Iran in Pakistan ended without agreement, the Associated Press reported.",
+      "Peter Magyar was projected to end Viktor Orban's 16 years as Hungary's prime minister after the 12 April election, CNN reported. Magyar, a former government insider, had promised to dismantle Orban's political system \"brick by brick\", AFP reported."
+    ]
+  }
+}
