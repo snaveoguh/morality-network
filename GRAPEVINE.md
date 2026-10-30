@@ -9,7 +9,7 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
-## ▲ node 85 · /markets: estimated liquidation map (crypto + stock perps)
+## ▲ node 88 · /markets: estimated liquidation map (crypto + stock perps)
 - **when** — 2026-10-30
 - **what** — New "Liquidation map" section on `/markets`. For 8 crypto perps (BTC, ETH, SOL, HYPE, XRP, ZEC, BNB, DOGE) and 8 HIP-3 stock/index perps on Hyperliquid's `xyz` dex (S&P 500, XYZ100, NVDA, GOOGL, AAPL, META, MSFT, TSLA) it estimates where longs and shorts would be liquidated: open interest spread over 7 days of volume-weighted 1h entry prices and an assumed leverage mix (5x 30%, 10x 30%, 25x 25%, 50x 10%, 100x 5%, clamped to each asset's max), liquidation prices with maintenance margin = 1/(2 × max leverage), positions already wiped since entry dropped. Bars by price bucket, current-price marker, asset picker, biggest-cluster callouts. Pure maths in `liquidation-map.ts` (vitest), Hyperliquid fetch + 5-min in-memory cache in `liquidation-map-data.ts`. No LLM calls, no keys.
 - **why** — Hugo asked for a liquidation map on the markets page. Every number comes from live Hyperliquid data; the page says it is an estimate. Binance/Bybit block US hosts (451/403) so they are not used.
