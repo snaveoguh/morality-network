@@ -242,7 +242,12 @@ function planJobs(s: ScanState, dex: Dex, now: number, quota: number): Array<{ u
   const fresh: string[] = [];
   const seen = new Set<string>();
   const traders = [...s.tradeUsers[key].entries()].sort((a, b) => b[1] - a[1]).map(([u]) => u);
-  for (const user of [...traders, ...s.directory[key]]) {
+  // Main dex: the leaderboard holds the big accounts, so 3 of every 4 new
+  // polls come from it. Stocks: the leaderboard is a weak guess, so the
+  // accounts seen trading stock perps go first.
+  const candidates =
+    dex === "xyz" ? [...traders, ...s.directory[key]] : interleave(s.directory[key], traders, 3);
+  for (const user of candidates) {
     if (fresh.length >= quota) break;
     if (seen.has(user) || !due(user)) continue;
     seen.add(user);
@@ -256,6 +261,18 @@ function planJobs(s: ScanState, dex: Dex, now: number, quota: number): Array<{ u
     ...holders.slice(holderQuota).map(([u]) => u),
   ].slice(0, quota);
   return users.map((user) => ({ user, dex }));
+}
+
+/** `ratio` items of `a` for each item of `b`, then whatever is left. */
+function interleave<T>(a: readonly T[], b: readonly T[], ratio: number): T[] {
+  const out: T[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < a.length || j < b.length) {
+    for (let k = 0; k < ratio && i < a.length; k++) out.push(a[i++]);
+    if (j < b.length) out.push(b[j++]);
+  }
+  return out;
 }
 
 function prune(s: ScanState): void {
