@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 85 · /markets: estimated liquidation map (crypto + stock perps)
+- **when** — 2026-10-30
+- **what** — New "Liquidation map" section on `/markets`. For 8 crypto perps (BTC, ETH, SOL, HYPE, XRP, ZEC, BNB, DOGE) and 8 HIP-3 stock/index perps on Hyperliquid's `xyz` dex (S&P 500, XYZ100, NVDA, GOOGL, AAPL, META, MSFT, TSLA) it estimates where longs and shorts would be liquidated: open interest spread over 7 days of volume-weighted 1h entry prices and an assumed leverage mix (5x 30%, 10x 30%, 25x 25%, 50x 10%, 100x 5%, clamped to each asset's max), liquidation prices with maintenance margin = 1/(2 × max leverage), positions already wiped since entry dropped. Bars by price bucket, current-price marker, asset picker, biggest-cluster callouts. Pure maths in `liquidation-map.ts` (vitest), Hyperliquid fetch + 5-min in-memory cache in `liquidation-map-data.ts`. No LLM calls, no keys.
+- **why** — Hugo asked for a liquidation map on the markets page. Every number comes from live Hyperliquid data; the page says it is an estimate. Binance/Bybit block US hosts (451/403) so they are not used.
+- **where** — `web/src/lib/liquidation-map.ts`, `web/src/lib/liquidation-map-data.ts`, `web/src/lib/__tests__/liquidation-map.test.ts`, `web/src/components/markets/LiquidationMap.tsx`, `web/src/app/markets/page.tsx`; branch `feat/liquidation-map` off `dev`.
+- **rollback** — `git revert` this commit. No data stored.
+
 ## ▲ node 84 · daily edition: live prices only, price guard
 - **when** — 2026-10-29
 - **what** — `fetchMarketData` keeps CoinGecko's USD price (was discarded) and adds solana. The daily-edition writer gets a CURRENT PRICES block and is told never to quote a price from memory. Council debates older than 36h are left out. New `web/src/lib/price-guard.ts` cuts any body sentence giving a BTC/ETH/SOL price more than 10% from the live one (or with no live price); tests in `price-guard.test.ts`.
