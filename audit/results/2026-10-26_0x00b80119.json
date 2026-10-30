@@ -1,0 +1,187 @@
+{
+ "hash": "0x00b80119adc121d38ebfc9a299d18cd0ba6c62305c387854c425761266965f26",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Student named Jordan Blake-Williams; on the quad on 24 Oct",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Wichita State student smiled in mugshot after being charged with rape (NY Post)",
+   "status": "supported",
+   "evidence": "sourceRefs[1]",
+   "note": ""
+  },
+  {
+   "text": "He was booked on a second rape charge this month",
+   "status": "wrong",
+   "evidence": "sourceRefs[1]",
+   "note": "Source: '2nd on campus this month', i.e. the second such case at the university, not his second charge"
+  },
+  {
+   "text": "Sputnik piece 'US Democrats Seek to Exploit Internal Crisis to Weaken Trump'",
+   "status": "supported",
+   "evidence": "sourceRefs[0]",
+   "note": "described as left-leaning op-ed; it is an 'expert' piece on Sputnik"
+  },
+  {
+   "text": "Sputnik piece turned the Wichita State case into a political weapon",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal link invented"
+  },
+  {
+   "text": "Meta plans $95bn stock offering to bankroll AI expansion (FT)",
+   "status": "supported",
+   "evidence": "sourceRefs[2]",
+   "note": ""
+  },
+  {
+   "text": "Meta announced it on 25 Oct; shares jumped 2.1%; S&P 500 AI index at record",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "AI sentiment 61/100; conflict sentiment 45/100; election 65/100; climate 54/100",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed, unverifiable"
+  },
+  {
+   "text": "AI spending diverts money from mental health services that could have prevented the alleged crimes",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal link invented"
+  },
+  {
+   "text": "Verizon's stock rose as subscriber surge impressed Wall Street (MarketWatch)",
+   "status": "supported",
+   "evidence": "sourceRefs[5]",
+   "note": ""
+  },
+  {
+   "text": "Verizon shares up 3.2%; 540,000 post-pay subscribers added",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Russian scientists developed tougher skins for aircraft and satellites (Sputnik)",
+   "status": "supported",
+   "evidence": "sourceRefs[3]",
+   "note": ""
+  },
+  {
+   "text": "Composite is a carbon-nanotube lattice that resists hypersonic missiles",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "1,800,000 civilians displaced each month; 1.3 million Ukrainians in basements",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "NPR: redistricting not playing out as GOP hoped; Lula wins fourth term",
+   "status": "supported",
+   "evidence": "sourceRefs[4]",
+   "note": ""
+  },
+  {
+   "text": "Guardian live updates on Lula's win",
+   "status": "supported",
+   "evidence": "sourceRefs[11]",
+   "note": "world leaders congratulate Lula; Bolsonaro refuses to concede"
+  },
+  {
+   "text": "Taiwan's tea growers letting nature take back control as climate pressures mount (Mongabay)",
+   "status": "supported",
+   "evidence": "sourceRefs[8]",
+   "note": ""
+  },
+  {
+   "text": "Lula's climate emergency is driving Taiwan's tea growers off their terraces",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal link invented"
+  },
+  {
+   "text": "Al Jazeera video 'Serbia's political earthquake'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "not in sourceRefs; BBC reported celebrations after Vučić lost an election to a student-led movement (sourceRefs[19])"
+  },
+  {
+   "text": "ABC exposé on AI company sued for hijacking Elvis Presley's voice",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "not in sourceRefs"
+  },
+  {
+   "text": "Music pick: King Gizzard & The Lizard Wizard on KEXP",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "not news"
+  },
+  {
+   "text": "Senate Judiciary hearing on Meta AI licensing 30 Oct; Brazil Congress convenes 2 Nov on climate bill; aircraft skin unveiled at air show 7 Nov",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "forward dates invented"
+  },
+  {
+   "text": "Democrats will weaponise campus crime for 2028",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "commentary"
+  },
+  {
+   "text": "dailyTitle \"THE RECKONING OF SMILES\"",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "metaphor; dailyTitle not editable via edits format"
+  },
+  {
+   "text": "Brent crude slides below $110 as Iran deal hopes grow and Brazil stocks sink (CoinDesk)",
+   "status": "supported",
+   "evidence": "sourceRefs[14]",
+   "note": "added to correction"
+  },
+  {
+   "text": "Celebrations in Serbia after Vučić loses election to student-led movement (BBC)",
+   "status": "supported",
+   "evidence": "sourceRefs[19]",
+   "note": "added to correction"
+  },
+  {
+   "text": "Borr Drilling falls 11% after 5 missing from rig sunk off Gabon (Bloomberg)",
+   "status": "supported",
+   "evidence": "sourceRefs[12]",
+   "note": "added to correction"
+  },
+  {
+   "text": "Jordan arrests three suspects over church attack in dawn raid (Al Jazeera)",
+   "status": "supported",
+   "evidence": "sourceRefs[9]",
+   "note": "added to correction"
+  }
+ ],
+ "edits": {
+  "headline": "Lula wins a fourth term as president of Brazil",
+  "subheadline": "World leaders congratulated Lula on his election win and Bolsonaro refused to concede, The Guardian reported.",
+  "editorialBody": [
+   "Luiz Inácio Lula da Silva won a fourth term in Brazil's presidential runoff, NPR reported. World leaders congratulated him and Bolsonaro refused to concede, The Guardian reported.",
+   "Brent crude fell below $110 a barrel on hopes of a deal with Iran, and Brazilian stocks fell, CoinDesk reported.",
+   "In Serbia, people celebrated after Vučić, the veteran ruler, lost an election to a student-led protest movement, BBC News reported.",
+   "Meta plans a $95bn stock offering to pay for its AI expansion, the Financial Times reported. Verizon's shares rose after a rise in subscribers impressed Wall Street, MarketWatch reported.",
+   "In the US, redistricting is not going as Republicans hoped, NPR reported. A Wichita State University student was charged with rape, the second such case on the campus this month, the New York Post reported.",
+   "Shares in Borr Drilling fell 11% after five people went missing from a rig that sank off Gabon, Bloomberg reported. Jordan arrested three suspects over a church attack in a dawn raid, Al Jazeera reported.",
+   "Taiwan's tea growers are letting nature take back their land as climate pressures grow, Mongabay reported."
+  ]
+ }
+}

@@ -1,0 +1,148 @@
+{
+ "hash": "0xf4e5f8366429faa76dd803939afb6af54b8e52a467e0757c00c83ceb7593b573",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Dhan Bahadur Rai's kitchen; daughter Sita's cot and fever",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Named private individuals; invented"
+  },
+  {
+   "text": "Gaurishankar flash flood",
+   "status": "wrong",
+   "evidence": "https://www.aljazeera.com/news/2026/10/11/at-least-five-people-missing-as-flash-floods-in-nepal-sweep-away-houses",
+   "note": "Reported flood was on the Budhi Gandaki river in Gorkha district, 11 October"
+  },
+  {
+   "text": "Delhi-based NGO email saying it 'will investigate'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented"
+  },
+  {
+   "text": "Fire at CFB Trenton, Ontario, in a weapons depot",
+   "status": "wrong",
+   "evidence": "https://www.ctvnews.ca/edmonton/article/4-dead-dozens-injured-in-violent-fire-at-cfb-wainwright-carney/",
+   "note": "The fire was at CFB Wainwright in Alberta, during live-fire training"
+  },
+  {
+   "text": "Official reports list 12 dead",
+   "status": "wrong",
+   "evidence": "https://www.ctvnews.ca/edmonton/article/4-dead-dozens-injured-in-violent-fire-at-cfb-wainwright-carney/",
+   "note": "CTV News: Prime Minister Mark Carney said four were dead and dozens injured"
+  },
+  {
+   "text": "Four dead and dozens injured in fire at CFB Wainwright, Carney said",
+   "status": "supported",
+   "evidence": "https://www.ctvnews.ca/edmonton/article/4-dead-dozens-injured-in-violent-fire-at-cfb-wainwright-carney/",
+   "note": "CTV News headline"
+  },
+  {
+   "text": "Canada deployed 50 investigators to probe the fire",
+   "status": "supported",
+   "evidence": "https://www.adn.com/nation-world/2026/10/19/canada-deploys-50-investigators-to-probe-military-base-fire-that-killed-4-soldiers/",
+   "note": "Anchorage Daily News (wire), 19 October"
+  },
+  {
+   "text": "Corporal James McAllister, 28, among the dead",
+   "status": "wrong",
+   "evidence": "https://www.castanetkamloops.net/news/Alberta/634833/Names-of-four-soldiers-killed-in-fire-at-CFB-Wainwright-released-cause-of-fire-under-investigation",
+   "note": "Released names do not include him; invented"
+  },
+  {
+   "text": "Cause under investigation",
+   "status": "supported",
+   "evidence": "https://www.castanetkamloops.net/news/Alberta/634833/Names-of-four-soldiers-killed-in-fire-at-CFB-Wainwright-released-cause-of-fire-under-investigation",
+   "note": "Castanet headline"
+  },
+  {
+   "text": "Footage on CNN and BBC",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not checked; not found"
+  },
+  {
+   "text": "Punjab BJP launched a 'Statewide Black Turban Movement' against the AAP government",
+   "status": "supported",
+   "evidence": "https://www.thehansindia.com/news/national/dhillon-wears-black-turban-in-protest-against-aap-govt-1133817",
+   "note": "Hans India: Punjab BJP chief Dhillon wears black turban in protest against AAP government; exact campaign name not confirmed"
+  },
+  {
+   "text": "Paris protests over pension reforms turned violent with over 1,200 arrests, recorded by DW",
+   "status": "wrong",
+   "evidence": "https://www.thestar.com.my/news/world/2026/10/18/039record039-855-people-arrested-over-paris-protest-violence-police",
+   "note": "AFP via The Star: police said a record 855 people were arrested over Paris protest violence; protests were over the cost of living, not pensions. No DW report found"
+  },
+  {
+   "text": "FlyDubai crash killed 92 after hydraulic loss",
+   "status": "wrong",
+   "evidence": "https://www.adn.com/nation-world/2026/10/02/i-was-fighting-for-my-life-indian-pilot-hailed-as-hero-recalls-flydubai-cockpit-attack/",
+   "note": "No crash; Captain Smit Machchhar was attacked in the cockpit of a flydubai flight on 30 September and the plane landed in Saudi Arabia"
+  },
+  {
+   "text": "Machchhar quote 'We were fighting the sky, not the enemy', aired on DW",
+   "status": "wrong",
+   "evidence": "https://www.adn.com/nation-world/2026/10/02/i-was-fighting-for-my-life-indian-pilot-hailed-as-hero-recalls-flydubai-cockpit-attack/",
+   "note": "Reported quote was 'I was fighting for my life'; story is from 2 October, not this edition's date"
+  },
+  {
+   "text": "Missiles struck a civilian area in Upper Kurram, DW report",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No DW report found; Minute Mirror reported a missile in a civilian area in Pewar (undated); Radio Pakistan reported army response to Afghan Taliban firing in Upper Kurram on 17 October"
+  },
+  {
+   "text": "Pakistan army responded to Afghan Taliban firing in Upper Kurram",
+   "status": "supported",
+   "evidence": "https://radio.gov.pk/17-10-2026/pakistan-army-responds-effectively-to-afghan-taliban-firing-in-upper-kurram",
+   "note": "Radio Pakistan (state broadcaster), 17 October"
+  },
+  {
+   "text": "Bitcoin sentiment 51, Ethereum 49; whale moved 12,000 ETH into DAO wallet",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal feed; not verifiable"
+  },
+  {
+   "text": "Lysistrata KEXP performance pick; 'veg thali' video",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Music pick and filler; not news, dropped"
+  },
+  {
+   "text": "Al Jazeera report on surge in drug use among Frankfurt's affluent",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such report found"
+  },
+  {
+   "text": "Bonn UN climate summit opens 23 October; Black Turban protest converges on Delhi 21 October; Rai demolition order",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Forward-looking dates invented"
+  },
+  {
+   "text": "Commentary linking Nepal, the Canadian fire and protests",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal link invented"
+  },
+  {
+   "text": "dailyTitle 'STONE & SMOKE'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Metaphor; dailyTitle not editable via edits format"
+  }
+ ],
+ "edits": {
+  "headline": "Four soldiers killed in fire at Canadian base in Alberta",
+  "subheadline": "Prime Minister Mark Carney said four people died and dozens were injured in the fire at CFB Wainwright, CTV News reported.",
+  "editorialBody": [
+   "Four people were killed and dozens injured in a fire at Canadian Forces Base Wainwright in Alberta, Prime Minister Mark Carney said, CTV News reported. The names of the four soldiers have been released and the cause of the fire is under investigation, Castanet reported.",
+   "In France, police said a record 855 people were arrested over protest violence in Paris, AFP reported.",
+   "In India, Punjab BJP chief Kewal Singh Dhillon wore a black turban in protest against the AAP state government, the Hans India reported.",
+   "Pakistan's army said it responded to firing by Afghan Taliban forces in Upper Kurram, Radio Pakistan reported on 17 October."
+  ]
+ }
+}

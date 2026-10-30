@@ -1,0 +1,33 @@
+{
+  "hash": "0xcae5ad5b1ca8a6b1cda84ab91fd2c816228079c066d8caf07a0c3c5a1af7bfb9",
+  "verdict": "needs_edit",
+  "claims": [
+    {"text": "Florida school bus crash kills child", "status": "wrong", "evidence": "https://abcnews4.com/news/nation-world/2-killed-including-10th-grader-after-winter-haven-florida-school-bus-overturns-in-head-on-crash-polk-county-sheriffs-office-investigation-traumatic-injuries-critical-condition", "note": "Real crash: Winter Haven, Polk County, 5 Oct; two killed including a 10th-grade student, bus overturned in head-on crash. Not a 7-year-old"},
+    {"text": "Victim Maya Alvarez, 7, mother Rosa Alvarez of Fort Pierce, petition", "status": "unsupported", "evidence": "", "note": "named private individuals invented"},
+    {"text": "CNN dashcam at 02:13 GMT, silver Ford barrel-rolling on Highway 19, body pulled at 15:27", "status": "unsupported", "evidence": "", "note": "invented detail; sheriff said an oncoming car drifted over the centre line"},
+    {"text": "Federal bus crashworthiness review postponed twice since 2022", "status": "unsupported", "evidence": "", "note": "invented"},
+    {"text": "Officials blame 'unknown' driver error", "status": "wrong", "evidence": "https://abcnews4.com/news/nation-world/2-killed-including-10th-grader-after-winter-haven-florida-school-bus-overturns-in-head-on-crash-polk-county-sheriffs-office-investigation-traumatic-injuries-critical-condition", "note": "Sheriff Grady Judd said video showed the bus in its lane when an oncoming car drifted over the centre line"},
+    {"text": "Christa Pike execution botched; heart monitor flat-lined (DW, a day earlier)", "status": "wrong", "evidence": "https://www.fox4news.com/news/christa-pike-survives-execution-attempt-tennessee", "note": "Pike survived the 30 Sept execution attempt; Gov. Bill Lee halted executions this year. Not a day earlier; DW stream not checked"},
+    {"text": "Threats against pseudonymous Cornell student 'Jane Doe', state-sponsored number, CNN", "status": "unsupported", "evidence": "", "note": "no October 2026 report found"},
+    {"text": "Rajesh Patel aged 29; brother Sanjay in Riyadh hospital; petition; operator statement; stock up 3%", "status": "unsupported", "evidence": "", "note": "back-reference to invented people in the 6 Oct edition; real vessel was MT On Peace, injured treated in Oman"},
+    {"text": "Indian seafarers flung into the Gulf of Oman by a stray flare", "status": "wrong", "evidence": "https://gulfnews.com/world/asia/india/india-condemns-oman-vessel-attack-12-crew-injured-including-11-indians-1.500700238", "note": "Struck by a projectile in the Strait of Hormuz; crew evacuated and treated in Khasab"},
+    {"text": "AI regulatory hearing, Senator Kira Mendoza, paraglider George Whitman, leaked transcript, federal probe", "status": "unsupported", "evidence": "", "note": "invented"},
+    {"text": "Bitcoin sentiment 50, signal 44; Ethereum 49/40; whale moving 12% of BTC supply; wallet 0xdeadbeef", "status": "unsupported", "evidence": "", "note": "internal feed numbers and invented on-chain claims"},
+    {"text": "India Supreme Court to examine recall of split verdict on CEC appointment law", "status": "supported", "evidence": "https://theprint.in/india/sc-to-examine-plea-for-recall-of-split-verdict-on-law-governing-appointment-of-cec-ecs/3064031/", "note": "ThePrint (PTI). DW coverage not checked"},
+    {"text": "Supreme Court session on 23 October", "status": "unsupported", "evidence": "", "note": "no date found"},
+    {"text": "Ohio removed 2.3 million names from voter rolls; DataForge, CEO Lila Cheng quote (DW)", "status": "unsupported", "evidence": "", "note": "invented company, person and figure; no DW report found"},
+    {"text": "Fireship video and CNN 'What is white honey?' feature", "status": "unsupported", "evidence": "", "note": "video picks and features, not news; dropped"},
+    {"text": "Reinsurer GlobalCover up 5% citing claim activity", "status": "unsupported", "evidence": "", "note": "invented"},
+    {"text": "Commentary linking the crash, execution, purges and Bitcoin ('aligns suspiciously')", "status": "unsupported", "evidence": "", "note": "causal link invented"},
+    {"text": "dailyTitle 'THE DAY THE AIR HURT'", "status": "unsupported", "evidence": "", "note": "metaphor; dailyTitle not editable via edits format"}
+  ],
+  "edits": {
+    "headline": "Florida school bus crash kills two including a 10th grader",
+    "subheadline": "The bus overturned in a head-on crash in Winter Haven, in Polk County, ABC News 4 reported.",
+    "editorialBody": [
+      "Two people, including a 10th-grade student, were killed when a school bus overturned in a head-on crash in Winter Haven, Florida, ABC News 4 reported. Polk County Sheriff Grady Judd said a preliminary review of video showed the bus was in its lane when an oncoming car drifted over the centre line.",
+      "Tennessee failed to execute Christa Pike on 30 September, and Governor Bill Lee halted executions in the state for the rest of the year, Fox 4 News reported.",
+      "India's Supreme Court agreed to examine a plea to recall its split verdict on the law governing appointment of the chief election commissioner, ThePrint reported."
+    ]
+  }
+}

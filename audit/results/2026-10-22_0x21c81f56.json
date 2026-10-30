@@ -1,0 +1,33 @@
+{
+ "hash": "0x21c81f56ae91ff0c6855a2672104bcae607205b2429f72f1299c6fb18853d103",
+ "verdict": "needs_edit",
+ "claims": [
+  {"text": "Indian family in Brisbane received threats", "status": "supported", "evidence": "https://gulfnews.com/world/australian-teen-charged-after-alleged-racist-attack-on-indian-family-bomb-threat-1.500720132", "note": "Gulf News: 19-year-old charged over alleged racist abuse and a threat to blow up the family's residential building in Morningside on 19 Oct"},
+  {"text": "Family flees Brisbane / boarded a flight to Mumbai the next day", "status": "wrong", "evidence": "https://gulfnews.com/world/australian-teen-charged-after-alleged-racist-attack-on-indian-family-bomb-threat-1.500720132", "note": "Family was considering breaking its lease and returning to India; no report that it had left"},
+  {"text": "Rohit Patel, wife Aisha, six-month-old daughter; text at 03:12 GMT 'We're watching you. Leave.'", "status": "unsupported", "evidence": "", "note": "Invented private individuals and quote; incident was in-person abuse about 12:30 am"},
+  {"text": "Threat traced to an online hate group", "status": "wrong", "evidence": "https://gulfnews.com/world/australian-teen-charged-after-alleged-racist-attack-on-indian-family-bomb-threat-1.500720132", "note": "A 19-year-old man was charged; prosecutor said he believed the family had complained about him"},
+  {"text": "Century-old Race Course mosque in Delhi faces demolition", "status": "supported", "evidence": "https://www.thequint.com/news/politics/might-be-our-last-namaz-here-a-demolition-fear-gloom-at-race-course-mosque", "note": "The Quint, 24 Oct: worshippers fear demolition; power and water were cut"},
+  {"text": "Mosque dates from 1893 and is in Delhi's Mehrauli district", "status": "wrong", "evidence": "https://www.thequint.com/news/politics/might-be-our-last-namaz-here-a-demolition-fear-gloom-at-race-course-mosque", "note": "Mosque is inside the Race Course grounds near the PM's residence on Lok Kalyan Marg; Waqf Board puts it at about 300 years old"},
+  {"text": "Caretaker Haji Yusuf, 58, filed an appeal; municipal bulldozers lined up; heritage board cited 'illegal extensions'", "status": "unsupported", "evidence": "", "note": "Invented person and details; The Quint cites a Land and Development Office eviction notice"},
+  {"text": "Fringe nationalist bloc said the mosque 'taints' the skyline", "status": "unsupported", "evidence": "", "note": "Invented quote"},
+  {"text": "Kharge warned on DW that 'Hindu Rashtra' is code for caste erasure in a Karnataka caste debate", "status": "unsupported", "evidence": "", "note": "Not found"},
+  {"text": "Amit Shah blamed Rahul Gandhi for 'vote chori' and AAP for a fabricated Punjab drug crisis", "status": "unsupported", "evidence": "", "note": "No report found for this date; Shah has attacked the AAP government over drugs, but not as described"},
+  {"text": "Punjab 2027 elections shaped by the BJP-Akali Dal alliance's drug-free pledge", "status": "wrong", "evidence": "https://www.tribuneindia.com/news/india/no-more-chhota-bhai-shah-rules-out-pact-with-sad-bjp-to-go-solo/", "note": "Tribune: Shah ruled out a pact with the Akali Dal; BJP to go solo"},
+  {"text": "Jason Samuel, CEO of VibeSphere, arrested in Mumbai after a TikTok star's suicide; DW 'Tech CEO Arrested' piece", "status": "unsupported", "evidence": "", "note": "No such report found"},
+  {"text": "ABC live rescue of a truck driver from a sinking river", "status": "unsupported", "evidence": "", "note": "Not found"},
+  {"text": "Critical OpenSSL patch for CVE-2026-1123, 'most urgent fix of the decade' per ABC; OpenSSL underpins 70% of web traffic", "status": "unsupported", "evidence": "", "note": "No such advisory or quote found; latest OpenSSL advisory found was 25 Aug 2026"},
+  {"text": "Bitcoin sentiment 51, signal 47; 12% drop in active wallets", "status": "unsupported", "evidence": "", "note": "Internal feed / invented on-chain stat"},
+  {"text": "Mitsune KEXP live session", "status": "unsupported", "evidence": "", "note": "Music pick, not news; dropped"},
+  {"text": "Indian High Court hears Patel injunction Oct 30; Delhi heritage court hearing Nov 5; India drafting influencer rules by year-end", "status": "unsupported", "evidence": "", "note": "Invented forward schedule"},
+  {"text": "Commentary linking Brisbane threats, mosque demolition and Karnataka debate as one 'sectarian dread'", "status": "unsupported", "evidence": "", "note": "Causal link invented; dropped"},
+  {"text": "dailyTitle 'SHADOWS ON THE FRONT'", "status": "unsupported", "evidence": "", "note": "dailyTitle not editable via edits format"}
+ ],
+ "edits": {
+  "headline": "Teen charged over alleged racist threats to Indian family in Brisbane",
+  "subheadline": "The 19-year-old allegedly threatened to blow up the family's residential building, Gulf News reported.",
+  "editorialBody": [
+   "A 19-year-old man was charged after an alleged racist attack on an Indian family in Morningside, in Brisbane's east, Gulf News reported. He allegedly abused the family and threatened to blow up their residential building, and the family was considering returning to India, the paper said.",
+   "In New Delhi, worshippers at the Race Course mosque, near the Prime Minister's residence, fear it will be demolished after its power and water were cut, The Quint reported."
+  ]
+ }
+}

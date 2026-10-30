@@ -1,0 +1,180 @@
+{
+ "hash": "0x03adccafed148d23c5f9d85d867ad35cbc76e3688618ded53aadeb649b31e268",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "BLF announced an attack called \"Operation Almas\"",
+   "status": "supported",
+   "evidence": "https://pakobserver.net/?p=783511",
+   "note": "Pakistan Observer: BLF announced the attack; main target the FWO camp at Gwadar Zero Point"
+  },
+  {
+   "text": "Attack left a Pakistani marine dead / blast at Gwadar naval base",
+   "status": "wrong",
+   "evidence": "https://pakobserver.net/?p=783511",
+   "note": "Pakistan Observer: target was an FWO camp; security sources said no security personnel were killed and the facility was already vacated"
+  },
+  {
+   "text": "Marine named Ali Khan, aged 24",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "BLF video streamed on DW",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Widow named Sana, condolence call at 04:12 GMT, 150,000 rupee cheque, two children",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Swadeshi Jagran Manch protested in Delhi demanding Starlink be blocked",
+   "status": "supported",
+   "evidence": "https://www.outlookindia.com/national/in-photos-swadeshi-jagran-manch-protests-against-starlink-in-delhi",
+   "note": "Outlook India photo report of SJM protest in Delhi; ThePrint: SJM urges Centre to deny Starlink licence on security grounds (https://theprint.in/india/swadeshi-jagran-manch-urges-centre-to-deny-starlink-licence-on-security-grounds/3079752/)"
+  },
+  {
+   "text": "SJM protest happened \"a week earlier\"",
+   "status": "wrong",
+   "evidence": "https://www.outlookindia.com/national/in-photos-swadeshi-jagran-manch-protests-against-starlink-in-delhi",
+   "note": "Protest march was on 23 Oct; the SJM demand was first made on 13 Oct"
+  },
+  {
+   "text": "SJM quote \"feeds foreign espionage\" and petition backed by right-wing think-tanks",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Ministry response \"review in progress\"",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Rohit Patel's family fled Brisbane after online death threats; asylum approved 23 Oct; flat in Melbourne",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such case found; a Brisbane case found involved a teen charged over threats at a family's home, not this"
+  },
+  {
+   "text": "\"Mumbai High Court\" cracked down on firecrackers",
+   "status": "wrong",
+   "evidence": "https://theprint.in/india/ban-on-firecrackers-on-roads-applicable-throughout-year-says-bombay-hc-ahead-of-diwali/3073098/",
+   "note": "It is the Bombay High Court; it said its ban on firecrackers on roads applies throughout the year"
+  },
+  {
+   "text": "Mumbai PM2.5 at 274 µg/m³",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Court order issued 23 Oct forcing vendors to surrender 1,432 illegal crackers",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Instagram meme quote; vendor Ramesh Sharma, 68",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "United States extended a \"fresh nod\" to VanDyke to remain in the US until February 2025, announced by DW News",
+   "status": "wrong",
+   "evidence": "https://theprint.in/india/myanmar-arms-training-case-delhi-court-allows-us-national-vandyke-to-stay-abroad-till-feb-24/3079544/",
+   "note": "A Delhi court allowed US national Matthew VanDyke, accused in the Myanmar training camp case, to stay abroad till 24 Feb (ThePrint); not a US decision, not 2025; no DW report found"
+  },
+  {
+   "text": "VanDyke tweet \"Freedom is louder than drones\"",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Link between VanDyke case and BLF propaganda",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal link invented"
+  },
+  {
+   "text": "Trump called Ramaswamy \"the most honest liar in a room full of liars\"",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such quote found; Trump backed Ramaswamy's ad featuring Amy Acton's estranged mother (CBS News)"
+  },
+  {
+   "text": "Ramaswamy is in a Republican primary against Trump; 12-point poll dip for Trump; Ramaswamy favourability 17%",
+   "status": "wrong",
+   "evidence": "https://www.goodmorningamerica.com/news/story/ohio-gov-mike-dewine-condemns-ramaswamy-ad-calls-137478294",
+   "note": "Ramaswamy is the Republican candidate for Ohio governor against Democrat Amy Acton; Trump backed his ad; poll figures invented"
+  },
+  {
+   "text": "ABC News covered the Ramaswamy ad",
+   "status": "supported",
+   "evidence": "https://www.goodmorningamerica.com/news/story/ohio-gov-mike-dewine-condemns-ramaswamy-ad-calls-137478294",
+   "note": "ABC (Good Morning America): Ohio Gov. Mike DeWine condemns Ramaswamy ad"
+  },
+  {
+   "text": "Bitcoin sentiment 51, signal 49, price around $28,000; Ethereum 51/49, 2% volume rise",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed, unverifiable"
+  },
+  {
+   "text": "Drone strike on a market in Abyei (covered 21 Oct)",
+   "status": "supported",
+   "evidence": "https://theprint.in/world/sudanese-drone-attack-killed-over-150-people-in-abyei-market-official-says/3077194/",
+   "note": "Sudanese drone attack killed over 150 people in Abyei market, official says"
+  },
+  {
+   "text": "Full footage leaked 23 Oct; NGOs filed complaint at the UN; Sudan called it \"propaganda by hostile forces\"",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Reports say Sudan's government denied involvement; no 'propaganda' quote or NGO complaint found"
+  },
+  {
+   "text": "Music pick: Yussef Dayes on KEXP",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "not news"
+  },
+  {
+   "text": "Indian Supreme Court Starlink hearing 5 Nov; Islamabad HC hearing 30 Oct; State Dept white paper 2 Nov; Bombay HC reconvenes 1 Nov",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "forward dates invented"
+  },
+  {
+   "text": "Commentary linking Starlink, BLF video, Myanmar and crypto",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal links invented"
+  },
+  {
+   "text": "dailyTitle \"THE GUNSMOKE WIFI\"",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "metaphor; dailyTitle not editable via edits format"
+  }
+ ],
+ "edits": {
+  "headline": "RSS affiliate protests in Delhi against Starlink's India launch",
+  "subheadline": "The Swadeshi Jagran Manch has urged the government to deny Starlink a licence on security grounds, ThePrint reported.",
+  "editorialBody": [
+   "Members of the Swadeshi Jagran Manch, a group affiliated to the RSS, protested in Delhi against Starlink, Outlook India reported. The group has urged the government to deny Elon Musk's company a licence on security grounds, ThePrint reported.",
+   "In Pakistan, the Baloch Liberation Front said it had carried out an attack in Gwadar that it called \"Operation Almas\", the Pakistan Observer reported. Security sources said no security personnel were killed, the paper reported.",
+   "A Delhi court allowed US national Matthew VanDyke, accused in a Myanmar training camp case, to stay abroad until 24 February, ThePrint reported.",
+   "In the US, President Trump backed Vivek Ramaswamy over a campaign ad featuring the estranged mother of Amy Acton, his Democratic opponent for Ohio governor, CBS News reported. Ohio Governor Mike DeWine condemned the ad, ABC News reported.",
+   "The Bombay High Court said its ban on bursting firecrackers on roads applies throughout the year, ThePrint reported.",
+   "A Sudanese drone attack on a market in Abyei killed more than 150 people, an official said, ThePrint reported."
+  ]
+ }
+}

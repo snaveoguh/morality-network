@@ -1,0 +1,205 @@
+{
+ "hash": "0x8726a5fad50a435561913bdc6a5cc0d71b7c8f4c1970dec8666581ea6ec904f6",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "dailyTitle 'THE SKY IS FALLING'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "metaphor; dailyTitle not editable via edits format"
+  },
+  {
+   "text": "Headline: Sicilian cobbler loses roof, crypto wallet loses millions",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "cobbler invented; headline joins three unrelated stories"
+  },
+  {
+   "text": "Subheadline: 'policy inertia' links tornado and blockchain hack",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal link invented"
+  },
+  {
+   "text": "Luca Romano, 42, cobbler in Modica, shop destroyed",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "named private individual invented"
+  },
+  {
+   "text": "Tornado struck on 9 October",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Tornado hit Modica / 'western Sicily'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "sourceRefs[12] says only Sicily; Modica is in south-east Sicily"
+  },
+  {
+   "text": "12 injured, three dead",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "sourceRefs[12] says dozens injured; no deaths mentioned"
+  },
+  {
+   "text": "Guardian: dozens injured and buildings damaged by tornadoes in Sicily",
+   "status": "supported",
+   "evidence": "sourceRefs[12]",
+   "note": ""
+  },
+  {
+   "text": "The Defiant: wallet linked to CryptoBilis thefts routed 464 ETH to Tornado Cash",
+   "status": "supported",
+   "evidence": "sourceRefs[2]",
+   "note": ""
+  },
+  {
+   "text": "464 ETH worth roughly $7.8 million",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "crypto price figure"
+  },
+  {
+   "text": "Victim Mikhail Ivanov, 27, developer from St Petersburg",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "named private individual invented"
+  },
+  {
+   "text": "DW News: women candidates could make history in US midterms",
+   "status": "supported",
+   "evidence": "sourceRefs[1]",
+   "note": ""
+  },
+  {
+   "text": "31 women incumbents and 12 challengers",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Congressional budget earmarks $1.2bn for military spending",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "$14m FEMA relief allocated for the Sicilian disaster",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "FEMA is a US agency; invented"
+  },
+  {
+   "text": "BBC: Green Party wants to make sure it is 'not vulnerable to extremists'",
+   "status": "supported",
+   "evidence": "sourceRefs[3]",
+   "note": ""
+  },
+  {
+   "text": "Green Party internal memo leaked last night; faction on fossil fuel subsidies",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "TASS: Putin conveyed Iran's vision for possible conflict resolution to Trump, Kremlin said",
+   "status": "supported",
+   "evidence": "sourceRefs[4]",
+   "note": ""
+  },
+  {
+   "text": "AFP: hunger and malnutrition stalk Gazans a year on from ceasefire",
+   "status": "supported",
+   "evidence": "sourceRefs[17]",
+   "note": ""
+  },
+  {
+   "text": "4,200 children severely malnourished in Gaza",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Human Rights sentiment 53/100; Bitcoin sentiment 64, Ethereum 66",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed numbers"
+  },
+  {
+   "text": "MarketWatch: new ETF offers all-or-nothing bet on S&P 500 at 10,000",
+   "status": "supported",
+   "evidence": "sourceRefs[24]",
+   "note": ""
+  },
+  {
+   "text": "S&P 500 rose 0.3% on Tuesday",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Index buoyed by Nvidia GPU sales surge",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "sourceRefs[20] is about how companies access Nvidia GPUs; causal link invented"
+  },
+  {
+   "text": "Fox News: truckers warn soaring diesel costs threaten 'domino effect'",
+   "status": "supported",
+   "evidence": "sourceRefs[14]",
+   "note": ""
+  },
+  {
+   "text": "Ohio voter worried about diesel prices",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented"
+  },
+  {
+   "text": "DW News investigation into Flydubai hijack plot involving Indian and UAE agencies",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "not in sourceRefs"
+  },
+  {
+   "text": "Channel 4 footage of the Sicilian tornado",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "not in sourceRefs"
+  },
+  {
+   "text": "Senate votes tomorrow on infrastructure bill with $2bn for climate-resilient construction",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "forward-looking schedule"
+  },
+  {
+   "text": "Tornado Cash court hearing on 15 November",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "forward-looking date"
+  },
+  {
+   "text": "Commentary paragraphs linking tornado, crypto theft and 'inertia'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal link invented"
+  }
+ ],
+ "edits": {
+  "headline": "Tornadoes hit Sicily, injuring dozens and damaging buildings",
+  "subheadline": "Dozens of people were injured and buildings were damaged when tornadoes struck Sicily, the Guardian reported.",
+  "editorialBody": [
+   "Tornadoes hit Sicily, injuring dozens of people and damaging buildings, the Guardian reported.",
+   "A wallet linked to the CryptoBilis thefts sent 464 ETH to the Tornado Cash mixer, The Defiant reported.",
+   "Women candidates could make history in the US midterm elections, DW News reported.",
+   "In the UK, the Green Party said it wants to make sure it is \"not vulnerable to extremists\", BBC News reported.",
+   "Russian President Vladimir Putin passed Iran's view on a possible resolution of the conflict to Donald Trump, the Kremlin said, according to TASS. Most of the Putin-Trump phone call was about a Ukraine settlement, a Kremlin spokesman said, TASS reported.",
+   "Hunger and malnutrition are spreading among Gazans a year after the ceasefire, AFP reported.",
+   "US truckers warned that rising diesel costs could have a \"domino effect\", Fox News reported. A new exchange-traded fund offers investors an all-or-nothing bet on the S&P 500 reaching 10,000, MarketWatch reported."
+  ]
+ }
+}

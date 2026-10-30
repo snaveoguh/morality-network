@@ -1,0 +1,44 @@
+{
+  "hash": "0x25f58fed56db507edef014a8f4222cf46ba7ee058b04eba63e4e060539f964b5",
+  "verdict": "needs_edit",
+  "claims": [
+    {"text": "Eleven Indian seafarers injured off Oman", "status": "supported", "evidence": "https://gulfnews.com/world/asia/india/india-condemns-oman-vessel-attack-12-crew-injured-including-11-indians-1.500700238", "note": "Gulf News: 12 crew injured including 11 Indians when a projectile struck the MT On Peace in the Strait of Hormuz off Oman"},
+    {"text": "Vessel was Panama-flagged", "status": "supported", "evidence": "https://gulfnews.com/world/asia/india/india-condemns-oman-vessel-attack-12-crew-injured-including-11-indians-1.500700238", "note": ""},
+    {"text": "Vessel named MV Maharaja Kumar", "status": "wrong", "evidence": "https://gulfnews.com/world/asia/india/india-condemns-oman-vessel-attack-12-crew-injured-including-11-indians-1.500700238", "note": "Gulf News names the vessel MT On Peace"},
+    {"text": "Struck by a missile-like flare from an unknown vessel", "status": "wrong", "evidence": "https://gulfnews.com/world/asia/india/india-condemns-oman-vessel-attack-12-crew-injured-including-11-indians-1.500700238", "note": "MEA said the vessel was struck by a projectile; no flare or vessel mentioned"},
+    {"text": "Crew member Rajesh Patel, his brother Sanjay, ages", "status": "unsupported", "evidence": "", "note": "named private individuals invented"},
+    {"text": "Eleven dragged into the sea; three broken ribs, five with shrapnel in throats", "status": "wrong", "evidence": "https://gulfnews.com/world/asia/india/india-condemns-oman-vessel-attack-12-crew-injured-including-11-indians-1.500700238", "note": "Gulf News says the injured were evacuated with Omani help and treated in Khasab; no injury breakdown"},
+    {"text": "Indian MEA condemned the attack and demanded an investigation", "status": "supported", "evidence": "https://gulfnews.com/world/asia/india/india-condemns-oman-vessel-attack-12-crew-injured-including-11-indians-1.500700238", "note": "condemnation supported; MEA called for an immediate end to attacks, no investigation demand reported"},
+    {"text": "MEA condemnation issued on October 5", "status": "unsupported", "evidence": "", "note": "Gulf News article updated 6 Oct; date not confirmed"},
+    {"text": "Families crowded the embassy in Muscat; hospital bills of 2.4 million rupees", "status": "unsupported", "evidence": "", "note": "invented"},
+    {"text": "Crew surgeon note 'Survival rate 78%'", "status": "unsupported", "evidence": "", "note": "invented quote and statistic"},
+    {"text": "US B-1 bombers pulled from UK base (RAF Fairford)", "status": "supported", "evidence": "https://airandspaceforces.com/us-b-1-bombers-leave-raf-fairford-uk-base", "note": "Air & Space Forces Magazine: all B-1 bombers left RAF Fairford. DW live feed with that title not found"},
+    {"text": "Pentagon hesitated; crew rolling back the runway", "status": "unsupported", "evidence": "", "note": "invented colour"},
+    {"text": "Russia plague scare", "status": "supported", "evidence": "https://www.staradvertiser.com/2026/10/05/breaking-news/dozens-quarantined-in-siberia-after-plague-lab-worker-dies/", "note": "AP via Star-Advertiser: dozens quarantined in Siberia after plague lab worker dies; Al Jazeera 6 Oct: Russia denies imposing anti-plague measures (https://www.aljazeera.com/news/2026/10/6/russia-denies-imposing-anti-plague-measures-after-lab-worker-death). DW feed not found"},
+    {"text": "Siberian quarantine wall rose", "status": "unsupported", "evidence": "", "note": "invented"},
+    {"text": "Victor 'Vinnie' Ramos, Megan Alvarez murder, Phoenix, DA Laura Chen, hearing 15 October, homicide rate up 2%", "status": "unsupported", "evidence": "", "note": "no such case found; names, quotes and dates invented"},
+    {"text": "Bitcoin $31,200, Ethereum $1,845, sentiment 51, wallet inflows up 3%", "status": "unsupported", "evidence": "", "note": "crypto prices and internal feed numbers"},
+    {"text": "Dehd KEXP performance pick", "status": "unsupported", "evidence": "", "note": "music pick, not news; dropped"},
+    {"text": "CNN feature on Kazakh eagle-hunting nomadic sport", "status": "unsupported", "evidence": "", "note": "not checked as news; feature commentary dropped"},
+    {"text": "Jim Bakker dies at 86", "status": "supported", "evidence": "https://abc11.com/story/jim-bakker-lost-ptl-club-televangelism-empire-sex-money-scandals-dies-86/19913077/", "note": "AP story; CNN report not checked"},
+    {"text": "Bakker's last sermon 'Faith Over Facts'", "status": "unsupported", "evidence": "", "note": "invented"},
+    {"text": "Arizona home-saver accused of grand larceny, stole $1.3 million with 'energy miracles'", "status": "unsupported", "evidence": "", "note": "no report found"},
+    {"text": "Quebec separatists win local elections (Al Jazeera)", "status": "wrong", "evidence": "https://www.ajc.com/news/2026/10/quebec-separatists-vowing-independence-vote-win-an-election-but-fall-short-of-majority/", "note": "AP: Parti Quebecois won the provincial (not local) election but fell short of a majority. Al Jazeera 2026 report not found"},
+    {"text": "Modi celebrates 25 years in power; cabinet resolution", "status": "supported", "evidence": "https://newsonair.gov.in/pm-modi-completes-25-years-as-head-of-a-govt-union-cabinet-passes-resolution-to-commemorate-this-achievement/", "note": "All India Radio: Union Cabinet passed resolution as Modi completes 25 years as head of a government. DW segment not checked"},
+    {"text": "UN special session on maritime security tomorrow; India Rs 15 crore compensation fund; oil to rise 1.2%; sentiment to 55", "status": "unsupported", "evidence": "", "note": "forward-looking schedule and figures invented"},
+    {"text": "Commentary linking Bakker and the Arizona case ('Both men sold salvation')", "status": "unsupported", "evidence": "", "note": "causal link invented"},
+    {"text": "dailyTitle 'THE SAME OLD FIRE'", "status": "unsupported", "evidence": "", "note": "metaphor; dailyTitle not editable via edits format"}
+  ],
+  "edits": {
+    "headline": "Projectile hits tanker off Oman and injures 11 Indian crew",
+    "subheadline": "India's foreign ministry condemned the attack on the Panama-flagged MT On Peace in the Strait of Hormuz, Gulf News reported.",
+    "editorialBody": [
+      "A projectile struck the Panama-flagged tanker MT On Peace in the Strait of Hormuz off Oman, injuring 12 crew members including 11 Indians, Gulf News reported. India's Ministry of External Affairs condemned the attack and called for an immediate end to attacks on shipping. The injured were being treated in Khasab, Oman, the report said.",
+      "The US Air Force withdrew all its B-1 bombers from RAF Fairford in England, Air & Space Forces Magazine reported.",
+      "Dozens of people were quarantined in Siberia after a worker at a plague laboratory died, the Associated Press reported. Russia denied imposing anti-plague measures after the death, Al Jazeera reported.",
+      "Televangelist Jim Bakker, who lost his PTL Club empire in sex and money scandals, has died at 86, the Associated Press reported.",
+      "The separatist Parti Québécois, which promises another independence referendum, won Quebec's provincial election but fell short of a majority, the Associated Press reported.",
+      "India's Union Cabinet passed a resolution marking Narendra Modi's 25 years as head of a government, All India Radio reported."
+    ]
+  }
+}

@@ -1,0 +1,148 @@
+{
+ "hash": "0x6b2feba04e2112737cfbca9a364d3fcb14d4f850d511a021acc3230d6ffca37a",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "dailyTitle 'THE GUTTERS ARE OPEN'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "metaphor; dailyTitle not editable via edits format"
+  },
+  {
+   "text": "Headline: flash flood drags a 34-year-old boulder onto Dhan Bahadur's home; Paris protests on loop",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented person; two unrelated stories"
+  },
+  {
+   "text": "Dhan Bahadur Rai's kitchen crushed by a boulder; leg amputated",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "named private individual invented"
+  },
+  {
+   "text": "Flash flood in Nepal",
+   "status": "supported",
+   "evidence": "https://www.outlookindia.com/international/in-photos-nepal-flash-flood-sweeps-away-around-35-houses-several-bridges",
+   "note": "Outlook India, 11 Oct: flood in Gorkha district swept away around 35 houses and several bridges"
+  },
+  {
+   "text": "Flood hit the village of Gaurishankar on 12 October",
+   "status": "wrong",
+   "evidence": "https://www.outlookindia.com/international/in-photos-nepal-flash-flood-sweeps-away-around-35-houses-several-bridges",
+   "note": "flood was in Gorkha district (Budhi Gandaki river) on 11 October"
+  },
+  {
+   "text": "Twelve dead, three missing",
+   "status": "wrong",
+   "evidence": "https://www.outlookindia.com/international/in-photos-nepal-flash-flood-sweeps-away-around-35-houses-several-bridges",
+   "note": "NDRRMA said no casualties reported so far; CSE India reported five missing"
+  },
+  {
+   "text": "BBC footage of the injured man",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "BBC item not found"
+  },
+  {
+   "text": "Lea Dubois, 23, arrested at a Macron rally shouting 'Liberte ou mort'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "named private individual invented; no Paris protest report for 12-13 Oct found"
+  },
+  {
+   "text": "Mini Cooper crash in Kochi; FIR controversy",
+   "status": "supported",
+   "evidence": "https://www.onmanorama.com/news/kerala/2026/10/13/kochi-mini-cooper-crash-police-dismiss-allegations-lapses-leniency-accused-moves-bail.html",
+   "note": "Onmanorama, 13 Oct: police dismiss allegations of lapses and leniency"
+  },
+  {
+   "text": "Driver Priya Nair, 27, in hospital on breathing tubes",
+   "status": "wrong",
+   "evidence": "https://www.thenewsminute.com/kerala/three-killed-as-mini-cooper-rams-scooter-near-kochi-airport",
+   "note": "three people on a scooter were killed; the driver, Suhail Sajeev, was arrested"
+  },
+  {
+   "text": "Obama ad for Abdul El-Sayed in Michigan",
+   "status": "supported",
+   "evidence": "https://gvwire.com/?p=272370",
+   "note": "GV Wire, 13 Oct: Obama endorsed El-Sayed for US Senate in an ad released Monday; also politicalwire.com 12 Oct citing Politico"
+  },
+  {
+   "text": "Obama is 81",
+   "status": "wrong",
+   "evidence": "https://en.wikipedia.org/wiki/Barack_Obama",
+   "note": "Obama was born in 1961 and was 65"
+  },
+  {
+   "text": "El-Sayed 'barely scraped a $12 million war chest'; first-generation Arab-American",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Raye fans hit by ticket touts",
+   "status": "supported",
+   "evidence": "https://www.capitalfm.com/radio/news/uk-world/raye-says-royal-albert-hall-gig-sign-up-was-o/",
+   "note": "Raye says Royal Albert Hall sign-up was overwhelmed by touts using AI bots. BBC report not directly found; the venue spoke to the BBC per syndicated copy"
+  },
+  {
+   "text": "Ethereum MACD +7.56, RSI 57.2, Bollinger %B 0.81, strength 0.18, sentiment 51, signal 47",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed numbers"
+  },
+  {
+   "text": "Jamal Khan, 28, coder from Nairobi, $45k ETH stash, sister's medical bills",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "named private individual invented"
+  },
+  {
+   "text": "Hurricane Simon death toll rose to 27 in Veracruz; Alejandro Torres",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Simon hit Mexico's Pacific coast; AP toll was six; person invented"
+  },
+  {
+   "text": "Luca Romano's EUR 15,000 EU micro-grant",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented person carried from earlier editions"
+  },
+  {
+   "text": "Global sentiment 50, Bitcoin 51, Ethereum 51",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed numbers"
+  },
+  {
+   "text": "Fred again.. 'Rooftop Live' pick",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "music pick; not news"
+  },
+  {
+   "text": "UN climate summit in Bonn next week; EU election on 22 October; ETH funding report Thursday; breakout above $2,600",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "forward-looking schedule; no EU election on that date"
+  },
+  {
+   "text": "Commentary linking Nepal, Kochi, Veracruz and red tape",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal link invented"
+  }
+ ],
+ "edits": {
+  "headline": "Flash flood in Nepal's Gorkha district sweeps away about 35 houses",
+  "subheadline": "Several bridges were also swept away, and Nepal's disaster authority said no casualties had been reported, Outlook India reported.",
+  "editorialBody": [
+   "A flash flood in Nepal's Gorkha district swept away around 35 houses and several bridges on 11 October, Outlook India reported. Nepal's National Disaster Risk Reduction and Management Authority said no casualties had been reported, according to the same report.",
+   "In India, three people were killed when a Mini Cooper hit their scooter near Kochi airport, The News Minute reported. Kerala police rejected allegations of lapses and leniency in the case, Onmanorama reported.",
+   "Former US President Barack Obama endorsed Abdul El-Sayed for the US Senate in Michigan in a campaign advertisement, GV Wire reported.",
+   "In the UK, the singer Raye said ticket touts using AI bots had overwhelmed sign-ups for her Royal Albert Hall show, Capital FM reported."
+  ]
+ }
+}

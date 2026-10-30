@@ -1,0 +1,196 @@
+{
+  "hash": "0x15aca1f013349f3ca542ccd54ea94acf275db00481c7f63d7cbcbb56da135c85",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "A high-speed train crash in Spain killed at least 68 people",
+      "status": "supported",
+      "evidence": "https://www.cbsnews.com/news/spain-train-crash-toledo-urda/",
+      "note": "CBS News/AP: high-speed train struck the rear of a stopped train near Urda (Toledo province), at least 68 dead. Also CNN live page and Irish Times (https://www.irishtimes.com/world/europe/2026/10/28/spain-train-crash-live-updates/)."
+    },
+    {
+      "text": "Crash on October 27, killing 16 (the mother and fifteen others)",
+      "status": "wrong",
+      "evidence": "https://www.cnn.com/2026/10/28/world/live-news/spain-train-crash-collision-intl",
+      "note": "CNN's page is dated 28 Oct and gives at least 68 dead"
+    },
+    {
+      "text": "Crash at Ávila on a train bound for Madrid; train ripped in two",
+      "status": "wrong",
+      "evidence": "https://www.cbsnews.com/news/spain-train-crash-toledo-urda/",
+      "note": "Crash was near Urda in Toledo province, south of Madrid, not Ávila. No source describes the train splitting in two."
+    },
+    {
+      "text": "María López and her two-year-old son on the platform",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "invented private individual"
+    },
+    {
+      "text": "Channel 4 News filmed the collision in aerial detail",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "no Channel 4 News report found"
+    },
+    {
+      "text": "Assailant attacked at the Israeli embassy in Belgrade and was shot by a police officer",
+      "status": "supported",
+      "evidence": "https://www.cp24.com/news/world/2026/10/28/serbian-police-say-assailant-killed-after-attacking-officer-outside-the-israeli-embassy-in-belgrade/",
+      "note": "AP (Jovana Gec) via CP24, 28 Oct: attacker with two knives attacked an officer guarding the embassy; officer fired several shots, killing him"
+    },
+    {
+      "text": "Attacker lunged at a diplomatic reception",
+      "status": "wrong",
+      "evidence": "https://www.cp24.com/news/world/2026/10/28/serbian-police-say-assailant-killed-after-attacking-officer-outside-the-israeli-embassy-in-belgrade/",
+      "note": "AP: the attacker targeted the officer guarding the embassy just after midnight; no reception"
+    },
+    {
+      "text": "Officer named Luka Petrović, 38",
+      "status": "wrong",
+      "evidence": "https://www.cp24.com/news/world/2026/10/28/serbian-police-say-assailant-killed-after-attacking-officer-outside-the-israeli-embassy-in-belgrade/",
+      "note": "AP identifies the officer only by the initials D.S.; name and age invented"
+    },
+    {
+      "text": "Officer sustained a shrapnel wound that will scar his left cheek",
+      "status": "wrong",
+      "evidence": "https://www.cp24.com/news/world/2026/10/28/serbian-police-say-assailant-killed-after-attacking-officer-outside-the-israeli-embassy-in-belgrade/",
+      "note": "AP: prosecutors said a knife struck his left cheek; he was slightly wounded"
+    },
+    {
+      "text": "Red alert threat level in Belgrade",
+      "status": "supported",
+      "evidence": "https://www.cp24.com/news/world/2026/10/28/serbian-police-say-assailant-killed-after-attacking-officer-outside-the-israeli-embassy-in-belgrade/",
+      "note": "AP: authorities raised the terror threat to the highest level"
+    },
+    {
+      "text": "DW News showed the moment in grainy 4K",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "no DW report found directly; only secondhand via an aggregator"
+    },
+    {
+      "text": "Trump said he would accept the 2026 midterm results 'if they're honest'",
+      "status": "supported",
+      "evidence": "https://www.koreatimes.co.kr/world/20261028/trump-says-will-respect-us-midterm-results-if-theyre-honest",
+      "note": "Korea Times, 28 Oct: said he would respect the results 'if they're honest' as he headed to Texas for a campaign trip"
+    },
+    {
+      "text": "Trump described as 'former President'",
+      "status": "wrong",
+      "evidence": "https://www.koreatimes.co.kr/world/20261028/trump-says-will-respect-us-midterm-results-if-theyre-honest",
+      "note": "he is the sitting president"
+    },
+    {
+      "text": "Remark made at a suburban hall in Arizona",
+      "status": "wrong",
+      "evidence": "https://www.koreatimes.co.kr/world/20261028/trump-says-will-respect-us-midterm-results-if-theyre-honest",
+      "note": "Korea Times snippet: said at Joint Base Andrews as he left for Texas"
+    },
+    {
+      "text": "Statement broadcast by DW News",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "no DW report found"
+    },
+    {
+      "text": "First-time voter Eddie Ramos, 27, of Tucson; ballot in Maricopa County clerk's office",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "invented private individual"
+    },
+    {
+      "text": "Kenya released the last twenty Ebola contacts on Friday, declaring them negative",
+      "status": "wrong",
+      "evidence": "https://news.un.org/feed/view/en/story/2026/10/1168676",
+      "note": "UN News: 20 contacts discharged on Monday after 21 days' monitoring; 98 remain in quarantine; no test result given"
+    },
+    {
+      "text": "New wave of fever cases in Kitui: seven children under ten, two in intensive care",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "invented; UN News reports eight contacts tested positive and were moved to Nairobi, not Kitui children"
+    },
+    {
+      "text": "Kenya health ministry mass vaccination drive on November 12",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "forward date invented"
+    },
+    {
+      "text": "Sitharaman attacked Rahul Gandhi over a Tata Group governance row (DW News)",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "no report found linking Sitharaman, Gandhi and Tata in Oct 2026"
+    },
+    {
+      "text": "Tata stock slipped 1.8%, rupee 0.3% lower",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "figures invented"
+    },
+    {
+      "text": "Likud at 27% and Yeshar at 21%",
+      "status": "wrong",
+      "evidence": "https://www.jpost.com/israel-election-2026/article-913237",
+      "note": "Jerusalem Post, 29 Oct: Likud 27 seats and Yashar 21 seats (projected), not percentages"
+    },
+    {
+      "text": "No clear majority for Netanyahu",
+      "status": "supported",
+      "evidence": "https://www.aljazeera.com/news/2026/10/29/israel-election-result-shows-no-overall-majority-as-vote-count-complete",
+      "note": "Al Jazeera, 29 Oct: Netanyahu bloc 53, opposition bloc 48, neither reached 61 of 120 seats"
+    },
+    {
+      "text": "Israeli election results reported by DW",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "no DW report found; story attributed to JPost and Al Jazeera in correction"
+    },
+    {
+      "text": "Bitcoin and Ethereum sentiment 52, signals 54; on-chain volume up 12% after Israeli poll",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed numbers; causal link invented"
+    },
+    {
+      "text": "Music pick: Dehd live on KEXP",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "music pick, not news"
+    },
+    {
+      "text": "Israel coalition talks reconvene November 3; US Senate run-offs begin November 7",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "forward dates invented"
+    },
+    {
+      "text": "Commentary paragraphs linking the crash, Belgrade attack and markets",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "links invented"
+    },
+    {
+      "text": "dailyTitle 'THE SCARS OF SUNDOWN'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "metaphor; dailyTitle not editable via edits format"
+    },
+    {
+      "text": "The crash killed María López 'and fifteen others' (16 dead)",
+      "status": "wrong",
+      "evidence": "https://www.cbsnews.com/news/spain-train-crash-toledo-urda/",
+      "note": "At least 68 dead. María López is unsupported (invented)."
+    }
+  ],
+  "edits": {
+    "headline": "High-speed train crash in Spain kills at least 68 people",
+    "subheadline": "The train hit the rear of a stopped train near Urda, south of Madrid, CBS News and the Associated Press reported.",
+    "editorialBody": [
+      "A high-speed train crashed into the rear of a stopped train near Urda, south of Madrid, killing at least 68 people, CBS News and the Associated Press reported. The Castilla-La Mancha regional government confirmed the death toll, CBS said. CNN and the Irish Times also reported at least 68 dead.",
+      "A police officer guarding the Israeli embassy in Belgrade shot dead an attacker carrying two knives just after midnight, the Associated Press reported. The officer was slightly wounded in the face, prosecutors said. Interior Minister Ivica Dacic said the attacker was a minor who supported the Islamic State group, and Serbia raised its terror threat level to the highest level, the AP said.",
+      "Benjamin Netanyahu's Likud was the largest party in Israel's election, with a projected 27 seats to 21 for Gadi Eisenkot's Yashar party, the Jerusalem Post reported. Neither Netanyahu's bloc, with 53 seats, nor the opposition bloc, with 48, reached the 61 seats needed for a majority, Al Jazeera reported.",
+      "President Donald Trump said he would respect the results of the US midterm elections \"if they're honest\", the Korea Times reported. He made the remark as he left for a campaign trip to Texas, the paper said."
+    ]
+  }
+}

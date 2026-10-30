@@ -1,0 +1,140 @@
+{
+ "hash": "0xbbf0dc267be1bf640e9b3b001f48db64b204aa8a1f52581d4f3af26b3f06da13",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "dailyTitle 'FLOODLIGHT'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "wordplay; dailyTitle not editable via edits format"
+  },
+  {
+   "text": "Headline: Mexico's coast drowns, Brazil's heir rises, crypto whale resurfaces",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "three unrelated stories; Mexico detail wrong"
+  },
+  {
+   "text": "Alejandro Torres, 72, carpenter, and daughter Luz",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "named private individuals invented"
+  },
+  {
+   "text": "Hurricane Simon slammed into Veracruz in the Gulf on 11 October",
+   "status": "wrong",
+   "evidence": "https://www.aljazeera.com/news/2026/10/10/hurricane-simon-strengthens-to-category-4-off-mexicos-pacific-coast",
+   "note": "Simon was a Pacific hurricane threatening western Mexico (Michoacan, Colima, Jalisco), not Veracruz"
+  },
+  {
+   "text": "Hurricane Simon strengthened to Category 4 and neared Mexico with 155 mph winds",
+   "status": "supported",
+   "evidence": "https://ny1.com/nyc/all-boroughs/ap-top-news/2026/10/11/a-ferocious-hurricane-simon-nears-mexico-with-155-mph-winds-and-flooding-fears",
+   "note": "AP headline 11 Oct; Category 4 per https://www.aljazeera.com/news/2026/10/10/hurricane-simon-strengthens-to-category-4-off-mexicos-pacific-coast. Added to body as replacement for the Veracruz claim"
+  },
+  {
+   "text": "Three-metre tide; 23 dead",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "AP later put the toll from Simon and Rachel's remnants at six (fireengineering.com syndication)"
+  },
+  {
+   "text": "Delhi Police removed Jantar Mantar's status as a designated protest site and named three new sites",
+   "status": "supported",
+   "evidence": "https://newsonair.gov.in/jantar-mantar-de-notified-as-designated-protest-site-delhi-police-names-three-alternatives/",
+   "note": "All India Radio, 12 Oct. DW report not found; also Deccan Herald"
+  },
+  {
+   "text": "'Police decree aired on DW News'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "DW report not found"
+  },
+  {
+   "text": "Activist Priya Sharma; new zones three hours from the nearest metro",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "named private individual invented; distance invented"
+  },
+  {
+   "text": "Channel 4 piece 'Who is Flavio Bolsonaro'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "not found"
+  },
+  {
+   "text": "Flavio Bolsonaro leading the polls",
+   "status": "supported",
+   "evidence": "https://bernama.com/en/world/news.php?id=2617446",
+   "note": "Bernama carrying Anadolu: Flavio ahead of Lula by six points in first poll after the 4 Oct first round. Not used in body (page title in search index showed a different story)"
+  },
+  {
+   "text": "$12m offshore conduit in Flavio Bolsonaro's campaign finance disclosures",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Brazil's election is slated for 30 November",
+   "status": "wrong",
+   "evidence": "https://bernama.com/en/world/news.php?id=2617446",
+   "note": "runoff was on 25 October; first round 4 October"
+  },
+  {
+   "text": "DW live feed of Trump on an Ohio stage with 'Midterm Madness' banner",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "not found; Trump's Youngstown rally was on the evening of 12 Oct, after this edition was generated"
+  },
+  {
+   "text": "US midterm elections on 5 November",
+   "status": "wrong",
+   "evidence": "https://hoodline.com/2026/10/trump-heads-to-chillicothe-for-third-ohio-rally-before-nov-3-vote/",
+   "note": "midterms were on 3 November"
+  },
+  {
+   "text": "Ethereum sentiment 52; wallet '0xC0FFEE' moved 8,300 ETH (~$14m); Bitcoin sentiment 51 / signal 49; global sentiment 50",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed / on-chain figures"
+  },
+  {
+   "text": "Hedge fund positioning for a post-midterm 'regulation-free' window",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented"
+  },
+  {
+   "text": "Miriam Ortiz follow-up; FEMA trailer wait; Luca Romano EU funds idle; Gomez family class action over Farmington pipeline",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented people and events carried from earlier editions"
+  },
+  {
+   "text": "Yussef Dayes 'Turquoise Galaxy' on KEXP",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "music pick; not news"
+  },
+  {
+   "text": "UN Climate Conference opens in Nairobi on 2 November; next Ethereum upgrade",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "forward-looking schedule; invented"
+  },
+  {
+   "text": "Closing paragraph about flash floods and promises",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "commentary"
+  }
+ ],
+ "edits": {
+  "headline": "Delhi Police remove Jantar Mantar as a designated protest site",
+  "subheadline": "Delhi Police named three alternative venues for protests and demonstrations in the city, All India Radio reported.",
+  "editorialBody": [
+   "Delhi Police de-notified Jantar Mantar as a designated protest site and named three alternative venues, All India Radio reported.",
+   "Hurricane Simon strengthened to Category 4 off Mexico's Pacific coast, Al Jazeera reported. The storm neared Mexico with winds of 155 mph, the Associated Press reported."
+  ]
+ }
+}
