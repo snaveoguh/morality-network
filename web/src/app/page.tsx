@@ -6,6 +6,7 @@ import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
 import { AsyncMasthead } from "@/components/layout/AsyncMasthead";
 import { AsyncFeed } from "@/components/feed/AsyncFeed";
 import { LedgerStrip, LedgerCardsSkeleton } from "@/components/ledger/LedgerStrip";
+import { RecordBand, RecordBandSkeleton, RECORD_LINE } from "@/components/ledger/RecordBand";
 import { FrontGrid } from "@/components/feed/FrontFeed";
 import { AsyncSignals, SignalsSkeleton } from "@/components/feed/AsyncSignals";
 import { AsyncCommentary, CommentarySkeleton } from "@/components/feed/AsyncCommentary";
@@ -18,6 +19,10 @@ export const maxDuration = 30;
 
 // ============================================================================
 // FEED PAGE — instant shell, data streams in via Suspense
+//
+// The record leads: the Accountability record band (corrections, PMQs
+// claims, pledges) sits above everything, then the Claim Ledger cards, then
+// the news, signals and commentary.
 //
 // The page shell (PooterTheme + skeleton placeholders) renders immediately.
 // AsyncMasthead, AsyncFeed and LedgerStrip are async server components that
@@ -34,7 +39,6 @@ export const maxDuration = 30;
  */
 export async function generateMetadata(): Promise<Metadata> {
   let headline: string | null = null;
-  let subheadline: string | null = null;
   let dailyTitle: string | null = null;
 
   try {
@@ -43,7 +47,6 @@ export async function generateMetadata(): Promise<Metadata> {
     const cached = await getArchivedEditorial(hash);
     if (cached?.isDailyEdition) {
       headline = cached.primary.title;
-      subheadline = cached.subheadline;
       dailyTitle = cached.dailyTitle ?? null;
     }
   } catch {
@@ -57,7 +60,6 @@ export async function generateMetadata(): Promise<Metadata> {
       const best = originals[0];
       if (best) {
         headline = best.title;
-        subheadline = best.subheadline;
         dailyTitle = best.dailyTitle ?? null;
       }
     } catch {
@@ -70,7 +72,9 @@ export async function generateMetadata(): Promise<Metadata> {
     const title = dailyTitle
       ? withBrand(`${dailyTitle} — ${headline}`)
       : withBrand(headline);
-    const description = subheadline || headline;
+    // Record-first: the description says what the site is; the title
+    // carries today's lead story.
+    const description = RECORD_LINE;
 
     return {
       title,
@@ -90,17 +94,39 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   }
 
-  // No article available — use defaults (layout.tsx metadata applies)
-  return {};
+  // No article available — record-first title and description.
+  const title = withBrand("Accountability record");
+  return {
+    title,
+    description: RECORD_LINE,
+    openGraph: {
+      title,
+      description: RECORD_LINE,
+      type: "website",
+      siteName: "pooter world",
+      url: SITE_URL,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: RECORD_LINE,
+    },
+  };
 }
 
 export default function FeedPage() {
   // Independent Suspense boundaries share one grid: the feed's blocks, the
   // lead story, the ledger rail, the Bearometer signals and the commentary
-  // column each place themselves (see FrontFeed).
+  // column each place themselves (see FrontFeed). The record band sits above
+  // the grid. On phone the ledger cards are lifted to the top of the grid so
+  // they follow the band; from 1024 they stay the right-hand rail beside the
+  // lead (display: contents keeps their grid placement).
   return (
     <>
       <PooterTheme />
+      <Suspense fallback={<RecordBandSkeleton />}>
+        <RecordBand />
+      </Suspense>
       <FrontGrid>
         <Suspense fallback={<FeedSkeleton />}>
           <AsyncFeed />
@@ -108,9 +134,11 @@ export default function FeedPage() {
         <Suspense fallback={<MastheadSkeleton />}>
           <AsyncMasthead />
         </Suspense>
-        <Suspense fallback={<LedgerCardsSkeleton />}>
-          <LedgerStrip />
-        </Suspense>
+        <div className="contents max-lg:[&>section]:-order-1">
+          <Suspense fallback={<LedgerCardsSkeleton />}>
+            <LedgerStrip />
+          </Suspense>
+        </div>
         <Suspense fallback={<SignalsSkeleton />}>
           <AsyncSignals />
         </Suspense>
