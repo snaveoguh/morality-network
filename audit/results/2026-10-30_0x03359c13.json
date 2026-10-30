@@ -1,0 +1,90 @@
+{
+  "hash": "0x03359c13c84477a12a5309bbc17684d39eafa857be62e54da4c4d9210b318ad2",
+  "verdict": "clean",
+  "claims": [
+    {
+      "text": "Afghan opium output surges fivefold as Taliban ban is bypassed (headline; body[0])",
+      "status": "supported",
+      "evidence": "sourceRefs[0]",
+      "note": "UN News: 'Afghanistan opium production jumps fivefold as farmers find ways round Taliban ban'."
+    },
+    {
+      "text": "The Taliban's ban is on poppy growing (subheadline)",
+      "status": "supported",
+      "evidence": "https://www.voanews.com/amp/afghan-opium-cultivation-bounces-and-shifts-2-years-after-ban-un-says/7853395.html",
+      "note": "sourceRefs[0] says 'Taliban ban'; the ban is on opium poppy cultivation (VOA on the UNODC survey)."
+    },
+    {
+      "text": "dailyTitle 'FIVEFOLD SURGE'",
+      "status": "supported",
+      "evidence": "sourceRefs[0]",
+      "note": ""
+    },
+    {
+      "text": "Russian drone strike on a crowded Dnipro train station killed 13 (DW News)",
+      "status": "supported",
+      "evidence": "sourceRefs[3]",
+      "note": ""
+    },
+    {
+      "text": "Eli Lilly beat estimates and raised its sales outlook as Zepbound and Mounjaro demand rose again (CNBC)",
+      "status": "supported",
+      "evidence": "sourceRefs[2]",
+      "note": ""
+    },
+    {
+      "text": "Third time this year Lilly raised its outlook (MarketWatch)",
+      "status": "supported",
+      "evidence": "sourceRefs[24]",
+      "note": ""
+    },
+    {
+      "text": "Merck beat quarterly estimates and raised its profit outlook, helped by a new form of Keytruda (CNBC)",
+      "status": "supported",
+      "evidence": "sourceRefs[16]",
+      "note": "Source: 'as new Keytruda form shows strength'. 'Cancer drug' is public record for Keytruda."
+    },
+    {
+      "text": "US Treasury sanctioned 11 over a North Korean IT-worker scheme that moved millions in crypto (Decrypt)",
+      "status": "supported",
+      "evidence": "sourceRefs[4]",
+      "note": ""
+    },
+    {
+      "text": "Google and Microsoft held off raising capex forecasts, a setback for AI data-centre build-out (CNBC)",
+      "status": "supported",
+      "evidence": "sourceRefs[8]",
+      "note": "Source: 'AI build-out hits snag as Google and Microsoft put off raising capex forecasts'. 'Data centres' is a gloss on 'AI build-out'; acceptable."
+    },
+    {
+      "text": "Dario Amodei setting out a new direction for tech philanthropy (CNBC)",
+      "status": "supported",
+      "evidence": "sourceRefs[5]",
+      "note": ""
+    },
+    {
+      "text": "France said Europe was set to release 42 million barrels of oil (Bloomberg)",
+      "status": "supported",
+      "evidence": "sourceRefs[18]",
+      "note": ""
+    },
+    {
+      "text": "Six Palestinians killed in 24 hours, Gaza health ministry said (Middle East Eye)",
+      "status": "supported",
+      "evidence": "sourceRefs[19]",
+      "note": ""
+    },
+    {
+      "text": "Poundland edged towards collapse (BBC News)",
+      "status": "supported",
+      "evidence": "sourceRefs[23]",
+      "note": ""
+    },
+    {
+      "text": "Trump moved to end H-1B visa deference (Times of India)",
+      "status": "supported",
+      "evidence": "sourceRefs[20]",
+      "note": "Body says 'deference to H-1B visa holders'; source says 'H-1B visa deference', which may mean deference to earlier approvals rather than to visa holders (not checked: article not fetched). Minor; passes, but a reviewer may prefer the source wording 'moved to end H-1B visa deference'."
+    }
+  ]
+}

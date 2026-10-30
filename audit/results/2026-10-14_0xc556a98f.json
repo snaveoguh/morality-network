@@ -1,0 +1,178 @@
+{
+ "hash": "0xc556a98f0534b997d43d4ac1fa84072a0d0f0fb56874eaa6c10d8bf2376b6c53",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Dhan Bahadur Rai, 34, and daughter Sita; six-ton slab in his kitchen doorway",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Named private individuals; invented"
+  },
+  {
+   "text": "Gaurishankar flash flood ripped through his village on 12 October",
+   "status": "wrong",
+   "evidence": "https://www.aljazeera.com/news/2026/10/11/at-least-five-people-missing-as-flash-floods-in-nepal-sweep-away-houses",
+   "note": "The reported flood was on the Budhi Gandaki river in Gorkha district on 11 October; Al Jazeera: at least five missing as flash floods swept away houses. No Gaurishankar flood found"
+  },
+  {
+   "text": "Aid trucks arrived yesterday; government tin-shed shelter",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source"
+  },
+  {
+   "text": "Alejandro Torres of Veracruz lost his home",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Named private individual; invented"
+  },
+  {
+   "text": "Hurricane a week earlier killed 23 in Veracruz; official toll reads 22",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No October 2026 hurricane deaths in Veracruz found; cold-front deaths reported later, from 19 October"
+  },
+  {
+   "text": "Abhijeet Dipke detained by security at Delhi airport",
+   "status": "supported",
+   "evidence": "https://www.deccanherald.com/india/cjp-founder-abhijeet-dipke-detained-along-with-saurav-das-ashutosh-ranka-at-delhi-airport-4177557",
+   "note": "Deccan Herald: CJP founder detained with Saurav Das and Ashutosh Ranka at Delhi airport (10 October)"
+  },
+  {
+   "text": "Dipke's passport stamped 'questioned' after a protest against the CJP's anti-CEC stance",
+   "status": "wrong",
+   "evidence": "https://www.theweek.in/news/india/2026/10/10/where-are-abhijeet-dipke-and-saurav-das-detained-delhi-police.html",
+   "note": "Dipke founded the CJP; police took him off a plane before a planned CJP protest against the Chief Election Commissioner. No passport stamp reported"
+  },
+  {
+   "text": "Rahul Gandhi demanded the arrest warrants be dropped, flanked by journalists",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Kerala Kaumudi reported Gandhi criticised the arrest of CJP leaders and said waving the Tricolour in a peaceful protest is not a crime; no demand about warrants found"
+  },
+  {
+   "text": "Rahul Gandhi criticised the arrest of CJP leaders over the Jantar Mantar protest",
+   "status": "supported",
+   "evidence": "https://keralakaumudi.com/en/india/general/rahul-gandhi-cjp-leaders-arrest-jantar-mantar-1814888",
+   "note": "Kerala Kaumudi"
+  },
+  {
+   "text": "Video streamed by DW",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No DW report found"
+  },
+  {
+   "text": "Pope had a 'peaceful' night in hospital, Vatican press office said",
+   "status": "supported",
+   "evidence": "https://abc30.com/story/pope-has-peaceful-night-hospital-following-surgery-vatican-says/19937514/",
+   "note": "ABC News: Pope has 'peaceful' night in hospital following surgery, Vatican says"
+  },
+  {
+   "text": "The pope in hospital is Francis",
+   "status": "wrong",
+   "evidence": "https://gulfnews.com/world/europe/popes-lung-surgery-successfully-completed-vatican-1.500709483",
+   "note": "The pope is Leo XIV, who had lung surgery that the Vatican said was 'successfully completed'"
+  },
+  {
+   "text": "Vatican said the pope's lung surgery was successfully completed",
+   "status": "supported",
+   "evidence": "https://gulfnews.com/world/europe/popes-lung-surgery-successfully-completed-vatican-1.500709483",
+   "note": "Gulf News"
+  },
+  {
+   "text": "Cardinal Tagle said Mass; Francis's controversial family document",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source"
+  },
+  {
+   "text": "Pope described as a dying monarch",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented; Vatican described surgery as successful"
+  },
+  {
+   "text": "Whale moved 12,000 BTC worth $480m at $40,000 per coin; sentiment scores 51/51/50",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal feed; crypto prices not verifiable"
+  },
+  {
+   "text": "Navi Pillay DW interview warning of 'systemic erosion' of rights in Pakistan and Bangladesh",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No DW interview found; Pillay was reported as 2026 Nobel Peace Prize winner"
+  },
+  {
+   "text": "Albanian student protests in Tirana, reported by Al Jazeera",
+   "status": "supported",
+   "evidence": "https://www.aljazeera.com/news/2026/10/14/fire-erupts-at-albanias-education-ministry-as-protests-enter-third-day",
+   "note": "Al Jazeera: fire erupted at Albania's Education Ministry as protests entered third day"
+  },
+  {
+   "text": "Students set fire to barricades",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Al Jazeera headline reports a fire at the Education Ministry, not barricades"
+  },
+  {
+   "text": "UN reluctant to intervene",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source"
+  },
+  {
+   "text": "DW polls: Trump pulls 23% of swing voters; 12-point Epstein trust deficit",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Figures invented"
+  },
+  {
+   "text": "CNN Senate debates",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No specific report found"
+  },
+  {
+   "text": "Global sentiment 50/100",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal feed"
+  },
+  {
+   "text": "MONO 'Full Performance (Live on KEXP)' pick",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Music pick; not news, dropped"
+  },
+  {
+   "text": "UN Human Rights Council convenes 5 November; Indian Supreme Court hears CJP case 12 November; next halving 2028",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Forward-looking dates invented"
+  },
+  {
+   "text": "Commentary linking the Nepal flood, Veracruz, Delhi and the Vatican",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal link invented"
+  },
+  {
+   "text": "dailyTitle 'THE GUTTERS REVERBERATION'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Metaphor; dailyTitle not editable via edits format"
+  }
+ ],
+ "edits": {
+  "headline": "Pope Leo XIV has peaceful night in hospital after surgery",
+  "subheadline": "The Vatican said the pope's lung surgery had been successfully completed, Gulf News reported.",
+  "editorialBody": [
+   "Pope Leo XIV had a peaceful night in hospital following surgery, the Vatican said, ABC News reported. The Vatican said the lung surgery had been successfully completed, according to Gulf News.",
+   "In Albania, a fire broke out at the Education Ministry as student protests entered a third day, Al Jazeera reported.",
+   "In India, Delhi Police detained Cockroach Janta Party founder Abhijeet Dipke at Delhi airport with party leaders Saurav Das and Ashutosh Ranka, the Deccan Herald reported. Rahul Gandhi criticised the arrest of CJP leaders over a protest at Jantar Mantar, Kerala Kaumudi reported.",
+   "In Nepal, at least five people were missing after flash floods swept away houses, Al Jazeera reported on 11 October."
+  ]
+ }
+}

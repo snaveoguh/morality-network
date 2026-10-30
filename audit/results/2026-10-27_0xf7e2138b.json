@@ -1,0 +1,247 @@
+{
+  "hash": "0xf7e2138b8f2cfaa78f59e2f036af9987f61c6af8d0cd365a919aa5513b6aa2a9",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "20 Ebola contacts released from quarantine in Kenya",
+      "status": "supported",
+      "evidence": "sourceRefs[0]",
+      "note": "UN News: 20 contacts of Kenya's first Ebola case discharged on Monday after a 21-day monitoring period; 98 remain in quarantine (https://news.un.org/feed/view/en/story/2026/10/1168676)"
+    },
+    {
+      "text": "Contacts released after testing negative",
+      "status": "unsupported",
+      "evidence": "https://news.un.org/feed/view/en/story/2026/10/1168676",
+      "note": "UN News says they completed 21 days of monitoring without symptoms; no test result mentioned"
+    },
+    {
+      "text": "42-year-old market vendor leaving a quarantine centre in Kitui with cash-stained gloves",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "invented private individual and place; UN News names no town"
+    },
+    {
+      "text": "3,219 deaths recorded in Africa since the 2014 outbreak",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "figure not in any source"
+    },
+    {
+      "text": "Release happened on October 27",
+      "status": "wrong",
+      "evidence": "https://news.un.org/feed/view/en/story/2026/10/1168676",
+      "note": "UN News says the contacts were discharged on Monday (26 Oct); the report is dated 27 Oct"
+    },
+    {
+      "text": "Oil prices seesaw amid diplomatic efforts to end the Middle East conflict (CNBC)",
+      "status": "supported",
+      "evidence": "sourceRefs[4]",
+      "note": ""
+    },
+    {
+      "text": "Envoys shuttling between Tehran and Jerusalem; ceasefire patched together by UN statements",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "not in the CNBC headline"
+    },
+    {
+      "text": "Brent slid to $84.73 then rebounded to $86.12",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "prices not in any source"
+    },
+    {
+      "text": "Sentiment scores (global economy 71, AI 68, political engagement 65, environment 62)",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed numbers, unverifiable"
+    },
+    {
+      "text": "Iran says US 'not serious' about talks during a Tehran meeting (Al Jazeera)",
+      "status": "supported",
+      "evidence": "sourceRefs[7]",
+      "note": "not in original body; used in correction"
+    },
+    {
+      "text": "Bloomberg: Anthropic gives traders a pure-play bet on frontier AI",
+      "status": "supported",
+      "evidence": "sourceRefs[12]",
+      "note": ""
+    },
+    {
+      "text": "Anthropic touting a new model that promises to 'think twice before it talks'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "quote and model invented"
+    },
+    {
+      "text": "Vox warned the company could simply shut the doors",
+      "status": "unsupported",
+      "evidence": "sourceRefs[14]",
+      "note": "Vox headline is 'Anthropic could just stop' (URL refers to the AI race and safety); 'shut the doors' is an invented reading"
+    },
+    {
+      "text": "TASS: Russian stock market accelerated",
+      "status": "supported",
+      "evidence": "sourceRefs[6]",
+      "note": "headline: 'Russian stock market accelerates on news reports'"
+    },
+    {
+      "text": "Russian market rose after reports of $1bn trade turnover with South Africa",
+      "status": "unsupported",
+      "evidence": "sourceRefs[6], sourceRefs[19]",
+      "note": "two separate TASS items; the causal link is invented"
+    },
+    {
+      "text": "Russia-South Africa trade turnover above $1bn a year (TASS)",
+      "status": "supported",
+      "evidence": "sourceRefs[19]",
+      "note": "edition called it 'new'; source does not"
+    },
+    {
+      "text": "Guptas' Johannesburg homes on sale as stigma dampens interest (Bloomberg)",
+      "status": "supported",
+      "evidence": "sourceRefs[8]",
+      "note": ""
+    },
+    {
+      "text": "Gupta homes listed at 'stigma-discounted' prices",
+      "status": "unsupported",
+      "evidence": "sourceRefs[8]",
+      "note": "headline says stigma dampens interest; no prices or discount mentioned"
+    },
+    {
+      "text": "Speaker Johnson predicts Democrats' far-left shift will 'juice enthusiasm' for GOP in midterms (Fox News)",
+      "status": "supported",
+      "evidence": "sourceRefs[1]",
+      "note": ""
+    },
+    {
+      "text": "Fox News aired a narrative that the GOP base will 'reclaim the House'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "no such source; National Review ran 'Republicans Still Can Win' (sourceRefs[15])"
+    },
+    {
+      "text": "RT: Brazil handed Washington a setback it won't forgive",
+      "status": "supported",
+      "evidence": "sourceRefs[2]",
+      "note": "RT is Russian state media"
+    },
+    {
+      "text": "RT story refers to a row over Amazon carbon credits",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "invented context"
+    },
+    {
+      "text": "Carbon futures dipped 2.4% after US Senate blocked a joint monitoring programme",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "invented"
+    },
+    {
+      "text": "Bitcoin sentiment 69, signal 48; Ethereum 70/48; DeFi lending uptick",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed numbers"
+    },
+    {
+      "text": "CNBC: CRE debt is due, presenting a 'massive' opportunity",
+      "status": "supported",
+      "evidence": "sourceRefs[10]",
+      "note": ""
+    },
+    {
+      "text": "CRE debt due this week; deadline 30 October forcing refinance or mass defaults",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "dates invented"
+    },
+    {
+      "text": "Capital moving into risk-on tokens to hedge oil volatility and CRE debt",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "causal link invented"
+    },
+    {
+      "text": "Music pick: Divide and Dissolve live on KEXP",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "music pick, not news"
+    },
+    {
+      "text": "DW News piece on Lula's historic fourth term",
+      "status": "unsupported",
+      "evidence": "sourceRefs[9]",
+      "note": "only source is Xinhua: 'Xi congratulates Lula on re-election as Brazilian president'; no DW item or 'fourth term' in refs"
+    },
+    {
+      "text": "Al Jazeera expose on life under Ukrainian drones",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "not in sourceRefs"
+    },
+    {
+      "text": "OPEC+ meeting on November 2",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "forward date invented"
+    },
+    {
+      "text": "Brazil's presidential inauguration on November 15",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "forward date invented"
+    },
+    {
+      "text": "Kenya health ministry post-quarantine health audit on November 3",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "forward date invented"
+    },
+    {
+      "text": "Commentary paragraphs linking Ebola, oil, AI and markets",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "causal links invented"
+    },
+    {
+      "text": "dailyTitle 'ECHOES OF FEAR'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "metaphor; dailyTitle not editable via edits format"
+    },
+    {
+      "text": "Xi congratulates Lula on re-election as Brazilian president (Xinhua)",
+      "status": "supported",
+      "evidence": "sourceRefs[9]",
+      "note": "used in correction"
+    },
+    {
+      "text": "Pope Leo keeps South America trip in November after lung surgery (Bloomberg)",
+      "status": "supported",
+      "evidence": "sourceRefs[13]",
+      "note": "used in correction"
+    },
+    {
+      "text": "Two charged with national security offences over RAF Fairford incident (BBC News)",
+      "status": "supported",
+      "evidence": "sourceRefs[18]",
+      "note": "used in correction"
+    }
+  ],
+  "edits": {
+    "headline": "Kenya releases 20 Ebola contacts from quarantine after 21 days",
+    "subheadline": "Another 98 contacts of the country's first Ebola case remain in quarantine, UN News reported.",
+    "editorialBody": [
+      "Twenty people who had been in contact with Kenya's first Ebola case were released from quarantine after 21 days of monitoring, UN News reported. Another 98 contacts remain in quarantine, it said.",
+      "Oil prices moved up and down as diplomatic efforts to end the conflict in the Middle East resumed, CNBC reported. Iran said the United States was not serious about talks, during a meeting in Tehran, Al Jazeera reported.",
+      "In the US, House Speaker Mike Johnson predicted that the Democrats' shift to the left would increase enthusiasm for Republicans in the midterm elections, Fox News reported.",
+      "Chinese President Xi Jinping congratulated Luiz Inácio Lula da Silva on his re-election as president of Brazil, Xinhua reported. Pope Leo is keeping his November trip to South America after lung surgery, Bloomberg reported.",
+      "Russia's trade with South Africa is above $1 billion a year, TASS reported. In Johannesburg, homes belonging to the Gupta family have been put up for sale, and stigma attached to the family has reduced buyers' interest, Bloomberg reported.",
+      "Bloomberg reported that Anthropic was giving traders a pure-play bet on frontier AI. Commercial real estate debt is coming due, and CNBC reported that this presents a \"massive\" opportunity.",
+      "In the UK, two people have been charged with national security offences over an incident at RAF Fairford, BBC News reported."
+    ]
+  }
+}

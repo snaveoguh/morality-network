@@ -1,0 +1,43 @@
+{
+ "hash": "0x27d97e00a09170943c2155f6a8b3c26035b7e5c8bbbbe9565b788db70df7798b",
+ "verdict": "needs_edit",
+ "claims": [
+  {"text": "Four Canadian soldiers died in a fire during a field exercise", "status": "supported", "evidence": "https://www.dailymaverick.co.za/article/2026-10-19-strong-winds-fueled-grass-fire-at-canadian-military-base-that-killed-four/", "note": "Grass fire at CFB Wainwright, Alberta"},
+  {"text": "A gust turned the exercise into a wall of flame", "status": "supported", "evidence": "https://www.dailymaverick.co.za/article/2026-10-19-strong-winds-fueled-grass-fire-at-canadian-military-base-that-killed-four/", "note": "Headline: strong winds fueled the fire"},
+  {"text": "Fire was outside Moose Jaw", "status": "wrong", "evidence": "https://www.aljazeera.com/news/2026/10/19/how-a-grass-fire-at-a-canadian-military-base-killed-four-soldiers", "note": "CFB Wainwright, Alberta"},
+  {"text": "Fire started at 03:14 GMT on October 20", "status": "wrong", "evidence": "https://www.aljazeera.com/news/2026/10/19/how-a-grass-fire-at-a-canadian-military-base-killed-four-soldiers", "note": "Fire was on Saturday 17 Oct; reported 18-19 Oct"},
+  {"text": "Victims named McLeod, Sanchez, Kumar and 'Elias', all men in their twenties", "status": "unsupported", "evidence": "", "note": "Invented names; Sanchez was given as Maya, contradicting 'all men'"},
+  {"text": "Former President Donald Trump promised $8 billion in fuel relief for American farmers", "status": "wrong", "evidence": "https://www.fox35orlando.com/news/diesel-fuel-relief-us-farmers", "note": "$8bn USDA harvest fuel relief programme is supported, but Trump is the sitting president, not former"},
+  {"text": "Iowa farmhand ledger", "status": "unsupported", "evidence": "", "note": "Invented illustration"},
+  {"text": "Delhi will deny fuel to vehicles without a PUC certificate from Nov 1", "status": "supported", "evidence": "https://www.outlookindia.com/national/no-valid-pucc-no-fuel-delhi-announces-winter-pollution-curbs", "note": "Outlook India: 'No valid PUCC, no fuel: Delhi announces winter pollution curbs'; plan runs from 1 Nov"},
+  {"text": "The no-PUC rule will bar older vehicles from the road", "status": "wrong", "evidence": "https://www.outlookindia.com/national/no-valid-pucc-no-fuel-delhi-announces-winter-pollution-curbs", "note": "Rule denies fuel to vehicles without a valid pollution certificate; a separate entry ban covers non-BS-VI vehicles from outside Delhi"},
+  {"text": "DW News called it a 'mega pollution plan'", "status": "unsupported", "evidence": "", "note": "No DW report found"},
+  {"text": "Both promises are framed as salvation resting on cheap energy", "status": "unsupported", "evidence": "", "note": "Commentary linking Trump fuel relief and Delhi rule; dropped"},
+  {"text": "France announced curfews in Paris", "status": "supported", "evidence": "https://www.adn.com/nation-world/2026/10/20/france-announces-nightly-curfews-for-as-long-as-necessary-in-paris-and-other-big-cities/", "note": "AP: nightly curfews 'for as long as necessary' in Paris and other big cities"},
+  {"text": "Curfew announced by the French interior ministry; BBC News shows officers on the Seine; 11th arrondissement", "status": "unsupported", "evidence": "", "note": "Reports cite PM Lecornu and prefects; curfew zones named were around Place de la Republique and Les Halles; no BBC report checked"},
+  {"text": "French officials quietly voted to increase surveillance budgets", "status": "unsupported", "evidence": "", "note": "Not found"},
+  {"text": "Geo Platforms poised to raise Rs 302 billion in India's biggest IPO", "status": "wrong", "evidence": "https://www.thestar.com.my/tech/tech-news/2026/10/19/india039s-jio-draws-about-25-billion-in-ipo-anchor-investor-bids-sources-say", "note": "Company is Reliance's Jio Platforms; Reuters (via The Star) gives a $3.2bn IPO that drew about $25bn in anchor bids. Issue size of about Rs 30,213 crore appears on IPO listing sites only"},
+  {"text": "Jio raised Rs 8,110 crore from anchor investors", "status": "supported", "evidence": "https://www.businesstoday.in/markets/ipo-corner/story/jio-platforms-raises-rs-8110-crore-from-over-200-anchor-investors-draws-rs-2-5-lakh-cr-demand-562601-2026-10-20", "note": "Business Today headline, 20 Oct"},
+  {"text": "DW News dubbed it the nation's biggest IPO", "status": "unsupported", "evidence": "", "note": "No DW report found"},
+  {"text": "IPO capital will fund a satellite constellation mapping air quality", "status": "unsupported", "evidence": "", "note": "Invented"},
+  {"text": "Geo Platforms IPO closes on October 28", "status": "wrong", "evidence": "https://inc42.com/buzz/jio-ipo-to-open-for-subscription-on-october-21/", "note": "Subscription window was 21-23 Oct; 28 Oct was the tentative listing date"},
+  {"text": "Dhan Bahadur Rai, six-ton granite slab, daughter Sita", "status": "unsupported", "evidence": "", "note": "Invented private individuals"},
+  {"text": "ABC News documentary resurrects the O.J. Simpson case with new forensic details", "status": "unsupported", "evidence": "", "note": "No ABC News O.J. documentary found for October 2026"},
+  {"text": "ETH at $2,393.25, RSI 35.7, MACD -1.3436, Bollinger %B 0.04, sentiment 50/51, signals 46/47, 88% conviction short, targets $2,250-2,300", "status": "unsupported", "evidence": "", "note": "Internal trading feed; cannot verify"},
+  {"text": "Global sentiment score of 50/100", "status": "unsupported", "evidence": "", "note": "Internal feed"},
+  {"text": "Packaging KEXP live session pick", "status": "unsupported", "evidence": "", "note": "Music pick, not news; dropped"},
+  {"text": "French curfew reviewed on November 5; ETH council reconvenes October 30", "status": "unsupported", "evidence": "", "note": "Invented forward schedule"},
+  {"text": "dailyTitle 'SMOKE & CURFEWS'", "status": "unsupported", "evidence": "", "note": "dailyTitle not editable via edits format"}
+ ],
+ "edits": {
+  "headline": "Trump announces $8 billion fuel relief programme for US farmers",
+  "subheadline": "The US Department of Agriculture will run the programme to help farmers offset diesel costs at harvest, FOX 35 Orlando reported.",
+  "editorialBody": [
+   "President Donald Trump said the US Department of Agriculture would launch an $8 billion harvest fuel relief programme to help farmers offset diesel costs, FOX 35 Orlando reported.",
+   "In Canada, a grass fire driven by strong winds killed four soldiers at a military base, Daily Maverick reported. The fire was at Canadian Forces Base Wainwright in Alberta, Al Jazeera reported.",
+   "France announced nightly curfews in Paris and other big cities for as long as necessary, the Associated Press reported.",
+   "Delhi announced winter pollution curbs under which vehicles without a valid pollution certificate will be refused fuel, Outlook India reported.",
+   "Reliance's Jio Platforms drew about $25 billion in bids from anchor investors for its $3.2 billion share sale, The Star reported, citing Reuters. The company raised about 8,110 crore rupees from more than 200 anchor investors, Business Today reported."
+  ]
+ }
+}

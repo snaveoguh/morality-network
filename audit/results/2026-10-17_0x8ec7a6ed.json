@@ -1,0 +1,35 @@
+{
+ "hash": "0x8ec7a6edda6f74685841984d5dd9efe04fc05d672e3629edca7abfd8e11892d1",
+ "verdict": "needs_edit",
+ "claims": [
+  {"text": "Dhan Bahadur Rai's kitchen wall is a granite slab; daughter Sita, 3, has a fever", "status": "unsupported", "evidence": "", "note": "Named private individuals; invented"},
+  {"text": "Gaurishankar flash flood on 12 October", "status": "wrong", "evidence": "https://www.aljazeera.com/news/2026/10/11/at-least-five-people-missing-as-flash-floods-in-nepal-sweep-away-houses", "note": "Reported flood was on the Budhi Gandaki river in Gorkha district, 11 October"},
+  {"text": "Kathmandu promised 'rapid assistance', still pending", "status": "unsupported", "evidence": "", "note": "Invented quote"},
+  {"text": "Tesla unveiled a car it says can fly", "status": "supported", "evidence": "https://abc30.com/story/can-new-tesla-roadster-fly-elon-musk-unveils-what-he-says-is-flying-car/19944143/", "note": "ABC News: Elon Musk unveils the Roadster, a new Tesla he says is a flying car"},
+  {"text": "Al Jazeera feature on Tesla's 'flying car', billed 'future or just a stunt?'", "status": "unsupported", "evidence": "", "note": "No such Al Jazeera report found"},
+  {"text": "Craft hovers over a Los Angeles test track", "status": "wrong", "evidence": "https://www.dtnext.in/news/business/elon-musk-unveils-flying-car-prototype-says-will-redefine-urban-travel", "note": "Unveiling was reported at a SpaceX test site in McGregor, Texas"},
+  {"text": "Investors whisper of $12 billion valuations", "status": "unsupported", "evidence": "", "note": "Invented figure"},
+  {"text": "DW aired video of a Delhi Police constable striking a protester's jaw at the CJP Tiranga march", "status": "unsupported", "evidence": "", "note": "No DW report found; The Week reported a viral video allegedly showing a woman slapping a CRPF officer at the march, and a Delhi Police probe"},
+  {"text": "CJP's Tiranga march in Delhi drew police detentions; protests continued", "status": "supported", "evidence": "https://kathmandupost.com/world/2026/10/16/flash-protests-keep-the-flag-flying-dipke-bora-s-detentions-police-action-fail-to-deter-delhi-s-protesters", "note": "Kathmandu Post headline: flash protests keep the flag flying; Dipke, Bora's detentions, police action fail to deter Delhi's protesters"},
+  {"text": "BJP 'festive conspiracy' claim reported by DW", "status": "unsupported", "evidence": "", "note": "Not found"},
+  {"text": "Amardeep Singh Grewal arrested on bribery and money-laundering charges", "status": "wrong", "evidence": "https://www.uniindia.com/north-india/ed-detains-film-producer-linked-to-cm-mann/217055", "note": "UNI reported the ED detained him; Outlook reported an ED summons in an alleged bribery case. No arrest or money-laundering charge found"},
+  {"text": "Grewal is the Punjab chief minister's brother-in-law", "status": "supported", "evidence": "https://www.outlookindia.com/national/ed-summons-punjab-cms-brother-in-law-amardeep-singh-grewal-in-alleged-bribery-case", "note": "Outlook India headline"},
+  {"text": "Case lodged hours after the BJP's 'cultural rant'; reported by DW", "status": "unsupported", "evidence": "", "note": "No source"},
+  {"text": "DW analysis: Mother of All Bombs failed to dismantle ISIS and will not halt Iran", "status": "unsupported", "evidence": "", "note": "No DW report found; CNN-sourced reports said the US was considering the bomb in Iran strike plans"},
+  {"text": "Bengaluru five-minute drive became a two-hour slog after rains", "status": "unsupported", "evidence": "", "note": "No report found for this date"},
+  {"text": "Global sentiment 50/100; Bitcoin $28,300 down 2%; S&P 500 down 0.8%; ETH gas 12 gwei", "status": "unsupported", "evidence": "", "note": "Internal feed and market figures not verifiable; BTC price implausible"},
+  {"text": "Dehd 'Full Performance (Live on KEXP)' pick", "status": "unsupported", "evidence": "", "note": "Music pick; not news, dropped"},
+  {"text": "Indian Election Commission releases final candidate list tomorrow; Tesla public test flight in San Jose on 22 October", "status": "unsupported", "evidence": "", "note": "Forward-looking dates invented"},
+  {"text": "Commentary linking the Nepal boulder with Tesla and Indian politics", "status": "unsupported", "evidence": "", "note": "causal link invented"},
+  {"text": "dailyTitle 'THE STONE THAT WONT MOVE'", "status": "unsupported", "evidence": "", "note": "Metaphor; dailyTitle not editable via edits format"}
+ ],
+ "edits": {
+  "headline": "Musk unveils new Tesla Roadster he says is a flying car",
+  "subheadline": "The car was unveiled at a SpaceX test site in McGregor, Texas, DT Next reported.",
+  "editorialBody": [
+   "Elon Musk unveiled a new Tesla Roadster that he says is a flying car, ABC News reported. The car was shown at a SpaceX test site in McGregor, Texas, DT Next reported.",
+   "In India, the Enforcement Directorate detained Punjabi film producer Amardeep Singh Grewal at Delhi airport, UNI reported. Outlook India reported that the ED had summoned Grewal, the Punjab chief minister's brother-in-law, in an alleged bribery case.",
+   "In Delhi, protests continued after police detained Cockroach Janta Party founder Abhijeet Dipke and others during the party's Tiranga march, the Kathmandu Post reported. A video from the march that allegedly showed a woman slapping a CRPF officer is under investigation by Delhi Police, The Week reported."
+  ]
+ }
+}

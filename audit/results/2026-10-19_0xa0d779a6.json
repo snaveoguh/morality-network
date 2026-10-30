@@ -1,0 +1,42 @@
+{
+ "hash": "0xa0d779a6d8de2e40badea32e8ffe5b302160015b26b0a4781812a6fbf55a8f7f",
+ "verdict": "needs_edit",
+ "claims": [
+  {"text": "Four Canadian soldiers died in a grass fire at a training ground", "status": "supported", "evidence": "https://www.aljazeera.com/news/2026/10/19/how-a-grass-fire-at-a-canadian-military-base-killed-four-soldiers", "note": "Fire at CFB Wainwright, Alberta, on 17 Oct during live-fire training"},
+  {"text": "Fire was on a training ground outside Moose Jaw", "status": "wrong", "evidence": "https://www.aljazeera.com/news/2026/10/18/deaths-injuries-after-fire-at-alberta-military-base-canada-minister", "note": "Fire was at Canadian Forces Base Wainwright in Alberta, not Moose Jaw (Saskatchewan)"},
+  {"text": "Grass ignited at 03:14 GMT", "status": "unsupported", "evidence": "", "note": "Reports give Saturday afternoon local time"},
+  {"text": "Victims named as Cpl James McLeod, Lt-Cdr Maya Sanchez, Sgt Rohit Kumar, Pte Elias Bouchard; relatives Maria McLeod in Halifax, Sanchez's son in Vancouver", "status": "unsupported", "evidence": "", "note": "Invented names and relatives; Lieutenant-Commander is a naval rank"},
+  {"text": "Ministry of Defence rolls out $12 million recovery fund", "status": "unsupported", "evidence": "", "note": "Not found"},
+  {"text": "19 other people critically injured in the fire", "status": "supported", "evidence": "https://www.ajc.com/news/2026/10/grass-fire-at-canadian-military-base-kills-4-soldiers-and-critically-injures-19-other-people/", "note": "AP headline"},
+  {"text": "Canada deployed 50 investigators to examine the fire", "status": "supported", "evidence": "https://ny1.com/nyc/all-boroughs/ap-top-news/2026/10/19/canada-deploys-50-investigators-to-probe-military-base-fire-that-killed-4-soldiers", "note": "AP headline, added from source"},
+  {"text": "Undocumented worker Carlos Gomez, 29, fractured pelvis when a California ICE convoy rammed a protest line; lawyer Aisha Mendoza; $4.6m insurance, $1,200 settlement, $2,000 cap", "status": "unsupported", "evidence": "", "note": "No such incident found around 19 Oct; private individuals and figures invented"},
+  {"text": "Livestream trended for twelve minutes before being flagged", "status": "unsupported", "evidence": "", "note": ""},
+  {"text": "Dhan Bahadur Rai cleared a six-ton monolith from his kitchen in Gaurishankar with a Nepalese Army crane and a $9,300 UN grant; daughter Sita", "status": "unsupported", "evidence": "", "note": "No report found; private individuals invented"},
+  {"text": "Flood ripped through Gaurishankar on Oct 12", "status": "unsupported", "evidence": "", "note": "The October flood found was in Gorkha district on 11 Oct, not Gaurishankar"},
+  {"text": "Three nights of looting in the 5th arrondissement of Paris", "status": "unsupported", "evidence": "", "note": "Main unrest was on 17 Oct across Paris and other cities; no 5th arrondissement detail found"},
+  {"text": "Protests turned into the worst riots in France in years", "status": "supported", "evidence": "https://www.staradvertiser.com/2026/10/17/breaking-news/mass-protests-in-france-spiral-into-worst-riots-in-years/", "note": "Headline: 'Mass protests in France spiral into worst riots in years'"},
+  {"text": "Unrest was sparked by a proposed tuition hike", "status": "wrong", "evidence": "https://kuwaittimes.com/article/51769/world/looting-fires-and-clashes-as-france-protests-over-soaring-prices/", "note": "Protests were over soaring prices / cost of living"},
+  {"text": "Macron on the Elysee balcony promised 'full accountability' and ordered a curfew until 06:00 GMT", "status": "unsupported", "evidence": "", "note": "Curfews were announced on 20 Oct by the government and prefects; quote not found"},
+  {"text": "Police list 2,348 arrests; insurance losses top EUR 420 million", "status": "unsupported", "evidence": "", "note": "Reports gave about 1,200 to 1,800 arrests; no insurance figure found"},
+  {"text": "ECB nudged the euro down 0.4%", "status": "unsupported", "evidence": "", "note": "Invented market figure"},
+  {"text": "Senator Marco Rubio landed in New Delhi on a private jet", "status": "wrong", "evidence": "https://www.khaleejtimes.com/world/americas/rubio-kicks-off-india-visit-trade-deal-russian-oil-agenda", "note": "Rubio is Secretary of State; the visit was a two-day trip from Tuesday 20 Oct; private jet detail invented"},
+  {"text": "Rubio's India visit had trade and Russian oil on the agenda", "status": "supported", "evidence": "https://www.khaleejtimes.com/world/americas/rubio-kicks-off-india-visit-trade-deal-russian-oil-agenda", "note": "Khaleej Times headline"},
+  {"text": "Clean-energy corridor for Russian oil via Indian ports, deal valued at $3.2 billion", "status": "unsupported", "evidence": "", "note": "Not found"},
+  {"text": "Global sentiment 50/100, S&P 500 down 0.3%, Bitcoin $28,740 up 1.8%, on-chain donation addresses", "status": "unsupported", "evidence": "", "note": "Internal feed / invented market figures"},
+  {"text": "Miley Cyrus paid tribute to Dolly Parton", "status": "supported", "evidence": "https://abc7news.com/story/miley-cyrus-honors-dolly-parton-emotional-tribute-hollywood-bowl/19950060/", "note": "Tribute was at her Hollywood Bowl concert, not a primetime special; glitter cardigan and lullaby details unsupported"},
+  {"text": "The THE KEXP live session pick", "status": "unsupported", "evidence": "", "note": "Music pick, not news; dropped"},
+  {"text": "Commentary paragraphs linking the stories as 'spectacle over substance'", "status": "unsupported", "evidence": "", "note": "Causal link invented; editorial commentary dropped"},
+  {"text": "UN Climate Summit opens in Bonn on Nov 2; French municipal elections on Dec 13; Senate vote on Rubio pact on Nov 7; Caspian pipeline", "status": "unsupported", "evidence": "", "note": "Invented forward schedule"},
+  {"text": "dailyTitle 'GRASS FIRE GUTS'", "status": "unsupported", "evidence": "", "note": "dailyTitle not editable via edits format"}
+ ],
+ "edits": {
+  "headline": "Grass fire kills four soldiers at Canadian military base in Alberta",
+  "subheadline": "The fire at Canadian Forces Base Wainwright also critically injured 19 other people, the Associated Press reported.",
+  "editorialBody": [
+   "Four Canadian soldiers were killed when a grass fire overtook troops at Canadian Forces Base Wainwright in Alberta, Al Jazeera reported. The fire critically injured 19 other people, and Canada sent 50 investigators to examine it, the Associated Press reported.",
+   "In France, mass protests over rising prices turned into the worst riots in years, the Honolulu Star-Advertiser reported. The Kuwait Times reported looting, fires and clashes during the protests.",
+   "US Secretary of State Marco Rubio began a visit to India with a trade deal and India's purchases of Russian oil on the agenda, Khaleej Times reported.",
+   "Miley Cyrus paid an emotional tribute to Dolly Parton at the Hollywood Bowl, ABC7 reported."
+  ]
+ }
+}

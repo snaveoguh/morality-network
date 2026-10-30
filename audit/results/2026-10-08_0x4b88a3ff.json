@@ -1,0 +1,128 @@
+{
+  "hash": "0x4b88a3ff32365767b655574eccafb8c43e1c6d3da7d12980c574ba7f1f34bece",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Jane Doe, 34, Dayton teacher, 37 notes, son Milo, CNN hoax segment",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "named private individuals and story invented"
+    },
+    {
+      "text": "French mayor clashed with police over a protest (CNN clip)",
+      "status": "supported",
+      "evidence": "https://www.internazionale.it/ultime-notizie-reuters/2026/10/07/french-mayor-caught-in-viral-video-clash-says-student-protesters-could-be-my-children",
+      "note": "Reuters: Saint-Denis mayor Bally Bagayoko, caught in viral video clash, said student protesters 'could be my children'. CNN clip not found"
+    },
+    {
+      "text": "Mayor named Luc Bérard, protest in Marseille",
+      "status": "wrong",
+      "evidence": "https://www.internazionale.it/ultime-notizie-reuters/2026/10/07/french-mayor-caught-in-viral-video-clash-says-student-protesters-could-be-my-children",
+      "note": "The mayor was Bally Bagayoko of Saint-Denis; the march was in Paris"
+    },
+    {
+      "text": "Quote 'You cannot police conscience!', #BérardBold memes, EUR 12m shortfall, street-lighting cuts vote",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "invented"
+    },
+    {
+      "text": "Merz and Green 'Katrin Burnham' joint Berlin press conference (Channel 4)",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "no report found; name appears invented"
+    },
+    {
+      "text": "AfD slipping from 16% to 12%; former aide offshore accounts scandal",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "invented poll figures"
+    },
+    {
+      "text": "Ohio Senate race flipping Democratic for first time in a decade; Iowa toss-up (DW)",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "forecasters rated Ohio a toss-up; no October flip report or DW story found"
+    },
+    {
+      "text": "+6 points for Democrats per RealClearPolitics; tech donor ad campaign",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "invented"
+    },
+    {
+      "text": "CNN segment of Trump joking about his thinning hair",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "not found as a CNN report on the date; not news, dropped"
+    },
+    {
+      "text": "Billionaire Arman Shah sold $300m of Bitcoin; 5,200 BTC outflow; sentiment 51/47; $2.3tn cap; CME expiry 15 Oct",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "invented person and crypto figures"
+    },
+    {
+      "text": "Florida bus driver Luis Herrera, 42, charged with manslaughter; faulty brakes on recall list since 2022",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "invented; real Winter Haven crash: sheriff said an oncoming car crossed the centre line"
+    },
+    {
+      "text": "Maya Alvarez, 7, killed in Florida bus crash",
+      "status": "wrong",
+      "evidence": "https://abcnews4.com/news/nation-world/2-killed-including-10th-grader-after-winter-haven-florida-school-bus-overturns-in-head-on-crash-polk-county-sheriffs-office-investigation-traumatic-injuries-critical-condition",
+      "note": "victims were a 10th-grade student and a car driver"
+    },
+    {
+      "text": "MV Maharaja Kumar crew families received $12,800 each",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "invented; vessel was MT On Peace"
+    },
+    {
+      "text": "S&P 500 down 0.4%; DeFi liquidations surge",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "no source"
+    },
+    {
+      "text": "2026 Nobel Prize in Literature announced (Channel 4 stream)",
+      "status": "supported",
+      "evidence": "https://www.nobelprize.org/prizes/literature/2026/press-release/",
+      "note": "announced 8 Oct; Channel 4 stream not checked"
+    },
+    {
+      "text": "Laureate is Chilean poet María López, work on 'digital exile'",
+      "status": "wrong",
+      "evidence": "https://www.bluewin.ch/en/lifestyle/nobel-prize-in-literature-awarded-to-canadian-anne-carson-li.3628676",
+      "note": "Prize went to Canadian poet Anne Carson"
+    },
+    {
+      "text": "Ohio Senate runoff tomorrow; German grand coalition talks; mayor's council vote",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "forward-looking schedule invented; Ohio has no runoff"
+    },
+    {
+      "text": "Commentary tying the stories together as 'erosion of the personal'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "causal link invented"
+    },
+    {
+      "text": "dailyTitle 'THREE FUNERALS'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "no funerals reported; dailyTitle not editable via edits format"
+    }
+  ],
+  "edits": {
+    "headline": "Canadian poet Anne Carson wins the Nobel Prize in Literature",
+    "subheadline": "The Swedish Academy announced the 2026 prize on 8 October, the Nobel Prize organisation said.",
+    "editorialBody": [
+      "Canadian poet Anne Carson won the 2026 Nobel Prize in Literature, the Swedish Academy announced on 8 October, blue News reported.",
+      "Bally Bagayoko, mayor of Saint-Denis, was caught in a viral video clash with police at a student march in Paris and said the protesters \"could be my children\", Reuters reported."
+    ]
+  }
+}

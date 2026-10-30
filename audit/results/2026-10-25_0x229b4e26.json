@@ -1,0 +1,174 @@
+{
+ "hash": "0x229b4e26bdfdc759a3154d2bd1917f3ac4fd53a6e9088382dba4e666abfab66d",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Student Camille Dupont, 22, from Montreuil, kneecap broken by rubber bullet at Place de la République on 24 Oct",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Her ambulance ride filmed live; footage shared 1.3 million times",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Police used water-cannon foam on the boulevard",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "BBC: almost 1,000 arrested as protests in France turned violent",
+   "status": "supported",
+   "evidence": "sourceRefs[9]",
+   "note": "Actual BBC headline: 'Almost 1,000 arrested as clashes follow another day of mass protests across France'; edition misquotes the title"
+  },
+  {
+   "text": "More than 400,000 protested across France (AFP)",
+   "status": "supported",
+   "evidence": "sourceRefs[10]",
+   "note": ""
+  },
+  {
+   "text": "The 400,000 rallied on 23 October",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "sourceRef gives no date; Al Jazeera reports the mass protest day as 24 Oct (https://www.aljazeera.com/news/2026/10/24/france-braces-for-another-day-of-mass-protests-as-security-on-high-alert)"
+  },
+  {
+   "text": "Interior ministry logged 1,018 arrests in a single day",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "BBC headline says almost 1,000; no 1,018 figure found"
+  },
+  {
+   "text": "AI sentiment 57/100 on France; election optimism 64/100; Bitcoin sentiment 59, signal 49",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed, unverifiable"
+  },
+  {
+   "text": "Police water-cannon videos on BBC and ABC",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Brazil runoff between Lula and Flavio Bolsonaro",
+   "status": "supported",
+   "evidence": "sourceRefs[7]",
+   "note": "DW: tight runoff"
+  },
+  {
+   "text": "DW report 'US Midterms 2026: Inflation & Corruption Emerge as Top Voter Issues'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "not in sourceRefs"
+  },
+  {
+   "text": "Russian ambassador said Russia actively sharing agricultural technologies with African partners (Sputnik)",
+   "status": "supported",
+   "evidence": "sourceRefs[0]",
+   "note": ""
+  },
+  {
+   "text": "Russian troops advancing across Ukraine's front lines (Sputnik)",
+   "status": "supported",
+   "evidence": "sourceRefs[21]",
+   "note": "state-media claim"
+  },
+  {
+   "text": "African crypto-based grain contracts on Binance",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "NY Post: lawsuit says NYPD captain and clique tormented female officer after she spurned his advances",
+   "status": "supported",
+   "evidence": "sourceRefs[1]",
+   "note": "lawsuit claims, not findings"
+  },
+  {
+   "text": "Officer named Maria Torres; captain named Carter; lawsuit filed 25 Oct",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "India's Election Commission rattled by 'roll manipulation' scandal",
+   "status": "wrong",
+   "evidence": "sourceRefs[3]",
+   "note": "Source: Congress questioned the EC over withholding ECINET details, alleging it was 'to hide roll manipulation'; an opposition allegation, not an established scandal"
+  },
+  {
+   "text": "Election Commission field-testing joint coastal warfare drills with Australia in AUSTRAHIND 2026",
+   "status": "wrong",
+   "evidence": "sourceRefs[2]",
+   "note": "Source: Indian and Australian troops train for coastal and island warfare; the EC has nothing to do with it"
+  },
+  {
+   "text": "Mali farmer watching drone spray pesticide while his son's school is bombed in Ukraine",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Music pick: MONO on KEXP",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "not news"
+  },
+  {
+   "text": "French municipal elections 15 Dec; Brazil results certified by 10 Nov; Kremlin ag-tech shipments to Nigeria early 2027; NYPD hearing 2 Nov",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "forward dates invented"
+  },
+  {
+   "text": "Stablecoin transfers to African agribusinesses spiked 12% on 24 Oct",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed, unverifiable"
+  },
+  {
+   "text": "Commentary tying Paris, Brazil, Moscow and NYPD to 'cynicism toward progress'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal link invented"
+  },
+  {
+   "text": "dailyTitle \"THE RAIN THAT BURNS\"",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "metaphor; dailyTitle not editable via edits format"
+  },
+  {
+   "text": "France's far right gathers as Le Pen prepares presidential campaign (AFP)",
+   "status": "supported",
+   "evidence": "sourceRefs[12]",
+   "note": "added to correction"
+  },
+  {
+   "text": "Some clashes erupted at end of protests (AFP)",
+   "status": "supported",
+   "evidence": "sourceRefs[6]",
+   "note": "added to correction"
+  }
+ ],
+ "edits": {
+  "headline": "Almost 1,000 arrested after another day of mass protests in France",
+  "subheadline": "More than 400,000 people protested across France and some clashes broke out at the end of the marches, AFP reported.",
+  "editorialBody": [
+   "Almost 1,000 people were arrested as clashes followed another day of mass protests across France, BBC News reported. More than 400,000 people protested across the country, AFP reported, and some clashes broke out at the end of the marches.",
+   "France's far right gathered as Marine Le Pen prepares her presidential campaign, AFP reported.",
+   "Brazil voted in a tight presidential runoff between Lula, who is on the left, and the right-wing Flavio Bolsonaro, DW News reported.",
+   "A Russian ambassador said Russia was sharing agricultural technologies with African partners, Sputnik reported. Sputnik also reported that the Russian army was advancing across front lines in Ukraine.",
+   "In New York, a female police officer says in a lawsuit that a captain and a group of officers tormented her after she rejected his advances, the New York Post reported.",
+   "Indian and Australian troops are training for coastal and island warfare in the AUSTRAHIND 2026 exercise, the Times of India reported. India's Congress party questioned the Election Commission over withholding ECINET details, the paper said."
+  ]
+ }
+}

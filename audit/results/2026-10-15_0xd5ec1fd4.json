@@ -1,0 +1,50 @@
+{
+ "hash": "0xd5ec1fd4389ff232195274bd56843c9e483842cb94d9bb39a696fd6dac50d7f8",
+ "verdict": "needs_edit",
+ "claims": [
+  {"text": "Dhan Bahadur Rai's kitchen blocked by a six-ton boulder for twelve days", "status": "unsupported", "evidence": "", "note": "Named private individual not in any sourceRef; invented"},
+  {"text": "Gaurishankar flood on 12 October", "status": "unsupported", "evidence": "", "note": "No sourceRef mentions a Nepal flood"},
+  {"text": "Rai's three-year-old daughter Sita eats from a bowl on the floor", "status": "unsupported", "evidence": "", "note": "Invented private individual"},
+  {"text": "Nepalese government promised 'rapid assistance'; aid truck stuck on washed-out road", "status": "unsupported", "evidence": "", "note": "Invented quote and detail"},
+  {"text": "China and North Korea opened the long-delayed border bridge", "status": "supported", "evidence": "sourceRefs[3]", "note": "AFP / France 24"},
+  {"text": "China is keen to strengthen North Korea trade ties with the New Yalu River Bridge opening", "status": "supported", "evidence": "sourceRefs[15]", "note": "SCMP"},
+  {"text": "Bridge opened on Wednesday", "status": "unsupported", "evidence": "", "note": "Day not in sourceRefs"},
+  {"text": "Bridge promises to double trade flow", "status": "unsupported", "evidence": "", "note": "Figure not in sourceRefs"},
+  {"text": "US considering easing sanctions on shadow fleet vessels to cut freight rates, an official said", "status": "supported", "evidence": "sourceRefs[10]", "note": "New York Post"},
+  {"text": "Easing aimed at lowering freight rates for American shippers", "status": "unsupported", "evidence": "", "note": "Source says 'to cut freight rates'; 'American shippers' not stated"},
+  {"text": "Big Walk is an activist group that dropped Xbox", "status": "wrong", "evidence": "sourceRefs[4]", "note": "The Verge (games section, URL big-walk-house-house) describes Big Walk as a game that skipped Xbox, not an activist group"},
+  {"text": "Big Walk skipped Xbox to boycott Microsoft's involvement with Israel", "status": "supported", "evidence": "sourceRefs[4]", "note": "The Verge"},
+  {"text": "Brooklyn prosecutors took down 112 servers behind a crypto scam targeting Russian speakers", "status": "supported", "evidence": "sourceRefs[8]", "note": "Decrypt"},
+  {"text": "Servers seized 'yesterday'; bust froze over $12 million", "status": "unsupported", "evidence": "", "note": "Not in sourceRef"},
+  {"text": "Hyperliquid founder wants US oversight of trading platforms", "status": "supported", "evidence": "sourceRefs[9]", "note": "CoinDesk; source adds 'not his blockchain'"},
+  {"text": "Hyperliquid founder quote about the 'crypto elite'; 'interview'", "status": "unsupported", "evidence": "", "note": "Quote invented"},
+  {"text": "Bitcoin at $81,231.50, MACD +38.5, RSI 50.1, sentiment 64, trading council HOLD", "status": "unsupported", "evidence": "", "note": "Internal feed figures; cannot verify"},
+  {"text": "Man killed by tiger was Javier Morales, in Kerala", "status": "unsupported", "evidence": "", "note": "BBC headline gives no name or place; name and location invented"},
+  {"text": "Man killed by tiger had climbed two fences before suffering multiple injuries, inquest heard", "status": "supported", "evidence": "sourceRefs[6]", "note": "BBC News"},
+  {"text": "Tiger death was a 'wildlife-tourist trap' escape", "status": "unsupported", "evidence": "", "note": "Invented framing"},
+  {"text": "India's Gen Z protesters find gaps in security clampdown", "status": "supported", "evidence": "sourceRefs[5]", "note": "France 24 report"},
+  {"text": "Clampdown comes ahead of national elections", "status": "unsupported", "evidence": "", "note": "Not in sourceRef"},
+  {"text": "Colombians, fearing for future, march against right-wing president", "status": "supported", "evidence": "sourceRefs[13]", "note": "AFP / France 24"},
+  {"text": "The right-wing president is Gustavo Petro", "status": "unsupported", "evidence": "", "note": "Source does not name the president; Petro was not described as right-wing; name inserted by writer"},
+  {"text": "Sentiment scores AI 65, Crypto 65, Global 61", "status": "unsupported", "evidence": "", "note": "Internal feed; cannot verify"},
+  {"text": "Yalu bridge ceremony on 30 October with Chinese Premier Li cutting the ribbon", "status": "unsupported", "evidence": "", "note": "Forward-looking date invented; contradicts bridge already opened"},
+  {"text": "US Senate vote on shadow-fleet sanctions easing on 5 November", "status": "unsupported", "evidence": "", "note": "Forward-looking date invented"},
+  {"text": "Israel's snap elections on 30 October", "status": "unsupported", "evidence": "", "note": "Date not in sourceRef"},
+  {"text": "Netanyahu and Eisenkot clash over Palestinian statehood ahead of elections", "status": "supported", "evidence": "sourceRefs[1]", "note": "Middle East Eye"},
+  {"text": "Commentary linking the boulder, the bridge, the boycott and crypto markets", "status": "unsupported", "evidence": "", "note": "causal link invented"},
+  {"text": "dailyTitle 'STONE AND CIRCUITS'", "status": "unsupported", "evidence": "", "note": "Metaphor; dailyTitle not editable via edits format"}
+ ],
+ "edits": {
+  "headline": "China and North Korea open long-delayed border bridge",
+  "subheadline": "China is keen to strengthen trade ties with North Korea through the New Yalu River Bridge, the South China Morning Post reported.",
+  "editorialBody": [
+   "China and North Korea opened a long-delayed border bridge, AFP and France 24 reported. China is keen to strengthen trade ties with North Korea through the New Yalu River Bridge, the South China Morning Post said.",
+   "The US is considering easing sanctions on shadow fleet vessels to cut freight rates, an official said, the New York Post reported.",
+   "Brooklyn prosecutors took down 112 servers behind a crypto scam targeting Russian speakers, Decrypt reported. The founder of Hyperliquid wants US oversight of trading platforms but not of his blockchain, CoinDesk reported.",
+   "The game Big Walk skipped Xbox as a boycott of Microsoft's involvement with Israel, The Verge reported.",
+   "In Israel, Netanyahu and Eisenkot clashed over Palestinian statehood ahead of elections, Middle East Eye reported.",
+   "In India, Gen Z protesters found gaps in a security clampdown, France 24 reported. In Colombia, people fearing for the future marched against the country's right-wing president, AFP reported.",
+   "A man killed by a tiger had climbed two fences before suffering multiple injuries, an inquest heard, BBC News reported."
+  ]
+ }
+}

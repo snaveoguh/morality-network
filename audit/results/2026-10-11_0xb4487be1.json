@@ -1,0 +1,141 @@
+{
+ "hash": "0xb4487be199f28b6457690ee6fcfd04bc76a6d64e0e3156158a2b3d7d185964b7",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "dailyTitle 'THE GHOSTS KEEP CALLING'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "metaphor; dailyTitle not editable via edits format"
+  },
+  {
+   "text": "Headline: hurricane-scorched family, cobbler's shop, crypto whale 'expose the world's hidden hand'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented people; three unrelated stories joined"
+  },
+  {
+   "text": "Miriam Ortiz, 28, roof ripped off her walk-up",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "named private individual invented"
+  },
+  {
+   "text": "Hurricane Isaias slammed into Jacksonville on 10 October",
+   "status": "wrong",
+   "evidence": "https://www.news4jax.com/news/2026/10/10/hundreds-of-thousands-without-power-after-isaias-slams-the-florida-panhandle-and-alabama/",
+   "note": "Isaias hit the Florida Panhandle and Alabama (landfall Friday 9 Oct, near Pensacola/Destin), not Jacksonville"
+  },
+  {
+   "text": "Four people died in the storm",
+   "status": "supported",
+   "evidence": "https://www.bostonglobe.com/2026/10/10/nation/4-dead-storm-isaias-brings-threat-floods-across-southeast/",
+   "note": "Boston Globe headline: 4 dead as storm Isaias brings threat of floods across Southeast; later toll in Florida rose to six"
+  },
+  {
+   "text": "Power out for 73,000 homes",
+   "status": "wrong",
+   "evidence": "https://www.news4jax.com/news/2026/10/10/hundreds-of-thousands-without-power-after-isaias-slams-the-florida-panhandle-and-alabama/",
+   "note": "hundreds of thousands were without power"
+  },
+  {
+   "text": "Smart meters recorded a 4-minute blackout that lasted three days",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Luca Romano's insurance offer of EUR 12,300 on 11 October; 4.7 BTC (~$140k) flash-loan hack by Russian syndicate",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented person and figures"
+  },
+  {
+   "text": "Pedro Gomez and son Luis killed in Farmington, New Mexico pipeline blast; funeral on 9 October",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "no report of such a blast found"
+  },
+  {
+   "text": "Pipeline blast released 4,200 barrels and burned 12 hours; DoE Pipeline Integrity Task Force named three executives; bonuses approved",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented"
+  },
+  {
+   "text": "BBC segment 'Why did Trump just call for a new president of Ukraine?'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "BBC item not found (BBC domains not searchable); the underlying remark is supported via AP"
+  },
+  {
+   "text": "Trump said Ukraine needs a new president",
+   "status": "supported",
+   "evidence": "https://www.irishexaminer.com/world/arid-41922502.html",
+   "note": "AP (Susie Blann), 10 Oct 2026: Trump says Ukraine needs a new president and blames Zelensky for diesel prices"
+  },
+  {
+   "text": "Defence contractor consortium lobbying for a prolonged proxy war",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented"
+  },
+  {
+   "text": "Al Jazeera piece on Netanyahu's 'final campaign'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "not found"
+  },
+  {
+   "text": "Israel's election is about a final cash-in on settlement expansions",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "commentary presented as fact"
+  },
+  {
+   "text": "Bitcoin sentiment 51, price $28,720; Ethereum sentiment 50, market cap $218bn; whale moved 200,000 ETH (~$368m)",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed / crypto figures"
+  },
+  {
+   "text": "Pakistan declared emergency in Khyber Pakhtunkhwa and arrested CM Sohail Afridi",
+   "status": "supported",
+   "evidence": "https://www.theweek.in/news/world/2026/10/11/pakistan-imposes-emergency-in-khyber-pakhtunkhwa-ruled-by-imran-khans-party-arrests-chief-minister.amp.html",
+   "note": "DW clip itself not found; The Week (11 Oct) headline. Afridi named in https://minutemirror.com.pk/afridi-top-pti-leaders-taken-into-custody-talal-643367/"
+  },
+  {
+   "text": "Governments 'weaponizing security to silence dissent' playbook",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "commentary"
+  },
+  {
+   "text": "Mitsune live set on KEXP",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "music pick; not news"
+  },
+  {
+   "text": "House vote on Infrastructure Resilience Act on 15 October; EU Climate Fund meets 19 October; DoE Farmington report by 2 November",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "forward-looking schedule"
+  },
+  {
+   "text": "Closing paragraph about 'ghosts' and the next storm",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "commentary"
+  }
+ ],
+ "edits": {
+  "headline": "Trump says Ukraine needs a new president who can make a deal",
+  "subheadline": "Trump suggested Volodymyr Zelensky had not done enough to end the war with Russia and blamed him for diesel prices, the Associated Press reported.",
+  "editorialBody": [
+   "Donald Trump said it was time for Ukraine to get a new president, suggesting Volodymyr Zelensky had not done enough to end the war with Russia, the Associated Press reported. Trump also blamed Zelensky for diesel prices, the AP said.",
+   "Hurricane Isaias hit the Florida Panhandle and Alabama, leaving hundreds of thousands of people without power, News4Jax reported. Four deaths were linked to the storm, the Boston Globe reported.",
+   "Pakistan imposed emergency rule in Khyber Pakhtunkhwa, the province governed by Imran Khan's party, and arrested its chief minister, The Week reported. Minister of State for Interior Talal Chaudhry said Sohail Afridi and senior PTI leaders had been taken into custody, Minute Mirror reported."
+  ]
+ }
+}

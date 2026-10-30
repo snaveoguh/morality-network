@@ -1,0 +1,37 @@
+{
+  "hash": "0x1ad007fecbce30d20157182673f873fead7a8460946d21bdd52d1d4e1f327a6c",
+  "verdict": "needs_edit",
+  "claims": [
+    {"text": "Two dead in New Mexico pipeline blast", "status": "supported", "evidence": "https://www.krqe.com/news/new-mexico/pipeline-explosion-in-lea-county-forces-road-closures/", "note": "KRQE: pipeline explosion in Lea County kills 2 people"},
+    {"text": "Southwest Gas pipeline near Farmington ruptured on 8 October", "status": "wrong", "evidence": "https://www.newsradiokkob.com/2026/10/08/two-dead-after-pipeline-explosion-in-lea-county-2nd-explosion-in-san-juan-county-causes-power-outages/", "note": "Deaths were in Lea County (south-east NM); a second explosion in San Juan County caused power outages, no deaths reported. Operator not reported as Southwest Gas"},
+    {"text": "Spilled 4,200 barrels of crude", "status": "unsupported", "evidence": "", "note": "invented; reports describe a natural gas pipeline"},
+    {"text": "Victims Pedro Gómez and his teenage son Luis; funeral details", "status": "unsupported", "evidence": "", "note": "named private individuals invented"},
+    {"text": "Hurricane Isaias gathering strength toward the Gulf Coast", "status": "supported", "evidence": "https://www.wunc.org/2026-10-09/isaias-strengthens-into-category-2-hurricane-on-collision-course-with-the-gulf-coast", "note": "NPR: Isaias strengthens into Category 2 hurricane on collision course with the Gulf Coast. CNN footage not checked"},
+    {"text": "Labour won Holborn and St Pancras, defeating Green leader Zack Polanski (Channel 4)", "status": "supported", "evidence": "https://www.itv.com/news/2026-10-09/labour-wins-holborn-and-st-pancras-by-election-for-keir-starmers-seat", "note": "ITV News; Channel 4 report not checked. 'Surprise sweep' and 'mid-term referendum' framing unsupported"},
+    {"text": "Bitcoin billionaire's net worth dipped 12%; Bitcoin sentiment 52, signal 52; Ethereum 51/47", "status": "unsupported", "evidence": "", "note": "invented person from prior edition; internal feed numbers"},
+    {"text": "Navi Pillay won the Nobel Peace Prize", "status": "supported", "evidence": "https://www.nprillinois.org/2026-10-09/south-african-human-rights-lawyer-navi-pillay-wins-the-nobel-peace-prize", "note": "NPR: South African human rights lawyer Navi Pillay wins the Nobel Peace Prize"},
+    {"text": "US Vice-President described undocumented migrants as 'indentured servants'", "status": "wrong", "evidence": "https://www.republicworld.com/world-news/deeply-offensive-mea-condemns-vances-indentured-servants-remark-on-h-1b-workers-says-it-carries-colonial-connotations-2026-10-09-138581", "note": "JD Vance's remark was about H-1B visa workers, not undocumented migrants"},
+    {"text": "India's MEA condemned the remark", "status": "supported", "evidence": "https://www.republicworld.com/world-news/deeply-offensive-mea-condemns-vances-indentured-servants-remark-on-h-1b-workers-says-it-carries-colonial-connotations-2026-10-09-138581", "note": "MEA called it 'deeply offensive'. Edition attributes to DW; DW segment not found"},
+    {"text": "Tear gas in Brussels; workers rallied against water-cannon measures", "status": "wrong", "evidence": "https://www.aljazeera.com/news/2026/10/9/thousands-rally-for-anti-austerity-protest-in-brussels-amid-clashes", "note": "Thousands rallied against austerity; police used tear gas and water cannon on the protest (Arab News: https://www.arabnews.com/world/chaotic-scenes-as-police-youths-face-off-at-brussels-protest-3005477). The rally was not against water cannon"},
+    {"text": "Link to anti-piracy chants on the MV Maharaja Kumar", "status": "unsupported", "evidence": "", "note": "invented vessel and link"},
+    {"text": "Yogi Adityanath courting oil magnates who finance New Mexico pipelines (DW, UP elections)", "status": "unsupported", "evidence": "", "note": "causal link invented"},
+    {"text": "Maya Alvarez death forced a congressional hearing", "status": "unsupported", "evidence": "", "note": "invented person and hearing"},
+    {"text": "Mamdani on CNN: 'what happened today was an outrage'", "status": "unsupported", "evidence": "", "note": "quote not found"},
+    {"text": "UN Climate Summit in Nairobi tomorrow; NM pipeline hearing 15 October; UK Green-Energy Bill debate", "status": "unsupported", "evidence": "", "note": "forward-looking schedule invented"},
+    {"text": "Child's laughter cut short on a New Mexico road", "status": "unsupported", "evidence": "", "note": "invented; victims not identified"},
+    {"text": "Subscription appeal and commentary paragraphs", "status": "unsupported", "evidence": "", "note": "commentary dropped"},
+    {"text": "dailyTitle 'SMOKE AND SILENCE'", "status": "unsupported", "evidence": "", "note": "metaphor; dailyTitle not editable via edits format"}
+  ],
+  "edits": {
+    "headline": "Pipeline explosion in New Mexico's Lea County kills two people",
+    "subheadline": "A second pipeline explosion in San Juan County caused power outages, KKOB radio reported.",
+    "editorialBody": [
+      "Two people were killed in a pipeline explosion in Lea County, New Mexico, KRQE reported. A second explosion in San Juan County caused power outages, KKOB radio reported.",
+      "Isaias strengthened into a Category 2 hurricane heading for the US Gulf Coast, NPR reported.",
+      "Labour won the Holborn and St Pancras by-election for Keir Starmer's former seat, defeating Green Party leader Zack Polanski, ITV News reported.",
+      "South African human rights lawyer Navi Pillay won the 2026 Nobel Peace Prize, NPR reported.",
+      "India's foreign ministry called Vice President JD Vance's description of H-1B visa workers as \"indentured servants\" deeply offensive, Republic World reported.",
+      "Thousands of people rallied in Brussels against austerity, and police used tear gas and water cannon during clashes, Al Jazeera and Arab News reported."
+    ]
+  }
+}

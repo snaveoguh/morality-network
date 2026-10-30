@@ -1,0 +1,153 @@
+{
+ "hash": "0x1bd368e53fa37b204e9f1a660e09491b6baf9246fe68244e80d8b97585d3e626",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Ohio hazmat blast kills firefighter (headline)",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No Ohio firefighter hazmat death found around 21 Oct"
+  },
+  {
+   "text": "Mark Reynolds, 42, died in Dayton, Ohio, after a valve failure; sister Lila; report cites 'acute exposure to unknown chemical agent'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented private individuals and quote"
+  },
+  {
+   "text": "A drone struck a market in Abyei",
+   "status": "supported",
+   "evidence": "https://ny1.com/nyc/all-boroughs/ap-top-news/2026/10/20/drone-strike-on-a-market-in-disputed-african-region-of-abyei-kills-at-least-153",
+   "note": "AP: drone strike on a market in disputed region of Abyei kills at least 153"
+  },
+  {
+   "text": "152 bodies left by the strike",
+   "status": "wrong",
+   "evidence": "https://ny1.com/nyc/all-boroughs/ap-top-news/2026/10/20/drone-strike-on-a-market-in-disputed-african-region-of-abyei-kills-at-least-153",
+   "note": "AP gave at least 153 dead"
+  },
+  {
+   "text": "Strike at 06:12 GMT on October 21",
+   "status": "wrong",
+   "evidence": "https://ny1.com/nyc/all-boroughs/ap-top-news/2026/10/20/drone-strike-on-a-market-in-disputed-african-region-of-abyei-kills-at-least-153",
+   "note": "Strike was on Monday 19 Oct; AP report dated 20 Oct"
+  },
+  {
+   "text": "Sudan market massacre (headline framing: Sudan)",
+   "status": "supported",
+   "evidence": "https://www.scmp.com/news/world/africa/article/3371608/drone-strike-market-disputed-sudan-border-region-kills-least-153",
+   "note": "Abyei is disputed between Sudan and South Sudan; SCMP: 'disputed Sudan border region'"
+  },
+  {
+   "text": "Sudanese army officer said the strike targeted fuel tankers bound for the RSF",
+   "status": "supported",
+   "evidence": "https://www.news4jax.com/news/world/2026/10/20/drone-strike-on-a-market-in-disputed-african-region-of-abyei-kills-at-least-153/",
+   "note": "AP; added from source"
+  },
+  {
+   "text": "Aisha Hassan, 27, buying millet for her three children",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented private individual"
+  },
+  {
+   "text": "Al Jazeera footage of smoke over the stalls",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Story found via AP and SCMP, not Al Jazeera"
+  },
+  {
+   "text": "Trump asked a reporter 'Are you a sick person?' in the Oval Office",
+   "status": "supported",
+   "evidence": "https://www.newsweek.com/white-house-correspondent-hits-back-after-trump-brands-him-a-sick-person-12596353",
+   "note": "Newsweek: White House correspondent hits back after Trump brands him a sick person"
+  },
+  {
+   "text": "The reporter was DW News reporter 'N18S'",
+   "status": "wrong",
+   "evidence": "https://www.thewrap.com/media-platforms/politics/donald-trump-snaps-white-house-reporter-andrew-feinberg-responds/",
+   "note": "The reporter was White House correspondent Andrew Feinberg, not a DW reporter"
+  },
+  {
+   "text": "Political discourse sentiment score of 50",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal feed"
+  },
+  {
+   "text": "Canadian soldiers McLeod, Sanchez, Kumar and Elias Nguyen rest under the prairie sky of Moose Jaw",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented names; fire was at CFB Wainwright, Alberta, not Moose Jaw"
+  },
+  {
+   "text": "Ministry of Defence released a 'lessons learned' dossier",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not found; Canada sent 50 investigators"
+  },
+  {
+   "text": "Musk allegedly ordered Starshield satellite services over Ukraine to be throttled",
+   "status": "supported",
+   "evidence": "https://english.aawsat.com/world/5331854-report-musk-ordered-reduction-starshield-services-ukraine",
+   "note": "Asharq Al-Awsat: report (WSJ) that Musk ordered a reduction in Starshield services for Ukraine"
+  },
+  {
+   "text": "Musk suggested the US government was behind any slowdown",
+   "status": "supported",
+   "evidence": "https://www.scmp.com/news/world/russia-central-asia/article/3370923/musk-suggests-us-government-behind-any-slowdown-ukraines-starshield",
+   "note": "SCMP headline; added from source"
+  },
+  {
+   "text": "ABC News reported the restriction could shave 12 percent off Ukraine's intelligence feed",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No ABC report or 12% figure found"
+  },
+  {
+   "text": "Bitcoin sentiment 52, signal 54; Ethereum signal 55; traders buying the dip",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal feed"
+  },
+  {
+   "text": "Video picks: Tiger Shroff and the Bishnoi gang probe (DW); 29-year-old blind climber on Everest",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Video picks, not checked; dropped"
+  },
+  {
+   "text": "Rahman Mammadli KEXP live session",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Music pick, not news; dropped"
+  },
+  {
+   "text": "UN emergency session on Sudan on Oct 28; Canadian committee hears families Nov 2; Ohio EPA investigation within 30 days",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented forward schedule"
+  },
+  {
+   "text": "Commentary linking Ohio, Abyei and Oval Office ('same indifferent calculus'; fire doesn't discriminate)",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Causal link invented; dropped"
+  },
+  {
+   "text": "dailyTitle 'SMOKE & DRONES'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "dailyTitle not editable via edits format"
+  }
+ ],
+ "edits": {
+  "headline": "Drone strike on market in disputed Abyei region kills at least 153",
+  "subheadline": "A Sudanese military officer said the army had targeted fuel tankers bound for the Rapid Support Forces, the Associated Press reported.",
+  "editorialBody": [
+   "A drone strike on a market in Abyei, a region disputed by Sudan and South Sudan, killed at least 153 people, a local official said, according to the Associated Press. A Sudanese military officer said the army had targeted fuel tankers arriving from South Sudan that he said were bound for the paramilitary Rapid Support Forces, the AP reported.",
+   "In Washington, President Donald Trump asked White House correspondent Andrew Feinberg whether he was a sick person during an Oval Office exchange, TheWrap and Newsweek reported.",
+   "The Wall Street Journal reported that Elon Musk had ordered a reduction in Starshield satellite services for Ukraine, Asharq Al-Awsat said. Musk suggested the US government was behind any slowdown, the South China Morning Post reported."
+  ]
+ }
+}

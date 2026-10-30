@@ -1,0 +1,138 @@
+{
+ "hash": "0x19fda030371ca96b7370726f596fe499fd454654db3810cef4b16b1ccb146b4d",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Marine named Ali Khan, 24, died at Gwadar on 22 Oct",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "BLF drone detonated on the Starlink-linked fence of the naval base, killing a marine",
+   "status": "wrong",
+   "evidence": "https://pakobserver.net/?p=783511",
+   "note": "Pakistan Observer: BLF's \"Operation Almas\" targeted an FWO camp at Gwadar Zero Point; security sources said no security personnel were killed; no drone or Starlink link reported"
+  },
+  {
+   "text": "Video is a bargaining chip in New Delhi's Starlink debate; ban would cripple rural schools",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal link invented"
+  },
+  {
+   "text": "Debate in India over blocking Starlink",
+   "status": "supported",
+   "evidence": "https://theprint.in/india/rss-affiliate-urges-centre-to-block-rollout-permit-to-elon-musks-starlink-cites-security-concerns/3070474/",
+   "note": "ThePrint: RSS affiliate urges Centre to block rollout permit to Starlink; SJM protest in Delhi (Outlook India https://www.outlookindia.com/national/in-photos-swadeshi-jagran-manch-protests-against-starlink-in-delhi)"
+  },
+  {
+   "text": "Rohit Patel, 38, fled Delhi to Brisbane with six-month-old daughter after death threats",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such case found"
+  },
+  {
+   "text": "Jamia Millia Islamia students protested demanding union elections",
+   "status": "supported",
+   "evidence": "https://www.theweek.in/news/india/2026/10/26/jamia-millia-islamia-students-protest-union-elections.html",
+   "note": "The Week: Jamia students protest over union elections; classes moved online after students and guards clashed (https://www.theweek.in/news/india/2026/10/24/jamia-millia-islamia-moves-classes-online-as-students-guards-clash-during-protest.html)"
+  },
+  {
+   "text": "Students gathered on 23 Oct refusing to negotiate; DW footage of 'Democracy or Death' banners; riot police wall",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Paris students marched from Place d'Italie to Porte de Vincennes, chanting 'Liberté, égalité, résistance' (Al Jazeera)",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No Al Jazeera report with this route or chant found"
+  },
+  {
+   "text": "Paris \"Yellow Rain\" protests are about tuition",
+   "status": "wrong",
+   "evidence": "https://www.aljazeera.com/news/2026/10/24/france-braces-for-another-day-of-mass-protests-as-security-on-high-alert",
+   "note": "No 'Yellow Rain' name found; Al Jazeera: protests began at a Créteil high school over dilapidated buildings, overcrowded classrooms and teacher shortages, then widened to cost of living"
+  },
+  {
+   "text": "Protests linked to climate heatwaves",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "causal link invented"
+  },
+  {
+   "text": "BBC piece on a wave-energy system modelled on the human heart, same day",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No BBC report found for that date"
+  },
+  {
+   "text": "Fire at Hitler's Eagle's Nest in the Bavarian Alps; suspect arrested",
+   "status": "supported",
+   "evidence": "https://www.hawaiinewsnow.com/2026/10/25/suspect-arrested-after-fire-completely-engulfed-hitlers-eagles-nest-mountain-retreat-germany/",
+   "note": "AP, 24 Oct: fire swept through the retreat; 33-year-old German arrested on suspicion of arson; no one injured"
+  },
+  {
+   "text": "Blaze was extinguished",
+   "status": "wrong",
+   "evidence": "https://www.hawaiinewsnow.com/2026/10/25/suspect-arrested-after-fire-completely-engulfed-hitlers-eagles-nest-mountain-retreat-germany/",
+   "note": "AP: firefighters pulled out overnight and hoped to finish the next day; fire not reported out"
+  },
+  {
+   "text": "BBC reported the Eagle's Nest fire",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "BBC not reachable to verify; story found from AP"
+  },
+  {
+   "text": "Bitcoin sentiment 51, signal 47; Ethereum same; on-chain activity",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed, unverifiable"
+  },
+  {
+   "text": "EU forthcoming regulation on AI-generated protest footage",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "invented; no source found"
+  },
+  {
+   "text": "Music pick: Fred again.. 'Rooftop Live'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "not news"
+  },
+  {
+   "text": "India's Ministry of Electronics votes on Starlink ban 5 Nov; 600 million Indians; French committee on higher education 12 Nov",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "forward dates invented"
+  },
+  {
+   "text": "Closing commentary on marines, chants and wars",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "commentary"
+  },
+  {
+   "text": "dailyTitle \"THE YELLOW RAIN\"",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "unsupported name; dailyTitle not editable via edits format"
+  }
+ ],
+ "edits": {
+  "headline": "Man arrested after fire at Hitler's Eagle's Nest retreat in Germany",
+  "subheadline": "Police arrested a 33-year-old German man on suspicion of arson, and no one was injured, the Associated Press reported.",
+  "editorialBody": [
+   "A fire swept through the Eagle's Nest, the mountaintop retreat built for Adolf Hitler in the Bavarian Alps, the Associated Press reported. Police arrested a 33-year-old German man on suspicion of arson, and no one was injured.",
+   "Prosecutors said the man showed signs of mental illness and would be sent to a psychiatric facility, AP reported. They said they would also look into a possible political motive.",
+   "At Jamia Millia Islamia in Delhi, the university moved classes online after students and guards clashed during a protest, The Week reported. The students are demanding union elections.",
+   "In France, hundreds of thousands of people protested under heavy police security, Al Jazeera reported. The protests began in mid-September at a high school in Créteil over overcrowded classrooms and teacher shortages, and have widened to the cost of living.",
+   "Members of the RSS-affiliated Swadeshi Jagran Manch protested in Delhi against Starlink's launch in India, Outlook India reported.",
+   "In Pakistan, security sources said no security personnel were killed in an attack in Gwadar that the Baloch Liberation Front called \"Operation Almas\", the Pakistan Observer reported."
+  ]
+ }
+}
