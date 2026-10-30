@@ -6,14 +6,14 @@ import { SignalDashboard } from "@/components/trading/SignalDashboard";
 import { withBrand } from "@/lib/brand";
 import { Suspense } from "react";
 import {
-  SupplyChainPanel,
-  SupplyChainPanelSkeleton,
-} from "@/components/bearometer/SupplyChainPanel";
+  GlobalSupplyChainPanel,
+  GlobalSupplyChainPanelSkeleton,
+} from "@/components/bearometer/GlobalSupplyChainPanel";
 
 export const metadata = {
   title: withBrand("Bearometer"),
   description:
-    "Directional market signals and China supply-chain pressure on rare earths, chip metals and battery materials. Signals and data, not financial advice.",
+    "Directional market signals and global supply-chain strain: sea chokepoints, freight, energy, food, factory surveys and China's critical minerals. Signals and data, not financial advice.",
 };
 
 export const revalidate = 3600; // 1 hour ISR
@@ -48,8 +48,8 @@ export default async function SignalsPage() {
         </p>
       </div>
 
-      <Suspense fallback={<SupplyChainPanelSkeleton />}>
-        <SupplyChainPanel />
+      <Suspense fallback={<GlobalSupplyChainPanelSkeleton />}>
+        <GlobalSupplyChainPanel />
       </Suspense>
 
       {/* Newsdesk narrative banner (when LLM synthesis is active) */}
