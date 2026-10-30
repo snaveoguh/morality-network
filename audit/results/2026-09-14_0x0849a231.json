@@ -1,0 +1,143 @@
+{
+ "hash": "0x0849a231f8af021686f4eab54cdee2b61e51f3b9cfd5ecccb65d42f2414e03fe",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Luis Ramirez stood in Amman's Royal Rehabilitation Center on 14 September with a titanium prosthetic",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented person (recurring). US officials said no American personnel were killed in the 8 September Jordan base attack (https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/)."
+  },
+  {
+   "text": "Leg billed at $38,700, paid by the State Department 'Humanitarian Assistance' line",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "Same line green-lit a $12 million package for 'defensive missile kits' three days earlier, used in the strike on Al-Sahra",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented; no such package found."
+  },
+  {
+   "text": "Iranian cargo vessel Al-Sahra blown up on 12 September, killing deckhand Mohammad Reza Hafezi, 34, and wounding four",
+   "status": "wrong",
+   "evidence": "https://www.presstv.co.uk/Detail/2026/09/13/776204/One-killed,-four-injured-after-US-Israeli-attack-on-commercial-vessel-off-Qeshm-Island--",
+   "note": "Press TV reported one killed and four injured on a commercial vessel off Qeshm Island on 13 September (about 5am local). No vessel name, victim name or age given; date was 13 September, not 12."
+  },
+  {
+   "text": "Hafezi's family in a Tehran flat received a $1,200 condolence cheque from an offshore charity",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "DW 'US-Iran War LIVE' broadcast Trump's 'midnight proclamation' that the US would 'pull back the trigger on this endless war'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such quote or proclamation found."
+  },
+  {
+   "text": "Trump said the war with Iran would end after the midterms",
+   "status": "supported",
+   "evidence": "https://www.businesstoday.in/world/story/would-do-exactly-as-i-did-donald-trump-says-he-doesnt-regret-the-iran-war-554745-2026-09-11",
+   "note": "Business Today, 11 September, citing Fox News interview: he believes the war will end right after the election."
+  },
+  {
+   "text": "Midterms on 5 November",
+   "status": "wrong",
+   "evidence": "https://en.wikipedia.org/wiki/2026_United_States_elections",
+   "note": "US midterm elections are on Tuesday 3 November 2026."
+  },
+  {
+   "text": "New 'peace-through-strength' package funnelling $4 billion into missile defence for regional allies (the 'catch')",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Trump urged Ukraine to halt strikes on Russian diesel facilities (NBC clip)",
+   "status": "supported",
+   "evidence": "https://www.irishexaminer.com/world/arid-41910727.html",
+   "note": "AP via Irish Examiner, 14 September: at the Irish Open in Doonbeg Trump said 'He has to stop knocking out diesel fuel in Russia'. NBC clip itself not checked."
+  },
+  {
+   "text": "White House trying to keep the 'energy market stable'; Ukraine receives a 'diplomatic slap'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Characterisation; quote not found."
+  },
+  {
+   "text": "Bitcoin and Ethereum sentiment 52, market signal 53",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores; no public source."
+  },
+  {
+   "text": "UN Security Council's latest draft resolution promises 'enhanced monitoring' without enforcement",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such draft found."
+  },
+  {
+   "text": "DW 'AI Concerns' segment warned of an 'emergency House session' scheduled for next Wednesday",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Patiala protest video: water cannons drenched opposition leaders",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No 2026 report found; only undated/older Patiala water-cannon reports."
+  },
+  {
+   "text": "ABC News Gypsy-Rose Blanchard case: 'a mother who murdered her own daughter'",
+   "status": "wrong",
+   "evidence": "https://en.wikipedia.org/wiki/Murder_of_Dee_Dee_Blanchard",
+   "note": "Reversed: Dee Dee Blanchard (the mother) was killed in 2015; her daughter Gypsy-Rose was convicted of second-degree murder. No ABC News item from September 2026 found. 'Funded by charitable foundations' is invented."
+  },
+  {
+   "text": "Dehd live set on KEXP",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Feed video; not news. Removed."
+  },
+  {
+   "text": "UN General Assembly convenes on 20 September",
+   "status": "wrong",
+   "evidence": "https://aljazeera.com/news/2026/9/22/un-general-assembly-2026-when-is-it-who-is-speaking-and-when",
+   "note": "UNGA 81 opened on 8 September; the high-level general debate began on 22 September."
+  },
+  {
+   "text": "NATO summit scheduled for 12 October to unveil a 'new strategic deterrent'",
+   "status": "wrong",
+   "evidence": "https://agenceurope.eu/en/bulletin/article/13694/33/2026-summit-will-be-held-in-ankara-on-7-and-8-july",
+   "note": "The 2026 NATO summit was held in Ankara on 7-8 July 2026."
+  },
+  {
+   "text": "(rewrite) Trump: 'I don't believe in the word regret'; said Iran was trying to influence the midterms",
+   "status": "supported",
+   "evidence": "https://www.businesstoday.in/world/story/would-do-exactly-as-i-did-donald-trump-says-he-doesnt-regret-the-iran-war-554745-2026-09-11",
+   "note": ""
+  },
+  {
+   "text": "(rewrite) Trump told Fox News he would do exactly as he did if he had to do it again",
+   "status": "supported",
+   "evidence": "https://www.businesstoday.in/world/story/would-do-exactly-as-i-did-donald-trump-says-he-doesnt-regret-the-iran-war-554745-2026-09-11",
+   "note": ""
+  }
+ ],
+ "edits": {
+  "headline": "Trump says Iran war will end right after the midterm elections",
+  "subheadline": "Trump told Fox News he did not regret starting the war and would make the same decision again, Business Today reported.",
+  "editorialBody": [
+   "US President Donald Trump said he believed the war with Iran would end right after the November midterm elections, in a Fox News interview reported by Business Today on 11 September.",
+   "\"I don't believe in the word 'regret',\" Trump said. He also said Iran was trying to influence the midterms.",
+   "Trump said Ukraine should stop striking Russian diesel production, the Associated Press reported on 14 September. \"Mr Zelenskyy has to do one thing. He has to stop knocking out diesel fuel in Russia,\" he said at the Irish Open at his Doonbeg golf club.",
+   "One person was killed and four were injured when an Iranian commercial vessel was hit off Qeshm Island on 13 September, Press TV reported. Iranian officials blamed US and Israeli forces.",
+   "The UN General Assembly's high-level general debate begins in New York on 22 September."
+  ]
+ }
+}
