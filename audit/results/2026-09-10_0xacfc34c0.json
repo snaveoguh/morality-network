@@ -1,0 +1,170 @@
+{
+ "hash": "0xacfc34c0819fd4fcbcf53054e9751230b4e1db92dd0eb4cfc01db6188acdc46a",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Headline: Luis Ramirez lies half-alive on a Jordan tarmac",
+   "status": "wrong",
+   "evidence": "https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/",
+   "note": "Invented soldier; US officials said no American personnel were killed in the 8 Sept attack on Muwaffaq Salti Air Base."
+  },
+  {
+   "text": "Subheadline: the same missiles are sold as 'defensive' kits to a Saudi-backed proxy in Yemen",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source; rhetorical."
+  },
+  {
+   "text": "Ramirez, 24, lost his right leg on September 9 at a base outside Amman; in a Jordanian field hospital",
+   "status": "wrong",
+   "evidence": "https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/",
+   "note": "Attack was on 8 Sept (US Eastern time) at Muwaffaq Salti Air Base near Azraq; no US casualties reported."
+  },
+  {
+   "text": "A single IRGC missile shredded the perimeter wall",
+   "status": "wrong",
+   "evidence": "https://www.tribuneindia.com/news/world/iranian-strikes-in-jordan-damage-several-us-aircraft-but-cause-no-american-casualties-report/",
+   "note": "Reports describe a missile attack that damaged an A-10 and about eight F-15s; Jordan said it engaged multiple ballistic missiles. No single-missile wall hit reported."
+  },
+  {
+   "text": "Messages from a mother in Barpak",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "Press TV confirmed the strike, adding a U.S. warplane on the same sortie was damaged",
+   "status": "unsupported",
+   "evidence": "https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/",
+   "note": "Press TV report not found. US aircraft damage was reported by CBS News and Air & Space Forces (A-10 severely damaged, about eight F-15Es lightly damaged)."
+  },
+  {
+   "text": "U.S. warships had been pushed 400 km from the Strait of Hormuz (Press TV)",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "search budget for this run ran out before this claim could be searched; not verified, treat as invented"
+  },
+  {
+   "text": "Tehran's UN envoy called U.S. sanctions on Iranian airlines 'economic terrorism'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "search budget for this run ran out before this claim could be searched; not verified, treat as invented"
+  },
+  {
+   "text": "Senior Iranian lawmaker urged U.S. forces to 'head home while you still can'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "search budget for this run ran out before this claim could be searched; not verified, treat as invented"
+  },
+  {
+   "text": "IAEA drafting a 'political' resolution that Iran denounced; Russia and China jointly rejected it (Press TV)",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "search budget for this run ran out before this claim could be searched; not verified, treat as invented"
+  },
+  {
+   "text": "Washington funneling $2 billion in extra defense aid to Saudi Arabia",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "search budget for this run ran out before this claim could be searched; not verified, treat as invented"
+  },
+  {
+   "text": "Yemen's Houthi-aligned media: 'severe retaliation' for 54 Saudi strikes in twelve hours",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "search budget for this run ran out before this claim could be searched; not verified, treat as invented"
+  },
+  {
+   "text": "Maya Gurung in intensive care; sister Lhamo missing; rescued from Barpak on September 6",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented people."
+  },
+  {
+   "text": "International NGOs pledged $3.2 million in relief, siphoned through crypto channels",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "The Defiant reports Revolut's EURR rollout as a regulated issuer",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "search budget for this run ran out before this claim could be searched; not verified, treat as invented"
+  },
+  {
+   "text": "Bitcoin sentiment 69, market signal 47",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed metric, not reportable"
+  },
+  {
+   "text": "Crypto-custody rewrite stalls in the White House",
+   "status": "unsupported",
+   "evidence": "https://thedefiant.io/converge/regulation/sec-crypto-custody-rewrite-enters-white-house-review",
+   "note": "The Defiant reported the rewrite entered White House review; no report it had stalled."
+  },
+  {
+   "text": "Hudson Yards' $2.7 billion tower may snag a property-tax break",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "search budget for this run ran out before this claim could be searched; not verified, treat as invented"
+  },
+  {
+   "text": "AI sentiment 66, Conflict & Security 49, elections 68, 'trend zero'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed metric, not reportable"
+  },
+  {
+   "text": "Bloomberg: airline sanctions could cost the carrier $150 million; Treasury press release frames it as 'targeted pressure'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "search budget for this run ran out before this claim could be searched; not verified, treat as invented"
+  },
+  {
+   "text": "DW clip of Jacob Coxon, former OpenAI researcher: 'AI could kill us all by 2030'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Video pick; person and quote not verified."
+  },
+  {
+   "text": "Trump-linked video promising a $5,000 'dividend' if Republicans win the midterms",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Video pick; not verified."
+  },
+  {
+   "text": "BBC piece on Apple's GBP 1,999 foldable iPhone",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "search budget for this run ran out before this claim could be searched; not verified, treat as invented"
+  },
+  {
+   "text": "IAEA emergency session on September 15",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "US Senate hearing on the Jordan strike on September 18",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Revolut plans to launch the EURR token on September 20",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  }
+ ],
+ "edits": {
+  "headline": "Iranian missiles damage US aircraft at Jordan air base",
+  "subheadline": "US officials said no American personnel were killed in the attack on Muwaffaq Salti Air Base, Air & Space Forces Magazine reported.",
+  "editorialBody": [
+   "An Iranian missile attack on Muwaffaq Salti Air Base in Jordan on September 8 severely damaged a US A-10 aircraft and lightly damaged about eight F-15E jets, Air & Space Forces Magazine reported, citing CBS News. US officials said no American personnel were killed.",
+   "The SEC's rewrite of its crypto custody rules has entered White House review, The Defiant reported."
+  ]
+ }
+}
