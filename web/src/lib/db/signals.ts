@@ -17,7 +17,9 @@ export type SignalProducer =
   | "pattern"
   | "wallet-flow"
   | "technical"
-  | "market-data";
+  | "market-data"
+  // Informational only: always direction "neutral", which the trader skips.
+  | "liquidation-map";
 
 export interface RecordSignalInput {
   id: string;
@@ -113,8 +115,12 @@ export async function getRecentSignalsByProducer(
   `;
 }
 
+/** Producers whose rows are informational and never reach the trader's feed. */
+export const INFORMATIONAL_PRODUCERS: readonly SignalProducer[] = ["liquidation-map"];
+
 /** Fetch every recent signal across all symbols/producers. Used by the trader
- *  to assemble the cross-asset news signal feed. */
+ *  to assemble the cross-asset news signal feed. Informational producers are
+ *  left out here, so they cannot crowd the LIMIT or reach a decision. */
 export async function getRecentSignals(
   lookbackHours = 2,
   limit = 500,
@@ -124,6 +130,7 @@ export async function getRecentSignals(
     SELECT * FROM pooter.signals
     WHERE produced_at >= ${cutoff}
       AND (ttl_expires_at IS NULL OR ttl_expires_at > NOW())
+      AND produced_by <> ALL(${INFORMATIONAL_PRODUCERS as string[]}::text[])
     ORDER BY produced_at DESC
     LIMIT ${limit}
   `;

@@ -8,11 +8,14 @@ import {
   LEVERAGE_MIX,
 } from "@/lib/liquidation-map";
 import type { LiquidationMapEntry, LiquidationMapSnapshot } from "@/lib/liquidation-map-data";
+import { describeSignal } from "@/lib/liquidation-signal";
 import type { PriceLevel } from "@/lib/price-levels";
 
 const INK = "#0d0d0d";
-// Shorts are hatched, longs solid: one ink, no colour coding.
+// Shorts are hatched, longs solid: one ink, no colour coding. The estimated
+// share is the same ink at lower opacity.
 const HATCH = `repeating-linear-gradient(135deg, ${INK} 0 2px, transparent 2px 4px)`;
+const EST_OPACITY = 0.35;
 
 const GROUPS = [
   { key: "crypto", label: "Crypto" },
@@ -33,9 +36,19 @@ function formatUtc(ts: number): string {
   return `${d.getUTCDate()} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}, ${hh}:${mm} UTC`;
 }
 
-function Bar({ usd, max, hatched }: { usd: number; max: number; hatched: boolean }) {
+function Bar({
+  usd,
+  max,
+  hatched,
+  faded = false,
+}: {
+  usd: number;
+  max: number;
+  hatched: boolean;
+  faded?: boolean;
+}) {
   const pct = max > 0 ? (usd / max) * 100 : 0;
-  if (pct <= 0) return <span className="h-full" />;
+  if (pct <= 0) return null;
   return (
     <span
       className="h-full"
@@ -43,9 +56,15 @@ function Bar({ usd, max, hatched }: { usd: number; max: number; hatched: boolean
         width: `${Math.max(pct, 0.75)}%`,
         background: hatched ? HATCH : INK,
         boxShadow: hatched ? `inset 0 0 0 1px ${INK}` : undefined,
+        opacity: faded ? EST_OPACITY : undefined,
       }}
     />
   );
+}
+
+function formatPct(x: number): string {
+  const pct = x * 100;
+  return pct > 0 && pct < 1 ? "<1%" : `${Math.round(pct)}%`;
 }
 
 function levelText(l: PriceLevel): string {
@@ -67,36 +86,66 @@ function LevelMarker({ level }: { level: PriceLevel }) {
   );
 }
 
+interface Row {
+  lo: number;
+  hi: number;
+  /** Real positions (or the whole estimate when there is no exact layer). */
+  exactUsd: number;
+  /** Estimated share. */
+  estUsd: number;
+}
+
 function Chart({ entry }: { entry: LiquidationMapEntry }) {
-  const { map } = entry;
+  const { map, exact } = entry;
   const step = map.bucketSize;
-  const shorts = map.buckets.filter((b) => b.hi > map.price);
-  const longs = map.buckets.filter((b) => b.lo <= map.price);
-  const max = Math.max(0, ...map.buckets.map((b) => Math.max(b.longUsd, b.shortUsd)));
+  // Without an exact layer the whole bar is the estimate, drawn as before.
+  const rows = exact
+    ? exact.combined.buckets.map((b) => ({
+        lo: b.lo,
+        hi: b.hi,
+        long: { exactUsd: b.exactLongUsd, estUsd: b.estLongUsd },
+        short: { exactUsd: b.exactShortUsd, estUsd: b.estShortUsd },
+      }))
+    : map.buckets.map((b) => ({
+        lo: b.lo,
+        hi: b.hi,
+        long: { exactUsd: b.longUsd, estUsd: 0 },
+        short: { exactUsd: b.shortUsd, estUsd: 0 },
+      }));
+  const shorts = rows.filter((b) => b.hi > map.price);
+  const longs = rows.filter((b) => b.lo <= map.price);
+  const max = Math.max(
+    0,
+    ...rows.map((b) => Math.max(b.long.exactUsd + b.long.estUsd, b.short.exactUsd + b.short.estUsd)),
+  );
 
   const levelsIn = (lo: number, hi: number, kind: PriceLevel["kind"]) =>
     entry.levels.filter((l) => l.kind === kind && l.price >= lo && l.price < hi);
 
-  const row = (lo: number, usd: number, hatched: boolean, key: string) => (
-    <div
-      key={key}
-      className="grid h-[14px] grid-cols-[60px_1fr_40px] items-center gap-2 sm:h-4 sm:grid-cols-[80px_1fr_48px]"
-    >
-      <span className="text-right font-mono text-[10px] leading-none text-[#383734] sm:text-[11px]">
-        {formatPrice(lo, step)}
-      </span>
-      <span className="flex h-[10px] items-stretch sm:h-3">
-        <Bar usd={usd} max={max} hatched={hatched} />
-      </span>
-      <span className="font-mono text-[10px] leading-none sm:text-[11px]">
-        {usd >= max * 0.02 && usd > 0 ? formatUsdCompact(usd) : ""}
-      </span>
-    </div>
-  );
+  const row = (r: Row, hatched: boolean, key: string) => {
+    const usd = r.exactUsd + r.estUsd;
+    return (
+      <div
+        key={key}
+        className="grid h-[14px] grid-cols-[60px_1fr_40px] items-center gap-2 sm:h-4 sm:grid-cols-[80px_1fr_48px]"
+      >
+        <span className="text-right font-mono text-[10px] leading-none text-[#383734] sm:text-[11px]">
+          {formatPrice(r.lo, step)}
+        </span>
+        <span className="flex h-[10px] items-stretch sm:h-3">
+          <Bar usd={r.exactUsd} max={max} hatched={hatched} faded={!exact} />
+          <Bar usd={r.estUsd} max={max} hatched={hatched} faded />
+        </span>
+        <span className="font-mono text-[10px] leading-none sm:text-[11px]">
+          {usd >= max * 0.02 && usd > 0 ? formatUsdCompact(usd) : ""}
+        </span>
+      </div>
+    );
+  };
 
   return (
     <figure
-      aria-label={`Estimated ${entry.label} liquidations by price level`}
+      aria-label={`${exact ? "" : "Estimated "}${entry.label} liquidations by price level`}
       className="flex flex-col gap-[2px]"
     >
       <p className="mb-1 text-[12px] text-[#383734]">
@@ -108,7 +157,7 @@ function Chart({ entry }: { entry: LiquidationMapEntry }) {
           {levelsIn(b.lo, b.hi, "resistance").map((l) => (
             <LevelMarker key={`r${l.price}`} level={l} />
           ))}
-          {row(b.lo, b.shortUsd, true, `s${b.lo}`)}
+          {row({ lo: b.lo, hi: b.hi, ...b.short }, true, `s${b.lo}`)}
         </Fragment>
       ))}
       <div className="my-1 flex items-center gap-2 border-y-2 border-[#0d0d0d] py-1 text-[12px] font-bold">
@@ -119,10 +168,21 @@ function Chart({ entry }: { entry: LiquidationMapEntry }) {
           {levelsIn(b.lo, b.hi, "support").map((l) => (
             <LevelMarker key={`p${l.price}`} level={l} />
           ))}
-          {row(b.lo, b.longUsd, false, `l${b.lo}`)}
+          {row({ lo: b.lo, hi: b.hi, ...b.long }, false, `l${b.lo}`)}
         </Fragment>
       ))}
       <p className="mt-1 text-[12px] text-[#383734]">Longs, liquidated if price falls (solid)</p>
+      <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#383734]">
+        {exact && (
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-[10px] w-4" style={{ background: INK }} /> Real positions
+          </span>
+        )}
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-[10px] w-4" style={{ background: INK, opacity: EST_OPACITY }} />{" "}
+          Estimated{exact ? `, for the ${formatPct(1 - exact.map.coverage)} not scanned` : ""}
+        </span>
+      </p>
     </figure>
   );
 }
@@ -181,8 +241,24 @@ export function LiquidationMap({ snapshot }: { snapshot: LiquidationMapSnapshot 
 
             <div>
               <h3 className="news-label text-xl leading-tight">
-                {entry.label}: estimated liquidation levels
+                {entry.label}: {entry.exact ? "" : "estimated "}liquidation levels
               </h3>
+              {entry.exact ? (
+                <p className="mt-1 text-[13px] leading-snug">
+                  <span className="font-bold">
+                    Exact: {entry.exact.map.accounts.toLocaleString("en-US")}{" "}
+                    {entry.exact.map.accounts === 1 ? "account" : "accounts"},{" "}
+                    {formatPct(entry.exact.map.coverage)} of Hyperliquid open interest.
+                  </span>{" "}
+                  The other {formatPct(1 - entry.exact.map.coverage)} is estimated.
+                </p>
+              ) : (
+                <p className="mt-1 text-[13px] leading-snug">
+                  {snapshot.scannedAt
+                    ? `Estimated. No scanned account holds ${entry.label} yet.`
+                    : "Estimated. Real positions appear after the first scan of Hyperliquid accounts, about 5 minutes after a restart."}
+                </p>
+              )}
               <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[13px]">
                 <dt className="text-[#383734]">Price</dt>
                 <dd>{formatPrice(entry.map.price)}</dd>
@@ -200,11 +276,24 @@ export function LiquidationMap({ snapshot }: { snapshot: LiquidationMapSnapshot 
                 <p className="mb-1 text-[12px] font-bold">Biggest clusters</p>
                 <ul className="flex flex-col gap-1 text-[13px] leading-snug">
                   {entry.clusters.map((c) => (
-                    <li key={`${c.side}${c.lo}`}>{describeCluster(c, entry.map.bucketSize)}.</li>
+                    <li key={`${c.side}${c.lo}`}>
+                      {describeCluster(c, entry.map.bucketSize, { estimated: !entry.exact })}.
+                    </li>
                   ))}
                 </ul>
               </div>
             )}
+
+            <div>
+              <p className="mb-1 text-[12px] font-bold">Nearest large clusters</p>
+              <p className="text-[13px] leading-snug">
+                {describeSignal(entry.signal, formatUsdCompact, (p) => formatPrice(p, entry.map.bucketSize))}
+              </p>
+              <p className="mt-1 text-[12px] text-[#383734]">
+                Large means at least 10% of that side&rsquo;s liquidations on the chart. Recorded as an
+                untested signal. The trading bot does not use it.
+              </p>
+            </div>
 
             {entry.levels.length > 0 && (
               <div>
@@ -228,27 +317,66 @@ export function LiquidationMap({ snapshot }: { snapshot: LiquidationMapSnapshot 
             )}
 
             <p className="text-[13px] font-bold leading-snug">
-              Estimated from open interest and an assumed leverage mix. Signals and data, not financial
-              advice.
+              {entry.exact
+                ? `Real positions for ${formatPct(entry.exact.map.coverage)} of open interest. The rest is estimated from open interest and an assumed leverage mix.`
+                : "Estimated from open interest and an assumed leverage mix."}{" "}
+              Signals and data, not financial advice.
             </p>
           </div>
 
           <div className="min-w-0 lg:col-span-8">
             <Chart entry={entry} />
-            {(entry.map.beyondRange.longUsd > 0 || entry.map.beyondRange.shortUsd > 0) && (
-              <p className="mt-2 text-[12px] text-[#383734]">
-                Outside this range (±12% of price): ≈{formatUsdCompact(entry.map.beyondRange.shortUsd)} of
-                shorts above, ≈{formatUsdCompact(entry.map.beyondRange.longUsd)} of longs below.
-              </p>
-            )}
+            {(() => {
+              const beyond = entry.exact?.combined.beyondRange ?? entry.map.beyondRange;
+              if (beyond.longUsd <= 0 && beyond.shortUsd <= 0) return null;
+              return (
+                <p className="mt-2 text-[12px] text-[#383734]">
+                  Outside this range (±12% of price): ≈{formatUsdCompact(beyond.shortUsd)} of shorts
+                  above, ≈{formatUsdCompact(beyond.longUsd)} of longs below.
+                </p>
+              );
+            })()}
+            {entry.exact &&
+              (entry.exact.map.noLiquidation.longUsd > 0 || entry.exact.map.noLiquidation.shortUsd > 0) && (
+                <p className="mt-1 text-[12px] text-[#383734]">
+                  Not on the chart: {formatUsdCompact(entry.exact.map.noLiquidation.longUsd)} of longs and{" "}
+                  {formatUsdCompact(entry.exact.map.noLiquidation.shortUsd)} of shorts in scanned accounts
+                  have no liquidation price, because their margin covers any move.
+                </p>
+              )}
           </div>
 
           <details className="text-[13px] leading-snug lg:col-span-12">
-            <summary className="cursor-pointer font-bold">How this is estimated</summary>
-            <ul className="mt-2 flex list-disc flex-col gap-1 pl-5 text-[#383734]">
+            <summary className="cursor-pointer font-bold">How this is worked out</summary>
+            <p className="mt-2 font-bold">Real positions</p>
+            <ul className="mt-1 flex list-disc flex-col gap-1 pl-5 text-[#383734]">
               <li>
-                Exchanges do not publish positions or liquidation prices. Every figure here is a model,
-                not a record of real positions.
+                Hyperliquid runs on its own blockchain, so every account&rsquo;s open positions are
+                public. For each position it publishes the size, entry price, leverage and the price at
+                which the exchange would liquidate it.
+              </li>
+              <li>
+                Accounts are found from the public trade feed, which names both sides of every trade,
+                from Hyperliquid&rsquo;s public leaderboard (largest accounts and highest 30-day
+                volume) and from its list of vaults. Positions are re-read about every 5 minutes, within
+                Hyperliquid&rsquo;s published rate limits, and are dropped if older than 20 minutes.
+              </li>
+              <li>
+                Each bar adds up position size times liquidation price. Coverage is the size held by
+                the scanned accounts divided by twice the open interest, because every contract has a
+                long and a short.
+              </li>
+              <li>
+                Binance, Bybit and other centralised exchanges do not publish positions, so for them
+                only an estimate like the one below is possible. They are not shown.
+              </li>
+            </ul>
+            <p className="mt-3 font-bold">Estimated share</p>
+            <ul className="mt-1 flex list-disc flex-col gap-1 pl-5 text-[#383734]">
+              <li>
+                The open interest not covered by scanned accounts is modelled, not observed. Before the
+                first scan finishes, or for a market no scanned account trades, the whole map is
+                modelled.
               </li>
               <li>
                 Size: Hyperliquid open interest times mark price. Every perp contract has one long and
@@ -273,7 +401,8 @@ export function LiquidationMap({ snapshot }: { snapshot: LiquidationMapSnapshot 
               </li>
               <li>
                 Positions whose liquidation price has already been reached since entry are treated as
-                closed, and the rest are scaled up to today&rsquo;s open interest.
+                closed, and the rest are scaled up to today&rsquo;s open interest, then down to the
+                share not scanned.
               </li>
               <li>
                 Support and resistance: an hour whose high (or low) is the highest (or lowest) of the
@@ -289,8 +418,10 @@ export function LiquidationMap({ snapshot }: { snapshot: LiquidationMapSnapshot 
           </details>
 
           <p className="text-[11px] text-[#6e6a61] lg:col-span-12">
-            Source: Hyperliquid public API (open interest, mark price, funding, 1h candles), fetched{" "}
-            {formatUtc(snapshot.fetchedAt)} &middot; updates every 5 minutes
+            Source: Hyperliquid public API (open interest, mark price, funding, 1h candles
+            {snapshot.scannedAt ? ", account positions" : ""}), fetched {formatUtc(snapshot.fetchedAt)}
+            {snapshot.scannedAt ? <> &middot; positions scanned {formatUtc(snapshot.scannedAt)}</> : null}{" "}
+            &middot; updates every 5 minutes
           </p>
         </div>
       )}

@@ -9,6 +9,15 @@ import {
   type LiquidationMap,
 } from "@/lib/liquidation-map";
 import { findPriceLevels, type PriceLevel } from "@/lib/price-levels";
+import {
+  buildExactLiquidationMap,
+  combineMaps,
+  type CombinedLiquidationMap,
+  type ExactLiquidationMap,
+} from "@/lib/hl-positions";
+import { getScannedPositions, lastScanFinishedAt, touchHlScanner } from "@/lib/hl-position-scanner";
+import { liquidationSignal, type LiquidationSignal } from "@/lib/liquidation-signal";
+import { recordSignalsBatch, type RecordSignalInput } from "@/lib/db/signals";
 
 /**
  * Live inputs for the liquidation map, from Hyperliquid's public info API
@@ -21,6 +30,15 @@ import { findPriceLevels, type PriceLevel } from "@/lib/price-levels";
  *
  * Results are cached in memory for CACHE_MS; the /markets page also
  * revalidates every 5 minutes.
+ *
+ * Exact layer: `hl-position-scanner.ts` polls real accounts' positions in
+ * the background. Where it has any for a coin, the entry carries the exact
+ * map (real `liquidationPx × size`) and a combined map: exact plus the
+ * estimate scaled to the share of open interest not yet scanned.
+ *
+ * Each load also writes one INFORMATIONAL row per coin per hour to `pooter.signals`
+ * (producer "liquidation-map", direction "neutral", which the trader's
+ * reader skips). See `liquidation-signal.ts` for the backtest gate.
  */
 
 const HL_INFO = "https://api.hyperliquid.xyz/info";
@@ -66,11 +84,17 @@ export interface LiquidationMapEntry {
   clusters: LiquidationCluster[];
   /** Support and resistance from swing highs and lows in the same candles. */
   levels: PriceLevel[];
+  /** Real positions, when the scanner has any for this coin. */
+  exact: { map: ExactLiquidationMap; combined: CombinedLiquidationMap } | null;
+  /** Nearest large clusters, from the combined map if there is one. */
+  signal: LiquidationSignal;
 }
 
 export interface LiquidationMapSnapshot {
   fetchedAt: number;
   entries: LiquidationMapEntry[];
+  /** When the position scan whose results are used here finished. */
+  scannedAt: number | null;
 }
 
 interface AssetCtx {
@@ -133,6 +157,7 @@ async function fetchCandles(coin: string, now: number): Promise<Candle[]> {
 
 async function load(): Promise<LiquidationMapSnapshot> {
   const now = Date.now();
+  const scan = getScannedPositions(now);
   const [main, xyz] = await Promise.all([
     fetchContexts(),
     fetchContexts("xyz").catch(() => new Map<string, AssetCtx>()),
@@ -150,29 +175,89 @@ async function load(): Promise<LiquidationMapSnapshot> {
         maxLeverage: ctx.maxLeverage,
         candles,
       });
+      let exact: LiquidationMapEntry["exact"] = null;
+      if (scan) {
+        const exactMap = buildExactLiquidationMap({
+          coin: a.coin,
+          price: ctx.price,
+          openInterest: ctx.openInterest,
+          positions: scan.positions,
+        });
+        if (exactMap.accounts > 0) exact = { map: exactMap, combined: combineMaps(exactMap, map) };
+      }
+      const shown = exact?.combined ?? map;
       return {
         label: a.label,
         group: a.group,
         funding: ctx.funding,
         maxLeverage: ctx.maxLeverage,
         map,
-        clusters: findClusters(map),
+        clusters: findClusters(shown),
         levels: findPriceLevels(candles, ctx.price),
+        exact,
+        signal: liquidationSignal({ coin: a.coin, price: ctx.price, buckets: shown.buckets }),
       };
     }),
   );
   const entries = settled.flatMap((r) => (r.status === "fulfilled" && r.value ? [r.value] : []));
-  return { fetchedAt: now, entries };
+  void recordLiquidationSignals(entries, now);
+  return { fetchedAt: now, entries, scannedAt: scan?.lastCycle?.finishedAt ?? null };
 }
 
-let cache: { at: number; promise: Promise<LiquidationMapSnapshot> } | null = null;
+/**
+ * One row per coin per hour (the first load in the hour wins). Rows are kept
+ * after their TTL, so they build the history the exact signal needs before
+ * it can be backtested (docs/LIQUIDATION_SIGNAL.md).
+ */
+const SIGNAL_SLOT_MS = 3_600_000;
+const SIGNAL_TTL_MS = 2 * SIGNAL_SLOT_MS;
+
+export function toSignalRows(entries: readonly LiquidationMapEntry[], now: number): RecordSignalInput[] {
+  const slot = Math.floor(now / SIGNAL_SLOT_MS) * SIGNAL_SLOT_MS;
+  return entries.map((e) => ({
+    id: `liqmap-${e.map.coin}-${slot}`,
+    producedAt: new Date(now),
+    producedBy: "liquidation-map",
+    symbol: e.map.coin,
+    // Informational: the trader's reader drops neutral rows.
+    direction: "neutral",
+    strength: 0,
+    claim: null,
+    sourceDetail: {
+      informational: true,
+      basis: e.exact ? "exact+estimate" : "estimate",
+      coverage: e.exact?.map.coverage ?? 0,
+      accounts: e.exact?.map.accounts ?? 0,
+      price: e.signal.price,
+      nearestLong: e.signal.nearestLong,
+      nearestShort: e.signal.nearestShort,
+      imbalance: e.signal.imbalance,
+      nearPct: e.signal.nearPct,
+    },
+    ttlExpiresAt: new Date(now + SIGNAL_TTL_MS),
+  }));
+}
+
+async function recordLiquidationSignals(entries: readonly LiquidationMapEntry[], now: number): Promise<void> {
+  if (!process.env.DATABASE_URL || process.env.NEXT_PHASE === "phase-production-build") return;
+  try {
+    await recordSignalsBatch(toSignalRows(entries, now));
+  } catch (err) {
+    console.warn("[liquidation-map] signal write failed:", err instanceof Error ? err.message : err);
+  }
+}
+
+let cache: { at: number; scanAt: number | null; promise: Promise<LiquidationMapSnapshot> } | null = null;
 
 /** Live snapshot, or null if Hyperliquid is unreachable. Never throws. */
 export async function getLiquidationMaps(): Promise<LiquidationMapSnapshot | null> {
   const now = Date.now();
-  if (!cache || now - cache.at > CACHE_MS) {
+  touchHlScanner(LIQ_MAP_ASSETS.map((a) => a.coin));
+  const scanAt = lastScanFinishedAt();
+  // Reload when a newer position scan has finished, not only on expiry.
+  if (!cache || now - cache.at > CACHE_MS || scanAt !== cache.scanAt) {
     const promise = load();
-    cache = { at: now, promise };
+    cache = { at: now, scanAt, promise };
     // Don't keep a failed or empty load cached.
     promise
       .then((s) => {

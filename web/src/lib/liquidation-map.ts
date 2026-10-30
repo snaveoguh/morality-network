@@ -164,13 +164,56 @@ export function shortLiqPrice(entry: number, leverage: number, mmr: number): num
   return entry * (1 + 1 / leverage - mmr);
 }
 
+export interface BucketGrid {
+  step: number;
+  /** Lower edge of the lowest bucket. */
+  lowEdge: number;
+  nBuckets: number;
+}
+
+/**
+ * The fixed price buckets for a map around `price`. Depends only on price and
+ * options, so maps built with the same inputs share a grid and can be added
+ * bucket by bucket (the exact map and the estimate for the uncovered share).
+ */
+export function bucketGrid(price: number, opts: LiquidationOptions = {}): BucketGrid {
+  const rangePct = opts.rangePct ?? 0.12;
+  const bucketPct = opts.bucketPct ?? 0.005;
+  const maxBuckets = opts.maxBuckets ?? 50;
+  let step = niceStep(price * bucketPct);
+  while ((2 * rangePct * price) / step > maxBuckets) step = nextNiceStep(step);
+  const lowEdge = Math.floor((price * (1 - rangePct)) / step) * step;
+  const highEdge = Math.ceil((price * (1 + rangePct)) / step) * step;
+  const nBuckets = Math.max(1, Math.round((highEdge - lowEdge) / step));
+  return { step, lowEdge, nBuckets };
+}
+
+/** Index of the bucket holding `px`, or -1 if it is outside the grid. */
+export function bucketIndex(grid: BucketGrid, px: number): number {
+  const idx = Math.floor((px - grid.lowEdge) / grid.step);
+  return idx < 0 || idx >= grid.nBuckets ? -1 : idx;
+}
+
+/** Bucket rows, highest price first, from per-bucket sums in ascending order. */
+export function gridBuckets(grid: BucketGrid, longs: number[], shorts: number[]): LiquidationBucket[] {
+  const buckets: LiquidationBucket[] = [];
+  for (let i = grid.nBuckets - 1; i >= 0; i--) {
+    const lo = Number((grid.lowEdge + i * grid.step).toPrecision(12));
+    buckets.push({
+      lo,
+      hi: Number((lo + grid.step).toPrecision(12)),
+      longUsd: longs[i] ?? 0,
+      shortUsd: shorts[i] ?? 0,
+    });
+  }
+  return buckets;
+}
+
 export function buildLiquidationMap(
   input: LiquidationInput,
   opts: LiquidationOptions = {},
 ): LiquidationMap {
   const { coin, price, openInterest, maxLeverage } = input;
-  const rangePct = opts.rangePct ?? 0.12;
-  const bucketPct = opts.bucketPct ?? 0.005;
   const mix = clampMix(opts.mix ?? LEVERAGE_MIX, maxLeverage);
   const mmr = 1 / (2 * maxLeverage);
   const oiUsd = openInterest * price;
@@ -179,12 +222,8 @@ export function buildLiquidationMap(
     (k) => k.v > 0 && k.h > 0 && k.l > 0 && k.c > 0 && Number.isFinite(k.v),
   );
 
-  const maxBuckets = opts.maxBuckets ?? 50;
-  let step = niceStep(price * bucketPct);
-  while ((2 * rangePct * price) / step > maxBuckets) step = nextNiceStep(step);
-  const lowEdge = Math.floor((price * (1 - rangePct)) / step) * step;
-  const highEdge = Math.ceil((price * (1 + rangePct)) / step) * step;
-  const nBuckets = Math.max(1, Math.round((highEdge - lowEdge) / step));
+  const grid = bucketGrid(price, opts);
+  const { step, nBuckets } = grid;
   const longByBucket = new Array<number>(nBuckets).fill(0);
   const shortByBucket = new Array<number>(nBuckets).fill(0);
   let longBeyond = 0;
@@ -229,8 +268,8 @@ export function buildLiquidationMap(
   }
 
   const place = (liq: number, usd: number, side: "long" | "short") => {
-    const idx = Math.floor((liq - lowEdge) / step);
-    if (idx < 0 || idx >= nBuckets) {
+    const idx = bucketIndex(grid, liq);
+    if (idx < 0) {
       if (side === "long") longBeyond += usd;
       else shortBeyond += usd;
       return;
@@ -241,16 +280,7 @@ export function buildLiquidationMap(
   for (const [lp, ww] of longs) place(lp, (ww / longMass) * oiUsd, "long");
   for (const [sp, ww] of shorts) place(sp, (ww / shortMass) * oiUsd, "short");
 
-  const buckets: LiquidationBucket[] = [];
-  for (let i = nBuckets - 1; i >= 0; i--) {
-    const lo = Number((lowEdge + i * step).toPrecision(12));
-    buckets.push({
-      lo,
-      hi: Number((lo + step).toPrecision(12)),
-      longUsd: longByBucket[i],
-      shortUsd: shortByBucket[i],
-    });
-  }
+  const buckets = gridBuckets(grid, longByBucket, shortByBucket);
 
   return {
     coin,
@@ -270,7 +300,7 @@ export function buildLiquidationMap(
  * adjacent buckets, not overlapping. Ties go to the window nearer the price.
  */
 export function findClusters(
-  map: LiquidationMap,
+  map: Pick<LiquidationMap, "buckets" | "price">,
   opts: { width?: number; count?: number } = {},
 ): LiquidationCluster[] {
   const width = opts.width ?? 2;
@@ -331,9 +361,16 @@ export function formatPrice(p: number, step?: number): string {
   })}`;
 }
 
-/** "≈$420m of estimated long liquidations between $78,000 and $79,000". */
-export function describeCluster(c: LiquidationCluster, step: number): string {
-  return `≈${formatUsdCompact(c.usd)} of estimated ${c.side} liquidations between ${formatPrice(
+/**
+ * "≈$420m of estimated long liquidations between $78,000 and $79,000".
+ * Pass `estimated: false` when the cluster comes partly from real positions.
+ */
+export function describeCluster(
+  c: LiquidationCluster,
+  step: number,
+  { estimated = true }: { estimated?: boolean } = {},
+): string {
+  return `≈${formatUsdCompact(c.usd)} of ${estimated ? "estimated " : ""}${c.side} liquidations between ${formatPrice(
     c.lo,
     step,
   )} and ${formatPrice(c.hi, step)}`;
