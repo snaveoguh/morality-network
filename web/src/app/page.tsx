@@ -13,6 +13,7 @@ import { AsyncCommentary, CommentarySkeleton } from "@/components/feed/AsyncComm
 import { getDailyEditionHash } from "@/lib/daily-edition";
 import { getArchivedEditorial, getRecentPooterOriginals } from "@/lib/editorial-archive";
 import { SITE_URL, withBrand } from "@/lib/brand";
+import { isFrontStory } from "@/lib/front-filter";
 
 export const revalidate = 900; // 15 min ISR (was 60s — $70+/mo savings)
 export const maxDuration = 30;
@@ -45,7 +46,9 @@ export async function generateMetadata(): Promise<Metadata> {
     // Try today's daily edition first
     const hash = getDailyEditionHash();
     const cached = await getArchivedEditorial(hash);
-    if (cached?.isDailyEdition) {
+    // Same rule as the masthead: a crypto or market edition never titles the
+    // home page (lib/front-filter.ts).
+    if (cached?.isDailyEdition && isFrontStory({ title: cached.primary.title, category: cached.primary.category })) {
       headline = cached.primary.title;
       dailyTitle = cached.dailyTitle ?? null;
     }
@@ -57,7 +60,7 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!headline) {
     try {
       const originals = await getRecentPooterOriginals(false);
-      const best = originals[0];
+      const best = originals.find(isFrontStory);
       if (best) {
         headline = best.title;
         dailyTitle = best.dailyTitle ?? null;
