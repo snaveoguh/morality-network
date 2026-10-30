@@ -2,6 +2,7 @@ import { getSourceTier, type FeedItem, type SourceTier } from "./rss";
 import { tagGroups } from "./bearometer/supply-chain-taxonomy";
 import { computeEntityHash } from "./entity";
 import { hasStyleErrors, lintCopy, tidyHeadline } from "./house-style";
+import { isFrontStory, isPoliticsStory } from "./front-filter";
 
 // ============================================================================
 // IMPACT SCORE — which of today's stories matter most, for the header ticker
@@ -17,6 +18,10 @@ import { hasStyleErrors, lintCopy, tidyHeadline } from "./house-style";
 //   category  sport and culture count for less on an "important notice" line
 //   signal    ×1.35 when the story touches an asset or theme the Bearometer
 //             tracks (BTC, ETH, SOL, gold, DXY, S&P 500, China supply chain)
+//
+// The ticker ranks front-eligible stories only (lib/front-filter.ts): no
+// crypto, markets or trading. If that leaves nothing, it falls back to the
+// newest politics headlines, never to a blank bar.
 //
 // The feed itself is cached in rss.ts; scores are memoised per feed array.
 // ============================================================================
@@ -194,15 +199,42 @@ export function rankStories(items: FeedItem[], limit = 8, now: number = Date.now
     .slice(0, limit);
 }
 
+/** Ticker stories: front-eligible items ranked by impact, else the newest
+ *  politics headlines, else the unfiltered ranking. Pure given `now`. */
+export function rankFrontStories(items: FeedItem[], limit = 8, now: number = Date.now()): TickerStory[] {
+  const front = rankStories(items.filter(isFrontStory), limit, now);
+  if (front.length > 0) return front;
+
+  // Politics, at any age: the strip must never be blank.
+  const politics = items
+    .filter((i) => i.title && i.link && !isScraped(i) && isPoliticsStory(i))
+    .sort((a, b) => parseTime(b.pubDate) - parseTime(a.pubDate))
+    .slice(0, limit)
+    .map((i) => ({
+      id: i.id,
+      headline: tickerHeadline([i], false),
+      href: `/article/${computeEntityHash(i.link)}`,
+      source: i.source,
+      sourceCount: 1,
+      score: 0,
+      signals: [],
+      pubDate: i.pubDate,
+    }));
+  if (politics.length > 0) return politics;
+
+  return rankStories(items, limit, now);
+}
+
 // Memoised per feed array: fetchAllFeeds returns the same array while its
 // cache is fresh, so the ranking is computed once per feed refresh.
 const rankCache = new WeakMap<FeedItem[], { ts: number; stories: TickerStory[] }>();
 const RANK_TTL_MS = 5 * 60 * 1000;
 
+/** Cached rankFrontStories, for the header ticker. */
 export function rankStoriesCached(items: FeedItem[], limit = 8): TickerStory[] {
   const hit = rankCache.get(items);
   if (hit && Date.now() - hit.ts < RANK_TTL_MS && hit.stories.length >= limit) return hit.stories.slice(0, limit);
-  const stories = rankStories(items, Math.max(limit, 8));
+  const stories = rankFrontStories(items, Math.max(limit, 8));
   rankCache.set(items, { ts: Date.now(), stories });
   return stories.slice(0, limit);
 }
