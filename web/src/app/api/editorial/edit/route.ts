@@ -4,6 +4,7 @@ import { getSession } from "@/lib/session";
 import { getArchivedEditorial, saveEditorial } from "@/lib/editorial-archive";
 import { saveIllustration } from "@/lib/illustration-store";
 import { computeEntityHash } from "@/lib/entity";
+import { buildAgentResearchPack } from "@/lib/agent-swarm";
 import type { ArticleContent } from "@/lib/article";
 
 export const runtime = "nodejs";
@@ -110,6 +111,19 @@ export async function POST(request: NextRequest) {
     editedAt: new Date().toISOString(),
     editCount: (existing.editCount ?? 0) + 1,
   };
+
+  // Daily editions store a research pack whose evidence summary is a copy of
+  // the opening paragraph. Rebuild it the way daily-edition.ts does, or the
+  // old text survives the edit in the "Agent research pack" box.
+  if (existing.isDailyEdition && (edits.editorialBody || edits.subheadline || edits.headline)) {
+    updated.agentResearch = buildAgentResearchPack({
+      primary: updated.primary,
+      related: [],
+      fallbackClaim: updated.primary.title,
+      primarySummary: updated.editorialBody[0] || updated.subheadline,
+      relatedSummaryByLink: {},
+    });
+  }
 
   // Also update dailyTitle if this is a daily edition
   if (edits.dailyTitle && existing.isDailyEdition) {
