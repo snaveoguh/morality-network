@@ -1,0 +1,267 @@
+{
+  "hash": "0xf13fd88c9d0d5a4bb5ba862022b9aed63f341058f498f73f780ca705e7d0e08e",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Headline: 'A 74-year-old fell from the sky as AI hearings promise more regulation, but markets chase Bitcoin'",
+      "status": "unsupported",
+      "evidence": "sourceRefs[19], sourceRefs[6]",
+      "note": "Links three unrelated stories; hearings 'promise more regulation' is not in the source (S6 says execs are set to testify)."
+    },
+    {
+      "text": "dailyTitle 'THE WIRE THAT SNAPS'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Metaphor; refers to an invented snapped line. dailyTitle not editable via edits format."
+    },
+    {
+      "text": "Subheadline: 'a veteran's death, a lab's silence and a billionaire's BTC spree converge'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented framing; no source calls the man a veteran or says a lab was silent."
+    },
+    {
+      "text": "The paraglider was named George Whitman",
+      "status": "unsupported",
+      "evidence": "sourceRefs[19]",
+      "note": "Source gives no name."
+    },
+    {
+      "text": "He was from Hilo, Hawaii",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented."
+    },
+    {
+      "text": "He was killed on October 4",
+      "status": "wrong",
+      "evidence": "https://www.thestandard.com.hk/news/article/344643/Paraglider-pilot-likely-lost-effective-control-before-fatal-Lantau-crash-AAIA-report",
+      "note": "The probe reported in October 2026 concerns a fatal crash on Lantau, Hong Kong, in June 2024."
+    },
+    {
+      "text": "The crash was over the Pacific cliffs of Da Nang",
+      "status": "wrong",
+      "evidence": "https://www.scmp.com/news/hong-kong/society/article/3369815/man-74-lost-control-paraglider-strong-winds-probe-fatal-crash-finds",
+      "note": "SCMP Hong Kong story; The Standard places the crash on Lantau, Hong Kong."
+    },
+    {
+      "text": "A gust snapped his paraglider's line; probe found no mechanical fault",
+      "status": "unsupported",
+      "evidence": "sourceRefs[19]",
+      "note": "Source: he lost control in strong winds. Nothing about a snapped line or mechanical checks."
+    },
+    {
+      "text": "'The crash probe, released by SCMP'",
+      "status": "wrong",
+      "evidence": "sourceRefs[19]",
+      "note": "SCMP reported the probe; it did not release it (Hong Kong's Air Accident Investigation Authority investigates)."
+    },
+    {
+      "text": "A 74-year-old man lost control of a paraglider in strong winds, a probe into the fatal crash found (SCMP)",
+      "status": "supported",
+      "evidence": "sourceRefs[19]",
+      "note": ""
+    },
+    {
+      "text": "His daughter Maya clutches a framed photo",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented."
+    },
+    {
+      "text": "'A day later' (timing of TASS reports relative to the crash)",
+      "status": "wrong",
+      "evidence": "",
+      "note": "Crash was in 2024."
+    },
+    {
+      "text": "'Increased strikes on Ukraine aimed at preventing attacks on the Russian economy' (TASS)",
+      "status": "supported",
+      "evidence": "sourceRefs[0]",
+      "note": "Said by a Russian envoy per TASS headline, not 'the Kremlin's propaganda machine'."
+    },
+    {
+      "text": "TASS labelled 'Lean Right'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Bias label is not a sourced fact; removed."
+    },
+    {
+      "text": "Russian troops 'liberating' Samoilovka community in Zaporozhye (TASS)",
+      "status": "supported",
+      "evidence": "sourceRefs[1]",
+      "note": "Russian military claim, reported by TASS."
+    },
+    {
+      "text": "Oleksiy Koval, 32, lost his home in the same barrage",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented person."
+    },
+    {
+      "text": "Russian lab worker's death linked to a COVID-19 sample (CNBC)",
+      "status": "wrong",
+      "evidence": "sourceRefs[2]",
+      "note": "CNBC: a suspected plague case reportedly linked to a lab worker's death (Irkutsk per URL). Not COVID-19."
+    },
+    {
+      "text": "Hearing is 'on Capitol Hill'",
+      "status": "wrong",
+      "evidence": "sourceRefs[6]",
+      "note": "Source: New York City Council hearing."
+    },
+    {
+      "text": "Anthropic, OpenAI, Google and Meta execs set to testify at NYC Council hearing on AI risks (CNBC)",
+      "status": "supported",
+      "evidence": "sourceRefs[6]",
+      "note": ""
+    },
+    {
+      "text": "Testimony will shape the first municipal AI safety framework",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented."
+    },
+    {
+      "text": "$1.2 trillion AI market; council economic office quote 'growing faster than any regulatory body can track'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented figure and quote."
+    },
+    {
+      "text": "Bitcoin sentiment 68, market signal 52",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal feed numbers; unverifiable."
+    },
+    {
+      "text": "The dollar nears its strongest level of the year (Bloomberg)",
+      "status": "supported",
+      "evidence": "sourceRefs[11]",
+      "note": ""
+    },
+    {
+      "text": "Strategy bought 334 BTC for $28.7 million; holdings top 848,000 BTC (The Block)",
+      "status": "supported",
+      "evidence": "sourceRefs[10]",
+      "note": ""
+    },
+    {
+      "text": "It was Michael Saylor's purchase and 'his total'",
+      "status": "wrong",
+      "evidence": "sourceRefs[10]",
+      "note": "The buyer is Strategy, the company Saylor chairs."
+    },
+    {
+      "text": "'The veteran's widow sees a funeral bill'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented; contradicts the earlier invented daughter."
+    },
+    {
+      "text": "Pedro Sánchez called a snap election (CNBC)",
+      "status": "supported",
+      "evidence": "sourceRefs[14]",
+      "note": ""
+    },
+    {
+      "text": "The election was called after housing protests; it will be held on 29 November",
+      "status": "supported",
+      "evidence": "https://www.thenationalnews.com/news/europe/2026/10/05/spains-sanchez-calls-snap-election-after-housing-protests/",
+      "note": "Also https://www.arise.tv/spain-to-hold-snap-election-on-29-november-after-housing-protests/"
+    },
+    {
+      "text": "Guardian Environment ties Spain's housing crisis to a £50,000 cost-cut in new builds",
+      "status": "wrong",
+      "evidence": "sourceRefs[17]",
+      "note": "The £50,000 figure is the UK shadow chancellor's claim about cutting red tape on UK house building; nothing to do with Spain."
+    },
+    {
+      "text": "Flávio Bolsonaro takes commanding lead in Brazil election (FT)",
+      "status": "supported",
+      "evidence": "sourceRefs[15]",
+      "note": ""
+    },
+    {
+      "text": "'a continent already bruised by fiscal fatigue'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Commentary."
+    },
+    {
+      "text": "Russian MP: Ukraine faces armed revolt due to corruption (TASS)",
+      "status": "supported",
+      "evidence": "sourceRefs[16]",
+      "note": "Headline also cites failures on the front."
+    },
+    {
+      "text": "Kyiv has allocated 1.2 billion euros to rebuild schools",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented."
+    },
+    {
+      "text": "Zach Bryan smashed Ed Sheeran's stadium record after defying Kraft on Palestine (The Canary)",
+      "status": "supported",
+      "evidence": "sourceRefs[3]",
+      "note": ""
+    },
+    {
+      "text": "Day's pick: Divide and Dissolve 'Full Performance (Live on KEXP)'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Video pick, not news; dropped."
+    },
+    {
+      "text": "Channel 4 News piece on Sánchez's snap election",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not in sourceRefs; not found."
+    },
+    {
+      "text": "DW exposé on the Flydubai co-pilot plot",
+      "status": "wrong",
+      "evidence": "sourceRefs[23]",
+      "note": "Reported by Fox News, and as an allegation ('allegedly planned'), not a confirmed plot or 'betrayal'."
+    },
+    {
+      "text": "NYC Council will vote on AI oversight on October 12",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented date."
+    },
+    {
+      "text": "Spanish ballot opens on October 23",
+      "status": "wrong",
+      "evidence": "https://www.thenationalnews.com/news/europe/2026/10/05/spains-sanchez-calls-snap-election-after-housing-protests/",
+      "note": "Election is 29 November."
+    },
+    {
+      "text": "Next wave of Russian strikes slated for the weekend, per unnamed TASS sources",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented."
+    },
+    {
+      "text": "Bitcoin likely to test $38,500 resistance",
+      "status": "wrong",
+      "evidence": "https://coinpedia.org/crypto-live-news/strategys-bitcoin-holdings-reach-848000-btc-after-28-7m-purchase/",
+      "note": "Strategy's purchase that week averaged about $85,839 per bitcoin; $38,500 is a stale price."
+    }
+  ],
+  "edits": {
+    "headline": "Spain's Pedro Sánchez calls a snap election after housing protests",
+    "subheadline": "The general election will be held on 29 November, The National reported.",
+    "editorialBody": [
+      "Spain's prime minister, Pedro Sánchez, has called a snap general election after protests over housing, The National reported. The vote will be held on 29 November. CNBC also reported on the decision.",
+      "Flávio Bolsonaro has taken a commanding lead in Brazil's election, the Financial Times reported.",
+      "Executives from Anthropic, OpenAI, Google and Meta are set to testify at a New York City Council hearing on the risks of artificial intelligence, CNBC reported.",
+      "CNBC reported a suspected case of plague in Russia that has reportedly been linked to the death of a laboratory worker.",
+      "A Russian envoy said increased strikes on Ukraine were aimed at preventing attacks on the Russian economy, TASS reported. Russia's military said its troops had taken the Samoilovka community in the Zaporozhye region, according to TASS. A Russian MP said Ukraine faced armed revolt because of corruption and failures at the front, TASS said.",
+      "A Flydubai co-pilot allegedly planned to crash an Israel-bound jet at Ben Gurion Airport, Fox News reported.",
+      "An investigation into a fatal paragliding crash in Hong Kong found that the 74-year-old pilot lost control in strong winds, the South China Morning Post reported.",
+      "Michael Saylor's company, Strategy, bought 334 bitcoin for $28.7 million, taking its holdings above 848,000 BTC, The Block reported. The dollar neared its strongest level this year, Bloomberg reported.",
+      "Zach Bryan broke Ed Sheeran's stadium record after defying Kraft over Palestine, The Canary reported."
+    ]
+  }
+}
