@@ -8,6 +8,7 @@ import {
   type LiquidationCluster,
   type LiquidationMap,
 } from "@/lib/liquidation-map";
+import { findPriceLevels, type PriceLevel } from "@/lib/price-levels";
 
 /**
  * Live inputs for the liquidation map, from Hyperliquid's public info API
@@ -63,6 +64,8 @@ export interface LiquidationMapEntry {
   maxLeverage: number;
   map: LiquidationMap;
   clusters: LiquidationCluster[];
+  /** Support and resistance from swing highs and lows in the same candles. */
+  levels: PriceLevel[];
 }
 
 export interface LiquidationMapSnapshot {
@@ -154,6 +157,7 @@ async function load(): Promise<LiquidationMapSnapshot> {
         maxLeverage: ctx.maxLeverage,
         map,
         clusters: findClusters(map),
+        levels: findPriceLevels(candles, ctx.price),
       };
     }),
   );

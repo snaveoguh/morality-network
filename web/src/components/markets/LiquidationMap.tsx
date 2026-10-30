@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import {
   describeCluster,
   formatPrice,
@@ -8,6 +8,7 @@ import {
   LEVERAGE_MIX,
 } from "@/lib/liquidation-map";
 import type { LiquidationMapEntry, LiquidationMapSnapshot } from "@/lib/liquidation-map-data";
+import type { PriceLevel } from "@/lib/price-levels";
 
 const INK = "#0d0d0d";
 // Shorts are hatched, longs solid: one ink, no colour coding.
@@ -47,12 +48,34 @@ function Bar({ usd, max, hatched }: { usd: number; max: number; hatched: boolean
   );
 }
 
+function levelText(l: PriceLevel): string {
+  const name = l.kind === "support" ? "Support" : "Resistance";
+  const turns = l.touches === 1 ? "turned once" : `turned ${l.touches} times`;
+  return `${name} near ${formatPrice(l.price)}: price ${turns} there in 7 days`;
+}
+
+function LevelMarker({ level }: { level: PriceLevel }) {
+  return (
+    <div className="grid grid-cols-[60px_1fr] items-center gap-2 sm:grid-cols-[80px_1fr]">
+      <span className="text-right font-mono text-[10px] font-bold leading-none sm:text-[11px]">
+        {formatPrice(level.price)}
+      </span>
+      <span className="border-t border-dashed border-[#0d0d0d] pt-[1px] text-[10px] font-bold leading-tight sm:text-[11px]">
+        {level.kind === "support" ? "Support" : "Resistance"} · turned {level.touches}×
+      </span>
+    </div>
+  );
+}
+
 function Chart({ entry }: { entry: LiquidationMapEntry }) {
   const { map } = entry;
   const step = map.bucketSize;
   const shorts = map.buckets.filter((b) => b.hi > map.price);
   const longs = map.buckets.filter((b) => b.lo <= map.price);
   const max = Math.max(0, ...map.buckets.map((b) => Math.max(b.longUsd, b.shortUsd)));
+
+  const levelsIn = (lo: number, hi: number, kind: PriceLevel["kind"]) =>
+    entry.levels.filter((l) => l.kind === kind && l.price >= lo && l.price < hi);
 
   const row = (lo: number, usd: number, hatched: boolean, key: string) => (
     <div
@@ -80,11 +103,25 @@ function Chart({ entry }: { entry: LiquidationMapEntry }) {
         Shorts, liquidated if price rises (hatched) · lower edge of each{" "}
         {formatPrice(step, step)} band
       </p>
-      {shorts.map((b) => row(b.lo, b.shortUsd, true, `s${b.lo}`))}
+      {shorts.map((b) => (
+        <Fragment key={`s${b.lo}`}>
+          {levelsIn(b.lo, b.hi, "resistance").map((l) => (
+            <LevelMarker key={`r${l.price}`} level={l} />
+          ))}
+          {row(b.lo, b.shortUsd, true, `s${b.lo}`)}
+        </Fragment>
+      ))}
       <div className="my-1 flex items-center gap-2 border-y-2 border-[#0d0d0d] py-1 text-[12px] font-bold">
         <span>Current price {formatPrice(map.price)}</span>
       </div>
-      {longs.map((b) => row(b.lo, b.longUsd, false, `l${b.lo}`))}
+      {longs.map((b) => (
+        <Fragment key={`l${b.lo}`}>
+          {levelsIn(b.lo, b.hi, "support").map((l) => (
+            <LevelMarker key={`p${l.price}`} level={l} />
+          ))}
+          {row(b.lo, b.longUsd, false, `l${b.lo}`)}
+        </Fragment>
+      ))}
       <p className="mt-1 text-[12px] text-[#383734]">Longs, liquidated if price falls (solid)</p>
     </figure>
   );
@@ -169,6 +206,27 @@ export function LiquidationMap({ snapshot }: { snapshot: LiquidationMapSnapshot 
               </div>
             )}
 
+            {entry.levels.length > 0 && (
+              <div>
+                <p className="mb-1 text-[12px] font-bold">Support and resistance</p>
+                <ul className="flex flex-col gap-1 text-[13px] leading-snug">
+                  {entry.levels.map((l) => (
+                    <li key={`${l.kind}${l.price}`}>{levelText(l)}.</li>
+                  ))}
+                </ul>
+                <p className="mt-1 text-[12px] text-[#383734]">
+                  {(["support", "resistance"] as const)
+                    .filter((k) => !entry.levels.some((l) => l.kind === k))
+                    .map((k) =>
+                      k === "support"
+                        ? "No turn below the current price in the last 7 days. "
+                        : "No turn above the current price in the last 7 days. ",
+                    )}
+                  Where the price turned before, not a forecast. Dashed lines on the chart.
+                </p>
+              </div>
+            )}
+
             <p className="text-[13px] font-bold leading-snug">
               Estimated from open interest and an assumed leverage mix. Signals and data, not financial
               advice.
@@ -216,6 +274,12 @@ export function LiquidationMap({ snapshot }: { snapshot: LiquidationMapSnapshot 
               <li>
                 Positions whose liquidation price has already been reached since entry are treated as
                 closed, and the rest are scaled up to today&rsquo;s open interest.
+              </li>
+              <li>
+                Support and resistance: an hour whose high (or low) is the highest (or lowest) of the
+                6 hours either side counts as a turn. Turns within 0.6% of price of each other are
+                merged into one level. Levels below the price are support, above are resistance. The
+                two with the most turns on each side are shown.
               </li>
               <li>
                 Stocks and indices are HIP-3 perps on the trade.xyz market on Hyperliquid. They show
