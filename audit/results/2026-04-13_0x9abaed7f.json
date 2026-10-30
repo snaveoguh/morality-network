@@ -34,9 +34,9 @@
     },
     {
       "text": "The Associated Press reports that European leaders are celebrating Magyar's victory",
-      "status": "unsupported",
-      "evidence": "",
-      "note": "Not verified: the shared web-search budget ran out before this could be searched. The CNN piece found carries no European government statements. Removed; recheck before treating as invented."
+      "status": "supported",
+      "evidence": "https://www.thesunchronicle.com/news/nation_world/european-leaders-celebrate-p-ter-magyars-victory-in-a-stunning-hungarian-election/article_189934cb-6ce6-52af-89e3-0b87122b8c20.html",
+      "note": "AP story 'European leaders celebrate Peter Magyar's victory in a stunning Hungarian election' carried by AP member sites (Sun Chronicle, WSOC-TV, Telemundo Nebraska), 12-13 April. Full text not read (429/404), so copy keeps to the headline. Anadolu and The National also reported EU leaders welcoming the result."
     },
     {
       "text": "Magyar, a former Fidesz insider, has vowed to dismantle the Orban system \"brick by brick\", as reported by AFP / France 24",
@@ -46,9 +46,9 @@
     },
     {
       "text": "TOTO will stop taking orders for its system baths due to supply chain disruptions, as reported by NHK World",
-      "status": "unsupported",
-      "evidence": "",
-      "note": "Not verified: the shared web-search budget ran out before this could be searched. Causal link to the blockade is in any case unsupported (blockade was announced 12 April). Removed; recheck before treating as invented."
+      "status": "supported",
+      "evidence": "https://www.fukuoka-now.com/en/news/toto-halts-bath-orders/",
+      "note": "Fukuoka Now, 14 April 2026 (citing KBC News and TBS News Dig): TOTO told clients on 13 April it would halt new orders for unit baths and related products over the supply of naphtha-derived solvents; toilets not affected; no date set for resuming. NHK's own report not found, so copy attributes Fukuoka Now. Causal link to the US blockade is not made by the source and is not in the copy."
     },
     {
       "text": "Takashi Nakamura, a 35-year-old father of two who was planning to install a new bathroom",
@@ -89,8 +89,8 @@
     {
       "text": "According to Bloomberg, State Street has advised further de-risking amid inflation threats",
       "status": "unsupported",
-      "evidence": "",
-      "note": "Not verified: the shared web-search budget ran out before this could be searched. Removed; recheck before treating as invented."
+      "evidence": "https://allmind.ai/news/5f39a76596e0ffa5fce495a926ee8fdd207bfb90458cd17eca64031f30f473dc",
+      "note": "Reviewer: only an aggregator summary of a Bloomberg video; Bloomberg page never read. Too weak; removed. Previous note: Bloomberg video headline 'State Street Advises Further De-Risking Amid Inflation Threat', 13 April 2026, seen via the AllMind aggregator (Bloomberg page not read); summary names State Street's Michael Metcalfe. Copy keeps to the headline."
     },
     {
       "text": "Dehd's \"Full Performance (Live on KEXP)\"",
@@ -102,13 +102,13 @@
       "text": "As reported by the Associated Press, Magyar has vowed to introduce a new era of transparency and accountability",
       "status": "unsupported",
       "evidence": "",
-      "note": "Not verified: the shared web-search budget ran out before this could be searched. Removed."
+      "note": "Two searches found no AP report with 'transparency and accountability'. AP later reported Magyar promising investigative committees into alleged corruption under Orban (infonews.ca, after he took office), which is a different claim and later date. Removed."
     },
     {
       "text": "The Lufthansa pilot strike, set to cancel hundreds of flights, according to Bloomberg",
-      "status": "unsupported",
-      "evidence": "",
-      "note": "Not verified: the shared web-search budget ran out before this could be searched. Removed; recheck before treating as invented."
+      "status": "supported",
+      "evidence": "https://www.thestar.com.my/aseanplus/aseanplus-news/2026/04/13/lufthansa039s-two-day-pilot-strike-set-to-cancel-hundreds-of-flights",
+      "note": "Bloomberg (Sonja Wind) via The Star, 13 April 2026: 'Lufthansa's two-day pilot strike set to cancel hundreds of flights'; Vereinigung Cockpit strike from 00:01 on 13 April to midnight on 14 April over pensions, covering the mainline, cargo and CityLine; flights to several Middle East destinations exempt."
     },
     {
       "text": "The airline industry struggles to cope with the fallout from the blockade; the strike could have significant implications for the global economy",
@@ -120,7 +120,7 @@
       "text": "As reported by DW News, the US military has announced plans to blockade Iranian ports",
       "status": "supported",
       "evidence": "https://abc17news.com/money/cnn-business-consumer/2026/04/13/oil-prices-jump-on-us-plans-to-blockade-iranian-ports-in-strait-of-hormuz/",
-      "note": "Announcement confirmed by CNN (CENTCOM statement, 12 April). DW's own report not checked (search budget exhausted), so copy attributes CNN."
+      "note": "Announcement confirmed by CNN (CENTCOM statement, 12 April) and AP via PBS. DW's own report could not be checked (dw.com blocked to the search tool; one further search found no DW copy), so copy attributes CNN."
     },
     {
       "text": "The blockade has been met with widespread criticism and a wave of protests",
@@ -142,7 +142,9 @@
       "US Central Command said on 12 April that naval forces would block all maritime traffic entering and leaving Iranian ports from 10am ET on 13 April, CNN reported. Ships travelling through the Strait of Hormuz to and from other countries' ports would not be stopped, it said.",
       "Brent crude rose 7% to $102 a barrel and West Texas Intermediate rose 7.8% to $104, CNN reported.",
       "The announcement came after talks between the US and Iran in Pakistan ended without agreement, the Associated Press reported.",
-      "Peter Magyar was projected to end Viktor Orban's 16 years as Hungary's prime minister after the 12 April election, CNN reported. Magyar, a former government insider, had promised to dismantle Orban's political system \"brick by brick\", AFP reported."
+      "Peter Magyar was projected to end Viktor Orban's 16 years as Hungary's prime minister after the 12 April election, CNN reported. Magyar, a former government insider, had promised to dismantle Orban's political system \"brick by brick\", AFP reported. European leaders welcomed his victory, the Associated Press reported.",
+      "In Japan, TOTO told clients on 13 April that it would stop taking new orders for unit baths because of difficulty obtaining solvents made from naphtha, Fukuoka Now reported. Toilets were not affected, it said.",
+      "Lufthansa pilots began a two-day strike on 13 April over pensions that was set to cancel hundreds of flights, Bloomberg reported. Flights to several Middle East destinations were exempt."
     ]
   }
 }
