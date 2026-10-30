@@ -1,0 +1,103 @@
+{
+  "hash": "0x39c725a257848d6866f7d01921d5cad8b1310e5e3df30146fef15e1a78a5cd22",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "In a small Tehran apartment, Leila Namazi counts her dwindling savings",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Unnamed private individual with a name and a city and no source; invented. Removed."
+    },
+    {
+      "text": "Iran flounders under the bombardment from U.S.-Israeli forces, 163 wounded in a single day, according to Middle East Eye",
+      "status": "wrong",
+      "evidence": "https://www.middleeasteye.net/live-blog/live-blog-update/israel-says-163-injured-past-24-hours-amid-iran-hezbollah-attacks",
+      "note": "Middle East Eye's 163 figure was Israel's count of people injured in Israel in 24 hours from Iranian and Hezbollah attacks, not Iranians wounded by US-Israeli strikes."
+    },
+    {
+      "text": "Major Fertilizer Buyer India focuses on tenders as bombs melt roads and futures, Bloomberg reports",
+      "status": "supported",
+      "evidence": "https://www.bloomberg.com/news/articles/2026-04-06/major-fertilizer-buyer-india-issues-tender-as-war-hits-supply",
+      "note": "Bloomberg, 6 Apr: 'Major Fertilizer Buyer India Issues Tender as War Hits Supply'; India sought about 2.5 million tonnes of urea (per Jakarta Post/Bloomberg coverage). 'Bombs melt roads' is figurative and removed."
+    },
+    {
+      "text": "SCMP: electric truck rollouts in China might compensate for disruptions in oil supply due to the Iran war",
+      "status": "supported",
+      "evidence": "https://www.scmp.com/news/china/science/article/3348742/chinas-electric-truck-revolution-powerful-painkiller-iran-war",
+      "note": "SCMP: 'China's electric truck revolution a powerful painkiller for Iran war'; sales of electric heavy-duty trucks rose 182% in 2025."
+    },
+    {
+      "text": "North Korea's silence on Iran, as per South China Morning Post, read as openness",
+      "status": "supported",
+      "evidence": "https://www.scmp.com/news/asia/east-asia/article/3349136/north-korean-silence-iran-signals-openness-us-talks-seouls-spy-agency",
+      "note": "SCMP: 'North Korean silence on Iran signals openness to US talks: Seoul's spy agency'."
+    },
+    {
+      "text": "Middle East Eye ponders the death of 'the Gulf moment'",
+      "status": "supported",
+      "evidence": "https://live.libnanews.com/event/ev-1775457926270-dc75",
+      "note": "Middle East Eye piece 'Has US war on Iran killed the \"Gulf moment\"?' (6 Apr), found via an aggregator listing; original not read."
+    },
+    {
+      "text": "Trump's power plant delays",
+      "status": "supported",
+      "evidence": "https://www.pbs.org/newshour/world/3-times-trump-has-given-iran-deadlines-and-then-delayed-them",
+      "note": "AP (on PBS NewsHour): Trump repeatedly delayed deadlines for strikes on Iran's power plants; on Sunday 5 Apr he posted that 'Tuesday will be Power Plant Day'. 'Gamble after gamble' is figurative and removed."
+    },
+    {
+      "text": "NHK World ponders a one-day reprieve",
+      "status": "unsupported",
+      "evidence": "https://www.pbs.org/newshour/world/3-times-trump-has-given-iran-deadlines-and-then-delayed-them",
+      "note": "No NHK World report found. The one-day delay itself (deadline moved to Tuesday 7 Apr, 8pm EDT) is supported by AP, so the corrected copy attributes it to AP."
+    },
+    {
+      "text": "Bitcoin sentiment pointing stubbornly at 59",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "The platforms of DeFi, celebrated r/defi style",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Reddit forum reference, not a news item. Removed."
+    },
+    {
+      "text": "Weight loss pills aim for revenue tallies of $101B",
+      "status": "wrong",
+      "evidence": "https://www.biospace.com/business/lillys-weight-loss-trio-could-top-100b-in-revenue-thanks-to-oral-option",
+      "note": "The $101bn figure is a Truist Securities estimate of peak worldwide revenue for Lilly's three obesity drugs (Mounjaro, Zepbound, orforglipron), reported by BioSpace on 19 Nov 2025. It is not a revenue tally and not news from this edition's date. Removed."
+    },
+    {
+      "text": "Mongabay: a Rwandan nurse fulfils a calling among forest communities in the Central African Republic",
+      "status": "supported",
+      "evidence": "https://www.pulse.bot/healthcare/news/far-from-home-a-rwandan-nurse-fulfills-her-calling-among-car-forest-communities-77288582-9ceb-4b57-88bb-f151b4a24f0f",
+      "note": "Mongabay headline 'Far From Home, a Rwandan Nurse Fulfills Her Calling Among CAR Forest Communities', found via aggregator; original mongabay.com page not read. 'IR-sensitive drones' line is invented and removed."
+    },
+    {
+      "text": "Rəhman Məmmədli's live performance",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news"
+    },
+    {
+      "text": "April 7th cannot mend Tehran's rifts",
+      "status": "supported",
+      "evidence": "https://www.pbs.org/newshour/world/3-times-trump-has-given-iran-deadlines-and-then-delayed-them",
+      "note": "7 April was Trump's deadline (8pm EDT Tuesday), per AP. The rest of the sentence is rhetorical."
+    }
+  ],
+  "edits": {
+    "headline": "Trump sets Tuesday deadline for strikes on Iran's power plants",
+    "subheadline": "President Trump said on Sunday that Tuesday would be \"Power Plant Day\" in Iran, the Associated Press reported.",
+    "editorialBody": [
+      "President Donald Trump moved his deadline for Iran to reopen the Strait of Hormuz to Tuesday 7 April at 8pm EDT, after delaying earlier deadlines several times, the Associated Press reported. In a Sunday post he wrote that \"Tuesday will be Power Plant Day\" in Iran.",
+      "Israel said 163 people had been injured in the previous 24 hours in attacks by Iran and Hezbollah, Middle East Eye reported.",
+      "India, a major buyer of fertiliser, issued a tender for supplies because the war had hit supply, Bloomberg reported.",
+      "Sales of electric heavy trucks in China rose 182% in 2025, which could cushion China from the war's disruption to oil supplies, the South China Morning Post reported.",
+      "South Korea's spy agency said North Korea's silence on Iran showed it was open to talks with the US, the South China Morning Post reported.",
+      "Middle East Eye published an analysis asking whether the US war on Iran had ended \"the Gulf moment\", a term for the regional rise of states such as the UAE, Qatar and Saudi Arabia.",
+      "Mongabay published a profile of a Rwandan nurse working with forest communities in the Central African Republic."
+    ]
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "hash": "0xb816011902e3d608c5fa946afee9d8892c625a1fc8180fd0ad7c57ed050de56a",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Headline: US legislation weaponizes campuses while missiles strike weddings and floods drown villages",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Figurative headline joining three unrelated stories; replaced."
+    },
+    {
+      "text": "Subheadline: the same Capitol corridor that drafts boycotts also signs off on bombs",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Rhetorical link, no fact; replaced."
+    },
+    {
+      "text": "Shirin Ghorbani, 28, a bride from Qazvin, was dancing when the strike hit; her sister Fatemeh and three children were killed",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No such names in any report found; invented. Reports name the couple as Maryam Mallahi and Ziaeddin."
+    },
+    {
+      "text": "A US precision munition struck the wedding tent in Kermanshah on September 2",
+      "status": "wrong",
+      "evidence": "https://naharnet.com/stories/en/322250-iran-guards-chief-vows-to-avenge-victims-killed-in-wedding-strike",
+      "note": "AFP (via Naharnet): the wedding was in the coastal town of Kuhestak in southern Iran (Sirik County, Hormozgan), not Kermanshah. Stars and Stripes says the explosion was on Tuesday (1 Sept). Iranian authorities said at least four killed, including a child, and 68 wounded."
+    },
+    {
+      "text": "Iran's IRGC called the strike 'appalling' and vowed retaliation",
+      "status": "wrong",
+      "evidence": "https://naharnet.com/stories/en/322250-iran-guards-chief-vows-to-avenge-victims-killed-in-wedding-strike",
+      "note": "IRGC chief Ahmad Vahidi vowed the deaths would be avenged (AFP). 'Appalling' not found; Iranian officials called it a 'war crime'. Vow supported, quote not."
+    },
+    {
+      "text": "A former Pentagon official told Press TV the US was 'intentionally targeting Iranian civilians'",
+      "status": "supported",
+      "evidence": "https://www.presstv.co.uk/Detail/2026/09/03/775624/Ex-Pentagon-official--US-‘intentionally-targeting-Iranian-civilians’",
+      "note": "Press TV, 3 Sept: Wes Bryant, former Pentagon chief of civilian harm assessments. 'Whispered' is invented colour."
+    },
+    {
+      "text": "The House voted to pass a bill threatening federal funding for universities that support BDS / boycott Israel",
+      "status": "supported",
+      "evidence": "https://gvwire.com/2026/09/03/us-house-passes-bill-to-crack-down-on-university-boycotts-of-israel/",
+      "note": "Reuters (syndicated by GV Wire), 3 Sept: Protect Economic and Academic Freedom Act passed 237-169; would withhold federal funding from universities that boycott Israel; Senate must pass it."
+    },
+    {
+      "text": "The legislation, championed by a coalition of pro-Israel lobbyists",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Reuters names sponsors' stated aims, not lobbyists."
+    },
+    {
+      "text": "The bill will be debated on the floor next week / House will vote on the anti-BDS bill Sept 12",
+      "status": "wrong",
+      "evidence": "https://gvwire.com/2026/09/03/us-house-passes-bill-to-crack-down-on-university-boycotts-of-israel/",
+      "note": "The House had already passed it on 3 Sept; next step is the Senate."
+    },
+    {
+      "text": "Maya Patel, a political science major, was warned she could lose her research grant for hosting a BDS symposium",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Unnamed private individual with no source; invented."
+    },
+    {
+      "text": "Press TV drone footage showed the Karnali River swallowing the village of Dandakhali; fisherman Bishnu Thapa, 42, was swept away",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No report found; the Aug 26 flood was on the Bhote Koshi/Trishuli, not the Karnali. Invented."
+    },
+    {
+      "text": "Nepal's death toll now exceeds 900, with 3,000 still missing",
+      "status": "wrong",
+      "evidence": "https://www.ewn.co.za/2026/09/02/nepal-flood-death-toll-keeps-climbing-with-3-916-missing-confirms-disaster-authority",
+      "note": "AFP (via EWN), 2 Sept: Nepal's disaster authority said at least 1,114 killed and 3,916 missing."
+    },
+    {
+      "text": "Conflict sentiment 53, AI 66, crypto 69, Bitcoin sentiment 73, signal 59, global economy 68, US dollar 70",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "The Defiant reported Revolut's EURR rollout",
+      "status": "supported",
+      "evidence": "https://thedefiant.io/converge/tradfi-and-fintech/revolut-starts-eurr-rollout-with-bridge-as-regulated-issuer",
+      "note": "The Defiant: 'Revolut starts EURR rollout with Bridge as regulated issuer'. Rollout began 26 Aug in Denmark, Poland and Portugal (The Block)."
+    },
+    {
+      "text": "The SEC's custody rewrite now sits under White House review",
+      "status": "supported",
+      "evidence": "https://thedefiant.io/converge/regulation/sec-crypto-custody-rewrite-enters-white-house-review",
+      "note": "The Defiant: SEC crypto custody rewrite enters White House review (sent to OIRA 25 Aug). 'Regulatory tightening' framing not supported."
+    },
+    {
+      "text": "South Korea plans to tokenize 'all types' of securities by 2027, detailed by The Block",
+      "status": "supported",
+      "evidence": "https://cointelegraph.com/news/south-korean-regulators-tokenized-securities-roadmap",
+      "note": "Cointelegraph (4 Sept): roadmap covers stocks, bonds and funds; legal recognition from 4 Feb 2027; phase two extends to all publicly offered securities, so 'all types by 2027' is overstated. The Block's article not found; attributed to Cointelegraph."
+    },
+    {
+      "text": "South Korea will unveil the first phase of its tokenization plan on Jan 1 2027",
+      "status": "wrong",
+      "evidence": "https://ambcrypto.com/south-korea-sets-february-2027-rollout-for-tokenized-securities-details/",
+      "note": "The regime is due to start on 4 February 2027."
+    },
+    {
+      "text": "CoinDesk confirmed El Salvador's Bitcoin boom was financed by private donors, not taxpayers",
+      "status": "unsupported",
+      "evidence": "https://cointelegraph.com/news/el-salvador-bitcoin-private-donations-imf",
+      "note": "CoinDesk article not found. Cointelegraph reported the IMF said El Salvador's bitcoin added since its review came from private donations and used no public funds. Attribution changed to Cointelegraph."
+    },
+    {
+      "text": "The US Senate's talk of 'donor-free' funding for foreign aid",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source; invented."
+    },
+    {
+      "text": "DW News ran a deep-dive on why Nepal's floods were so 'unpredictable'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Video pick; DW piece not found. Dropped."
+    },
+    {
+      "text": "Al Jazeera's fish-power piece on European politics",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news; not found."
+    },
+    {
+      "text": "Lysistrata's live KEXP performance",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news"
+    },
+    {
+      "text": "Iran's oil ministers will meet Chinese counterparts in Tehran on Sept 15 to bypass the US blockade",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source; invented future date."
+    },
+    {
+      "text": "SEC custody reforms slated for final comment by the White House by October 1",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No such deadline found; one report expected a proposed rule around October 2026. Invented date."
+    }
+  ],
+  "edits": {
+    "headline": "US House passes bill targeting university boycotts of Israel",
+    "subheadline": "The bill would withhold federal funding from universities that boycott Israel and now goes to the Senate, Reuters reported.",
+    "editorialBody": [
+      "The US House of Representatives voted 237-169 on 3 September to pass the Protect Economic and Academic Freedom Act, Reuters reported. The bill would withhold federal funding from universities that boycott Israel. It must pass the Senate before it can become law.",
+      "Iran's Revolutionary Guards chief Ahmad Vahidi vowed to avenge the victims of a strike on a wedding in Kuhestak, in southern Iran, AFP reported. Iranian authorities said at least four people were killed, including a child, and 68 wounded. A former Pentagon civilian harm official told Press TV the United States was \"intentionally targeting Iranian civilians\".",
+      "At least 1,114 people were killed and 3,916 were missing in Nepal a week after the 26 August floods, the country's disaster authority said, according to AFP.",
+      "Revolut began rolling out its EURR euro stablecoin with Bridge as the regulated issuer, The Defiant reported. The Defiant also reported that the SEC's rewrite of its crypto custody rules had entered White House review.",
+      "South Korean regulators set out a roadmap for tokenized securities covering stocks, bonds and funds, Cointelegraph reported. Tokenized securities are due to be legally recognised from 4 February 2027, with all publicly offered securities included in a later phase.",
+      "The IMF said bitcoin added to El Salvador's holdings since its programme review came from private donations and used no public funds, Cointelegraph reported."
+    ]
+  }
+}

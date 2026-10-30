@@ -1,0 +1,30 @@
+{
+  "hash": "0xa85b9bb50ff9e466b68f41035892528cc43ef9d922e0cc6c98e924767253448a",
+  "verdict": "needs_edit",
+  "claims": [
+    {"text": "Headline: Iran raises fuel prices amid US blockade", "status": "unsupported", "evidence": "https://www.khaleejtimes.com/world/mena/iran-petrol-price-rise-us-economic-pressure", "note": "The only petrol price rise found (above-quota petrol, 10,000 toman per litre) took effect from 8 September 2026, not April. No April 2026 report of an Iranian fuel price rise found in one search. PROVISIONAL: second search not run because the shared web search budget ran out."},
+    {"text": "Subheadline: Tehran's clever capitalism may be the new norm in conflict zones", "status": "unsupported", "evidence": "", "note": "Opinion, not a claim of fact. Removed."},
+    {"text": "Iranian president highlighted diplomacy while stressing distrust of the US, according to IRNA", "status": "unsupported", "evidence": "", "note": "NOT SEARCHED: shared web search budget exhausted before this claim could be checked. Needs a follow-up check; removed from copy until verified."},
+    {"text": "IRGC announced the Strait of Hormuz is 'fully closed' until the US lifts its blockade on Iranian ports", "status": "supported", "evidence": "https://www.aljazeera.com/amp/news/2026/4/18/iran-closes-strait-of-hormuz-again-over-us-blockade-of-its-ports", "note": "Al Jazeera, 18 April 2026 (checked for the 19 April edition)."},
+    {"text": "Tehran is attaching a price list to its closures, charging tolls instead of shooting missiles", "status": "unsupported", "evidence": "", "note": "Repeats an invented line from the previous edition. On 18 April IRGC boats fired on a tanker (UKMTO), so 'instead of shooting' is also contradicted."},
+    {"text": "Malacca Strait potentially at risk of a 'chain reaction' after a warning from an Iranian adviser, as reported by SCMP", "status": "unsupported", "evidence": "", "note": "NOT SEARCHED: search budget exhausted. Needs follow-up."},
+    {"text": "Vietnam and the Philippines trust Japan but Indonesia does not, as noted by SCMP", "status": "unsupported", "evidence": "", "note": "NOT SEARCHED: search budget exhausted. Needs follow-up."},
+    {"text": "Two Palestinians injured by Israeli gunfire in the occupied West Bank, as reported by Middle East Eye", "status": "unsupported", "evidence": "", "note": "NOT SEARCHED: search budget exhausted. Needs follow-up."},
+    {"text": "Congress leader 'confined' under pretext of IT 'search' ahead of rally, as reported by Times of India", "status": "unsupported", "evidence": "", "note": "NOT SEARCHED: search budget exhausted. Needs follow-up."},
+    {"text": "Bitcoin sentiment score 63, market signal 51", "status": "unsupported", "evidence": "", "note": "internal feed metric, not reportable"},
+    {"text": "China's silver imports jumped to a record high on retail and solar demand, as reported by Bloomberg", "status": "unsupported", "evidence": "", "note": "NOT SEARCHED: search budget exhausted. Needs follow-up."},
+    {"text": "The price of Bitcoin is affecting the broader market", "status": "unsupported", "evidence": "", "note": "Unsourced generalisation."},
+    {"text": "Kelp's Black Swan for Aave, as reported by r/defi", "status": "unsupported", "evidence": "", "note": "Reddit post, not a news outlet. Not reportable; removed."},
+    {"text": "BBC News report on the Louisiana shooting that killed eight children", "status": "unsupported", "evidence": "", "note": "playlist/video pick, not news. NOT SEARCHED (search budget exhausted); a serious claim that must be verified before any use."},
+    {"text": "Pope Leo's historic trip to Africa covered by ABC News", "status": "unsupported", "evidence": "", "note": "playlist/video pick, not news. Not searched."},
+    {"text": "Pfizer and Amgen among 22 strategic firms eyeing Hong Kong expansion, as reported by the SCMP", "status": "unsupported", "evidence": "", "note": "NOT SEARCHED: search budget exhausted. Needs follow-up."},
+    {"text": "In our previous edition, Iran's Revolutionary Guards had redefined 'fully closed' to mean 'pay us first'", "status": "unsupported", "evidence": "", "note": "Self-reference to an unsupported headline (see 2026-04-19 result)."}
+  ],
+  "edits": {
+    "headline": "Iran keeps Strait of Hormuz closed over US blockade",
+    "subheadline": "The Revolutionary Guards said the strait would stay closed until the US lifted its blockade of Iranian ports, Al Jazeera reported.",
+    "editorialBody": [
+      "Iran's Revolutionary Guards said on 18 April that the Strait of Hormuz would remain closed until the US lifted its blockade of Iranian ports, Al Jazeera reported."
+    ]
+  }
+}

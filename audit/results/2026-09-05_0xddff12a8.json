@@ -1,0 +1,41 @@
+{
+  "hash": "0xddff12a8edd03dad56931678ca9dea6e9261e29037740fa0e013e8c46b923032",
+  "verdict": "needs_edit",
+  "claims": [
+    {"text": "Headline: A Nepali schoolteacher drowns as diesel prices hit a record, while the world argues over who should pay for wars", "status": "unsupported", "evidence": "", "note": "Teacher invented; headline joins unrelated stories. Replaced."},
+    {"text": "Subheadline: the price of fuel becomes a death sentence for the same family", "status": "unsupported", "evidence": "", "note": "Rhetorical, no fact; replaced."},
+    {"text": "Asha Karki, 22, a teacher from Barpak, drowned with her 6-year-old son Laxmi on September 4 after lifting a child from a flooded classroom", "status": "unsupported", "evidence": "", "note": "No report found; unnamed private individual with name and village and no source. The 26 Aug floods were on the Bhote Koshi/Trishuli, not in Barpak. Invented."},
+    {"text": "Jim Harlow, a long-haul trucker out of Dallas, whose weekly earnings dropped 12 percent, quoted: 'I'm paying for someone else's war with every mile'", "status": "unsupported", "evidence": "", "note": "Invented person and quote."},
+    {"text": "US diesel hit $5.28 per gallon, a record", "status": "wrong", "evidence": "https://abc7news.com/story/us-diesel-prices-hit-record-high-585-average-iran-war-disrupts-flow-fuel/19789077/", "note": "AP (syndicated on ABC7), 4 Sept: record national average of $5.85 a gallon, beating about $5.82 set in June 2022. Record itself supported; figure wrong."},
+    {"text": "The diesel record was set in the wake of the Iran war", "status": "supported", "evidence": "https://abc7news.com/story/us-diesel-prices-hit-record-high-585-average-iran-war-disrupts-flow-fuel/19789077/", "note": "AP attributes the rise to the Iran war disrupting fuel flows, with tanker traffic bottlenecked in the Strait of Hormuz. 'Iran-Israel conflict' wording not used by AP."},
+    {"text": "Press TV ran a piece titled 'US diesel prices hit record high as war on Iran backfires'", "status": "unsupported", "evidence": "", "note": "Press TV article not found in two searches."},
+    {"text": "Iran's judiciary chief urged BRICS to prosecute alleged war crimes, Press TV reported", "status": "supported", "evidence": "https://www.presstv.co.uk/Detail/2026/09/05/775706/Judiciary-chief-BRICS-prosecute-perpetrators-of-war-crimes-Iran", "note": "Press TV, 5 Sept: Gholam-Hossein Mohseni-Ejei at the BRICS Chief Justices' Forum in New Delhi."},
+    {"text": "The call was a challenge to the 'snapback illusion' of the US-E3 resolution", "status": "unsupported", "evidence": "", "note": "No source links the BRICS remarks to snapback."},
+    {"text": "BRICS nations are scrambling for cheaper energy while the West tightens sanctions that push prices into the stratosphere", "status": "unsupported", "evidence": "", "note": "Unsourced analysis."},
+    {"text": "The Defiant reported Revolut launched its EURR stablecoin with Bridge as regulated issuer", "status": "supported", "evidence": "https://thedefiant.io/converge/tradfi-and-fintech/revolut-starts-eurr-rollout-with-bridge-as-regulated-issuer", "note": "The Defiant: Revolut starts EURR rollout with Bridge as regulated issuer."},
+    {"text": "The SEC's crypto-custody rewrite is under White House review", "status": "supported", "evidence": "https://thedefiant.io/converge/regulation/sec-crypto-custody-rewrite-enters-white-house-review", "note": "The Defiant."},
+    {"text": "Bitcoin sentiment 68, market signal 47; Ethereum sentiment 59", "status": "unsupported", "evidence": "", "note": "internal feed metric, not reportable"},
+    {"text": "NPR's 'Voters are fed up with data centers' notes bipartisan attempts to tax the industry ahead of the midterms", "status": "wrong", "evidence": "https://www.kunc.org/npr-news/2026-09-05/voters-are-fed-up-with-data-centers-both-parties-are-trying-to-cash-in-for-midterms", "note": "NPR story exists (5 Sept, syndicated on member stations). It reports both parties arguing data centers get too many tax breaks and drive up electricity bills, and more than $45m in ads mentioning data centers (AdImpact). Not 'attempts to tax the industry'."},
+    {"text": "The same NPR report says data centers' electricity is often sourced from fossil fuels driving diesel prices", "status": "unsupported", "evidence": "", "note": "Not in NPR excerpts; diesel link invented."},
+    {"text": "Inside Climate News: Black and Hispanic homeowners pay up to 27 percent more for insurance as extreme weather intensifies", "status": "wrong", "evidence": "https://insideclimatenews.org/news/05092026/black-and-hispanic-homeowners-pay-more-for-insurance/", "note": "Story exists (5 Sept). Citing a Consumer Federation of America report, it says predominantly Hispanic ZIP codes pay 30% more and Black ZIP codes 16% more than white areas nationally. No 27% figure."},
+    {"text": "Barpak had no floodplain maps, no early-warning system and a thatched school", "status": "unsupported", "evidence": "", "note": "Invented."},
+    {"text": "Wired: Marvel's '42 Hours of Homework Before Avengers: Doomsday'", "status": "supported", "evidence": "https://dnyuz.com/?p=263233", "note": "Wired piece (republished on dnyuz) says Marvel's official watch list takes about 42 hours. Entertainment item; dropped from copy as not news."},
+    {"text": "Adidas faced boycott calls for featuring an Israeli soldier in a campaign", "status": "supported", "evidence": "https://www.aljazeera.com/sports/2026/9/6/adidas-faces-boycott-calls-over-campaign-featuring-former-israeli-soldier", "note": "Al Jazeera (6 Sept) and The New Arab (4 Sept): campaign for its Single Shoe service featured former Israeli soldier Shalev Biton. Al Jazeera piece is dated a day after the edition; The New Arab ran it on 4 Sept."},
+    {"text": "Adidas sales climbed 4 percent the same day", "status": "unsupported", "evidence": "", "note": "No source; invented."},
+    {"text": "Conflict & Security sentiment 48, AI 64, Crypto 66, global mood 60/100", "status": "unsupported", "evidence": "", "note": "internal feed metric, not reportable"},
+    {"text": "The UK chancellor will address the economic fallout from the war on Iran tomorrow", "status": "unsupported", "evidence": "", "note": "No such speech found for 6 Sept."},
+    {"text": "The UN will convene a special session on climate-linked displacement on September 12", "status": "unsupported", "evidence": "", "note": "No source; invented date."}
+  ],
+  "edits": {
+    "headline": "US diesel price hits record $5.85 a gallon",
+    "subheadline": "The national average passed the June 2022 record after the Iran war disrupted fuel supplies, the Associated Press reported.",
+    "editorialBody": [
+      "The average US price of diesel reached a record $5.85 a gallon on 4 September, the Associated Press reported. The previous record, about $5.82, was set in June 2022. The AP said the Iran war had disrupted fuel supplies, with tanker traffic held up in the Strait of Hormuz.",
+      "Iran's judiciary chief, Gholam-Hossein Mohseni-Ejei, urged BRICS members to prosecute those responsible for what he called war crimes against Iran, Press TV reported. He spoke at a forum of BRICS chief justices in New Delhi.",
+      "Revolut began rolling out its EURR euro stablecoin with Bridge as the regulated issuer, The Defiant reported. The Defiant also reported that the SEC's rewrite of its crypto custody rules had entered White House review.",
+      "Campaigns and outside groups have spent more than $45 million on ads mentioning data centers in this year's US races, NPR reported. Candidates from both parties argued that the facilities get too many tax breaks and drive up electricity bills.",
+      "Homeowners in predominantly Hispanic US ZIP codes pay about 30% more for home insurance than those in white areas, and in Black areas about 16% more, Inside Climate News reported. The figures come from a Consumer Federation of America report.",
+      "Adidas faced calls for a boycott over a campaign for its Single Shoe service that featured a former Israeli soldier, The New Arab and Al Jazeera reported."
+    ]
+  }
+}

@@ -1,0 +1,203 @@
+{
+  "hash": "0xf47171e6afb04e32fda3b78c6d403b9d3da3be050d8698b95d672bfa1daee913",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Headline: Artemis II astronauts hurtle toward Pacific splashdown",
+      "status": "supported",
+      "evidence": "https://www.ksl.com/article/51481765/artemis-ii-returns-from-moon-with-splashdown-to-close-out-record-breaking-lunar-voyage",
+      "note": "AP story (Marcia Dunn) syndicated on KSL: Orion splashed down in the Pacific off San Diego on Friday 10 April at 6:07pm MDT after a nearly 10-day flight launched 1 April. The edition was generated at 07:06 UTC on 10 April, before splashdown."
+    },
+    {
+      "text": "Headline: ceasefires wobble and oil chokes",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Figurative; not a checkable statement. Replaced."
+    },
+    {
+      "text": "Subheadline: the moon mission comes home to a world that learned to count dead while they were gone",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Rhetorical line, no checkable fact. Replaced."
+    },
+    {
+      "text": "Four astronauts are falling toward the Pacific right now; NASA's live feed shows Orion descending under parachutes",
+      "status": "wrong",
+      "evidence": "https://www.ksl.com/article/51481765/artemis-ii-returns-from-moon-with-splashdown-to-close-out-record-breaking-lunar-voyage",
+      "note": "AP: splashdown was at 6:07pm MDT (8:07pm ET) on 10 April, about 17 hours after this edition was generated. The crew was not descending at the time of writing."
+    },
+    {
+      "text": "Humanity's first crewed lunar mission in over fifty years",
+      "status": "supported",
+      "evidence": "https://www.ksl.com/article/51481765/artemis-ii-returns-from-moon-with-splashdown-to-close-out-record-breaking-lunar-voyage",
+      "note": "AP describes a record-breaking lunar voyage; first crewed lunar flight since Apollo. Not carried into copy beyond the splashdown fact."
+    },
+    {
+      "text": "The crew left Earth when the US-Iran ceasefire was just diplomatic noise; they return to find it cracking",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Rhetorical framing. Launch was 1 April (AP); the ceasefire was announced 7-8 April. Removed."
+    },
+    {
+      "text": "CNBC reports tanker traffic through the Strait of Hormuz remains \"largely closed\" despite the pause in hostilities",
+      "status": "supported",
+      "evidence": "https://www.cnbc.com/2026/04/09/iran-war-oil-tanker-strait-hormuz.html",
+      "note": "CNBC 9 April: 'Strait of Hormuz oil traffic way down after ceasefire'; also https://www.cnbc.com/2026/04/09/tankers-return-to-hormuz-ceasefire-disruption-to-last-weeks.html (Kpler: two tankers and a handful of bulk carriers transited since the ceasefire). The exact phrase 'largely closed' was not confirmed as CNBC's wording, so it is not quoted in the copy."
+    },
+    {
+      "text": "Keeping crude prices elevated and Asia-Pacific markets jittery",
+      "status": "supported",
+      "evidence": "https://www.cnbc.com/2026/04/09/asia-pacific-markets-us-iran-negotiations-.html",
+      "note": "CNBC 9 April: Asia-Pacific markets fell after Iran's parliamentary speaker accused the US of breaching the ceasefire; oil back above $100 a barrel. 'Jittery' dropped as figurative."
+    },
+    {
+      "text": "20% of global oil flows through the 21-mile-wide strait",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Background figures not sourced in the edition and not checked against a report from this date. Removed."
+    },
+    {
+      "text": "Insurance companies aren't betting their premiums on diplomatic promises",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source found for any insurer statement. Removed."
+    },
+    {
+      "text": "Leila Namazi's savings, which we've tracked through Tehran's bombing",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented private individual; no source. Removed."
+    },
+    {
+      "text": "Melania Trump denied any connection to Jeffrey Epstein and urged hearings for survivors, BBC News",
+      "status": "supported",
+      "evidence": "https://www.graphic.com.gh/international/international-news/melania-trump-denies-ties-to-jeffrey-epstein-and-urges-hearing-for-survivors.html",
+      "note": "BBC story syndicated by Graphic Online, 10 April: she denied any connection, said claims 'need to end today', and called on Congress to hold hearings where survivors could testify under oath. Statement given 9 April (Al Jazeera https://www.aljazeera.com/news/2026/4/9/us-first-lady-melania-trump-denies-connection-to-epstein-in-rare-speech)."
+    },
+    {
+      "text": "BBC frames it as damage control ahead of the 2026 midterms; the timing isn't accidental",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source shows the BBC framed it this way. Editorial speculation. Removed."
+    },
+    {
+      "text": "Secretary Rubio heads to India for Quad talks",
+      "status": "wrong",
+      "evidence": "https://theprint.in/world/misri-rubio-discuss-trade-quad-us-diplomat-set-to-visit-india-in-may/2901211",
+      "note": "On 10 April Rubio met Indian Foreign Secretary Vikram Misri in Washington; his India visit for the Quad ministerial came in late May (AP via NPR https://npr.org/2026/05/23/nx-s1-5832394/rubio-arrives-india)."
+    },
+    {
+      "text": "Vice President Vance flies to Pakistan for direct negotiations with Tehran",
+      "status": "supported",
+      "evidence": "https://www.arabnews.pk/node/2639289",
+      "note": "Pakistan said a US team led by Vance would visit Islamabad for Iran talks; Vance left Joint Base Andrews on 10 April and arrived 11 April (https://www.arabnews.pk/node/2639457)."
+    },
+    {
+      "text": "Crypto sentiment index sits at 70 for Bitcoin",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "CZ predicted people will \"stop talking about crypto and just use it\" within five years",
+      "status": "supported",
+      "evidence": "https://cryptonews.net/news/analytics/32686521/",
+      "note": "Cointelegraph report republished by cryptonews.net, 10 April: Changpeng Zhao said he hoped that within five years people would stop treating crypto as a separate topic and just use it. Exact quoted wording not confirmed, so paraphrased in copy."
+    },
+    {
+      "text": "DeFi forums buzz with questions about converting BTC without \"high fees\" and where to \"put stablecoins these days\"",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Unsourced forum posts; not news. Removed."
+    },
+    {
+      "text": "Hong Kong authorities spent HK$34 million on Tai Po fire recovery",
+      "status": "supported",
+      "evidence": "https://www.scmp.com/news/hong-kong/society/article/3349625/hong-kong-authorities-spend-hk34-million-tai-po-fire-recovery-works",
+      "note": "SCMP: the Housing Bureau said follow-up works related to the Wang Fuk Court fire in Tai Po cost about HK$34 million (also The Star, 10 April)."
+    },
+    {
+      "text": "151 civil servants dismissed for misconduct over three years, according to SCMP",
+      "status": "supported",
+      "evidence": "https://www.scmp.com/news/hong-kong/politics/article/3349620/151-hong-kong-civil-servants-dismissed-misconduct-convictions-past-3-years",
+      "note": "SCMP: 151 Hong Kong civil servants dismissed for misconduct or criminal convictions in the past three financial years."
+    },
+    {
+      "text": "Politicians hope Xi Jinping might visit Taiwan if the KMT wins in 2028",
+      "status": "supported",
+      "evidence": "https://www.scmp.com/news/china/politics/article/3349617/taiwans-opposition-leader-cheng-li-wun-speaks-after-historic-meeting-xi-jinping",
+      "note": "SCMP: KMT chair Cheng Li-wun, after meeting Xi in Beijing on 10 April, said she hoped to invite Xi to Taiwan if the KMT won the 2028 election. Copy names Cheng rather than unnamed 'politicians'."
+    },
+    {
+      "text": "A bowler took nine wickets in three overs, ABC Australia reports",
+      "status": "supported",
+      "evidence": "https://www.icc-cricket.com/news/brazil-s-laura-cardoso-makes-t20i-history-with-nine-wicket-haul",
+      "note": "Brazil's Laura Cardoso took 9 for 4 in three overs against Lesotho on 9 April, the first nine-wicket haul in a T20 international (ICC; Al Jazeera). An ABC Australia report could not be found, so the copy attributes the ICC."
+    },
+    {
+      "text": "Attribution of the cricket story to ABC Australia",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No ABC Australia article found in two searches. Attribution changed to the ICC."
+    },
+    {
+      "text": "Turkey replaced management at Turkish Airlines",
+      "status": "supported",
+      "evidence": "https://www.turkishminute.com/2026/04/10/turkish-airlines-replaces-ceo-chairman-and-withholds-dividend-over-regional-risks/",
+      "note": "Turkish Airlines named Ahmet Olmustur chief executive and Murat Seker chairman at its 9 April general assembly and withheld a dividend, citing regional risks (Turkish Minute; Zawya)."
+    },
+    {
+      "text": "Turkey overhauled leadership at state banks",
+      "status": "supported",
+      "evidence": "https://www.pulse.bot/ceo-pulse/news/turkey-overhauls-leadership-at-state-lenders-halkbank-vakifbank-87c17545-fae4-41d8-81c3-6f9ffb4fc6e7",
+      "note": "Aggregator of a Bloomberg report dated 10 April: 'Turkey Overhauls Leadership at State Lenders Halkbank, Vakifbank'. Original Bloomberg page not read."
+    },
+    {
+      "text": "Indonesia's richest man \"loosens grip\" on energy companies amid tighter ownership rules",
+      "status": "supported",
+      "evidence": "https://www.scmp.com/news/asia/southeast-asia/article/3349623/indonesias-richest-man-loosens-grip-petrindo-barito-amid-tighter-ownership-rules",
+      "note": "Bloomberg story carried by SCMP: Prajogo Pangestu cut stakes in Petrindo and Barito Renewables after tighter ownership rules."
+    },
+    {
+      "text": "Right-wing underrepresentation: 9 sources versus 26 left-leaning",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "Iranian attack count over 6,400 since the war began, per Middle East Eye",
+      "status": "supported",
+      "evidence": "https://www.middleeastmonitor.com/20260410-iran-targeted-7-arab-countries-with-6413-missiles-drones-over-past-41-days",
+      "note": "Anadolu Agency tally, carried by Middle East Monitor on 10 April: Iran fired at least 6,413 missiles and drones at seven Arab countries over 41 days. A Middle East Eye report could not be found, so the copy attributes Anadolu Agency."
+    },
+    {
+      "text": "Attribution of the 6,400 figure to Middle East Eye",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No Middle East Eye report found; the tally is Anadolu Agency's. Attribution changed."
+    },
+    {
+      "text": "Astronauts will hit the Pacific in hours; they left during war and return during ceasefire",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Rhetorical closing passage. Removed."
+    }
+  ],
+  "edits": {
+    "headline": "Hormuz tanker traffic stays low despite US-Iran ceasefire",
+    "subheadline": "Only a handful of ships had crossed the Strait of Hormuz since the ceasefire was announced, CNBC reported.",
+    "editorialBody": [
+      "Oil tanker traffic through the Strait of Hormuz remained far below normal after the US-Iran ceasefire, CNBC reported. Asia-Pacific markets fell on 9 April after Iran's parliamentary speaker accused the US of breaching the ceasefire, CNBC said.",
+      "Vice President JD Vance was to lead a US team to Islamabad for talks with Iran, Pakistan said, according to Arab News.",
+      "Melania Trump denied any connection to Jeffrey Epstein and called on Congress to hold hearings where survivors could testify under oath, BBC News reported.",
+      "Iran fired at least 6,413 missiles and drones at seven Arab countries over 41 days of war, according to an Anadolu Agency tally.",
+      "NASA's Artemis II crew splashed down in the Pacific off San Diego on 10 April after a flight of nearly 10 days around the Moon, the Associated Press reported.",
+      "Hong Kong authorities spent about HK$34 million on follow-up works after the fire at Wang Fuk Court in Tai Po, the South China Morning Post reported. The paper also reported that 151 civil servants had been dismissed for misconduct or criminal convictions over the past three years.",
+      "Kuomintang chair Cheng Li-wun said after meeting Xi Jinping in Beijing that she hoped to invite him to Taiwan if her party won the 2028 election, the South China Morning Post reported.",
+      "Turkish Airlines named a new chief executive and chairman, Turkish Minute reported. Turkey also replaced the leadership of the state lenders Halkbank and Vakifbank, Bloomberg reported.",
+      "Prajogo Pangestu, Indonesia's richest man, reduced his stakes in Petrindo and Barito Renewables after the authorities tightened ownership rules, Bloomberg reported.",
+      "Binance founder Changpeng Zhao said he hoped people would stop treating crypto as a separate topic within five years, Cointelegraph reported.",
+      "Brazil's Laura Cardoso took nine wickets for four runs in three overs against Lesotho, the first nine-wicket haul in a T20 international, the ICC said."
+    ]
+  }
+}

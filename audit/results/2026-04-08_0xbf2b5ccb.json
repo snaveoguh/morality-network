@@ -1,0 +1,104 @@
+{
+  "hash": "0xbf2b5ccbc3cdf1e76989354e39ff03e1192984255ce3ab8bf7f68771753347d4",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Iran Agrees to Conditional Ceasefire (headline); the U.S.-Iran ceasefire agreement",
+      "status": "supported",
+      "evidence": "https://aljazeera.com/news/2026/4/7/trump-suspends-iran-bombing-for-two-weeks-following-dire-threats",
+      "note": "Al Jazeera, 7 Apr: Trump announced a two-week ceasefire conditional on Iran reopening the Strait of Hormuz; Iran's foreign minister Abbas Araghchi said safe passage would be possible for two weeks via coordination with Iran's armed forces."
+    },
+    {
+      "text": "Leila Namazi, a resident of Tehran, counted her last rials (also subheadline and later paragraphs)",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Unnamed private individual with a name and a city and no source; invented. Removed."
+    },
+    {
+      "text": "The ceasefire, brokered after weeks of tense negotiations, has brought a semblance of calm to the region",
+      "status": "wrong",
+      "evidence": "https://www.rferl.org/amp/trump-iran-deadline-deal/33727017.html",
+      "note": "Reports describe a last-minute agreement after a diplomatic intervention led by Pakistan, shortly before Trump's deadline, not weeks of negotiations; Iranian officials had denied talks were taking place. 'Semblance of calm' is also contradicted by reports that Iran attacked Saudi Arabia's East-West Pipeline hours after the ceasefire was agreed. Removed."
+    },
+    {
+      "text": "The Associated Press reported that Rex Heuermann will plead guilty in the Gilgo Beach killings",
+      "status": "supported",
+      "evidence": "https://www.wsls.com/news/national/2026/04/08/rex-heuermann-to-plead-guilty-in-the-gilgo-beach-killings-ending-long-search-for-a-serial-killer/",
+      "note": "AP (syndicated on WSLS), 8 Apr: 'Rex Heuermann to plead guilty in the Gilgo Beach killings, ending long search for a serial killer'. The link to 'consequences of conflict' is invented and removed."
+    },
+    {
+      "text": "Global sentiment index 62/100; conflict and security topic 60/100; Bitcoin sentiment 71/100; Ethereum 71/100; global economy sentiment 58/100",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "CNBC reported that South Korea stocks led gains in Asia as oil prices plunged after the U.S.-Iran ceasefire deal",
+      "status": "supported",
+      "evidence": "https://torre.news/south-korea-stocks-lead-gains-in-asia-as-oil-prices-plunge-after-us-iran-ceasefire-deal",
+      "note": "CNBC headline (8 Apr) carried by aggregator; summary of the CNBC piece says the Kospi rose 5.99%. CNBC original not read directly."
+    },
+    {
+      "text": "Elections in Assam, Kerala and Puducherry",
+      "status": "supported",
+      "evidence": "https://www.thestatesman.com/india/assembly-elections-2026-west-bengal-tamil-nadu-kerala-assam-complete-poll-schedule-1503570368.html",
+      "note": "The Statesman: Assam, Kerala and Puducherry vote on 9 April, counting on 4 May. Polling had not yet happened on the edition date."
+    },
+    {
+      "text": "The Times of India reported that the TMC vs EC showdown in Bengal escalated, with the poll body accusing Derek O'Brien of 'shouting'",
+      "status": "supported",
+      "evidence": "https://theprint.in/india/ec-tmc-meet-ends-on-bitter-note-cec-asks-leaders-to-get-lost-mp-accused-of-shouting/2899618",
+      "note": "Fact confirmed (8 Apr): Election Commission sources said Derek O'Brien shouted at Chief Election Commissioner Gyanesh Kumar; TMC said the CEC told the delegation to 'get lost'. Times of India article not found after two searches, so corrected copy attributes to ThePrint (PTI)."
+    },
+    {
+      "text": "The ceasefire sparked diplomatic activity, with China's Alibaba launching a 10,000-card computing cluster, a bid to intensify the AI race with the U.S.",
+      "status": "wrong",
+      "evidence": "https://www.scmp.com/tech/article/3349335/ai-race-us-intensifies-chinas-alibaba-launches-10000-card-computing-cluster",
+      "note": "SCMP did report Alibaba launching a 10,000-card computing cluster as the AI race with the US intensified, but no source links it to the ceasefire or to diplomacy. Kept as a separate item without the causal link."
+    },
+    {
+      "text": "The SCMP reported that Iran hopes China can be a security guarantor in the Middle East",
+      "status": "supported",
+      "evidence": "https://scmp.com/news/china/diplomacy/article/3349347/iran-hopes-china-can-be-security-guarantor-middle-east-envoy-beijing",
+      "note": "SCMP, 8 Apr: Iran's envoy in Beijing said he hoped China could be a security guarantor in the Middle East."
+    },
+    {
+      "text": "The Middle East Eye reported that Iran said no pollutant leak at Amirkabir petrochemical site, but the damage has already been done",
+      "status": "supported",
+      "evidence": "https://live.libnanews.com/event/ev-1775631539922-d7b4",
+      "note": "Middle East Eye item carried by aggregator: officials in Iran's Petrochemical Special Economic Zone said there was no leak of pollutants from the Amirkabir Petrochemical Company. 'The damage has already been done' is unsupported and removed."
+    },
+    {
+      "text": "Oil prices plunged below $100 after Iran agreed to safe passage through the Strait of Hormuz during the ceasefire",
+      "status": "supported",
+      "evidence": "https://www.bnnbloomberg.ca/business/2026/04/08/oil-tumbles-below-us100-after-trump-announces-two-week-ceasefire/",
+      "note": "Bloomberg (on BNN Bloomberg), 8 Apr: oil tumbled below $100 after Trump announced the two-week ceasefire."
+    },
+    {
+      "text": "DW News video picks: Fareed Zakaria on the 'Islamabad Accord'; 'Tehran Erupts: Celebration or Defiance?'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news"
+    },
+    {
+      "text": "Yussef Dayes, \"Turquoise Galaxy (Live on KEXP)\"",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news"
+    }
+  ],
+  "edits": {
+    "headline": "US and Iran agree conditional two-week ceasefire",
+    "subheadline": "President Trump said the pause depended on Iran reopening the Strait of Hormuz, Al Jazeera reported.",
+    "editorialBody": [
+      "President Donald Trump announced a two-week ceasefire with Iran on 7 April, on condition that Iran reopened the Strait of Hormuz, Al Jazeera reported. Iran's foreign minister, Abbas Araghchi, said safe passage through the strait would be possible for two weeks in coordination with Iran's armed forces.",
+      "Oil fell below $100 a barrel after the ceasefire was announced, Bloomberg reported. South Korean stocks led gains in Asia, CNBC reported.",
+      "Iran's envoy in Beijing said he hoped China could act as a security guarantor in the Middle East, the South China Morning Post reported.",
+      "Iranian officials said there had been no leak of pollutants at the Amirkabir petrochemical site, according to Middle East Eye.",
+      "Rex Heuermann was due to plead guilty in the Gilgo Beach killings, the Associated Press reported.",
+      "In India, the Election Commission said Trinamool Congress MP Derek O'Brien shouted at Chief Election Commissioner Gyanesh Kumar during a meeting about West Bengal's elections, ThePrint reported. The party said the commissioner told its delegation to \"get lost\".",
+      "Assam, Kerala and Puducherry were due to vote in state assembly elections on 9 April, with counting on 4 May, The Statesman reported.",
+      "Alibaba launched a computing cluster of 10,000 AI chips, the South China Morning Post reported."
+    ]
+  }
+}

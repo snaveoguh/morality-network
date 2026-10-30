@@ -1,0 +1,123 @@
+{
+  "hash": "0x43e98c6e8d6c4a68d42ac6400563e9f12df0aa2f9805e4d41a2e8e46669ca5f6",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Three cargo ships struck off Iran's coast in 24 hours, including one in the Strait of Hormuz chokepoint (also subheadline: 'Three cargo ships struck')",
+      "status": "supported",
+      "evidence": "https://news.usni.org/2026/03/11/3-cargo-ships-damaged-in-suspected-iranian-attacks-in-the-strait-of-hormuz",
+      "note": "USNI News, 11 Mar: UK Maritime Trade Operations reported three commercial ships hit by projectiles in and around the Strait of Hormuz, including the Thai-flagged Mayuree Naree. Two of the three were off the UAE coast, so 'off Iran's coast' is loose; corrected copy says 'in and around the Strait of Hormuz'."
+    },
+    {
+      "text": "The IEA responds with the largest emergency oil reserve release in history",
+      "status": "supported",
+      "evidence": "https://fortune.com/2026/03/11/iea-record-400-million-barrels-emergency-oil-reserve-release-iran-war",
+      "note": "IEA members agreed on 11 Mar to release about 400 million barrels, the largest release in the agency's history (previous record 182.7m barrels in 2022)."
+    },
+    {
+      "text": "Asia's energy-dependent economies face what SCMP calls an \"existential threat\" from prolonged conflict",
+      "status": "supported",
+      "evidence": "https://newsar.codejungle.org/articles/23518",
+      "note": "SCMP headline 11 Mar (Biman Mukherji): 'Asia's energy-reliant economies face \"existential threat\" from prolonged Iran war'. Found via an aggregator copy; original scmp.com page not reached."
+    },
+    {
+      "text": "Something else quietly achieved consciousness (the fruit fly emulation)",
+      "status": "unsupported",
+      "evidence": "https://eon.systems/updates/embodied-brain-emulation",
+      "note": "Eon Systems makes no claim of consciousness; it describes a work-in-progress emulation driving a simulated body. Removed."
+    },
+    {
+      "text": "Scientists at Eon Systems copied a fruit fly's brain neuron by neuron into silicon. It walks. It grooms. It feeds.",
+      "status": "supported",
+      "evidence": "https://eon.systems/updates/embodied-brain-emulation",
+      "note": "Eon Systems announced (7 Mar) a connectome-based fruit fly brain emulation connected to a simulated body that walks, grooms and feeds. It is a simulated body, not a physical one."
+    },
+    {
+      "text": "No training data, no prompts, pure biological architecture",
+      "status": "unsupported",
+      "evidence": "https://eon.systems/updates/embodied-brain-emulation",
+      "note": "Eon says no hand-tuning or additional learning algorithms; 'no training data, no prompts' is the writer's paraphrase. Dropped as not needed."
+    },
+    {
+      "text": "Darwin Labs co-founder gets arrested in India for the GainBitcoin scam",
+      "status": "supported",
+      "evidence": "https://cointelegraph.com/news/india-arrests-darwin-labs-co-founder-in-gainbitcoin-scam-probe",
+      "note": "CBI arrested Darwin Labs co-founder Ayush Varshney in the GainBitcoin case after he was stopped at Mumbai airport (around 10 Mar)."
+    },
+    {
+      "text": "Sentiment scores: AI 67/100, crypto 66/100, health 65/100, conflict 52/100; Bitcoin sentiment 63, market signal 50; Ethereum sentiment 65, signal 51",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "Nebius stock pops 14% on Nvidia's $2 billion investment",
+      "status": "supported",
+      "evidence": "https://www.fool.com/investing/2026/03/11/why-nebius-stock-is-up-today",
+      "note": "Nvidia's $2bn investment in Nebius was announced 11 Mar and shares rose. Reported gains range from about 10% to 16% depending on timing; the 14% figure is not confirmed, so corrected copy gives no percentage."
+    },
+    {
+      "text": "Base ecosystem quietly processes millions in daily volume; new LP pairs launching hourly on Uniswap v4 hooks; MEV protection protocols seeing 300% weekly growth",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source; invented. Removed."
+    },
+    {
+      "text": "Eli Lilly commits $3 billion to expand China supply chains",
+      "status": "supported",
+      "evidence": "https://www.fiercepharma.com/manufacturing/lilly-commits-3b-china-manufacturing-expansions-local-cdmo-partnerships",
+      "note": "Lilly said on 11 Mar it would invest about $3bn in China over the next decade to expand supply-chain and manufacturing capacity, mainly for orforglipron. 'As the West fragments' is editorial and removed."
+    },
+    {
+      "text": "Spain removes its ambassador from Israel",
+      "status": "supported",
+      "evidence": "https://www.arabnews.pk/node/2636062",
+      "note": "Reuters (via Arab News): Spain removed its ambassador to Israel, according to the official state gazette published 11 Mar."
+    },
+    {
+      "text": "Congo's Nguesso seeks another term after four decades",
+      "status": "supported",
+      "evidence": "https://www.ksat.com/news/2026/03/15/republic-of-congo-votes-in-an-election-thats-expected-to-extend-incumbent-presidents-42-year-rule/",
+      "note": "AP (syndicated on KSAT): Republic of Congo's 15 Mar presidential election was expected to extend Denis Sassou Nguesso's 42-year rule. AP story is dated after the edition, but the candidacy was known before it."
+    },
+    {
+      "text": "\"Sweet Child O' Mine\" (1987) as today's music",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news"
+    },
+    {
+      "text": "Algorithmic traders parse Strait of Hormuz sensor data in microseconds, routing liquidity through decentralized exchanges",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source; invented. Removed."
+    },
+    {
+      "text": "The old world builds military bases in Somaliland",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No report found of a base being built in Somaliland around 11 Mar; later reports (Le Monde on Berbera airport, Somalia warning Israel on 16 Mar) concern plans or construction and are disputed. Removed."
+    },
+    {
+      "text": "Oil tankers burn / cargo ships burn in ancient waterways",
+      "status": "unsupported",
+      "evidence": "https://news.usni.org/2026/03/11/3-cargo-ships-damaged-in-suspected-iranian-attacks-in-the-strait-of-hormuz",
+      "note": "The ships hit were cargo vessels (one bulk carrier caught fire), not oil tankers. Removed."
+    }
+  ],
+  "edits": {
+    "headline": "Three cargo ships hit by projectiles in Strait of Hormuz",
+    "subheadline": "The UK Maritime Trade Operations agency reported the strikes on 11 March, USNI News reported.",
+    "editorialBody": [
+      "Three commercial ships were hit by projectiles in and around the Strait of Hormuz on 11 March, the UK Maritime Trade Operations agency said, according to USNI News. One of them, the Thai-flagged bulk carrier Mayuree Naree, caught fire.",
+      "Member countries of the International Energy Agency agreed to release about 400 million barrels of oil from emergency reserves, the largest release in the agency's history, Fortune reported.",
+      "Asian economies that rely on imported energy face an \"existential threat\" from a prolonged Iran war, the South China Morning Post reported.",
+      "Eon Systems said it had connected an emulation of a fruit fly's brain, built from its full wiring diagram, to a simulated body that walks, grooms and feeds.",
+      "India's Central Bureau of Investigation arrested Darwin Labs co-founder Ayush Varshney in the GainBitcoin fraud case after he was stopped at Mumbai airport, Cointelegraph reported.",
+      "Shares in Nebius rose after Nvidia announced a $2bn investment in the AI cloud company, the Motley Fool reported.",
+      "Eli Lilly said it would invest about $3bn in China over the next decade to expand its supply chain and manufacturing, Fierce Pharma reported.",
+      "Spain removed its ambassador to Israel, according to the official state gazette, Reuters reported.",
+      "In the Republic of Congo, President Denis Sassou Nguesso stood for another term in an election expected to extend his 42 years in power, the Associated Press reported."
+    ]
+  }
+}

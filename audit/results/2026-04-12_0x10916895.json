@@ -1,0 +1,154 @@
+{
+  "hash": "0x109168953b6516cc0a25af0c46040165d2c2eea415aa434ab116218828eedbdb",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Headline: Iran talks collapse",
+      "status": "supported",
+      "evidence": "https://www.ksat.com/gallery/news/2026/04/12/the-latest-us-vice-president-vance-leaves-pakistan-after-talks-with-iran-end-without-agreement",
+      "note": "AP, 12 April: Vance left Pakistan after talks with Iran ended without agreement."
+    },
+    {
+      "text": "Headline: while Trump watches cage fights",
+      "status": "supported",
+      "evidence": "https://www.hawaiitribune-herald.com/2026/04/13/nation-world-news/trump-was-watching-a-ufc-fight-in-miami-while-iran-talks-collapsed/",
+      "note": "New York Times (Katie Rogers), syndicated: Trump was at a UFC event in Miami while the talks ended. NYT said it was unclear whether he knew the talks had failed. Kept as a separate item, not linked to the talks in the headline."
+    },
+    {
+      "text": "Headline: astronauts float home",
+      "status": "wrong",
+      "evidence": "https://www.ksl.com/article/51481765/artemis-ii-returns-from-moon-with-splashdown-to-close-out-record-breaking-lunar-voyage",
+      "note": "AP: splashdown was on 10 April, two days before this edition, not ongoing."
+    },
+    {
+      "text": "Subheadline: the distance between diplomacy and entertainment has never been measured in dead children before",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Rhetorical line. Replaced."
+    },
+    {
+      "text": "Four Americans bobbed in the Pacific yesterday after ten days orbiting the moon",
+      "status": "wrong",
+      "evidence": "https://www.ksl.com/article/51481765/artemis-ii-returns-from-moon-with-splashdown-to-close-out-record-breaking-lunar-voyage",
+      "note": "AP: splashdown was on Friday 10 April (not 'yesterday', 11 April) after a nearly 10-day flight; the crew included Canadian astronaut Jeremy Hansen, so not four Americans."
+    },
+    {
+      "text": "The Artemis II crew splashed down to champagne and recovery ships",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Recovery by US Navy to USS John P. Murtha is reported; no source for champagne. Removed."
+    },
+    {
+      "text": "Iranian negotiators rejected the terms Vance brought; Vance said it was \"bad news\" that no agreement was reached",
+      "status": "supported",
+      "evidence": "https://tribune.com.pk/story/2602357/vance-leaves-after-21-hour-talks-end-without-agreement-praises-pakistans-mediation-efforts",
+      "note": "Express Tribune, 12 April: after about 21 hours of talks Vance called it bad news, more for Iran than for the US, and said Iran had not accepted US terms. Exact quote wording varies between outlets, so the copy paraphrases. Iran's Tasnim blamed 'excessive' US demands (Free Press Journal)."
+    },
+    {
+      "text": "Talks crashed into \"response phases\" and \"pause periods\"; the Iranian negotiators are in their \"response phase\"",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source found for these quoted phrases. Removed."
+    },
+    {
+      "text": "Trump was at a UFC event in Miami when the talks failed",
+      "status": "supported",
+      "evidence": "https://www.bangordailynews.com/2026/04/12/politics/washington/trump-miami-ufc-iran-war/",
+      "note": "Trump attended UFC 327 at the Kaseya Center in Miami on Saturday 11 April as the talks ended (NYT; Bangor Daily News)."
+    },
+    {
+      "text": "The crowd cheered; the bombs are probably already in the air",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Reports conflict on whether he was cheered or booed; 'bombs in the air' is speculation. Removed."
+    },
+    {
+      "text": "Smoke is rising from Beirut suburbs again, according to DW News",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No DW report found for 11-12 April in two searches; strikes on Beirut's southern suburbs were reported on 6 and 8 April. Removed."
+    },
+    {
+      "text": "Pakistan has deployed fighter jets to Saudi Arabia",
+      "status": "supported",
+      "evidence": "https://www.aljazeera.com/news/2026/4/11/pakistan-sends-fighter-jets-to-saudi-arabia-amid-fragile-us-iran-ceasefire",
+      "note": "Al Jazeera, 11 April: Saudi defence ministry said Pakistani fighter and support aircraft arrived at King Abdulaziz Air Base under the September 2025 mutual defence pact. 'Positioning for offense' is speculation and removed."
+    },
+    {
+      "text": "CNN's talking heads are \"breaking down\" the failed talks",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Unspecified TV segment; not a news fact. Removed."
+    },
+    {
+      "text": "The photographs of dead Iranian children Vance brought to Islamabad",
+      "status": "wrong",
+      "evidence": "https://www.freepressjournal.in/world/blood-soaked-bags-footwear-with-photos-iran-delegation-calls-minab-school-victims-companions-on-flight-as-it-reaches-islamabad-for-peace-talks",
+      "note": "The photos and belongings of Minab victims were carried by the Iranian delegation led by Ghalibaf, not by Vance."
+    },
+    {
+      "text": "The world edges toward a shooting war between nuclear powers",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source; Iran is not a declared nuclear weapons state. Removed."
+    },
+    {
+      "text": "Bitcoin sentiment 51; Ethereum 51",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "Global Sentiment tracker 50 out of 100",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "Seattle unveiled a monument to Swami Vivekananda",
+      "status": "supported",
+      "evidence": "https://www.fox13seattle.com/news/seattle-mayor-swami-vivekananda-statue",
+      "note": "FOX 13 Seattle: Mayor Katie Wilson and the Indian Consulate unveiled a statue of Swami Vivekananda downtown (Westlake, 11 April per Business Today)."
+    },
+    {
+      "text": "Fighter jets scrambled toward the Persian Gulf",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source for jets scrambling; the Pakistani aircraft deployment to Saudi Arabia is the only sourced movement. Removed."
+    },
+    {
+      "text": "Three days ago, I wrote about astronauts falling toward Earth",
+      "status": "wrong",
+      "evidence": "",
+      "note": "That edition was dated 10 April, two days earlier. Self-reference removed."
+    },
+    {
+      "text": "Today they're home safe and the ceasefire is dead",
+      "status": "wrong",
+      "evidence": "https://www.pbs.org/newshour/amp/world/u-s-and-iran-signal-new-ceasefire-talks-in-islamabad-as-fragile-truce-nears-end",
+      "note": "The two-week ceasefire remained in place after the talks failed; later reporting describes the 'fragile truce' nearing its end around 21 April."
+    },
+    {
+      "text": "Divide and Dissolve's live performance on KEXP",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news"
+    },
+    {
+      "text": "The astronauts will do interviews about seeing Earth from space",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Speculative closing. Removed."
+    }
+  ],
+  "edits": {
+    "headline": "US and Iran end talks in Pakistan without agreement",
+    "subheadline": "Vice President JD Vance left Pakistan after talks with Iran ended without agreement, the Associated Press reported.",
+    "editorialBody": [
+      "Talks between the US and Iran in Islamabad ended without agreement, the Associated Press reported. Vice President JD Vance said after about 21 hours of talks that Iran had not accepted US terms and called the outcome bad news, the Express Tribune reported.",
+      "President Trump attended a UFC event in Miami on 11 April, The New York Times reported. The paper said it was unclear whether he knew the talks had ended.",
+      "Pakistani fighter and support aircraft arrived at King Abdulaziz Air Base in Saudi Arabia under the two countries' defence pact, the Saudi defence ministry said, according to Al Jazeera.",
+      "In Seattle, Mayor Katie Wilson and India's consulate unveiled a statue of Swami Vivekananda, FOX 13 Seattle reported."
+    ]
+  }
+}
