@@ -37,6 +37,8 @@ interface EditRequestBody {
     claim?: string;
     tags?: string[];
     dailyTitle?: string;
+    /** ISO timestamp: corrects a generatedAt that an earlier edit re-stamped. */
+    generatedAt?: string;
     /** Base64-encoded PNG for illustration replacement */
     illustrationBase64?: string;
   };
@@ -124,6 +126,13 @@ export async function POST(request: NextRequest) {
       relatedSummaryByLink: {},
     });
   }
+
+  // Keep the original date (saveEditorial preserves it when present), or
+  // apply an explicit correction.
+  (updated as unknown as Record<string, unknown>).generatedAt =
+    edits.generatedAt && !Number.isNaN(Date.parse(edits.generatedAt))
+      ? new Date(edits.generatedAt).toISOString()
+      : existing.generatedAt;
 
   // Also update dailyTitle if this is a daily edition
   if (edits.dailyTitle && existing.isDailyEdition) {

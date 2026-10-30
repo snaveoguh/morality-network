@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 94 · editorials keep their original date when re-saved
+- **when** — 2026-10-30
+- **what** — `saveEditorial` keeps a `generatedAt` that the caller passes (archived records carry one) instead of stamping the save time. `/api/editorial/edit` keeps the record's date and accepts a `generatedAt` correction.
+- **why** — the 29 Oct opium edition's illustration broke after it was edited: its edition/illustration number is derived from `generatedAt`, which the edit re-stamped to 30 Oct (#599, no image) instead of 29 Oct (#598). The same re-stamp happened whenever the article page hydrated a cached editorial, the daily-illustration cron re-saved an edition, or the illustration backfill ran. It would also have re-dated all 72 editions in the fact audit.
+- **where** — `web/src/lib/editorial-archive.ts`, `web/src/app/api/editorial/edit/route.ts`. The opium edition's date is restored through the edit route after deploy.
+- **rollback** — `git revert` this commit.
+
 ## ▲ node 93 · trader key rotation: keep the track record across accounts
 - **when** — 2026-10-30
 - **what** — `TRADER_ARCHIVED_WALLETS` (comma list): `/api/trading/metrics-v2` now reads closed trades (`getRecentClosedForWallets`) and Hyperliquid close fills for the live account plus every archived one; live positions and balance still come from the live account only. A trade-only Hyperliquid API (agent) key was generated on the Mac at `~/.pooter-hl-agent.key` (address `0xAbf67A13a5974cD67958dFB34589E09f73A1f4aa`); the trader already supports signing for a separate account via `HYPERLIQUID_ACCOUNT_ADDRESS`.

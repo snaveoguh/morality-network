@@ -343,7 +343,10 @@ export async function saveEditorial(
     ...editorialWithoutIllustration,
     hasIllustration: editorial.hasIllustration || !!_illus,
     entityHash: hash,
-    generatedAt: now,
+    // Keep the original date when the caller carries one (edits pass the
+    // archived record through). Re-stamping it moved edited daily editions
+    // to the edit date, which broke their illustration and edition number.
+    generatedAt: (editorial as Partial<ArchivedEditorial>).generatedAt ?? now,
     generatedBy,
     contentHash,
     version: existing ? existing.version + 1 : 1,
