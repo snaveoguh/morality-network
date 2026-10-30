@@ -12,13 +12,13 @@ export default function EntityError({
   return (
     <section className="mx-auto max-w-3xl py-10">
       <div className="border-b-2 border-[var(--rule)] pb-4 mb-6">
-        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[var(--accent-red)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[var(--ink-faint)]">
           Entity Error
         </p>
-        <h1 className="mt-1 font-headline text-2xl leading-tight text-[var(--ink)] sm:text-3xl">
+        <h1 className="mt-1 news-head text-[28px] leading-[1.15] text-[var(--ink)]">
           Could not load this entity profile.
         </h1>
-        <p className="mt-3 font-body-serif text-base leading-relaxed text-[var(--ink-light)]">
+        <p className="mt-3 article-dek">
           Contract reads or RPC connectivity may be temporarily unavailable.
           Your onchain data is safe.
         </p>

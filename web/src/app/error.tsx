@@ -15,10 +15,10 @@ export default function RootError({
         <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[var(--accent-red)]">
           Rendering Error
         </p>
-        <h1 className="mt-1 font-headline text-2xl leading-tight text-[var(--ink)] sm:text-3xl">
+        <h1 className="mt-1 news-head text-[28px] leading-[1.15] text-[var(--ink)]">
           Something went wrong.
         </h1>
-        <p className="mt-3 font-body-serif text-base leading-relaxed text-[var(--ink-light)]">
+        <p className="mt-3 article-dek">
           This is usually a temporary issue with network connectivity or data
           loading. Your onchain data is still safe and permanent.
         </p>

@@ -348,10 +348,10 @@ export function FundingTree({ graph }: FundingTreeProps) {
   if (graph.nodes.length === 0) return null;
 
   return (
-    <section className="mb-8 border-t border-[var(--rule-light)] pt-4">
+    <section className="mb-8 article-section">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
-          Funding Tree
+        <h2 className="article-section-head">
+          Funding tree
         </h2>
         <span className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
           {graph.nodes.length} entities &middot; {graph.edges.length} links

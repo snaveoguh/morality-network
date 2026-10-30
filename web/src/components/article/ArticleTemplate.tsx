@@ -298,12 +298,12 @@ export function ArticleTemplate({
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6">
       {/* ══════════════ BACK NAV ══════════════ */}
-      <div className="mb-6 flex items-center gap-3 border-b border-[var(--rule-light)] pb-3 font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
+      <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[var(--rule-light)] pb-3 article-byline">
         <Link
           href="/"
           className="transition-colors hover:text-[var(--ink)]"
         >
-          &larr; Back to Front Page
+          &larr; Front page
         </Link>
         <span className="mx-1 text-[var(--rule-light)]">|</span>
         <span>{primary.category}</span>
@@ -320,44 +320,44 @@ export function ArticleTemplate({
       {/* ══════════════ ARTICLE HEADER ══════════════ */}
       <header className="mb-8">
         {/* Category + Source + Bias */}
-        <div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-          <span className="font-bold text-[var(--accent-red)]">{primary.category}</span>
+        <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 article-byline">
+          <span className="article-kicker">{primary.category}</span>
           <span>&middot;</span>
           <span>{primary.source}</span>
           {primary.bias && <BiasPill bias={primary.bias} />}
         </div>
 
-        {/* Headline — Playfair Display, massive */}
+        {/* Headline — Newsreader, the front-page lead scaled up */}
         <h1
           ref={headlineRef}
           contentEditable={editing}
           suppressContentEditableWarning
-          className={`font-headline text-3xl leading-[1.1] text-[var(--ink)] sm:text-4xl lg:text-5xl ${editing ? "outline outline-1 outline-dashed outline-[var(--accent-red)] px-2 py-1" : ""}`}
+          className={`article-title ${editing ? "outline outline-1 outline-dashed outline-[var(--ink-faint)] px-2 py-1" : ""}`}
         >
           {stripMd(primary.title)}
         </h1>
 
-        {/* Subheadline — editorial, italic */}
+        {/* Standfirst — serif, roman */}
         <p
           ref={subheadlineRef}
           contentEditable={editing}
           suppressContentEditableWarning
-          className={`mt-3 font-body-serif text-base italic leading-relaxed text-[var(--ink-light)] sm:text-lg ${editing ? "outline outline-1 outline-dashed outline-[var(--accent-red)] px-2 py-1" : ""}`}
+          className={`mt-3 article-dek ${editing ? "outline outline-1 outline-dashed outline-[var(--ink-faint)] px-2 py-1" : ""}`}
         >
           {stripMd(subheadline)}
         </p>
         {subheadlineEnglish &&
           stripMd(subheadlineEnglish) !== stripMd(subheadline) && (
-            <p className="mt-1 font-body-serif text-sm leading-relaxed text-[var(--ink-faint)] sm:text-base">
+            <p className="mt-1 text-[15px] leading-relaxed text-[var(--ink-faint)]">
               {stripMd(subheadlineEnglish)}
             </p>
           )}
 
         <aside className="mt-5 border-l-2 border-[var(--rule)] pl-4">
-          <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--ink-faint)]">
-            Canonical Claim
+          <p className="mb-1 text-xs font-semibold text-[var(--ink-faint)]">
+            Canonical claim
           </p>
-          <p className="font-body-serif text-base leading-relaxed text-[var(--ink)]">
+          <p className="news-head text-lg leading-snug text-[var(--ink)]">
             {claim}
           </p>
         </aside>
@@ -376,8 +376,8 @@ export function ArticleTemplate({
           </div>
         )}
 
-        {/* Dateline — monospace ruled */}
-        <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-b border-[var(--rule-light)] py-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+        {/* Dateline — plain Inter byline between hairlines */}
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-b border-[var(--rule-light)] py-2 article-byline">
           <span>{dateline}</span>
           <span>&middot;</span>
           <span>Source: {primary.source}</span>
@@ -501,17 +501,17 @@ export function ArticleTemplate({
       {podcastEpisode && <PodcastEmbed episode={podcastEpisode} sourceName={primary.source} />}
 
       {/* ══════════════ AGENT SWARM ATTRIBUTION ══════════════ */}
-      <div className="mb-4 flex items-center gap-2 border-b border-[var(--rule-light)] pb-3">
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-          Created &amp; moderated by the Morality Agent Swarm
+      <div className="mb-4 flex flex-wrap items-center gap-2 border-b border-[var(--rule-light)] pb-3">
+        <span className="article-byline">
+          Created and moderated by the Morality Agent Swarm
         </span>
         {archiveStatus?.generatedBy === "claude-ai" && (
-          <span className="border border-[var(--ink)] px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--ink)]">
-            AI Editorial
+          <span className="article-byline">
+            &middot; AI editorial
           </span>
         )}
         {article.editedBy && (
-          <span className="border border-[var(--accent-red)] px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[var(--accent-red)]">
+          <span className="article-byline">
             Edited by {article.editedBy.endsWith(".eth") ? article.editedBy : `${article.editedBy.slice(0, 6)}...${article.editedBy.slice(-4)}`}
           </span>
         )}
@@ -556,17 +556,13 @@ export function ArticleTemplate({
               ref={(el) => { bodyRefs.current[i] = el; }}
               contentEditable={editing}
               suppressContentEditableWarning
-              className={`font-body-serif leading-[1.85] text-[var(--ink-light)] ${
-                i === 0
-                  ? "drop-cap text-[1.125rem] leading-[1.9] text-[var(--ink)]"
-                  : "text-base"
-              } ${editing ? "outline outline-1 outline-dashed outline-[var(--rule)] px-2 py-1" : ""}`}
+              className={`article-body ${i === 0 ? "drop-cap" : ""} ${editing ? "outline outline-1 outline-dashed outline-[var(--rule)] px-2 py-1" : ""}`}
             >
               {renderParagraphWithEntities(paragraph, i, entities || [])}
             </p>
             {editorialBodyEnglish?.[i] &&
               editorialBodyEnglish[i].trim() !== paragraph.trim() && (
-                <p className="mt-1 font-body-serif text-sm leading-relaxed text-[var(--ink-faint)]">
+                <p className="mt-1 text-[15px] leading-relaxed text-[var(--ink-faint)]">
                   {editorialBodyEnglish[i]}
                 </p>
               )}
@@ -576,9 +572,9 @@ export function ArticleTemplate({
 
       {/* ══════════════ DAILY EDITION: MUSIC PICK ══════════════ */}
       {isDailyEdition && musicPick && (
-        <section className="mb-8 border-t border-[var(--rule-light)] pt-6">
-          <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
-            Today&rsquo;s Pick
+        <section className="mb-8 article-section">
+          <h2 className="mb-3 article-section-head">
+            Today&rsquo;s pick
           </h2>
           {musicPick.spotifyId ? (
             <SpotifyEmbed
@@ -602,9 +598,9 @@ export function ArticleTemplate({
 
       {/* ══════════════ DAILY EDITION: NEWS VIDEOS ══════════════ */}
       {isDailyEdition && newsVideos && newsVideos.length > 0 && (
-        <section className="mb-8 border-t border-[var(--rule-light)] pt-6">
-          <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
-            Today&rsquo;s Video Picks
+        <section className="mb-8 article-section">
+          <h2 className="mb-3 article-section-head">
+            Today&rsquo;s video picks
           </h2>
           <div className="space-y-4">
             {newsVideos.map((video) => (
@@ -626,14 +622,14 @@ export function ArticleTemplate({
 
       {/* ══════════════ DEEP CONTEXT — what's missing from the coverage ══════════════ */}
       {(missingContext || historicalParallel || stakeholderAnalysis) && (
-        <section className="mb-8 border-t-2 border-[var(--rule)] pt-4">
-          <h2 className="mb-4 font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
-            Deeper Context
+        <section className="mb-8 article-section">
+          <h2 className="mb-4 article-section-head">
+            Deeper context
           </h2>
 
           {missingContext && (
-            <div className="mb-4 border-l-2 border-[var(--accent-red)] pl-4">
-              <p className="mb-1.5 font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--accent-red)]">
+            <div className="mb-4 border-l-2 border-[var(--ink)] pl-4">
+              <p className="mb-1.5 font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--ink)]">
                 What&rsquo;s Missing
               </p>
               <p className="font-body-serif text-sm leading-[1.8] text-[var(--ink-light)]">
@@ -670,9 +666,9 @@ export function ArticleTemplate({
       {fundingGraph.nodes.length > 1 && <FundingTree graph={fundingGraph} />}
 
       {/* ══════════════ ORIGINAL SOURCE TEXT — cited verbatim ══════════════ */}
-      <section className="mb-8 border-t-2 border-b border-[var(--rule)] py-4">
-        <h2 className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
-          Original Source Text
+      <section className="mb-8 article-section pb-4">
+        <h2 className="mb-1 article-section-head">
+          Original source text
         </h2>
         <p className="mb-3 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
           Verbatim descriptions from source feeds &mdash; unedited, as received
@@ -734,9 +730,9 @@ export function ArticleTemplate({
 
       {/* ══════════════ STORY CONTEXT — scraped + synthesized ══════════════ */}
       {contextSnippets.length > 0 && (
-        <section className="mb-8 border-t border-b border-[var(--rule-light)] py-4">
-          <h2 className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
-            Story Context
+        <section className="mb-8 article-section pb-4">
+          <h2 className="mb-3 article-section-head">
+            Story context
           </h2>
           <div className="space-y-2.5">
             {contextSnippets.map((snippet) => (
@@ -757,9 +753,9 @@ export function ArticleTemplate({
       )}
 
       {/* ══════════════ AGENT RESEARCH PACK ══════════════ */}
-      <section className="mb-8 border-t border-b-2 border-[var(--rule)] py-4">
-        <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
-          Agent Research Pack
+      <section className="mb-8 article-section pb-4">
+        <h2 className="mb-2 article-section-head">
+          Agent research pack
         </h2>
         <p className="mb-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
           {agentResearch.sourceCount} sources · {agentResearch.evidence.length} evidence links
@@ -771,8 +767,8 @@ export function ArticleTemplate({
         </div>
 
         {agentResearch.contradictionFlags.length > 0 && (
-          <div className="mb-3 border border-[var(--accent-red)]/50 bg-[color-mix(in_oklab,var(--paper)_94%,var(--accent-red)_6%)] p-2.5">
-            <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--accent-red)]">
+          <div className="mb-3 border border-[var(--rule)] bg-[var(--paper-dark)] p-2.5">
+            <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--ink)]">
               Conflicting Claims Detected
             </p>
             <div className="space-y-2">
@@ -797,7 +793,7 @@ export function ArticleTemplate({
                 href={evidence.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-body-serif text-sm leading-relaxed text-[var(--ink)] underline decoration-[var(--rule-light)] underline-offset-2 transition-colors hover:text-[var(--accent-red)]"
+                className="font-body-serif text-sm leading-relaxed text-[var(--ink)] underline decoration-[var(--rule-light)] underline-offset-2 transition-colors hover:text-[var(--ink)]"
               >
                 {evidence.title}
               </a>
@@ -823,9 +819,9 @@ export function ArticleTemplate({
 
       {/* ══════════════ THE WIRE — Multi-source coverage ══════════════ */}
       {relatedSources.length > 0 && (
-        <section className="mb-8 border-t-2 border-b-2 border-[var(--rule)] py-4">
-          <h2 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
-            The Wire &mdash; Other Sources
+        <section className="mb-8 article-section pb-4">
+          <h2 className="mb-3 article-section-head">
+            Other sources on this story
           </h2>
           <div className="space-y-3">
             {relatedSources.map((rel, i) => {
@@ -849,7 +845,7 @@ export function ArticleTemplate({
                   <div className="min-w-0 flex-1">
                     <Link
                       href={`/article/${relHash}`}
-                      className="font-headline-serif text-sm font-bold leading-snug text-[var(--ink)] transition-colors hover:text-[var(--accent-red)]"
+                      className="article-link-head hover:underline hover:decoration-[var(--ink-faint)] hover:decoration-1 hover:underline-offset-4"
                     >
                       {rel.title}
                     </Link>
@@ -878,14 +874,14 @@ export function ArticleTemplate({
 
       {/* ══════════════ ARCHIVE — Related archived coverage ══════════════ */}
       {archivedRelated.length > 0 && (
-        <section className="mb-8 border-t border-b border-[var(--rule-light)] py-4">
+        <section className="mb-8 article-section pb-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--ink)]">
-              From the Archive
+            <h2 className="article-section-head">
+              From the archive
             </h2>
             <Link
               href="/archive"
-              className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--accent-red)]"
+              className="font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)] transition-colors hover:text-[var(--ink)]"
             >
               Browse Archive &rsaquo;
             </Link>
@@ -908,7 +904,7 @@ export function ArticleTemplate({
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/article/${item.hash}`}
-                    className="font-headline-serif text-sm font-bold leading-snug text-[var(--ink)] transition-colors hover:text-[var(--accent-red)]"
+                    className="article-link-head hover:underline hover:decoration-[var(--ink-faint)] hover:decoration-1 hover:underline-offset-4"
                   >
                     {item.title}
                   </Link>
@@ -950,7 +946,7 @@ export function ArticleTemplate({
       )}
 
       {/* ══════════════ ACTIONS BAR ══════════════ */}
-      <div className="mb-6 flex flex-wrap items-center gap-4 border-t-2 border-[var(--rule)] pt-4">
+      <div className="mb-6 flex flex-wrap items-center gap-4 article-section">
         <RatingWidget entityHash={entityHash as `0x${string}`} />
 
         {isConnected && <TipButton entityHash={entityHash as `0x${string}`} />}
@@ -987,9 +983,9 @@ export function ArticleTemplate({
       )}
 
       {/* ══════════════ EMBEDDED DISCUSSION ══════════════ */}
-      <section className="mb-8 border-t-2 border-[var(--rule)] pt-4">
+      <section className="mb-8 article-section">
         <div className="mb-3 flex items-center gap-2">
-          <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--ink)]">
+          <h2 className="article-section-head">
             Discussion
           </h2>
           <span className="font-mono text-[9px] text-[var(--ink-faint)]">&mdash; onchain</span>
@@ -1007,7 +1003,7 @@ export function ArticleTemplate({
             href={primary.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="block font-body-serif text-sm text-[var(--ink-light)] underline decoration-[var(--rule-light)] underline-offset-2 transition-colors hover:text-[var(--accent-red)] hover:decoration-[var(--accent-red)]"
+            className="block font-body-serif text-sm text-[var(--ink-light)] underline decoration-[var(--rule-light)] underline-offset-2 transition-colors hover:text-[var(--ink)] hover:decoration-[var(--ink)]"
           >
             {primary.source}: {primary.title}
           </a>
@@ -1028,7 +1024,7 @@ export function ArticleTemplate({
                 href={rel.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block font-body-serif text-sm text-[var(--ink-light)] underline decoration-[var(--rule-light)] underline-offset-2 transition-colors hover:text-[var(--accent-red)] hover:decoration-[var(--accent-red)]"
+                className="block font-body-serif text-sm text-[var(--ink-light)] underline decoration-[var(--rule-light)] underline-offset-2 transition-colors hover:text-[var(--ink)] hover:decoration-[var(--ink)]"
               >
                 {rel.source}: {rel.title}
               </a>

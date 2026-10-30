@@ -12,7 +12,7 @@ export default function Loading() {
           <span className="text-[var(--rule-light)]">|</span>
           <span>Archive</span>
         </div>
-        <h1 className="font-headline text-3xl leading-tight text-[var(--ink)] md:text-4xl">
+        <h1 className="article-title">
           The Archive
         </h1>
       </div>

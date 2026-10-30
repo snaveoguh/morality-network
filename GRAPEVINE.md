@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 90 · article pages in the direction C type
+- **when** — 2026-10-29
+- **what** — Shared `article-*` utilities in `globals.css` (`article-title`, `article-dek`, `article-kicker`, `article-byline`, `article-body`, `article-section`, `article-section-head`, `article-link-head`) built on the front page's Newsreader headline. The article reader (`ArticleTemplate` + its section components), the `/article/[hash]` fallback states, `/entity/[hash]`, `/originals` and `/archive` now use them: the h1 is Newsreader 500 (32px phone, 44px desktop) in place of Archivo Black, the standfirst is a roman serif, section heads are serif labels under a 4px double rule, and related-story links are serif. Red category kickers, red "What's missing" rule and red hovers are now ink.
+- **why** — Hugo: "when u click into articles it doesnt actually maintain the style? h1 is still old ones rather than the new serif font".
+- **where** — `web/src/app/globals.css`, `web/src/components/article/*`, `web/src/app/{article,entity}/[hash]/*`, `web/src/app/{originals,archive}/*`, `web/src/components/archive/AsyncArchiveList.tsx`, `web/src/components/entity/EntityProfile.tsx`; branch `feat/article-style` off `dev`.
+- **rollback** — `git revert` the commit.
+
 ## ▲ node 89 · header: dated notice line + impact-ranked news ticker
 - **when** — 2026-10-29
 - **what** — Header reads "Accountability record · Thu 29 Oct" (London date, set on the client) with a strip below it: the day's top 8 stories, scrolling right to left, each linking to its `/article/<hash>` page. Stories touching a Bearometer asset carry the asset in small mono ("BTC", "Gold", "DXY", "Supply chain"). Ranking is `web/src/lib/impact.ts`: title-overlap clusters scored by outlets × recency (8h half-life) × source tier × category × 1.35 signal boost; no model call, memoised per cached feed. Served by `/api/ticker`. CSS-only animation; pauses on hover, stops on keyboard focus, static first story under `prefers-reduced-motion`. `rss.ts` now exports `getSourceTier`/`SourceTier`.
