@@ -1,0 +1,139 @@
+{
+ "hash": "0x7a0fb9a35d2737ae77dcadc44b857ef168c57ac04119a4b111fc6b3eb2aa29a4",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Saad Ahmed, 32, scaled the gates of Delhi University on September 22 with a placard and a quoted promise to 'find the student who stole my future'",
+   "status": "wrong",
+   "evidence": "https://abc7news.com/post/video-man-scales-locked-gate-chasing-uc-berkeley-student-home/19856045/",
+   "note": "The ABC report on a man scaling a gate after chasing a student concerns UC Berkeley, California (incident 15 Sept). No named suspect, no Delhi, no placard, no quote. Name, age, place, date and quote invented."
+  },
+  {
+   "text": "ABC report 'Man who scaled gate pursuing student remains free' still lists him as at large a week later",
+   "status": "wrong",
+   "evidence": "https://abc7news.com/post/video-man-scales-locked-gate-chasing-uc-berkeley-student-home/19856045/",
+   "note": "ABC7 (23 Sept) says the Berkeley suspect was released after the incident, then arrested on 19 Sept on an unrelated felony warrant and held at Santa Rita Jail; the DA had not filed charges for the gate incident."
+  },
+  {
+   "text": "DW: Kejriwal demands Gyanesh Kumar's arrest and fresh polls",
+   "status": "supported",
+   "evidence": "https://www.republicworld.com/india/gyanesh-kumar-acting-as-mastermind-arvind-kejriwal-demands-arrest-of-cec-alleges-electoral-rigging-2026-09-23-137554",
+   "note": "Republic World, 23 Sept 2026: Kejriwal demanded the arrest of CEC Gyanesh Kumar and fresh elections. Kejriwal is not a sitting chief minister. DW original not found; reported by Republic World and others."
+  },
+  {
+   "text": "Fresh polls in 7 states",
+   "status": "unsupported",
+   "evidence": "https://www.republicworld.com/india/gyanesh-kumar-acting-as-mastermind-arvind-kejriwal-demands-arrest-of-cec-alleges-electoral-rigging-2026-09-23-137554",
+   "note": "Republic World lists four (Delhi, Bihar, West Bengal, Maharashtra); other outlets list six or seven. Count not settled, so dropped."
+  },
+  {
+   "text": "Kejriwal described as a chief minister; 'men who sold tickets to the 2025 Delhi floods'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Kejriwal is not a serving chief minister; 'Delhi floods' line invented."
+  },
+  {
+   "text": "DOJ defends White House ban on CNN, MS NOW and Politico citing national security",
+   "status": "supported",
+   "evidence": "https://www.cbsnews.com/news/doj-defends-trump-white-house-media-ban/",
+   "note": "CBS News: DOJ filing on 22 Sept said 'Access to the White House is a privilege, not a right' and cited protection of classified information."
+  },
+  {
+   "text": "DOJ is expected to file a suit against the media ban by mid-week",
+   "status": "wrong",
+   "evidence": "https://www.cbsnews.com/news/doj-defends-trump-white-house-media-ban/",
+   "note": "The outlets sued; the DOJ is defending the ban. No DOJ suit."
+  },
+  {
+   "text": "FBI investigating possible cyber breach of its job application website (ABC)",
+   "status": "supported",
+   "evidence": "https://www.goodmorningamerica.com/news/story/fbi-investigating-cyber-breach-job-application-website-136671996",
+   "note": "ABC News, 23 Sept: FBI said it was aware of claims of unauthorized activity affecting FBIjobs.gov and was investigating; ABC had not verified the hackers' claims."
+  },
+  {
+   "text": "(rewrite) A hacking group said it was responsible, according to 404 Media; ABC had not verified",
+   "status": "supported",
+   "evidence": "https://www.goodmorningamerica.com/news/story/fbi-investigating-cyber-breach-job-application-website-136671996",
+   "note": "ABC News 23 Sept cites 404 Media on the group's claim and says ABC had not verified it."
+  },
+  {
+   "text": "The breach spooked crypto markets; Bitcoin sentiment 51, market signal 49; Ethereum mirrors",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal sentiment scores, no public source; causal link to FBI breach invented."
+  },
+  {
+   "text": "80-year-old Hong Kong victim of 'Blood and Bitcoin' lost HK$6 million",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal earlier edition. Search found only a March 2026 case of a 66-year-old Hong Kong retiree losing HK$6.6m; no 80-year-old."
+  },
+  {
+   "text": "Asian Games 2026: Mirabai Chanu wins silver",
+   "status": "supported",
+   "evidence": "https://www.aljazeera.com/sports/2026/9/23/mirabai-chanu-wins-asian-games-silver-as-ri-breaks-weightlifting-record",
+   "note": "Al Jazeera, 23 Sept: silver in women's 49kg weightlifting, 198kg total, Ri Song Gum (North Korea) gold."
+  },
+  {
+   "text": "Silver won on the fields of Hangzhou; Chanu a gymnast",
+   "status": "wrong",
+   "evidence": "https://www.aljazeera.com/sports/2026/9/23/mirabai-chanu-wins-asian-games-silver-as-ri-breaks-weightlifting-record",
+   "note": "The 2026 Asian Games were in Aichi-Nagoya, Japan; Chanu is a weightlifter."
+  },
+  {
+   "text": "Ram Mandir donation case: 7,000-page charge sheet against 8",
+   "status": "wrong",
+   "evidence": "https://www.businesstoday.in/india/story/ram-temple-donation-theft-case-74000-page-chargesheet-filed-eight-accused-named-557441-2026-09-24",
+   "note": "Business Today, 24 Sept: SIT filed a 74,000-page charge sheet against eight accused. Eight is correct; page count wrong."
+  },
+  {
+   "text": "Fraud siphoned crores of rupees from devotees",
+   "status": "unsupported",
+   "evidence": "https://www.businesstoday.in/india/story/ram-temple-donation-theft-case-74000-page-chargesheet-filed-eight-accused-named-557441-2026-09-24",
+   "note": "Business Today reports recovery of about Rs 79.8 lakh from seven accused; no crore total given."
+  },
+  {
+   "text": "Liang Wei cradling his mother's hand in Guangzhou; footage amassed three million views",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal earlier edition; no source found."
+  },
+  {
+   "text": "Binance pump-and-dump cycle driven by the same algorithms",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "Ahmed al-Mansoor's thigh torn by shrapnel in Kuwait; IVF clinics scramble for supplies under sanctions",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found; appears invented."
+  },
+  {
+   "text": "Supreme Court will hear Election Commissioners Appointment Law arguments on October 5",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Searched LiveLaw and others: latest hearings found May and 30 July 2026; no 5 Oct listing found."
+  },
+  {
+   "text": "'Decentralized Futures Forum' on October 12 with governance-audit proposal",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such event found."
+  }
+ ],
+ "edits": {
+  "headline": "Kejriwal demands arrest of India's chief election commissioner",
+  "subheadline": "Kejriwal also called for fresh elections in Delhi and Bihar, Republic World reported.",
+  "editorialBody": [
+   "Arvind Kejriwal demanded the arrest of India's Chief Election Commissioner, Gyanesh Kumar, at a press conference on 23 September, Republic World reported.",
+   "Kejriwal alleged rigging of electoral rolls. He called for fresh elections in Delhi, Bihar, West Bengal and Maharashtra, Republic World reported.",
+   "The US Justice Department defended the White House ban on CNN, MS NOW and Politico in a court filing on 22 September, CBS News reported. \"Access to the White House is a privilege, not a right,\" the filing said.",
+   "The department also cited the protection of classified information. US District Judge Timothy Kelly is hearing the outlets' request to restore their access, CBS News reported.",
+   "The FBI said it was investigating reports of unauthorised activity affecting FBIjobs.gov, its job application website, ABC News reported on 23 September. A hacking group said it was responsible, according to 404 Media. ABC News said it had not verified this.",
+   "India's Mirabai Chanu won silver in the women's 49kg weightlifting at the Asian Games in Nagoya, Japan, on 23 September, Al Jazeera reported. North Korea's Ri Song Gum won gold.",
+   "A police Special Investigation Team filed a 74,000-page charge sheet against eight people accused of stealing donations at the Ram temple in Ayodhya, Business Today reported on 24 September."
+  ]
+ }
+}

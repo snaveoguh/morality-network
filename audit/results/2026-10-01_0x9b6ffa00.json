@@ -70,9 +70,9 @@
     },
     {
       "text": "The victim is 27-year-old Maya González of Manchester, quoted 'shoved back into the hallway'",
-      "status": "wrong",
-      "evidence": "https://www.nationalworld.com/news/travelodge-woman-sexual-assault-room-key-review-9247429",
-      "note": "Victim is anonymous ('Lily'); assault was at the Maidenhead hotel. Name, age, city and quote invented."
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source names the victim. Search summaries (not fully verified) indicate she is anonymous and the assault was at a Maidenhead hotel; name, age, city and quote treated as invented. Removed."
     },
     {
       "text": "Hotel's internal review leaked on October 1 'admits' failures",
@@ -113,8 +113,8 @@
     {
       "text": "CNBC: AI billing algorithms inflating patient invoices by up to 23 percent",
       "status": "unsupported",
-      "evidence": "sourceRefs[12]",
-      "note": "Headline only says AI is in the billing system and patients may already be paying. No 23% figure found."
+      "evidence": "",
+      "note": "Headline only says AI is in the billing system and patients may already be paying. No 23% figure found. Related: sourceRefs[12]"
     },
     {
       "text": "'Patients may already be paying the price'",

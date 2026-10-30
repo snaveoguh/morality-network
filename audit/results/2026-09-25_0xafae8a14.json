@@ -1,0 +1,127 @@
+{
+ "hash": "0xafae8a142c3fd873a2b751fadf2b931ce400943a0fbd4b67171ed366818084c2",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Irina Petrova, 45, ex-software engineer and Uber driver in Bushwick, voted for United Russia on September 24 at her kitchen table; son drafted into the navy",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented person. TASS reports voting at 333 polling stations abroad; no kitchen-table ballots. Duma voting ran 18 to 20 Sept, not 24 Sept."
+  },
+  {
+   "text": "Over 280,000 Russians voted abroad, CEC chief announced",
+   "status": "supported",
+   "evidence": "sourceRefs[1]; https://tass.com/politics/2192731",
+   "note": "TASS 25 Sept: Ella Pamfilova said 280,355 voted abroad at 333 stations in 152 countries; about 204,000 in 2021."
+  },
+  {
+   "text": "Russian navy 'haunted by the Caspian explosion'",
+   "status": "wrong",
+   "evidence": "https://tass.com/world/2192125",
+   "note": "The Caspian incident was a Kazakh naval exercise; no explosion reported."
+  },
+  {
+   "text": "UN Day 3 delegates traded barbs over a Gaza 'humanitarian corridors' resolution and tabled it indefinitely",
+   "status": "unsupported",
+   "evidence": "https://news.un.org/feed/view/en/story/2026/09/1168434",
+   "note": "UN News Day 3 recap mentions no such resolution; Israel-Palestine dominated the debate, Abbas spoke by video after visa denial."
+  },
+  {
+   "text": "Global sentiment 60, AI optimism 62",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores."
+  },
+  {
+   "text": "Russia's ambassador to Germany, Sergei Kovalev, said 'questions remain' about who ordered the Nord Stream blasts",
+   "status": "wrong",
+   "evidence": "https://tass.com/politics/2192725",
+   "note": "The ambassador is Sergey Nechayev. TASS 25 Sept: he said key questions about perpetrators, those who ordered the sabotage and beneficiaries remain unanswered."
+  },
+  {
+   "text": "German utilities announce a five-fold surge in gas prices over the next five years",
+   "status": "wrong",
+   "evidence": "https://tass.com/economy/2192723",
+   "note": "TASS: Russian Security Council deputy secretary Alexey Shevtsov said Germany's rejection of Russian gas drove a fivefold price rise over the past five years. Not utilities, not a forecast."
+  },
+  {
+   "text": "The same TASS dispatch cited the gas price spike and said Nord Stream will stay 'unresolved' until a new security framework",
+   "status": "wrong",
+   "evidence": "https://tass.com/politics/2192725",
+   "note": "Two separate TASS items; the Nechayev item does not mention gas prices or a security framework."
+  },
+  {
+   "text": "Price hike projected at €2.5 billion annually for Germany; Leipzig electrician, 28",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "CEC 'boast' as attempt to legitimise; pipelines lie in tatters",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Opinion with no source."
+  },
+  {
+   "text": "BBC: cyber attack on police force may have compromised staff information",
+   "status": "supported",
+   "evidence": "sourceRefs[7]; https://therecord.media/wales-cyberattack-police-breach",
+   "note": "The Record 25 Sept: Dyfed-Powys Police (Wales); no evidence public data affected."
+  },
+  {
+   "text": "A national police force; data of over 1.2 million officers; 'Red-Phoenix' ransomware collective",
+   "status": "wrong",
+   "evidence": "https://therecord.media/wales-cyberattack-police-breach",
+   "note": "It was a regional Welsh force (Dyfed-Powys); force was still investigating whether staff data was accessed. No number or group named."
+  },
+  {
+   "text": "Vox: Alzheimer's drug slowed decline by 22 percent in a Phase III trial; Dr Maya Singh in Boston; the Whitakers",
+   "status": "unsupported",
+   "evidence": "sourceRefs[5]",
+   "note": "Vox headline only says Alzheimer's treatment is advancing; trial figure, doctor and family not found."
+  },
+  {
+   "text": "Bitcoin sentiment 70; BTC $26,800 down from $27,300; ETH sentiment 67, $1,820; USD sentiment 65",
+   "status": "wrong",
+   "evidence": "https://www.coindesk.com/markets/2026/09/24/traders-are-pricing-in-4-fed-rate-hikes-as-bitcoin-slides-below-usd83-000",
+   "note": "CoinDesk 24 Sept: bitcoin just below $83,000. Prices are 2023-era; scores are internal."
+  },
+  {
+   "text": "A 17-year-old in Delhi scales a university gate and vanishes",
+   "status": "wrong",
+   "evidence": "https://abc7news.com/post/video-man-scales-locked-gate-chasing-uc-berkeley-student-home/19856045/",
+   "note": "The gate story was in Berkeley, California, involving an adult man later arrested on an unrelated warrant."
+  },
+  {
+   "text": "Dehd live on KEXP",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Search found Dehd KEXP sessions from 2022 only."
+  },
+  {
+   "text": "Susan Sarandon and Hannah Einbinder detained outside the UN (CNN)",
+   "status": "supported",
+   "evidence": "https://keyt.com/news/national-world/cnn-national/2026/09/25/susan-sarandon-hannah-einbinder-among-more-than-100-detained-during-anti-netanyahu-protest-outside-un/",
+   "note": "CNN 25 Sept: among more than 100 detained at an anti-Netanyahu protest on 24 Sept near UN HQ; NYPD said 103."
+  },
+  {
+   "text": "UN vote on climate financing tomorrow; Russian gas ministry tariff review; European Commission subsidy package on October 10",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Nothing found; no such UN vote in the Day 3 recap."
+  }
+ ],
+ "edits": {
+  "headline": "More than 280,000 Russians voted abroad in Duma elections",
+  "subheadline": "Election commission chair Ella Pamfilova said 333 polling stations opened in 152 countries, TASS reported.",
+  "editorialBody": [
+   "More than 280,000 Russians voted at polling stations abroad in the State Duma elections held from 18 to 20 September, election commission chair Ella Pamfilova said on 25 September, TASS reported.",
+   "Pamfilova said 280,355 people voted abroad. About 204,000 voted abroad in the 2021 elections, she said.",
+   "Russia's ambassador to Germany, Sergey Nechayev, said key questions about who carried out and ordered the 2022 Nord Stream pipeline attacks remained unanswered, TASS reported.",
+   "Alexey Shevtsov, a deputy secretary of Russia's Security Council, said Germany's rejection of Russian gas had led to a fivefold rise in gas prices over five years, TASS reported.",
+   "The Israel-Palestine conflict dominated the third day of the UN General Assembly debate, UN News reported. Palestinian President Mahmoud Abbas spoke by video after his delegation was denied visas.",
+   "Dyfed-Powys Police in Wales said a cyber attack may have compromised staff information, The Record reported. The force said it had found no evidence that information belonging to members of the public was affected.",
+   "Actors Susan Sarandon and Hannah Einbinder were among more than 100 people detained at a protest against Israeli Prime Minister Benjamin Netanyahu near UN headquarters in New York on 24 September, CNN reported. The NYPD said 103 people were taken into custody."
+  ]
+ }
+}

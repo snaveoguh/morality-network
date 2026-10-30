@@ -1,0 +1,223 @@
+{
+  "hash": "0x2dc573765f035df85d154707b7735a4e659ec99cfe02334f1fe4b1f5984a155a",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Headline: a dead mother in a freezer, a trade embargo, and a yield cliff",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Comma-list headline joining three stories; 'yield cliff' not in any source."
+    },
+    {
+      "text": "DOJ charged 17 people with stealing $1.3m in Social Security; one kept her dead mother in a freezer (New York Post)",
+      "status": "supported",
+      "evidence": "sourceRefs[1]",
+      "note": "Also WJLA/Sinclair: DOJ announced on Tuesday 29 Sept. https://wjla.com/news/nation-world/17-people-charged-for-allegedly-stealing-13-million-in-social-security-benefits-report-jd-vance-donald-trump"
+    },
+    {
+      "text": "Maya Alvarez, 45, arrested in New York",
+      "status": "wrong",
+      "evidence": "https://wjla.com/news/nation-world/17-people-charged-for-allegedly-stealing-13-million-in-social-security-benefits-report-jd-vance-donald-trump",
+      "note": "Reports describe a woman from Chicago; no name or age given. Name and age invented; location wrong."
+    },
+    {
+      "text": "Mother had died months earlier",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not in sources found."
+    },
+    {
+      "text": "Police found $1.3 million in misappropriated Social Security checks tucked in the icebox",
+      "status": "wrong",
+      "evidence": "https://wjla.com/news/nation-world/17-people-charged-for-allegedly-stealing-13-million-in-social-security-benefits-report-jd-vance-donald-trump",
+      "note": "$1.3m is the total allegedly stolen by all 17 defendants, not cash found in a freezer."
+    },
+    {
+      "text": "Her case is the first of 17 defendants charged",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No ordering in source."
+    },
+    {
+      "text": "The woman is accused of collecting her dead mother's retirement benefits",
+      "status": "supported",
+      "evidence": "https://wjla.com/news/nation-world/17-people-charged-for-allegedly-stealing-13-million-in-social-security-benefits-report-jd-vance-donald-trump",
+      "note": "WJLA citing the New York Post. Added in rewrite. WJLA also calls her 'convicted' of keeping the body in a freezer; status unclear."
+    },
+    {
+      "text": "Assistant Attorney General Colin McDonald said Social Security programs are meant to safeguard elderly and vulnerable Americans",
+      "status": "supported",
+      "evidence": "https://wjla.com/news/nation-world/17-people-charged-for-allegedly-stealing-13-million-in-social-security-benefits-report-jd-vance-donald-trump",
+      "note": "Added in rewrite."
+    },
+    {
+      "text": "US ban on Canadian alcohol, dairy products and motorcycles took effect (DW News)",
+      "status": "supported",
+      "evidence": "sourceRefs[6]",
+      "note": "Effective 12:01am ET 29 Sept per https://stockanalysis.com/news/us-canada-import-ban-takes-effect/"
+    },
+    {
+      "text": "Ban activated on 28 September",
+      "status": "wrong",
+      "evidence": "https://stockanalysis.com/news/us-canada-import-ban-takes-effect/",
+      "note": "Took effect at midnight on 29 September."
+    },
+    {
+      "text": "'The U.S. and Canada activated' the ban",
+      "status": "wrong",
+      "evidence": "sourceRefs[6]",
+      "note": "It is a US ban on Canadian goods."
+    },
+    {
+      "text": "Ban bars Canadian goods 'from entering the United States' including alcohol, dairy, motorcycles",
+      "status": "supported",
+      "evidence": "sourceRefs[5]",
+      "note": "CNBC headline. Scope: certain alcohol, whey/dairy-related products, molasses, non-alcoholic beer, larger motorcycles (https://stockanalysis.com/news/us-canada-import-ban-takes-effect/)."
+    },
+    {
+      "text": "Embargo will choke a $6 billion segment of Canadian exports",
+      "status": "wrong",
+      "evidence": "https://stockanalysis.com/news/us-canada-import-ban-takes-effect/",
+      "note": "American Action Forum put affected 2025 imports at about $967m, 87% alcohol."
+    },
+    {
+      "text": "Ripples through producers in Quebec and Alberta",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source names these provinces."
+    },
+    {
+      "text": "CNBC list includes maple syrup and farm-raised pork",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not in reports of the covered products (alcohol, whey, molasses, non-alcoholic beer, motorcycles)."
+    },
+    {
+      "text": "Ban covers about $967m of 2025 Canadian imports, mostly alcohol (Jacob Jensen, American Action Forum)",
+      "status": "supported",
+      "evidence": "https://stockanalysis.com/news/us-canada-import-ban-takes-effect/",
+      "note": "Added in rewrite."
+    },
+    {
+      "text": "Iran's parliament speaker: if Iran's oil sales and security are not guaranteed, neither are anyone else's (Press TV)",
+      "status": "supported",
+      "evidence": "sourceRefs[0]",
+      "note": "URL names Qalibaf."
+    },
+    {
+      "text": "Iran will 'pull back its energy lifeline'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Paraphrase goes beyond the headline."
+    },
+    {
+      "text": "US consumer market grappling with a 5.25 percent Treasury yield ceiling",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Bloomberg headline only says Yardeni is not convinced 5.25% is the top in yields."
+    },
+    {
+      "text": "Yardeni dismissed that ceiling as the 'top' for now",
+      "status": "wrong",
+      "evidence": "sourceRefs[2]",
+      "note": "Headline says Yardeni is 'not convinced' 5.25% is the top in yields; the edition inverts it."
+    },
+    {
+      "text": "Global sentiment index 61/100",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal score; no public source."
+    },
+    {
+      "text": "Morgan Stanley's Mike Wilson said an S&P 500 correction may be 'exactly what the market needs' (MarketWatch)",
+      "status": "supported",
+      "evidence": "sourceRefs[20]",
+      "note": ""
+    },
+    {
+      "text": "Correction could shave roughly 3 percent off equity valuations",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not in source."
+    },
+    {
+      "text": "ABC News: OpenAI new model rollout 'citing safety fears'",
+      "status": "wrong",
+      "evidence": "https://abcnews.com/video/136844911/",
+      "note": "ABC video title 'OpenAI releases new model, citing safety fears' but ABC and others reported OpenAI delayed/cancelled the release of the model over safety concerns; 'rollout' is wrong."
+    },
+    {
+      "text": "Bloomberg: '¿Se puede apagar una IA demasiado poderosa?'",
+      "status": "supported",
+      "evidence": "sourceRefs[9]",
+      "note": ""
+    },
+    {
+      "text": "Anti-migrant activist Daniel Thomas refused bail over alleged boat damage (BBC)",
+      "status": "supported",
+      "evidence": "sourceRefs[11]",
+      "note": ""
+    },
+    {
+      "text": "Thomas denies criminal damage; Portsmouth Crown Court; provisional trial date 1 March 2027",
+      "status": "supported",
+      "evidence": "https://www.arabnews.pk/world/judge-keeps-uk-far-right-activist-in-jail-for-trial-on-slashing-migrant-dinghy-3002729",
+      "note": "AFP via Arab News, 29 Sept. Added in rewrite."
+    },
+    {
+      "text": "Qatar's Foreign Ministry warned the US-Iran conflict threatens the global economy (TASS)",
+      "status": "supported",
+      "evidence": "sourceRefs[4]",
+      "note": ""
+    },
+    {
+      "text": "KEXP live performance by Rəhman Məmmədli with a saxophone line",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not checked against a dated source; not news."
+    },
+    {
+      "text": "DW News clip of a massive fire at the Bank of India building in Pune",
+      "status": "supported",
+      "evidence": "https://www.thebridgechronicle.com/pune/pune-bank-of-india-building-fire-laxmi-road-agn97",
+      "note": "Fire at Bank of India building on Laxmi Road, Pune, 29 Sept, no injuries. DW clip itself not found."
+    },
+    {
+      "text": "US Senate hearing on Treasury yields next Tuesday with Yardeni and Wilson",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented future event."
+    },
+    {
+      "text": "Canada trade ministry bilateral talks in Ottawa on 5 October",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented future event."
+    },
+    {
+      "text": "Iran parliament speaker closed-door session on 30 September on oil export guarantees",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented future event."
+    },
+    {
+      "text": "Maya's trial slated for 12 October",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented person and date."
+    }
+  ],
+  "edits": {
+    "headline": "US charges 17 people over $1.3m Social Security theft",
+    "subheadline": "One of them is a Chicago woman who kept her dead mother's body in a freezer, the New York Post reported.",
+    "editorialBody": [
+      "The US Department of Justice on Tuesday 29 September charged 17 people with stealing more than $1.3m in Social Security benefits, the New York Post reported.",
+      "One of them is a Chicago woman who kept her dead mother's body in a freezer. She is accused of collecting her mother's retirement benefits, WJLA reported, citing the New York Post.",
+      "A US ban on imports of some Canadian alcohol, dairy products and motorcycles took effect on 29 September, DW News and CNBC reported.",
+      "The ban covers about $967m of Canadian imports in 2025, most of it alcohol, according to Jacob Jensen of the American Action Forum.",
+      "Iran's parliament speaker said that if Iran's oil sales and security are not guaranteed, \"neither are anyone else's\", Press TV reported.",
+      "A judge refused bail to anti-migrant activist Daniel Thomas, who denies criminal damage over the alleged slashing of a migrant boat, BBC News reported.",
+      "Thomas was remanded in custody at Portsmouth Crown Court, and a provisional trial date was set for 1 March 2027, AFP reported."
+    ]
+  }
+}

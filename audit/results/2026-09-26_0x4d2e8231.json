@@ -1,0 +1,188 @@
+{
+ "hash": "0x4d2e8231b4fc089e241eb584efe9de628d6cf9362a773f1be1a37d99fd6b4c99",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Irina Petrova, 45, Bushwick, voted for United Russia on September 24; son Dima, 19; shell landed three blocks from her apartment",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented person and scene (also contradicts itself: Bushwick apartment and Kharkiv shelling)."
+  },
+  {
+   "text": "September 24 was Day 4 of the UN General Assembly debate",
+   "status": "wrong",
+   "evidence": "sourceRefs[0]",
+   "note": "UN News Day 4 recap is dated 26 Sept; Day 2 was Wednesday 23 Sept."
+  },
+  {
+   "text": "UN Day 4 Takeaway: no resolutions, quote 'we must find common ground'",
+   "status": "unsupported",
+   "evidence": "sourceRefs[0]",
+   "note": "Quote not in sourceRefs; not found."
+  },
+  {
+   "text": "Russian MoD says forces took three settlements in Kharkiv and Sumy regions (Sputnik)",
+   "status": "supported",
+   "evidence": "sourceRefs[6]; https://sputnikglobe.com/20260926/russian-forces-liberate-3-settlements-in-kharkov-sumy-regions--mod-1124793671.html",
+   "note": "Sputnik 26 Sept: Petropavlovka and Lozovaya (Kharkiv), Maryino (Sumy), per Russian MoD."
+  },
+  {
+   "text": "Announcement made at the UN Security Council",
+   "status": "wrong",
+   "evidence": "https://sputnikglobe.com/20260926/russian-forces-liberate-3-settlements-in-kharkov-sumy-regions--mod-1124793671.html",
+   "note": "It was a Russian Defence Ministry statement reported by Sputnik."
+  },
+  {
+   "text": "12 civilians killed in Velyka Pysarivka including teacher Oksana Koval, 68",
+   "status": "unsupported",
+   "evidence": "https://sputnikglobe.com/20260926/russian-forces-liberate-3-settlements-in-kharkov-sumy-regions--mod-1124793671.html",
+   "note": "Not in the Sputnik report; nothing found."
+  },
+  {
+   "text": "Pope Leo XIV on first state visit to France in 18 years",
+   "status": "supported",
+   "evidence": "sourceRefs[18]; https://www.france24.com/en/leo-xiv-in-paris-pope-arrives-in-france-on-first-state-visit-in-18-years",
+   "note": ""
+  },
+  {
+   "text": "Pope stepped off an Air France jet into a crowd of migrants in Calais",
+   "status": "unsupported",
+   "evidence": "https://www.france24.com/en/leo-xiv-in-paris-pope-arrives-in-france-on-first-state-visit-in-18-years",
+   "note": "France 24 names Paris as arrival; no Air France or Calais."
+  },
+  {
+   "text": "Pope met migrants and marginalised people",
+   "status": "supported",
+   "evidence": "sourceRefs[5]",
+   "note": ""
+  },
+  {
+   "text": "Pope shook the hand of Ahmed Diarra, 28, from Mali",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "Pope spoke of 'authentic secularity'",
+   "status": "supported",
+   "evidence": "sourceRefs[19]",
+   "note": "France 24: authentic secularity does not exclude religion."
+  },
+  {
+   "text": "French Ministry of the Interior tightened visa rules, condemned by Labour MP Jess Rayner in a BBC interview",
+   "status": "wrong",
+   "evidence": "sourceRefs[4]; https://www.lbc.co.uk/politics/uk-politics/angela-rayner-attacks-migrant-visa-changes/",
+   "note": "BBC item is Angela Rayner criticising UK visa rule proposals ahead of the Labour conference. Nothing to do with France; 'Jess' wrong; 'revolving fence' quote invented."
+  },
+  {
+   "text": "Trump advocated arms control talks with China and Russia (Sputnik)",
+   "status": "supported",
+   "evidence": "sourceRefs[2]; https://sputnikglobe.com/20260926/trump-advocates-arms-control-talks-with-china-and-russia-1124794190.html",
+   "note": "White House statement after Trump met Xi in Washington."
+  },
+  {
+   "text": "Trump dismissed Iran's seven-day ceasefire proposal as 'unrealistic'",
+   "status": "wrong",
+   "evidence": "https://www.aljazeera.com/news/2026/9/26/trump-reportedly-rejects-irans-seven-day-ceasefire-proposal-whats-next",
+   "note": "Al Jazeera: WSJ reported, citing US officials, that Trump rejected it; no 'unrealistic' quote. US had not publicly responded."
+  },
+  {
+   "text": "Trump refused the Hormuz plan Tehran offered on September 26",
+   "status": "unsupported",
+   "evidence": "sourceRefs[10]; https://www.aljazeera.com/news/2026/9/26/trump-reportedly-rejects-irans-seven-day-ceasefire-proposal-whats-next",
+   "note": "Rejection reported (France 24, 'reportedly'); the 26 Sept offer date is not supported."
+  },
+  {
+   "text": "Chinese-US military memorandum on crisis contacts was signed",
+   "status": "wrong",
+   "evidence": "sourceRefs[3]",
+   "note": "Sputnik headline: 'to sign', citing reports. Not yet signed."
+  },
+  {
+   "text": "Chinese ship docked in San Francisco built by consortium supplying drones to Ukraine",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "AI optimism 61, Conflict & Security 45, global economy 65, world optimism 59",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores."
+  },
+  {
+   "text": "Olha, 32, in Kyiv trades bread for a bullet",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "Bitcoin sentiment 65, signal 49, price around $28,300; Ethereum sentiment 57",
+   "status": "wrong",
+   "evidence": "https://www.coindesk.com/markets/2026/09/24/traders-are-pricing-in-4-fed-rate-hikes-as-bitcoin-slides-below-usd83-000",
+   "note": "CoinDesk 24 Sept: bitcoin just below $83,000; $28,300 is a 2023-era price. Scores internal."
+  },
+  {
+   "text": "DW News video 'Trump's Animated Farewell To Xi' went viral",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in sourceRefs; no matching DW item found."
+  },
+  {
+   "text": "Al Jazeera deep-dive on rural political visibility",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in sourceRefs; not found."
+  },
+  {
+   "text": "Lysistrata live on KEXP",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Search found a KEXP session from Feb 2024 only."
+  },
+  {
+   "text": "John Wood, CEO of Lockheed Martin, met UN delegates privately on September 23; minutes leaked to Times of India; 'peace-keeping drones' to surveil diaspora voting booths",
+   "status": "wrong",
+   "evidence": "",
+   "note": "Lockheed Martin's CEO is Jim Taiclet, not John Wood. Meeting, leak and proposal not found anywhere."
+  },
+  {
+   "text": "UN special session on climate-linked migration on October 3",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Nothing found."
+  },
+  {
+   "text": "Morocco's Authenticity and Modernity Party won the parliamentary election",
+   "status": "supported",
+   "evidence": "sourceRefs[9]; https://www.aljazeera.com/news/2026/9/24/monarchy-aligned-pam-leads-in-morocco-election-provisional-results",
+   "note": "Provisional results: 97 of 395 seats, turnout 38.02%, election 23 Sept."
+  },
+  {
+   "text": "PAM secured a parliamentary majority",
+   "status": "wrong",
+   "evidence": "https://www.aljazeera.com/news/2026/9/24/monarchy-aligned-pam-leads-in-morocco-election-provisional-results",
+   "note": "97 of 395 seats; no single party expected to win an absolute majority."
+  },
+  {
+   "text": "Data-centre boom will dominate the upcoming US election debate",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  }
+ ],
+ "edits": {
+  "headline": "Pope Leo XIV makes first state visit to France in 18 years",
+  "subheadline": "The pope said \"authentic secularity\" does not exclude religion, France 24 reported.",
+  "editorialBody": [
+   "Pope Leo XIV arrived in Paris on the first papal state visit to France in 18 years, France 24 reported on 26 September.",
+   "The pope said \"authentic secularity\" does not exclude religion. France 24 also reported that he met migrants and marginalised people during the visit.",
+   "Iran proposed a seven-day plan to reopen the Strait of Hormuz, Al Jazeera reported on 26 September. The Wall Street Journal, citing US officials, reported that President Donald Trump rejected it.",
+   "Under the plan, the United States would release $12bn in frozen Iranian assets, lift oil sanctions on Iran and end its naval blockade of Iranian ports, Al Jazeera reported.",
+   "Trump called for arms control talks between the United States, Russia and China during a meeting with Chinese President Xi Jinping in Washington, according to a White House statement reported by Sputnik.",
+   "Russia's Defence Ministry said its forces had taken Petropavlovka and Lozovaya in Kharkiv region and Maryino in Sumy region, Sputnik reported.",
+   "Angela Rayner criticised proposed changes to UK visa rules ahead of the Labour Party conference, BBC News reported.",
+   "Morocco's Authenticity and Modernity Party won 97 of 395 seats in the 23 September parliamentary election, according to provisional results announced by Interior Minister Abdelouafi Laftit, Al Jazeera reported."
+  ]
+ }
+}

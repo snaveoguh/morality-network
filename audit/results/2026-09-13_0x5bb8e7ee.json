@@ -1,0 +1,186 @@
+{
+ "hash": "0x5bb8e7ee5426d4a15498ef5e5b4795e6a87d0278d7efb57f1ee8b15d552e23d0",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Press TV: 'US attack on Iranian commercial vessel kills one, injures four'",
+   "status": "supported",
+   "evidence": "https://www.presstv.co.uk/Detail/2026/09/13/776204/One-killed,-four-injured-after-US-Israeli-attack-on-commercial-vessel-off-Qeshm-Island--",
+   "note": "Press TV, 13 September 08:39 UTC: one killed, four injured off Qeshm Island; Iranian officials blamed the 'American-Zionist enemy'. US involvement is Iran's attribution only. IRIB via AZERTAC said one killed, three injured (https://azertag.az/en/xeber/4410864)."
+  },
+  {
+   "text": "Victim named Mohammad Reza Hafezi, 34-year-old deckhand",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Press TV gives no name or age. Invented."
+  },
+  {
+   "text": "Vessel named Al-Sahra",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Press TV does not name the vessel. Invented."
+  },
+  {
+   "text": "Strike happened on 12 September",
+   "status": "wrong",
+   "evidence": "https://www.presstv.co.uk/Detail/2026/09/13/776204/One-killed,-four-injured-after-US-Israeli-attack-on-commercial-vessel-off-Qeshm-Island--",
+   "note": "Press TV says around 5am local time (0130 GMT) on 13 September."
+  },
+  {
+   "text": "Struck by a 'US missile' off the Strait of Hormuz",
+   "status": "wrong",
+   "evidence": "https://www.presstv.co.uk/Detail/2026/09/13/776204/One-killed,-four-injured-after-US-Israeli-attack-on-commercial-vessel-off-Qeshm-Island--",
+   "note": "Press TV says a self-propelled underwater missile/projectile hit the ship off Qeshm Island near the strait; attribution to US is by Iranian officials, not established."
+  },
+  {
+   "text": "Three of the injured had shrapnel lodged in their throats",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in Press TV. Invented."
+  },
+  {
+   "text": "Death certificate lists 'exsanguination secondary to missile fragment trauma'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "Luis Ramirez, American veteran in Jordan, leg ripped off by IRGC missile; took first unassisted steps; Press TV crew filmed; quote 'I can walk again...'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented person and quote (recurring). US officials said no American personnel were killed in the 8 September Jordan attack (https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/)."
+  },
+  {
+   "text": "Aid-for-arms pipeline funds the rockets that maimed him",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented link."
+  },
+  {
+   "text": "Iraqi MP Saad Al-Mousawi announced US forces will leave by 30 September",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No MP of that name found making this statement. The 30 September date itself was set by Iraqi PM Ali al-Zaidi and US officials in August (https://www.local10.com/news/world/2026/08/12/officials-say-us-forces-on-track-to-complete-iraq-pullout-by-sept-30/)."
+  },
+  {
+   "text": "US forces to leave Iraq by 30 September",
+   "status": "supported",
+   "evidence": "https://www.local10.com/news/world/2026/08/12/officials-say-us-forces-on-track-to-complete-iraq-pullout-by-sept-30/",
+   "note": "AP, 12 August 2026."
+  },
+  {
+   "text": "Timetable 'aligns suspiciously' with the Al-Sahra incident; US 'withdrew from Iraq a decade ago'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented link; US forces were present until 30 September 2026."
+  },
+  {
+   "text": "Iran's 'president-elect' Mohammad Pezeshkian",
+   "status": "wrong",
+   "evidence": "https://www.presstv.co.uk/Detail/2026/09/12/776159/Iran-India-Pezeshkian-BRICS",
+   "note": "Masoud Pezeshkian is Iran's president, in office since 2024, not president-elect; first name is Masoud."
+  },
+  {
+   "text": "BRICS summit in Johannesburg",
+   "status": "wrong",
+   "evidence": "https://www.presstv.co.uk/Detail/2026/09/12/776159/Iran-India-Pezeshkian-BRICS",
+   "note": "Summit was in New Delhi, 12-13 September 2026."
+  },
+  {
+   "text": "Pezeshkian demanded 'genuine reform of international mechanisms' and defence of the non-use of force principle; urged BRICS to play a more active role",
+   "status": "supported",
+   "evidence": "https://www.tasnimnews.ir/en/news/2026/09/12/3694724/iran-urges-real-reform-of-international-governance-mechanisms",
+   "note": "Tasnim quoted 'We need real reform of international mechanisms'. Press TV: multilateralism loses meaning when the UN Charter fails to shield countries from unlawful military action. Wording in edition paraphrased."
+  },
+  {
+   "text": "Xi Jinping called for peace in West Asia at the summit",
+   "status": "supported",
+   "evidence": "https://al-monitor.com/originals/2026/09/chinas-xi-urges-brics-take-peacemaking-role-middle-east-war",
+   "note": "Xi urged BRICS to take a peacemaking role in the Middle East war, 12 September."
+  },
+  {
+   "text": "Middle East Eye reported Israeli settlers stormed Al-Aqsa under police protection on 13 September",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No MEE report for that date found; similar incursions are reported frequently by Jordanian outlets but none dated 13 September."
+  },
+  {
+   "text": "Palestinian carpenter Youssef Al-Hassan, 28, beaten near Ramallah, left eye knocked out",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found. Invented."
+  },
+  {
+   "text": "AI sentiment 63, conflict mood 45, Bitcoin sentiment 54, market signal 48",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores; no public source."
+  },
+  {
+   "text": "Brent's climb past $106, noted by The Defiant",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No Defiant article giving $106 found; no dated price source."
+  },
+  {
+   "text": "SEC crypto custody rewrite under White House review",
+   "status": "supported",
+   "evidence": "https://thedefiant.io/converge/regulation/sec-crypto-custody-rewrite-enters-white-house-review",
+   "note": ""
+  },
+  {
+   "text": "Revolut's EURR launch",
+   "status": "supported",
+   "evidence": "https://thedefiant.io/converge/tradfi-and-fintech/revolut-starts-eurr-rollout-with-bridge-as-regulated-issuer",
+   "note": ""
+  },
+  {
+   "text": "DW video 'LIVE: Donald Trump's AI Data Center Push Sparks Fierce Backlash Across America'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Feed video title; not verified. Edition also calls Trump a 'former president', which is wrong (he is the sitting president)."
+  },
+  {
+   "text": "Ex-Anthropic researcher told the BBC AI staff are 'genuinely frightened' for humanity's future",
+   "status": "supported",
+   "evidence": "https://jang.com.pk/en/73087-we-could-all-die-ex-anthropic-researcher-unveils-ai-staffs-fears-for-humanity-news",
+   "note": "Jacob Coxon, interviewed by Laura Kuenssberg (BBC). Found via secondary outlets (Jang, The News); BBC page not fetched."
+  },
+  {
+   "text": "Fisherman's family sells fish from a freezer in Bandar Abbas",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "BRICS summit will vote tomorrow on a new development bank charter funding Iran's missile factories",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source; summit ended 13 September with the New Delhi Declaration."
+  },
+  {
+   "text": "Celebratory fireworks in Baghdad on 30 September",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Speculation, unsupported."
+  },
+  {
+   "text": "Dublin protesters will gather again on 2 October to denounce Trump's AI venture",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  }
+ ],
+ "edits": {
+  "headline": "Iran says attack on cargo ship off Qeshm Island kills 1",
+  "subheadline": "Four other people were injured when the ship was hit at about 5am local time near the Strait of Hormuz, Press TV reported.",
+  "editorialBody": [
+   "One person was killed and four were injured when an Iranian commercial vessel was hit off Qeshm Island in the Persian Gulf on 13 September, Press TV reported.",
+   "Iranian officials blamed US and Israeli forces. Qeshm Island governor Hossein Amir-Teymouri said further details would be released after investigations, Press TV reported.",
+   "Iranian President Masoud Pezeshkian told a closed BRICS leaders' session in New Delhi on 12 September that multilateralism loses meaning when the UN Charter fails to shield countries from unlawful military action, Press TV reported.",
+   "Chinese President Xi Jinping urged BRICS to take a peacemaking role in the Middle East war, Al-Monitor reported on 12 September.",
+   "Jacob Coxon, a researcher who left Anthropic, told the BBC that people working on AI were \"genuinely frightened\" about the speed of its progress.",
+   "US and Iraqi officials said in August that US forces were on track to complete their withdrawal from Iraq by 30 September, the Associated Press reported."
+  ]
+ }
+}

@@ -54,19 +54,19 @@
       "text": "DW News stream 'LIVE: SPACEX STARSHIP FIRST ORBITAL FLIGHT'",
       "status": "unsupported",
       "evidence": "",
-      "note": "DW stream title not found. The launch itself is confirmed: Starship Flight 14 from Starbase, Texas, 28 Sept (https://www.satellitetoday.com/launch/2026/09/28/spacexs-starship-reaches-orbit-cuts-10-hour-mission-short-after-engine-issue/)."
+      "note": "DW stream title not found. The launch itself is confirmed: Starship Flight 14 from Starbase, Texas, 28 Sept (https://www.satellitetoday.com/launch/2026/09/28/spacexs-starship-reaches-orbit-cuts-10-hour-mission-short-after-engine-issue/). Launch happened after the edition was generated (11:51 UTC), so it is left out of the rewrite."
     },
     {
       "text": "Starship's 10-hour arc over the Gulf",
       "status": "wrong",
       "evidence": "https://www.satellitetoday.com/launch/2026/09/28/spacexs-starship-reaches-orbit-cuts-10-hour-mission-short-after-engine-issue/",
-      "note": "Planned mission was about 10 hours and six orbits, but it was cut short at 3h 9m after an engine issue; splashdown in the northern Pacific."
+      "note": "Planned mission was about 10 hours and six orbits, but it was cut short at 3h 9m after an engine issue; splashdown in the northern Pacific. Launch happened after the edition was generated (11:51 UTC), so it is left out of the rewrite."
     },
     {
       "text": "Starship reached orbit for the first time on 28 Sept, deployed 26 Starlink V3 satellites, lost an engine, ended after 3h 9m",
       "status": "supported",
       "evidence": "https://www.satellitetoday.com/launch/2026/09/28/spacexs-starship-reaches-orbit-cuts-10-hour-mission-short-after-engine-issue/",
-      "note": "Added in rewrite. Note: launch was after this edition's generatedAt time (11:51 UTC)."
+      "note": "Added in rewrite. Note: launch was after this edition's generatedAt time (11:51 UTC). Launch happened after the edition was generated (11:51 UTC), so it is left out of the rewrite."
     },
     {
       "text": "Arjun Patel, 19-year-old engineering student, trampled when the LPU protest in Chennai turned violent",
@@ -174,7 +174,7 @@
       "text": "SpaceX second orbital attempt on 12 Oct",
       "status": "unsupported",
       "evidence": "",
-      "note": "Invented future date."
+      "note": "Invented future date. Launch happened after the edition was generated (11:51 UTC), so it is left out of the rewrite."
     },
     {
       "text": "US midterm primaries begin on 3 Nov",
@@ -192,7 +192,6 @@
       "Cornell said it supported the decision. \"Any suggestion that the university did not impose consequential punishments for those involved is false,\" the university said.",
       "Lovely Professional University in Phagwara, Punjab, suspended classes for 10 days from 28 September after a student protest turned violent, Business Today reported. Protesters set two police vehicles on fire.",
       "The protest followed allegations that a student was raped on campus. The university called the allegations \"false, baseless and fabricated\".",
-      "SpaceX's Starship reached orbit for the first time on its 14th test flight from Starbase, Texas, on 28 September, Satellite Today reported. It deployed 26 Starlink satellites.",
       "The ship lost an engine shortly after launch, and the flight ended after 3 hours 9 minutes instead of the planned 10 hours, Satellite Today reported."
     ]
   }
