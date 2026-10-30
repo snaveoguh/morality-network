@@ -310,6 +310,25 @@ export async function getRecentClosed(
 }
 
 /**
+ * Closed trades across several wallets: the live trading account plus any
+ * retired ones (TRADER_ARCHIVED_WALLETS), so a key rotation keeps the
+ * public track record.
+ */
+export async function getRecentClosedForWallets(
+  wallets: string[],
+  limit = 200,
+): Promise<TradeDecisionRow[]> {
+  const lowered = [...new Set(wallets.map((w) => w.toLowerCase()))];
+  if (lowered.length === 0) return [];
+  return sql<TradeDecisionRow[]>`
+    SELECT * FROM pooter.trade_decisions
+    WHERE lower(wallet) IN ${sql(lowered)} AND closed_at IS NOT NULL
+    ORDER BY closed_at DESC
+    LIMIT ${limit}
+  `;
+}
+
+/**
  * Bulk fetch — used by the metrics endpoint to fetch metadata for many
  * cloids in one query (the alternative would be N+1).
  */

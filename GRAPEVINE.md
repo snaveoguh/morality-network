@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 93 · trader key rotation: keep the track record across accounts
+- **when** — 2026-10-30
+- **what** — `TRADER_ARCHIVED_WALLETS` (comma list): `/api/trading/metrics-v2` now reads closed trades (`getRecentClosedForWallets`) and Hyperliquid close fills for the live account plus every archived one; live positions and balance still come from the live account only. A trade-only Hyperliquid API (agent) key was generated on the Mac at `~/.pooter-hl-agent.key` (address `0xAbf67A13a5974cD67958dFB34589E09f73A1f4aa`); the trader already supports signing for a separate account via `HYPERLIQUID_ACCOUNT_ADDRESS`.
+- **why** — the trader key `AGENT_PRIVATE_KEY` (`0x3850…764d`) sat in Railway during the October breach (node 73) and was still the live key, with the trader switched on. The new setup keeps funds in a wallet whose key is never on Railway; the key on Railway can trade but cannot withdraw. Without this change the /markets record would have gone blank on the switch.
+- **where** — `web/src/app/api/trading/metrics-v2/route.ts`, `web/src/lib/db/trade-decisions.ts`. Railway variables are set once the owner's main wallet has approved the agent.
+- **rollback** — `git revert` this commit; unset `TRADER_ARCHIVED_WALLETS`.
+
 ## ▲ node 92 · daily edition: no invented reporting; edit route syncs source text
 - **when** — 2026-10-30
 - **what** — the daily-edition writer now gets each story's feed summary (240 chars) as well as its headline, is told those are all the reporting it has, and must not write any name, number, quote, date or place that is not in them; the "identifiable victim / lead with the human" instruction now applies only when a summary names someone. `/api/editorial/edit` keeps `primary.description` in step with the subheadline when they matched (daily editions show it as "Original Source Text").

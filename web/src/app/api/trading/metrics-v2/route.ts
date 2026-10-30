@@ -24,7 +24,7 @@ import {
 } from "@/lib/trading/hyperliquid";
 import {
   getOpenForWallet,
-  getRecentClosed,
+  getRecentClosedForWallets,
   findOpenByWalletSymbol,
 } from "@/lib/db/trade-decisions";
 import { dbReachable } from "@/lib/db";
@@ -191,6 +191,12 @@ export async function GET(request: Request) {
         ? (await import("viem/accounts")).privateKeyToAccount(config.privateKey).address as Address
         : "0x0000000000000000000000000000000000000000" as Address;
     const hlWallet = resolveHyperliquidAccountAddress(config, walletAddress);
+    // Retired trading accounts (key rotations). Their closed trades and fills
+    // stay in the public record; live positions and balance come from hlWallet.
+    const archivedWallets = (process.env.TRADER_ARCHIVED_WALLETS ?? "")
+      .split(",")
+      .map((w) => w.trim())
+      .filter((w): w is Address => isAddress(w) && w.toLowerCase() !== hlWallet.toLowerCase());
     const pgAvailable = await dbReachable();
 
     // ─── Parallel fetch: HL live data + Postgres metadata ───
@@ -198,7 +204,7 @@ export async function GET(request: Request) {
       fetchHyperliquidLivePositions(config, hlWallet as Address).catch(() => []),
       fetchHyperliquidAccountValueUsd(config, hlWallet as Address).catch(() => null),
       pgAvailable ? getOpenForWallet(hlWallet) : Promise.resolve([]),
-      pgAvailable ? getRecentClosed(hlWallet, 2000) : Promise.resolve([]),
+      pgAvailable ? getRecentClosedForWallets([hlWallet, ...archivedWallets], 2000) : Promise.resolve([]),
       fetchVaultOverview({
         limit: 50,
         account: includeAccount ? account : null,
@@ -216,7 +222,9 @@ export async function GET(request: Request) {
         hlWallet as Address,
         livePositions.map((p) => ({ symbol: p.symbol, isShort: p.isShort })),
       ).catch(() => new Map<string, number>()),
-      fetchCloseFills(config, hlWallet as Address).catch(() => []),
+      Promise.all(
+        [hlWallet as Address, ...archivedWallets].map((w) => fetchCloseFills(config, w).catch(() => [])),
+      ).then((lists) => lists.flat()),
     ]);
 
     // Index close fills by coin (sorted oldest-first) so we can find the
