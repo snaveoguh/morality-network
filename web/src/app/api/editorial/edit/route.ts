@@ -94,6 +94,12 @@ export async function POST(request: NextRequest) {
     primary: {
       ...existing.primary,
       title: edits.headline ?? existing.primary.title,
+      // Daily editions store the subheadline as the primary item's
+      // description too (shown as "Original Source Text"); keep them in step.
+      description:
+        edits.subheadline !== undefined && existing.primary.description === existing.subheadline
+          ? edits.subheadline
+          : existing.primary.description,
     },
     subheadline: edits.subheadline ?? existing.subheadline,
     editorialBody: edits.editorialBody ?? existing.editorialBody,

@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 92 · daily edition: no invented reporting; edit route syncs source text
+- **when** — 2026-10-30
+- **what** — the daily-edition writer now gets each story's feed summary (240 chars) as well as its headline, is told those are all the reporting it has, and must not write any name, number, quote, date or place that is not in them; the "identifiable victim / lead with the human" instruction now applies only when a summary names someone. `/api/editorial/edit` keeps `primary.description` in step with the subheadline when they matched (daily editions show it as "Original Source Text").
+- **why** — the 29 Oct edition (Afghan opium lead) was written from 25 bare headlines and invented a farmer, a deputy minister and a dead teacher with their families, a 40% patrol cut, $3bn capex cuts, an Anthropic 15%-of-profits pledge, 4.1% eurozone inflation and five November dates, as well as the stale crypto prices (node 84).
+- **where** — `web/src/lib/daily-edition.ts`, `web/src/app/api/editorial/edit/route.ts`. The 29 Oct edition was rewritten by hand from its 25 source headlines through the edit route.
+- **rollback** — `git revert` this commit.
+
 ## ▲ node 91 · Bearometer: supply chain goes global (by region)
 - **when** — 2026-10-29
 - **what** — The `/signals` supply-chain panel is now **Supply chain — global**: eight regions (global shipping and food, Middle East and Red Sea, Europe, Americas, East Asia, South and Southeast Asia, Africa, Black Sea), 27 data indicators and 8 regional news sweeps. The China critical-minerals cards sit unchanged inside East Asia. Data comes from free, keyless sources checked live on 2026-10-29: IMF PortWatch daily chokepoint transits (Hormuz, Bab el-Mandeb, Suez, Panama, Taiwan, Korea, Malacca, Cape, Bosporus), Yahoo Finance closes (BDRY, BWET, Brent, TTF, Henry Hub, copper, wheat, LIT), OECD manufacturing confidence (stands in for PMIs, which are not free), the FAO Food Price Index and the EIA's weekly SPR stocks. Every reading is scored −1…+1 by `tanh(polarity × change / scale)` against its own baseline. A region is the plain mean of its readings. Each indicator lists the Bearometer assets it may bear on, tagged documented, plausible or speculative. Readings are recorded in new tables (migration 016, not applied). No LLM calls: news direction is regex only, and `BEAROMETER_LLM_CLASSIFY` still covers only the China layer.

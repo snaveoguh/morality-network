@@ -242,7 +242,10 @@ function buildWriterPrompt(data: DailyEditionData): string {
   // Top stories — group by category, pick top articles
   const topStories = rssItems.slice(0, 25).map((item) => {
     const bias = item.bias ? ` [${BIAS_LABELS[item.bias.bias]}, ${item.bias.factuality}]` : "";
-    return `- ${item.source}${bias}: ${item.title}`;
+    // The summary is the only reporting the writer sees. Without it the model
+    // filled in names, figures and dates from nothing (29 Oct 2026 edition).
+    const summary = (item.description ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 240);
+    return `- ${item.source}${bias}: ${item.title}${summary ? `\n  Summary: ${summary}` : ""}`;
   }).join("\n");
 
   // Sentiment summary
@@ -278,6 +281,7 @@ TODAY'S DATE: ${getTodayUTC()}
 GLOBAL SENTIMENT: ${sentiment.globalScore}/100 (${sentimentLabel(sentiment.globalScore)})
 
 === TOP STORIES (last 24h) ===
+These headlines and summaries are ALL the reporting you have. You have not read the articles.
 ${topStories}
 
 === SENTIMENT BY TOPIC ===
@@ -314,7 +318,7 @@ Write the DAILY EDITION for pooter world. This is the front-page editorial that 
 YOUR VOICE:
 - You are a reporter who has been doing this every day. You remember yesterday. You follow up on stories. If you wrote about something 2 days ago, tell the reader what changed. Build running threads.
 - You write like a good wire reporter with a point of view: exact, plain, specific. Your opinions are in what you choose to report and what you ask, not in adjectives or metaphors.
-- You see the specific human cost. Name the person, the town, the amount, when the sources do. Report it plainly; the facts carry the weight.
+- You see the specific human cost. Name the person, the town, the amount, only when the headline or summary does. Report it plainly; the facts carry the weight.
 - Dry wit is allowed in the body, sparingly. Never in the headline or standfirst, and never about the dead or injured.
 - Match the tone to what actually happened. Don't force a vibe.
 - Dense with signal. Reference specific stories, name names, cite numbers. If you can't be specific, don't say it.
@@ -356,7 +360,8 @@ RULES:
 - The daily title must feel like a signal from today, not a generic label
 - The subheadline must add a new fact, not restate the headline
 - No filler. No "In today's world..." No throat-clearing. Start with the news.
-- Use the identifiable victim effect: one person's story hits harder than a million people's statistic. Lead with the human where you can.
+- FACTS: every name, number, quote, date and place you write must appear in a headline or summary above (or in the data blocks). If it is not there, leave it out. Never invent a person, a quote, a statistic or a future date. Attribute each story to its outlet ("UN News reported"). A short, true edition beats a vivid, invented one.
+- Lead with a named person only when a summary names them.
 - Vary the emotional register day to day to match the news, through what you report, not through adjectives.
 - If a sentence would still be true of a different day's news, cut it.
 
