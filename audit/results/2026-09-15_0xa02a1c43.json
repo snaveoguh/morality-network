@@ -1,0 +1,205 @@
+{
+ "hash": "0xa02a1c439fff1b8c172cdb2eeb0923d4c9db04a0043c265c01571f3b2a0cb66f",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Headline: UAVs downed on Russia's border",
+   "status": "supported",
+   "evidence": "sourceRefs[0]",
+   "note": "TASS: mobile armed units down most UAVs flying deep into Russia (expert view)."
+  },
+  {
+   "text": "Luis Ramirez stood in Amman's Royal Rehabilitation Center on 15 September with a $38,700 titanium prosthetic",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Recurring invented character; no source in sourceRefs or on the web. Price and clinic invented."
+  },
+  {
+   "text": "The leg was paid from the same US 'Humanitarian Assistance' budget line that financed missiles that downed a Ukrainian drone",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source; invented causal/budget link between unrelated stories."
+  },
+  {
+   "text": "TASS reported three UAVs shot down by mobile armed units",
+   "status": "wrong",
+   "evidence": "https://tass.com/defense/2187793",
+   "note": "TASS article gives no count; expert Oleg Ivanov said units down 'the overwhelming majority' of drones flying deep into Russia."
+  },
+  {
+   "text": "Drone downed over the Belgorod border",
+   "status": "wrong",
+   "evidence": "https://tass.com/defense/2187793",
+   "note": "TASS dateline and content concern the Kursk region, not Belgorod."
+  },
+  {
+   "text": "Mobile armed units shoot down most UAVs flying deep into Russia along the border",
+   "status": "supported",
+   "evidence": "sourceRefs[0]; https://tass.com/defense/2187793",
+   "note": "Expert view (Oleg Ivanov) reported by TASS on 15 Sep."
+  },
+  {
+   "text": "Units use pickup trucks with crews of three or four and form a layered defence in the Kursk region",
+   "status": "supported",
+   "evidence": "https://tass.com/defense/2187793",
+   "note": "From TASS article text."
+  },
+  {
+   "text": "US budget lines labelled 'Humanitarian Aid' and 'Defensive Kits'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "Russian border guard Dmitri Petrov died when his vehicle was hit by shrapnel last week",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No report found; invented person."
+  },
+  {
+   "text": "Stack BTC is backed by Nigel Farage / 'Farage's former allies'",
+   "status": "wrong",
+   "evidence": "https://www.coindesk.com/business/2026/09/15/nigel-farage-backed-stack-btc-eyes-usd16-million-gold-dealer-deal-to-fund-bitcoin-buy",
+   "note": "CoinDesk: Stack BTC is backed by Farage himself; his company Thorn In The Side invested £215,000 in March for about 6.3%."
+  },
+  {
+   "text": "Stack BTC eyes a $16 million gold dealer deal to fund bitcoin buying (CoinDesk)",
+   "status": "supported",
+   "evidence": "sourceRefs[1]; https://www.coindesk.com/business/2026/09/15/nigel-farage-backed-stack-btc-eyes-usd16-million-gold-dealer-deal-to-fund-bitcoin-buy",
+   "note": "Proposed acquisition of Direct Bullion for up to £12m ($16m), using its operating cash flow to support bitcoin accumulation."
+  },
+  {
+   "text": "Stack BTC is buying gold to back a 'massive Bitcoin buy-back'",
+   "status": "wrong",
+   "evidence": "https://www.coindesk.com/business/2026/09/15/nigel-farage-backed-stack-btc-eyes-usd16-million-gold-dealer-deal-to-fund-bitcoin-buy",
+   "note": "It is acquiring a precious metals dealer to use its cash flow for bitcoin accumulation; no buy-back, no gold purchase."
+  },
+  {
+   "text": "Deal terms: £3m cash, about £4m in shares, £5m performance-linked; non-binding",
+   "status": "supported",
+   "evidence": "https://www.coindesk.com/business/2026/09/15/nigel-farage-backed-stack-btc-eyes-usd16-million-gold-dealer-deal-to-fund-bitcoin-buy",
+   "note": ""
+  },
+  {
+   "text": "Bitcoin sentiment score 70, market signal 47",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal sentiment scores; no public source."
+  },
+  {
+   "text": "US House crypto tax package omits mining and staking reward deferral (Cointelegraph)",
+   "status": "supported",
+   "evidence": "sourceRefs[2]; https://cointelegraph.com/news/us-house-crypto-tax-bill-mining-staking-reward-deferral",
+   "note": ""
+  },
+  {
+   "text": "Package is a 114-page bill, H.R. 10357, before the House Ways and Means Committee, markup on Wednesday 16 September",
+   "status": "supported",
+   "evidence": "https://cointelegraph.com/news/us-house-crypto-tax-bill-mining-staking-reward-deferral",
+   "note": "Cointelegraph published 15 Sep 2026 (a Tuesday); markup 'on Wednesday'."
+  },
+  {
+   "text": "Omission is deliberate: 'not an oversight'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Opinion/no source."
+  },
+  {
+   "text": "AI sentiment 65 and '95 articles this week' say machines will replace jobs",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal metrics; no public source."
+  },
+  {
+   "text": "Bloomberg piece: entry-level analysts need a master's degree, data-science certification, 80-hour weeks for a stipend",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "sourceRefs[5] is a Bloomberg video titled 'What It Takes to Get a Job on Wall Street'; none of these details are in the headline and no transcript found."
+  },
+  {
+   "text": "Student-debt-burdened graduates are 30% less likely to save for retirement (Bloomberg/MarketWatch)",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "MarketWatch headline (sourceRefs[18]) says people with student debt fall behind early on retirement saving; no 30% figure found."
+  },
+  {
+   "text": "People with student debt fall behind early on retirement saving and never catch up (MarketWatch)",
+   "status": "supported",
+   "evidence": "sourceRefs[18]",
+   "note": ""
+  },
+  {
+   "text": "24-year-old Russian mechanic Alexei Kuznetsov lost his leg in the same missile strike",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented person; no report."
+  },
+  {
+   "text": "Lysistrata full live performance on KEXP",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in sourceRefs; not checked as a dated release; removed."
+  },
+  {
+   "text": "Russian warship fires flares at Danish helicopter (DW News)",
+   "status": "supported",
+   "evidence": "sourceRefs[4]",
+   "note": ""
+  },
+  {
+   "text": "'Bright bursts lit up a cold sea', Arctic setting",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in source headline; location not given."
+  },
+  {
+   "text": "New York Post report on Hayden Panettiere's alleged drug dealer messages",
+   "status": "supported",
+   "evidence": "sourceRefs[3]",
+   "note": "Headline only; not used in rewrite."
+  },
+  {
+   "text": "Fox News report of roaches on a steakhouse kitchen floor",
+   "status": "supported",
+   "evidence": "sourceRefs[8]",
+   "note": "Headline only; not used in rewrite."
+  },
+  {
+   "text": "NATO will convene in Brussels next week",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source for a meeting date."
+  },
+  {
+   "text": "House is set to vote on a revised crypto tax bill that names mining and staking",
+   "status": "wrong",
+   "evidence": "https://cointelegraph.com/news/us-house-crypto-tax-bill-mining-staking-reward-deferral",
+   "note": "Cointelegraph reported the package omits the deferral; no revised bill found."
+  },
+  {
+   "text": "Stack BTC's gold purchase is scheduled for the end of the month",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "CoinDesk describes a non-binding proposal subject to due diligence; no date."
+  },
+  {
+   "text": "Expert named Oleg Ivanov, TASS, Kursk dateline 15 Sep",
+   "status": "supported",
+   "evidence": "https://tass.com/defense/2187793",
+   "note": ""
+  }
+ ],
+ "edits": {
+  "headline": "Farage-backed Stack BTC proposes £12m deal for a gold dealer",
+  "subheadline": "CoinDesk reported that the UK bitcoin treasury company would use the dealer's cash flow to buy more bitcoin.",
+  "editorialBody": [
+   "Stack BTC, a UK bitcoin treasury company backed by Nigel Farage, has proposed buying precious metals dealer Direct Bullion for up to £12m ($16m), CoinDesk reported on 15 September.",
+   "The non-binding deal includes £3m in cash, about £4m in shares and £5m in performance-linked payments, CoinDesk reported. Stack plans to use the dealer's operating cash flow to support bitcoin purchases.",
+   "Farage's company, Thorn In The Side, invested £215,000 in Stack in March for about 6.3% of the company, according to CoinDesk.",
+   "A crypto tax package before the US House Ways and Means Committee leaves out a provision that would let miners and stakers defer tax on new tokens until they sell them, Cointelegraph reported. The committee was due to consider the 114-page bill, H.R. 10357, on 16 September.",
+   "Mobile armed units in Russia's border areas shoot down most Ukrainian drones flying deep into Russia, military expert Oleg Ivanov told TASS. He said the units use pickup trucks with crews of three or four and form a layered defence in the Kursk region.",
+   "People with student debt fall behind early when saving for retirement and do not catch up, MarketWatch reported.",
+   "A Russian warship fired flares at a Danish helicopter, DW News reported."
+  ]
+ }
+}

@@ -1,0 +1,199 @@
+{
+  "hash": "0xe3fabcc31b7ac7c90dc539213372dda858bfd56c3f3129c6b3dc87bd86a8e80e",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "ABC News: 'DA reopens case of alleged Cornell University gang rape'",
+      "status": "supported",
+      "evidence": "https://abc30.com/post/cornell-university-gang-rape-case-news-new-york-district-attorney-reopens-investigation-alleged-fraternity-incident/19882953/",
+      "note": "ABC News report, 28 Sept 2026. No sourceRefs for this edition."
+    },
+    {
+      "text": "Mia Chen, 20-year-old sophomore, bruised wrist, dragged into a dorm hallway",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No victim is named in AP/ABC coverage; the alleged assault was at the Chi Phi fraternity house in Oct 2024 per AP (https://www.boston.com/news/education/2026/09/28/prosecutor-reopens-probe-into-cornell-gang-rape-allegations-after-accuser-files-lawsuit/). Invented person and details."
+    },
+    {
+      "text": "District attorney's office issued a new subpoena",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "AP says the DA will present evidence to a grand jury; no subpoena reported."
+    },
+    {
+      "text": "Campus police chief Harold Singh faces a disciplinary hearing",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No such person or hearing found in AP/ABC/NPR coverage."
+    },
+    {
+      "text": "Tompkins County DA Matthew Van Houten reopened the investigation on Monday 28 Sept and will present evidence to a grand jury",
+      "status": "supported",
+      "evidence": "https://www.boston.com/news/education/2026/09/28/prosecutor-reopens-probe-into-cornell-gang-rape-allegations-after-accuser-files-lawsuit/",
+      "note": "Added in rewrite."
+    },
+    {
+      "text": "Lawsuit filed 16 Sept by a former student says seven Chi Phi members assaulted her in Oct 2024; suit also names Cornell",
+      "status": "supported",
+      "evidence": "https://www.boston.com/news/education/2026/09/28/prosecutor-reopens-probe-into-cornell-gang-rape-allegations-after-accuser-files-lawsuit/",
+      "note": "Added in rewrite."
+    },
+    {
+      "text": "Cornell: 'Any suggestion that the university did not impose consequential punishments for those involved is false'",
+      "status": "supported",
+      "evidence": "https://www.boston.com/news/education/2026/09/28/prosecutor-reopens-probe-into-cornell-gang-rape-allegations-after-accuser-files-lawsuit/",
+      "note": "Added in rewrite."
+    },
+    {
+      "text": "A dozen rockets roared overhead in Texas",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Single Starship launch; 'a dozen rockets' invented."
+    },
+    {
+      "text": "DW News stream 'LIVE: SPACEX STARSHIP FIRST ORBITAL FLIGHT'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "DW stream title not found. The launch itself is confirmed: Starship Flight 14 from Starbase, Texas, 28 Sept (https://www.satellitetoday.com/launch/2026/09/28/spacexs-starship-reaches-orbit-cuts-10-hour-mission-short-after-engine-issue/)."
+    },
+    {
+      "text": "Starship's 10-hour arc over the Gulf",
+      "status": "wrong",
+      "evidence": "https://www.satellitetoday.com/launch/2026/09/28/spacexs-starship-reaches-orbit-cuts-10-hour-mission-short-after-engine-issue/",
+      "note": "Planned mission was about 10 hours and six orbits, but it was cut short at 3h 9m after an engine issue; splashdown in the northern Pacific."
+    },
+    {
+      "text": "Starship reached orbit for the first time on 28 Sept, deployed 26 Starlink V3 satellites, lost an engine, ended after 3h 9m",
+      "status": "supported",
+      "evidence": "https://www.satellitetoday.com/launch/2026/09/28/spacexs-starship-reaches-orbit-cuts-10-hour-mission-short-after-engine-issue/",
+      "note": "Added in rewrite. Note: launch was after this edition's generatedAt time (11:51 UTC)."
+    },
+    {
+      "text": "Arjun Patel, 19-year-old engineering student, trampled when the LPU protest in Chennai turned violent",
+      "status": "wrong",
+      "evidence": "https://www.businesstoday.in/india/story/lpu-riots-regular-classes-suspended-for-10-days-midterms-postponed-amid-violent-protests-558109-2026-09-28",
+      "note": "LPU (Lovely Professional University) is in Phagwara, Punjab, not Chennai. No student named or reported trampled. Invented person."
+    },
+    {
+      "text": "DW footage of cops fleeing the campus",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not found."
+    },
+    {
+      "text": "LPU suspended classes for 10 days from 28 Sept after a protest turned violent; two police vehicles set on fire; university called rape allegations 'false, baseless and fabricated'",
+      "status": "supported",
+      "evidence": "https://www.businesstoday.in/india/story/lpu-riots-regular-classes-suspended-for-10-days-midterms-postponed-amid-violent-protests-558109-2026-09-28",
+      "note": "Added in rewrite."
+    },
+    {
+      "text": "CNN aired Trump's dismissal of 'AI going rogue'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No CNN item with this phrase found around 27-28 Sept. Trump called AI warnings a 'hoax' around 15 Sept (AFP), not this day."
+    },
+    {
+      "text": "DW: 'The GOP Turns To Trump As Midterm Ad War Intensifies'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "DW item not found."
+    },
+    {
+      "text": "Ad budget of $12 million in taxpayer money for fear clips about bots stealing votes",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented."
+    },
+    {
+      "text": "AI is already rewriting ballot counts in diaspora kitchens",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented."
+    },
+    {
+      "text": "Irina Petrova's United Russia vote in a Brooklyn envelope; logged into UN provisional tally; diaspora count 280,000",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Recurring invented character; UN does not tally national votes."
+    },
+    {
+      "text": "General Assembly stalled for four days",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source."
+    },
+    {
+      "text": "Thandiwe Mokoena killed in a drive-by in 'Pietermariff'",
+      "status": "wrong",
+      "evidence": "https://www.wsls.com/news/world/2026/09/27/police-hunt-gunmen-after-2-mass-shootings-in-south-africa-leave-at-least-27-dead/",
+      "note": "Invented in the 27 Sept edition; the 26 Sept shootings were in Wedela and Lwandle, no victims named."
+    },
+    {
+      "text": "KwaZulu-Natal water mains left 12,000 without water; council repaired the pipe this morning",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Carried over from 27 Sept edition; no source places the BBC burst pipe in KwaZulu-Natal."
+    },
+    {
+      "text": "Suspect, a local gang member, arrested last night",
+      "status": "wrong",
+      "evidence": "https://www.wsls.com/news/world/2026/09/27/police-hunt-gunmen-after-2-mass-shootings-in-south-africa-leave-at-least-27-dead/",
+      "note": "AP reported no arrests had been made."
+    },
+    {
+      "text": "UN offered a statement of condolence",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not found."
+    },
+    {
+      "text": "Bitcoin sentiment 50, signal 46; Ethereum sentiment 51, signal 47",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal scores; no public source."
+    },
+    {
+      "text": "On-chain wallet transfers to addresses linked to protest financing; same dollars fund SpaceX and megaphones in Chennai",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented causal link."
+    },
+    {
+      "text": "Music pick: Packaging 'Full Performance (Live on KEXP)'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not checked against a dated source; not news."
+    },
+    {
+      "text": "UN special session on water security on 5 Oct in response to KwaZulu-Natal crisis",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented future event."
+    },
+    {
+      "text": "SpaceX second orbital attempt on 12 Oct",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented future date."
+    },
+    {
+      "text": "US midterm primaries begin on 3 Nov",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source; 3 Nov 2026 is the general election day, and primaries were held earlier in the year."
+    }
+  ],
+  "edits": {
+    "headline": "New York prosecutor reopens Cornell fraternity rape investigation",
+    "subheadline": "District Attorney Matthew Van Houten said his office would present evidence against seven fraternity members to a grand jury.",
+    "editorialBody": [
+      "Tompkins County District Attorney Matthew Van Houten reopened a criminal investigation into an alleged gang rape at Cornell University on Monday 28 September, the Associated Press and ABC News reported.",
+      "A former student sued on 16 September, saying seven members of the Chi Phi fraternity assaulted her in October 2024. The lawsuit also names Cornell, the AP reported.",
+      "Cornell said it supported the decision. \"Any suggestion that the university did not impose consequential punishments for those involved is false,\" the university said.",
+      "Lovely Professional University in Phagwara, Punjab, suspended classes for 10 days from 28 September after a student protest turned violent, Business Today reported. Protesters set two police vehicles on fire.",
+      "The protest followed allegations that a student was raped on campus. The university called the allegations \"false, baseless and fabricated\".",
+      "SpaceX's Starship reached orbit for the first time on its 14th test flight from Starbase, Texas, on 28 September, Satellite Today reported. It deployed 26 Starlink satellites.",
+      "The ship lost an engine shortly after launch, and the flight ended after 3 hours 9 minutes instead of the planned 10 hours, Satellite Today reported."
+    ]
+  }
+}

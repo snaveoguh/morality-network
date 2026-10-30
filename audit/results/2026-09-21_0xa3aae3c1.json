@@ -1,0 +1,193 @@
+{
+ "hash": "0xa3aae3c13613b85e0951a5da25918895b8e60d97c24698935f6fd7ad96146285",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "An 80-year-old Hong Kong woman lost HK$6 million to a fake online investment expert",
+   "status": "supported",
+   "evidence": "sourceRefs[13]",
+   "note": "SCMP headline."
+  },
+  {
+   "text": "The victim's name is Li Mei; she clutched a bank statement in a cramped flat on September 20",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Name, scene and date not in source; invented. The Standard reports the scam ran through Facebook."
+  },
+  {
+   "text": "The fraudster 'claimed to double her savings' and vanished",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in source headline."
+  },
+  {
+   "text": "The scam was run through Facebook (rewrite detail)",
+   "status": "supported",
+   "evidence": "https://www.thestandard.com.hk/news/article/343369/Elderly-retiree-duped-out-of-6m-in-Facebook-investment-scam",
+   "note": "The Standard headline: 'Elderly retiree duped out of 6m in Facebook investment scam'. Added in rewrite."
+  },
+  {
+   "text": "Li Mei's loss could have been a phishing scam through a wallet app; Florida storm infrastructure that 'residents like Li Mei rely on'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented; she lives in Hong Kong, not Florida."
+  },
+  {
+   "text": "Inside Climate News reported on how Florida ties localities' hands on environmental regulation and worker protections",
+   "status": "supported",
+   "evidence": "sourceRefs[2]",
+   "note": "ICN headline."
+  },
+  {
+   "text": "Florida's new 'one-stop' framework ties every local decision to a single opaque agency",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in the headline; invented characterisation."
+  },
+  {
+   "text": "The legislation has stalled a small IVF clinic in Tampa",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Nothing in source; invented link to the IVF story."
+  },
+  {
+   "text": "'Just down the coast in Florida' from Hong Kong",
+   "status": "wrong",
+   "evidence": "",
+   "note": "Geographically false."
+  },
+  {
+   "text": "Bitcoin hit $85,000 on a short squeeze that forced out $648 million of bearish bets (CoinDesk)",
+   "status": "supported",
+   "evidence": "sourceRefs[22]",
+   "note": "CoinDesk headline."
+  },
+  {
+   "text": "Bitcoin sentiment 68, crypto optimism index 63, market signal 60; AI sentiment 61 'reported by Wired'; climate sentiment 60; optimism scores in low sixties across AI, health, economy",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores; no public source. Wired did not report an AI sentiment score."
+  },
+  {
+   "text": "CNBC reported MS NOW, CNN and Politico are suing to overturn a White House ban on reporters",
+   "status": "supported",
+   "evidence": "sourceRefs[1]",
+   "note": "CNBC headline says 'Trump to be sued by MS NOW, CNN, Politico to reverse White House ban'."
+  },
+  {
+   "text": "New York Post: First Amendment suit after journalists were booted from the West Wing",
+   "status": "supported",
+   "evidence": "sourceRefs[4]",
+   "note": "NY Post headline says 'booted from White House grounds', not specifically the West Wing."
+  },
+  {
+   "text": "'Trump's legal woes deepened'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Characterisation; the sources describe a planned lawsuit, not wider legal woes."
+  },
+  {
+   "text": "DW: Putin's party retained a majority in a controlled parliamentary vote",
+   "status": "supported",
+   "evidence": "sourceRefs[5]",
+   "note": "DW headline."
+  },
+  {
+   "text": "United Russia retained a 'fabricated majority' in a vote 'engineered by the Kremlin'",
+   "status": "unsupported",
+   "evidence": "sourceRefs[5]",
+   "note": "DW headline says 'controlled parliamentary vote'; 'fabricated' and 'engineered' are not in it."
+  },
+  {
+   "text": "DW quoted Kremlin spokespeople downplaying Ukrainian attacks during elections",
+   "status": "wrong",
+   "evidence": "sourceRefs[23]",
+   "note": "That headline is TASS ('Kremlin comments on Ukrainian attacks during elections, settlement process'), not DW; 'downplaying' is not in it."
+  },
+  {
+   "text": "Typhoon Dujuan nearing Tokyo; over 1.6 million people in Japan urged to evacuate (SCMP)",
+   "status": "supported",
+   "evidence": "sourceRefs[6]",
+   "note": "SCMP headline. Edition said 'prompting evacuations for' 1.6 million; headline says 'urged to evacuate'."
+  },
+  {
+   "text": "US and China 'have opened a back-channel' to alert each other of AI national security threats (Wired)",
+   "status": "wrong",
+   "evidence": "sourceRefs[11]",
+   "note": "Wired headline says the US and China 'discuss' alerting each other; no channel is reported as opened."
+  },
+  {
+   "text": "Former Shenzhen mayor Qin Weizhong under graft probe (SCMP)",
+   "status": "supported",
+   "evidence": "sourceRefs[9]",
+   "note": "SCMP headline: under graft probe by China's discipline body."
+  },
+  {
+   "text": "South Korea met its foreign-student target but struggles to keep them (SCMP)",
+   "status": "supported",
+   "evidence": "sourceRefs[16]",
+   "note": "SCMP headline. Edition wrongly says 'SCMP disclosed... while South Korea announced'; it is an SCMP feature."
+  },
+  {
+   "text": "Al Jazeera live coverage of German election fallout",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in sourceRefs; no German national election in Sep 2026 found to match."
+  },
+  {
+   "text": "ABC footage of an ICE officer shooting a delivery driver in Austin",
+   "status": "supported",
+   "evidence": "https://www.cp24.com/news/world/2026/09/21/venezuelan-doordash-driver-shot-and-wounded-by-ice-agent-in-austin-texas-officials-say/",
+   "note": "An ICE agent shot and wounded a Venezuelan DoorDash driver in Austin on 20 Sep (CP24, others). ABC footage itself not checked."
+  },
+  {
+   "text": "Ed Sheeran's apologetic interview about Gaza aired on ABC",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in this edition's sourceRefs; 19 Sep DW headline only says Sheeran continued his US tour amid a Palestinian controversy. No apology interview found."
+  },
+  {
+   "text": "US Senate to vote on a supplemental Russia sanctions package next week",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source; Trump had already signed a Russia sanctions bill on 18 Sep."
+  },
+  {
+   "text": "Taiwan's elections loom in November",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source given; not checked against any reference in this edition."
+  },
+  {
+   "text": "Next AI summit in Geneva",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "On-chain data suggests institutional inflows are stabilising",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "Causal links (crypto tech fuels Li Mei's fraud; AI labs' deepfakes led to media bans)",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented links between unrelated stories."
+  }
+ ],
+ "edits": {
+  "headline": "Hong Kong woman aged 80 loses HK$6 million to fake investment expert",
+  "subheadline": "The retiree was defrauded in an investment scam run through Facebook, The Standard reported.",
+  "editorialBody": [
+   "An 80-year-old woman in Hong Kong lost HK$6 million to a fake online investment expert, the South China Morning Post reported. The Standard said the scam was run through Facebook.",
+   "CNN, MS NOW and Politico said they would bring a First Amendment lawsuit after their reporters were removed from White House grounds, the New York Post reported. CNBC said the suit seeks to reverse the ban.",
+   "Bitcoin hit $85,000 as a short squeeze forced out $648 million of bets on falling prices, CoinDesk reported.",
+   "More than 1.6 million people in Japan were urged to evacuate as Typhoon Dujuan neared Tokyo, the South China Morning Post reported.",
+   "President Vladimir Putin's party kept its majority in Russia's parliamentary election, which DW described as a controlled vote.",
+   "Qin Weizhong, a former mayor of Shenzhen, is under investigation for graft by China's discipline body, the South China Morning Post reported.",
+   "The United States and China are discussing alerting each other to national security threats from artificial intelligence, Wired reported."
+  ]
+ }
+}

@@ -1,0 +1,193 @@
+{
+ "hash": "0x3d5077da6d6e9a8ffcfb766c4dbe4ca8f5e0c11817bec2df658dcd6abcb72df4",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Luis Ramirez, a US casualty in Jordan, lost a leg on 9 September; Jordanian Ministry of Health said amputation 'successful'; prosthetic funded by a US veterans charity",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No report of any person of this name found. Air & Space Forces Magazine and Tribune India report US officials said no American personnel were killed in the 8 September attack on the Jordan base. Recurring invented character."
+  },
+  {
+   "text": "Charity ledger shows a $12,000 grant; '24-year-old in a Jordanian ward'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented detail attached to the invented casualty."
+  },
+  {
+   "text": "Press TV: Iran ships 'defensive' missile kits to a Saudi-backed proxy in Yemen; kits financed by charity dollars",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such Press TV report found; Iran is not reported arming Saudi-backed forces. Invented causal link."
+  },
+  {
+   "text": "IRGC Navy forces 'seized' an unmanned US vessel in the Strait of Hormuz a day after Ramirez's story; Press TV described it as 'destroying a floating spy'",
+   "status": "wrong",
+   "evidence": "https://www.siasat.com/irans-irgc-says-hit-us-sea-drone-in-hormuz-strait-3540170/",
+   "note": "IRGC said on 10-11 September it struck/destroyed a US Saildrone Explorer unmanned surface vessel (Tasnim, IANS via Siasat); the seizure claim (an unmanned underwater vehicle) was on 8 September (https://live.libnanews.com/event/ev-1788881711427-d8cb). No Press TV 'floating spy' quote found. US did not confirm."
+  },
+  {
+   "text": "IRGC missile 'gouged a wall' at a US forward operating base outside Amman, damaging two warplanes",
+   "status": "wrong",
+   "evidence": "https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/",
+   "note": "The attack hit Muwaffaq Salti Air Base near Azraq, not a base outside Amman. One A-10 had a severely damaged wing and about eight F-15Es were lightly damaged (Air & Space Forces Magazine); ABC News sources said nine warplanes. Not two."
+  },
+  {
+   "text": "Iranian missiles damaged US warplanes at an air base in Jordan",
+   "status": "supported",
+   "evidence": "https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/",
+   "note": "Attack on 8 September (ET), reported 9 September. Also https://abcnews.com/WNT/video/iranian-strikes-damaged-us-warplanes-jordan-sources-136352863"
+  },
+  {
+   "text": "Pentagon labelled the strike 'unprecedented'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No Pentagon statement found; CENTCOM did not comment to Air & Space Forces Magazine and Trump denied damage."
+  },
+  {
+   "text": "US response a 'half-hearted aerial patrol'; unnamed adviser called it 'warmongering accelerated power shift toward East'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Yemen's (Houthi-led) armed forces took control of the Red Sea port of Mokha",
+   "status": "supported",
+   "evidence": "https://www.tasnimnews.ir/en/news/2026/09/10/3693598/yemeni-forces-take-control-of-strategic-red-sea-port-city",
+   "note": "Tasnim, 10 September (page returned 503 on fetch; headline and summary via search). L'Orient-Le Jour headline 'Houthis seize Mokha city on Red Sea: Yemen military source' (https://today.lorientlejour.com/article/1547108/houthis-seize-mokha-city-on-red-sea-yemen-military-source.html). Edition's date of 11 September is not supported: Tasnim reports 10 September."
+  },
+  {
+   "text": "Press TV called the gains a 'strategic victory' after a week of 'rapid gains'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No Press TV article found."
+  },
+  {
+   "text": "Mokha mayor Aisha Al-Mansoor told Reuters 23 civilians were injured and three shops destroyed",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such person or Reuters report found. Invented."
+  },
+  {
+   "text": "UN condemned the weapons last month in a resolution that 'the IAEA's secretary' called 'illegal, political, and a product of US-Zionist pressure'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such resolution or quote found; the IAEA has a director general, not a secretary."
+  },
+  {
+   "text": "YAF tightening grip on Bab al-Mandeb",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source for 'YAF'; not checkable."
+  },
+  {
+   "text": "Brent surged past $106 per barrel this morning",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No dated source for $106 on 11 September. A BingX AI summary put Brent at $107.63 on 10 September; psuconnect put it near $104 on 12 September. Treated as unsupported."
+  },
+  {
+   "text": "64% chance the Fed will hike again",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found; the September 2026 FOMC was discussed in terms of cuts, not hikes."
+  },
+  {
+   "text": "SEC crypto custody rewrite is under White House review (The Defiant)",
+   "status": "supported",
+   "evidence": "https://thedefiant.io/converge/regulation/sec-crypto-custody-rewrite-enters-white-house-review",
+   "note": "Sent to OIRA on 25 August 2026 (https://theblock.co/news/regulation/2026-08-26-sec-sends-crypto-custody-rule-changes-to-white-house-for-review-412811)."
+  },
+  {
+   "text": "Bitcoin sentiment 65, Ethereum 69; Global Economy sentiment 58; AI optimism 66",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal sentiment scores; no public source."
+  },
+  {
+   "text": "The Defiant reported Revolut's EURR rollout, a regulated stablecoin",
+   "status": "supported",
+   "evidence": "https://thedefiant.io/converge/tradfi-and-fintech/revolut-starts-eurr-rollout-with-bridge-as-regulated-issuer",
+   "note": "Bridge is issuer; selected customers in Denmark, Poland and Portugal from 26 August (https://theblock.co/news/business/2026-08-26-revolut-begins-phased-eurr-stablecoin-rollout-in-denmark-poland-and-portugal-412772)."
+  },
+  {
+   "text": "A 'crypto sell-off' tied to the Brent spike",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "MarketWatch warned that AI could 'wipe out humanity'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No MarketWatch article found around the date."
+  },
+  {
+   "text": "Bridgewater's chief warns of 'algorithmic unemployment'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Bridgewater CEO AI job-displacement warning found only in late September 2026 (Bloomberg via secondary outlets), after this edition, and not with this phrase."
+  },
+  {
+   "text": "48-year-old shop owner in Mokha; US pilot's aircraft in repair hangar costing $8 million",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "Video picks: DW BRICS summit footage, CNN 'Havana now pitch black', BBC 9/11 memorial",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Feed video titles; no CNN 'Havana pitch black' report from September 2026 found. Not used in rewrite."
+  },
+  {
+   "text": "Pezeshkian lands in New Delhi for BRICS",
+   "status": "supported",
+   "evidence": "https://aa.com.tr/en/asia-pacific/iranian-president-arrives-in-india-for-brics-summit-amid-war-with-us/4054190",
+   "note": "Arrived 11 September 2026 (Anadolu)."
+  },
+  {
+   "text": "UN Security Council convenes on 15 September to debate a Red Sea blockade resolution",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "US Navy Secretary expected to address 'Fifth Fleet' incident in Bahrain",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Fed minutes released on 17 September, confirming a rate-hike trajectory",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found. Bitrue preview (https://www.bitrue.com/blog/btc-price-prediction-september-2026) puts the FOMC decision on 16 September; the FOMC meeting was 15-16 September; minutes are published three weeks after a meeting, not the next day. 'Rate-hike trajectory' unsupported."
+  },
+  {
+   "text": "(rewrite) US officials said no American personnel were killed",
+   "status": "supported",
+   "evidence": "https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/",
+   "note": ""
+  },
+  {
+   "text": "(rewrite) Pezeshkian scheduled to meet Modi Friday evening",
+   "status": "supported",
+   "evidence": "https://aa.com.tr/en/asia-pacific/iranian-president-arrives-in-india-for-brics-summit-amid-war-with-us/4054190",
+   "note": ""
+  }
+ ],
+ "edits": {
+  "headline": "Iranian missile attack damages US warplanes at Jordan air base",
+  "subheadline": "One A-10 had a badly damaged wing and about eight F-15Es were lightly damaged, Air & Space Forces Magazine reported.",
+  "editorialBody": [
+   "Iranian ballistic missiles damaged US aircraft at Muwaffaq Salti Air Base in Jordan on 8 September, Air & Space Forces Magazine reported on 9 September.",
+   "One A-10 Thunderbolt II had a severely damaged wing and about eight F-15E Strike Eagles were lightly damaged, the magazine reported. US officials said no American personnel were killed. ABC News, citing sources, said nine US warplanes were damaged.",
+   "Iran's Revolutionary Guards said their navy struck a US Saildrone Explorer unmanned surface vessel at the entrance to the Strait of Hormuz, IANS reported on 11 September. The US did not confirm the claim.",
+   "Houthi-led forces took control of the Red Sea port city of Mokha, Iran's Tasnim news agency reported on 10 September.",
+   "Iranian President Masoud Pezeshkian arrived in New Delhi on 11 September for the BRICS summit, Anadolu Agency reported. He was scheduled to meet Indian Prime Minister Narendra Modi that evening.",
+   "The US Securities and Exchange Commission's rewrite of its crypto custody rules for investment advisers has entered White House review, The Defiant reported.",
+   "Revolut has begun rolling out EURR, a euro stablecoin issued by Bridge, to selected customers in three countries, The Defiant reported."
+  ]
+ }
+}

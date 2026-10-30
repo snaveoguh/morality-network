@@ -1,0 +1,161 @@
+{
+  "hash": "0x36e05344ae031968469b0b4567e552f3a710e6848068491e63658fe1b97c7daf",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Megan Alvarez made a 911 call in Ahwatukee, Phoenix, at 2:14 a.m. on October 3; quote 'He's in the back, he's...'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Searched Ahwatukee/Phoenix 911 call murder October 2026: no such case or name found. Edition has no sourceRefs."
+    },
+    {
+      "text": "Victim a 34-year-old mother of two found in a garage",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Nothing found."
+    },
+    {
+      "text": "1.2% rise in homicide calls over the past month in Maricopa County",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Nothing found."
+    },
+    {
+      "text": "Christa Pike's botched lethal injection two days ago",
+      "status": "wrong",
+      "evidence": "https://www.aljazeera.com/news/2026/10/1/us-supreme-court-clears-way-for-christa-pikes-execution-in-tennessee",
+      "note": "Execution attempt was on 30 Sept, three days before 3 Oct."
+    },
+    {
+      "text": "A federal judge yesterday ordered a full review of the Department of Corrections' medical protocols",
+      "status": "wrong",
+      "evidence": "https://www.aljazeera.com/news/2026/10/1/us-supreme-court-clears-way-for-christa-pikes-execution-in-tennessee",
+      "note": "Governor Bill Lee ordered a third-party review; no federal judge order found. Tennessee's agency is the Department of Correction."
+    },
+    {
+      "text": "Pike remains on a ventilator",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "A lawyer, Stephen Ferrell, later said she was on a ventilator, but no source dated by 3 Oct found; BBC on 2 Oct reported critical condition. Related: https://www.bollywoodshaadis.com/articles/christa-pike-may-not-fully-recover-after-her-botched-execution-85276"
+    },
+    {
+      "text": "Budget cuts that erased a refugee girl's classroom are earmarked for 'enhanced medical oversight'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented link; the refugee girl was itself invented in the 2 Oct edition."
+    },
+    {
+      "text": "Smit Machchhar hailed as hero for landing the flydubai flight",
+      "status": "wrong",
+      "evidence": "https://www.aljazeera.com/news/2026/9/30/what-happened-on-diverted-flydubai-flight-from-dubai-to-tel-aviv",
+      "note": "He was hailed as a hero (Gargash, Khaleej Times), but Al Jazeera reported the plane was landed in Tabuk by other on-duty crew after he was wounded; he did not land it. 'Knife-riddled' unsupported (UAE prosecutor said an axe)."
+    },
+    {
+      "text": "Airline slapped with mandatory safety audit; government report found 'systemic lapses in passenger screening'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Nothing found; attacker was the co-pilot, not a passenger."
+    },
+    {
+      "text": "Federal judge ruled AI voice clones inadmissible; Aria Singh's AI division halted a $3.2bn acquisition; shares up 4.7%",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No such ruling, person or deal found."
+    },
+    {
+      "text": "Ethereum at $2,679.05",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No dated source for that exact figure; ETH was about $2,690 on 4 Oct per CryptoTicker/CoinGecko, so plausible but unverified. Related: https://cryptoticker.io/en/ethereum-price-prediction-october-record-last-two-lower/"
+    },
+    {
+      "text": "MACD histogram 3.1678, technical strength 0.35, RSI 57.2, Bollinger %B 1.06, council verdict hold",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal model output."
+    },
+    {
+      "text": "Bitcoin sentiment 50, signal 46; ETH sentiment 50, signal 45; global sentiment 50/100",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal scores."
+    },
+    {
+      "text": "India won hockey gold, ending a 44-year drought",
+      "status": "supported",
+      "evidence": "https://organiser.org/2026/10/02/384078/sports/asian-games-2026-india-end-44-year-womens-hockey-gold-drought-by-beating-china-1-0-seal-la-2028-olympic-berth/",
+      "note": "India beat China 1-0 in the women's final on 2 Oct in Aichi-Nagoya; first women's hockey gold in 44 years."
+    },
+    {
+      "text": "Sjoerd Marijne lauding discipline; Savita Punia lifts the Cup (DW News)",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Marijne is the coach and Punia a player, but no source for the 'discipline' remark or the cup-lift; DW clip not found. The Asian Games award a medal, not a cup."
+    },
+    {
+      "text": "ABC 'Trump Rallies for GOP in Red States' video",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not found."
+    },
+    {
+      "text": "DW 'Can Cancer Be Prevented?'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Feed item, not checked; irrelevant."
+    },
+    {
+      "text": "ETH open interest steady, funding flat, spike in wallets holding >10 ETH",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source."
+    },
+    {
+      "text": "Senate vote on AI Oversight Bill on October 12",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No such bill or date found."
+    },
+    {
+      "text": "Arizona detectives expect to announce a suspect by October 10",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Case not found."
+    },
+    {
+      "text": "Lalremsiami scored in the 10th minute; win gives direct qualification for LA 2028",
+      "status": "supported",
+      "evidence": "https://organiser.org/2026/10/02/384078/sports/asian-games-2026-india-end-44-year-womens-hockey-gold-drought-by-beating-china-1-0-seal-la-2028-olympic-berth/",
+      "note": "Added."
+    },
+    {
+      "text": "Pike in critical condition after surviving two lethal injections, lawyer says (BBC, 2 Oct)",
+      "status": "supported",
+      "evidence": "https://www.bbc.co.uk/news/articles/cmn4540d4z87o",
+      "note": "Added; BBC headline from the 2 Oct edition's sourceRefs."
+    },
+    {
+      "text": "Governor Bill Lee ordered a third-party review",
+      "status": "supported",
+      "evidence": "https://www.aljazeera.com/news/2026/10/1/us-supreme-court-clears-way-for-christa-pikes-execution-in-tennessee",
+      "note": "Added."
+    },
+    {
+      "text": "Gargash called the attack a 'dangerous terrorist act' and praised Machchhar",
+      "status": "supported",
+      "evidence": "https://www.khaleejtimes.com/uae/gargash-praises-flydubai-pilot-dangerous-terrorist-act",
+      "note": "Added."
+    }
+  ],
+  "edits": {
+    "headline": "India beat China 1-0 to win Asian Games women's hockey gold",
+    "subheadline": "Lalremsiami scored the only goal in the 10th minute, giving India its first women's hockey gold at the Asian Games in 44 years.",
+    "editorialBody": [
+      "India's women's hockey team beat China 1-0 in the Asian Games final in Aichi-Nagoya, Japan, on 2 October, Organiser reported.",
+      "Lalremsiami scored the only goal in the 10th minute. The gold is India's first in women's hockey at the Asian Games in 44 years and gives the team direct qualification for the Los Angeles 2028 Olympics.",
+      "Christa Pike was in critical condition in hospital after Tennessee failed to execute her on 30 September, her lawyer said on 2 October, BBC News reported.",
+      "Tennessee Governor Bill Lee ordered a third-party review of what happened during the execution attempt, Al Jazeera reported.",
+      "Anwar Gargash, diplomatic adviser to the UAE president, praised flydubai captain Smit Machchhar and called the 30 September cockpit attack a \"dangerous terrorist act\", Khaleej Times reported."
+    ]
+  }
+}

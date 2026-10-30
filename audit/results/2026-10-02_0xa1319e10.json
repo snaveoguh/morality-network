@@ -1,0 +1,175 @@
+{
+  "hash": "0xa1319e10542d60d534f97fe216ab5dae3c24050d38b349493476ef2ee01ae54a",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Christa Pike survived a botched lethal injection and is in critical condition",
+      "status": "supported",
+      "evidence": "sourceRefs[1]",
+      "note": "BBC: critical condition after surviving two lethal injections, lawyer says."
+    },
+    {
+      "text": "Pike was in a D.C. intensive-care bed on October 2, 2024",
+      "status": "wrong",
+      "evidence": "https://www.aljazeera.com/news/2026/10/1/us-supreme-court-clears-way-for-christa-pikes-execution-in-tennessee",
+      "note": "Execution attempt was in Tennessee on 30 Sept 2026; she was taken by ambulance to a hospital (not in Washington DC). Year 2024 is wrong."
+    },
+    {
+      "text": "Her lawyer James 'Jinx' Mallory called it 'the most barbaric medical experiment ever sanctioned by a courtroom'",
+      "status": "wrong",
+      "evidence": "https://newschannel9.com/news/local/christa-pike-awake-and-speaking-after-failed-execution-lawyers-say",
+      "note": "Her lawyers named in reporting are Randy Spivey and Stephen Ferrell. Name and quote invented."
+    },
+    {
+      "text": "A week earlier we followed Smit Machchhar",
+      "status": "wrong",
+      "evidence": "https://www.aljazeera.com/news/2026/9/30/what-happened-on-diverted-flydubai-flight-from-dubai-to-tel-aviv",
+      "note": "Attack was on 30 Sept, two days earlier, covered in the 1 Oct edition."
+    },
+    {
+      "text": "Machchhar, an Indian pilot, steered a flydubai Airbus to safety",
+      "status": "wrong",
+      "evidence": "https://www.aljazeera.com/news/2026/9/30/what-happened-on-diverted-flydubai-flight-from-dubai-to-tel-aviv",
+      "note": "Indian pilot supported (sourceRefs[2]). Airbus unsupported; reports said the plane was landed in Tabuk by other on-duty crew after he was wounded."
+    },
+    {
+      "text": "UAE aviation minister praised his 'heroic composure'",
+      "status": "wrong",
+      "evidence": "https://www.khaleejtimes.com/uae/gargash-praises-flydubai-pilot-dangerous-terrorist-act",
+      "note": "The official was Anwar Gargash, diplomatic adviser to the UAE president, on X; quote 'heroic composure' not found."
+    },
+    {
+      "text": "UAE official called the incident a 'terrorist act'",
+      "status": "supported",
+      "evidence": "sourceRefs[2]",
+      "note": "Also Khaleej Times: 'dangerous terrorist act'."
+    },
+    {
+      "text": "His name on a banner at Dubai International Airport",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Nothing found."
+    },
+    {
+      "text": "UNHCR announced a 30% cut to education funding for camps in Kenya, jeopardising 1.2 million children",
+      "status": "wrong",
+      "evidence": "https://news.un.org/feed/view/en/story/2026/10/1168506",
+      "note": "UN News piece is a UNHCR report on refugee education; no 30% figure, no Kenya, no 1.2 million. It says 5.8 million of 13.1 million school-age refugee children were out of school in 2025."
+    },
+    {
+      "text": "Twelve-year-old Aisha Hassan of Dadaab, quote 'I thought I could become a teacher...'",
+      "status": "wrong",
+      "evidence": "https://news.un.org/feed/view/en/story/2026/10/1168506",
+      "note": "Person and quote invented. The headline quote 'I have not lost my dreams' is from Jamila Mostafa, 19, a Sudanese refugee in Egypt."
+    },
+    {
+      "text": "EU announced diesel release, dumping 50 million barrels into the market",
+      "status": "wrong",
+      "evidence": "sourceRefs[15]",
+      "note": "FT says the EU was considering releasing 50mn barrels, not that it announced or released them."
+    },
+    {
+      "text": "FT reported diesel fell 12% in a single session",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "FT headline says 'falls sharply'; no 12% figure found."
+    },
+    {
+      "text": "NPR asked why diesel now costs less than regular gasoline",
+      "status": "wrong",
+      "evidence": "sourceRefs[11]",
+      "note": "NPR headline: 'Why is diesel more expensive than regular gas?'"
+    },
+    {
+      "text": "Sentiment 66% AI, 62% global economy, Bitcoin 70%, market signal 56%, conflict 46, health 64, crypto 67, human rights 54, tilt -0.19",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal scores."
+    },
+    {
+      "text": "Cheaper fuel fuels a surge in trucks delivering contraband to refugee camps",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented causal link."
+    },
+    {
+      "text": "Cointelegraph: corporate treasuries may struggle to match the new 'Strategy' protocol",
+      "status": "wrong",
+      "evidence": "sourceRefs[18]",
+      "note": "Headline: 'Bitcoin treasuries may struggle to match Strategy, says Ammous'. Strategy is a company, not a protocol."
+    },
+    {
+      "text": "Modi faces 'cockroach' movement and opposition parties (SCMP)",
+      "status": "supported",
+      "evidence": "sourceRefs[4]",
+      "note": ""
+    },
+    {
+      "text": "Activists call themselves 'the crawl' after an SCMP exposé of street protests",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not in headline; nothing found."
+    },
+    {
+      "text": "Supercam S180 and S350 UAVs jointly perform missions in special op zone (TASS)",
+      "status": "supported",
+      "evidence": "sourceRefs[3]",
+      "note": "'Unnamed conflict theater' is the Russian special military operation zone in Ukraine per TASS usage."
+    },
+    {
+      "text": "DW live feed of an Iranian official linking the flydubai attack to Tehran; BBC aired pilot's recollection",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No such reports found by 2 Oct."
+    },
+    {
+      "text": "Fred again.. 'Rooftop Live (Arun's Roof, London)'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal feed item; irrelevant."
+    },
+    {
+      "text": "UN funding summit Oct 12; federal lethal-injection hearing Oct 15; EU second diesel release Oct 20; Indian parliamentary session Oct 25",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No sources for any of these dates."
+    },
+    {
+      "text": "Fox News: former police chief says botched injection takes focus off victim, jeopardizes execution",
+      "status": "supported",
+      "evidence": "sourceRefs[8]",
+      "note": "Added."
+    },
+    {
+      "text": "Pike was given two doses of pentobarbital on 30 Sept and Tennessee could not complete the execution",
+      "status": "supported",
+      "evidence": "https://www.aljazeera.com/news/2026/10/1/us-supreme-court-clears-way-for-christa-pikes-execution-in-tennessee",
+      "note": "Added."
+    },
+    {
+      "text": "Gargash, diplomatic adviser to the UAE president, praised Machchhar and called it a 'dangerous terrorist act' on X on 2 Oct",
+      "status": "supported",
+      "evidence": "https://www.khaleejtimes.com/uae/gargash-praises-flydubai-pilot-dangerous-terrorist-act",
+      "note": "Added."
+    },
+    {
+      "text": "5.8 million of 13.1 million school-age refugee children out of school in 2025 (UNHCR)",
+      "status": "supported",
+      "evidence": "https://news.un.org/feed/view/en/story/2026/10/1168506",
+      "note": "Added."
+    }
+  ],
+  "edits": {
+    "headline": "Christa Pike in critical condition after failed Tennessee execution",
+    "subheadline": "Tennessee officials gave her two doses of pentobarbital on 30 September but could not complete the execution, Al Jazeera reported.",
+    "editorialBody": [
+      "Christa Pike is in critical condition in hospital after Tennessee failed to execute her on 30 September, her lawyer said, BBC News reported on 2 October.",
+      "Her lawyers said she was given two doses of pentobarbital, Al Jazeera reported. Governor Bill Lee ordered a third-party review.",
+      "A former police chief said the botched lethal injection took the focus off Pike's victim and put her execution in jeopardy, Fox News reported.",
+      "Anwar Gargash, diplomatic adviser to the UAE president, called the 30 September attack on flydubai flight FZ1073 a \"dangerous terrorist act\", Khaleej Times reported. He praised the Indian captain, Smit Machchhar.",
+      "Funding cuts threaten the education of refugee children, UNHCR said in a report covered by UN News. About 5.8 million of 13.1 million school-age refugee children were out of school in 2025, the agency said.",
+      "Diesel prices fell sharply as the EU considered releasing 50mn barrels under pressure from US President Donald Trump, the Financial Times reported.",
+      "Indian Prime Minister Narendra Modi faces pressure from a \"cockroach\" movement and from opposition parties, the South China Morning Post reported."
+    ]
+  }
+}

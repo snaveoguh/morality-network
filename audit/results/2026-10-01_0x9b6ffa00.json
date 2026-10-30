@@ -1,0 +1,199 @@
+{
+  "hash": "0x9b6ffa00dec62506c2f8902e1c2fc10dfb4aac0d65bbd8830689b8fc3b4adb84",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Smit Machchhar was the pilot of the flydubai flight that was attacked",
+      "status": "supported",
+      "evidence": "https://www.aljazeera.com/news/2026/9/30/what-happened-on-diverted-flydubai-flight-from-dubai-to-tel-aviv",
+      "note": "Al Jazeera: captain Smit Machchhar, Indian national, per India's embassy in Saudi Arabia."
+    },
+    {
+      "text": "Attack happened on October 1",
+      "status": "wrong",
+      "evidence": "https://www.aljazeera.com/news/2026/9/30/what-happened-on-diverted-flydubai-flight-from-dubai-to-tel-aviv",
+      "note": "Attack was on Wednesday 30 September 2026."
+    },
+    {
+      "text": "Flight number FZ1073",
+      "status": "supported",
+      "evidence": "https://www.aljazeera.com/news/2026/9/30/what-happened-on-diverted-flydubai-flight-from-dubai-to-tel-aviv",
+      "note": "Dubai to Tel Aviv."
+    },
+    {
+      "text": "A passenger brandished a kitchen knife and slashed the cockpit door",
+      "status": "wrong",
+      "evidence": "https://www.aljazeera.com/news/2026/9/30/what-happened-on-diverted-flydubai-flight-from-dubai-to-tel-aviv",
+      "note": "The attacker was the co-pilot/first officer, not a passenger; UAE prosecutor later said an emergency axe was used. No kitchen knife or slashed door reported."
+    },
+    {
+      "text": "Captain wounded in the forearm",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Al Jazeera reports several stab wounds, stable condition; no forearm detail found."
+    },
+    {
+      "text": "Machchhar touched down in Dubai with 174 lives intact",
+      "status": "wrong",
+      "evidence": "https://www.aljazeera.com/news/2026/9/30/what-happened-on-diverted-flydubai-flight-from-dubai-to-tel-aviv",
+      "note": "Flight was diverted and landed in Tabuk, Saudi Arabia. 174 people on board is supported (Netanyahu statement cited by Al Jazeera)."
+    },
+    {
+      "text": "Machchhar was the headline of every DW News clip from Tel Aviv to New York",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Rhetorical; no source."
+    },
+    {
+      "text": "The attacker vanished into a courtroom",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No court proceedings found by 1 Oct."
+    },
+    {
+      "text": "Christa Pike survived two lethal injections in Tennessee",
+      "status": "supported",
+      "evidence": "sourceRefs[2]",
+      "note": "Al Jazeera: two doses of pentobarbital on 30 Sept per lawyers' filings; https://www.aljazeera.com/news/2026/10/1/us-supreme-court-clears-way-for-christa-pikes-execution-in-tennessee"
+    },
+    {
+      "text": "Pike gasped back to consciousness; nurses scrambled to keep her breathing; AFP/France 24 recorded the moment",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Witnesses said she was audibly snoring and was taken to hospital; no report of nurses or of AFP filming the moment."
+    },
+    {
+      "text": "Travelodge failed a sex assault victim 'at every stage', BBC review",
+      "status": "supported",
+      "evidence": "sourceRefs[4]",
+      "note": ""
+    },
+    {
+      "text": "The victim is 27-year-old Maya González of Manchester, quoted 'shoved back into the hallway'",
+      "status": "wrong",
+      "evidence": "https://www.nationalworld.com/news/travelodge-woman-sexual-assault-room-key-review-9247429",
+      "note": "Victim is anonymous ('Lily'); assault was at the Maidenhead hotel. Name, age, city and quote invented."
+    },
+    {
+      "text": "Hotel's internal review leaked on October 1 'admits' failures",
+      "status": "wrong",
+      "evidence": "sourceRefs[4]",
+      "note": "The review was published (independent KC review commissioned by Travelodge), not leaked."
+    },
+    {
+      "text": "TASS interview with senior EU fiscal analyst: each new tranche costs the bloc an extra €12 billion; quote 'every euro diverted...'",
+      "status": "wrong",
+      "evidence": "https://tass.com/politics/2195627",
+      "note": "TASS expert was Alexander Irkhin, a professor at Vernadsky Crimean Federal University, not an EU analyst. Figures cited were €69bn (Ukraine's 2027 need) and €90bn (EU aid 2026-27). €12bn and the quote are invented."
+    },
+    {
+      "text": "CoinDesk reported $1.26 billion lost in hacks over the past quarter",
+      "status": "supported",
+      "evidence": "https://www.coindesk.com/daybook-us/2026/10/01/crypto-lost-usd1-26-billion-in-hacks-while-bitcoin-bulls-enjoyed-a-monster-quarter",
+      "note": "Q3 2026, CertiK data; 247 incidents."
+    },
+    {
+      "text": "TOMS Shoes sold for $400 million (MarketWatch)",
+      "status": "supported",
+      "evidence": "sourceRefs[7]",
+      "note": "First-person MarketWatch essay by the founder."
+    },
+    {
+      "text": "Bitcoin sentiment 67, market signal 50",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal score, no public source."
+    },
+    {
+      "text": "Victims in Lagos, São Paulo and Seoul woke to empty wallets",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not in CoinDesk headline/article summary."
+    },
+    {
+      "text": "CNBC: AI billing algorithms inflating patient invoices by up to 23 percent",
+      "status": "unsupported",
+      "evidence": "sourceRefs[12]",
+      "note": "Headline only says AI is in the billing system and patients may already be paying. No 23% figure found."
+    },
+    {
+      "text": "'Patients may already be paying the price'",
+      "status": "supported",
+      "evidence": "sourceRefs[12]",
+      "note": "This is the CNBC headline, not a quote from the report."
+    },
+    {
+      "text": "SpaceX will launch Google AI chips into orbit on October 12",
+      "status": "wrong",
+      "evidence": "https://www.androidheadlines.com/2026/10/spacex-sends-googles-ai-chips-into-space-to-explore-orbital-data-centers.html",
+      "note": "Launch was on 1 October 2026 (Transporter rideshare, Vandenberg). CNBC ref 21 says 'set to launch' on 1 Oct."
+    },
+    {
+      "text": "CNBC framed it as 'the next frontier for low-latency computing'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Quote not found; CNBC headline says 'push toward space-based data centers'."
+    },
+    {
+      "text": "AI sentiment 65, health 64, crypto 64, 60-point baseline; feed tilts left",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal scores."
+    },
+    {
+      "text": "Yussef Dayes 'Turquoise Galaxy (Live on KEXP)'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal feed item; not checked; irrelevant."
+    },
+    {
+      "text": "Tomorrow EU votes on aid package; UK publishes Travelodge settlement; federal court in Tennessee hears Pike appeal; SpaceX window 04:32 UTC",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No sources for any of these future events; SpaceX launch already happened 1 Oct at 11:32 PT."
+    },
+    {
+      "text": "Israeli PM Netanyahu said it was too early to say whether Iran was involved in the flight attack",
+      "status": "supported",
+      "evidence": "sourceRefs[18]",
+      "note": ""
+    },
+    {
+      "text": "Captain was in hospital in stable condition with several stab wounds",
+      "status": "supported",
+      "evidence": "https://www.aljazeera.com/news/2026/9/30/what-happened-on-diverted-flydubai-flight-from-dubai-to-tel-aviv",
+      "note": "Added detail."
+    },
+    {
+      "text": "Governor Bill Lee ordered a third-party review of Pike execution",
+      "status": "supported",
+      "evidence": "https://www.aljazeera.com/news/2026/10/1/us-supreme-court-clears-way-for-christa-pikes-execution-in-tennessee",
+      "note": "Added detail."
+    },
+    {
+      "text": "Bitcoin rose about 40% in Q3 2026 (CoinDesk)",
+      "status": "supported",
+      "evidence": "https://www.coindesk.com/daybook-us/2026/10/01/crypto-lost-usd1-26-billion-in-hacks-while-bitcoin-bulls-enjoyed-a-monster-quarter",
+      "note": "Added detail."
+    },
+    {
+      "text": "SpaceX set to launch Google AI chips with Planet Labs satellites toward space-based data centres",
+      "status": "supported",
+      "evidence": "sourceRefs[21]",
+      "note": ""
+    }
+  ],
+  "edits": {
+    "headline": "Flydubai flight to Tel Aviv diverts to Saudi Arabia after cockpit attack",
+    "subheadline": "The co-pilot attacked Indian captain Smit Machchhar on flight FZ1073, which landed in Tabuk, Al Jazeera reported.",
+    "editorialBody": [
+      "A co-pilot attacked the captain of flydubai flight FZ1073 from Dubai to Tel Aviv on 30 September, Al Jazeera reported. The plane was diverted and landed in Tabuk, Saudi Arabia.",
+      "India's embassy in Saudi Arabia named the captain as Smit Machchhar, an Indian national. He was in hospital in a stable condition with several stab wounds, Al Jazeera reported. Israeli Prime Minister Benjamin Netanyahu said 174 people were on board.",
+      "Netanyahu said it was too early to say whether Iran was involved in the attack, BBC News reported.",
+      "Tennessee officials could not complete the execution of Christa Pike on 30 September, Al Jazeera reported. Her lawyers said she was given two doses of pentobarbital and was taken to hospital in critical condition. Governor Bill Lee ordered a third-party review.",
+      "A review found that Travelodge failed a sexual assault victim \"at every stage\", BBC News reported.",
+      "Crypto platforms lost $1.26bn to hacks in the third quarter of 2026, CoinDesk reported, citing data from the security firm CertiK. Bitcoin rose about 40% over the same quarter.",
+      "SpaceX was set to launch Google AI chips into orbit with Planet Labs satellites as a test of space-based data centres, CNBC reported."
+    ]
+  }
+}

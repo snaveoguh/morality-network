@@ -1,0 +1,173 @@
+{
+ "hash": "0xa9b5c0644db44fe36e6bf716900c8f353572b75e46603542fd0f28b237ff165d",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Luis Ramirez(-Al-Sahra) receives a $38,700 titanium prosthetic in Amman's Royal Rehabilitation Center on 16 September",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Recurring invented character; nothing in sourceRefs or on the web."
+  },
+  {
+   "text": "Leg billed to the State Department 'Humanitarian Assistance' line that also paid for missiles that hit an Iranian fishing boat three weeks ago and financed the MQ-9",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented; no source links aid budgets to these events. No report of a fishing-boat strike found in sourceRefs."
+  },
+  {
+   "text": "Iran downed a US MQ-9 drone over Qeshm Island, its 52nd (Press TV)",
+   "status": "supported",
+   "evidence": "sourceRefs[0]; https://www.presstv.co.uk/Detail/2026/09/16/776392/Iran-downs-52nd-US-MQ-9-drone-over-Qeshm-Island-in-another-blow-to-US-Israeli-military-aggression",
+   "note": "Iranian claim reported by Press TV and Tasnim on 16 Sep; search found no US confirmation, so it is attributed."
+  },
+  {
+   "text": "Brought down by Iran's 'Qeshm-based air defenses'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Reports say IRGC air defence; nothing found on where the system is based."
+  },
+  {
+   "text": "Iran called it a 'precise, justified response'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Quote not found in Press TV headline or search results."
+  },
+  {
+   "text": "Pentagon boasted the drone would 'track Iranian naval movements'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such Pentagon statement found."
+  },
+  {
+   "text": "The MQ-9 was worth roughly $15 million",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No dated source given; not checked against a cost source; removed."
+  },
+  {
+   "text": "Four Iranian pilots survived the crash and two technicians were killed in the blast",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented; an MQ-9 is uncrewed and no casualties were reported."
+  },
+  {
+   "text": "Sam Altman told the BBC the world has a 'right to be afraid' of AI but should trust AI firms",
+   "status": "supported",
+   "evidence": "sourceRefs[7]; https://armenpress.am/en/article/1260529",
+   "note": "BBC headline names 'OpenAI boss'; syndicated BBC copy names Sam Altman."
+  },
+  {
+   "text": "AI sentiment 64/100, Bitcoin 67/100, Bitcoin market signal 47, US dollar sentiment 63/100",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal sentiment scores; no public source."
+  },
+  {
+   "text": "Deutsche Bank plans bitcoin and ether custody for institutional clients in Europe (The Block)",
+   "status": "supported",
+   "evidence": "sourceRefs[2]; https://www.theblock.co/news/business/2026-09-16-deutsche-bank-plans-bitcoin-ether-custody-for-institutional-clients-in-europe-415251",
+   "note": ""
+  },
+  {
+   "text": "Deutsche Bank 'once shied away from any crypto chatter'",
+   "status": "wrong",
+   "evidence": "https://www.theblock.co/news/business/2026-09-16-deutsche-bank-plans-bitcoin-ether-custody-for-institutional-clients-in-europe-415251",
+   "note": "The Block notes Reuters reported a 2023 partnership with Taurus for institutional crypto custody."
+  },
+  {
+   "text": "Service will also support USDC, EURC and EURAU and launch in 2026 subject to regulatory clearance",
+   "status": "supported",
+   "evidence": "https://www.theblock.co/news/business/2026-09-16-deutsche-bank-plans-bitcoin-ether-custody-for-institutional-clients-in-europe-415251",
+   "note": "From article text."
+  },
+  {
+   "text": "ETH at $2,403.25, MACD +0.6312, RSI 50.7, Bollinger %B 0.65; council directional strength 0.28 vs 0.50 threshold",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal trading-council data; no dated public source."
+  },
+  {
+   "text": "Bloomberg reports the Fed's latest rate hike is 'one and done'",
+   "status": "wrong",
+   "evidence": "sourceRefs[6]",
+   "note": "Bloomberg video headline attributes the view to Citi's Hollenhorst, not to Bloomberg; it is a forecast."
+  },
+  {
+   "text": "Inflation near 3.2% year on year",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source or period given."
+  },
+  {
+   "text": "Investors are hedging with crypto and banks like Deutsche are becoming gatekeepers",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Opinion/causal link with no source."
+  },
+  {
+   "text": "Rest of World highlights a US-China AI 'cold war'",
+   "status": "supported",
+   "evidence": "sourceRefs[20]",
+   "note": "Headline: 'Playing both sides of the U.S.-China AI \"Cold War\"'."
+  },
+  {
+   "text": "Council verdict: hold until sentiment climbs above 55 on RSI or a geopolitical shock",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal; no source."
+  },
+  {
+   "text": "DW: Global Gender Gap Report warns women's hard-won gains are 'fragile'",
+   "status": "supported",
+   "evidence": "sourceRefs[3]",
+   "note": ""
+  },
+  {
+   "text": "Meera Patel, 27, teacher in rural Gujarat facing budget cut",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented person; no report found."
+  },
+  {
+   "text": "The The 'Full Performance (Live on KEXP)'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in sourceRefs; not verified; removed."
+  },
+  {
+   "text": "European Commission will unveil a MiCA-style crypto framework next week",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source; MiCA already exists."
+  },
+  {
+   "text": "US Senate will hold its first OpenAI hearing on October 3",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Iranian air defences expected to conduct another test flight on September 22",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Subheadline: central banks 'stare at stubborn inflation'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  }
+ ],
+ "edits": {
+  "headline": "Iran says it shot down 52nd US MQ-9 drone over Qeshm Island",
+  "subheadline": "Press TV carried the claim on 16 September, describing the aircraft as the 52nd US MQ-9 drone brought down by Iran.",
+  "editorialBody": [
+   "Iran said it shot down a US MQ-9 drone over Qeshm Island on 16 September, Press TV reported. It said the drone was the 52nd of its type that Iran had downed.",
+   "Deutsche Bank said on 16 September it plans to offer bitcoin and ether custody to corporate and institutional clients in Europe, The Block reported. The service will also support the stablecoins USDC, EURC and EURAU and is due to launch this year, subject to regulatory clearance.",
+   "OpenAI chief Sam Altman said the world is \"right to be afraid\" of artificial intelligence but should trust AI firms, BBC News reported.",
+   "Citi's Hollenhorst told Bloomberg that the Federal Reserve's rate rise would be \"one and done\".",
+   "Women's hard-won gains are \"fragile\", according to the Global Gender Gap Report, DW News reported."
+  ]
+ }
+}

@@ -1,0 +1,223 @@
+{
+ "hash": "0xcc30bec316800ba0618b2f32447ff726e89868e8020b316dfdb463c3148614f7",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Headline: lion diet 'claims 90% psoriasis cure, sparks health-tech frenzy'",
+   "status": "wrong",
+   "evidence": "https://www.foxnews.com/food-drink/man-says-meat-only-lion-diet-cleared-psoriasis-covering-90-his-body-ended-decades-depression",
+   "note": "Fox: man says the diet cleared psoriasis covering 90% of his body (not a 90% cure); no 'health-tech frenzy' reported."
+  },
+  {
+   "text": "Jared Kline, 42, a welder from Bismarck, North Dakota",
+   "status": "wrong",
+   "evidence": "https://www.foxnews.com/food-drink/man-says-meat-only-lion-diet-cleared-psoriasis-covering-90-his-body-ended-decades-depression",
+   "note": "Fox names Stephen Lashbrook, 50, of Pensacola, Florida."
+  },
+  {
+   "text": "Posted a grainy video on Thursday showing a scar-free forearm",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Fox article is an interview with Fox News Digital; no video described."
+  },
+  {
+   "text": "Diet erased psoriasis and lifted decades of depression",
+   "status": "supported",
+   "evidence": "sourceRefs[5]; https://www.foxnews.com/food-drink/man-says-meat-only-lion-diet-cleared-psoriasis-covering-90-his-body-ended-decades-depression",
+   "note": "Self-reported."
+  },
+  {
+   "text": "Depression kept his kids from school",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in Fox article."
+  },
+  {
+   "text": "Diet costs about $250 a week; quote 'cheaper than my old meds'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Fox gives no diet cost; quote not found."
+  },
+  {
+   "text": "Lashbrook started the diet on 1 January 2024",
+   "status": "supported",
+   "evidence": "https://www.foxnews.com/food-drink/man-says-meat-only-lion-diet-cleared-psoriasis-covering-90-his-body-ended-decades-depression",
+   "note": ""
+  },
+  {
+   "text": "Wired: EU wants to break up kids and their chatbots",
+   "status": "supported",
+   "evidence": "sourceRefs[0]",
+   "note": ""
+  },
+  {
+   "text": "Legislation would force developers to dismantle AI companions for users under 13",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in headline; Wired page could not be fetched; no detail confirmed."
+  },
+  {
+   "text": "BBC: EU plan to restrict social media access for under-15s",
+   "status": "supported",
+   "evidence": "sourceRefs[10]",
+   "note": ""
+  },
+  {
+   "text": "27% of teens experience anxiety linked to scrolling",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "TASS: Russia to open polling stations on borders with Baltic states and Poland",
+   "status": "supported",
+   "evidence": "sourceRefs[2]; https://tass.com/politics/2188933",
+   "note": "Ella Pamfilova, CEC chair: ten stations near border crossings with Latvia, Lithuania, Estonia and Poland, open 18 to 20 September."
+  },
+  {
+   "text": "Stations are designed to capture expatriate votes for the Duma",
+   "status": "supported",
+   "evidence": "https://tass.com/politics/2188933",
+   "note": "Pamfilova said they are for Russian citizens living in those countries; sourceRefs[1] confirms Duma elections."
+  },
+  {
+   "text": "Lavrov warned of a massive wave of propaganda from the West ahead of Russia's elections",
+   "status": "supported",
+   "evidence": "sourceRefs[4]",
+   "note": ""
+  },
+  {
+   "text": "Wired: hundreds of election deniers will appear on November ballots",
+   "status": "supported",
+   "evidence": "sourceRefs[13]",
+   "note": ""
+  },
+  {
+   "text": "Democratic machinery is being 'weaponised from both sides'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Opinion with no source."
+  },
+  {
+   "text": "SOL $97.81, RSI 61.0, MACD +0.1053, %B 0.89, strength 0.33, Fear & Greed 51",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal trading-council data; no dated source."
+  },
+  {
+   "text": "Bitcoin sentiment 65, Ethereum 56, market signal 51 to 53; AI 64, elections 68, conflict 48",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal sentiment scores; no public source."
+  },
+  {
+   "text": "NPR: pressure on global chokepoints drives Asia's increased use of Arctic trade routes",
+   "status": "supported",
+   "evidence": "sourceRefs[12]",
+   "note": ""
+  },
+  {
+   "text": "Shift 'could reshape freight economics before winter'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in headline."
+  },
+  {
+   "text": "Rest of World: South Africa resists American data-centre expansion",
+   "status": "supported",
+   "evidence": "sourceRefs[14]",
+   "note": ""
+  },
+  {
+   "text": "South Africa is 'insisting on sovereign cloud infrastructure'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in headline; not checked."
+  },
+  {
+   "text": "SCMP: record graduate influx pushes China's youth unemployment to 18.9%",
+   "status": "supported",
+   "evidence": "sourceRefs[20]",
+   "note": ""
+  },
+  {
+   "text": "Youth unemployment 'could fuel unrest'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in source headline."
+  },
+  {
+   "text": "Hong Kong property gets reprieve on rates but remains precarious",
+   "status": "supported",
+   "evidence": "sourceRefs[11]",
+   "note": ""
+  },
+  {
+   "text": "Uganda raised its reserve ratio to protect the shilling",
+   "status": "supported",
+   "evidence": "sourceRefs[21]",
+   "note": ""
+  },
+  {
+   "text": "Uganda's move 'mirrors the West's own tightening'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented link."
+  },
+  {
+   "text": "Packaging 'Full Performance (Live on KEXP)'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in sourceRefs; not verified."
+  },
+  {
+   "text": "DW live feed of Trump's emergency declaration; BBC piece on a 'silicon species' of AI",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in sourceRefs; nothing found."
+  },
+  {
+   "text": "EU child-AI legislation debated in European Parliament next Tuesday, vote 25 September",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "Russia's border polling stations must be operational by 1 October",
+   "status": "wrong",
+   "evidence": "https://tass.com/politics/2188933",
+   "note": "TASS: stations operate during voting on 18 to 20 September."
+  },
+  {
+   "text": "Solana 50-day moving average test on 5 October",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "Arctic shipping season opens officially on 1 November",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "China's 2026 graduate cohort enters the job market in December",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  }
+ ],
+ "edits": {
+  "headline": "EU announces plan to restrict social media for under-15s",
+  "subheadline": "BBC News reported on 17 September that the European Union plans to limit social media access for children under 15.",
+  "editorialBody": [
+   "The European Union announced a plan to restrict social media access for children under 15, BBC News reported on 17 September.",
+   "The EU also wants to separate children from AI chatbots, Wired reported.",
+   "Russia will open 10 polling stations near its border crossings with Latvia, Lithuania, Estonia and Poland for parliamentary elections on 18 to 20 September, TASS reported. Central Election Commission chairwoman Ella Pamfilova said they were for Russian citizens living in those countries.",
+   "Lavrov said there was a massive wave of propaganda from the West ahead of the elections, TASS reported.",
+   "Stephen Lashbrook, 50, of Pensacola, Florida, told Fox News Digital that a meat-only \"lion diet\" cleared psoriasis covering 90% of his body and ended decades of depression. He started the diet on 1 January 2024.",
+   "A record number of university graduates pushed China's youth unemployment rate to 18.9%, the South China Morning Post reported.",
+   "Uganda's central bank raised its reserve requirement to defend the shilling, Bloomberg reported."
+  ]
+ }
+}

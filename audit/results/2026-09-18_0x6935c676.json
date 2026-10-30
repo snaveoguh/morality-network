@@ -1,0 +1,223 @@
+{
+ "hash": "0x6935c67695e58a7523fa2841d9c01275438d03f7eefa83cabde9bb51515912f8",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Headline: Bitcoin claws back to $78,000",
+   "status": "supported",
+   "evidence": "sourceRefs[3]",
+   "note": "CoinDesk headline: bitcoin 'recovers toward $78,000' (live blog later reported above $80,000)."
+  },
+  {
+   "text": "Megan Clarke, 34, mother of two, had a needless mastectomy",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No woman of that name found in BBC/PA coverage; invented."
+  },
+  {
+   "text": "Botched diagnosis at a Sheffield NHS trust",
+   "status": "wrong",
+   "evidence": "https://www.irishnews.com/news/uk/20-women-unnecessarily-had-breasts-removed-and-others-suffered-serious-harm-ON3CUANHGFOSPL7XLWHFBFLE2Y/",
+   "note": "The trust is County Durham and Darlington NHS Foundation Trust."
+  },
+  {
+   "text": "Trust has recorded more than 300 'needless' mastectomies (BBC)",
+   "status": "wrong",
+   "evidence": "sourceRefs[6]; https://www.irishnews.com/news/uk/20-women-unnecessarily-had-breasts-removed-and-others-suffered-serious-harm-ON3CUANHGFOSPL7XLWHFBFLE2Y/",
+   "note": "BBC: more than 300 suffered harm. Unnecessary mastectomies: 20."
+  },
+  {
+   "text": "20 women had unnecessary mastectomies at County Durham and Darlington NHS Foundation Trust",
+   "status": "supported",
+   "evidence": "https://www.irishnews.com/news/uk/20-women-unnecessarily-had-breasts-removed-and-others-suffered-serious-harm-ON3CUANHGFOSPL7XLWHFBFLE2Y/",
+   "note": "18 Sep 2026."
+  },
+  {
+   "text": "Of 539 cases reviewed by 2 September: 242 minor, 59 moderate, 19 severe harm, one death; review covers Jan 2023 to Feb 2025",
+   "status": "supported",
+   "evidence": "https://www.irishnews.com/news/uk/20-women-unnecessarily-had-breasts-removed-and-others-suffered-serious-harm-ON3CUANHGFOSPL7XLWHFBFLE2Y/",
+   "note": ""
+  },
+  {
+   "text": "Chief executive Steve Russell: 'We are deeply sorry to the women and families who have been harmed and let down by failings in our breast services.'",
+   "status": "supported",
+   "evidence": "https://www.irishnews.com/news/uk/20-women-unnecessarily-had-breasts-removed-and-others-suffered-serious-harm-ON3CUANHGFOSPL7XLWHFBFLE2Y/",
+   "note": ""
+  },
+  {
+   "text": "The hospital's apology was a form letter",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "AFP: Russia held a wartime election set to secure the Kremlin's power",
+   "status": "supported",
+   "evidence": "sourceRefs[1]",
+   "note": ""
+  },
+  {
+   "text": "Election will lock Putin's grip on power for another term",
+   "status": "wrong",
+   "evidence": "https://tass.com/politics/2188933",
+   "note": "It is a parliamentary (Duma) election held 18 to 20 September, not a presidential vote."
+  },
+  {
+   "text": "Turnout reported at 78%",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Voting was still under way on 18 Sep; no source."
+  },
+  {
+   "text": "Conscripts from Kharitonovo; Sergei Ivanov, 22, never returned home",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "Turkey fund rout erases $4 billion from a rapidly won fortune (Bloomberg)",
+   "status": "supported",
+   "evidence": "sourceRefs[7]",
+   "note": ""
+  },
+  {
+   "text": "Fortune 'built in a decade'; story set 'in Istanbul'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Bloomberg headline says 'rapidly-won'; no timeframe or place in headline."
+  },
+  {
+   "text": "Pusula and Tera crisis sparked market panic (Bloomberg)",
+   "status": "supported",
+   "evidence": "sourceRefs[5]",
+   "note": ""
+  },
+  {
+   "text": "Global economy sentiment 64; Bitcoin sentiment 66, market signal 54; AI sentiment 62",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores; no public source."
+  },
+  {
+   "text": "Lira trembles as BOE balance-sheet move fails to address capital flight",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented link between unrelated stories."
+  },
+  {
+   "text": "BOE balance-sheet move eases repo pressure, Barclays says (Bloomberg)",
+   "status": "supported",
+   "evidence": "sourceRefs[12]",
+   "note": ""
+  },
+  {
+   "text": "HYPE led an altcoin rally (CoinDesk)",
+   "status": "supported",
+   "evidence": "sourceRefs[3]; https://www.coindesk.com/tech/2026/09/18/live-updates-hype-leads-altcoin-rally-as-bitcoin-recovers-toward-usd78-000",
+   "note": ""
+  },
+  {
+   "text": "Anthropic and OpenAI hunting 'cheaper' data-centre deals",
+   "status": "wrong",
+   "evidence": "sourceRefs[17]",
+   "note": "CNBC says smaller deals, not cheaper."
+  },
+  {
+   "text": "Luis Ramirez-Al-Sahra's leg funded by US humanitarian line; once limped through a Syrian refugee camp; missiles that downed a US drone over Belgorod",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented recurring character and links; no US drone over Belgorod reported in sources."
+  },
+  {
+   "text": "Lion diet attracted a $12 million Series A round",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "FDA issued a warning after three patients reported kidney strain",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Lion diet 'promises a 90 percent psoriasis cure'",
+   "status": "wrong",
+   "evidence": "https://www.foxnews.com/food-drink/man-says-meat-only-lion-diet-cleared-psoriasis-covering-90-his-body-ended-decades-depression",
+   "note": "Fox: one man said it cleared psoriasis covering 90% of his body."
+  },
+  {
+   "text": "DW: new cat species discovered in Bolivia",
+   "status": "supported",
+   "evidence": "sourceRefs[16]",
+   "note": ""
+  },
+  {
+   "text": "The cat was hidden in the Amazon and survived climate change",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in source headline."
+  },
+  {
+   "text": "TASS: Russian scientists identify previously unknown warm surface current in the Arctic",
+   "status": "supported",
+   "evidence": "sourceRefs[15]",
+   "note": ""
+  },
+  {
+   "text": "Current could accelerate ice melt",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in source headline."
+  },
+  {
+   "text": "DW video 'UN mission says grounds to believe US committed war crimes in Iran'",
+   "status": "wrong",
+   "evidence": "sourceRefs[24]",
+   "note": "The item is from AFP/France 24, not DW."
+  },
+  {
+   "text": "Rəhman Məmmədli live KEXP performance",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in sourceRefs; not verified."
+  },
+  {
+   "text": "Russian election results certified on 25 September",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "UK Parliament debates the New Statesman's space proposal on 2 October",
+   "status": "wrong",
+   "evidence": "sourceRefs[0]",
+   "note": "The New Statesman item is a sponsored article; no parliamentary debate found."
+  },
+  {
+   "text": "Turkey's central bank promises a 'stability package' next week",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "Subheadline: aid money funds titanium legs and missiles alike",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  }
+ ],
+ "edits": {
+  "headline": "NHS trust says 20 women had breasts removed unnecessarily",
+  "subheadline": "County Durham and Darlington NHS Foundation Trust found that more than 300 breast cancer patients suffered harm, the BBC reported.",
+  "editorialBody": [
+   "County Durham and Darlington NHS Foundation Trust said 20 women had mastectomies they did not need, the Irish News reported on 18 September.",
+   "Of 539 cases reviewed by 2 September, 242 involved minor harm, 59 moderate harm and 19 severe harm, and one patient died. The review covers breast cancer cases from January 2023 to February 2025.",
+   "Chief executive Steve Russell said: \"We are deeply sorry to the women and families who have been harmed and let down by failings in our breast services.\"",
+   "Russians began voting in a wartime parliamentary election set to secure the Kremlin's power, AFP reported on 18 September. Voting runs until 20 September, TASS reported.",
+   "A rout in Turkish investment funds erased $4bn from a rapidly won fortune, Bloomberg reported. A crisis at the Pusula and Tera funds led to market panic, according to Bloomberg.",
+   "Bitcoin recovered toward $78,000 on 18 September and the HYPE token led a rally in other cryptocurrencies, CoinDesk reported.",
+   "Scientists have discovered a new cat species in Bolivia, DW News reported."
+  ]
+ }
+}

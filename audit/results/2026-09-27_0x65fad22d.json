@@ -1,0 +1,191 @@
+{
+  "hash": "0x65fad22d51ba56b2db36ace81b3bc63a8b50a6d4be3b340e6de61ba2f1ef85ca",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Headline: water bursts, a teenager's murder, and the UN",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Comma-list headline joining three stories; the teenager's murder is invented (see Thandiwe Mokoena)."
+    },
+    {
+      "text": "Subheadline: a cracked mains in rural KwaZulu-Natal leaves 12,000 without tap water",
+      "status": "wrong",
+      "evidence": "sourceRefs[8]",
+      "note": "The BBC headline says thousands without water after a burst pipe; no location given. No source places it in KwaZulu-Natal; the body itself later calls it a UK/Midlands story. 12,000 not found."
+    },
+    {
+      "text": "A South African mass shooting left 27 dead",
+      "status": "supported",
+      "evidence": "sourceRefs[16]",
+      "note": "BBC headline: 'Two mass shootings in South Africa leave 27 dead'. AP: Wedela (17) and Lwandle (10), late Saturday 26 Sept. https://www.wsls.com/news/world/2026/09/27/police-hunt-gunmen-after-2-mass-shootings-in-south-africa-leave-at-least-27-dead/"
+    },
+    {
+      "text": "Thandiwe Mokoena, 19-year-old student from Pietermaritzburg, killed in a drive-by outside a community centre on 26 Sept; mother Nomvula; notebook",
+      "status": "wrong",
+      "evidence": "https://www.wsls.com/news/world/2026/09/27/police-hunt-gunmen-after-2-mass-shootings-in-south-africa-leave-at-least-27-dead/",
+      "note": "No victim named in AP or BBC. Shootings were at a bar in Wedela (near Johannesburg) and a store in Lwandle (near Cape Town), not Pietermaritzburg or a community centre. Invented person."
+    },
+    {
+      "text": "27 dead was 'South Africa's worst single-day killing spree'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source makes this comparison; searched AP/BBC coverage."
+    },
+    {
+      "text": "UN General Assembly Day 5 Takeaway from UN News",
+      "status": "supported",
+      "evidence": "sourceRefs[0]",
+      "note": "Headline only; the characterisation 'barely mentioning the human cost' is opinion/unsupported."
+    },
+    {
+      "text": "Irina Petrova, Brooklyn Uber driver, United Russia vote counted, ballot in a New York consulate drawer, confirmation email 27 Sept",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Recurring invented character from earlier editions; no source."
+    },
+    {
+      "text": "Hamas said Israeli actions are 'paving the way for total control' over Al-Aqsa (Middle East Eye)",
+      "status": "supported",
+      "evidence": "sourceRefs[1]",
+      "note": ""
+    },
+    {
+      "text": "Youssef al-Khalil, 34-year-old carpenter, gates closed, new Israeli police checkpoints, brother's workshop vandalised",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not in sourceRef headline; no report found. Invented."
+    },
+    {
+      "text": "National Review piece 'The Underfunding Myth Is Exposed' argues conservative fiscal restraint is a myth perpetuated by left-leaning think-tanks",
+      "status": "wrong",
+      "evidence": "sourceRefs[4]",
+      "note": "Headline only in sourceRefs; the summary of its argument is invented and conflicts with the headline's plain sense."
+    },
+    {
+      "text": "Feed bias tilt of -0.16 and under-representation of conservative foreign-policy voices",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal metric; no public source."
+    },
+    {
+      "text": "FT: 'The EU needs a clearer strategy for partners like Canada'",
+      "status": "supported",
+      "evidence": "sourceRefs[22]",
+      "note": "Linking it to a feed blind spot is unsupported."
+    },
+    {
+      "text": "Wired: 'You Don't Need to Pay for Distraction-Blocking Software'",
+      "status": "supported",
+      "evidence": "sourceRefs[6]",
+      "note": ""
+    },
+    {
+      "text": "Wired article cites a 12% rise in open-source blockers",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No such figure found; headline only in sourceRefs."
+    },
+    {
+      "text": "AI sentiment score 61/100",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal sentiment score; no public source."
+    },
+    {
+      "text": "Bitcoin sentiment 63, market signal 52, Ethereum sentiment 48, crypto market 58/100",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Internal scores; no public source."
+    },
+    {
+      "text": "Bitcoin price hovering just under $28,900",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No dated source; figure matches 2023 price levels, not Sept 2026."
+    },
+    {
+      "text": "BBC: burst pipe left thousands without water and roads closed",
+      "status": "supported",
+      "evidence": "sourceRefs[8]",
+      "note": "Headline only. Location could not be confirmed (bbc.co.uk not fetchable; web searches for 26-27 Sept 2026 found no match)."
+    },
+    {
+      "text": "Burst pipe was in the Midlands",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not in headline; location not confirmed."
+    },
+    {
+      "text": "Municipal water authority estimates 12,000 households affected; crews working around the clock",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not found."
+    },
+    {
+      "text": "Pipe laid in 1974 gave way under pressure from a recent heatwave",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not found; invented causal link."
+    },
+    {
+      "text": "BBC video 'Can Labour Agree on the UK's direction?'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not in sourceRefs; not found."
+    },
+    {
+      "text": "DW piece on Amit Shah's political targeting in India",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not in sourceRefs; not found."
+    },
+    {
+      "text": "Fox News: SCOTUS detention fight could unleash dangerous criminal migrants onto US streets, experts warn",
+      "status": "supported",
+      "evidence": "sourceRefs[15]",
+      "note": ""
+    },
+    {
+      "text": "UN will convene again on 30 Sept to break deadlock on Ukraine aid",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented future event."
+    },
+    {
+      "text": "EU summit on 3 October will press Canada for a joint carbon-border mechanism",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented future event."
+    },
+    {
+      "text": "South African police promised a full inquiry into the 26 Sept shootings",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "AP (https://www.wsls.com/news/world/2026/09/27/police-hunt-gunmen-after-2-mass-shootings-in-south-africa-leave-at-least-27-dead/) says police deployed specialised units and soldiers; no 'full inquiry' promise reported."
+    },
+    {
+      "text": "Police said 17 were killed at a bar in Wedela, southwest of Johannesburg, and 10 at a store in Lwandle near Cape Town; no arrests",
+      "status": "supported",
+      "evidence": "https://www.wsls.com/news/world/2026/09/27/police-hunt-gunmen-after-2-mass-shootings-in-south-africa-leave-at-least-27-dead/",
+      "note": "Added in rewrite. AP, 27 Sept 2026."
+    },
+    {
+      "text": "Five days earlier gunmen killed at least 11 at a house party in KwaMakhutha near Durban",
+      "status": "supported",
+      "evidence": "https://www.wsls.com/news/world/2026/09/27/police-hunt-gunmen-after-2-mass-shootings-in-south-africa-leave-at-least-27-dead/",
+      "note": "Added in rewrite. AP."
+    }
+  ],
+  "edits": {
+    "headline": "Gunmen kill 27 in two mass shootings in South Africa",
+    "subheadline": "Police said no arrests had been made after the attacks on a bar near Johannesburg and a store near Cape Town.",
+    "editorialBody": [
+      "Gunmen killed 27 people in two mass shootings in South African townships late on Saturday 26 September, BBC News and the Associated Press reported.",
+      "Police said 17 people were killed at a bar in Wedela, southwest of Johannesburg, and 10 at a store in Lwandle, near Cape Town, the AP reported. No arrests had been made.",
+      "Five days earlier, gunmen killed at least 11 people at a house party in KwaMakhutha township near Durban, the AP reported.",
+      "Hamas said Israeli actions were \"paving the way for total control\" over Al-Aqsa in Jerusalem, Middle East Eye reported.",
+      "Experts quoted by Fox News said a Supreme Court fight over immigration detention \"could unleash dangerous criminal migrants onto US streets\"."
+    ]
+  }
+}

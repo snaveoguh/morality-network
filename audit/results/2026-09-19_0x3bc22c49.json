@@ -1,0 +1,247 @@
+{
+ "hash": "0x3bc22c4906a9945e3db15d43f80e3d6a27201a8b2fc64e84c83ebdeaadc10804",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Iranian missiles struck/damaged a US base in Kuwait (headline 'scar Kuwait base'; Press TV images)",
+   "status": "supported",
+   "evidence": "sourceRefs[0]",
+   "note": "Press TV headline: new images reveal severe destruction at US base in Kuwait after Iranian strikes. Press TV page returned 503; only the headline is relied on."
+  },
+  {
+   "text": "Ahmed al-Mansoor, 27, Yemeni-born contractor with shrapnel in his left thigh, writing from a field hospital in Al-Ahmadi",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such person in sourceRefs or web search; invented character."
+  },
+  {
+   "text": "Base named 'Camp Arif Al-Bayan'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such base found; reported Iranian strikes in Kuwait in Sep 2026 named Ali Al Salem and Ahmed Al-Jaber air bases. Invented."
+  },
+  {
+   "text": "The strike happened on September 18",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Press TV headline gives no date; no source found for an 18 Sep strike."
+  },
+  {
+   "text": "The strike left three Americans dead and dozens wounded, confirmed by Press TV footage",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Press TV headline mentions destruction only, not casualties. Web search found no confirmed US deaths from a September 2026 strike in Kuwait (confirmed deaths were in March)."
+  },
+  {
+   "text": "$2,400 a week in lost wages; drones humming over the desert",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Detail of invented character."
+  },
+  {
+   "text": "Ahvaz medicine shortage reported by SCMP; shortages deepened as ports sit idle under shipping bans",
+   "status": "unsupported",
+   "evidence": "sourceRefs[3]",
+   "note": "SCMP headline supports only 'Iran medicine shortages deepen as war, shipping restrictions continue'. Ahvaz, idle ports and 'shipping bans' are not in the headline; article blocked (403)."
+  },
+  {
+   "text": "Dialysis fluid, insulin and antibiotics rationed; mother travels three hours for a vial of insulin",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in source headline; invented detail."
+  },
+  {
+   "text": "Earl Spencer's new biography of Diana, unveiled by the BBC, drags the royals back into grief",
+   "status": "supported",
+   "evidence": "sourceRefs[1]",
+   "note": "BBC headline: 'Earl Spencer's Diana book opens old wounds royals would rather forget'. Supports a Spencer book about Diana; 'unveiled by the BBC' and 'biography' are not supported."
+  },
+  {
+   "text": "Book reveals a 1995 private letter from Diana quoting 'the world will never let me breathe'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Quote and letter not found anywhere; invented."
+  },
+  {
+   "text": "Petitions to rename the 'Princess Diana Memorial Fund'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Nothing found; invented."
+  },
+  {
+   "text": "Florida couple's daughter conceived with a stranger's sperm in an IVF mix-up, reported by the New York Post",
+   "status": "supported",
+   "evidence": "sourceRefs[10]",
+   "note": "NY Post headline: couple accuse fertility clinic of using stranger's sperm for daughter's embryo."
+  },
+  {
+   "text": "The couple live in the suburbs of Orlando",
+   "status": "wrong",
+   "evidence": "https://www.ibtimes.co.uk/florida-couple-sue-fertility-clinic-sperm-mix-1820708",
+   "note": "Clinic and couple are in Jacksonville, Florida; suit filed in Duval County Circuit Court."
+  },
+  {
+   "text": "Mix-up cost them $12,000 in legal fees",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No figure found; suit seeks more than $50,000 in damages (IBTimes UK)."
+  },
+  {
+   "text": "Clinic owner Dr. Carla Mendes faces a class-action suit that could bankrupt the practice",
+   "status": "wrong",
+   "evidence": "https://www.ibtimes.co.uk/florida-couple-sue-fertility-clinic-sperm-mix-1820708",
+   "note": "Clinic is Brown Fertility; founder and owner is Dr. Samuel Brown. The suit is by one couple (Joshua and Natalie Strong) against Dr. Brown and 10 other defendants; no class action reported."
+  },
+  {
+   "text": "Ahmed's prosthetic billed to a 'Humanitarian Aid' line last month",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented character detail; invented causal link."
+  },
+  {
+   "text": "Couple Natalie and Joshua Strong sued Brown Fertility in Jacksonville, Florida",
+   "status": "supported",
+   "evidence": "https://www.ibtimes.co.uk/florida-couple-sue-fertility-clinic-sperm-mix-1820708",
+   "note": "Added in rewrite."
+  },
+  {
+   "text": "Suit filed in Duval County Circuit Court names Dr. Samuel Brown and 10 other defendants; DNA testing found a 0% probability Joshua Strong is the father; daughter born June 2025",
+   "status": "supported",
+   "evidence": "https://www.ibtimes.co.uk/florida-couple-sue-fertility-clinic-sperm-mix-1820708",
+   "note": "Added in rewrite."
+  },
+  {
+   "text": "Sputnik reported Russian forces 'liberated' Maryevka and Gulevo in Donetsk, per MoD",
+   "status": "supported",
+   "evidence": "sourceRefs[2]",
+   "note": "Sputnik headline."
+  },
+  {
+   "text": "MoD claims minimal casualties",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in Sputnik headline."
+  },
+  {
+   "text": "CEC chief Pamfilova described Russia's voting procedure as 'quite intense'",
+   "status": "supported",
+   "evidence": "sourceRefs[9]",
+   "note": "TASS headline."
+  },
+  {
+   "text": "Voting described as 'intense' 'in Moscow'; electorate asked to endorse a war; 'deeper fatigue'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "TASS headline does not say this; editorial invention and a false link between the vote and the war. sourceRefs[6] separately says Moscow's election system came under powerful attacks."
+  },
+  {
+   "text": "Bitcoin sentiment 68, market signal 58; Ethereum sentiment 73, market signal 60",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores; no public source."
+  },
+  {
+   "text": "Bitcoin price $27,400 and Ethereum $1,850",
+   "status": "wrong",
+   "evidence": "https://www.coindesk.com/markets/2026/09/21/bitcoin-hits-usd85-000-as-short-squeeze-forces-out-usd648-million-of-bearish-bets",
+   "note": "No dated source for these prices. CoinDesk reported Bitcoin hit $85,000 on 21 Sep 2026, so $27,400 is far off (it matches 2023 levels)."
+  },
+  {
+   "text": "12% jump in DeFi lending contracts as investors hedge geopolitical risk",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Wired reported a new California law providing reparations for residents harmed by oil drilling",
+   "status": "supported",
+   "evidence": "sourceRefs[4]",
+   "note": "Wired headline: residents harmed by oil drilling may soon receive reparations under new California law."
+  },
+  {
+   "text": "The law promises $500 million",
+   "status": "wrong",
+   "evidence": "https://dnyuz.com/?p=276354",
+   "note": "The Capital B/Wired story (republished) says $5 million from penalised Inglewood oil wells, up to $5,000 each for 1,000 households."
+  },
+  {
+   "text": "The law mandates a public, on-chain ledger of payments",
+   "status": "unsupported",
+   "evidence": "https://dnyuz.com/?p=276354",
+   "note": "No ledger mentioned in the article."
+  },
+  {
+   "text": "AB 1661 by Assemblymember Isaac Bryan passed the Legislature; $5 million; up to $5,000 for 1,000 households within 2.5 miles of the Inglewood Oil Field; expected to be signed by Gov. Newsom by October",
+   "status": "supported",
+   "evidence": "https://dnyuz.com/?p=276354",
+   "note": "Added in rewrite. Also consistent with https://truthout.org/articles/some-black-los-angelenos-may-soon-receive-environmental-reparations/"
+  },
+  {
+   "text": "Wired's VPN roundup ranks six services",
+   "status": "supported",
+   "evidence": "sourceRefs[23]",
+   "note": "Wired headline '6 Best VPN Services (2026)'."
+  },
+  {
+   "text": "AI sentiment 63",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal score; no public source."
+  },
+  {
+   "text": "DW video 'AI vs Humanity' with cosmologist Martin Rees warning 'regulation or ruin'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Not in sourceRefs; web search found no DW video with Rees in Sep 2026; quote not found."
+  },
+  {
+   "text": "Mitsune 'Full Performance (Live on KEXP)' with jangly synths",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No KEXP session by Mitsune found (Mitsune is a shamisen trio). Not in sourceRefs."
+  },
+  {
+   "text": "UNGA convenes on September 24 to debate the EU's call to lift the travel ban on the Palestinian delegation",
+   "status": "unsupported",
+   "evidence": "sourceRefs[11]",
+   "note": "Al Jazeera headline supports only that the EU urged the US to lift the ban for the UNGA meeting. The 24 Sep debate is unsourced."
+  },
+  {
+   "text": "Russia sanctions bill signed by Trump last week (RT)",
+   "status": "supported",
+   "evidence": "sourceRefs[12]",
+   "note": "RT headline 'Trump signs new Russia sanctions bill', dated 19 Sep, so 'last week' is wrong timing; signing itself supported."
+  },
+  {
+   "text": "First Senate hearing on the sanctions bill on October 2",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source; a signed bill would not get a first Senate hearing."
+  },
+  {
+   "text": "California will begin disbursing oil-reparations checks on October 5",
+   "status": "unsupported",
+   "evidence": "https://dnyuz.com/?p=276354",
+   "note": "Article says the county was still working out how aid would be delivered; no start date."
+  },
+  {
+   "text": "Causal links: Kuwait strike to Ahvaz shortages, IVF negligence to Ahmed's prosthetic, AI algorithms to IVF/royal leaks",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented links between unrelated stories."
+  }
+ ],
+ "edits": {
+  "headline": "Florida couple sue Jacksonville fertility clinic over IVF sperm mix-up",
+  "subheadline": "The suit says DNA testing found a 0% probability that the husband is their daughter's biological father, IBTimes UK reported.",
+  "editorialBody": [
+   "Natalie and Joshua Strong have sued Brown Fertility in Jacksonville, Florida, saying it used another man's sperm to create their daughter's embryo, the New York Post reported on 19 September.",
+   "The suit, filed in Duval County Circuit Court, names the clinic's founder, Dr. Samuel Brown, and 10 other defendants. It says DNA testing found a 0% probability that Joshua Strong is the girl's father, IBTimes UK reported. The girl was born in June 2025.",
+   "Iran's Press TV published images it said showed severe destruction at a US base in Kuwait after Iranian strikes.",
+   "Medicine shortages in Iran have deepened as the war and shipping restrictions continue, the South China Morning Post reported.",
+   "Residents near the Inglewood Oil Field in Los Angeles may receive payments under AB 1661, Wired reported. The bill would pay up to $5,000 each to 1,000 households from $5 million in penalties on oil wells, Capital B reported.",
+   "Russia's Defence Ministry said its forces had taken Maryevka and Gulevo in the Donetsk region, Sputnik reported.",
+   "The European Union urged the United States to lift its travel ban on the Palestinian delegation to the UN General Assembly meeting, Al Jazeera reported."
+  ]
+ }
+}

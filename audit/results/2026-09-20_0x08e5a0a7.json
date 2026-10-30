@@ -1,0 +1,197 @@
+{
+ "hash": "0x08e5a0a7e3fd28b685dbeeed2f1a6f7a53e527071f5a0fb8f2005017ca25d85d",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Iranian missiles struck/damaged a US base in Kuwait",
+   "status": "supported",
+   "evidence": "https://presstv.co.uk/Detail/2026/09/19/776570/images-severe-destruction-US-base-Kuwait",
+   "note": "Press TV (19 Sep) headline: images show severe destruction at US base in Kuwait after Iranian strikes. No sourceRefs in this edition; headline only."
+  },
+  {
+   "text": "Ahmed al-Mansoor, 27, Yemeni-born contractor, shrapnel in left thigh, woke three days later in a Kuwait City hospital with broken femur and fractured wrist; commander's quote 'the wound will heal, the war will end'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented character recycled from the 19 Sep edition; quote not found anywhere."
+  },
+  {
+   "text": "Base named 'Camp Arif Al-Bayan', 'turned into a smoking ruin on September 18'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No such base found; no source for an 18 Sep strike date. Reported Sep 2026 Iranian strikes named Ali Al Salem and Ahmed Al-Jaber air bases."
+  },
+  {
+   "text": "Florida IVF clinic: dozens of families received embryos belonging to strangers",
+   "status": "wrong",
+   "evidence": "https://www.ibtimes.co.uk/florida-couple-sue-fertility-clinic-sperm-mix-1820708",
+   "note": "The reported Florida case is one couple (Joshua and Natalie Strong) alleging Brown Fertility in Jacksonville used the wrong sperm; not dozens of families or embryo swaps."
+  },
+  {
+   "text": "Clinic CEO Dr. Lena Ortiz told a Miami court a software glitch swapped barcode tags",
+   "status": "wrong",
+   "evidence": "https://www.ibtimes.co.uk/florida-couple-sue-fertility-clinic-sperm-mix-1820708",
+   "note": "Clinic owner is Dr. Samuel Brown; suit filed in Duval County Circuit Court (Jacksonville), not Miami. No glitch testimony found; invented."
+  },
+  {
+   "text": "The Garcias received twins that aren't theirs",
+   "status": "wrong",
+   "evidence": "https://www.ibtimes.co.uk/florida-couple-sue-fertility-clinic-sperm-mix-1820708",
+   "note": "Plaintiffs are the Strongs; one daughter born June 2025."
+  },
+  {
+   "text": "Lawsuit seeks $12 million in damages and a federal audit of the 'digital womb'",
+   "status": "wrong",
+   "evidence": "https://www.ibtimes.co.uk/florida-couple-sue-fertility-clinic-sperm-mix-1820708",
+   "note": "Suit seeks more than $50,000 and a jury trial; no federal audit."
+  },
+  {
+   "text": "'Two thousand kilometres north' of Kuwait is Florida",
+   "status": "wrong",
+   "evidence": "",
+   "note": "Geographically false (Florida is about 11,000 km west of Kuwait)."
+  },
+  {
+   "text": "Megan Clarke, 34, needless mastectomy; NHS reports 342 similar cases in the last year; hospital 'algorithmic triage'; patient in Sheffield",
+   "status": "unsupported",
+   "evidence": "https://www.onenewspage.com/story/nhs-trust-20-unnecessary-mastectomies-12e5f5fb/",
+   "note": "No Megan Clarke, Sheffield, 342 figure or algorithmic triage found. The real story: County Durham and Darlington NHS Foundation Trust told the BBC on 18 Sep that 20 women had breasts removed unnecessarily."
+  },
+  {
+   "text": "BBC expose last week sparked a parliamentary inquiry",
+   "status": "unsupported",
+   "evidence": "https://www.turkiyetoday.com/lifestyle/uk-hospital-scandal-sees-20-women-undergo-unnecessary-mastectomies-4500-cases-face-re-3230930",
+   "note": "BBC report was 18 Sep (two days earlier). No parliamentary inquiry found; later reports mention a police/NCA investigation and an expanded case review."
+  },
+  {
+   "text": "20 women had breasts removed unnecessarily at County Durham and Darlington NHS Foundation Trust; trust told the BBC (18 Sep); among hundreds harmed at its breast unit",
+   "status": "supported",
+   "evidence": "https://www.onenewspage.com/story/nhs-trust-20-unnecessary-mastectomies-12e5f5fb/",
+   "note": "Added in rewrite. BBC original: https://www.bbc.co.uk/news/articles/c9qrn3y72dxo (BBC domain blocked to the search tool; relied on the One News Page record of the BBC and Guardian reports)."
+  },
+  {
+   "text": "Jared Kline, North Dakota welder, 'lion diet' cleared psoriasis, appeared at a Senate hearing last night",
+   "status": "wrong",
+   "evidence": "https://foxnews.com/food-drink/man-says-meat-only-lion-diet-cleared-psoriasis-covering-90-his-body-ended-decades-depression",
+   "note": "Fox News (17 Sep) reported a 50-year-old Florida man said the lion diet cleared his psoriasis. No North Dakota welder, no name Jared Kline, no Senate hearing found."
+  },
+  {
+   "text": "Senate Commerce Committee drafting a bill banning unapproved dietary regimens; 'Dietary Safety Act' Senate vote on October 2; federal warning listing steak-only diet",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Nothing found; invented."
+  },
+  {
+   "text": "DW News reported Trump signed the Russia Sanctions Act into law",
+   "status": "supported",
+   "evidence": "https://www.deccanchronicle.com/world/americas/trump-signs-russia-sanctions-bill-allowing-100-tariffs-on-india-1988663",
+   "note": "Trump signed a Russia sanctions bill on Friday 18 Sep (AFP via Deccan Chronicle; Outlook Business). DW's own report could not be checked (dw.com blocked to the search tool); attribution to DW unverified."
+  },
+  {
+   "text": "India's trade ministry in a panic over a 100% tariff threat on Russian oil",
+   "status": "wrong",
+   "evidence": "https://www.deccanchronicle.com/world/americas/trump-signs-russia-sanctions-bill-allowing-100-tariffs-on-india-1988663",
+   "note": "Law allows tariffs of up to 100% on major buyers of Russian oil and gas, which could cover India and China (AFP). India said it would continue buying oil 'through diversified sourcing'; no trade ministry 'panic' reported."
+  },
+  {
+   "text": "House passed the package 262-159; India said it would keep buying oil through diversified sourcing",
+   "status": "supported",
+   "evidence": "https://www.deccanchronicle.com/world/americas/trump-signs-russia-sanctions-bill-allowing-100-tariffs-on-india-1988663",
+   "note": "Added in rewrite (AFP)."
+  },
+  {
+   "text": "Sanction sentiment score 51, market signal 48",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores; no public source."
+  },
+  {
+   "text": "Same administration 'tried to ban a media outlet'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Vague; no source given in this edition."
+  },
+  {
+   "text": "Al Jazeera footage of Argentines chanting against Milei's austerity; protests in their third week",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No Al Jazeera report from Sep 2026 found; no source for a three-week protest."
+  },
+  {
+   "text": "Government delayed the 'zero-budget' decree until a November parliamentary vote; Argentine parliament to debate Milei's budget on November 10",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Nothing found; invented."
+  },
+  {
+   "text": "Milei reform sentiment 32",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal score; no public source."
+  },
+  {
+   "text": "CNN: 'Huge stars celebrate Lucas' art museum opening'",
+   "status": "supported",
+   "evidence": "https://thegrio.com/2026/09/21/lucas-museum-opening-mellody-hobson-oprah/",
+   "note": "CNN piece not found by search, but many outlets (TheGrio, NBC LA, TMZ) report the star-studded opening gala on 19 Sep 2026. CNN attribution unverified."
+  },
+  {
+   "text": "Museum in Los Angeles showcases a retrospective of the 'late filmmaker's' work",
+   "status": "wrong",
+   "evidence": "https://thegrio.com/2026/09/21/lucas-museum-opening-mellody-hobson-oprah/",
+   "note": "George Lucas is alive; he co-hosted the opening gala with Mellody Hobson. The Lucas Museum of Narrative Art is a museum of visual storytelling, not a retrospective of his work."
+  },
+  {
+   "text": "Museum financed by a crypto fund that collapsed three months ago with a $4.2 billion loss",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Nothing found; museum co-founded by Lucas and Hobson. Invented."
+  },
+  {
+   "text": "$1 billion museum in Exposition Park; gala 19 Sep; opens to the public 22 Sep",
+   "status": "supported",
+   "evidence": "https://thegrio.com/2026/09/21/lucas-museum-opening-mellody-hobson-oprah/",
+   "note": "Added in rewrite."
+  },
+  {
+   "text": "Bitcoin sentiment 51, market signal 48; Ethereum sentiment 50, signal 45",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Internal scores; no public source."
+  },
+  {
+   "text": "Bitcoin price around $78,200; '$78,000 rally two days ago'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No dated price source for 18-20 Sep found. CoinDesk reported BTC hit $85,000 on 21 Sep."
+  },
+  {
+   "text": "Spike in DeFi withdrawals ahead of a regulatory storm",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source."
+  },
+  {
+   "text": "UN special session on missile proliferation on September 25",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Nothing found; invented."
+  },
+  {
+   "text": "Causal/linking claims (missile-tracking tech now tracking sperm; sanctions and IVF patches drafted by the same hand)",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented links between unrelated stories."
+  }
+ ],
+ "edits": {
+  "headline": "Trump signs Russia sanctions bill allowing tariffs of up to 100%",
+  "subheadline": "The law lets Washington impose the tariffs on major buyers of Russian oil and gas, which could include China and India, AFP reported.",
+  "editorialBody": [
+   "US President Donald Trump signed a Russia sanctions bill on 18 September that allows tariffs of up to 100% on major buyers of Russian oil and gas, AFP reported.",
+   "The House of Representatives passed the package by 262 votes to 159, AFP reported. India said it would continue buying oil \"through diversified sourcing\".",
+   "Twenty women had breasts removed unnecessarily during cancer treatment at County Durham and Darlington NHS Foundation Trust, the trust told the BBC on 18 September. It said they were among hundreds of patients harmed at its breast unit.",
+   "Natalie and Joshua Strong have sued Brown Fertility in Jacksonville, Florida, saying it used another man's sperm to create their daughter's embryo, IBTimes UK reported. The suit names Dr. Samuel Brown and 10 other defendants.",
+   "George Lucas and Mellody Hobson hosted an opening gala for the $1 billion Lucas Museum of Narrative Art in Los Angeles on 19 September, TheGrio reported. The museum opens to the public on 22 September."
+  ]
+ }
+}
