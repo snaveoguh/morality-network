@@ -103,20 +103,22 @@ async function resolveMasthead(): Promise<MastheadEdition | null> {
     // No originals available
   }
 
-  if (marketLead) return marketLead;
-
-  // 3. Last resort: any-age Pooter Original — masthead must NEVER be empty
+  // 3. Any-age Pooter Original — masthead must NEVER be empty. A
+  // front-eligible one from the archive beats a crypto or market lead; the
+  // market lead is used only if the archive has nothing else.
   // Give 3s — inner indexer fetch has its own 2s cap, so local JSON always
   // has headroom to complete.
   try {
-    const anyAge = await withTimeout(getRecentPooterOriginals(false, 1, true), 3000);
-    const pick = anyAge?.[0];
-    if (pick) return originalToEdition(pick, "FROM THE ARCHIVE");
+    const anyAge = await withTimeout(getRecentPooterOriginals(false, 30, true), 3000);
+    const front = anyAge?.find(isFrontStory);
+    if (front) return originalToEdition(front, "FROM THE ARCHIVE");
+    if (marketLead) return marketLead;
+    if (anyAge?.[0]) return originalToEdition(anyAge[0], "FROM THE ARCHIVE");
   } catch {
     // Archive unavailable — Masthead will show brand fallback
   }
 
-  return null;
+  return marketLead;
 }
 
 export async function AsyncMasthead() {
