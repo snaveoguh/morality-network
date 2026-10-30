@@ -1,0 +1,199 @@
+{
+ "hash": "0x8785adcd302a2135a1c8e8ff2aece4d07c3a0ef5282e45456b7ed2c7d3a8f1d8",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Headline: a Nepali mother clings to a broken chair",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source names this person or scene; the AP and Reuters flood reports do not."
+  },
+  {
+   "text": "Headline: missiles chase American ships through Hormuz",
+   "status": "supported",
+   "evidence": "https://www.anews.com.tr/world/2026/09/06/irans-revolutionary-guards-say-missiles-struck-us-aircraft-carrier-destroyer",
+   "note": "Figurative. The IRGC said it fired ballistic missiles at a US carrier and destroyer; CENTCOM said both evaded the attack (Anadolu)."
+  },
+  {
+   "text": "Subheadline: floodwaters and missile trails share the same horizon",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Rhetorical framing linking unrelated stories; removed."
+  },
+  {
+   "text": "Maya Gurung, 22, rescued in Barpak on September 6 on a wooden chair; quote 'My sister is still under'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented person and quote. Flood coverage centres on Rasuwa, Nuwakot and the Bhotekoshi/Trishuli rivers; Barpak is not mentioned (AP, Reuters)."
+  },
+  {
+   "text": "Her 8-year-old sister Lhamo remained tangled in rebar",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented person."
+  },
+  {
+   "text": "Death toll in the Himalayan floods now eclipses 950",
+   "status": "wrong",
+   "evidence": "https://www.nbcwashington.com/news/national-international/nepal-holds-day-of-mourning-after-deadly-floods/",
+   "note": "AP (7 Sept) reported more than 1,300 killed in Nepal and Tibet, about 5,000 missing; Reuters put it at at least 1,380 (https://www.thestar.com.my/aseanplus/aseanplus-news/2026/09/07/nepal-marks-national-mourning-day-after-deadly-flood)."
+  },
+  {
+   "text": "Government promise of 'rapid burial'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "USS Dwight D. Eisenhower reversed course after an IRGC ballistic missile salvo near Hormuz",
+   "status": "wrong",
+   "evidence": "https://www.anews.com.tr/world/2026/09/06/irans-revolutionary-guards-say-missiles-struck-us-aircraft-carrier-destroyer",
+   "note": "The IRGC claimed it hit an unnamed US carrier and destroyer and that they left the area; CENTCOM said both ships evaded the attack. No source names the Eisenhower."
+  },
+  {
+   "text": "Petty Officer 2nd Class Michael Ortiz, 27, blown from the deck, arm mangled",
+   "status": "wrong",
+   "evidence": "https://www.anews.com.tr/world/2026/09/06/irans-revolutionary-guards-say-missiles-struck-us-aircraft-carrier-destroyer",
+   "note": "CENTCOM said no American personnel were harmed. The sailor is invented."
+  },
+  {
+   "text": "Pentagon still calls the war 'limited'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Press TV aired Minister of Energy Reza Ghalami saying Iran's oil was still flowing despite 550 strikes on the Kharg tanker, on September 7",
+   "status": "wrong",
+   "evidence": "https://www.presstv.co.uk/Detail/2026/09/07/775818/Iran-kept-oil-exports-flowing-during-war-despite-550-strikes-on-Kharg--Minister",
+   "note": "Press TV (7 Sept) quoted Petroleum Minister Mohsen Paknejad: crude exports were not interrupted during the 40-day war despite more than 550 attacks on Kharg Island (the island, not a tanker). Name and title wrong."
+  },
+  {
+   "text": "Iran proclaimed a 'restricted zone' just outside Hormuz, marked on civilian charts as a no-fly corridor",
+   "status": "unsupported",
+   "evidence": "https://www.oilandgas360.com/brent-advances-toward-100-bbl-after-iran-threat-to-gulf-energy-infrastructure/",
+   "note": "An 8 Sept report mentions Iranian plans for a restricted zone in the strait; the no-fly corridor and charts detail is unsupported."
+  },
+  {
+   "text": "Top security official Ali Shahriari warned Seoul a South Korean naval deployment amounts to 'direct support for the United States'",
+   "status": "wrong",
+   "evidence": "https://www.koreatimes.co.kr/foreignaffairs/20260907/iran-warns-korea-over-possible-hormuz-deployment",
+   "note": "Korea Times: foreign ministry spokesperson Esmaeil Baqaei said a military presence in the Gulf 'would amount to direct support for the aggressor'; an unnamed senior official told Al Mayadeen a Korean role would be 'direct military participation in the aggression'. Ali Shahriari not found."
+  },
+  {
+   "text": "South Korea's merchant fleet scrambles to reroute cargo, fearing a repeat of the 2022 oil price spike",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Oil prices rose 1.2% after the Iranian statements",
+   "status": "unsupported",
+   "evidence": "https://gulfnews.com/business/energy/oil-prices-hold-near-97-as-us-iran-conflict-and-hormuz-disruptions-keep-geopolitical-premium-high-1.500665326",
+   "note": "Reports for 7 Sept give Brent around $96-97 after a 9.3% weekly rise; no 1.2% move tied to the statements found."
+  },
+  {
+   "text": "2023 energy crisis",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Unsourced background."
+  },
+  {
+   "text": "SEC crypto-custody rewrite is under White House review",
+   "status": "supported",
+   "evidence": "https://thedefiant.io/converge/regulation/sec-crypto-custody-rewrite-enters-white-house-review",
+   "note": "The Defiant: 'SEC crypto custody rewrite enters White House review'. The Block dated the submission to OIRA as 25-26 Aug (https://www.theblock.co/news/regulation/2026-08-26-sec-sends-crypto-custody-rule-changes-to-white-house-for-review-412811)."
+  },
+  {
+   "text": "Bitcoin sentiment score 62, market signal 49",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed metric, not reportable"
+  },
+  {
+   "text": "$1.8 billion in stablecoins skirting the new regulations",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Huawei unveiled a trifold smartphone powered by a Kirin chip built on the 'Tau Scaling Law'",
+   "status": "supported",
+   "evidence": "https://scmp.com/tech/tech-trends/article/3366650/huawei-unveils-new-trifold-smartphone-powered-tau-scaling-law-based-kirin-chip",
+   "note": "SCMP: 'Huawei unveils new trifold smartphone powered by Tau scaling law-based Kirin chip'."
+  },
+  {
+   "text": "The device promises to double processing efficiency",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Global Sentiment gauge 59/100",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed metric, not reportable"
+  },
+  {
+   "text": "Sputnik reported Putin and 'former President' Trump may exchange a phone call after US negotiators arrived in Moscow and Kyiv",
+   "status": "wrong",
+   "evidence": "https://www.wyso.org/2026-09-06/u-s-envoys-visit-kyiv-for-first-time-after-meeting-putin-in-moscow",
+   "note": "Trump is the sitting president, not a former president. NPR (Joanna Kakissis and Joel Rose, syndicated on WYSO, 6 Sept, opened): US envoys Steve Witkoff and Jared Kushner made their first official visit to Kyiv, by train, a day after meeting Putin in Moscow, and met Zelenskyy. The earlier AP citation (a newsitem.com summary never opened) was replaced; the copy now attributes NPR. A Sputnik report of a possible call was not found; the call took place on 8 Sept (https://meduza.io/en/news/2026/09/08/putin-and-trump-discussed-u-s-negotiators-trips-to-moscow-and-kyiv-in-one-hour-call-kremlin-says)."
+  },
+  {
+   "text": "Kremlin hint of a 'private dialogue'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Quote not found."
+  },
+  {
+   "text": "Conflict & Security 49/100, Health & Pandemic 62, Crypto & Web3 61, AI 62, Climate & Environment 58",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed metric, not reportable"
+  },
+  {
+   "text": "Rahman Mammadli live performance on KEXP",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "playlist/video pick, not news"
+  },
+  {
+   "text": "UN Security Council will convene on September 12 to debate a resolution on the Hormuz restricted zone",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Nepal's meteorological agency issued a yellow alert, urging evacuations in 12 districts",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "US Senate is slated to vote on the crypto-custody bill on September 14",
+   "status": "wrong",
+   "evidence": "https://www.theblock.co/news/regulation/2026-08-26-sec-sends-crypto-custody-rule-changes-to-white-house-for-review-412811",
+   "note": "The custody change is an SEC rule under OIRA review, not a Senate bill; no Senate vote found."
+  },
+  {
+   "text": "Huawei promises to ship its trifold phone to Europe by the end of the month",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  }
+ ],
+ "edits": {
+  "headline": "Iran says it fired missiles at US carrier and destroyer near Hormuz",
+  "subheadline": "US Central Command said both warships evaded the attack and no American personnel were harmed, Anadolu Agency reported.",
+  "editorialBody": [
+   "Iran's Revolutionary Guards said they fired ballistic missiles at a US aircraft carrier and a destroyer near the Strait of Hormuz early on September 6, and said both ships were damaged. US Central Command said both warships evaded the attack and no American personnel were harmed, Anadolu Agency reported.",
+   "Iran's petroleum minister, Mohsen Paknejad, said crude exports were not interrupted during the 40-day war despite more than 550 attacks on Kharg Island, Press TV reported.",
+   "Iran's foreign ministry spokesperson, Esmaeil Baqaei, warned South Korea that a military presence in the Gulf would amount to direct support for the aggressor, the Korea Times reported.",
+   "Nepal held a national day of mourning on September 7 for more than 1,300 people killed in floods in Nepal and Tibet, the Associated Press reported. About 5,000 people were still missing, according to Nepal's disaster management agency.",
+   "US envoys Steve Witkoff and Jared Kushner made their first official visit to Kyiv and met President Volodymyr Zelenskyy, a day after meeting President Vladimir Putin in Moscow, NPR reported.",
+   "The SEC's rewrite of its crypto custody rules has entered White House review, The Defiant reported.",
+   "Huawei unveiled a trifold smartphone powered by a Kirin chip based on its Tau scaling law, the South China Morning Post reported."
+  ]
+ }
+}

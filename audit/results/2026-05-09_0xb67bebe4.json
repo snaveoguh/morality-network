@@ -1,0 +1,37 @@
+{
+  "hash": "0xb67bebe426af61bfbb4c5241ef3ecb66f53d69d53812a5c98e3ece1bd22ad142",
+  "verdict": "needs_edit",
+  "claims": [
+    {"text": "Headline: Musk Mocks French Prosecutors", "status": "supported", "evidence": "https://www.scmp.com/news/world/europe/article/3352982/musk-uses-slurs-mock-french-prosecutors-investigating-x", "note": "SCMP headline 'Musk uses slurs to mock French prosecutors investigating X' (May 2026, wire copy). Headline replaced with the Senedd result as lead; Musk item kept in body."},
+    {"text": "Subheadline: As Plaid Cymru wins Senedd vote, nationalist fervor spreads", "status": "unsupported", "evidence": "", "note": "'Nationalist fervor spreads' is commentary with no source; joins two stories. Rewritten."},
+    {"text": "Plaid Cymru's leader announced the party is ready to run Wales after winning a Senedd vote", "status": "supported", "evidence": "https://nation.cymru/news/ready-to-govern-plaid-leader-moves-to-form-next-welsh-government/", "note": "Nation.Cymru, 8 May 2026: Rhun ap Iorwerth said Plaid 'now stands ready to take the necessary steps to form the next Government of Wales'; Plaid won 43 of 96 seats, Reform UK 34, Labour 9. A BBC article with the same content exists (id cdrpxvz61vko) but bbc.co.uk could not be reached directly, so copy attributes to Nation.Cymru."},
+    {"text": "Elon Musk used slurs to mock French prosecutors investigating X", "status": "supported", "evidence": "https://www.scmp.com/news/world/europe/article/3352982/musk-uses-slurs-mock-french-prosecutors-investigating-x", "note": "Also EWN 9 May 2026 (AFP): https://www.ewn.co.za/2026/05/09/musk-rants-at-french-prosecutors-probing-his-x-platform"},
+    {"text": "The BBC reported on the Musk incident", "status": "unsupported", "evidence": "", "note": "bbc.co.uk not reachable; only a blog reproduction of a BBC item on the earlier no-show summons found. Copy attributes to SCMP instead."},
+    {"text": "Escalating tensions between Musk and regulatory bodies", "status": "unsupported", "evidence": "", "note": "Characterisation, not sourced; removed."},
+    {"text": "Global sentiment 64; health 64; conflict 55; economy 67; based on 41 articles, trend 0", "status": "unsupported", "evidence": "", "note": "internal feed metric, not reportable"},
+    {"text": "Surge of pro-independence parties in Britain, as reported by r/geopolitics", "status": "unsupported", "evidence": "", "note": "A Reddit forum is not a news outlet; no report checked. Removed."},
+    {"text": "Middle East Eye reported Israel's evacuation warnings for nine villages in southern Lebanon", "status": "supported", "evidence": "https://www.freemalaysiatoday.com/category/world/2026/05/09/israeli-army-issues-evacuation-warning-for-9-south-lebanese-villages", "note": "Free Malaysia Today (AFP), 9 May 2026. MEE item seen only via feed mirror (https://news.spill.org/en/article/israel-issues-evacuation-warnings-for-nine-villages-in-southern-lebanon-422); also Dawn https://www.dawn.com/news/1998894. Copy attributes to Middle East Eye per the feed mirror; reviewers may prefer Dawn."},
+    {"text": "SCMP reported US sanctions on mainland China and Hong Kong entities", "status": "supported", "evidence": "https://www.scmp.com/news/china/diplomacy/article/3352980/us-sanctions-9-mainland-china-and-hong-kong-entities-over-alleged-iran-military-links", "note": "SCMP, 9 May 2026: US sanctioned 9 mainland China and Hong Kong entities over alleged links to Iran's military."},
+    {"text": "This move is likely to impact already strained US-China relations", "status": "unsupported", "evidence": "", "note": "Speculation; removed."},
+    {"text": "SCMP reported China's Huaqiangbei betting on AI innovations to revive its global appeal", "status": "supported", "evidence": "https://www.scmp.com/tech/tech-trends/article/3352938/chinas-huaqiangbei-bets-ai-innovations-revive-global-appeal", "note": "SCMP headline confirmed via search; full text paywalled."},
+    {"text": "Mongabay reported the European roller's migration; its migration patterns are influenced by human relationships / human activity", "status": "wrong", "evidence": "https://news.mongabay.com/2026/05/from-africa-to-central-asia-the-european-rollers-migration-builds-relationships/", "note": "Mongabay, 9 May 2026: BirdLife South Africa fitted trackers to seven rollers; the 'relationships' are collaborations between researchers in South Africa, India and China. It does not say human activity shapes the migration."},
+    {"text": "Bitcoin sentiment 73, market signal 52; Ethereum sentiment 63, market signal 54; 26 articles each", "status": "unsupported", "evidence": "", "note": "internal feed metric, not reportable"},
+    {"text": "AI insight report: overrepresentation of center and lean-left sources", "status": "unsupported", "evidence": "", "note": "internal feed metric, not reportable"},
+    {"text": "DW News videos: Suvendu Adhikari's oath-taking and PM Modi meeting a 98-year-old BJP leader", "status": "unsupported", "evidence": "", "note": "playlist/video pick, not news. Adhikari was sworn in as West Bengal chief minister on 9 May 2026 (https://www.outlookindia.com/national/suvendu-adhikari-sworn-in-as-west-bengals-first-bjp-chief-minister); the 98-year-old leader was not found. Dropped."},
+    {"text": "Music pick: Rahman Mammadli 'Full Performance (Live on KEXP)'", "status": "unsupported", "evidence": "", "note": "playlist/video pick, not news"},
+    {"text": "The US Federal Reserve's next meeting is scheduled for June", "status": "supported", "evidence": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm", "note": "FOMC 2026 calendar lists 16-17 June. Not a news item; dropped from copy."},
+    {"text": "Middle East Eye: Iran's response to the US proposal expected at an 'appropriate time'", "status": "supported", "evidence": "https://www.middleeasteye.net/live-blog/live-blog-update/iran-says-response-us-proposal-coming-appropriate-time", "note": "MEE live blog, about 8-9 May 2026: foreign ministry spokesman Esmaeil Baghaei said Tehran was reviewing the US proposal and would reply at the appropriate time."}
+  ],
+  "edits": {
+    "headline": "Plaid Cymru leader says party is ready to govern Wales",
+    "subheadline": "Plaid won 43 of the 96 seats in the Senedd election, Nation.Cymru reported.",
+    "editorialBody": [
+      "Plaid Cymru leader Rhun ap Iorwerth said the party stood ready to form the next government of Wales after it won 43 of the 96 Senedd seats, Nation.Cymru reported. Reform UK won 34 seats and Labour won nine.",
+      "Elon Musk used slurs to mock French prosecutors investigating his platform X, the South China Morning Post reported.",
+      "Israel's military issued evacuation warnings for nine villages in southern Lebanon, Middle East Eye reported.",
+      "Iran said it would respond to a US proposal at the appropriate time, according to Middle East Eye.",
+      "The US sanctioned nine mainland Chinese and Hong Kong entities over alleged links to Iran's military, the South China Morning Post reported. The paper also reported that Shenzhen's Huaqiangbei electronics market was betting on AI innovations to revive its global appeal.",
+      "Scientists at BirdLife South Africa fitted trackers to seven European rollers to map their migration from Africa to Central Asia, Mongabay reported."
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "hash": "0xf6e07e9e707ccf5581c7a54d1b4fac5b2139adc6f4c44a0dfbacebd0ab460637",
+  "verdict": "needs_edit",
+  "claims": [
+    {"text": "Headline: Iran Talks Stall as Gaza Votes", "status": "supported", "evidence": "https://www.bloomberg.com/news/articles/2026-04-25/iran-s-araghchi-arrives-in-pakistan-with-us-talks-still-in-limbo", "note": "Two unrelated stories joined in one headline; Bloomberg said US talks were 'in limbo'; Gaza vote confirmed by Al Jazeera. Rewritten as a single-story headline."},
+    {"text": "Subheadline: Peace optimism fades with each new casualty", "status": "unsupported", "evidence": "", "note": "Rhetorical line, no source; removed."},
+    {"text": "Palestinians voted in municipal elections in Gaza and the West Bank", "status": "supported", "evidence": "https://www.aljazeera.com/news/2026/4/25/polls-open-in-gaza-area-in-first-municipal-election-in-20-years", "note": "Al Jazeera, 25 Apr 2026: vote in Deir el-Balah (central Gaza) and the occupied West Bank; Gaza's first electoral exercise in 20 years; Hamas did not put forward candidates."},
+    {"text": "Iran's foreign minister awaited a US delegation in Pakistan for peace talks", "status": "supported", "evidence": "https://www.dawn.com/news/1994680/iranian-delegation-led-by-fm-araghchi-lands-in-islamabad-us-officials-to-also-arrive-in-pakistan", "note": "Dawn: Araghchi landed in Islamabad; US officials also expected. Iran's foreign ministry later said no talks with the US were planned and the US trip was cancelled (https://gna.org.gh/2026/04/irans-araghchi-leaves-pakistan-as-us-officials-cancel-trip/). Copy limited to arrival and expected US officials."},
+    {"text": "A shipping body said the capture of ships by the US and Iran violates international law", "status": "supported", "evidence": "https://www.aljazeera.com/economy/2026/4/25/capture-of-ships-by-us-iran-violates-international-law-shipping-body-says", "note": "Al Jazeera, 25 Apr 2026: International Chamber of Shipping; marine director John Stawpert called for crews' release."},
+    {"text": "Global sentiment 59/100; conflict and security sentiment 51/100", "status": "unsupported", "evidence": "", "note": "internal feed metric, not reportable"},
+    {"text": "Issam Abdallah, a Lebanese journalist, died in an Israeli strike despite the supposed ceasefire", "status": "wrong", "evidence": "https://www.newarab.com/video/issam-abdallah-killed-prompts-reuters-call-investigation", "note": "Reuters video journalist Issam Abdallah was killed by Israeli tank fire in south Lebanon on 13 Oct 2023, not during a ceasefire around April 2026. No April 2026 report of his death found."},
+    {"text": "As we reported yesterday, the alleged ceasefire has done little to alleviate suffering", "status": "unsupported", "evidence": "", "note": "Self-reference and opinion; removed."},
+    {"text": "The head of OpenAI apologized for failing to alert police ahead of the Canada mass shooting", "status": "supported", "evidence": "https://www.aljazeera.com/economy/2026/4/25/chkopenaissamaltmanapologises-over-failure-to-report-canadian-mass-shooter", "note": "Sam Altman apologised over failure to report the Tumbler Ridge, British Columbia, shooter's ChatGPT account (Al Jazeera, 25 Apr 2026; also AP via Purdue Exponent)."},
+    {"text": "AI sentiment 65/100", "status": "unsupported", "evidence": "", "note": "internal feed metric, not reportable"},
+    {"text": "The failure of GPT-5.5, touted as the 'strongest agentic coding model ever'", "status": "unsupported", "evidence": "", "note": "Only a Reddit post and a low-quality blog; OpenAI's wording was 'strongest agentic coding model to date'. No news report of a 'failure' found."},
+    {"text": "Global economy sentiment score 63/100", "status": "unsupported", "evidence": "", "note": "internal feed metric, not reportable"},
+    {"text": "Bitcoin traders are getting bullish, with some predicting a rally", "status": "unsupported", "evidence": "", "note": "Only a republished newsletter on an exchange site found; no identifiable outlet. Removed."},
+    {"text": "Music pick: Lysistrata 'Full Performance (Live on KEXP)'", "status": "unsupported", "evidence": "", "note": "playlist/video pick, not news"}
+  ],
+  "edits": {
+    "headline": "Palestinians vote in first local elections since the Gaza war",
+    "subheadline": "Voters in Deir el-Balah in central Gaza and in the occupied West Bank chose local councils, Al Jazeera reported.",
+    "editorialBody": [
+      "Palestinians in Deir el-Balah, in central Gaza, and in the occupied West Bank voted in municipal elections on 25 April, Al Jazeera reported. It was Gaza's first vote in 20 years, and Hamas did not put forward candidates, according to Al Jazeera.",
+      "Iran's foreign minister, Abbas Araghchi, arrived in Islamabad, and US officials were also expected in Pakistan, Dawn reported. Bloomberg reported that talks between Iran and the US were still in limbo.",
+      "The International Chamber of Shipping said the seizure of commercial ships by the US and Iran broke international law, Al Jazeera reported. Its marine director, John Stawpert, called for the crews to be released.",
+      "OpenAI chief executive Sam Altman apologised for the company's failure to alert police about the ChatGPT account of the suspect in the mass shooting in Tumbler Ridge, British Columbia, Al Jazeera reported."
+    ]
+  }
+}

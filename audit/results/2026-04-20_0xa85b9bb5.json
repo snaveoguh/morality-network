@@ -1,0 +1,120 @@
+{
+  "hash": "0xa85b9bb50ff9e466b68f41035892528cc43ef9d922e0cc6c98e924767253448a",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Headline: Iran raises fuel prices amid US blockade",
+      "status": "unsupported",
+      "evidence": "https://www.khaleejtimes.com/world/mena/iran-petrol-price-rise-us-economic-pressure",
+      "note": "Two searches found no April 2026 Iranian fuel price rise. The only rise found (above-quota petrol) took effect in September 2026 (Khaleej Times; Iran International). Replaced."
+    },
+    {
+      "text": "Subheadline: Tehran's clever capitalism may be the new norm in conflict zones",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Opinion, not a claim of fact. Removed."
+    },
+    {
+      "text": "Iranian president highlighted diplomacy while stressing distrust of the US, according to IRNA",
+      "status": "supported",
+      "evidence": "https://www.freemalaysiatoday.com/category/world/2026/04/20/irans-president-stresses-importance-of-diplomacy-while-noting-distrust-of-us",
+      "note": "Reuters via Free Malaysia Today, 20 April 2026, citing state news agency IRNA: Pezeshkian stressed diplomacy and said vigilance and distrust toward Washington were an 'undeniable necessity'."
+    },
+    {
+      "text": "IRGC announced the Strait of Hormuz is 'fully closed' until the US lifts its blockade on Iranian ports",
+      "status": "supported",
+      "evidence": "https://www.aljazeera.com/amp/news/2026/4/18/iran-closes-strait-of-hormuz-again-over-us-blockade-of-its-ports",
+      "note": "Al Jazeera, 18 April 2026 (checked for the 19 April edition)."
+    },
+    {
+      "text": "Tehran is attaching a price list to its closures, charging tolls instead of shooting missiles",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Repeats an invented line from the previous edition. On 18 April IRGC boats fired on a tanker (UKMTO), so 'instead of shooting' is also contradicted."
+    },
+    {
+      "text": "Malacca Strait potentially at risk of a 'chain reaction' after a warning from an Iranian adviser, as reported by SCMP",
+      "status": "supported",
+      "evidence": "https://www.scmp.com/news/china/diplomacy/article/3350691/malacca-strait-risk-hormuz-chain-reaction-after-warning-iranian-adviser",
+      "note": "SCMP headline 'Malacca Strait at risk of Hormuz chain reaction after warning by Iranian adviser'. Page not read; search summary names the adviser as Ali Akbar Velayati (remarks on X, 19 April per Iran International). Copy keeps to the headline."
+    },
+    {
+      "text": "Vietnam and the Philippines trust Japan but Indonesia does not, as noted by SCMP",
+      "status": "supported",
+      "evidence": "https://scmp.com/week-asia/politics/article/3350694/vietnam-and-philippines-trust-japan-why-doesnt-indonesia",
+      "note": "SCMP headline 'Vietnam and Philippines trust Japan. Why doesn't Indonesia?' (around 20 April), drawing on the ISEAS State of Southeast Asia 2026 survey. Page not read; copy keeps to the headline."
+    },
+    {
+      "text": "Two Palestinians injured by Israeli gunfire in the occupied West Bank, as reported by Middle East Eye",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Two searches found no Middle East Eye report matching this around 19-20 April 2026. Nearest items: The Peninsula, 12 April (two injured near Hebron); a Dawn/Anadolu story with this wording is from August 2024; on 21 April two Palestinians were killed (not injured) near al-Mughayyir. Removed."
+    },
+    {
+      "text": "Congress leader 'confined' under pretext of IT 'search' ahead of rally, as reported by Times of India",
+      "status": "supported",
+      "evidence": "https://scroll.in/latest/1092232/scroll_in",
+      "note": "Scroll.in, 20 April 2026: Tamil Nadu Congress chief K Selvaperunthagai alleged Income Tax officials 'unlawfully confined' him at his Sriperumbudur home under the pretext of a 'search' as Rahul Gandhi arrived to campaign; I-T sources denied confining him (DT Next). Times of India's own article not found, so copy attributes Scroll. It was a campaign visit, not specifically a rally."
+    },
+    {
+      "text": "Bitcoin sentiment score 63, market signal 51",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "China's silver imports jumped to a record high on retail and solar demand, as reported by Bloomberg",
+      "status": "supported",
+      "evidence": "https://www.pulse.bot/mining/news/chinas-silver-imports-jump-to-record-on-retail-and-solar-demand-e3871a78-9c80-4105-a76e-4224bad71787/",
+      "note": "Bloomberg headline 'China's Silver Imports Jump to Record on Retail and Solar Demand' (20 April), seen on aggregator pulse.bot and an Edge Singapore syndication (both blocked when fetched). The record month was March (also ING, SMM). Copy keeps to the headline plus the month."
+    },
+    {
+      "text": "The price of Bitcoin is affecting the broader market",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Unsourced generalisation."
+    },
+    {
+      "text": "Kelp's Black Swan for Aave, as reported by r/defi",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Reddit post, not a news outlet. Not reportable; removed."
+    },
+    {
+      "text": "BBC News report on the Louisiana shooting that killed eight children",
+      "status": "supported",
+      "evidence": "https://www.ksat.com/gallery/news/2026/04/19/8-children-between-the-ages-of-1-and-14-are-dead-after-a-mass-shooting-in-louisiana-police-say/",
+      "note": "playlist/video pick, not news. The event is real: AP via KSAT, 19 April 2026, eight children aged 1 to 14 killed in a mass shooting in Shreveport, Louisiana. BBC video not checked. Dropped from copy as a video pick, per brief."
+    },
+    {
+      "text": "Pope Leo's historic trip to Africa covered by ABC News",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news. Not searched."
+    },
+    {
+      "text": "Pfizer and Amgen among 22 strategic firms eyeing Hong Kong expansion, as reported by the SCMP",
+      "status": "supported",
+      "evidence": "https://www.scmp.com/news/hong-kong/hong-kong-economy/article/3350693/pfizer-amgen-among-22-strategic-firms-eyeing-hong-kong-expansion-source",
+      "note": "SCMP, around 20 April 2026, citing a source: Pfizer and Amgen among 22 strategic enterprises planning to open or expand in Hong Kong under the government's investment-attraction programme (also Newsquawk, Caixin). Page not read in full."
+    },
+    {
+      "text": "In our previous edition, Iran's Revolutionary Guards had redefined 'fully closed' to mean 'pay us first'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Self-reference to an unsupported headline (see 2026-04-19 result)."
+    }
+  ],
+  "edits": {
+    "headline": "Iran keeps Strait of Hormuz closed over US blockade",
+    "subheadline": "The Revolutionary Guards said the strait would stay closed until the US lifted its blockade of Iranian ports, Al Jazeera reported.",
+    "editorialBody": [
+      "Iran's Revolutionary Guards said on 18 April that the Strait of Hormuz would remain closed until the US lifted its blockade of Iranian ports, Al Jazeera reported.",
+      "Iranian President Pezeshkian stressed the importance of diplomacy but said distrust of and vigilance towards Washington were an \"undeniable necessity\", Reuters reported, citing the state news agency IRNA.",
+      "The South China Morning Post reported that the Strait of Malacca was at risk of a \"chain reaction\" from Hormuz after a warning by an Iranian adviser. In a separate report, the paper asked why Vietnam and the Philippines trusted Japan when Indonesia did not.",
+      "Pfizer and Amgen were among 22 strategic companies planning to open or expand operations in Hong Kong, the South China Morning Post reported, citing a source.",
+      "China's silver imports rose to a record in March on demand from retail buyers and solar manufacturers, Bloomberg reported.",
+      "In India, the Tamil Nadu Congress chief K Selvaperunthagai said Income Tax officials had \"unlawfully confined\" him at his home under the pretext of a \"search\" as Rahul Gandhi arrived in the state to campaign, Scroll.in reported."
+    ]
+  }
+}

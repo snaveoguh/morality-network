@@ -1,0 +1,45 @@
+{
+  "hash": "0x051cccea19783d98b561386b51ab2a9edc06caf5bb4e0af3d75f437b926d5530",
+  "verdict": "needs_edit",
+  "claims": [
+    {"text": "Headline: America is hemorrhaging women and nobody in power is embarrassed", "status": "unsupported", "evidence": "", "note": "Opinion headline with no news fact; replaced."},
+    {"text": "Subheadline: Lindsay Clancy in a wheelchair; 'the postpartum crisis segment nobody watched twice'", "status": "unsupported", "evidence": "", "note": "Viewing claim invented; replaced."},
+    {"text": "Lindsay Clancy was wheeled to the judge's sidebar in a Massachusetts courtroom this week by her lawyer", "status": "supported", "evidence": "https://cbsaustin.com/news/nation-world/gallery/jury-in-lindsay-clancy-murder-trial-continues-to-deliberate-as-risk-of-a-mistrial-grows-sept-3-2026?photo=1", "note": "AP pool photo caption (Greg Derr/The Patriot Ledger via AP): defense attorney Kevin Reddington pushes Clancy's wheelchair for a sidebar with the judge, Plymouth, 3 Sept 2026. Syndicated on a Sinclair station site."},
+    {"text": "NBC News ran the footage alongside a chyron about legal procedure", "status": "unsupported", "evidence": "", "note": "No NBC report or chyron found."},
+    {"text": "The judge leaned down; the courtroom held its breath", "status": "unsupported", "evidence": "", "note": "Invented scene detail."},
+    {"text": "Clancy is paralyzed from a suicide attempt she made the same night she killed her three children", "status": "supported", "evidence": "https://www.wbur.org/news/2026/09/03/lindsay-clancy-trial-jury-deliberations", "note": "WBUR: jurors deciding whether Clancy is criminally responsible for killing her three children; she attempted suicide in 2023. Wheelchair use reported widely. 'Paralyzed' wording not checked directly, so not kept."},
+    {"text": "The killings happened in January 2023 / the night of January 24th", "status": "unsupported", "evidence": "", "note": "WBUR gives 2023 only; exact date not confirmed in sources read. Not kept."},
+    {"text": "Clancy was a labor and delivery nurse", "status": "unsupported", "evidence": "", "note": "Not confirmed in sources found."},
+    {"text": "She had five postpartum psychiatric hospitalizations before the killings and requested help repeatedly", "status": "unsupported", "evidence": "", "note": "No source found for five hospitalizations; treated as invented."},
+    {"text": "NBC ran a segment called 'America's postpartum crisis' the same day", "status": "wrong", "evidence": "https://abcnews.com/US/video/americas-postpartum-crisis-136185588", "note": "The segment 'I'm Not Ok: America's Postpartum Crisis' is an ABC News programme (3 Sept 2026); no NBC segment of that name found."},
+    {"text": "ABC ran a similar postpartum segment", "status": "supported", "evidence": "https://abcnews.com/US/video/americas-postpartum-crisis-136185588", "note": "ABC News: 'I'm Not Ok: America's Postpartum Crisis'."},
+    {"text": "Global sentiment 50/100", "status": "unsupported", "evidence": "", "note": "internal feed metric, not reportable"},
+    {"text": "JD Vance told the BBC he is skeptical the US was behind the strike that killed people at a wedding in Iran", "status": "wrong", "evidence": "https://www.stripes.com/theaters/middle_east/2026-09-04/iran-wedding-strike-investigation-22751095.html", "note": "Stars and Stripes: Vance spoke to reporters at a White House briefing on Thursday 3 Sept, said the US was investigating and that he was 'extremely skeptical' of the claims. No BBC interview found; attribution to the BBC unsupported."},
+    {"text": "The wedding strike killed people", "status": "supported", "evidence": "https://www.stripes.com/theaters/middle_east/2026-09-04/iran-wedding-strike-investigation-22751095.html", "note": "Iranian officials said at least five dead and nearly 70 wounded in Kuhestak, Sirik County (Stars and Stripes)."},
+    {"text": "The BBC headline spelled it 'sceptical'", "status": "unsupported", "evidence": "", "note": "BBC headline not found."},
+    {"text": "CNN ran an explainer on what made the Nepal and China floods so devastating", "status": "unsupported", "evidence": "", "note": "Two searches; CNN explainer not found."},
+    {"text": "Floods caused by monsoon intensity amplified by a warming atmosphere and aging infrastructure in the Koshi River basin", "status": "wrong", "evidence": "https://www.preventionweb.net/collections/nepal-china-flash-floods-2026", "note": "The 26 Aug flash flood was triggered by a collapse of glacial ice, rock and debris that blocked the Bhote Koshi river and then failed; scientists said it was too soon to pinpoint climate change's role."},
+    {"text": "Nepal and China floods; thousands displaced", "status": "supported", "evidence": "https://www.npr.org/2026/08/28/nx-s1-5947990/hundreds-dead-and-thousands-missing-after-the-catastrophic-china-nepal-flooding", "note": "NPR: hundreds dead and thousands missing. 'Displaced' figure not checked; copy uses NPR's headline facts."},
+    {"text": "Bitcoin sentiment 53, market signal 60; Ethereum sentiment 53, signal 59", "status": "unsupported", "evidence": "", "note": "internal feed metric, not reportable"},
+    {"text": "An unnamed battleground Republican declined to say on camera whether he would welcome Trump on the campaign trail, NBC reported", "status": "unsupported", "evidence": "", "note": "NBC report not found after two searches."},
+    {"text": "Mark Sanchez, 'not the quarterback, different Mark Sanchez', agreed to plead guilty in a stabbing case", "status": "wrong", "evidence": "https://nbcsports.com/nfl/profootballtalk/rumor-mill/news/mark-sanchez-agrees-to-plead-guilty-in-stabbing-case", "note": "It is the former NFL quarterback and Fox Sports analyst. ProFootballTalk (3 Sept): joint motion filed asking to cancel the 8 Sept trial and set a plea and sentencing hearing over an October 2025 fight in Indianapolis. Plea agreement itself supported."},
+    {"text": "Minneapolis has a shooting suspect", "status": "supported", "evidence": "https://www.nashuatelegraph.com/news/local-news/2026/09/03/2-people-killed-and-suspect-is-dead-in-downtown-minneapolis-shooting/", "note": "AP (syndicated): shooting on 2 Sept at a downtown Minneapolis apartment building left three dead including the suspect, five wounded."},
+    {"text": "A snowfall saga is premiering", "status": "unsupported", "evidence": "", "note": "Entertainment item, too vague to verify; not news."},
+    {"text": "Source bias reading balanced, factuality unknown", "status": "unsupported", "evidence": "", "note": "internal feed metric, not reportable"},
+    {"text": "The Clancy sentencing continues", "status": "wrong", "evidence": "https://www.wbur.org/news/2026/09/03/lindsay-clancy-trial-jury-deliberations", "note": "There was no conviction or sentencing; the jury was in its sixth day of deliberations on 3 Sept with one juror apparently disagreeing with the other 11."},
+    {"text": "Nepal flood aid coordination within 72 hours; Geneva conversation on Iran", "status": "unsupported", "evidence": "", "note": "Speculative forward-looking claims, no source."}
+  ],
+  "edits": {
+    "headline": "Lindsay Clancy jury ends sixth day of deliberations without a verdict",
+    "subheadline": "One juror appeared to disagree with the other 11 in the Massachusetts murder trial, WBUR reported.",
+    "editorialBody": [
+      "Jurors in the murder trial of Lindsay Clancy ended a sixth day of deliberations in Plymouth, Massachusetts, on 3 September without a verdict, WBUR reported. Clancy is charged with killing her three young children. Her defence argues she had postpartum psychosis and is not criminally responsible.",
+      "One juror appeared to disagree with the other 11, according to WBUR. Judge William Sullivan repeated his explanation of reasonable doubt and declined a defence request to remove the juror. Jurors were due back on Friday.",
+      "ABC News aired a programme titled \"I'm Not Ok: America's Postpartum Crisis\".",
+      "Vice President JD Vance said the US was investigating a reported strike on a wedding in Kuhestak, southern Iran, and that he was \"extremely skeptical\" of the reports, Stars and Stripes reported. Iranian officials said at least five people were killed and nearly 70 wounded.",
+      "Flash floods in Nepal and China left hundreds dead and thousands missing, NPR reported.",
+      "Former NFL quarterback Mark Sanchez agreed to plead guilty over an October 2025 fight in Indianapolis in which he was stabbed, ProFootballTalk reported. A judge must still accept the plea.",
+      "A shooting at a downtown Minneapolis apartment building on 2 September left three people dead, including the suspect, and five wounded, the Associated Press reported."
+    ]
+  }
+}

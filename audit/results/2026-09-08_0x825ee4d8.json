@@ -1,0 +1,172 @@
+{
+ "hash": "0x825ee4d8e49ea6fe5472fe981f69bce5b53b8bbe6d95bf0fe1c4b7f7e5d10c66",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Headline: Maya Gurung's broken chair becomes a flagpole",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented person; figurative."
+  },
+  {
+   "text": "Subheadline: a child's loss is livestreamed alongside missile silhouettes",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Rhetorical framing; removed."
+  },
+  {
+   "text": "Maya Gurung pulled from a rusted chair on September 6, the last of Barpak's survivors; sister Lhamo, 8, died",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented people. Flood coverage centres on Rasuwa, Nuwakot and the Bhotekoshi river; Barpak not mentioned (https://www.nbcwashington.com/news/national-international/nepal-holds-day-of-mourning-after-deadly-floods/)."
+  },
+  {
+   "text": "She arrived at Kathmandu General Hospital; doctors say her lungs are scarred",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "Government offered a one-month stipend of 12,500 NPR",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "DW footage of Nepal's national day of mourning showed the chair as a flagpole in a schoolyard in Dhanusha",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented scene; DW clip not verified. Dhanusha is not among the affected districts in AP/Reuters reports."
+  },
+  {
+   "text": "Sita Kumari, 34, sifting mud for her missing husband's shoe",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented person."
+  },
+  {
+   "text": "Prime minister's speech played over flood maps; image went viral",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found. Reuters said no government programmes were organised for the day (https://www.thestar.com.my/aseanplus/aseanplus-news/2026/09/07/nepal-marks-national-mourning-day-after-deadly-flood)."
+  },
+  {
+   "text": "NBC: Nepal observes national day of mourning",
+   "status": "supported",
+   "evidence": "https://www.nbcwashington.com/news/national-international/nepal-holds-day-of-mourning-after-deadly-floods/",
+   "note": "NBC Washington ran the AP report (7 Sept): day of mourning, more than 1,300 killed in Nepal and Tibet, about 5,000 missing."
+  },
+  {
+   "text": "BRS MLCs arrested in Telangana political row",
+   "status": "supported",
+   "evidence": "https://theprint.in/india/congress-brs-battle-takes-a-turn-as-2-oppn-mlcs-arrested-over-remarks-against-telangana-speaker/3036480/",
+   "note": "ThePrint (ANI, 8 Sept): BRS MLCs Tata Madhu and Naveen Kumar Reddy arrested over alleged derogatory remarks against Speaker Gaddam Prasad Kumar."
+  },
+  {
+   "text": "They shouted 'Speaker, you're a puppet'",
+   "status": "unsupported",
+   "evidence": "https://theprint.in/india/congress-brs-battle-takes-a-turn-as-2-oppn-mlcs-arrested-over-remarks-against-telangana-speaker/3036480/",
+   "note": "ThePrint does not quote the remarks."
+  },
+  {
+   "text": "The row erupted into a street brawl that spilled into the night",
+   "status": "unsupported",
+   "evidence": "https://theprint.in/india/congress-brs-battle-takes-a-turn-as-2-oppn-mlcs-arrested-over-remarks-against-telangana-speaker/3036480/",
+   "note": "Not reported; ThePrint describes protests outside a police station and FIR allegations of pushing at an Assembly gate."
+  },
+  {
+   "text": "American destroyers exchanged fire with Iranian missiles over Hormuz",
+   "status": "unsupported",
+   "evidence": "https://www.anews.com.tr/world/2026/09/06/irans-revolutionary-guards-say-missiles-struck-us-aircraft-carrier-destroyer",
+   "note": "Figurative link. CENTCOM said US ships evaded Iranian missiles on 6 Sept; no exchange of fire over Hormuz in this form."
+  },
+  {
+   "text": "DW's 'Modi Meets Putin on September 11' showed both leaders smiling over a banquet",
+   "status": "wrong",
+   "evidence": "https://ddindia.co.in/2026/09/pm-modi-meets-vladimir-putin-on-sidelines-of-brics-summit-reviews-india-russia-bilateral-ties/",
+   "note": "The Modi-Putin meeting took place on 11 Sept in New Delhi, after this edition; footage of it could not exist on 8 Sept. DW clip not verified."
+  },
+  {
+   "text": "Drone shot of a burning oil platform",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Germany's AfD celebrated its strongest post-WWII win",
+   "status": "supported",
+   "evidence": "https://www.stlpr.org/npr/2026-09-06/germanys-far-right-achieves-an-electoral-breakthrough-in-saxony-anhalt",
+   "note": "NPR: AfD won 43.8% in Saxony-Anhalt (6 Sept), its best state result, just short of an absolute majority. 'Post-WWII' framing not used."
+  },
+  {
+   "text": "AfD promised a 'firewall' against 'globalist invasion'",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Quote not found. 'Firewall' is the other parties' term for refusing to work with the AfD."
+  },
+  {
+   "text": "Al Jazeera: 100 days of protests in Albania over Jared Kushner-linked project",
+   "status": "supported",
+   "evidence": "https://www.aljazeera.com/video/newsfeed/2026/9/8/flamingo-revolution-enters-100th-day-against-kushner-linked-resort",
+   "note": "Al Jazeera video (8 Sept): 'Flamingo Revolution' enters 100th day against Kushner-linked resort."
+  },
+  {
+   "text": "Bitcoin sentiment 51, market signal 48; Ethereum sentiment 51, signal 50",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed metric, not reportable"
+  },
+  {
+   "text": "12% surge in stablecoin deposits to DeFi lending pools",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Mitsune's live KEXP set",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "playlist/video pick, not news"
+  },
+  {
+   "text": "DW 'US Midterm Polls' and NBC videos",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "playlist/video pick, not news"
+  },
+  {
+   "text": "Polls show a 4% swing toward independents",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No poll named or found."
+  },
+  {
+   "text": "UN Climate Summit in Bonn kicks off on October 2; Nepal will demand a flood fund",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "GOP primary on November 5",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found; the US midterm election is on 3 Nov 2026."
+  },
+  {
+   "text": "Modi's next summit with Putin will discuss oil routes",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Speculation; no source."
+  }
+ ],
+ "edits": {
+  "headline": "Nepal holds day of mourning after floods kill more than 1,300",
+  "subheadline": "About 5,000 people were still missing in Nepal and Tibet, the Associated Press reported.",
+  "editorialBody": [
+   "Nepal held a national day of mourning on September 7 for more than 1,300 people killed in floods in Nepal and Tibet, the Associated Press reported. Flags were lowered at government offices, and about 5,000 people were still missing, according to Nepal's disaster management agency.",
+   "Police in Telangana arrested two opposition Bharat Rashtra Samithi members of the state legislative council, Tata Madhu and Naveen Kumar Reddy, over alleged derogatory remarks about Assembly Speaker Gaddam Prasad Kumar, ANI reported on ThePrint.",
+   "The Alternative for Germany won 43.8% of the vote in the Saxony-Anhalt state election on September 6, according to preliminary final results, NPR reported. The party fell just short of an absolute majority.",
+   "Protests in Albania against a resort project linked to Jared Kushner reached their 100th day, Al Jazeera reported."
+  ]
+ }
+}

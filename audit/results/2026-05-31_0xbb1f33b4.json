@@ -1,0 +1,108 @@
+{
+  "hash": "0xbb1f33b48dbf5763d1ac0e2456548367e63973740b5b7f938189ff3dfc045d57",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Headline: Malaysia scraps Norway missile deal (body: 'Malaysia's decision to axe its missile deal with Norway')",
+      "status": "wrong",
+      "evidence": "https://wtop.com/world/2026/05/norway-defends-its-decision-to-cancel-missile-system-sale-to-malaysia/",
+      "note": "AP, 15 May 2026: Norway's foreign ministry revoked the export licences for the Naval Strike Missile system Malaysia bought from Kongsberg in 2018; Malaysia protested and said it was examining legal options. Norway cancelled, not Malaysia (also USNI News, 14 May). Malaysia only halted new Norwegian procurement later (NST, July 2026). No end-of-May Malaysian cancellation found."
+    },
+    {
+      "text": "Subheadline: Global trust unravels as South China Sea tensions simmer",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Editorial framing, not a sourced claim. Replaced."
+    },
+    {
+      "text": "Tensions in the South China Sea continue to escalate; far-reaching implications for global security",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Unsourced characterisation. Removed."
+    },
+    {
+      "text": "The Philippines cited Beijing as the main hurdle to a South China Sea code of conduct",
+      "status": "supported",
+      "evidence": "https://www.scmp.com/week-asia/politics/article/3355456/philippines-says-beijing-main-hurdle-south-china-sea-code-conduct",
+      "note": "SCMP headline 'Philippines says Beijing main hurdle to South China Sea code of conduct'. Page returned 403; search summary says Defence Secretary Gilberto Teodoro said it at the Shangri-La Dialogue in Singapore. Speaker name not read on the page itself, so copy keeps to the headline. Edition named no outlet."
+    },
+    {
+      "text": "Rajat Patidar, the injury replacement turned captain, changed the fate of Royal Challengers Bangalore",
+      "status": "unsupported",
+      "evidence": "https://www.thestatesman.com/sports/injury-replacement-to-ipl-winning-captain-rajat-patidar-earns-kohlis-pat-bat-1503441532.html",
+      "note": "Reviewer: only a headline was read and it appears to date from RCB's 2025 title, not around 31 May 2026. Not confirmed as news for this edition; removed. Previous note: The Statesman headline: 'Injury replacement to IPL-winning captain - Rajat Patidar earns Kohli's pat & bat'. Page returned 403, so only the headline was read; it appears to date from RCB's 2025 title. The team is now called Royal Challengers Bengaluru. 'Changed the fate' is figurative; copy keeps to the headline."
+    },
+    {
+      "text": "The African Development Bank allotted $650 million for a Uganda railroad",
+      "status": "supported",
+      "evidence": "https://eagle.co.ug/2026/05/29/afdb-commits-shs2-4t-to-ugandas-standard-gauge-railway-project/",
+      "note": "Eagle Online, 29 May 2026: AfDB tentatively allocated UA 480 million (about $650 million) to the 326km Malaba-Kampala standard gauge railway; final terms due at a June 2026 appraisal mission. Also Independent (Uganda), 1 June. Bloomberg ran 'African Development Bank Allots $650 Million for Uganda Railroad' (seen via pulse.bot aggregator, not read). Edition named no outlet; 'flown under the radar' is unsupported and was removed."
+    },
+    {
+      "text": "A woman in China nearly died after becoming tangled in a fishing line while riding her bike at night",
+      "status": "supported",
+      "evidence": "https://www.scmp.com/news/people-culture/trending-china/article/3355144/china-woman-nearly-dies-after-becoming-tangled-fishing-line-while-riding-bike-night",
+      "note": "SCMP headline matches; search summary: woman surnamed Wang in Hangzhou, line caught her neck on a bridge, account shared 23 May. Page not read; copy keeps to the headline. Edition named no outlet. The 'lack of infrastructure' and 'safety measures' lines are unsourced and were removed."
+    },
+    {
+      "text": "Global sentiment score 59/100",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "Bitcoin sentiment 63, market signal 51; Ethereum sentiment 65, market signal 51; investors wary of volatility",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "Source bias landscape: slight left lean, overrepresentation of crypto headlines, underrepresentation of right-wing sources",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "Nigeria plans to introduce a new currency, as reported by the Times of India",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Two searches found no Times of India report and no late-May 2026 announcement of a new Nigerian currency. A Feb 2026 fact-check (newsverifierafrica.com) rated claims that Nigeria would replace the naira as false. Removed."
+    },
+    {
+      "text": "Wembanyama and the Spurs beat the Thunder",
+      "status": "supported",
+      "evidence": "https://www.ksat.com/sports/2026/05/30/wembanyama-spurs-win-the-west-topple-thunder-111-103-in-game-7-to-head-to-nba-finals/",
+      "note": "AP via KSAT, 30 May 2026: the Spurs beat the Thunder 111-103 in Game 7 of the Western Conference finals in Oklahoma City to reach the NBA Finals. Edition named no outlet."
+    },
+    {
+      "text": "Video of Thailand's Pride Parade",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news"
+    },
+    {
+      "text": "Rəhman Məmmədli, 'Full Performance (Live on KEXP)'",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news"
+    },
+    {
+      "text": "Girls were killed in a Kenya school fire",
+      "status": "supported",
+      "evidence": "https://www.aljazeera.com/amp/news/2026/5/28/at-least-16-students-killed-in-fire-at-kenya-girls-school-dorm",
+      "note": "Al Jazeera, 28 May 2026: at least 16 students killed in a fire at a girls' school dormitory in Kenya. AP ran the same (washingtontimes.com AP copy, 28 May). Edition gave no detail or outlet."
+    }
+  ],
+  "edits": {
+    "headline": "Fire at Kenyan girls' school dormitory kills at least 16 students",
+    "subheadline": "At least 16 students were killed when fire broke out in a dormitory at a girls' school in Kenya, Al Jazeera reported.",
+    "editorialBody": [
+      "At least 16 students were killed in a fire at a girls' school dormitory in Kenya on 28 May, Al Jazeera and the Associated Press reported.",
+      "Norway revoked the export licences for Naval Strike Missiles that Malaysia had bought from the Norwegian company Kongsberg in 2018, the Associated Press reported on 15 May. Malaysia protested and said it was examining its legal options.",
+      "The Philippines said Beijing was the main obstacle to a code of conduct for the South China Sea, the South China Morning Post reported.",
+      "The African Development Bank tentatively allocated about $650 million to the Malaba-Kampala section of Uganda's standard gauge railway, the Ugandan outlet Eagle Online reported on 29 May. Final terms were due to be agreed in June.",
+      "A woman in China nearly died after becoming caught in a fishing line while riding her bicycle at night, the South China Morning Post reported.",
+      "The San Antonio Spurs beat the Oklahoma City Thunder 111-103 in Game 7 of the NBA Western Conference finals on 30 May to reach the NBA Finals, the Associated Press reported."
+    ]
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "hash": "0xfb00758241041a132f546b70088c71841aab9a8ab941aa73eabebb761092a6ca",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Ceasefire holds (headline)",
+      "status": "supported",
+      "evidence": "https://www.ksat.com/gallery/news/2026/04/09/oil-prices-rise-again-and-asian-stocks-retreat-on-the-fragile-iran-ceasefire",
+      "note": "AP, 9 Apr, described the US-Iran ceasefire as fragile but in place. The headline's 'everyone counts what they lost' is figurative; headline replaced with the lead story."
+    },
+    {
+      "text": "Rex Heuermann pleaded guilty to seven murders yesterday, admitting to an eighth",
+      "status": "supported",
+      "evidence": "https://ktar.com/national-news/takeaways-from-the-gilgo-beach-case-as-rex-heuermann-pleads-guilty-to-7-murders-and-admits-to-an-8th",
+      "note": "AP (on KTAR): Heuermann pleaded guilty on Wednesday 8 April to seven murders and admitted to an eighth killing. 'Yesterday' is correct for a 9 April edition."
+    },
+    {
+      "text": "A chapter that began with bodies washing up on Long Island shores",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Not checked against a source; AP describes remains found near Gilgo Beach and on Fire Island, not bodies washing up. Removed."
+    },
+    {
+      "text": "In West Virginia, electricity bills now exceed mortgage payments",
+      "status": "supported",
+      "evidence": "https://www.wtvr.com/news/national-news/trump-pledge-to-cut-power-costs-west-virginia-now-tops-mortgages-april-9-2026",
+      "note": "AP, 9 Apr: some West Virginia families now pay more for utilities than for their mortgages (examples given are individual households, not a statewide average)."
+    },
+    {
+      "text": "The man who promised to cut energy costs in half delivered the opposite",
+      "status": "supported",
+      "evidence": "https://www.wtvr.com/news/national-news/trump-pledge-to-cut-power-costs-west-virginia-now-tops-mortgages-april-9-2026",
+      "note": "AP: Trump pledged during the 2024 campaign to halve electricity bills within 12 to 18 months; electricity prices rose 4.8% nationally in February from a year earlier."
+    },
+    {
+      "text": "Sharon McKinney's bills, stacked on her kitchen table in Charleston",
+      "status": "unsupported",
+      "evidence": "https://www.wtvr.com/news/national-news/trump-pledge-to-cut-power-costs-west-virginia-now-tops-mortgages-april-9-2026",
+      "note": "Invented person. The AP story names Rebecca Michalski of Rainelle, Jennifer Brown of Kingwood and others; no Sharon McKinney and no Charleston resident. Removed."
+    },
+    {
+      "text": "Sentiment scores show 62/100 optimism globally; Bitcoin sentiment 66/100 with market signal 48; Ethereum 64 and 44",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "Oil prices up 3% as traders eye every diplomatic twitch",
+      "status": "supported",
+      "evidence": "https://arynews.tv/oil-price-today-international-market-after-iran-us-ceasefire",
+      "note": "Reuters (via ARY News), 9 Apr: 'Oil rises 3% as Hormuz restrictions keep supply risks elevated', on doubts over the two-week ceasefire."
+    },
+    {
+      "text": "European gas steadies, Bloomberg reports",
+      "status": "unsupported",
+      "evidence": "https://www.energyconnects.com/news/utilities/2026/april/european-natural-gas-steadies-as-us-and-iran-weigh-new-talks/",
+      "note": "No Bloomberg 'European gas steadies' story found for 8-9 April; the closest Bloomberg headline is from about 14 April. Trading Economics reported prices rising on 9 April after a sharp fall on 8 April. Removed."
+    },
+    {
+      "text": "Cooper urges full reopening of the Strait of Hormuz, toll-free",
+      "status": "supported",
+      "evidence": "https://www.marketscreener.com/news/uk-s-cooper-urges-full-resumption-of-shipping-through-strait-of-hormuz-ce7e50d3da8ff22c",
+      "note": "Reuters, 9 Apr: British Foreign Secretary Yvette Cooper said shipping through the Strait of Hormuz must be fully resumed and toll-free."
+    },
+    {
+      "text": "Leila Namazi, whom we've followed for days, still counts her last rials in that Tehran apartment",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented private individual (recurring across 6 and 8 April editions). Removed."
+    },
+    {
+      "text": "European nationalists who once championed Trump now distance themselves from his Iran war, the Associated Press notes",
+      "status": "supported",
+      "evidence": "https://www.pbs.org/newshour/world/once-viewed-as-maga-allies-some-european-nationalists-distance-themselves-from-trumps-iran-war",
+      "note": "AP (on PBS NewsHour), 9 Apr. Examples: Giorgia Meloni refused US use of a Sicilian air base; Marine Le Pen called Trump's war goals 'erratic'."
+    },
+    {
+      "text": "Viktor Orbán wins again in Hungary, football stadiums full of supporters",
+      "status": "wrong",
+      "evidence": "https://www.arabnews.pk/node/2640728",
+      "note": "Hungary's election was on 12 April, after this edition, and Orbán lost to Péter Magyar's Tisza party and conceded. No stadium rally found. AP on 9 April said only that Orbán neither condemned nor endorsed the Iran strikes. Removed."
+    },
+    {
+      "text": "Republicans fear their electoral math as Democrats keep winning special elections ahead of midterms",
+      "status": "supported",
+      "evidence": "https://www.theweek.in/wire-updates/international/2026/04/09/republican-fears-grow-as-democrats-keep-notching-election-victories-ahead-of-midterms.html",
+      "note": "AP (on The Week), 9 Apr: 'Republican fears grow as Democrats keep notching election victories ahead of midterms'; cites Wisconsin and Georgia results."
+    },
+    {
+      "text": "In Maryland, protesters rally against an immigration detention facility that's now paused",
+      "status": "supported",
+      "evidence": "https://wtop.com/national/2026/04/protesters-rally-against-planned-maryland-immigration-detention-facility-thats-now-paused/",
+      "note": "AP, 9 Apr: protest in Hagerstown, Washington County; the plan is tied up in court and DHS paused new warehouse purchases. 'Someone calculated the cost of cages' is invented and removed."
+    },
+    {
+      "text": "Yuga Labs settles with artists accused of copying its NFTs",
+      "status": "supported",
+      "evidence": "https://cointelegraph.com/news/yuga-labs-settles-bayc-nft-lawsuit-ripps-cahen",
+      "note": "Cointelegraph: Yuga Labs settled its 2022 lawsuit against Ryder Ripps and Jeremy Cahen over lookalike Bored Ape NFTs; terms not disclosed. 'Analog courtrooms... print their contracts' is invented and removed."
+    },
+    {
+      "text": "The Philippines expands its South China Sea footprint with a permanent base on Thitu Island",
+      "status": "supported",
+      "evidence": "https://www.scmp.com/news/asia/southeast-asia/article/3349488/philippines-expands-south-china-sea-footprint-permanent-thitu-island-base",
+      "note": "SCMP headline matches; AP reported the Philippines opened a coast guard base on Thitu (Pag-asa) on 9 April."
+    },
+    {
+      "text": "Finland plans to bury nuclear waste for future generations, a decision that carries risk forward",
+      "status": "supported",
+      "evidence": "https://www.durangoherald.com/?p=266481",
+      "note": "AP: 'Finland's plan to bury spent nuclear waste carries risk to future generations' (Onkalo repository at Olkiluoto). 'Someone in 2526' is the writer's invention and removed."
+    },
+    {
+      "text": "Russia's internet crackdown leads to growing discontent, the Associated Press reports",
+      "status": "supported",
+      "evidence": "https://wtop.com/national/2026/04/russias-internet-crackdown-leads-to-a-spring-of-growing-discontent/",
+      "note": "AP, 9 Apr: 'Russia's internet crackdown leads to a spring of growing discontent'; authorities have cut mobile internet, blocked messaging apps and throttled thousands of websites."
+    },
+    {
+      "text": "Pro-Iran groups use AI to troll Trump and control war narratives",
+      "status": "supported",
+      "evidence": "https://www.pbs.org/newshour/world/pro-iran-groups-deploy-ai-to-troll-trump-influence-the-war-narrative",
+      "note": "AP (on PBS NewsHour), 9 Apr: analysts said pro-Iran groups, apparently linked to Tehran, used AI-made memes to mock Trump and shape coverage of the war. 'The machines are learning to lie' is opinion and removed."
+    },
+    {
+      "text": "Tomorrow brings more elections in India: Kerala, Assam and Puducherry",
+      "status": "wrong",
+      "evidence": "https://www.thestatesman.com/india/assembly-elections-2026-west-bengal-tamil-nadu-kerala-assam-complete-poll-schedule-1503570368.html",
+      "note": "Polling in Assam, Kerala and Puducherry was on 9 April, the edition date itself, not the next day (The Statesman). 'Millions will count their votes against their grievances' is rhetorical and removed."
+    }
+  ],
+  "edits": {
+    "headline": "Rex Heuermann pleads guilty to seven Gilgo Beach murders",
+    "subheadline": "Heuermann also said he killed an eighth woman, the Associated Press reported.",
+    "editorialBody": [
+      "Rex Heuermann pleaded guilty on 8 April to seven murders in the Gilgo Beach case and said he had also killed an eighth woman, the Associated Press reported.",
+      "Some families in West Virginia now pay more for electricity than for their mortgages, the Associated Press reported. President Trump pledged during his 2024 campaign to cut electricity bills in half, but US electricity prices rose 4.8% in February from a year earlier, the agency said.",
+      "Oil prices rose 3% on 9 April because of doubts over the two-week ceasefire between the US and Iran, Reuters reported. British Foreign Secretary Yvette Cooper said shipping through the Strait of Hormuz must fully resume without tolls, Reuters reported.",
+      "Some European nationalist leaders once seen as allies of Trump have distanced themselves from his war on Iran, the Associated Press reported. Italy's Giorgia Meloni refused to let the US use an air base in Sicily for strikes, and France's Marine Le Pen called Trump's war goals \"erratic\".",
+      "Republicans are increasingly worried by Democratic wins in recent elections, including in Wisconsin and Georgia, before the midterms, the Associated Press reported.",
+      "Protesters rallied in Hagerstown, Maryland, against a planned immigration detention centre whose development has been paused while a court case continues, the Associated Press reported.",
+      "Yuga Labs settled its lawsuit against artists Ryder Ripps and Jeremy Cahen, who were accused of copying its Bored Ape NFTs, Cointelegraph reported. The terms were not disclosed.",
+      "The Philippines opened a permanent coast guard base on Thitu Island in the South China Sea, the South China Morning Post reported.",
+      "Finland's plan to bury spent nuclear fuel deep underground carries risks for future generations, the Associated Press reported.",
+      "Russian authorities have cut mobile internet, blocked messaging apps and slowed thousands of websites, causing growing discontent, the Associated Press reported.",
+      "Pro-Iran groups have used AI-generated memes to mock Trump and try to shape coverage of the war, analysts told the Associated Press.",
+      "Assam, Kerala and Puducherry were voting in state assembly elections on 9 April, with counting set for 4 May, The Statesman reported."
+    ]
+  }
+}

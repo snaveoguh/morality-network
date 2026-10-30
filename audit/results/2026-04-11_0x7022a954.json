@@ -1,0 +1,157 @@
+{
+  "hash": "0x7022a95450aa1db4753d2d2dc8bfd87268d0cd9c7bab16ba90300eb7f5e12adb",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Headline: four astronauts return from the moon",
+      "status": "supported",
+      "evidence": "https://www.ksl.com/article/51481765/artemis-ii-returns-from-moon-with-splashdown-to-close-out-record-breaking-lunar-voyage",
+      "note": "AP (syndicated on KSL): Artemis II splashed down in the Pacific off San Diego on Friday 10 April after a nearly 10-day flight."
+    },
+    {
+      "text": "Headline: JD Vance lands in Pakistan with photos of dead children",
+      "status": "wrong",
+      "evidence": "https://www.freepressjournal.in/world/blood-soaked-bags-footwear-with-photos-iran-delegation-calls-minab-school-victims-companions-on-flight-as-it-reaches-islamabad-for-peace-talks",
+      "note": "The photos and school bags were carried by the Iranian delegation led by Mohammad Bagher Ghalibaf, not by Vance."
+    },
+    {
+      "text": "Subheadline: the gap between humanity's highest aspirations and its bloodiest compromises has never felt smaller than 240,000 miles",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Rhetorical line. Replaced."
+    },
+    {
+      "text": "The Artemis II crew splashed down in the Pacific yesterday after ten days circling the moon",
+      "status": "supported",
+      "evidence": "https://www.ksl.com/article/51481765/artemis-ii-returns-from-moon-with-splashdown-to-close-out-record-breaking-lunar-voyage",
+      "note": "AP: splashdown on 10 April off San Diego after a nearly 10-day flight launched 1 April. 'Ten days circling the moon' overstates it (most of the flight was transit); copy says 'nearly 10-day flight'."
+    },
+    {
+      "text": "Vance's plane touched down in Islamabad carrying Iranian negotiators with bags full of photographs",
+      "status": "wrong",
+      "evidence": "https://www.arabnews.pk/node/2639457",
+      "note": "Vance flew with Steve Witkoff and Jared Kushner; the Iranian delegation (Ghalibaf, Araghchi) arrived in Islamabad separately late on Friday 10 April, Pakistan's Foreign Ministry said."
+    },
+    {
+      "text": "Four Americans floating home",
+      "status": "wrong",
+      "evidence": "https://abc13.com/post/when-is-artemis-ii-crew-splashing-down-nasa-preparing-orions-entry-earth-splashdown-pacific-ocean/18863652/",
+      "note": "The crew was three NASA astronauts (Wiseman, Glover, Koch) and Canadian Space Agency astronaut Jeremy Hansen."
+    },
+    {
+      "text": "Iranian officials clutching images of children killed in Minab; Middle East Eye reports they brought photos and bags belonging to children killed in recent strikes",
+      "status": "supported",
+      "evidence": "https://www.freepressjournal.in/world/blood-soaked-bags-footwear-with-photos-iran-delegation-calls-minab-school-victims-companions-on-flight-as-it-reaches-islamabad-for-peace-talks",
+      "note": "Free Press Journal, 11 April, and The New Arab (https://www.newarab.com/news/iran-pays-tribute-schoolchildren-victims-truce-talks): the delegation carried photos, blood-stained school bags and shoes of children killed in the 28 February strike on a school in Minab. A Middle East Eye report was not found; copy attributes The New Arab."
+    },
+    {
+      "text": "Attribution of the Minab photos story to Middle East Eye",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No Middle East Eye article found in two searches. Attribution changed to The New Arab."
+    },
+    {
+      "text": "The Artemis crew traveled farther into space than any human before them",
+      "status": "supported",
+      "evidence": "https://www.foxweather.com/earth-space/artemis-ii-capsule-splashes-down-closing-one-mission-ushering-new-era-human-spaceflight",
+      "note": "Crew broke Apollo 13's distance record, reaching 252,756 miles from Earth. Kept out of copy to stay short."
+    },
+    {
+      "text": "Vance's arrival caps two days of diplomatic theater that began when his team leaked the talks were happening",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source for a leak by Vance's team; Pakistan announced the talks (https://www.arabnews.pk/node/2639289). Removed."
+    },
+    {
+      "text": "The Associated Press confirms US officials are meeting with Iranian counterparts \"as ceasefire strains\"",
+      "status": "supported",
+      "evidence": "https://www.ksat.com/gallery/news/2026/04/11/us-iran-talks-set-to-bring-together-vance-and-iranian-officials-in-pakistan-as-ceasefire-strains",
+      "note": "AP headline, 11 April: 'US-Iran talks set to bring together Vance and Iranian officials in Pakistan as ceasefire strains'."
+    },
+    {
+      "text": "Global sentiment 60/100; conflict sentiment 51/100 across 147 articles",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "Israel bombing Lebanese towns",
+      "status": "supported",
+      "evidence": "https://www.arabnews.pk/node/2639519",
+      "note": "AP via Arab News, 10 April: Israeli strikes on several southern Lebanese towns, including a government building in Nabatieh that killed Lebanese security personnel, as Israel and Hezbollah traded fire."
+    },
+    {
+      "text": "Hezbollah targets army bases",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Reports say Hezbollah fired about 30 projectiles into Israel; no source found specifying army bases. Not carried."
+    },
+    {
+      "text": "Hungary votes soon in an election that tests what the AP calls Trump's \"foreign election clout\"",
+      "status": "supported",
+      "evidence": "https://wtop.com/elections/2026/04/trump-likes-to-back-winners-in-foreign-elections-the-upcoming-vote-in-hungary-will-test-his-clout/",
+      "note": "AP: 'Trump likes to back winners in foreign elections. The upcoming vote in Hungary will test his clout.' The exact phrase 'foreign election clout' is not the AP's wording; copy paraphrases."
+    },
+    {
+      "text": "DW News reports \"scandal, fear and hope\" ahead of the vote",
+      "status": "supported",
+      "evidence": "https://timesofoman.com/article/170564-hungary-scandal-fear-and-hope-ahead-of-vote",
+      "note": "DW piece 'Hungary: Scandal, fear and hope ahead of vote', syndicated by Times of Oman."
+    },
+    {
+      "text": "Eric Swalwell's gubernatorial run imploded after sexual assault allegations; AP reports allies yanking support",
+      "status": "supported",
+      "evidence": "https://www.wsls.com/news/politics/2026/04/10/democratic-allies-yank-support-for-swalwells-california-governor-run-after-assault-allegations/",
+      "note": "AP, 10 April: Democratic allies withdrew support for Swalwell's California governor run after the San Francisco Chronicle reported a woman's sexual assault allegations. Swalwell said the allegations 'did not happen'. 'Imploded' and 'lawyering up' removed as unsupported characterisation; he ended his campaign on 12 April (KQED), after this edition."
+    },
+    {
+      "text": "The UN launched a global AI impact study putting \"humans at the centre\"",
+      "status": "supported",
+      "evidence": "https://news.un.org/en/story/2026/04/1167263",
+      "note": "UN News, 11 April: 'Putting humans at the centre: UN AI panel begins work on global impact study'. It is a UN News story, not a press release."
+    },
+    {
+      "text": "AI sentiment score 66/100",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "Building a Visual EXPLAIN database tool, an r/programming highlight",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Reddit post, not news. Removed."
+    },
+    {
+      "text": "Bitcoin sentiment 70 with market signal 52; Ethereum similar",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "King Gizzard's KEXP performance, seven musicians",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news"
+    },
+    {
+      "text": "The astronauts are debriefing; Swalwell is lawyering up; the Hungarians are voting",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Rhetorical closing; Hungary voted on 12 April, the day after this edition. Removed."
+    }
+  ],
+  "edits": {
+    "headline": "Vance and Iranian officials meet in Pakistan for ceasefire talks",
+    "subheadline": "A US delegation led by Vice President JD Vance arrived in Islamabad for talks with Iran, the Associated Press reported.",
+    "editorialBody": [
+      "Vice President JD Vance led a US delegation to Islamabad for talks with Iranian officials as the ceasefire came under strain, the Associated Press reported. Iran's delegation, led by parliament speaker Mohammad Bagher Ghalibaf, arrived late on 10 April, Pakistan's Foreign Ministry said, according to Arab News.",
+      "The Iranian delegation carried photographs, school bags and shoes belonging to children killed in a strike on a school in Minab on 28 February, The New Arab reported.",
+      "Israeli strikes hit several towns in southern Lebanon, including a government building in Nabatieh where Lebanese security personnel were killed, the Associated Press reported, according to Arab News.",
+      "NASA's Artemis II crew splashed down in the Pacific off San Diego on 10 April after a flight of nearly 10 days around the Moon, the Associated Press reported.",
+      "Democratic allies withdrew their support for Eric Swalwell's campaign for governor of California after the San Francisco Chronicle reported sexual assault allegations against him, the Associated Press reported. Swalwell said the allegations did not happen.",
+      "Hungary's election was a test of Donald Trump's influence over foreign votes, the Associated Press reported. DW News reported on scandal, fear and hope ahead of the vote.",
+      "A UN scientific panel on artificial intelligence began work on a global study of the technology's impact, UN News reported."
+    ]
+  }
+}

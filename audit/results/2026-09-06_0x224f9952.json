@@ -1,0 +1,139 @@
+{
+  "hash": "0x224f9952f68de5ce65d9602182c1e878d07646621f0f17b7aeaf909032eb2960",
+  "verdict": "needs_edit",
+  "claims": [
+    {
+      "text": "Headline: A Nepali mother clings to a mud-caked doorway while Gaza's broken pipes turn war into thirst",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented person; joins unrelated stories. Replaced."
+    },
+    {
+      "text": "Subheadline: when power, politics and profit collide...",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Rhetorical, no fact; replaced."
+    },
+    {
+      "text": "Sita Kumari, 34, emerged from a collapsed home in Dhanusha on Tuesday; her husband was taken by the river two weeks earlier; 10-minute rescue streamed by DW",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source found; private individual with name and town and no source. Invented."
+    },
+    {
+      "text": "The Nepalese government lists the death toll at 912, with 3,000 still missing",
+      "status": "wrong",
+      "evidence": "https://www.ewn.co.za/2026/09/02/nepal-flood-death-toll-keeps-climbing-with-3-916-missing-confirms-disaster-authority",
+      "note": "AFP (via EWN, 2 Sept 2026, re-opened and confirmed): Nepal's disaster authority said floods since 26 Aug had killed at least 1,114 people in Nepal and 3,916 were missing. A 903 toll was reported on 31 Aug; 912 not found."
+    },
+    {
+      "text": "Days earlier a schoolroom in Barpak became a grave for teacher Asha Karki and her six-year-old son",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "Invented in the 5 Sept edition; no source."
+    },
+    {
+      "text": "The state can't afford to keep its drainage pipes clear",
+      "status": "wrong",
+      "evidence": "https://www.preventionweb.net/collections/nepal-china-flash-floods-2026",
+      "note": "The 26 Aug flood was triggered by a collapse of glacial ice, rock and debris that blocked a river and then failed, not drainage failure."
+    },
+    {
+      "text": "Israel's artillery ripped through Gaza's sewage system, a deliberate sabotage that Press TV reports has plunged the enclave into a 'water crisis for the regime'",
+      "status": "wrong",
+      "evidence": "https://www.presstv.co.uk/Detail/2026/09/06/775763/Israel%E2%80%99s-destruction-of-Gaza-sewage-system-backfires,-triggers-water-crisis-for-regime--Report",
+      "note": "Press TV (6 Sept) did run the story, but the 'water crisis for the regime' is Israel's, not Gaza's: citing Haaretz, it said sewage from Gaza fed an algal bloom that clogged the intakes of five of Israel's six desalination plants. 'Artillery' and 'deliberate sabotage' are not in the report."
+    },
+    {
+      "text": "The conflict has claimed over 9,000 Lebanese lives since 2023, according to Middle East Eye",
+      "status": "wrong",
+      "evidence": "https://madhyamamonline.com/world/govt-figures-show-nearly-9000-killed-in-israeli-attacks-on-lebanon-since-oct-2023-1552151",
+      "note": "Lebanon's health ministry said 8,920 killed and 30,595 wounded between Oct 2023 and early Sept 2026 ('nearly 9,000'), per Maktoob Media via Madhyamam, 6 Sept. Not over 9,000. Middle East Eye article not located."
+    },
+    {
+      "text": "IRGC 'decisive' strikes on three US-linked tankers in the Strait of Hormuz; a US aircraft carrier and destroyer fled; a ballistic missile launch forced an unmanned US vessel to retreat (Press TV)",
+      "status": "wrong",
+      "evidence": "https://maritime-executive.com/article/iran-renews-threats-and-says-it-turned-back-ships-after-us-sinks-tanker",
+      "note": "Maritime Executive, 6 Sept: CENTCOM said it struck three Iranian tankers on Saturday after Iran fired anti-ship ballistic missiles at a US aircraft carrier and destroyer; the IRGC then said it targeted three US-affiliated tankers and attacked a US unmanned surface vessel. No report that the carrier and destroyer fled (search coverage of the CENTCOM statement says they evaded the missiles; not opened) or that a missile forced a US drone vessel to retreat. Press TV version not located."
+    },
+    {
+      "text": "Cyber-finance sanctions have made the IRGC's financial lifelines shaky",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source."
+    },
+    {
+      "text": "Orionx, a Tether-backed exchange, announced its shutdown after an audit uncovered a $7 million custody gap",
+      "status": "supported",
+      "evidence": "https://cointelegraph.com/news/orionx-shut-down-7-million-move-outside-wallets",
+      "note": "Cointelegraph: the Chilean exchange said a forensic audit found balances exceeded assets at its custody addresses; more than $7m moved to wallets it did not manage; Tether led its Series A in June 2025; withdrawals suspended."
+    },
+    {
+      "text": "Bitcoin sentiment 64, signal 51; Ethereum sentiment 60, signal 54",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "BTC at $27,800, ETH at $1,870",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No source for these prices in Sept 2026; they match 2023 levels. Treated as invented."
+    },
+    {
+      "text": "The SEC's crypto custody rewrite is under White House review",
+      "status": "supported",
+      "evidence": "https://thedefiant.io/converge/regulation/sec-crypto-custody-rewrite-enters-white-house-review",
+      "note": "The Defiant; proposal sent to OIRA on 25 Aug."
+    },
+    {
+      "text": "Revolut is rolling out its 'Euro-Ruble (EURR) bridge', positioning itself as a regulated issuer",
+      "status": "wrong",
+      "evidence": "https://thedefiant.io/converge/tradfi-and-fintech/revolut-starts-eurr-rollout-with-bridge-as-regulated-issuer",
+      "note": "EURR is a euro-backed stablecoin; Bridge (owned by Stripe) is the regulated issuer and Revolut distributes it. No rouble involvement. Rollout began 26 Aug in Denmark, Poland and Portugal (The Block)."
+    },
+    {
+      "text": "A Miss America contestant in Massachusetts is moonlighting as a police officer, the New York Post highlighted",
+      "status": "supported",
+      "evidence": "https://dnyuz.com/2026/09/06/miss-america-contestant-reveals-surprising-day-job-as-massachusetts-police-officer/",
+      "note": "New York Post story (syndicated on DNYUZ, 'appeared first on New York Post'): Ashlyn Mercier, Miss Massachusetts, is a Westborough police officer competing in Miss America. 'With a smirk' is editorialising and dropped."
+    },
+    {
+      "text": "Shirin Ghorbani's sister Fatemeh was killed when a US precision bomb struck the tent in Kermanshah on September 2; Press TV called it 'appalling'",
+      "status": "wrong",
+      "evidence": "https://naharnet.com/stories/en/322250-iran-guards-chief-vows-to-avenge-victims-killed-in-wedding-strike",
+      "note": "Names not found in any report (invented). AFP: the wedding strike was in Kuhestak, southern Iran; Stars and Stripes says the explosion was on Tuesday 1 Sept. 'Appalling' not found."
+    },
+    {
+      "text": "Conflict & Security sentiment 45/100, AI 62, human rights 55, climate 58; feed is 75 sources, 40% centrist",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "internal feed metric, not reportable"
+    },
+    {
+      "text": "Packaging's 'Full Performance' live on KEXP",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "playlist/video pick, not news"
+    },
+    {
+      "text": "UN special session on Gaza's water infrastructure next week; US Seventh Fleet 'rules of engagement' memo for Hormuz on September 12; Orionx liquidation deadline October 1; Revolut full EURR licensing by Q4",
+      "status": "unsupported",
+      "evidence": "",
+      "note": "No sources; invented dates."
+    }
+  ],
+  "edits": {
+    "headline": "Chilean exchange Orionx shuts down after $7m custody gap",
+    "subheadline": "A forensic audit found customer balances exceeded the assets the Tether-backed exchange held, Cointelegraph reported.",
+    "editorialBody": [
+      "Orionx, a Chilean crypto exchange, said it was closing permanently and suspended withdrawals after a forensic audit found customer balances exceeded the assets held at its custody addresses, Cointelegraph reported. More than $7 million in customer assets had been moved to wallets the exchange did not manage. Tether led Orionx's Series A funding round in June 2025.",
+      "Floods in Nepal had killed at least 1,114 people and left 3,916 missing by 2 September, the country's disaster authority said, according to AFP.",
+      "The US military struck three Iranian oil tankers after Iran fired anti-ship ballistic missiles at a US aircraft carrier and a guided-missile destroyer, US Central Command said, according to Maritime Executive. The Islamic Revolutionary Guard Corps said it then targeted three tankers it described as affiliated with the US.",
+      "Press TV, citing Haaretz, reported that sewage from Gaza's damaged sewage system had fed an algal bloom that clogged the intakes of five of Israel's six desalination plants.",
+      "Lebanon's health ministry said Israeli attacks had killed 8,920 people and wounded 30,595 between October 2023 and early September, Maktoob Media reported.",
+      "The SEC's rewrite of its crypto custody rules entered White House review, The Defiant reported. Revolut began rolling out its EURR euro stablecoin, with Bridge as the regulated issuer, according to The Defiant.",
+      "Ashlyn Mercier, Miss Massachusetts, is a police officer in Westborough and competed in Miss America, the New York Post reported."
+    ]
+  }
+}

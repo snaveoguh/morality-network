@@ -1,0 +1,192 @@
+{
+ "hash": "0xf64fe09c3dced2e3b233847c731a77f1b247c6a849337146a84290aefffd0c19",
+ "verdict": "needs_edit",
+ "claims": [
+  {
+   "text": "Headline: IRGC seizes U.S. submersible",
+   "status": "supported",
+   "evidence": "https://koreatimes.co.kr/world/20260909/iran-guards-say-seized-unmanned-us-submarine-drone-in-hormuz",
+   "note": "AFP via Korea Times (9 Sept): the Guards said their naval forces captured a US unmanned submarine at the entrance to the Strait of Hormuz."
+  },
+  {
+   "text": "Headline: IRGC bombs Jordan base",
+   "status": "supported",
+   "evidence": "https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/",
+   "note": "Air & Space Forces Magazine (9 Sept): Iranian missile attack on Muwaffaq Salti Air Base on 8 Sept damaged US aircraft."
+  },
+  {
+   "text": "Headline: oil spikes past $100",
+   "status": "unsupported",
+   "evidence": "https://www.oilandgas360.com/brent-advances-toward-100-bbl-after-iran-threat-to-gulf-energy-infrastructure/",
+   "note": "Brent was about $98.64 on 8 Sept, 'advancing toward $100'; a move above $100 was not found."
+  },
+  {
+   "text": "Subheadline: drones die in Hormuz while a child in Barpak clutches a rusted chair",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented person, figurative link."
+  },
+  {
+   "text": "Private First Class Luis Ramirez, 24, lost his right leg in the strike",
+   "status": "wrong",
+   "evidence": "https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/",
+   "note": "US officials said no American personnel were killed; no injured soldier named. Invented person."
+  },
+  {
+   "text": "The base is near Amman",
+   "status": "wrong",
+   "evidence": "https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/",
+   "note": "Muwaffaq Salti Air Base is near Azraq."
+  },
+  {
+   "text": "Strike reported by Press TV",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Press TV report not found; damage was first reported by CBS News (https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/)."
+  },
+  {
+   "text": "First direct hit on a US installation since Tehran's October 2023 escalation",
+   "status": "wrong",
+   "evidence": "https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/",
+   "note": "Air & Space Forces notes three Army soldiers were killed in a July 2026 missile attack on the same base."
+  },
+  {
+   "text": "Three Americans dead, twelve wounded",
+   "status": "wrong",
+   "evidence": "https://www.airandspaceforces.com/iran-damages-a-10-f-15s-with-missile-attack-on-air-base-in-jordan/",
+   "note": "US officials said no American personnel were killed (also https://www.tribuneindia.com/news/world/iranian-strikes-in-jordan-damage-several-us-aircraft-but-cause-no-american-casualties-report/)."
+  },
+  {
+   "text": "Submersible was the 'Sea Hunter'",
+   "status": "wrong",
+   "evidence": "https://maritime-executive.com/article/irgc-captures-u-s-drone-sub-in-strait-of-hormuz",
+   "note": "Iranian media identified it as an Anduril Dive-LD unmanned underwater vehicle; Sea Hunter is a US surface vessel. US said an underwater drone had malfunctioned."
+  },
+  {
+   "text": "Press TV footage showed the sub hauled aboard a gray frigate",
+   "status": "unsupported",
+   "evidence": "https://koreatimes.co.kr/world/20260909/iran-guards-say-seized-unmanned-us-submarine-drone-in-hormuz",
+   "note": "AFP said the Guards would release images later."
+  },
+  {
+   "text": "Rescued fishermen in Barpak last week",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented."
+  },
+  {
+   "text": "Oil surged past $100 a barrel for the first time since July",
+   "status": "unsupported",
+   "evidence": "https://www.oilandgas360.com/brent-advances-toward-100-bbl-after-iran-threat-to-gulf-energy-infrastructure/",
+   "note": "Not found; Brent about $98.64 on 8 Sept."
+  },
+  {
+   "text": "U.S. strikes on Houthi-controlled tankers, chronicled by the Associated Press",
+   "status": "wrong",
+   "evidence": "https://www.anews.com.tr/world/2026/09/06/irans-revolutionary-guards-say-missiles-struck-us-aircraft-carrier-destroyer",
+   "note": "CENTCOM said US forces struck three Iranian crude oil tankers, not Houthi-controlled ones (Anadolu). AP report not verified."
+  },
+  {
+   "text": "U.S. Dollar index 61/100 in optimism; Bitcoin sentiment 69, market signal 51",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed metric, not reportable"
+  },
+  {
+   "text": "AfD celebrated a surprise win in state elections, taunting Chancellor Olaf Scholz",
+   "status": "wrong",
+   "evidence": "https://www.stlpr.org/npr/2026-09-06/germanys-far-right-achieves-an-electoral-breakthrough-in-saxony-anhalt",
+   "note": "The chancellor is Friedrich Merz, not Olaf Scholz. AfD won the Saxony-Anhalt election (NPR)."
+  },
+  {
+   "text": "AP reported the AfD secured 23% of the vote",
+   "status": "wrong",
+   "evidence": "https://www.stlpr.org/npr/2026-09-06/germanys-far-right-achieves-an-electoral-breakthrough-in-saxony-anhalt",
+   "note": "Preliminary final results gave the AfD 43.8% (NPR). AP report with 23% not found."
+  },
+  {
+   "text": "Bangladesh measles outbreak has claimed nearly 1,000 lives, the AP notes",
+   "status": "supported",
+   "evidence": "https://www.uniindia.com/world/bd-measles-deaths-997/171822",
+   "note": "UNI, 7 Sept: Bangladesh's DGHS counted 997 deaths (897 suspected, 100 laboratory-confirmed) in the measles outbreak; UNI reported the toll passed 1,000 (1,002) on 9 Sept. An AP report was not found, so the copy attributes UNI."
+  },
+  {
+   "text": "Global health sentiment 67/100",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed metric, not reportable"
+  },
+  {
+   "text": "Mothers in Sylhet clutch the bodies of children",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Invented scene."
+  },
+  {
+   "text": "The Defiant announced Revolut's EURR rollout as a regulated stablecoin",
+   "status": "supported",
+   "evidence": "https://thedefiant.io/converge/tradfi-and-fintech/revolut-starts-eurr-rollout-with-bridge-as-regulated-issuer",
+   "note": "The Defiant: 'Revolut Starts EURR Rollout With Bridge as Regulated Issuer'; Revolut is opening EURR to selected customers in three countries. Bridge, not Revolut, is the issuer."
+  },
+  {
+   "text": "SEC crypto-custody rewrite entered White House review",
+   "status": "supported",
+   "evidence": "https://thedefiant.io/converge/regulation/sec-crypto-custody-rewrite-enters-white-house-review",
+   "note": "The Defiant: 'SEC crypto custody rewrite enters White House review' (submitted to OIRA 25-26 Aug per The Block)."
+  },
+  {
+   "text": "AI sentiment 68/100",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "internal feed metric, not reportable"
+  },
+  {
+   "text": "China rebutted U.S. accusations of 'malicious AI distillation'",
+   "status": "supported",
+   "evidence": "https://www.news4jax.com/business/2026/09/09/china-hits-back-at-us-claims-of-malicious-ai-distillation-ahead-of-planned-trump-xi-talks/",
+   "note": "AP (syndicated on News4JAX), 9 Sept: China's Commerce Ministry called baseless a joint FBI/NSA/CISA advisory accusing Chinese AI developers including DeepSeek and Alibaba of 'aggressive, malicious, and targeted distillation' of US models, and said China would take 'resolute countermeasures'."
+  },
+  {
+   "text": "DW footage of the RNC in Dallas",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "Video pick; no RNC in Dallas in September 2026 found."
+  },
+  {
+   "text": "Turkish jets over the Giza pyramids",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "UN Security Council will convene on September 15 on Iran's naval activities",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Germany's coalition talks slated for the week of September 20",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  },
+  {
+   "text": "Consortium of European banks to launch a decentralized identity protocol",
+   "status": "unsupported",
+   "evidence": "",
+   "note": "No source found."
+  }
+ ],
+ "edits": {
+  "headline": "Iran's Revolutionary Guards say they seized US underwater drone",
+  "subheadline": "The Guards said their naval forces captured an unmanned US submarine at the entrance to the Strait of Hormuz, AFP reported.",
+  "editorialBody": [
+   "Iran's Revolutionary Guards said their naval forces captured an unmanned US submarine at the entrance to the Strait of Hormuz, AFP reported.",
+   "An Iranian missile attack on Muwaffaq Salti Air Base in Jordan on September 8 severely damaged a US A-10 aircraft and lightly damaged about eight F-15E jets, Air & Space Forces Magazine reported, citing CBS News. US officials said no American personnel were killed.",
+   "The Alternative for Germany won 43.8% of the vote in the Saxony-Anhalt state election on September 6, according to preliminary final results, NPR reported. The party fell just short of an absolute majority.",
+   "Bangladesh's health directorate counted 997 deaths from measles and measles-like symptoms in the current outbreak as of September 7, UNI reported.",
+   "China's Commerce Ministry called baseless a US government advisory accusing Chinese AI developers, including DeepSeek and Alibaba, of distilling US models, and said China would take \"resolute countermeasures\", the Associated Press reported.",
+   "The SEC's rewrite of its crypto custody rules has entered White House review, The Defiant reported. Revolut began rolling out the EURR euro stablecoin to selected customers in three countries, with Bridge as the regulated issuer, The Defiant reported."
+  ]
+ }
+}
