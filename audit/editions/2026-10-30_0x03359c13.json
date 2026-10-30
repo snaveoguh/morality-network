@@ -1,0 +1,169 @@
+{
+ "hash": "0x03359c13c84477a12a5309bbc17684d39eafa857be62e54da4c4d9210b318ad2",
+ "generatedAt": "2026-10-30T03:11:45.888Z",
+ "headline": "Afghan opium output surges fivefold as Taliban ban is bypassed",
+ "dailyTitle": "FIVEFOLD SURGE",
+ "subheadline": "Farmers have found ways round the Taliban's ban on poppy growing, UN News reported.",
+ "editorialBody": [
+  "Afghanistan's opium production has jumped fivefold as farmers find ways round the Taliban's ban on the crop, UN News reported.",
+  "In Ukraine, a Russian drone strike on a crowded train station in Dnipro killed 13 people, DW News reported.",
+  "Eli Lilly beat analysts' estimates and raised its sales outlook as demand for its weight-loss drugs Zepbound and Mounjaro rose again, CNBC reported. It was the third time this year Lilly had raised its outlook, according to MarketWatch. Merck also beat quarterly estimates and raised its profit outlook, helped by a new form of its cancer drug Keytruda, CNBC said.",
+  "The US Treasury sanctioned 11 people and entities over a North Korean IT-worker scheme that moved millions of dollars in crypto, Decrypt reported.",
+  "Google and Microsoft held off raising their capital-spending forecasts, a setback for the build-out of AI data centres, CNBC reported. Separately, CNBC reported that Anthropic chief executive Dario Amodei was setting out a new approach to philanthropy by technology companies.",
+  "France said Europe was set to release 42 million barrels of oil, Bloomberg reported. In Gaza, six Palestinians were killed in 24 hours, the territory's health ministry said, according to Middle East Eye.",
+  "In the UK, Poundland edged towards collapse, BBC News reported. In the US, President Trump moved to end deference to H-1B visa holders, the Times of India reported."
+ ],
+ "editedBy": "0xae4705dc0816ee6d8a13f1c72780ec5021915fed",
+ "sourceRefs": [
+  {
+   "title": "Afghanistan opium production jumps fivefold as farmers find ways round Taliban ban",
+   "source": "UN News",
+   "link": "https://news.un.org/feed/view/en/story/2026/10/1168697",
+   "description": ""
+  },
+  {
+   "title": "Two college students who went missing on Ice Mountain hike are found dead: \u2018A gut punch\u2019",
+   "source": "New York Post",
+   "link": "https://nypost.com/2026/10/29/us-news/two-college-students-who-went-missing-on-mountain-hike-are-found-dead/",
+   "description": ""
+  },
+  {
+   "title": "Eli Lilly blows past estimates, hikes sales outlook as Zepbound and Mounjaro demand surge again",
+   "source": "CNBC",
+   "link": "https://www.cnbc.com/2026/10/29/eli-lilly-lly-earnings-q3-2026.html",
+   "description": ""
+  },
+  {
+   "title": "Ukraine: 13 killed in Russian drone strike on crowded Dnipro train station",
+   "source": "DW News",
+   "link": "https://www.dw.com/en/ukraine-13-killed-in-russian-drone-strike-on-crowded-dnipro-train-station/a-79795076?maca=en-rss-en-all-1573-rdf",
+   "description": ""
+  },
+  {
+   "title": "Treasury Sanctions 11 Over North Korean IT Worker Scheme That Moved Millions in Crypto",
+   "source": "Decrypt",
+   "link": "https://decrypt.co/382132/treasury-sanctions-11-over-north-korean-it-worker-scheme-that-moved-millions-in-crypto",
+   "description": ""
+  },
+  {
+   "title": "Anthropic CEO Dario Amodei charts a new direction for tech philanthropy",
+   "source": "CNBC",
+   "link": "https://www.cnbc.com/2026/10/29/anthropic-ceo-dario-amodei-charts-new-direction-for-tech-philanthropy.html",
+   "description": ""
+  },
+  {
+   "title": "World has no other universal instrument like UN Security Council \u2014 Putin",
+   "source": "TASS",
+   "link": "https://tass.com/politics/2210135",
+   "description": ""
+  },
+  {
+   "title": "Fox News continues cable news lead over MS NOW, CNN in October viewership",
+   "source": "Fox News",
+   "link": "https://www.foxnews.com/media/fox-news-continues-cable-news-lead-ms-now-cnn-october-viewership",
+   "description": ""
+  },
+  {
+   "title": "AI build-out hits snag as Google and Microsoft put off raising capex forecasts",
+   "source": "CNBC",
+   "link": "https://www.cnbc.com/2026/10/29/microsoft-google-ai-capex-estimates.html",
+   "description": ""
+  },
+  {
+   "title": "The data industry has become a full-blown threat to US national security",
+   "source": "The Hill",
+   "link": "https://thehill.com/opinion/cybersecurity/6176825-military-commercial-data-surveillance/",
+   "description": ""
+  },
+  {
+   "title": "You can\u2019t rely on the S&P 500 as much as you may think",
+   "source": "MarketWatch",
+   "link": "https://www.marketwatch.com/story/you-cant-rely-on-the-s-p-500-as-much-as-you-may-think-a3ac0cb7?mod=mw_rss_topstories",
+   "description": ""
+  },
+  {
+   "title": "How Stitches fared on World Series bet and final season tally",
+   "source": "New York Post",
+   "link": "https://nypost.com/2026/10/29/betting/how-stitches-fared-on-world-series-bet-and-final-season-tally/",
+   "description": ""
+  },
+  {
+   "title": "Africa seeks to be manufacturing hub, same as rest of globe \u2014 Putin",
+   "source": "TASS",
+   "link": "https://tass.com/economy/2210129",
+   "description": ""
+  },
+  {
+   "title": "Bass fishing's biggest stars battle for record $1.25 million payday in historic Nashville showdown",
+   "source": "Fox News",
+   "link": "https://www.foxnews.com/outkick-sports/bass-fishing-biggest-stars-battle-record-125-million-payday-historic-nashville-showdown",
+   "description": ""
+  },
+  {
+   "title": "South Africa v Australia: third men\u2019s cricket Test, day three \u2013 live",
+   "source": "Guardian Sport",
+   "link": "https://www.theguardian.com/sport/live/2026/oct/29/south-africa-v-australia-third-test-day-three-cricket-newlands-cape-town-live-updates",
+   "description": ""
+  },
+  {
+   "title": "Sri Lanka v England: men\u2019s cricket tri-series one-day international \u2013 live",
+   "source": "Guardian Sport",
+   "link": "https://www.theguardian.com/sport/live/2026/oct/29/sri-lanka-v-england-mens-cricket-tri-series-one-day-international-live",
+   "description": ""
+  },
+  {
+   "title": "Merck tops quarterly estimates, hikes profit outlook as new Keytruda form shows strength",
+   "source": "CNBC",
+   "link": "https://www.cnbc.com/2026/10/29/merck-mrk-earnings-q3-2026.html",
+   "description": ""
+  },
+  {
+   "title": "Budget 2026: Key points at a glance - The Telegraph",
+   "source": "The Telegraph",
+   "link": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxOS25nWUc5aXVjWW9tcnJFV2ZPWDRjMVNlZzFubTZuZDhwc0hFV2RxdHBGemowN2lQdUNQZkFtM3ZoTW8xcnhqTEpMc1NPWXRjMXRYY1hfUWotUnZiclVRQUFrS0pnbElGUnREczFBZXpESjVXN0ZsRjNiNkJIWHdzUXMwaXF5RGR5Rkhj?oc=5",
+   "description": ""
+  },
+  {
+   "title": "Europe Set to Release 42 Million Barrels of Oil, France Says",
+   "source": "Bloomberg",
+   "link": "https://www.bloomberg.com/news/articles/2026-10-29/europe-set-to-release-42-million-barrels-of-oil-france-says",
+   "description": ""
+  },
+  {
+   "title": "Six Palestinians killed in 24 hours, Gaza health ministry reports",
+   "source": "Middle East Eye",
+   "link": "https://www.middleeasteye.net/live-blog/live-blog-update/six-palestinians-killed-24-hours-gaza-health-ministry-reports",
+   "description": ""
+  },
+  {
+   "title": "Trump moves to end H-1B visa deference: What it means for Indians",
+   "source": "Times of India",
+   "link": "https://timesofindia.indiatimes.com/world/us/trump-moves-to-end-h-1b-visa-deference-what-it-means-for-indians-stuck-in-the-green-card-backlog/articleshow/135302881.cms",
+   "description": ""
+  },
+  {
+   "title": "We like Claude and Gemini. We like paying $70 once for all of our AI tools even more.",
+   "source": "New York Post",
+   "link": "https://nypost.com/2026/10/29/shopping/get-the-1min-ai-advanced-business-plan-lifetime-subscription-for-69-9/",
+   "description": ""
+  },
+  {
+   "title": "Jake Paul announces Christmas Eve comeback fight in Dubai after broken jaw threatened his career",
+   "source": "Fox News",
+   "link": "https://www.foxnews.com/outkick-sports/jake-paul-announces-christmas-eve-comeback-fight-dubai-broken-jaw-threatened-career",
+   "description": ""
+  },
+  {
+   "title": "Poundland's future hangs in the balance as chain edges towards collapse",
+   "source": "BBC News",
+   "link": "https://www.bbc.co.uk/news/articles/cqrky1p4dlm7o?at_medium=RSS&at_campaign=rss",
+   "description": ""
+  },
+  {
+   "title": "Lilly raises outlook for third time this year as Zepbound sales soar",
+   "source": "MarketWatch",
+   "link": "https://www.marketwatch.com/story/lilly-raises-outlook-for-third-time-this-year-as-zepbound-sales-soar-6d987407?mod=mw_rss_topstories",
+   "description": ""
+  }
+ ]
+}
