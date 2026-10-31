@@ -24,13 +24,17 @@ interface PredictionMarketProps {
 export function PredictionMarket({ proposal }: PredictionMarketProps) {
   const { address, isConnected } = useAccount();
   const [stakeAmount, setStakeAmount] = useState("0.01");
-  const [selectedSide, setSelectedSide] = useState<"for" | "against" | null>(null);
+  const [selectedSide, setSelectedSide] = useState<"for" | "against" | null>(
+    null,
+  );
 
   const hasNumericProposalId = Number.isFinite(proposal.proposalNumber);
   const isOnchainProposal = proposal.source === "onchain";
   const isCandidate = proposal.status === "candidate";
   const daoKey = getDaoPredictionKey(proposal.dao);
-  const proposalId = hasNumericProposalId ? String(proposal.proposalNumber) : proposal.id;
+  const proposalId = hasNumericProposalId
+    ? String(proposal.proposalNumber)
+    : proposal.id;
   const isSupportedDao = daoKey === "nouns" || daoKey === "lil-nouns";
   const isStructurallyEligible =
     isSupportedDao && isOnchainProposal && !isCandidate && hasNumericProposalId;
@@ -70,8 +74,11 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
   });
 
   // Stake transaction
-  const { data: stakeTxHash, writeContract: writeStake, isPending: isStaking } =
-    useWriteContract();
+  const {
+    data: stakeTxHash,
+    writeContract: writeStake,
+    isPending: isStaking,
+  } = useWriteContract();
   const { isLoading: isStakeConfirming, isSuccess: stakeSuccess } =
     useWaitForTransactionReceipt({
       hash: stakeTxHash,
@@ -80,8 +87,11 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
     });
 
   // Claim transaction
-  const { data: claimTxHash, writeContract: writeClaim, isPending: isClaiming } =
-    useWriteContract();
+  const {
+    data: claimTxHash,
+    writeContract: writeClaim,
+    isPending: isClaiming,
+  } = useWriteContract();
   const { isLoading: isClaimConfirming, isSuccess: claimSuccess } =
     useWaitForTransactionReceipt({
       hash: claimTxHash,
@@ -97,12 +107,18 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
   }, [stakeSuccess, claimSuccess, refetchMarket, refetchPosition]);
 
   // Parse market data
-  const forPool = marketData ? Number(formatEther((marketData as any)[0] || BigInt(0))) : 0;
-  const againstPool = marketData ? Number(formatEther((marketData as any)[1] || BigInt(0))) : 0;
+  const forPool = marketData
+    ? Number(formatEther((marketData as any)[0] || BigInt(0)))
+    : 0;
+  const againstPool = marketData
+    ? Number(formatEther((marketData as any)[1] || BigInt(0)))
+    : 0;
   const forStakers = marketData ? Number((marketData as any)[2] || 0) : 0;
   const againstStakers = marketData ? Number((marketData as any)[3] || 0) : 0;
   const forOddsBps = marketData ? Number((marketData as any)[4] || 5000) : 5000;
-  const againstOddsBps = marketData ? Number((marketData as any)[5] || 5000) : 5000;
+  const againstOddsBps = marketData
+    ? Number((marketData as any)[5] || 5000)
+    : 5000;
   const outcome = marketData ? Number((marketData as any)[6] || 0) : 0;
   const marketExists = marketData ? (marketData as any)[7] === true : false;
 
@@ -112,20 +128,28 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
   const isResolved = outcome > 0;
 
   // User position
-  const userForStake = positionData ? Number(formatEther((positionData as any)[0] || BigInt(0))) : 0;
-  const userAgainstStake = positionData ? Number(formatEther((positionData as any)[1] || BigInt(0))) : 0;
+  const userForStake = positionData
+    ? Number(formatEther((positionData as any)[0] || BigInt(0)))
+    : 0;
+  const userAgainstStake = positionData
+    ? Number(formatEther((positionData as any)[1] || BigInt(0)))
+    : 0;
   const userClaimed = positionData ? (positionData as any)[2] === true : false;
   const hasPosition = userForStake > 0 || userAgainstStake > 0;
 
   const stakeNum = parseFloat(stakeAmount) || 0;
-  const potentialPayoutFor = stakeNum > 0 && forPool + stakeNum > 0
-    ? (stakeNum / (forPool + stakeNum)) * (totalPool + stakeNum)
-    : 0;
-  const potentialPayoutAgainst = stakeNum > 0 && againstPool + stakeNum > 0
-    ? (stakeNum / (againstPool + stakeNum)) * (totalPool + stakeNum)
-    : 0;
-  const isBusy = isStaking || isStakeConfirming || isClaiming || isClaimConfirming;
-  const canStake = isEligible && marketExists && !!selectedSide && stakeNum > 0 && !isBusy;
+  const potentialPayoutFor =
+    stakeNum > 0 && forPool + stakeNum > 0
+      ? (stakeNum / (forPool + stakeNum)) * (totalPool + stakeNum)
+      : 0;
+  const potentialPayoutAgainst =
+    stakeNum > 0 && againstPool + stakeNum > 0
+      ? (stakeNum / (againstPool + stakeNum)) * (totalPool + stakeNum)
+      : 0;
+  const isBusy =
+    isStaking || isStakeConfirming || isClaiming || isClaimConfirming;
+  const canStake =
+    isEligible && marketExists && !!selectedSide && stakeNum > 0 && !isBusy;
 
   const handleStake = () => {
     if (!canStake || !selectedSide) return;
@@ -158,7 +182,11 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
         </h3>
         {isResolved && (
           <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--ink)]">
-            {outcome === 1 ? "Resolved: FOR" : outcome === 2 ? "Resolved: AGAINST" : "Voided"}
+            {outcome === 1
+              ? "Resolved: FOR"
+              : outcome === 2
+                ? "Resolved: AGAINST"
+                : "Voided"}
           </span>
         )}
       </div>
@@ -169,53 +197,67 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
             ? "Only available for onchain proposals."
             : !isSupportedDao
               ? "Phase 1: Nouns + Lil Nouns only."
-            : isCandidate
-              ? "Candidates are not final-state resolvable onchain."
-              : !hasNumericProposalId
-                ? "Missing numeric onchain proposal ID."
-                : isDaoResolvableLoading
-                  ? "Checking onchain resolver..."
-                  : "DAO resolver not configured on Ethereum mainnet."}
+              : isCandidate
+                ? "Candidates are not final-state resolvable onchain."
+                : !hasNumericProposalId
+                  ? "Missing numeric onchain proposal ID."
+                  : isDaoResolvableLoading
+                    ? "Checking onchain resolver..."
+                    : "DAO resolver not configured on Ethereum mainnet."}
         </p>
       )}
 
       {isEligible && !marketExists && (
         <p className="mb-3 border border-[var(--rule-light)] px-2 py-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
-          Market not opened yet. An operator must create it on Ethereum mainnet before staking starts.
+          Market not opened yet. An operator must create it on Ethereum mainnet
+          before staking starts.
         </p>
       )}
 
-      {/* Odds display */}
-      <div className="mb-3">
-        <div className="mb-1 flex justify-between font-mono text-[10px]">
-          <span className="font-bold text-[var(--ink)]">
-            FOR {forPct.toFixed(1)}%
-          </span>
-          <span className="text-[var(--ink-faint)]">
-            {againstPct.toFixed(1)}% AGAINST
-          </span>
-        </div>
+      {/* Odds display — only once someone has staked; no default 50/50 */}
+      {totalPool === 0 ? (
+        <p className="mb-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          No wagers yet
+        </p>
+      ) : (
+        <div className="mb-3">
+          <div className="mb-1 flex justify-between font-mono text-[10px]">
+            <span className="font-bold text-[var(--ink)]">
+              FOR {forPct.toFixed(1)}%
+            </span>
+            <span className="text-[var(--ink-faint)]">
+              {againstPct.toFixed(1)}% AGAINST
+            </span>
+          </div>
 
-        {/* Monochrome odds bar */}
-        <div className="flex h-1.5 overflow-hidden bg-[var(--paper-dark)]">
-          <div
-            className="bg-[var(--ink)] transition-all duration-500"
-            style={{ width: `${forPct}%` }}
-          />
-        </div>
+          {/* Monochrome odds bar */}
+          <div className="flex h-1.5 overflow-hidden bg-[var(--paper-dark)]">
+            <div
+              className="bg-[var(--ink)] transition-all duration-500"
+              style={{ width: `${forPct}%` }}
+            />
+          </div>
 
-        {/* Stats */}
-        <div className="mt-1 flex justify-between font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-          <span>{forPool.toFixed(3)} Ξ &middot; {forStakers} staker{forStakers !== 1 ? "s" : ""}</span>
-          <span>Pool: {totalPool.toFixed(4)} ETH</span>
-          <span>{againstPool.toFixed(3)} Ξ &middot; {againstStakers}</span>
+          {/* Stats */}
+          <div className="mt-1 flex justify-between font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+            <span>
+              {forPool.toFixed(3)} Ξ &middot; {forStakers} staker
+              {forStakers !== 1 ? "s" : ""}
+            </span>
+            <span>Pool: {totalPool.toFixed(4)} ETH</span>
+            <span>
+              {againstPool.toFixed(3)} Ξ &middot; {againstStakers}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* User position */}
       {hasPosition && (
         <div className="mb-3 border border-[var(--rule-light)] px-2 py-1.5">
-          <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">Your Position</p>
+          <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
+            Your Position
+          </p>
           <div className="mt-0.5 flex gap-3 font-mono text-[10px]">
             {userForStake > 0 && (
               <span className="font-bold text-[var(--ink)]">
@@ -264,7 +306,9 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
           <div className="mb-2 flex gap-0 font-mono text-[10px] uppercase tracking-wider">
             {(["for", "against"] as const).map((side, i) => (
               <span key={side} className="flex items-center">
-                {i > 0 && <span className="mx-2 text-[var(--rule-light)]">|</span>}
+                {i > 0 && (
+                  <span className="mx-2 text-[var(--rule-light)]">|</span>
+                )}
                 <button
                   onClick={() => setSelectedSide(side)}
                   className={`transition-colors ${
@@ -276,7 +320,12 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
                   {side}
                   {selectedSide === side && stakeNum > 0 && (
                     <span className="ml-1 text-[8px] no-underline opacity-60">
-                      → {(side === "for" ? potentialPayoutFor : potentialPayoutAgainst).toFixed(4)}Ξ
+                      →{" "}
+                      {(side === "for"
+                        ? potentialPayoutFor
+                        : potentialPayoutAgainst
+                      ).toFixed(4)}
+                      Ξ
                     </span>
                   )}
                 </button>
@@ -295,14 +344,18 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
               className="w-full bg-transparent px-2 py-1.5 font-mono text-xs text-[var(--ink)] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               placeholder="0.01"
             />
-            <span className="shrink-0 pr-2 font-mono text-[10px] text-[var(--ink-faint)]">ETH</span>
+            <span className="shrink-0 pr-2 font-mono text-[10px] text-[var(--ink-faint)]">
+              ETH
+            </span>
           </div>
 
           {/* Quick amounts */}
           <div className="mb-3 flex gap-0 font-mono text-[9px] uppercase tracking-wider">
             {["0.005", "0.01", "0.05", "0.1"].map((amt, i) => (
               <span key={amt} className="flex items-center">
-                {i > 0 && <span className="mx-1 text-[var(--rule-light)]">·</span>}
+                {i > 0 && (
+                  <span className="mx-1 text-[var(--rule-light)]">·</span>
+                )}
                 <button
                   onClick={() => setStakeAmount(amt)}
                   className={`transition-colors ${
@@ -333,15 +386,16 @@ export function PredictionMarket({ proposal }: PredictionMarketProps) {
               ? "Staking..."
               : !marketExists
                 ? "Awaiting market creation"
-              : !selectedSide
-                ? "Choose a side"
-                : !isEligible
-                  ? "Market unavailable"
-                  : `Stake ${stakeAmount} ETH on ${selectedSide.toUpperCase()}`}
+                : !selectedSide
+                  ? "Choose a side"
+                  : !isEligible
+                    ? "Market unavailable"
+                    : `Stake ${stakeAmount} ETH on ${selectedSide.toUpperCase()}`}
           </button>
 
           <p className="mt-2 text-center font-mono text-[7px] uppercase tracking-wider text-[var(--ink-faint)]">
-            2% fee on profit &middot; Oracle: onchain governor state &middot; Winners take the pot
+            2% fee on profit &middot; Oracle: onchain governor state &middot;
+            Winners take the pot
           </p>
         </>
       )}

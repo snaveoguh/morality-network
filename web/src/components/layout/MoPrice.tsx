@@ -10,14 +10,14 @@ interface PriceData {
   priceUsd: string;
   priceChange24h: number;
   url: string;
-  // Synthetic sparkline points derived from price change data
+  // Price 24h, 6h and 1h ago, then now
   sparkline: number[];
 }
 
 /**
- * Generate a synthetic sparkline from the price change percentages.
- * DexScreener gives us h1, h6, h24 change — we interpolate
- * a plausible 24-point curve from current price + those deltas.
+ * Sparkline from the only real points DexScreener gives us: the price 24h,
+ * 6h and 1h ago (worked back from the % changes) and now. No interpolation
+ * or noise, so the line never shows moves that didn't happen.
  */
 function buildSparkline(
   currentPrice: number,
@@ -25,42 +25,12 @@ function buildSparkline(
   changeH6: number,
   changeH24: number
 ): number[] {
-  // Work backwards from current price using % changes
-  const priceH1Ago = currentPrice / (1 + changeH1 / 100);
-  const priceH6Ago = currentPrice / (1 + changeH6 / 100);
-  const priceH24Ago = currentPrice / (1 + changeH24 / 100);
-
-  // Key points: 24h ago, 6h ago, 1h ago, now (at indices 0, 18, 23, 24)
-  const keyPoints = [
-    { idx: 0, price: priceH24Ago },
-    { idx: 18, price: priceH6Ago },
-    { idx: 23, price: priceH1Ago },
-    { idx: 24, price: currentPrice },
+  return [
+    currentPrice / (1 + changeH24 / 100),
+    currentPrice / (1 + changeH6 / 100),
+    currentPrice / (1 + changeH1 / 100),
+    currentPrice,
   ];
-
-  // Linearly interpolate between key points, add slight noise for realism
-  const points: number[] = [];
-  for (let i = 0; i <= 24; i++) {
-    let segStart = keyPoints[0];
-    let segEnd = keyPoints[1];
-    for (let k = 0; k < keyPoints.length - 1; k++) {
-      if (i >= keyPoints[k].idx && i <= keyPoints[k + 1].idx) {
-        segStart = keyPoints[k];
-        segEnd = keyPoints[k + 1];
-        break;
-      }
-    }
-    const t =
-      segEnd.idx === segStart.idx
-        ? 1
-        : (i - segStart.idx) / (segEnd.idx - segStart.idx);
-    const base = segStart.price + t * (segEnd.price - segStart.price);
-    // Deterministic pseudo-noise based on index
-    const noise = Math.sin(i * 7.3 + 2.1) * 0.003 * currentPrice;
-    points.push(base + noise);
-  }
-
-  return points;
 }
 
 function formatPrice(priceStr: string): string {
@@ -90,8 +60,10 @@ function Sparkline({ points, isUp }: { points: number[]; isUp: boolean }) {
   const max = Math.max(...points);
   const range = max - min || 1;
 
+  // x positions are hours: 24h ago, 6h ago, 1h ago, now
+  const hours = [0, 18, 23, 24];
   const coords = points.map((p, i) => {
-    const x = pad + (i / (points.length - 1)) * (W - pad * 2);
+    const x = pad + (hours[i] / 24) * (W - pad * 2);
     const y = pad + (1 - (p - min) / range) * (H - pad * 2);
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   });

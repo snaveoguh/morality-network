@@ -14,7 +14,12 @@ import {
   PREDICTION_MARKET_CHAIN_ID,
   ZERO_ADDRESS,
 } from "@/lib/contracts";
-import { parseMarketData, parsePosition, MarketOutcome, type ParsedMarketData } from "@/lib/market-utils";
+import {
+  parseMarketData,
+  parsePosition,
+  MarketOutcome,
+  type ParsedMarketData,
+} from "@/lib/market-utils";
 import { formatEth } from "@/lib/entity";
 import { getDaoPredictionKey } from "@/lib/proposal-entity";
 
@@ -31,12 +36,13 @@ interface MarketCardProps {
   votingClosed?: boolean;
 }
 
-const OUTCOME_LABELS: Record<MarketOutcome, { label: string; color: string }> = {
-  [MarketOutcome.Unresolved]: { label: "Active", color: "var(--ink-faint)" },
-  [MarketOutcome.For]: { label: "Passed", color: "var(--ink)" },
-  [MarketOutcome.Against]: { label: "Failed", color: "var(--accent-red)" },
-  [MarketOutcome.Void]: { label: "Voided", color: "var(--ink-light)" },
-};
+const OUTCOME_LABELS: Record<MarketOutcome, { label: string; color: string }> =
+  {
+    [MarketOutcome.Unresolved]: { label: "Active", color: "var(--ink-faint)" },
+    [MarketOutcome.For]: { label: "Passed", color: "var(--ink)" },
+    [MarketOutcome.Against]: { label: "Failed", color: "var(--accent-red)" },
+    [MarketOutcome.Void]: { label: "Voided", color: "var(--ink-light)" },
+  };
 
 const DEFAULT_MARKET: ParsedMarketData = {
   forPool: BigInt(0),
@@ -93,15 +99,26 @@ export function MarketCard({
 
   const market = marketRaw
     ? parseMarketData(
-        marketRaw as readonly [bigint, bigint, bigint, bigint, bigint, bigint, number, boolean],
+        marketRaw as readonly [
+          bigint,
+          bigint,
+          bigint,
+          bigint,
+          bigint,
+          bigint,
+          number,
+          boolean,
+        ],
       )
     : null;
   const position = positionRaw
     ? parsePosition(positionRaw as readonly [bigint, bigint, boolean])
     : null;
 
-  // Use actual market data if it exists, otherwise show default 50/50
+  // Use actual market data if it exists. With no wagers there are no odds,
+  // so the bar is replaced by a plain "no wagers yet" line.
   const displayMarket = market?.exists ? market : DEFAULT_MARKET;
+  const hasWagers = displayMarket.totalPool > BigInt(0);
   const isResolved = displayMarket.outcome !== MarketOutcome.Unresolved;
   // Badge: use onchain outcome if resolved, else governance status if voting closed, else default
   const outcomeInfo = isResolved
@@ -131,29 +148,39 @@ export function MarketCard({
       </div>
 
       {/* Odds bar */}
-      <div className="mb-2">
-        <div className="flex h-6 w-full overflow-hidden border border-[var(--rule-light)]">
-          <div
-            className="flex items-center justify-center bg-[var(--ink)] font-mono text-[9px] font-bold text-[var(--paper)] transition-all"
-            style={{ width: `${displayMarket.forPercent}%` }}
-          >
-            {displayMarket.forPercent > 10 ? `PASS ${displayMarket.forPercent.toFixed(0)}%` : ""}
-          </div>
-          <div
-            className="flex items-center justify-center bg-[var(--accent-red)] font-mono text-[9px] font-bold text-[var(--paper)] transition-all"
-            style={{ width: `${displayMarket.againstPercent}%` }}
-          >
-            {displayMarket.againstPercent > 10 ? `FAIL ${displayMarket.againstPercent.toFixed(0)}%` : ""}
+      {!hasWagers ? (
+        <p className="mb-2 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+          No wagers yet
+        </p>
+      ) : (
+        <div className="mb-2">
+          <div className="flex h-6 w-full overflow-hidden border border-[var(--rule-light)]">
+            <div
+              className="flex items-center justify-center bg-[var(--ink)] font-mono text-[9px] font-bold text-[var(--paper)] transition-all"
+              style={{ width: `${displayMarket.forPercent}%` }}
+            >
+              {displayMarket.forPercent > 10
+                ? `PASS ${displayMarket.forPercent.toFixed(0)}%`
+                : ""}
+            </div>
+            <div
+              className="flex items-center justify-center bg-[var(--accent-red)] font-mono text-[9px] font-bold text-[var(--paper)] transition-all"
+              style={{ width: `${displayMarket.againstPercent}%` }}
+            >
+              {displayMarket.againstPercent > 10
+                ? `FAIL ${displayMarket.againstPercent.toFixed(0)}%`
+                : ""}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Pool info + governance votes */}
       <div className="mb-3 space-y-1 font-mono text-[9px] text-[var(--ink-faint)]">
         <div className="flex items-center justify-between">
           <span>
-            Pool: {formatEth(displayMarket.totalPool)} &bull;{" "}
-            {displayMarket.forStakers + displayMarket.againstStakers} stakers
+            {hasWagers &&
+              `Pool: ${formatEth(displayMarket.totalPool)} • ${displayMarket.forStakers + displayMarket.againstStakers} stakers`}
           </span>
           {url && (
             <a
@@ -169,9 +196,7 @@ export function MarketCard({
         {(votesFor !== undefined || votesAgainst !== undefined) && (
           <div className="text-[8px]">
             Governance: {votesFor ?? 0} for / {votesAgainst ?? 0} against
-            {quorum !== undefined && (
-              <span> (quorum: {quorum})</span>
-            )}
+            {quorum !== undefined && <span> (quorum: {quorum})</span>}
           </div>
         )}
         {!market?.exists && !votingClosed && (
@@ -216,9 +241,12 @@ export function MarketCard({
       )}
 
       {/* Claim button for resolved markets */}
-      {isResolved && position && position.totalStake > BigInt(0) && !position.claimed && (
-        <ClaimButton dao={daoKey} proposalId={proposalId} />
-      )}
+      {isResolved &&
+        position &&
+        position.totalStake > BigInt(0) &&
+        !position.claimed && (
+          <ClaimButton dao={daoKey} proposalId={proposalId} />
+        )}
     </div>
   );
 }
@@ -341,7 +369,11 @@ function ClaimButton({ dao, proposalId }: { dao: string; proposalId: string }) {
       disabled={isPending || isConfirming}
       className="w-full border border-[var(--rule)] bg-[var(--ink)] py-1.5 font-mono text-[9px] uppercase tracking-wider text-[var(--paper)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)] disabled:opacity-50"
     >
-      {isPending ? "Signing..." : isConfirming ? "Confirming..." : "Claim Winnings"}
+      {isPending
+        ? "Signing..."
+        : isConfirming
+          ? "Confirming..."
+          : "Claim Winnings"}
     </button>
   );
 }

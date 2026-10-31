@@ -88,10 +88,14 @@ export function PepeDetailView({ asset }: { asset: string }) {
             <span>Series {detail.series}</span>
             <span>&middot;</span>
             <span>Card #{detail.card}</span>
-            <span>&middot;</span>
-            <span className={rarity === "Legendary" ? "font-bold text-[var(--ink)]" : ""}>
-              {rarity}
-            </span>
+            {detail.supply > 0 && (
+              <>
+                <span>&middot;</span>
+                <span className={rarity === "Legendary" ? "font-bold text-[var(--ink)]" : ""}>
+                  {rarity}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Title */}

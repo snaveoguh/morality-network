@@ -104,7 +104,7 @@ export default function SubscribePage() {
         </h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           {[
-            { icon: "01", label: "Global Radar", desc: "Top stories from 60+ sources" },
+            { icon: "01", label: "Global Radar", desc: "Top stories from 80+ sources" },
             { icon: "02", label: "Market Pulse", desc: "Positions, P&L, win rate" },
             { icon: "03", label: "Signal Desk", desc: "Active signals + confidence" },
             { icon: "04", label: "Predictions", desc: "AI takes on what happens next" },

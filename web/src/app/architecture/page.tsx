@@ -78,7 +78,7 @@ const LAYERS: Layer[] = [
     subtitle:
       "32 page routes, 78 API endpoints, 700+ React components. E-ink newspaper aesthetic with 6-column grid, Playfair Display headlines, Libre Baskerville body text.",
     items: [
-      { name: "Feed", detail: "Aggregated RSS from 50+ sources with AI-scored sentiment and editorial synthesis" },
+      { name: "Feed", detail: "Aggregated RSS from 80+ sources with AI-scored sentiment and editorial synthesis" },
       { name: "Stumble", detail: "Random article discovery — infinite scroll, server-side pre-fetch" },
       { name: "Markets", detail: "Crypto market dashboard — CoinGecko, DexScreener, live ticker" },
       { name: "Signals", detail: "Real-time composite trading signals — technical, pattern, news, market, council vote" },
@@ -118,7 +118,7 @@ const LAYERS: Layer[] = [
       { name: "Position Management", detail: "Stop-loss 6%, take-profit 12%, trailing stop 5% (activated at +4%). Max hold 8hr, min hold 15min. Scaled exits at TP×1, ×1.5, ×2, ×3", tag: "LIVE" },
       { name: "Self-Learning", detail: "Per-market Kelly params, signal source accuracy scoring, adaptive weight adjustment (70% data + 30% prior), streak analysis, negative-edge market detection", tag: "LIVE" },
       { name: "Experiment Store", detail: "Upstash Redis persistence for autoresearch experiments. Tracks baseline vs experiment params, metrics, adoption history", tag: "LIVE" },
-      { name: "News Signals", detail: "70+ RSS feeds aggregated with 72-hour decay. Editorial impact scoring. Macro relay (SPX/DXY → BTC/ETH sentiment at 50% damping)", tag: "LIVE" },
+      { name: "News Signals", detail: "80+ RSS feeds aggregated with 72-hour decay. Editorial impact scoring. Macro relay (SPX/DXY → BTC/ETH sentiment at 50% damping)", tag: "LIVE" },
       { name: "Trade Journal", detail: "Full entry/exit rationale per position — signal source, Kelly phase, composite breakdown, agreement status, whale flow, moral score", tag: "LIVE" },
       { name: "Vault Rail", detail: "Capital flow pipeline: Base deposit → Morpho yield → Bridge → HyperLiquid perps. NAV reporting, withdrawal queue", tag: "OFF" },
       { name: "Vault Strategy", detail: "Auto-allocate buffer, auto-settle when flat, auto-report loss. Multi-funder capital pooling", tag: "OFF" },
@@ -133,7 +133,7 @@ const LAYERS: Layer[] = [
     items: [
       { name: "Trader Agent", detail: "90-second cycles on HyperLiquid. Evaluates exits → fetches signals → computes composite → Kelly sizing → executes. Publishes trade-executed, position-closed events", tag: "LIVE" },
       { name: "Scalper Agent", detail: "WebSocket-driven 1min candle momentum on BTC/ETH/SOL. Volume spike + big candle + VWAP breakout detection. Max 3 concurrent scalps", tag: "LIVE" },
-      { name: "Newsroom Agent", detail: "Cron-driven (2hr). Crawls 70+ RSS feeds, synthesizes 10 editorials per run via LLM. Max 2 per topic, 1 per source. Multi-source synthesis", tag: "LIVE" },
+      { name: "Newsroom Agent", detail: "Cron-driven (2hr). Crawls 80+ RSS feeds, synthesizes 10 editorials per run via LLM. Max 2 per topic, 1 per source. Multi-source synthesis", tag: "LIVE" },
       { name: "Governance Watcher", detail: "Polls Tally API every 5min across 6 protocols (Compound, Aave, Uniswap, ENS, Arbitrum, Optimism). Detects new proposals, vote shifts, executions → alpha signals", tag: "LIVE" },
       { name: "Coordinator Agent", detail: "Orchestrates all bus events. Routes governance-alpha to trader, manages circuit breaker state, spawns watchers, adjusts cooldowns on loss streaks", tag: "LIVE" },
       { name: "Scanner Agent", detail: "Watches Base L2 DEX factories for new token launches. Scores candidates, enriches with DexScreener data. Request-driven in serverless", tag: "ON-DEMAND" },
@@ -286,10 +286,6 @@ const STATS: { label: string; value: string }[] = [
   { label: "Smart Contracts", value: "26" },
   { label: "Solana Instructions", value: "6 modules" },
   { label: "ZK Circuits", value: "1 (Circom)" },
-  { label: "Web Routes", value: "32 pages" },
-  { label: "API Endpoints", value: "78" },
-  { label: "React Components", value: "700+" },
-  { label: "Trading Engine LOC", value: "12,000+" },
   { label: "Signal Sources", value: "5" },
   { label: "Autonomous Agents", value: "9" },
   { label: "HL Watch Markets", value: "20" },
@@ -472,7 +468,7 @@ export default function ArchitecturePage() {
 │                                                                         │
 │  ┌────────────┐ ┌────────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
 │  │ Technical  │ │ AI Pattern │ │   News   │ │  Market  │ │  Whale   │ │
-│  │ RSI, MACD  │ │ LLM chart  │ │ 70+ RSS  │ │ F&G, OI  │ │ 10 walls │ │
+│  │ RSI, MACD  │ │ LLM chart  │ │ 80+ RSS  │ │ F&G, OI  │ │ 10 walls │ │
 │  │ Ichi, EMA  │ │ patterns   │ │ feeds    │ │ Funding  │ │ $13B+    │ │
 │  │   30%      │ │   22%      │ │   22%    │ │   16%    │ │   10%    │ │
 │  └─────┬──────┘ └─────┬──────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ │

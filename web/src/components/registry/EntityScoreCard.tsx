@@ -1,10 +1,27 @@
 "use client";
 
+import Link from "next/link";
 import type { EntityScore } from "@/lib/entity-scorer";
 
-function ScoreBar({ label, value, max = 100, color }: { label: string; value: number; max?: number; color?: string }) {
+function ScoreBar({
+  label,
+  value,
+  max = 100,
+  color,
+}: {
+  label: string;
+  value: number;
+  max?: number;
+  color?: string;
+}) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
-  const displayColor = color ?? (value >= 70 ? "var(--ink)" : value >= 40 ? "var(--ink-faint)" : "var(--accent-red)");
+  const displayColor =
+    color ??
+    (value >= 70
+      ? "var(--ink)"
+      : value >= 40
+        ? "var(--ink-faint)"
+        : "var(--accent-red)");
 
   return (
     <div className="flex items-center gap-3">
@@ -84,35 +101,44 @@ export function EntityScoreCard({ score }: { score: EntityScore }) {
         <div className="min-w-0 flex-1">
           <p className="truncate font-mono text-[13px] font-bold text-[var(--ink)]">
             {score.metadata?.name
-              ? `${score.metadata.name as string} (${score.metadata.symbol as string ?? ""})`
+              ? `${score.metadata.name as string} (${(score.metadata.symbol as string) ?? ""})`
               : score.identifier.length > 50
-              ? `${score.identifier.slice(0, 20)}...${score.identifier.slice(-15)}`
-              : score.identifier}
+                ? `${score.identifier.slice(0, 20)}...${score.identifier.slice(-15)}`
+                : score.identifier}
           </p>
           <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink-faint)]">
             {score.entityHash.slice(0, 14)}...
           </p>
         </div>
         <span className="shrink-0 border border-[var(--rule)] px-2 py-0.5 font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">
-          {typeLabel}{chainLabel}
+          {typeLabel}
+          {chainLabel}
         </span>
       </div>
 
-      {/* Score bars */}
-      <div className="space-y-2">
-        <ScoreBar label="Morality" value={score.moralityScore} />
-        {score.factualityScore !== null && (
-          <ScoreBar label="Factuality" value={score.factualityScore} />
-        )}
-        {score.biasTilt !== null && score.biasLabel && (
-          <BiasIndicator tilt={score.biasTilt} label={score.biasLabel} />
-        )}
-        <ScoreBar
-          label="Risk"
-          value={score.riskScore}
-          color={score.riskScore >= 50 ? "var(--accent-red)" : score.riskScore >= 25 ? "var(--ink-faint)" : "var(--ink)"}
-        />
-      </div>
+      {/* Score bars — skipped when nothing scored it (no fallback 50) */}
+      {score.scoredBy !== "none" && (
+        <div className="space-y-2">
+          <ScoreBar label="Morality" value={score.moralityScore} />
+          {score.factualityScore !== null && (
+            <ScoreBar label="Factuality" value={score.factualityScore} />
+          )}
+          {score.biasTilt !== null && score.biasLabel && (
+            <BiasIndicator tilt={score.biasTilt} label={score.biasLabel} />
+          )}
+          <ScoreBar
+            label="Risk"
+            value={score.riskScore}
+            color={
+              score.riskScore >= 50
+                ? "var(--accent-red)"
+                : score.riskScore >= 25
+                  ? "var(--ink-faint)"
+                  : "var(--ink)"
+            }
+          />
+        </div>
+      )}
 
       {/* Risk flags */}
       <RiskFlags flags={score.riskFlags} />
@@ -127,11 +153,16 @@ export function EntityScoreCard({ score }: { score: EntityScore }) {
       {/* Meta */}
       <div className="flex items-center justify-between">
         <span className="font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">
-          Scored by {score.scoredBy} · {new Date(score.scoredAt).toLocaleTimeString()}
+          {score.scoredBy === "none"
+            ? "Not scored"
+            : `Scored by ${score.scoredBy} · ${new Date(score.scoredAt).toLocaleTimeString()}`}
         </span>
-        <button className="border border-[var(--rule-light)] px-2 py-1 font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)] hover:border-[var(--rule)] hover:text-[var(--ink)]">
+        <Link
+          href={`/entity/${score.entityHash}?${new URLSearchParams({ title: score.identifier })}`}
+          className="border border-[var(--rule-light)] px-2 py-1 font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--ink-faint)] hover:border-[var(--rule)] hover:text-[var(--ink)]"
+        >
           Rate Onchain
-        </button>
+        </Link>
       </div>
     </div>
   );

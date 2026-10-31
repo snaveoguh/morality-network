@@ -289,10 +289,19 @@ export function VaultArchitectureSection() {
           Security Audit &amp; Hardening
         </h2>
         <p className="mb-4 font-body-serif text-sm leading-relaxed text-[var(--ink-light)]">
-          All EVM contracts and Solana programs underwent automated security analysis.{" "}
+          All EVM contracts and Solana programs underwent automated security analysis
+          (22 March 2026; not a professional audit).{" "}
           {AUDIT_SUMMARY.total} findings were identified across both chains. All critical and high
-          severity issues have been patched. The full audit report is available at{" "}
-          <code className="font-mono text-[10px]">contracts/SECURITY_AUDIT.md</code>.
+          severity issues have been patched. Read the{" "}
+          <a
+            href="https://github.com/snaveoguh/morality-network/blob/main/contracts/SECURITY_AUDIT.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2"
+          >
+            full report
+          </a>
+          .
         </p>
 
         <div className="mb-6 grid grid-cols-5 gap-2 text-center">
