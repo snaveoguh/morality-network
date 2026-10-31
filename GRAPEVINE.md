@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 97 · headings site-wide in Newsreader
+- **when** — 2026-10-31
+- **what** — `.font-headline` and `.font-masthead` in `web/src/app/globals.css` now set Newsreader 500 (same as `news-head`, plus `text-wrap: balance`) instead of Archivo Black. About 100 pages use them, so every heading follows direction C at once. The /ledger h1 breaks after "This Week's".
+- **why** — Hugo spotted the Claim Ledger page still in the retired Archivo Black (pooter-brand: Newsreader for headlines) and asked for the other pages too.
+- **where** — `web/src/app/globals.css`, `web/src/app/ledger/page.tsx`.
+- **rollback** — `git revert` this commit and `f05694f`.
+
 ## ▲ node 96 · front page leads with the record; crypto and markets off the top
 - **when** — 2026-10-30
 - **what** — new `RecordBand` (`web/src/components/ledger/RecordBand.tsx`) opens the home page above the grid: corrections on record, median days to correct, share over 30 days, departments, this week's checkable PMQs claims and pledges tracked, each linking to its ledger page, with live DB figures and seed fallbacks (PMQs figure capped at 4s, blank rather than zero). On phone the Claim Ledger cards follow the band. Home meta description is now the record line. New `web/src/lib/front-filter.ts` keeps crypto, market and trading stories out of the header ticker (`rankFrontStories`, politics fallback so it is never blank), the Trending row (`topTags`; Search still shows them) and the masthead lead (a market lead is used only if nothing else exists). The feed orders them after the rest and drops them from newsroom-pick priority; nothing is removed from the data. 42 Vitest cases.
