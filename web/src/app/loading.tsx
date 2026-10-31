@@ -1,21 +1,35 @@
 import { MastheadSkeleton } from "@/components/layout/MastheadSkeleton";
 import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
 import { FrontGrid } from "@/components/feed/FrontFeed";
+import { PoliticsSliderSkeleton } from "@/components/feed/AsyncPoliticsSlider";
+import { SignalsSkeleton } from "@/components/feed/AsyncSignals";
+import { CommentarySkeleton } from "@/components/feed/AsyncCommentary";
 import { LedgerCardsSkeleton } from "@/components/ledger/LedgerStrip";
+import { RecordBandSkeleton } from "@/components/ledger/RecordBand";
 
 // ============================================================================
 // ROOT LOADING — lofi newspaper skeleton (replaces old spinner)
 //
-// Shows the same skeleton layout that the Suspense fallbacks use,
-// so the visual transition from loading → content is seamless.
+// Mirrors page.tsx block for block, using the same Suspense fallbacks, so
+// the loading → content transition is seamless: politics slider, the
+// Accountability record band, then the grid with the ledger cards lifted to
+// follow the band on phone.
 // ============================================================================
 
 export default function Loading() {
   return (
-    <FrontGrid>
-      <FeedSkeleton />
-      <MastheadSkeleton />
-      <LedgerCardsSkeleton />
-    </FrontGrid>
+    <>
+      <PoliticsSliderSkeleton />
+      <RecordBandSkeleton />
+      <FrontGrid>
+        <FeedSkeleton />
+        <MastheadSkeleton />
+        <div className="contents max-lg:[&>section]:-order-1">
+          <LedgerCardsSkeleton />
+        </div>
+        <SignalsSkeleton />
+        <CommentarySkeleton />
+      </FrontGrid>
+    </>
   );
 }
