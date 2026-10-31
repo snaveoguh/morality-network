@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { BRAND_NAME } from "@/lib/brand";
 import { CloseIcon, SearchIcon } from "@/components/layout/icons";
 import { HeaderTicker, useLondonDate } from "@/components/layout/HeaderTicker";
+import { HeaderSearch } from "@/components/layout/HeaderSearch";
 
 // ============================================================================
 // HEADER — direction C slim bar
@@ -110,18 +111,7 @@ export function Header() {
 
               {/* Desktop: inline search box + Menu */}
               <div className="hidden items-center justify-end gap-2.5 lg:flex">
-                <form action="/search" method="get" role="search" className="w-[220px]">
-                  <label className="flex h-11 items-center gap-2 border border-[var(--rule)] px-3">
-                    <SearchIcon className="h-4 w-4 shrink-0 text-[var(--ink)]" />
-                    <input
-                      type="search"
-                      name="q"
-                      placeholder="Search"
-                      aria-label="Search"
-                      className="min-w-0 flex-1 bg-transparent text-sm text-[var(--ink)] outline-none placeholder:text-[var(--ink-faint)]"
-                    />
-                  </label>
-                </form>
+                <HeaderSearch />
                 <Link
                   href="/more"
                   className="flex h-11 items-center border border-[var(--rule)] px-4 text-sm font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--paper-dark)]"
