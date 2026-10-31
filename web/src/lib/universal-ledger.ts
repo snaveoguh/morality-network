@@ -3,17 +3,20 @@ import { fetchAllProposals } from "@/lib/governance";
 import { computeEntityHash, entityTypeLabel } from "@/lib/entity";
 import { EntityType } from "@/lib/contracts";
 
+// The registry lists what pooter world actually tracks: the news sources in
+// the feed (with their published bias/factuality ratings) and the DAOs whose
+// proposals we follow. Every figure is a count from the live crawl. No
+// synthetic "ratings" or composite scores: onchain ratings show on each
+// entity page once people leave them.
 export interface UniversalLedgerEntry {
   rank: number;
   entityHash: `0x${string}`;
   identifier: string;
   entityType: EntityType;
-  avgRating: number;
-  ratingCount: number;
-  tipTotal: string;
-  commentCount: number;
-  aiScore: number;
-  compositeScore: number;
+  /** Articles in the current feed (sources) or proposals tracked (DAOs). */
+  itemCount: number;
+  /** Proposals currently open for voting (DAOs only). */
+  activeCount?: number;
   logo?: string;
   biasRating?: string | null;
   factuality?: string | null;
@@ -48,7 +51,6 @@ export async function buildUniversalLedger(): Promise<UniversalLedgerEntry[]> {
     {
       domain: string;
       articleCount: number;
-      totalEngagement: number;
       biasRating: string | null;
       factuality: string | null;
       categories: Set<string>;
@@ -60,7 +62,6 @@ export async function buildUniversalLedger(): Promise<UniversalLedgerEntry[]> {
     const existing = sourceMap.get(domain) || {
       domain,
       articleCount: 0,
-      totalEngagement: 0,
       biasRating: null,
       factuality: null,
       categories: new Set<string>(),
@@ -77,7 +78,7 @@ export async function buildUniversalLedger(): Promise<UniversalLedgerEntry[]> {
 
   const daoMap = new Map<
     string,
-    { name: string; proposalCount: number; activeCount: number; totalVotes: number; logo: string }
+    { name: string; proposalCount: number; activeCount: number; logo: string }
   >();
 
   for (const proposal of proposals) {
@@ -86,75 +87,55 @@ export async function buildUniversalLedger(): Promise<UniversalLedgerEntry[]> {
       name,
       proposalCount: 0,
       activeCount: 0,
-      totalVotes: 0,
       logo: proposal.daoLogo,
     };
 
     existing.proposalCount++;
     if (proposal.status === "active") existing.activeCount++;
-    existing.totalVotes += proposal.votesFor + proposal.votesAgainst;
     daoMap.set(name, existing);
   }
 
-  const entries: UniversalLedgerEntry[] = [];
-  let rank = 1;
-
-  const factScores: Record<string, number> = {
-    "very-high": 95,
-    high: 85,
-    "mostly-factual": 70,
-    mixed: 50,
-    low: 30,
-    "very-low": 15,
+  const factualityOrder: Record<string, number> = {
+    "very-high": 0,
+    high: 1,
+    "mostly-factual": 2,
+    mixed: 3,
+    low: 4,
+    "very-low": 5,
   };
+  const rankOf = (f: string | null) => (f ? factualityOrder[f] ?? 6 : 6);
 
-  const sortedSources = [...sourceMap.values()].sort((a, b) => b.articleCount - a.articleCount);
-
-  for (const source of sortedSources) {
-    const factScore = source.factuality ? factScores[source.factuality] || 60 : 60;
-    const volumeScore = Math.min(100, source.articleCount * 5);
-    const composite = factScore * 0.5 + volumeScore * 0.3 + 60 * 0.2;
-
-    entries.push({
-      rank: rank++,
+  const sources: UniversalLedgerEntry[] = [...sourceMap.values()]
+    .sort(
+      (a, b) =>
+        rankOf(a.factuality) - rankOf(b.factuality) ||
+        b.articleCount - a.articleCount ||
+        a.domain.localeCompare(b.domain),
+    )
+    .map((source) => ({
+      rank: 0,
       entityHash: computeEntityHash(source.domain),
       identifier: source.domain,
       entityType: EntityType.DOMAIN,
-      avgRating: factScore / 20,
-      ratingCount: source.articleCount,
-      tipTotal: "0 ETH",
-      commentCount: 0,
-      aiScore: factScore,
-      compositeScore: Math.round(composite * 10) / 10,
+      itemCount: source.articleCount,
       categories: [...source.categories],
       biasRating: source.biasRating,
       factuality: source.factuality,
-    });
-  }
+    }));
 
-  const sortedDaos = [...daoMap.values()].sort((a, b) => b.proposalCount - a.proposalCount);
-
-  for (const dao of sortedDaos) {
-    const activityScore = Math.min(100, dao.proposalCount * 3 + dao.activeCount * 20);
-    const voteScore = Math.min(100, Math.log10(dao.totalVotes + 1) * 25);
-    const composite = activityScore * 0.4 + voteScore * 0.4 + 50 * 0.2;
-
-    entries.push({
-      rank: rank++,
+  const daos: UniversalLedgerEntry[] = [...daoMap.values()]
+    .sort((a, b) => b.activeCount - a.activeCount || b.proposalCount - a.proposalCount)
+    .map((dao) => ({
+      rank: 0,
       entityHash: computeEntityHash(dao.name),
       identifier: dao.name,
       entityType: EntityType.CONTRACT,
-      avgRating: Math.min(5, composite / 20),
-      ratingCount: dao.proposalCount,
-      tipTotal: "0 ETH",
-      commentCount: dao.totalVotes,
-      aiScore: Math.round(activityScore),
-      compositeScore: Math.round(composite * 10) / 10,
+      itemCount: dao.proposalCount,
+      activeCount: dao.activeCount,
       logo: dao.logo,
-    });
-  }
+    }));
 
-  entries.sort((a, b) => b.compositeScore - a.compositeScore);
+  const entries = [...sources, ...daos];
   entries.forEach((entry, index) => {
     entry.rank = index + 1;
   });

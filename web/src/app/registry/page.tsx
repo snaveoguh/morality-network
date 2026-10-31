@@ -33,7 +33,8 @@ export default async function RegistryPage() {
           The Universal Registry
         </h1>
         <p className="mt-1 font-body-serif text-sm italic text-[var(--ink-light)]">
-          Score any URL, contract, domain, or address. AI morality scoring + onchain ratings.
+          Score any URL, contract, domain, or address. AI morality scoring +
+          onchain ratings.
         </p>
       </div>
 
@@ -43,36 +44,26 @@ export default async function RegistryPage() {
           Morality Oracle
         </h2>
         <p className="mb-4 font-mono text-[9px] text-[var(--ink-faint)]">
-          Paste any URL, smart contract address (Base or Solana), domain, or wallet.
-          The Oracle scores it for morality, bias, factuality, and risk — then anyone can rate it onchain.
+          Paste any URL, smart contract address (Base or Solana), domain, or
+          wallet. The Oracle scores it for morality, bias, factuality, and risk
+          — then anyone can rate it onchain.
         </p>
         <EntitySearch />
       </div>
 
-      {/* Scoring explanation */}
-      <div className="mb-6 border border-[var(--rule-light)] p-4">
-        <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--ink-faint)]">
-          <span className="font-bold text-[var(--ink)]">Onchain Composite</span> ={" "}
-          Rating (40%) + AI Score (30%) + Tips (20%) + Engagement (10%)
-        </p>
-      </div>
-
-      {/* Analyst Discovery */}
-      <div className="mb-6 border border-[var(--rule-light)] p-4">
-        <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-          Analyst Discovery
-        </h2>
-        <p className="mb-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
-          {analystSnapshot.scoringUnit === "interpretation"
-            ? `Interpretations scored: ${analystSnapshot.scoredInterpretations} · Ideas first`
-            : `Resolved markets: ${analystSnapshot.resolvedMarkets} · Right over loud`}
-        </p>
-
-        {topAnalysts.length === 0 ? (
-          <p className="font-body-serif text-sm italic text-[var(--ink-faint)]">
-            No resolved analyst predictions yet.
+      {/* Analyst Discovery and Ideas That Aged Best only appear once
+          prediction markets have resolved; empty panels read as dummy data. */}
+      {topAnalysts.length > 0 && (
+        <div className="mb-6 border border-[var(--rule-light)] p-4">
+          <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+            Analyst Discovery
+          </h2>
+          <p className="mb-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+            {analystSnapshot.scoringUnit === "interpretation"
+              ? `Interpretations scored: ${analystSnapshot.scoredInterpretations} · Ideas first`
+              : `Resolved markets: ${analystSnapshot.resolvedMarkets} · Right over loud`}
           </p>
-        ) : (
+
           <div className="space-y-2">
             {topAnalysts.map((analyst, index) => (
               <div
@@ -87,7 +78,8 @@ export default async function RegistryPage() {
                     {analyst.address}
                   </p>
                   <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-                    {analyst.correctPredictions}/{analyst.totalPredictions} correct · {analyst.totalStakedEth.toFixed(3)} ETH signaled
+                    {analyst.correctPredictions}/{analyst.totalPredictions}{" "}
+                    correct · {analyst.totalStakedEth.toFixed(3)} ETH signaled
                   </p>
                 </div>
                 <div className="text-right">
@@ -101,22 +93,17 @@ export default async function RegistryPage() {
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Ideas That Aged Best */}
-      <div className="mb-6 border border-[var(--rule-light)] p-4">
-        <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
-          Ideas That Aged Best
-        </h2>
-        <p className="mb-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
-          Interpretation → Outcome → Score
-        </p>
-        {topInterpretations.length === 0 ? (
-          <p className="font-body-serif text-sm italic text-[var(--ink-faint)]">
-            No scored interpretations yet.
+      {topInterpretations.length > 0 && (
+        <div className="mb-6 border border-[var(--rule-light)] p-4">
+          <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
+            Ideas That Aged Best
+          </h2>
+          <p className="mb-3 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-faint)]">
+            Interpretation → Outcome → Score
           </p>
-        ) : (
           <div className="space-y-3">
             {topInterpretations.map((row) => (
               <div
@@ -127,8 +114,8 @@ export default async function RegistryPage() {
                   &ldquo;{row.interpretation}&rdquo;
                 </p>
                 <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-[var(--ink-faint)]">
-                  {row.dao} #{row.proposalId} · predicted {row.predictedOutcome} · resolved{" "}
-                  {row.resolvedOutcome}
+                  {row.dao} #{row.proposalId} · predicted {row.predictedOutcome}{" "}
+                  · resolved {row.resolvedOutcome}
                 </p>
                 <div className="mt-1 flex items-center justify-between font-mono text-[8px] uppercase tracking-wider">
                   <span
@@ -148,8 +135,8 @@ export default async function RegistryPage() {
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Entity Rankings (existing leaderboard table) */}
       <LeaderboardTable entries={entries} />

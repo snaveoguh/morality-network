@@ -1,4 +1,5 @@
 import { computeEntityHash } from "./entity";
+import { SITE_URL } from "./brand";
 
 // ============================================================================
 // MACRO NARRATIVES — Thematic market signals users can rate & discuss
@@ -148,15 +149,15 @@ function hydrateSeedNarratives(): MacroNarrative[] {
  * right now, not what was manually curated.
  */
 export async function getLiveNarratives(): Promise<MacroNarrative[]> {
-  const seeds = hydrateSeedNarratives();
-
+  // The hand-written seeds are dated March 2026 and never change, so they
+  // are not shown as if they were live. No live clusters = no section.
   // Try to fetch live swarm clusters and convert to narratives
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/agents/swarm`,
+      `${SITE_URL}/api/agents/swarm`,
       { next: { revalidate: 300 }, signal: AbortSignal.timeout(8_000) },
     );
-    if (!res.ok) return seeds;
+    if (!res.ok) return [];
 
     const data = (await res.json()) as {
       clusters?: Array<{
@@ -168,7 +169,7 @@ export async function getLiveNarratives(): Promise<MacroNarrative[]> {
       }>;
     };
 
-    if (!data.clusters?.length) return seeds;
+    if (!data.clusters?.length) return [];
 
     const live: MacroNarrative[] = data.clusters
       .filter((c) => c.itemCount >= 2) // Need multi-source corroboration
@@ -198,10 +199,9 @@ export async function getLiveNarratives(): Promise<MacroNarrative[]> {
         };
       });
 
-    // Live narratives first, then seeds
-    return [...live, ...seeds];
+    return live;
   } catch {
-    return seeds;
+    return [];
   }
 }
 

@@ -15,7 +15,6 @@ const PROJECTS = [
   { href: "/discuss", label: "Discuss", desc: "Onchain threaded discussion stored permanently on Base L2. Comments, voting, and tipping.", tag: "Social" },
   { href: "/registry", label: "Registry", desc: "Score any URL, contract, domain, or address for morality, bias, and factuality.", tag: "Scoring" },
   { href: "/vault", label: "Vault", desc: "Multi-chain capital management: Base deposit, Morpho yield, Arbitrum bridge, HyperLiquid perps.", tag: "DeFi" },
-  { href: "/terminal", label: "Terminal", desc: "Holder-gated AI trading chat with real-time risk assessment and position execution.", tag: "Trading" },
   { href: "/stumble", label: "Stumble", desc: "Random article discovery with infinite scroll. Find something you weren't looking for.", tag: "Discovery" },
   { href: "/pipe", label: "Pipe", desc: "Real-time trading engine powered by multi-agent deliberation. Agents argue about what the data means before anyone trades.", tag: "Trading" },
   { href: "/", label: "Daily Edition", desc: "AI-generated daily broadsheet. The editorial takes a market stance and tracks whether it was right.", tag: "Media" },

@@ -23,7 +23,6 @@ const READ = [
   { href: "/pipe", label: "Pipe" },
   { href: "/discuss", label: "Discuss" },
   { href: "/stumble", label: "Stumble" },
-  { href: "/terminal", label: "Terminal" },
   { href: "/music", label: "Music" },
 ];
 
@@ -34,7 +33,6 @@ const ACT = [
   { href: "/coop", label: "Co-op" },
   { href: "/predictions", label: "Predictions" },
   { href: "/predictions/arb", label: "Arb scanner" },
-  { href: "/leaderboard", label: "Leaderboard" },
   { href: "/registry", label: "Registry" },
   { href: "/vault", label: "Vault" },
   { href: "/nouns", label: "Nouns" },

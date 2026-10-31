@@ -21,19 +21,21 @@ export default async function MarketsPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
-      {/* Macro Narratives */}
-      <div className="mb-8">
-        <div className="mb-4 border-b-2 border-[var(--rule)] pb-3">
-          <h2 className="font-headline text-2xl text-[var(--ink)]">
-            Macro Narratives
-          </h2>
-          <p className="mt-1 font-body-serif text-sm italic text-[var(--ink-light)]">
-            The thematic forces shaping markets. Rate them, challenge them,
-            discuss them onchain.
-          </p>
+      {/* Macro Narratives — only when the swarm has live clusters */}
+      {narratives.length > 0 && (
+        <div className="mb-8">
+          <div className="mb-4 border-b-2 border-[var(--rule)] pb-3">
+            <h2 className="font-headline text-2xl text-[var(--ink)]">
+              Macro Narratives
+            </h2>
+            <p className="mt-1 font-body-serif text-sm italic text-[var(--ink-light)]">
+              The thematic forces shaping markets. Rate them, challenge them,
+              discuss them onchain.
+            </p>
+          </div>
+          <NarrativeGrid narratives={narratives} />
         </div>
-        <NarrativeGrid narratives={narratives} />
-      </div>
+      )}
 
       {/* Liquidation map — estimated from Hyperliquid open interest */}
       <LiquidationMap snapshot={liquidationMaps} />
