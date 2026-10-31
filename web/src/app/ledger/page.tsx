@@ -215,7 +215,9 @@ export default async function LedgerPage() {
           <span>The Claim Ledger</span>
         </div>
         <h1 className="font-headline text-4xl text-[var(--ink)] md:text-6xl">
-          This Week&rsquo;s Checkable Claims
+          This Week&rsquo;s
+          <br />
+          Checkable Claims
         </h1>
         <p className="mt-3 max-w-2xl font-body-serif text-base leading-relaxed text-[var(--ink-light)]">
           Claims made at Prime Minister&rsquo;s Questions, quoted verbatim and

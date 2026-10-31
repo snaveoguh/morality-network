@@ -134,11 +134,13 @@ body { background: var(--paper); color: var(--ink); }
   body { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
 }
 
-/* ── Legacy fonts — Archivo Black (retired from the front page), Inter body ── */
-.font-masthead { font-family: var(--font-archivo), 'Archivo Black', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; letter-spacing: -0.015em; }
+/* ── Legacy class names. Archivo Black is retired everywhere (pooter-brand,
+   direction C): .font-masthead and .font-headline now set Newsreader 500,
+   same as news-head, so every page's headings follow the brand. ── */
+.font-masthead { font-family: var(--font-newsreader), 'Newsreader', Georgia, 'Times New Roman', serif; font-weight: 500; letter-spacing: -0.005em; text-wrap: balance; }
 .font-headline-serif { font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-weight: 700; letter-spacing: -0.015em; }
 .font-body-serif { font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-weight: 400; }
-.font-headline { font-family: var(--font-archivo), 'Archivo Black', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; letter-spacing: -0.01em; }
+.font-headline { font-family: var(--font-newsreader), 'Newsreader', Georgia, 'Times New Roman', serif; font-weight: 500; letter-spacing: -0.005em; text-wrap: balance; }
 .font-comic { font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-weight: 600; }
 
 /* ── Image treatment — full colour (GOV.UK uses colour imagery) ── */
