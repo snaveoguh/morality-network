@@ -8,6 +8,7 @@ import { AsyncFeed } from "@/components/feed/AsyncFeed";
 import { LedgerStrip, LedgerCardsSkeleton } from "@/components/ledger/LedgerStrip";
 import { RecordBand, RecordBandSkeleton, RECORD_LINE } from "@/components/ledger/RecordBand";
 import { FrontGrid } from "@/components/feed/FrontFeed";
+import { AsyncPoliticsSlider, PoliticsSliderSkeleton } from "@/components/feed/AsyncPoliticsSlider";
 import { AsyncSignals, SignalsSkeleton } from "@/components/feed/AsyncSignals";
 import { AsyncCommentary, CommentarySkeleton } from "@/components/feed/AsyncCommentary";
 import { getDailyEditionHash } from "@/lib/daily-edition";
@@ -21,7 +22,9 @@ export const maxDuration = 30;
 // ============================================================================
 // FEED PAGE — instant shell, data streams in via Suspense
 //
-// The record leads: the Accountability record band (corrections, PMQs
+// A politics slider opens the page (UK politics, or global politics relevant
+// to the UK, with images; it refreshes as stories come in). The record
+// follows: the Accountability record band (corrections, PMQs
 // claims, pledges) sits above everything, then the Claim Ledger cards, then
 // the news, signals and commentary.
 //
@@ -127,6 +130,9 @@ export default function FeedPage() {
   return (
     <>
       <PooterTheme />
+      <Suspense fallback={<PoliticsSliderSkeleton />}>
+        <AsyncPoliticsSlider />
+      </Suspense>
       <Suspense fallback={<RecordBandSkeleton />}>
         <RecordBand />
       </Suspense>
