@@ -38,6 +38,7 @@ Reference mockups: the Design canvas "Pooter Mobile-First Redesign" (claude.ai/a
 - Cream panels (#f2ede2 with black ink) work for charts and for featured callouts.
 
 ## Components
+- **Politics slider at the top of the home page** (Hugo, 2026-10-31): 3 to 6 stories, image + headline (Newsreader) + plain source line, strictly UK politics or global politics relevant to the UK (no markets, crypto, sport, celebrity), refreshing live as stories come in; the Accountability record band follows it. One slide on phone (swipe, "1 / 6" counter, under 300px tall), three across from 1024; auto-advance pauses on hover/touch and is off under reduced motion. Rules in `web/src/lib/politics-slider.ts`. Why: brings the page to life without losing the record.
 - **Lead image goes above the main headline**, at the top of the page. Don't bury it inside the article.
 - **Search is prominent.** It has suggested and trending topics instead of a wall of tags. Filters (Section, Region, Bias, Source) are collapsed rows inside Search, not on the front page.
 - **Trending** is a single plain-text row of topics under the masthead.

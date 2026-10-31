@@ -6,6 +6,15 @@ import { reportError, reportWarn } from "./report-error";
 
 const parser = new Parser({
   timeout: 5000,
+  // rss-parser only maps <enclosure> by default. BBC carries its pictures in
+  // <media:thumbnail> and the Guardian in <media:content> (several sizes), so
+  // without these the UK broadsheets arrive with no image at all.
+  customFields: {
+    item: [
+      ["media:content", "media:content", { keepArray: true }],
+      ["media:thumbnail", "media:thumbnail"],
+    ],
+  },
   headers: {
     "User-Agent": "PooterWorld/1.0",
   },
@@ -80,6 +89,8 @@ const SOURCE_TIER_MAP: Record<string, SourceTier> = {
   "Associated Press": "wire",
   "AFP / France 24": "wire",
   "BBC News": "broadsheet",
+  "BBC Politics": "broadsheet",
+  "Guardian Politics": "broadsheet",
   "NPR": "broadsheet",
   "The Guardian": "broadsheet",
   "The Atlantic": "broadsheet",
@@ -180,6 +191,8 @@ export const DEFAULT_FEEDS: FeedSource[] = [
   { name: "Daily Wire",        url: "https://www.dailywire.com/feeds/rss.xml",                     category: "Politics" },
 
   // ─── UK POLITICS ───
+  { name: "BBC Politics",      url: "https://feeds.bbci.co.uk/news/politics/rss.xml",              category: "Politics" },
+  { name: "Guardian Politics", url: "https://www.theguardian.com/politics/rss",                    category: "Politics" },
   { name: "New Statesman",     url: "https://www.newstatesman.com/feed",                           category: "Politics" },
 
   // ─── US POLITICS ───
@@ -359,7 +372,19 @@ export async function fetchAllFeeds(
     reportWarn("RSS", `Serving ${feedCache.items.length} items from cache`);
     return feedCache.items;
   }
+  // On a cold cache the home page asks for the feed from several boundaries
+  // at once (feed, politics slider, ticker): share one crawl between them.
+  if (!feedInflight) {
+    feedInflight = crawlAllFeeds(sources).finally(() => {
+      feedInflight = null;
+    });
+  }
+  return feedInflight;
+}
 
+let feedInflight: Promise<FeedItem[]> | null = null;
+
+async function crawlAllFeeds(sources: FeedSource[]): Promise<FeedItem[]> {
   // Fetch RSS in batches of 15 to avoid overwhelming serverless connections,
   // plus Reddit and 4chan scrapers in parallel
   const [rssResults, redditItems, chanItems] = await Promise.all([
@@ -671,10 +696,14 @@ function extractImageUrl(
   // Try common RSS image fields
   if (item.enclosure?.url) return item.enclosure.url;
 
-  const mediaContent = item["media:content"] as
-    | { $?: { url?: string } }
-    | undefined;
-  if (mediaContent?.$?.url) return mediaContent.$.url;
+  // media:content may repeat at several widths (the Guardian sends 140 and
+  // 460): take the widest image.
+  type MediaNode = { $?: { url?: string; width?: string; medium?: string; type?: string } };
+  const rawContent = item["media:content"] as MediaNode | MediaNode[] | undefined;
+  const mediaContent = (Array.isArray(rawContent) ? rawContent : rawContent ? [rawContent] : [])
+    .filter((m) => m?.$?.url && (!m.$.medium || m.$.medium === "image") && !/^video\//.test(m.$.type ?? ""))
+    .sort((a, b) => Number(b.$?.width ?? 0) - Number(a.$?.width ?? 0));
+  if (mediaContent[0]?.$?.url) return mediaContent[0].$.url;
 
   const mediaThumbnail = item["media:thumbnail"] as
     | { $?: { url?: string } }
