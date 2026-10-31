@@ -374,6 +374,9 @@ export async function fetchAllFeeds(
   }
   // On a cold cache the home page asks for the feed from several boundaries
   // at once (feed, politics slider, ticker): share one crawl between them.
+  // Only the default set is shared; a caller asking for a subset (trading
+  // signals) crawls its own.
+  if (sources !== DEFAULT_FEEDS) return crawlAllFeeds(sources);
   if (!feedInflight) {
     feedInflight = crawlAllFeeds(sources).finally(() => {
       feedInflight = null;

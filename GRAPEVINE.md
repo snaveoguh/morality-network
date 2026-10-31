@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 98 · politics slider at the top; search dropdown back; BBC and Guardian images
+- **when** — 2026-10-31
+- **what** — (1) `PoliticsSlider` above the Accountability record band: 3 to 6 stories with images, UK politics or global politics relevant to the UK (`lib/politics-slider.ts`, 45 tests; markets, crypto, sport, celebrity and state media left out), from `/api/front/slider` (cached 2 min), polled every 2.5 min, swipe on phone, auto-advance off under reduced motion, renders nothing under 3 stories. (2) `HeaderSearch` replaces the plain desktop search form: live dropdown after 2 characters, at most two results per outlet, keyboard and Escape, "See all results" to `/search?q=`; the unused `SearchBar.tsx` is deleted. (3) `rss.ts` reads `media:content` (widest) and `media:thumbnail`, so BBC and Guardian items carry images site-wide for the first time; adds BBC Politics and Guardian Politics feeds; concurrent default-feed crawls on a cold cache share one crawl.
+- **why** — Hugo, 2026-10-31: a slider "would bring the page to life", strictly UK politics or global politics relevant to the UK; and the old search dropdown with a See all button was better than the bare box. Building the slider showed prod had no images for any UK outlet.
+- **where** — merges of `feat/search-dropdown` (`c1f76ea`, `b5c486e`) and `feat/politics-slider` (`90a3912`); `web/src/lib/rss.ts`, `web/src/app/page.tsx`, `web/src/components/layout/{Header,HeaderSearch}.tsx`, `web/src/components/feed/{PoliticsSlider,AsyncPoliticsSlider}.tsx`, `web/src/app/api/front/slider/route.ts`, `.claude/skills/pooter-brand/SKILL.md`.
+- **rollback** — `git revert -m 1` the two merge commits and this commit. No data or schema changes.
+
 ## ▲ node 97 · headings site-wide in Newsreader
 - **when** — 2026-10-31
 - **what** — `.font-headline` and `.font-masthead` in `web/src/app/globals.css` now set Newsreader 500 (same as `news-head`, plus `text-wrap: balance`) instead of Archivo Black. About 100 pages use them, so every heading follows direction C at once. The /ledger h1 breaks after "This Week's".
