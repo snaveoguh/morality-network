@@ -3,7 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { SearchIcon } from "@/components/layout/icons";
+import { CloseIcon, SearchIcon } from "@/components/layout/icons";
 import { timeAgo } from "@/lib/front";
 import type { SearchGroup, SearchResponse, SearchResult } from "@/lib/search";
 
@@ -25,13 +25,25 @@ interface Section {
   results: SearchResult[];
 }
 
-/** Take the top results across groups (in API order), keeping section labels. */
+const MAX_PER_SOURCE = 2;
+
+/** Take the top results across groups (in API order), keeping section labels.
+ *  At most two per outlet, so one source can't fill the panel. */
 function pickTop(groups: SearchGroup[], limit: number): Section[] {
   const out: Section[] = [];
+  const perSource = new Map<string, number>();
   let left = limit;
   for (const group of groups) {
     if (left <= 0) break;
-    const take = group.results.slice(0, left);
+    const take: SearchResult[] = [];
+    for (const result of group.results) {
+      if (take.length >= left) break;
+      const key = (result.source ?? "").toLowerCase();
+      const seen = perSource.get(key) ?? 0;
+      if (key && seen >= MAX_PER_SOURCE) continue;
+      perSource.set(key, seen + 1);
+      take.push(result);
+    }
     if (take.length === 0) continue;
     out.push({ label: group.label, results: take });
     left -= take.length;
@@ -174,8 +186,22 @@ export function HeaderSearch() {
             aria-controls={listId}
             aria-autocomplete="list"
             aria-activedescendant={showPanel && active >= 0 ? rowId(active) : undefined}
-            className="min-w-0 flex-1 bg-transparent text-sm text-[var(--ink)] outline-none placeholder:text-[var(--ink-faint)]"
+            className="min-w-0 flex-1 bg-transparent text-sm text-[var(--ink)] outline-none placeholder:text-[var(--ink-faint)] [&::-webkit-search-cancel-button]:appearance-none"
           />
+          {query && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => {
+                setQuery("");
+                setActive(-1);
+                inputRef.current?.focus();
+              }}
+              className="shrink-0 text-[var(--ink-faint)] hover:text-[var(--ink)]"
+            >
+              <CloseIcon className="h-4 w-4" />
+            </button>
+          )}
         </label>
       </form>
 
