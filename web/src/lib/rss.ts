@@ -342,9 +342,8 @@ export async function fetchFeed(source: FeedSource): Promise<FeedItem[]> {
 }
 
 // ============================================================================
-// IN-MEMORY CACHE — avoid re-fetching 70+ feeds within the same request cycle
-// TTL is short (5 min) — just prevents duplicate work in a single page render
-// where both AsyncFeed and getDailyEdition call fetchAllFeeds().
+// IN-MEMORY CACHE — the last crawl of the default feeds, refreshed in the
+// background every 5 min (see fetchAllFeeds and src/instrumentation.ts).
 // ============================================================================
 
 let feedCache: { items: FeedItem[]; ts: number } | null = null;
@@ -367,18 +366,25 @@ async function batchSettled<T>(
 export async function fetchAllFeeds(
   sources: FeedSource[] = DEFAULT_FEEDS
 ): Promise<FeedItem[]> {
-  // Return cached if fresh
-  if (feedCache && Date.now() - feedCache.ts < FEED_CACHE_TTL_MS) {
-    reportWarn("RSS", `Serving ${feedCache.items.length} items from cache`);
+  // Only the default set is cached and shared; a caller asking for a subset
+  // (trading signals) crawls its own.
+  if (sources !== DEFAULT_FEEDS) return crawlAllFeeds(sources);
+
+  // Stale-while-revalidate: once one crawl has finished, every caller gets
+  // the last crawl at once and an expired cache is refreshed in the
+  // background. Only the first crawl after a boot makes anyone wait, and
+  // instrumentation.ts runs that one at startup.
+  if (feedCache) {
+    if (Date.now() - feedCache.ts >= FEED_CACHE_TTL_MS) refreshDefaultFeeds().catch(() => {});
     return feedCache.items;
   }
-  // On a cold cache the home page asks for the feed from several boundaries
-  // at once (feed, politics slider, ticker): share one crawl between them.
-  // Only the default set is shared; a caller asking for a subset (trading
-  // signals) crawls its own.
-  if (sources !== DEFAULT_FEEDS) return crawlAllFeeds(sources);
+  return refreshDefaultFeeds();
+}
+
+/** One shared crawl of the default feeds at a time. */
+function refreshDefaultFeeds(): Promise<FeedItem[]> {
   if (!feedInflight) {
-    feedInflight = crawlAllFeeds(sources).finally(() => {
+    feedInflight = crawlAllFeeds(DEFAULT_FEEDS).finally(() => {
       feedInflight = null;
     });
   }
@@ -437,8 +443,11 @@ async function crawlAllFeeds(sources: FeedSource[]): Promise<FeedItem[]> {
       parseTimestamp(b.pubDate) - parseTimestamp(a.pubDate),
   );
 
-  // Cache results
-  feedCache = { items: deduped, ts: Date.now() };
+  // Cache the default set only; a subset must not stand in for the feed.
+  // An empty crawl (network down) keeps the previous one.
+  if (sources === DEFAULT_FEEDS && (deduped.length > 0 || !feedCache)) {
+    feedCache = { items: deduped, ts: Date.now() };
+  }
 
   return deduped;
 }

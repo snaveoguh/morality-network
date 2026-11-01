@@ -36,7 +36,7 @@ import { fetchWithRetry } from "./fetch-utils";
 // CONSTANTS
 // ============================================================================
 
-const PROPOSAL_CACHE_TTL_MS = 60_000;
+const PROPOSAL_CACHE_TTL_MS = 5 * 60_000; // refreshed in the background (instrumentation.ts)
 const GOVERNANCE_SOCIAL_CACHE_TTL_MS = 120_000;
 const RECENT_GOVERNANCE_ACTIVITY_WINDOW_SECONDS = 72 * 60 * 60;
 const GOVERNANCE_SOCIAL_WINDOW_SECONDS = 7 * 24 * 60 * 60;

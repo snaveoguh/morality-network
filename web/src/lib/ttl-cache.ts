@@ -4,6 +4,11 @@ export interface TtlCacheEntry<T> {
   inFlight?: Promise<T>;
 }
 
+/**
+ * Stale-while-revalidate cache. Fresh values return at once. An expired
+ * value also returns at once while one background reload replaces it, so
+ * only the very first load for a key ever makes a caller wait.
+ */
 export async function loadTtlValue<T>(
   cache: Map<string, TtlCacheEntry<T>>,
   key: string,
@@ -17,32 +22,30 @@ export async function loadTtlValue<T>(
     return existing.value;
   }
 
-  if (existing?.inFlight) {
-    return existing.inFlight;
+  if (!existing?.inFlight) {
+    const entry: TtlCacheEntry<T> = { expiresAt: existing?.expiresAt ?? now, value: existing?.value };
+    entry.inFlight = loader()
+      .then((value) => {
+        cache.set(key, { value, expiresAt: Date.now() + ttlMs });
+        return value;
+      })
+      .catch((error) => {
+        const stale = cache.get(key)?.value;
+        if (stale !== undefined) {
+          // Keep serving the old value; retry on the next call.
+          cache.set(key, { value: stale, expiresAt: 0 });
+          return stale;
+        }
+        cache.delete(key);
+        throw error;
+      });
+    cache.set(key, entry);
   }
 
-  const nextEntry: TtlCacheEntry<T> = {
-    expiresAt: now + ttlMs,
-  };
-
-  const inFlight = loader()
-    .then((value) => {
-      cache.set(key, {
-        value,
-        expiresAt: Date.now() + ttlMs,
-      });
-      return value;
-    })
-    .catch((error) => {
-      const stale = cache.get(key);
-      if (stale?.value !== undefined) {
-        return stale.value;
-      }
-      cache.delete(key);
-      throw error;
-    });
-
-  nextEntry.inFlight = inFlight;
-  cache.set(key, nextEntry);
-  return inFlight;
+  const current = cache.get(key)!;
+  if (current.value !== undefined) {
+    current.inFlight?.catch(() => {});
+    return current.value;
+  }
+  return current.inFlight!;
 }

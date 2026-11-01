@@ -4,26 +4,35 @@ import { buildAnalystReputationFromPredictionMarkets } from "@/lib/analyst-reput
 import { buildInterpretationOutcomeScores } from "@/lib/interpretation-scores";
 import { buildUniversalLedger } from "@/lib/universal-ledger";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600; // 10 min ISR; the crawls behind it are kept warm (instrumentation.ts)
 export const maxDuration = 55;
+
+// The onchain scans are optional panels: never let a slow RPC hold the page.
+const SCAN_BUDGET_MS = 20_000;
+function within<T>(promise: Promise<T>): Promise<T | null> {
+  return Promise.race([
+    promise.catch(() => null),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), SCAN_BUDGET_MS)),
+  ]);
+}
 
 export default async function RegistryPage() {
   const [entries, analystSnapshot, interpretationSnapshot] = await Promise.all([
     buildUniversalLedger(),
-    buildAnalystReputationFromPredictionMarkets({
+    within(buildAnalystReputationFromPredictionMarkets({
       limit: 8,
       minPredictions: 2,
       lookbackBlocks: BigInt("90000"),
-    }),
-    buildInterpretationOutcomeScores({
+    })),
+    within(buildInterpretationOutcomeScores({
       limit: 5,
       lookbackBlocks: BigInt("90000"),
       minOutcomeScore: -100,
       onlyCorrect: false,
-    }),
+    })),
   ]);
-  const topAnalysts = analystSnapshot.analysts.slice(0, 5);
-  const topInterpretations = interpretationSnapshot.interpretations.slice(0, 3);
+  const topAnalysts = analystSnapshot?.analysts.slice(0, 5) ?? [];
+  const topInterpretations = interpretationSnapshot?.interpretations.slice(0, 3) ?? [];
 
   return (
     <div>
@@ -53,7 +62,7 @@ export default async function RegistryPage() {
 
       {/* Analyst Discovery and Ideas That Aged Best only appear once
           prediction markets have resolved; empty panels read as dummy data. */}
-      {topAnalysts.length > 0 && (
+      {analystSnapshot && topAnalysts.length > 0 && (
         <div className="mb-6 border border-[var(--rule-light)] p-4">
           <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink)]">
             Analyst Discovery
