@@ -13,6 +13,7 @@ import {
 import { commentOnChain, entityHash, getEthBalance } from "../onchain.js";
 import { bridge } from "../bridge.js";
 import { lintComment, formatCommentIssues, COMMENT_STYLE_PROMPT } from "../comment-style.js";
+import { fetchArticleText } from "../article-text.js";
 import { POOTER_API_URL, CRON_SECRET, MAX_COMMENTS_PER_DAY } from "../config.js";
 
 /** Minimum ETH balance to attempt on-chain comments (0.0005 ETH) */
@@ -118,12 +119,19 @@ export async function commentOnArticles(): Promise<void> {
       `Reply with ONLY the comment text. No reasoning, no preamble, no XML tags.`,
     ].join("\n");
 
+    // Read the piece itself. Fall back to the feed summary when the site
+    // blocks us or paywalls, and tell the model which one it has.
+    const body = await fetchArticleText(article.link);
+    console.log(`[pooter1] ${body ? `Read ${body.length} chars` : "Summary only"} for "${article.title.slice(0, 50)}"`);
+
     const user = [
       `Article: "${article.title}"`,
       `Source: ${article.source}`,
-      `Summary: ${article.description?.slice(0, 300)}`,
+      body
+        ? `Full text:\n${body}`
+        : `Summary (the full text could not be fetched, so you have NOT read the article; do not fault it for leaving things out):\n${article.description?.slice(0, 300)}`,
       ``,
-      `Write a brief, sharp comment.`,
+      `Write a brief comment.`,
     ].join("\n");
 
     try {

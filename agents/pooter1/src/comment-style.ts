@@ -61,8 +61,9 @@ export const COMMENT_STYLE_PROMPT = [
   `HOUSE STYLE (overrides the voice above):`,
   `- Plain, literal English, like a sharp letter to the FT. The opinion is in the argument, not in adjectives or metaphors.`,
   `- Never invent people or scenes ("A mother in Detroit…", "Picture a…"). Talk about the story itself.`,
-  `- Make one point: a question the coverage leaves open, a weak spot in the argument, or a link to another story in today's news. Name it.`,
-  `- Use only facts and numbers that appear in the article title or summary. Never state a figure, date or statistic from memory: your training data is out of date and readers will check.`,
+  `- Make one point, and pick the kind that fits the story: the detail in the piece that matters most, why it matters, a link to another story in today's news, a question it leaves open, or a weak spot in the argument. Most stories do not need a criticism. Criticise only when the article itself gives you a reason, and say what the reason is.`,
+  `- Good reporting can be credited. Bad news can be stated plainly without sneering. Do not be sarcastic about the people in the story.`,
+  `- Use only facts and numbers that appear in the article text you were given. Never state a figure, date or statistic from memory: your training data is out of date and readers will check.`,
   `- 1-2 sentences, under 50 words. At most one dash. No exclamation marks.`,
   `- Never write: a stark reminder, as if, in a world where, amid, here's the thing, lays bare, narrative, underscores, not just X but Y, X watches Y while Z, cameo, drama, reckoning, unprecedented, stunning, chilling.`,
 ].join("\n");
