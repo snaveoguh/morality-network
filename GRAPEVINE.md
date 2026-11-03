@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 101 · co-op tracker on dev; migration 017 applied alone
+- **when** — 2026-11-03
+- **what** — `dev` fast-forwarded to `e967356` (node 100); `dev.pooter.world/coops/sussex` serves 200 with the pipeline connected (0 co-ops), `/coops/kent` 404s, the operator API answers 401 unauthenticated. Migration `017_coop_tracker.sql` applied to the earnest-love/dev database (`ballast.proxy.rlwy.net`) on its own, recorded in `pooter.schema_migrations` with checksum `a34e9585`, via a one-file runner that mirrors `scripts/migrate.js`.
+- **why** — that database still has 013–016 pending, so `scripts/migrate.js` would have applied all five. Whether dev's database is the same one prod uses was not checked (prod config reads were blocked); 017 only adds two empty tables, so it is safe either way.
+- **where** — earnest-love / dev / morality-network (GitHub `dev` auto-deploy); dev DB `pooter.coop_pipeline`, `pooter.coop_pipeline_events`. Dev has `GOD_MODE_ADDRESSES` but no `OPERATOR_ADDRESSES`; either list unlocks `/coops/admin`.
+- **rollback** — redeploy the previous dev commit `9418efc`; `DROP TABLE pooter.coop_pipeline_events, pooter.coop_pipeline; DELETE FROM pooter.schema_migrations WHERE filename = '017_coop_tracker.sql';`
+
 ## ▲ node 100 · co-op tracker: Sussex register, new co-op pipeline, start-a-co-op
 - **when** — 2026-11-02
 - **what** — new `/coops` section. (1) `/coops/sussex`: every co-operative, community benefit society and credit union with a registered office in the 13 Sussex districts, from the FCA Mutuals Public Register CSV, placed by postcode via postcodes.io (`scripts/build-coop-economy.mjs`, `npm run coops:snapshot -- sussex`; snapshot committed at `src/data/coops/sussex.json`: 274 societies, 238 active). Figures, dot map, district/sector/type/decade panels, searchable directory, method note, open JSON/CSV at `/api/coops/sussex`. (2) A pipeline of new co-ops (migration `017_coop_tracker.sql`: `pooter.coop_pipeline` + append-only `coop_pipeline_events`), staged Idea → Forming → Registered → Trading → Reporting, with members, jobs and programme support; hidden until an operator publishes it at `/coops/admin`; contact email never served publicly. (3) `/coops/start`: five-step flow (who owns it → founders → money → plan → join the tracker) giving a model, legal form, staged checklist, founding meeting agenda and adviser questions, routing to Co-operatives UK's own advice and registration; draft kept in localStorage. Linked from `/coop` and More. Areas are config (`src/data/coops/areas.json`) so another authority is one entry plus a snapshot run.
