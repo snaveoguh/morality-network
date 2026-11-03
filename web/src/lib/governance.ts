@@ -30,6 +30,7 @@ import {
 import { getDaoPredictionKey } from "./proposal-entity";
 import { getPredictionMarketChain, getPredictionMarketRpcUrl } from "./rpc-urls";
 import { loadTtlValue, type TtlCacheEntry } from "./ttl-cache";
+import { processGlobal } from "./memory";
 import { fetchWithRetry } from "./fetch-utils";
 
 // ============================================================================
@@ -46,11 +47,16 @@ const DEFAULT_GOVERNANCE_FARCASTER_USERNAMES = [
   "nounsquare",
   "houseofnouns",
 ];
-const proposalCache = new Map<string, TtlCacheEntry<Proposal[]>>();
-const governanceSocialCache = new Map<
-  string,
-  TtlCacheEntry<GovernanceSocialSignal[]>
->();
+// One cache per process, shared by every bundled copy of this module (and
+// by the instrumentation.ts warmer) — see processGlobal in lib/memory.ts.
+const proposalCache = processGlobal(
+  "governance.proposalCache",
+  () => new Map<string, TtlCacheEntry<Proposal[]>>(),
+);
+const governanceSocialCache = processGlobal(
+  "governance.socialCache",
+  () => new Map<string, TtlCacheEntry<GovernanceSocialSignal[]>>(),
+);
 const predictionMarketPublicClient = createPublicClient({
   chain: getPredictionMarketChain(),
   transport: http(getPredictionMarketRpcUrl(), { timeout: 10_000 }),

@@ -6,6 +6,7 @@ import { isFrontStory } from "./front-filter";
 import { politicsReach } from "./politics-slider";
 import { fetchAllFeeds, type FeedItem } from "./rss";
 import { loadTtlValue, type TtlCacheEntry } from "./ttl-cache";
+import { processGlobal } from "./memory";
 import {
   BRIEF_TOPICS,
   type BriefTopic,
@@ -189,7 +190,12 @@ async function generateBrief(topic: BriefTopic): Promise<DayBrief> {
   }
 }
 
-const briefCache = new Map<string, TtlCacheEntry<DayBrief>>();
+// Shared by every bundled copy of this module and the instrumentation.ts
+// warmer, so the warmed brief is the one pages read (lib/memory.ts).
+const briefCache = processGlobal(
+  "dayBrief.cache",
+  () => new Map<string, TtlCacheEntry<DayBrief>>(),
+);
 
 export function isBriefTopic(value: unknown): value is BriefTopic {
   return BRIEF_TOPICS.some((t) => t.id === value);

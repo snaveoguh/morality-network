@@ -4,6 +4,7 @@
 // ============================================================================
 
 import { getSourceBias } from "./bias";
+import { detachStrings } from "./memory";
 import type { FeedItem } from "./rss";
 
 // ============================================================================
@@ -170,13 +171,17 @@ async function fetchSubreddit(
     );
     clearTimeout(timeout);
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      await res.body?.cancel().catch(() => {});
+      return [];
+    }
     const xml = await res.text();
 
     const entries = parseRedditAtom(xml);
     const bias = getSourceBias("reddit.com");
 
-    return entries
+    // detachStrings: the regex matches are slices of the whole Atom document.
+    return detachStrings(entries
       .filter((entry) => {
         // Skip stickied/megathread posts (usually mod posts)
         const author = entry.author.toLowerCase();
@@ -203,7 +208,7 @@ async function fetchSubreddit(
         };
 
         return feedItem;
-      });
+      }));
   } catch (error) {
     console.error(
       `[Reddit:${config.name}] Failed:`,
@@ -305,7 +310,10 @@ async function fetchChanBoard(
     );
     clearTimeout(timeout);
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      await res.body?.cancel().catch(() => {});
+      return [];
+    }
     const pages: Array<{ threads: ChanThread[] }> = await res.json();
 
     // Take threads from the first 2 pages (most active)
