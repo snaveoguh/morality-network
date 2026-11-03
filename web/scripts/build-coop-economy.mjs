@@ -1,19 +1,22 @@
 #!/usr/bin/env node
 /**
- * build-coop-economy.mjs — snapshot an area's co-operative economy.
+ * build-coop-economy.mjs — snapshot the UK's co-operative economy.
  *
  * Downloads the FCA Mutuals Public Register society list (CSV of basic
  * society details, published by the FCA), keeps co-operatives, community
  * benefit societies and credit unions, resolves each registered-office
- * postcode to a local authority district via postcodes.io, and writes the
- * societies inside the area's districts to src/data/coops/<area>.json.
+ * postcode to its local authority district, region and nation via
+ * postcodes.io, and writes src/data/coops/uk.json. Areas (src/data/coops/
+ * areas.json) are filtered views over this one snapshot.
  *
  * The register lists the registered office, not where a society trades, so a
- * society run in Sussex with an office elsewhere is missed (and vice versa).
- * The page's method note says so.
+ * society run in one place with its office elsewhere is counted at the office.
+ * The pages' method note says so.
+ *
+ * Rows are stored as arrays under `columns` to keep the file small.
  *
  * Usage:
- *   node scripts/build-coop-economy.mjs --area sussex [--csv path/to/SocietyList.csv]
+ *   node scripts/build-coop-economy.mjs [--csv path/to/SocietyList.csv]
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -28,19 +31,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const dataDir = join(here, "..", "src", "data", "coops");
 
 const args = process.argv.slice(2);
-const argValue = (flag) => {
-  const i = args.indexOf(flag);
-  return i >= 0 ? args[i + 1] : undefined;
-};
-const AREA = argValue("--area");
-const CSV_PATH = argValue("--csv");
-
-const areas = JSON.parse(readFileSync(join(dataDir, "areas.json"), "utf8"));
-const area = areas[AREA];
-if (!area) {
-  console.error(`--area must be one of: ${Object.keys(areas).join(", ")}`);
-  process.exit(1);
-}
+const csvIndex = args.indexOf("--csv");
+const CSV_PATH = csvIndex >= 0 ? args[csvIndex + 1] : undefined;
 
 // Minimal RFC 4180 parser: quoted fields, doubled quotes, CRLF.
 function parseCsv(text) {
@@ -113,12 +105,22 @@ function lastPostcode(address) {
   return m ? `${m[1]} ${m[2]}` : null;
 }
 
-const areaPrefix = new RegExp(`^(${area.postcodeAreas.join("|")})\\d`);
 const candidates = register
   .filter(inScope)
-  .map((r) => ({ r, postcode: lastPostcode(r["Society Address"]) }))
-  .filter((c) => c.postcode && areaPrefix.test(c.postcode));
-console.log(`in scope with ${area.postcodeAreas.join("/")} postcodes: ${candidates.length}`);
+  .map((r) => ({ r, postcode: lastPostcode(r["Society Address"]) }));
+const unplaced = candidates.filter((c) => !c.postcode).length;
+console.log(`in scope: ${candidates.length} (${unplaced} with no postcode in the address)`);
+
+// Scotland, Wales and Northern Ireland have no English region; use the nation.
+function place(hit) {
+  return {
+    district: hit.admin_district,
+    region: hit.region ?? hit.country,
+    country: hit.country,
+    lat: hit.latitude,
+    lng: hit.longitude,
+  };
+}
 
 async function bulkLookup(postcodes) {
   const out = new Map();
@@ -132,20 +134,15 @@ async function bulkLookup(postcodes) {
     if (!res.ok) throw new Error(`postcodes.io bulk failed: ${res.status}`);
     const { result } = await res.json();
     for (const { query, result: hit } of result) {
-      if (hit) {
-        out.set(query, {
-          district: hit.admin_district,
-          lat: hit.latitude,
-          lng: hit.longitude,
-        });
-      }
+      if (hit?.latitude) out.set(query, place(hit));
     }
+    if (i % 2000 === 0) console.log(`  located ${Math.min(i + 100, postcodes.length)}/${postcodes.length}`);
   }
   return out;
 }
 
 // Postcodes retired since registration resolve via the terminated endpoint
-// (location only), then a reverse lookup for the district.
+// (location only), then the nearest live postcode for district and region.
 async function terminatedLookup(postcode) {
   const res = await fetch(
     `${POSTCODES_API}/terminated_postcodes/${encodeURIComponent(postcode)}`,
@@ -159,12 +156,13 @@ async function terminatedLookup(postcode) {
   if (!near.ok) return null;
   const nearest = (await near.json()).result?.[0];
   if (!nearest) return null;
-  return { district: nearest.admin_district, lat: result.latitude, lng: result.longitude };
+  return { ...place(nearest), lat: result.latitude, lng: result.longitude };
 }
 
-const unique = [...new Set(candidates.map((c) => c.postcode))];
+const unique = [...new Set(candidates.map((c) => c.postcode).filter(Boolean))];
 const located = await bulkLookup(unique);
 const missing = unique.filter((p) => !located.has(p));
+console.log(`  ${missing.length} not live; trying terminated postcodes`);
 for (const postcode of missing) {
   const hit = await terminatedLookup(postcode);
   if (hit) located.set(postcode, hit);
@@ -172,8 +170,6 @@ for (const postcode of missing) {
 console.log(
   `postcodes: ${unique.length} unique, ${located.size} located, ${unique.length - located.size} unresolved`,
 );
-
-const districtNames = new Set(area.districts.map((d) => d.name));
 
 function typeOf(r) {
   if (r["Registered As"] === "Credit Union") return "Credit union";
@@ -185,28 +181,35 @@ function typeOf(r) {
   return r["Registered As"] === "Community Benefit Society" ? "Community benefit" : "Co-operative";
 }
 
+const COLUMNS = [
+  "regNo", "name", "form", "type", "sector", "sic", "postcode", "district",
+  "region", "country", "lat", "lng", "registered", "deregistered", "status",
+];
+const round = (n) => Math.round(n * 1e4) / 1e4;
+
 const societies = candidates
-  .map(({ r, postcode }) => ({ r, postcode, loc: located.get(postcode) }))
-  .filter(({ loc }) => loc && districtNames.has(loc.district))
-  .map(({ r, postcode, loc }) => ({
-    regNo: r["Full Registation Number"],
-    name: r["Society Name"],
-    form: r["Registered As"],
-    type: typeOf(r),
-    sector: r["Reporting Classification"] || "Other",
-    sic: r["Standard Industrial Classification Code (SIC)"] || null,
+  .map(({ r, postcode }) => ({ r, postcode, loc: postcode ? located.get(postcode) : undefined }))
+  .filter(({ loc }) => loc)
+  .map(({ r, postcode, loc }) => [
+    r["Full Registation Number"],
+    r["Society Name"],
+    r["Registered As"],
+    typeOf(r),
+    r["Reporting Classification"] || "Other",
+    r["Standard Industrial Classification Code (SIC)"] || null,
     postcode,
-    district: loc.district,
-    lat: Math.round(loc.lat * 1e4) / 1e4,
-    lng: Math.round(loc.lng * 1e4) / 1e4,
-    registered: r["Registration Date"] || null,
-    deregistered: r["Deregistration Date"] || null,
-    status: r["Society Status"],
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+    loc.district,
+    loc.region,
+    loc.country,
+    round(loc.lat),
+    round(loc.lng),
+    r["Registration Date"] || null,
+    r["Deregistration Date"] || null,
+    r["Society Status"],
+  ])
+  .sort((a, b) => a[1].localeCompare(b[1]));
 
 const snapshot = {
-  area: area.slug,
   source: {
     name: "FCA Mutuals Public Register",
     url: "https://mutuals.fca.org.uk/",
@@ -214,10 +217,12 @@ const snapshot = {
   },
   fetchedAt: new Date().toISOString(),
   count: societies.length,
-  societies,
+  unplaced: candidates.length - societies.length,
+  columns: COLUMNS,
+  rows: societies,
 };
 
-const outPath = join(dataDir, `${area.slug}.json`);
-writeFileSync(outPath, `${JSON.stringify(snapshot, null, 1)}\n`);
-const live = societies.filter((s) => s.status.startsWith("Registered")).length;
-console.log(`wrote ${outPath}: ${societies.length} societies (${live} still registered)`);
+const outPath = join(dataDir, "uk.json");
+writeFileSync(outPath, `${JSON.stringify(snapshot)}\n`);
+const live = societies.filter((s) => s[14].startsWith("Registered")).length;
+console.log(`wrote ${outPath}: ${societies.length} societies (${live} still registered), ${snapshot.unplaced} unplaced`);
