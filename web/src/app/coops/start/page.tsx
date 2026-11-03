@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { withBrand } from "@/lib/brand";
-import { listAreas } from "@/lib/coops/economy";
+import { isNational, listAreas } from "@/lib/coops/economy";
 import { StartFlowLoader } from "@/components/coops/StartFlowLoader";
 
 export const metadata = {
@@ -22,7 +22,10 @@ export default function StartCoopPage() {
           to an adviser. Your answers stay in this browser until you choose to join the tracker.
         </p>
       </header>
-      <StartFlowLoader areas={listAreas()} />
+      {/* Local areas first; a co-op anywhere else joins the UK tracker. */}
+      <StartFlowLoader
+        areas={[...listAreas().filter((a) => !isNational(a)), ...listAreas().filter(isNational)]}
+      />
     </div>
   );
 }

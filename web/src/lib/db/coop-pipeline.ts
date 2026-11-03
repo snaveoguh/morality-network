@@ -51,17 +51,27 @@ function toCoop(row: CoopRow): PipelineCoop {
   };
 }
 
-const PUBLIC_COLUMNS = sql`
+// A function, not a module-level fragment: building it calls the client, which
+// throws without DATABASE_URL, and pages must still render without Postgres.
+const publicColumns = () => sql`
   slug, area, name, model, sector, district, summary, website, stage,
   fca_reg_no, founders, members, jobs_fte, support_pence, created_at, updated_at
 `;
 
+/** Public co-ops in one area; "uk" returns every area's. */
 export async function listPublicCoops(area: string): Promise<PipelineCoop[]> {
-  const rows = await sql<CoopRow[]>`
-    SELECT ${PUBLIC_COLUMNS} FROM pooter.coop_pipeline
-    WHERE area = ${area} AND is_public
-    ORDER BY created_at
-  `;
+  const rows =
+    area === "uk"
+      ? await sql<CoopRow[]>`
+          SELECT ${publicColumns()} FROM pooter.coop_pipeline
+          WHERE is_public
+          ORDER BY created_at
+        `
+      : await sql<CoopRow[]>`
+          SELECT ${publicColumns()} FROM pooter.coop_pipeline
+          WHERE area = ${area} AND is_public
+          ORDER BY created_at
+        `;
   return rows.map(toCoop);
 }
 
@@ -69,7 +79,7 @@ export async function getPublicCoop(
   slug: string,
 ): Promise<{ coop: PipelineCoop; events: PipelineEvent[] } | null> {
   const [row] = await sql<Array<CoopRow & { id: string }>>`
-    SELECT id, ${PUBLIC_COLUMNS} FROM pooter.coop_pipeline
+    SELECT id, ${publicColumns()} FROM pooter.coop_pipeline
     WHERE slug = ${slug} AND is_public
   `;
   if (!row) return null;
@@ -96,7 +106,7 @@ export async function getPublicCoop(
 
 export async function listAllCoops(): Promise<OperatorCoop[]> {
   const rows = await sql<Array<CoopRow & { id: string; contact_email: string; is_public: boolean }>>`
-    SELECT id, contact_email, is_public, ${PUBLIC_COLUMNS} FROM pooter.coop_pipeline
+    SELECT id, contact_email, is_public, ${publicColumns()} FROM pooter.coop_pipeline
     ORDER BY is_public, created_at DESC
   `;
   return rows.map((row) => ({

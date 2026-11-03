@@ -53,6 +53,9 @@ export interface Society {
   sic: string | null;
   postcode: string;
   district: string;
+  /** English region, or the nation for Scotland, Wales and Northern Ireland. */
+  region: string;
+  country: string;
   lat: number;
   lng: number;
   registered: string | null;
@@ -65,16 +68,33 @@ export interface EconomySnapshot {
   source: { name: string; url: string; file: string };
   fetchedAt: string;
   count: number;
+  /** Societies on the UK register whose postcode could not be placed. */
+  unplaced: number;
   societies: Society[];
+}
+
+/** A search hit from /api/coops/search: an active society anywhere in the UK. */
+export type SocietyHit = Pick<Society, "regNo" | "name" | "type" | "sector" | "district" | "region" | "registered">;
+
+export interface Town {
+  name: string;
+  lat: number;
+  lng: number;
+  /** Which side of the point the label sits; default centred above. */
+  anchor?: "start" | "middle" | "end";
 }
 
 export interface Area {
   slug: string;
   name: string;
+  /** How the area reads mid-sentence ("the UK"); defaults to name. */
+  inName: string;
   authority: string;
   authorityNote: string;
-  postcodeAreas: string[];
+  /** Local authority districts that make up the area. Empty = the whole UK. */
   districts: Array<{ name: string; county: string }>;
+  /** Labels for the dot map. */
+  towns: Town[];
 }
 
 /** A co-op in the development pipeline (pooter.coop_pipeline), public fields only. */
