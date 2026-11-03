@@ -4,13 +4,14 @@ import { readPipeline } from "@/lib/coops/service";
 import type { Society } from "@/lib/coops/types";
 
 // Open data: the area's register snapshot plus its public pipeline.
-// ?format=csv returns the register snapshot as CSV.
+// ?format=csv returns the register snapshot as CSV. /api/coops/uk is the whole
+// UK register; local areas are the societies in their districts.
 
 export const revalidate = 300;
 
 const CSV_COLUMNS: Array<keyof Society> = [
   "regNo", "name", "form", "type", "sector", "sic", "postcode", "district",
-  "lat", "lng", "registered", "deregistered", "status",
+  "region", "country", "lat", "lng", "registered", "deregistered", "status",
 ];
 
 function csvCell(value: unknown): string {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { withBrand } from "@/lib/brand";
-import { economyStats, getArea, getSnapshot, listAreas } from "@/lib/coops/economy";
+import { economyStats, getArea, getSnapshot, isNational, listAreas } from "@/lib/coops/economy";
 import { formatPounds, readPipeline } from "@/lib/coops/service";
 import { MODEL_LABEL, STAGES, STAGE_LABEL, STAGE_MEANING, type PipelineCoop } from "@/lib/coops/types";
 import { BarPanel } from "@/components/coops/BarPanel";
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ area: str
   if (!area) return {};
   return {
     title: withBrand(`${area.name} co-op tracker`),
-    description: `Every co-operative and community benefit society registered in ${area.name}, and how each new co-op is doing.`,
+    description: `Every co-operative and community benefit society registered in ${area.inName}, and how each new co-op is doing.`,
   };
 }
 
@@ -46,7 +46,17 @@ function SectionHead({ title, intro }: { title: string; intro?: string }) {
   );
 }
 
-function Pipeline({ coops, available, areaName }: { coops: PipelineCoop[]; available: boolean; areaName: string }) {
+function Pipeline({
+  coops,
+  available,
+  areaName,
+  national,
+}: {
+  coops: PipelineCoop[];
+  available: boolean;
+  areaName: string;
+  national: boolean;
+}) {
   const stages = STAGES.filter((s) => s !== "closed");
   const live = coops.filter((c) => c.stage !== "closed");
   const totals = {
@@ -114,6 +124,7 @@ function Pipeline({ coops, available, areaName }: { coops: PipelineCoop[]; avail
                       <p className="text-[var(--ink-faint)]">
                         {c.sector}
                         {c.district ? ` · ${c.district}` : ""}
+                        {national ? ` · ${getArea(c.area)?.name ?? c.area}` : ""}
                       </p>
                     </td>
                     <td className="py-3 pr-4 text-[var(--ink-light)]">{MODEL_LABEL[c.model]}</td>
@@ -142,21 +153,31 @@ export default async function AreaTrackerPage({ params }: { params: Promise<{ ar
   const pipeline = await readPipeline(slug);
   const fetched = formatDate(snapshot.fetchedAt);
   const source = `Source: FCA Mutuals Public Register, registered offices, fetched ${fetched}.`;
-  const topDistrict = stats.byDistrict[0];
+  const national = isNational(area);
+  const topPlace = stats.byPlace[0];
   const topSector = stats.bySector[0];
   const topType = stats.byType[0];
-  const districtsWithCoops = stats.byDistrict.filter((d) => d.count > 0).length;
+  const placesWithCoops = stats.byPlace.filter((d) => d.count > 0).length;
+  const otherAreas = listAreas().filter((a) => a.slug !== slug);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
       <header className="mb-10">
-        <p className="text-sm text-[var(--ink-faint)]">
+        <nav aria-label="Areas" className="flex flex-wrap gap-x-3 text-sm text-[var(--ink-faint)]">
           <Link href="/coops" className="hover:underline">Co-op tracker</Link>
-        </p>
+          {otherAreas.map((a) => (
+            <span key={a.slug}>
+              <span aria-hidden>· </span>
+              <Link href={`/coops/${a.slug}`} className="hover:underline">
+                {a.name}
+              </Link>
+            </span>
+          ))}
+        </nav>
         <h1 className="mt-2 font-headline text-4xl text-[var(--ink)] sm:text-5xl">{area.name} co-operatives</h1>
         <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-[var(--ink-light)]">
-          Every co-operative, community benefit society and credit union registered in {area.name}, and how each new
-          co-op is doing. {area.authorityNote}
+          Every co-operative, community benefit society and credit union registered in {area.inName}, and how each
+          new co-op is doing. {area.authorityNote}
         </p>
         <div className="mt-5 flex flex-wrap gap-3 text-sm">
           <Link
@@ -175,36 +196,40 @@ export default async function AreaTrackerPage({ params }: { params: Promise<{ ar
       </header>
 
       <section className="mb-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Figure value={String(stats.active.length)} label="Societies on the register" />
-        <Figure value={String(stats.sinceYear.count)} label={`Registered since ${stats.sinceYear.year}`} />
-        <Figure value={`${districtsWithCoops} of ${area.districts.length}`} label="Districts with a society" />
+        <Figure value={stats.active.length.toLocaleString("en-GB")} label="Societies on the register" />
+        <Figure value={stats.sinceYear.count.toLocaleString("en-GB")} label={`Registered since ${stats.sinceYear.year}`} />
+        <Figure
+          value={`${placesWithCoops} of ${stats.placeCount}`}
+          label={national ? "Regions and nations with a society" : "Districts with a society"}
+        />
         <Figure
           value={pipeline.available ? String(pipeline.coops.length) : "—"}
           label="New co-ops on the tracker"
         />
       </section>
 
-      <Pipeline coops={pipeline.coops} available={pipeline.available} areaName={area.name} />
+      <Pipeline coops={pipeline.coops} available={pipeline.available} areaName={area.inName} national={national} />
 
       <section className="mb-12">
         <SectionHead
           title="The co-op economy today"
-          intro={`What is already registered in ${area.name}. New co-ops are measured against this starting point.`}
+          intro={`What is already registered in ${area.inName}. New co-ops are measured against this starting point.`}
         />
         <div className="grid gap-4 lg:grid-cols-2">
           <DotMap
             societies={stats.active}
-            title={`Where the ${stats.active.length} societies are registered`}
+            towns={area.towns}
+            title={`Where the ${stats.active.length.toLocaleString("en-GB")} societies are registered`}
             source={source}
             className="lg:col-span-2"
           />
           <BarPanel
-            title={`${topDistrict.label} has the most, with ${topDistrict.count}`}
-            rows={stats.byDistrict}
+            title={`${topPlace.label} has the most, with ${topPlace.count.toLocaleString("en-GB")}`}
+            rows={stats.byPlace}
             source={source}
           />
           <BarPanel
-            title={`${topSector.label} is the largest sector, with ${topSector.count} societies`}
+            title={`${topSector.label} is the largest sector, with ${topSector.count.toLocaleString("en-GB")} societies`}
             rows={stats.bySector}
             source={`${source} Sector is the FCA's reporting classification.`}
             limit={10}
@@ -215,7 +240,7 @@ export default async function AreaTrackerPage({ params }: { params: Promise<{ ar
             source={source}
           />
           <BarPanel
-            title={`${stats.sinceYear.count} of today's societies registered since ${stats.sinceYear.year}`}
+            title={`${stats.sinceYear.count.toLocaleString("en-GB")} of today's societies registered since ${stats.sinceYear.year}`}
             rows={stats.byDecade}
             source={`${source} Only societies still on the register are counted, so older decades look smaller than they were.`}
           />
@@ -236,8 +261,28 @@ export default async function AreaTrackerPage({ params }: { params: Promise<{ ar
       </section>
 
       <section className="mb-12">
-        <SectionHead title="Directory" intro="Every society counted above. Names link to the FCA register." />
-        <SocietyDirectory societies={stats.active} districts={area.districts.map((d) => d.name).sort()} />
+        {national ? (
+          <>
+            <SectionHead
+              title="Directory"
+              intro="Search every society counted above by name or sector. Names link to the FCA register."
+            />
+            <SocietyDirectory national total={stats.active.length} />
+          </>
+        ) : (
+          <>
+            <SectionHead
+              title="Directory"
+              intro={`Every society counted above. Names link to the FCA register. Searches also look for matching societies elsewhere in the UK.`}
+            />
+            <SocietyDirectory
+              societies={stats.active}
+              districts={area.districts.map((d) => d.name).sort()}
+              areaSlug={slug}
+              areaName={area.name}
+            />
+          </>
+        )}
       </section>
 
       <section className="mb-4">
@@ -249,8 +294,10 @@ export default async function AreaTrackerPage({ params }: { params: Promise<{ ar
               FCA Mutuals Public Register
             </a>
             . We keep societies the FCA classes as co-operative or community benefit, plus credit unions, and place
-            each one by the postcode of its registered office using postcodes.io. A society that trades in{" "}
-            {area.name} but has its registered office elsewhere is not counted, and the reverse.
+            each one by the postcode of its registered office using postcodes.io.{" "}
+            {national
+              ? `${snapshot.unplaced} societies on the UK register have a postcode that could not be placed and are not counted.`
+              : `A society that trades in ${area.name} but has its registered office elsewhere is not counted, and the reverse.`}
           </p>
           <p>
             The register does not record members, turnover or jobs, so those figures appear only for new co-ops on the
@@ -268,6 +315,18 @@ export default async function AreaTrackerPage({ params }: { params: Promise<{ ar
             Data: <a href={`/api/coops/${slug}`} className="text-[var(--ink)] underline">JSON</a> ·{" "}
             <a href={`/api/coops/${slug}?format=csv`} className="text-[var(--ink)] underline">CSV</a>. Register snapshot
             fetched {fetched}.
+          </p>
+          <p>
+            Run by{" "}
+            <a
+              href="https://mutuals.fca.org.uk/Search/Society/30459"
+              className="text-[var(--ink)] underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Morality Co-operative Ltd (FCA register no. 4621)
+            </a>
+            , a worker co-operative registered in London.
           </p>
         </div>
       </section>

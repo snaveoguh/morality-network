@@ -8,6 +8,7 @@ export const metadata = {
 };
 
 export default function CoopsIndexPage() {
+  // areas.json order: the UK first, then local areas.
   const areas = listAreas().map((area) => {
     const snapshot = getSnapshot(area.slug);
     return { area, active: snapshot ? economyStats(snapshot, area).active.length : 0 };
@@ -31,7 +32,7 @@ export default function CoopsIndexPage() {
                 <span className="block font-headline text-2xl text-[var(--ink)]">{area.name}</span>
                 <span className="block text-sm text-[var(--ink-light)]">{area.authority}</span>
               </span>
-              <span className="shrink-0 text-sm text-[var(--ink-faint)]">{active} societies</span>
+              <span className="shrink-0 text-sm text-[var(--ink-faint)]">{active.toLocaleString("en-GB")} societies</span>
             </Link>
           </li>
         ))}
