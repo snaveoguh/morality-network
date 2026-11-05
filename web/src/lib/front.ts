@@ -41,6 +41,18 @@ export function timeAgo(dateStr: string | undefined, now: number = Date.now()): 
   return new Date(ts).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
+/** Does a story belong in a news tab? A tab takes stories by feed category
+ *  or by auto-tag (a beat like Hardware trust cuts across categories).
+ *  A tab with neither (Latest) takes everything. */
+export function inTab(
+  tab: { categories: string[]; tags?: string[] },
+  item: { category: string; tags: string[] },
+): boolean {
+  const tags = tab.tags ?? [];
+  if (tab.categories.length === 0 && tags.length === 0) return true;
+  return tab.categories.includes(item.category) || item.tags.some((t) => tags.includes(t));
+}
+
 /** Display form of an auto-tag: "war" → "War", "ai" → "AI". */
 export function tagLabel(tag: string): string {
   const upper = new Set(["ai", "uk", "us", "eu", "un", "nato", "sec", "defi", "nft"]);

@@ -2,11 +2,11 @@
 
 import { useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { tagLabel } from "@/lib/front";
+import { inTab, tagLabel } from "@/lib/front";
 
 // ============================================================================
 // NEWS — the day's stories under one row of tabs (Latest, World, Politics,
-// Business & markets, Tech & science, Environment, Sport). Two lead cards
+// Business & markets, Tech & science, Hardware trust, Environment, Sport). Two lead cards
 // with photos, then a list with thumbnails. Items arrive pre-formatted from
 // the server (FrontFeed) so nothing date-dependent renders on the client.
 //
@@ -28,8 +28,11 @@ export interface NewsItem {
 export interface NewsTab {
   value: string;
   label: string;
-  /** Feed categories in this tab; empty = everything (Latest). */
+  /** Feed categories in this tab; empty (and no tags) = everything (Latest). */
   categories: string[];
+  /** Auto-tags in this tab. A beat like Hardware trust is a tag that cuts
+   *  across categories, so a story can be in this tab from any source. */
+  tags?: string[];
 }
 
 const PAGE = 20;
@@ -118,7 +121,9 @@ export function NewsSection({
   // The page is statically cached, so ?tag= is read on the client only
   // (the server snapshot is "", and React re-renders after hydration).
   const urlTag = useSyncExternalStore(noSubscribe, readUrlTag, () => "");
-  const tag = picked ?? (trending.includes(urlTag) ? urlTag : "");
+  // A beat tag (e.g. ?tag=hardware-trust) is shareable even when not trending.
+  const linkable = (t: string) => trending.includes(t) || tabs.some((tb) => tb.tags?.includes(t));
+  const tag = picked ?? (urlTag && linkable(urlTag) ? urlTag : "");
 
   const pickTag = (next: string) => {
     setPicked(next);
@@ -133,8 +138,8 @@ export function NewsSection({
   const current = tabs.find((t) => t.value === tab) ?? tabs[0];
   const filtered = tag
     ? items.filter((i) => i.tags.includes(tag))
-    : current && current.categories.length > 0
-      ? items.filter((i) => current.categories.includes(i.category))
+    : current
+      ? items.filter((i) => inTab(current, i))
       : items;
 
   // Two photo-led cards up top: the first two stories that have a photo.

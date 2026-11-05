@@ -478,6 +478,56 @@ export const BIAS_DATABASE: Record<string, SourceBias> = {
     ownership: "Independent", country: "US", fundingModel: "nonprofit",
   },
 
+  // ===== HARDWARE TRUST / DEVICE SECURITY =====
+  // 404 Media, The Record, Bleeping Computer, EFF, Krebs and Privacy
+  // International follow MBFC. Schneier, RISC-V International and
+  // bunnie:studios have no MBFC rating; these are our own, on the same scale.
+  "404media.co": {
+    name: "404 Media", domain: "404media.co",
+    bias: "lean-left", factuality: "high",
+    ownership: "Journalist-owned", country: "US", fundingModel: "independent",
+  },
+  "therecord.media": {
+    name: "The Record", domain: "therecord.media",
+    bias: "center", factuality: "high",
+    ownership: "Recorded Future (Mastercard)", country: "US", fundingModel: "corporate",
+  },
+  "bleepingcomputer.com": {
+    name: "Bleeping Computer", domain: "bleepingcomputer.com",
+    bias: "center", factuality: "high",
+    ownership: "Independent", country: "US", fundingModel: "independent",
+  },
+  "eff.org": {
+    name: "EFF Deeplinks", domain: "eff.org",
+    bias: "lean-left", factuality: "high",
+    ownership: "Electronic Frontier Foundation (advocacy)", country: "US", fundingModel: "nonprofit",
+  },
+  "krebsonsecurity.com": {
+    name: "Krebs on Security", domain: "krebsonsecurity.com",
+    bias: "center", factuality: "high",
+    ownership: "Independent (Brian Krebs)", country: "US", fundingModel: "independent",
+  },
+  "schneier.com": {
+    name: "Schneier on Security", domain: "schneier.com",
+    bias: "center", factuality: "high",
+    ownership: "Independent (Bruce Schneier)", country: "US", fundingModel: "independent",
+  },
+  "privacyinternational.org": {
+    name: "Privacy International", domain: "privacyinternational.org",
+    bias: "lean-left", factuality: "high",
+    ownership: "Privacy International (advocacy)", country: "UK", fundingModel: "nonprofit",
+  },
+  "riscv.org": {
+    name: "RISC-V International", domain: "riscv.org",
+    bias: "center", factuality: "mostly-factual",
+    ownership: "RISC-V International (member-funded standards body)", country: "Switzerland", fundingModel: "nonprofit",
+  },
+  "bunniestudios.com": {
+    name: "bunnie:studios", domain: "bunniestudios.com",
+    bias: "center", factuality: "high",
+    ownership: "Independent (Andrew \"bunnie\" Huang)", country: "Singapore", fundingModel: "independent",
+  },
+
   // ===== GOVERNMENT / INSTITUTIONAL =====
   "news.un.org": {
     name: "UN News", domain: "news.un.org",
