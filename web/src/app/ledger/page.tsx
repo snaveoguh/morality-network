@@ -42,6 +42,7 @@ const TOPIC_LABEL: Record<LedgerClaim["topic"], string> = {
   "voting-record": "Voting record",
   "policy-outcome": "Policy outcome",
   spending: "Spending",
+  "security-privacy": "Security & privacy",
   other: "Other",
 };
 

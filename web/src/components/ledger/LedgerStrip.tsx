@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { sql } from "@/lib/db";
+import { CONTEXT_LABEL } from "@/lib/ledger/entities";
 import type { LedgerContext } from "@/lib/ledger/types";
 
 // Front-page Claim Ledger (direction C). Phone: cards that scroll sideways
@@ -8,15 +9,10 @@ import type { LedgerContext } from "@/lib/ledger/types";
 // stamps, no verdict seals (pooter-brand). One cheap query; without a DB or
 // on any failure the rail still renders as a plain link to /ledger.
 
-const CONTEXT_LABEL: Record<LedgerContext, string> = {
-  pmqs: "PMQs",
-  budget: "Budget",
-  manifesto: "Manifesto",
-};
-
 interface FrontClaim {
   id: string;
   memberId: number | null;
+  entityId: string | null;
   speaker: string;
   party: string | null;
   quote: string;
@@ -51,13 +47,14 @@ async function ledgerFront(): Promise<LedgerFront | null> {
     const [counts, rows] = await Promise.all([
       sql<Array<{ claims: number; verdicts: number }>>`
         SELECT
-          (SELECT COUNT(*)::int FROM pooter.ledger_claims) AS claims,
+          (SELECT COUNT(*)::int FROM pooter.ledger_claims WHERE NOT review_hold) AS claims,
           (SELECT COUNT(*)::int FROM pooter.ledger_resolutions WHERE status = 'published') AS verdicts
       `,
       sql<
         Array<{
           id: string;
           member_id: number | null;
+          entity_id: string | null;
           speaker_name: string;
           party: string | null;
           verbatim_quote: string;
@@ -66,7 +63,7 @@ async function ledgerFront(): Promise<LedgerFront | null> {
           has_verdict: boolean;
         }>
       >`
-        SELECT c.id, c.member_id, c.speaker_name, c.party, c.verbatim_quote,
+        SELECT c.id, c.member_id, c.entity_id, c.speaker_name, c.party, c.verbatim_quote,
                c.uttered_at, c.context,
                EXISTS (
                  SELECT 1 FROM pooter.ledger_resolutions r
@@ -74,6 +71,7 @@ async function ledgerFront(): Promise<LedgerFront | null> {
                ) AS has_verdict
         FROM pooter.ledger_claims c
         WHERE c.claim_type = 'retrodictable'
+          AND NOT c.review_hold -- migration 018: held claims are not public
         ORDER BY c.uttered_at DESC, c.occurrences DESC, c.created_at ASC
         LIMIT 6
       `,
@@ -86,6 +84,7 @@ async function ledgerFront(): Promise<LedgerFront | null> {
       latest: rows.map((r) => ({
         id: r.id,
         memberId: r.member_id,
+        entityId: r.entity_id,
         speaker: r.speaker_name,
         party: r.party,
         quote: r.verbatim_quote,
@@ -169,7 +168,13 @@ export async function LedgerStrip() {
         {data.latest.map((claim) => (
           <Link
             key={claim.id}
-            href={claim.memberId ? `/ledger/member/${claim.memberId}` : "/ledger"}
+            href={
+              claim.memberId
+                ? `/ledger/member/${claim.memberId}`
+                : claim.entityId
+                  ? `/ledger/maker/${claim.entityId}`
+                  : "/ledger"
+            }
             className={`${CARD} group`}
           >
             <span className="text-[13px] text-[var(--ink-light)]">

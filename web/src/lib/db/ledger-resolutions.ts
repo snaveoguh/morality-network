@@ -6,10 +6,11 @@
 import { createHash } from "node:crypto";
 import { sql } from "../db";
 import { isoDateOnly } from "./ledger-claims";
-import type {
-  LedgerEvidence,
-  LedgerResolution,
-  LedgerVerdict,
+import {
+  LEDGER_EVIDENCE_KINDS,
+  type LedgerEvidence,
+  type LedgerResolution,
+  type LedgerVerdict,
 } from "../ledger/types";
 
 interface ResolutionRow {
@@ -73,13 +74,7 @@ const VALID_VERDICTS = new Set<LedgerVerdict>([
   "unresolved",
 ]);
 
-const EVIDENCE_KINDS = new Set<LedgerEvidence["kind"]>([
-  "division",
-  "ons",
-  "hansard",
-  "obr",
-  "other",
-]);
+const EVIDENCE_KINDS = new Set<LedgerEvidence["kind"]>(LEDGER_EVIDENCE_KINDS);
 
 /** Deterministic id — mirrors resolve.ts's resolutionId shape. */
 export function manualResolutionId(

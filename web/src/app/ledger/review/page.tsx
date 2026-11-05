@@ -8,6 +8,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ReviewerSignIn } from "@/components/ledger/ReviewerSignIn";
+import { LEDGER_EVIDENCE_KINDS } from "@/lib/ledger/types";
+import { claimSourceLabel } from "@/lib/ledger/entities";
 
 interface QueueItem {
   resolution: {
@@ -38,7 +40,7 @@ const VERDICT_LABEL: Record<string, string> = {
 };
 
 const VERDICTS = ["true", "false", "partial", "unresolved"] as const;
-const EVIDENCE_KINDS = ["division", "ons", "hansard", "obr", "other"] as const;
+const EVIDENCE_KINDS = LEDGER_EVIDENCE_KINDS;
 
 interface EvidenceDraft {
   url: string;
@@ -376,7 +378,7 @@ export default function LedgerReviewPage() {
                 rel="noopener noreferrer"
                 className="text-[var(--accent-red)] underline"
               >
-                Hansard
+                {claimSourceLabel(claim.sourceUrl)}
               </a>
             </p>
 

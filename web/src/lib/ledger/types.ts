@@ -6,8 +6,16 @@
 /** How a claim can, in principle, be checked. */
 export type LedgerClaimType = "retrodictable" | "predictive" | "unfalsifiable";
 
-/** Where a claim was uttered. Tier 1 = pmqs; Tier 2 backfill adds budget + manifesto. */
-export type LedgerContext = "pmqs" | "budget" | "manifesto";
+/**
+ * Where a claim was uttered. Tier 1 = pmqs; Tier 2 backfill adds budget +
+ * manifesto. 'company-statement' = a manufacturer's own published statement
+ * (product page, blog, press release) — migration 018.
+ */
+export type LedgerContext = "pmqs" | "budget" | "manifesto" | "company-statement";
+
+/** Who a claim is attributed to. 'mp' rows key on member_id; every other
+ *  kind keys on pooter.ledger_entities (migration 018). */
+export type LedgerEntityKind = "mp" | "manufacturer";
 
 /** Rough resolution category — drives which source resolves it in Phase B. */
 export type LedgerClaimTopic =
@@ -15,11 +23,15 @@ export type LedgerClaimTopic =
   | "voting-record"
   | "policy-outcome"
   | "spending"
+  | "security-privacy"
   | "other";
 
 export interface LedgerSpeaker {
-  /** Canonical Parliament Members API id. Null for unattributed items. */
+  /** Canonical Parliament Members API id. Null for unattributed items and
+   *  for non-MP entities. */
   memberId: number | null;
+  /** pooter.ledger_entities id for non-MP entities (e.g. a manufacturer). */
+  entityId?: string | null;
   /** Display name as attributed by Hansard (title stripped where possible). */
   name: string;
   /** Party code as printed in Hansard, e.g. "Lab", "Con", "LD". */
@@ -98,13 +110,27 @@ export type LedgerResolutionStatus = "proposed" | "published" | "rejected";
  * One link in a verdict's document chain. URLs are constructed server-side
  * from records we fetched ourselves — never taken from model output.
  */
+export const LEDGER_EVIDENCE_KINDS = [
+  "division",
+  "ons",
+  "hansard",
+  "obr",
+  // migration 018: regulator findings/orders (FTC, ICO, state AGs) and the
+  // entity's own later statements (incident notices, advisories).
+  "regulator",
+  "company",
+  "other",
+] as const;
+
+export type LedgerEvidenceKind = (typeof LEDGER_EVIDENCE_KINDS)[number];
+
 export interface LedgerEvidence {
   url: string;
   /** What the record shows, stated from the fetched data. */
   excerpt: string;
   /** 'obr' and 'other' are human-curated at review time (spec: OBR
    *  evaluation reports, court judgments, inquiries). */
-  kind: "division" | "ons" | "hansard" | "obr" | "other";
+  kind: LedgerEvidenceKind;
 }
 
 export interface LedgerResolution {
