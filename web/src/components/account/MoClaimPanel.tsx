@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -108,7 +109,12 @@ export function MoClaimPanel() {
           Pays out to your linked wallet{" "}
           <span className="font-mono text-xs">{claim.address}</span> on Base. The
           claim is verified against a published Merkle root — nobody, including
-          us, can redirect it to another address.
+          us, can redirect it to another address. We will never ask for your
+          recovery phrase.{" "}
+          <Link className="underline underline-offset-4" href="/verify-your-hardware#mo-claim">
+            What we will never ask for
+          </Link>
+          .
         </p>
 
         {alreadyClaimed ? (
