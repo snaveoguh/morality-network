@@ -8,6 +8,8 @@ import type { LedgerClaim, LedgerContext } from "../ledger/types";
 export interface LedgerClaimRow {
   id: string;
   member_id: number | null;
+  /** migration 018 — absent on queries that don't select it. */
+  entity_id?: string | null;
   speaker_name: string;
   party: string | null;
   constituency: string | null;
@@ -39,6 +41,7 @@ export function rowToClaim(row: LedgerClaimRow): LedgerClaim {
     id: row.id,
     speaker: {
       memberId: row.member_id,
+      entityId: row.entity_id ?? null,
       name: row.speaker_name,
       party: row.party,
       constituency: row.constituency,
@@ -149,7 +152,7 @@ export async function countClaimsByDebate(
   const rows = await sql<Array<{ debate_ext_id: string; n: number }>>`
     SELECT debate_ext_id, COUNT(*)::int AS n
     FROM pooter.ledger_claims
-    WHERE debate_ext_id IN ${sql(extIds)}
+    WHERE debate_ext_id IN ${sql(extIds)} AND NOT review_hold
     GROUP BY debate_ext_id
   `;
   return new Map(rows.map((r) => [r.debate_ext_id, r.n]));
@@ -181,6 +184,7 @@ export async function listResolvableUnresolvedClaims(
            contribution_ext_id, uttered_at, context, extracted_by, occurrences
     FROM pooter.ledger_claims
     WHERE status = 'unresolved'
+      AND entity_id IS NULL -- the resolution agent only knows Parliament sources
       AND topic IN ('voting-record', 'statistics')
       AND (
         claim_type = 'retrodictable'
@@ -205,8 +209,30 @@ export async function listLedgerClaimsForDebate(
            normalized_claim, claim_type, topic, resolution_due, source_url,
            contribution_ext_id, uttered_at, context, extracted_by, occurrences
     FROM pooter.ledger_claims
-    WHERE debate_ext_id = ${debateExtId}
+    WHERE debate_ext_id = ${debateExtId} AND NOT review_hold
     ORDER BY uttered_at DESC, speaker_name ASC
+  `;
+  return rows.map(rowToClaim);
+}
+
+/**
+ * PUBLIC claims attributed to a non-MP entity (migration 018), newest first.
+ * Held claims — everything not yet through the review gate — are excluded
+ * here, so an entity page can never show an unreviewed claim.
+ */
+export async function listPublicLedgerClaimsForEntity(
+  entityId: string,
+  limit = 500,
+): Promise<LedgerClaim[]> {
+  const rows = await sql<LedgerClaimRow[]>`
+    SELECT id, member_id, entity_id, speaker_name, party, constituency,
+           verbatim_quote, normalized_claim, claim_type, topic, resolution_due,
+           source_url, contribution_ext_id, uttered_at, context, extracted_by,
+           occurrences
+    FROM pooter.ledger_claims
+    WHERE entity_id = ${entityId} AND NOT review_hold
+    ORDER BY uttered_at DESC, created_at ASC
+    LIMIT ${Math.max(1, Math.min(2000, limit))}
   `;
   return rows.map(rowToClaim);
 }

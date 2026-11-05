@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { claimSourceLabel } from "@/lib/ledger/entities";
+
 /**
  * The reviewer's queue.
  *
@@ -243,7 +245,7 @@ export function ReviewQueue() {
                 rel="noopener noreferrer"
                 className="mt-2 inline-block text-xs text-[var(--ink-faint)] underline underline-offset-4"
               >
-                Read the original in Hansard
+                Read the original ({claimSourceLabel(a.sourceUrl)})
               </a>
             </div>
 

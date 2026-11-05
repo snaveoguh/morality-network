@@ -19,7 +19,7 @@ import {
   listReviewQueue,
   rejectResolution,
 } from "@/lib/db/ledger-resolutions";
-import type { LedgerEvidence } from "@/lib/ledger/types";
+import { LEDGER_EVIDENCE_KINDS, type LedgerEvidence } from "@/lib/ledger/types";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
 // 'propose' (the proposal's document chain — OBR reports, judgments,
 // inquiries; spec's human-curated sources). Strictly validated: returns null
 // when any item is malformed.
-const EVIDENCE_KINDS = new Set(["division", "ons", "hansard", "obr", "other"]);
+const EVIDENCE_KINDS = new Set<string>(LEDGER_EVIDENCE_KINDS);
 const VERDICTS = new Set(["true", "false", "partial", "unresolved"]);
 
 function parseEvidence(
