@@ -3,6 +3,7 @@ import { getSourceBias, type SourceBias } from "./bias";
 import { fetchRedditFeeds, fetchChanFeeds } from "./scrapers";
 import { extractCanonicalClaim } from "./claim-extract";
 import { reportError, reportWarn } from "./report-error";
+import { detachStrings, processGlobal } from "./memory";
 
 const parser = new Parser({
   timeout: 5000,
@@ -334,7 +335,9 @@ export async function fetchFeed(source: FeedSource): Promise<FeedItem[]> {
       if (tags.length > 0) feedItem.tags = tags;
       return feedItem;
     });
-    return markFetchStampedDates(mapped);
+    // Fresh strings: the parsed fields are slices of the whole XML document
+    // and would keep it alive in every cache that holds these items.
+    return markFetchStampedDates(detachStrings(mapped));
   } catch (error) {
     reportError(`RSS:${source.name}`, error, { severity: "error" });
     return [];
@@ -346,7 +349,12 @@ export async function fetchFeed(source: FeedSource): Promise<FeedItem[]> {
 // background every 5 min (see fetchAllFeeds and src/instrumentation.ts).
 // ============================================================================
 
-let feedCache: { items: FeedItem[]; ts: number } | null = null;
+// Shared by every bundled copy of this module (Next puts it in many route
+// chunks); one cache and one crawl per process, not one per chunk.
+const feedState = processGlobal("rss.feedState", () => ({
+  cache: null as { items: FeedItem[]; ts: number } | null,
+  inflight: null as Promise<FeedItem[]> | null,
+}));
 const FEED_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 /** Fetch an array of promises in batches to avoid overwhelming serverless connections. */
@@ -374,24 +382,23 @@ export async function fetchAllFeeds(
   // the last crawl at once and an expired cache is refreshed in the
   // background. Only the first crawl after a boot makes anyone wait, and
   // instrumentation.ts runs that one at startup.
-  if (feedCache) {
-    if (Date.now() - feedCache.ts >= FEED_CACHE_TTL_MS) refreshDefaultFeeds().catch(() => {});
-    return feedCache.items;
+  const cached = feedState.cache;
+  if (cached) {
+    if (Date.now() - cached.ts >= FEED_CACHE_TTL_MS) refreshDefaultFeeds().catch(() => {});
+    return cached.items;
   }
   return refreshDefaultFeeds();
 }
 
 /** One shared crawl of the default feeds at a time. */
 function refreshDefaultFeeds(): Promise<FeedItem[]> {
-  if (!feedInflight) {
-    feedInflight = crawlAllFeeds(DEFAULT_FEEDS).finally(() => {
-      feedInflight = null;
+  if (!feedState.inflight) {
+    feedState.inflight = crawlAllFeeds(DEFAULT_FEEDS).finally(() => {
+      feedState.inflight = null;
     });
   }
-  return feedInflight;
+  return feedState.inflight;
 }
-
-let feedInflight: Promise<FeedItem[]> | null = null;
 
 async function crawlAllFeeds(sources: FeedSource[]): Promise<FeedItem[]> {
   // Fetch RSS in batches of 15 to avoid overwhelming serverless connections,
@@ -445,8 +452,8 @@ async function crawlAllFeeds(sources: FeedSource[]): Promise<FeedItem[]> {
 
   // Cache the default set only; a subset must not stand in for the feed.
   // An empty crawl (network down) keeps the previous one.
-  if (sources === DEFAULT_FEEDS && (deduped.length > 0 || !feedCache)) {
-    feedCache = { items: deduped, ts: Date.now() };
+  if (sources === DEFAULT_FEEDS && (deduped.length > 0 || !feedState.cache)) {
+    feedState.cache = { items: deduped, ts: Date.now() };
   }
 
   return deduped;
@@ -634,6 +641,8 @@ async function fetchXmlFromUrl(
       if (res.ok) {
         return await res.text();
       }
+      // Release the unread error body so the socket and its buffers are freed.
+      await res.body?.cancel().catch(() => {});
 
       // 403/404 are not retryable — surface immediately so fallback logic can kick in
       if (FALLBACK_TRIGGER_CODES.has(res.status)) {

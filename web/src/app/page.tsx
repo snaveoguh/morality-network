@@ -11,6 +11,8 @@ import { FrontGrid } from "@/components/feed/FrontFeed";
 import { AsyncPoliticsSlider, PoliticsSliderSkeleton } from "@/components/feed/AsyncPoliticsSlider";
 import { AsyncSignals, SignalsSkeleton } from "@/components/feed/AsyncSignals";
 import { AsyncCommentary, CommentarySkeleton } from "@/components/feed/AsyncCommentary";
+import { AsyncDayBrief } from "@/components/brief/AsyncDayBrief";
+import { DayBriefSkeleton } from "@/components/brief/DayBrief";
 import { getDailyEditionHash } from "@/lib/daily-edition";
 import { getArchivedEditorial, getRecentPooterOriginals } from "@/lib/editorial-archive";
 import { SITE_URL, withBrand } from "@/lib/brand";
@@ -22,7 +24,9 @@ export const maxDuration = 30;
 // ============================================================================
 // FEED PAGE — instant shell, data streams in via Suspense
 //
-// A politics slider opens the page (UK politics, or global politics relevant
+// "Your day" opens the page: an AI rundown of the last 24 hours with topic
+// chips and a box to ask about the news (components/brief). A politics
+// slider follows (UK politics, or global politics relevant
 // to the UK, with images; it refreshes as stories come in). The record
 // follows: the Accountability record band (corrections, PMQs
 // claims, pledges) sits above everything, then the Claim Ledger cards, then
@@ -130,6 +134,9 @@ export default function FeedPage() {
   return (
     <>
       <PooterTheme />
+      <Suspense fallback={<DayBriefSkeleton />}>
+        <AsyncDayBrief />
+      </Suspense>
       <Suspense fallback={<PoliticsSliderSkeleton />}>
         <AsyncPoliticsSlider />
       </Suspense>

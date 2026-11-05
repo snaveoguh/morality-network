@@ -7,6 +7,7 @@ export const metadata = {
 };
 
 const PROJECTS = [
+  { href: "/coops", label: "Co-op tracker", desc: "Every registered co-op in an area, and how each new one is doing. Start a co-op and join the tracker.", tag: "Co-ops" },
   { href: "/signals", label: "Bearometer", desc: "Market signals from 80+ news sources, plus global supply-chain strain from sea chokepoints, freight, energy, food and China's critical minerals.", tag: "Trading" },
   { href: "/predictions", label: "Predictions", desc: "Binary outcome markets on DAO proposals and geopolitical events. Parimutuel pools with 2% protocol fee.", tag: "Markets" },
   { href: "/nouns", label: "Nouns Marketplace", desc: "Zero-fee Nouns NFT marketplace built on Seaport 1.6. Peer-to-peer trading on Ethereum mainnet.", tag: "NFT" },
