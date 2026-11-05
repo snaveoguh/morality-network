@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 104 · /verify-your-hardware: buying a wallet safely
+- **when** — 2026-11-05
+- **what** — new static guide at `/verify-your-hardware`: buy direct or from a maker-listed reseller (makers' own sites, alphabetical, no ranking, no affiliate links); you generate the recovery phrase yourself and stop if one arrives pre-filled or on a scratch card; tamper checks and the maker's genuine/attestation check on first boot; open-source, reproducibly built firmware and open hardware with the trade-offs (closed secure elements, unchecked builds); never type a phrase into a phone, computer or website, and nobody from pooter.world will ask; phones, smart TVs (turn off ACR) and other devices; a boxed "MO claim: how it works, and what we will never ask for" (`#mo-claim`). Cites the Ethereum Foundation's "Not your silicon, not your life" post. Linked from More (About list and the Account rows), `/account` under wallet setup, and the MO claim panel (to `#mo-claim`). There is no site-wide footer, so More's About list is the footer-equivalent.
+- **why** — EF at Devcon VIII (2026-11-03) on tampered hardware wallets and verifiable silicon; with the MO Merkle claim for legacy holders due around the end of 2026, people may buy wallets to claim and are a target for tampered devices and phrase phishing.
+- **where** — `feat/buy-safe-wallets` off `dev`; `web/src/app/verify-your-hardware/page.tsx`, `web/src/app/more/page.tsx`, `web/src/components/layout/MoreAccount.tsx`, `web/src/app/account/page.tsx`, `web/src/components/account/MoClaimPanel.tsx`. Checked with `tsc --noEmit`, eslint, `next build` (route static), and Playwright at 375px in light and dark (no horizontal scroll). Outbound vendor links checked to resolve on 2026-11-05.
+- **rollback** — `git revert` the commit. No data, schema or env changes.
+
 ## ▲ node 103 · dev OOM fixed: cached feed items no longer pin whole RSS documents
 - **when** — 2026-11-03
 - **what** — `fetchFeed` (and the Reddit scraper) now return items copied into fresh strings (`detachStrings`, new `web/src/lib/memory.ts`). The default-feed cache and its in-flight crawl live on `globalThis` (`processGlobal`), so the 17 server chunks that bundle `rss.ts`, plus the `instrumentation.ts` warmer, share one cache and one crawl instead of one each; governance and day-brief ttl caches are shared the same way, so the warmed values are the ones pages read. Unread error bodies on non-OK feed responses are cancelled. Behaviour is otherwise unchanged (same feeds, TTLs, stale-while-revalidate).

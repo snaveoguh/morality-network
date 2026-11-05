@@ -65,6 +65,10 @@ export function MoreAccount() {
         <span>Account settings</span>
         <span className="text-[var(--ink-light)]">›</span>
       </Link>
+      <Link href="/verify-your-hardware" className={ROW}>
+        <span>Buying a hardware wallet</span>
+        <span className="text-[13px] text-[var(--ink-light)]">Safety guide ›</span>
+      </Link>
     </div>
   );
 }

@@ -47,6 +47,7 @@ const ABOUT = [
   { href: "/appendix", label: "Appendix", desc: "Contracts and API reference" },
   { href: "/style-guide", label: "Style guide", desc: "Brand and design system" },
   { href: "/typography", label: "Typography lab", desc: "Type candidates" },
+  { href: "/verify-your-hardware", label: "Verify your hardware", desc: "Buying a wallet safely" },
   { href: "/zk-recovery", label: "ZK recovery", desc: "Passwordless wallet recovery" },
   { href: "/privacy", label: "Privacy", desc: "What we collect and why" },
   { href: "/terms", label: "Terms and risk", desc: "Experimental, unaudited, not advice" },

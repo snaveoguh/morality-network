@@ -113,6 +113,14 @@ async function SignedIn({
 
       <WalletSetup existing={wallets} />
 
+      <p className="mt-4 max-w-xl text-sm leading-relaxed text-[var(--ink-light)]">
+        Buying a hardware wallet to claim? Read{" "}
+        <Link href="/verify-your-hardware" className="underline underline-offset-4">
+          how to buy one safely and check it is genuine
+        </Link>
+        . We will never ask for your recovery phrase.
+      </p>
+
       <MoClaimPanel />
 
       {/* Old mainnet MO is deliberately not shown. The platform balance above is
