@@ -57,6 +57,40 @@ export interface FeedItem {
   eventHash?: `0x${string}`;
 }
 
+// Exported for tests. Matched against title + description.
+export const HARDWARE_TRUST = new RegExp(
+  [
+    // Devices watching their owners
+    "\\bsmart (tvs?|televisions?|speakers?|doorbells?|meters?|locks?|glasses|home devices?)\\b",
+    "\\bautomatic content recognition\\b",
+    "\\b(ring|nest) (doorbells?|cameras?)\\b",
+    "\\bconnected cars?\\b|\\bcar makers? (shar|sell)\\w*\\s+(driver|driving) data\\b",
+    "\\b(stalkerware|spyware)\\b",
+    "\\bdevice (tracking|fingerprinting|surveillance)\\b",
+    "\\b(hidden|secret|undisclosed) (sim( cards?)?|microphones?|cameras?|chips?|radios?|modems?)\\b",
+    "\\bpre-?installed (malware|spyware|backdoors?)\\b",
+    "\\b(android )?tv (boxes|sticks?)\\b|\\bset-?top box(es)?\\b|\\bstreaming (boxes|sticks?)\\b",
+    "\\b(iot|internet of things|connected) (devices?|botnets?|security|cameras?)\\b",
+    // Tampered hardware, firmware and the supply chain
+    "\\bhardware (backdoors?|implants?|trojans?|security|vulnerabilit\\w+|flaws?)\\b",
+    "\\bfirmware (backdoors?|implants?|attacks?|vulnerabilit\\w+|flaws?|bugs?|malware|rootkits?)\\b",
+    "\\bbackdoor(ed)? (firmware|chips?|devices?|routers?|hardware|phones?)\\b",
+    "\\b(tampered|counterfeit|fake|cloned) (hardware|devices?|chips?|wallets?|routers?|phones?)\\b",
+    "\\bsupply[- ]chain (attacks?|compromise|backdoors?|security|tampering|implants?)\\b",
+    "\\b(uefi|bios|bootloaders?|bootkits?|baseband|secure boot|trusted platform module|tpm chip|secure enclave)\\b",
+    "\\bside[- ]channel (attacks?|leaks?|flaws?)\\b|\\b(spectre|rowhammer)\\b",
+    // Hardware wallets
+    "\\bhardware wallets?\\b|\\bcold wallets?\\b",
+    "\\b(trezor|coldcard|bitbox\\d*|keystone wallet|ledger (nano|stax|flex|live))\\b",
+    "\\bseed phrases?\\b",
+    // Open, verifiable silicon
+    "\\bopen[- ]source (hardware|silicon|chips?|firmware)\\b|\\bopen (hardware|silicon)\\b",
+    "\\brisc-?v\\b|\\bopentitan\\b|\\bcoreboot\\b|\\bverifiable (hardware|silicon|chips?)\\b",
+    "\\bright to repair\\b",
+  ].join("|"),
+  "i",
+);
+
 // ============================================================================
 // KEYWORD PATTERNS — auto-tag articles by scanning title + description
 // Each key is a tag name, value is a regex pattern (case-insensitive)
@@ -75,6 +109,11 @@ export const KEYWORD_PATTERNS: Record<string, RegExp> = {
   energy:    /\b(oil|opec|natural gas|nuclear|solar|wind farm|pipeline|energy crisis|electricity|grid|petroleum)\b/i,
   rights:    /\b(human rights|protest|civil rights|freedom|censorship|asylum|refugee|migrant|discrimination|lgbtq|abortion|privacy)\b/i,
   security:  /\b(cybersecurity|hack|breach|surveillance|espionage|intelligence|nato|terrorism|extremism|radicalis)\b/i,
+  // Hardware trust beat: devices that spy on their owners, tampered or
+  // backdoored hardware, firmware and supply-chain compromise, hardware
+  // wallets, and open/verifiable silicon. Kept tight: no bare "backdoor",
+  // "tamper" or "ledger", which match politics and our own Claim Ledger.
+  "hardware-trust": HARDWARE_TRUST,
   nature:    /\b(biodiversity|species|wildlife|conservation|deforestation|coral reef|rainforest|endangered|ecosystem|habitat|ocean|marine|pollution|plastic)\b/i,
 };
 
@@ -137,6 +176,17 @@ const SOURCE_TIER_MAP: Record<string, SourceTier> = {
   "World Bank Blogs": "broadsheet",
   "IMF Blog": "broadsheet",
   "OECD Newsroom": "broadsheet",
+  // Hardware trust / device security
+  "404 Media": "broadsheet",
+  "The Record": "broadsheet",
+  "Bleeping Computer": "broadsheet",
+  "Ars Technica Security": "broadsheet",
+  "EFF Deeplinks": "broadsheet",
+  "Krebs on Security": "blog",
+  "Schneier on Security": "blog",
+  "Privacy International": "broadsheet",
+  "RISC-V International": "blog",
+  "bunnie:studios": "blog",
 };
 
 const TIER_PRIORITY: Record<SourceTier, number> = {
@@ -225,6 +275,22 @@ export const DEFAULT_FEEDS: FeedSource[] = [
   { name: "The Verge",         url: "https://www.theverge.com/rss/index.xml",                      category: "Tech" },
   { name: "Wired",             url: "https://www.wired.com/feed/rss",                              category: "Tech" },
   { name: "Rest of World",     url: "https://restofworld.org/feed/",                               category: "Tech" },
+
+  // ─── HARDWARE TRUST / DEVICE SECURITY ───
+  // Devices that spy on their owners, firmware and supply-chain backdoors,
+  // hardware wallet security, open and verifiable silicon. Feeds checked
+  // live 2026-11-05. The "hardware-trust" auto-tag (above) pulls matching
+  // stories from every source into the Hardware trust section, not just these.
+  { name: "404 Media",         url: "https://www.404media.co/rss/",                                category: "Security" },
+  { name: "The Record",        url: "https://therecord.media/feed",                                category: "Security" },
+  { name: "Bleeping Computer", url: "https://www.bleepingcomputer.com/feed/",                      category: "Security" },
+  { name: "Ars Technica Security", url: "https://arstechnica.com/security/feed/",                  category: "Security" },
+  { name: "EFF Deeplinks",     url: "https://www.eff.org/rss/updates.xml",                         category: "Security" },
+  { name: "Krebs on Security", url: "https://krebsonsecurity.com/feed/",                           category: "Security" },
+  { name: "Schneier on Security", url: "https://www.schneier.com/feed/atom/",                      category: "Security" },
+  { name: "Privacy International", url: "https://www.privacyinternational.org/rss.xml",            category: "Security" },
+  { name: "RISC-V International", url: "https://riscv.org/feed/",                                  category: "Security" },
+  { name: "bunnie:studios",    url: "https://www.bunniestudios.com/blog/feed/",                    category: "Security" },
 
   // ─── CRYPTO / WEB3 ───
   { name: "CoinDesk",          url: "https://www.coindesk.com/arc/outboundfeeds/rss/",             category: "Crypto" },

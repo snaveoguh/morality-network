@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { FeedItem } from "@/lib/rss";
 import type { PooterOriginal } from "@/lib/editorial-archive";
 import { computeEntityHash } from "@/lib/entity";
-import { biasBucket, biasWords, timeAgo, topTags } from "@/lib/front";
+import { biasBucket, biasWords, inTab, timeAgo, topTags } from "@/lib/front";
 import { NewsSection, type NewsItem, type NewsTab } from "./NewsSection";
 
 // ============================================================================
@@ -31,7 +31,11 @@ const TABS: NewsTab[] = [
   { value: "world", label: "World", categories: ["World"] },
   { value: "politics", label: "Politics", categories: ["Politics", "Governance"] },
   { value: "markets", label: "Business & markets", categories: ["Business", "Crypto"] },
-  { value: "tech", label: "Tech & science", categories: ["Tech", "Science"] },
+  { value: "tech", label: "Tech & science", categories: ["Tech", "Science", "Security"] },
+  // A beat, not a category: any story tagged hardware-trust (rss.ts), from
+  // any source. Devices that spy, tampered hardware, firmware and supply-chain
+  // backdoors, hardware wallets, open and verifiable silicon.
+  { value: "hardware", label: "Hardware trust", categories: [], tags: ["hardware-trust"] },
   { value: "environment", label: "Environment", categories: ["Environment"] },
   { value: "sport", label: "Sport", categories: ["Sport"] },
 ];
@@ -140,6 +144,9 @@ function OriginalsRow({ originals }: { originals: PooterOriginal[] }) {
 
 /** Newest stories per tab and per trending tag, newsroom picks first in
  *  Latest, as plain data. */
+/** Tags that always get their own slots in the payload (beat tabs). */
+const BEAT_TAGS = TABS.flatMap((t) => t.tags ?? []);
+
 function newsItems(rssItems: FeedItem[], publishedHashes: Set<string>, trending: string[]): NewsItem[] {
   const toNews = (item: FeedItem): NewsItem => ({
     id: item.id,
@@ -167,7 +174,7 @@ function newsItems(rssItems: FeedItem[], publishedHashes: Set<string>, trending:
     take(`c:${item.category}`, item);
     for (const tag of item.tags ?? []) {
       const key = tag.toLowerCase();
-      if (trending.includes(key)) take(`t:${key}`, item);
+      if (trending.includes(key) || BEAT_TAGS.includes(key)) take(`t:${key}`, item);
     }
   }
   return ordered.filter((i) => keep.has(i)).map(toNews);
@@ -186,7 +193,7 @@ export function FrontFeed({
   const news = newsItems(rssItems, publishedHashes, tags);
   // Only offer tabs that have something in them today.
   const tabs = TABS.filter(
-    (t) => t.categories.length === 0 || news.filter((n) => t.categories.includes(n.category)).length >= 3,
+    (t) => (t.categories.length === 0 && !t.tags?.length) || news.filter((n) => inTab(t, n)).length >= 3,
   );
 
   return (

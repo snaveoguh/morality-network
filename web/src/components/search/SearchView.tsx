@@ -260,6 +260,14 @@ export function SearchView({ items, trending }: { items: SearchItem[]; trending:
               <span>Bearometer</span>
               <span className="text-[13px] text-[var(--ink-faint)]">buy, hold or sell ›</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => setTag("hardware-trust")}
+              className="flex min-h-12 items-center justify-between gap-3 border-b border-[var(--rule-light)] text-left text-[15px] text-[var(--ink)]"
+            >
+              <span>Hardware trust</span>
+              <span className="text-[13px] text-[var(--ink-faint)]">devices, firmware, open silicon ›</span>
+            </button>
             {sources.slice(0, 3).map((s) => (
               <button
                 key={s.value}
