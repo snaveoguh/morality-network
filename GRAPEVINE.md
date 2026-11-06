@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 104 · prediction market: no stakes after the vote is over
+- **when** — 2026-11-06
+- **what** — `MoralityPredictionMarket` gets a per-market staking close time (`stakingClosesAt`, new mapping appended at slot 7; existing slots unchanged). New owner functions `createMarketWithClose(dao, id, closesAt)` and `setStakingClose(dao, id, closesAt)`. `stake()` no longer auto-creates owner-managed markets (no same-chain governor): they revert `"No market"` until the owner creates them, `"Staking close not set"` until a close time is set, and `"Staking closed"` at or after it. A close time, if set, also binds governor markets. Governor markets still auto-create on first stake. Tests: 8 existing owner-managed tests now create markets with a close; 7 new tests including the reported attack.
+- **why** — KupiaSec (cold email, 2026-11-02) reported that owner-managed markets stayed open until `ownerResolve()`, so anyone could bet on the known winner after the vote ended and take most of the losing pool. Confirmed by reading the code. Until the upgrade ships, `pause()` on both proxies closes the hole.
+- **where** — `fix/market-late-stake` off `dev`; `contracts/src/MoralityPredictionMarket.sol`, `contracts/test/MoralityPredictionMarket.t.sol`. NOT deployed; proxies on Ethereum `0x2ea7…6608` and Base `0x71b2…12a` still run the old code. The web UI does not call `createMarket`, so after the upgrade owner-managed DAOs (Snapshot, Nouns-from-Base) cannot take stakes until markets are created with a close time.
+- **rollback** — `git revert` the fix commit. After an upgrade: upgrade back to the previous implementation; the new slot 7 mapping is simply ignored.
+
 ## ▲ node 103 · dev OOM fixed: cached feed items no longer pin whole RSS documents
 - **when** — 2026-11-03
 - **what** — `fetchFeed` (and the Reddit scraper) now return items copied into fresh strings (`detachStrings`, new `web/src/lib/memory.ts`). The default-feed cache and its in-flight crawl live on `globalThis` (`processGlobal`), so the 17 server chunks that bundle `rss.ts`, plus the `instrumentation.ts` warmer, share one cache and one crawl instead of one each; governance and day-brief ttl caches are shared the same way, so the warmed values are the ones pages read. Unread error bodies on non-OK feed responses are cancelled. Behaviour is otherwise unchanged (same feeds, TTLs, stale-while-revalidate).

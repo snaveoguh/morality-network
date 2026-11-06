@@ -49,6 +49,12 @@ contract MoralityPredictionMarketTest is Test {
         vm.deal(charlie, 20 ether);
     }
 
+    uint256 internal constant CLOSE_IN = 1 days;
+
+    function _createOwnerMarket() internal {
+        market.createMarketWithClose(DAO, PROPOSAL_ID, block.timestamp + CLOSE_IN);
+    }
+
     // ========================================================================
     // ADMIN
     // ========================================================================
@@ -80,7 +86,7 @@ contract MoralityPredictionMarketTest is Test {
         market.setProtocolFee(500);
         assertEq(market.protocolFeeBps(), 500);
 
-        market.createMarket(DAO, PROPOSAL_ID);
+        _createOwnerMarket();
 
         vm.prank(alice);
         market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
@@ -159,7 +165,7 @@ contract MoralityPredictionMarketTest is Test {
 
     function test_stakeOnOwnerManagedMarket() public {
         // No governor — staking is open until owner resolves.
-        market.createMarket(DAO, PROPOSAL_ID);
+        _createOwnerMarket();
 
         vm.prank(alice);
         market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
@@ -189,7 +195,7 @@ contract MoralityPredictionMarketTest is Test {
     }
 
     function test_stakeRevertsOnResolvedMarket() public {
-        market.createMarket(DAO, PROPOSAL_ID);
+        _createOwnerMarket();
 
         vm.prank(alice);
         market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
@@ -202,7 +208,7 @@ contract MoralityPredictionMarketTest is Test {
     }
 
     function test_pauseBlocksStake() public {
-        market.createMarket(DAO, PROPOSAL_ID);
+        _createOwnerMarket();
         market.pause();
 
         vm.prank(alice);
@@ -224,7 +230,7 @@ contract MoralityPredictionMarketTest is Test {
     // ========================================================================
 
     function test_ownerResolveFor() public {
-        market.createMarket(DAO, PROPOSAL_ID);
+        _createOwnerMarket();
 
         vm.prank(alice);
         market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
@@ -240,7 +246,7 @@ contract MoralityPredictionMarketTest is Test {
     }
 
     function test_ownerResolveAgainst() public {
-        market.createMarket(DAO, PROPOSAL_ID);
+        _createOwnerMarket();
 
         vm.prank(alice);
         market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
@@ -256,7 +262,7 @@ contract MoralityPredictionMarketTest is Test {
     }
 
     function test_ownerResolveVoidRefundsAll() public {
-        market.createMarket(DAO, PROPOSAL_ID);
+        _createOwnerMarket();
 
         vm.prank(alice);
         market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
@@ -396,7 +402,7 @@ contract MoralityPredictionMarketTest is Test {
     // ========================================================================
 
     function test_claimWinningsAfterOwnerResolve() public {
-        market.createMarket(DAO, PROPOSAL_ID);
+        _createOwnerMarket();
 
         vm.prank(alice);
         market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
@@ -449,5 +455,103 @@ contract MoralityPredictionMarketTest is Test {
 
     function _proposalKey(string memory proposalId) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(DAO, ":", proposalId));
+    }
+
+    // ========================================================================
+    // STAKING CLOSE (late-stake front-running fix)
+    // ========================================================================
+
+    function test_stakeCannotAutoCreateOwnerManagedMarket() public {
+        vm.prank(alice);
+        vm.expectRevert("No market");
+        market.stake{value: 1 ether}("snapshot-dao", "7", true);
+    }
+
+    function test_stakeRevertsOnOwnerManagedMarketWithoutClose() public {
+        market.createMarket(DAO, PROPOSAL_ID);
+        vm.prank(alice);
+        vm.expectRevert("Staking close not set");
+        market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
+    }
+
+    function test_stakeRevertsAtAndAfterClose() public {
+        _createOwnerMarket();
+        uint256 closesAt = block.timestamp + CLOSE_IN;
+        assertEq(market.stakingClosesAt(keccak256(abi.encodePacked(DAO, ":", PROPOSAL_ID))), closesAt);
+
+        vm.warp(closesAt - 1);
+        vm.prank(alice);
+        market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
+
+        vm.warp(closesAt);
+        vm.prank(bob);
+        vm.expectRevert("Staking closed");
+        market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
+    }
+
+    /// The attack from the KupiaSec report: vote ends, result is public, owner
+    /// has not resolved yet, attacker piles onto the known winner. Must revert,
+    /// and the honest winner must keep the whole losing pool (less fee).
+    function test_lateStakerCannotDiluteHonestWinners() public {
+        _createOwnerMarket();
+        vm.prank(alice);
+        market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
+        vm.prank(bob);
+        market.stake{value: 1 ether}(DAO, PROPOSAL_ID, false);
+
+        // Voting ends; outcome FOR is public; owner resolves an hour later.
+        vm.warp(block.timestamp + CLOSE_IN + 1 hours);
+        vm.prank(charlie);
+        vm.expectRevert("Staking closed");
+        market.stake{value: 10 ether}(DAO, PROPOSAL_ID, true);
+
+        market.ownerResolve(DAO, PROPOSAL_ID, MoralityPredictionMarket.Outcome.FOR);
+        uint256 before = alice.balance;
+        vm.prank(alice);
+        market.claim(DAO, PROPOSAL_ID);
+        // 2 ETH pot, 1 ETH profit, 2% fee on profit.
+        assertEq(alice.balance - before, 2 ether - 0.02 ether);
+    }
+
+    function test_setStakingCloseRules() public {
+        market.createMarket(DAO, PROPOSAL_ID);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
+        market.setStakingClose(DAO, PROPOSAL_ID, block.timestamp + 1);
+
+        vm.expectRevert("Close must be in future");
+        market.setStakingClose(DAO, PROPOSAL_ID, block.timestamp);
+
+        vm.expectRevert("No market");
+        market.setStakingClose(DAO, "999", block.timestamp + 1);
+
+        market.setStakingClose(DAO, PROPOSAL_ID, block.timestamp + 1 hours);
+        vm.prank(alice);
+        market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
+
+        market.ownerResolve(DAO, PROPOSAL_ID, MoralityPredictionMarket.Outcome.FOR);
+        vm.expectRevert("Market resolved");
+        market.setStakingClose(DAO, PROPOSAL_ID, block.timestamp + 2 hours);
+    }
+
+    function test_closeAlsoBindsGovernorMarkets() public {
+        market.setDaoResolver(DAO, address(governorA), true);
+        governorA.setProposalState(100, 1, true); // Active
+        market.createMarketWithClose(DAO, PROPOSAL_ID, block.timestamp + 1 hours);
+
+        vm.warp(block.timestamp + 1 hours);
+        vm.prank(alice);
+        vm.expectRevert("Staking closed");
+        market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
+    }
+
+    function test_governorMarketStillAutoCreatesWithoutClose() public {
+        market.setDaoResolver(DAO, address(governorA), true);
+        governorA.setProposalState(100, 1, true); // Active
+        vm.prank(alice);
+        market.stake{value: 1 ether}(DAO, PROPOSAL_ID, true);
+        (,,,,,,, bool exists) = market.getMarket(DAO, PROPOSAL_ID);
+        assertTrue(exists);
     }
 }

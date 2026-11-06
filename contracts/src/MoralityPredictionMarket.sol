@@ -61,6 +61,11 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
     uint256 public totalFeesCollected;
     // slot 6
     uint256 private reentrancyLock;
+    // slot 7 — staking close time per market (unix seconds). 0 = not set.
+    // Owner-managed markets (governor == address(0)) refuse stakes until a
+    // close time is set and refuse every stake at or after it, so nobody can
+    // bet once the real result is public but before ownerResolve() lands.
+    mapping(bytes32 => uint256) public stakingClosesAt;
 
     modifier nonReentrant() {
         require(reentrancyLock == 1, "Reentrant");
@@ -77,6 +82,7 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
     event WinningsClaimed(bytes32 indexed proposalKey, address indexed staker, uint256 payout);
     event MarketVoided(bytes32 indexed proposalKey);
     event DaoResolverSet(string dao, address indexed governor, bool enabled);
+    event StakingCloseSet(bytes32 indexed proposalKey, uint256 closesAt);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -117,7 +123,44 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
         string calldata dao,
         string calldata proposalId
     ) external onlyOwner {
+        _createMarket(dao, proposalId);
+    }
+
+    /// @notice Create a market and set when staking closes, in one call.
+    ///         Owner-managed markets cannot take stakes without a close time.
+    function createMarketWithClose(
+        string calldata dao,
+        string calldata proposalId,
+        uint256 closesAt
+    ) external onlyOwner {
+        bytes32 key = _createMarket(dao, proposalId);
+        _setStakingClose(key, closesAt);
+    }
+
+    /// @notice Set or move the staking close time for an existing, unresolved market.
+    ///         Set it to the moment voting ends (or earlier) — never later.
+    function setStakingClose(
+        string calldata dao,
+        string calldata proposalId,
+        uint256 closesAt
+    ) external onlyOwner {
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
+        require(markets[key].exists, "No market");
+        require(markets[key].outcome == Outcome.UNRESOLVED, "Market resolved");
+        _setStakingClose(key, closesAt);
+    }
+
+    function _setStakingClose(bytes32 key, uint256 closesAt) internal {
+        require(closesAt > block.timestamp, "Close must be in future");
+        stakingClosesAt[key] = closesAt;
+        emit StakingCloseSet(key, closesAt);
+    }
+
+    function _createMarket(
+        string calldata dao,
+        string calldata proposalId
+    ) internal returns (bytes32 key) {
+        key = keccak256(abi.encodePacked(dao, ":", proposalId));
         require(!markets[key].exists, "Market exists");
 
         // Lock in same-chain governor if configured, otherwise owner-managed.
@@ -147,7 +190,9 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
     // ========================================================================
 
     /// @notice Stake ETH on a prediction outcome.
-    ///         If the market does not exist yet, the first stake auto-creates it.
+    ///         If the market does not exist yet and the DAO has a same-chain
+    ///         governor, the first stake auto-creates it. Owner-managed markets
+    ///         must be created by the owner with a close time first.
     /// @param dao The DAO identifier
     /// @param proposalId The proposal ID
     /// @param isFor true = stake on FOR (proposal passes), false = AGAINST
@@ -161,10 +206,12 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
         bytes32 key = keccak256(abi.encodePacked(dao, ":", proposalId));
         Market storage m = markets[key];
 
-        // Auto-create market on first wager
+        // Auto-create market on first wager — only where the chain itself can
+        // say when voting is over. Owner-managed markets need an explicit close.
         if (!m.exists) {
             DaoResolverConfig memory cfg = daoResolverConfigs[keccak256(bytes(dao))];
             address governor = (cfg.enabled && cfg.governor != address(0)) ? cfg.governor : address(0);
+            require(governor != address(0), "No market");
             uint256 proposalNumericId = _parseUintStrict(proposalId);
 
             m.proposalKey = key;
@@ -178,12 +225,18 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
 
         require(m.outcome == Outcome.UNRESOLVED, "Market resolved");
 
-        // If market has a same-chain governor, verify proposal is still open.
-        // If owner-managed (governor == address(0)), staking is open until
-        // owner resolves the market.
+        // Same-chain governor: the proposal must still be open onchain.
+        // Owner-managed: a close time must be set and not yet reached.
+        // An optional close time also binds governor markets.
+        uint256 closesAt = stakingClosesAt[key];
         if (m.governor != address(0)) {
             uint8 latestState = _readGovernorState(m.governor, m.proposalNumericId);
             require(_isStakeableState(latestState), "Proposal not open");
+        } else {
+            require(closesAt != 0, "Staking close not set");
+        }
+        if (closesAt != 0) {
+            require(block.timestamp < closesAt, "Staking closed");
         }
 
         Position storage pos = positions[key][msg.sender];
