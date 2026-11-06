@@ -518,5 +518,5 @@ contract MoralityPredictionMarket is Initializable, UUPSUpgradeable, OwnableUpgr
     // NOTE: receive() intentionally omitted — ETH should enter only via
     // stake(). Direct sends are not tracked and would be permanently stuck.
 
-    uint256[48] private __gap;
+    uint256[47] private __gap;
 }
