@@ -13,12 +13,21 @@ import {
 import { commentOnChain, entityHash, getEthBalance } from "../onchain.js";
 import { bridge } from "../bridge.js";
 import { lintComment, formatCommentIssues, COMMENT_STYLE_PROMPT } from "../comment-style.js";
+import { fetchArticleText } from "../article-text.js";
 import { POOTER_API_URL, CRON_SECRET, MAX_COMMENTS_PER_DAY } from "../config.js";
 
 /** Minimum ETH balance to attempt on-chain comments (0.0005 ETH) */
 const MIN_BALANCE_WEI = 500_000_000_000_000n; // 0.0005 ETH
 /** Max comments per cron run */
 const COMMENTS_PER_RUN = 3;
+/**
+ * Token budget per comment call. The Agent Hub model reasons in a <think>
+ * block before answering, and that block counts against max tokens before
+ * llm.ts strips it. At 300 the reasoning ate the budget: on 2026-11-09 one
+ * comment went on-chain cut off mid-sentence and another came back empty.
+ * The lint's "unfinished" rule catches any that still run out.
+ */
+const COMMENT_MAX_TOKENS = 1_500;
 
 /** Push article metadata to pooter.world so entity pages have context */
 async function pushEntityContext(article: any, identifier: string): Promise<void> {
@@ -118,24 +127,31 @@ export async function commentOnArticles(): Promise<void> {
       `Reply with ONLY the comment text. No reasoning, no preamble, no XML tags.`,
     ].join("\n");
 
+    // Read the piece itself. Fall back to the feed summary when the site
+    // blocks us or paywalls, and tell the model which one it has.
+    const body = await fetchArticleText(article.link);
+    console.log(`[pooter1] ${body ? `Read ${body.length} chars` : "Summary only"} for "${article.title.slice(0, 50)}"`);
+
     const user = [
       `Article: "${article.title}"`,
       `Source: ${article.source}`,
-      `Summary: ${article.description?.slice(0, 300)}`,
+      body
+        ? `Full text:\n${body}`
+        : `Summary (the full text could not be fetched, so you have NOT read the article; do not fault it for leaving things out):\n${article.description?.slice(0, 300)}`,
       ``,
-      `Write a brief, sharp comment.`,
+      `Write a brief comment.`,
     ].join("\n");
 
     try {
       // One retry with the lint's complaints; if that fails too, skip the
       // article. Comments go on-chain and on the front page, so a missed
       // comment is better than a purple one.
-      let comment = (await generate({ system, user, maxTokens: 300, temperature: 0.6 })).trim();
+      let comment = (await generate({ system, user, maxTokens: COMMENT_MAX_TOKENS, temperature: 0.6 })).trim();
       let issues = lintComment(comment);
       if (issues.length) {
         console.warn(`[pooter1] Comment failed house style: ${formatCommentIssues(issues)}`);
         const retryUser = `${user}\n\nYour last draft broke the house style (${formatCommentIssues(issues)}):\n"${comment}"\nRewrite it plainly.`;
-        comment = (await generate({ system, user: retryUser, maxTokens: 300, temperature: 0.4 })).trim();
+        comment = (await generate({ system, user: retryUser, maxTokens: COMMENT_MAX_TOKENS, temperature: 0.4 })).trim();
         issues = lintComment(comment);
       }
       if (issues.length) {

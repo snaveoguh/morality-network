@@ -12,6 +12,10 @@ import {
 import { rateOnChain } from "../onchain.js";
 import { bridge } from "../bridge.js";
 import { POOTER_API_URL, CRON_SECRET, MAX_EDITORIALS_PER_DAY } from "../config.js";
+import { fetchArticleText } from "../article-text.js";
+
+/** Lead stories fetched in full for the editorial; the rest stay as blurbs. */
+const FULL_TEXT_STORIES = 5;
 
 async function fetchTodaysFeed(): Promise<any[]> {
   const res = await fetch(`${POOTER_API_URL}/api/feed`, {
@@ -37,7 +41,17 @@ export async function writeEditorial(): Promise<void> {
     source: item.source,
     description: item.description?.slice(0, 200),
     category: item.category,
+    body: null as string | null,
   }));
+
+  // Read the top few in full so the take rests on what the pieces say, not
+  // on their blurbs. The rest stay as headlines for context.
+  await Promise.all(
+    feed.slice(0, FULL_TEXT_STORIES).map(async (item: any, i: number) => {
+      topStories[i].body = await fetchArticleText(item.link, 2_500);
+    }),
+  );
+  console.log(`[pooter1] Read ${topStories.filter((s) => s.body).length}/${FULL_TEXT_STORIES} lead stories in full`);
 
   if (!topStories.length) {
     console.log("[pooter1] No stories to write about");
@@ -75,7 +89,8 @@ export async function writeEditorial(): Promise<void> {
     `RULES:`,
     `- Write 3-5 paragraphs max`,
     `- Pick the 2-3 most interesting stories. Connect them only if the sources show a real link; otherwise take them one at a time`,
-    `- Be opinionated. Take a stance. This is an editorial, not a summary.`,
+    `- Take a stance. This is an editorial, not a summary. A stance can be agreement, credit or alarm as well as criticism: match it to what the stories actually say`,
+    `- Write about the stories marked FULL TEXT. Do not fault a "summary only" story for what it leaves out: you have not read it`,
     `- End on a fact or on what happens next (a date, a vote, a figure), not on a one-line moral`,
     `- No headline — the system adds that`,
     `- Never use exclamation marks`,
@@ -116,7 +131,9 @@ export async function writeEditorial(): Promise<void> {
     `Today's top stories:`,
     ``,
     ...topStories.map((s: any, i: number) =>
-      `${i + 1}. [${s.source}] ${s.title}\n   ${s.description || ""}`
+      s.body
+        ? `${i + 1}. [${s.source}] ${s.title}\n   FULL TEXT:\n${s.body}`
+        : `${i + 1}. [${s.source}] ${s.title}\n   ${s.description || ""} (summary only)`
     ),
     ``,
     `Write your editorial take on today's news.`,

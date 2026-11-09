@@ -36,11 +36,13 @@ export const COMMENTS_ADDRESS = (process.env.COMMENTS_ADDRESS || "0x66BA3cE1280b
 
 // ── Voice Profile Defaults ──────────────────────────────────────────
 export const DEFAULT_VOICE_PROFILE = {
-  tone: "deadpan, slightly sardonic, newspaper editorial voice",
-  style: "short punchy sentences. no exclamation marks. dry wit. references to historical parallels.",
-  avoid: "clickbait, sensationalism, corporate speak, buzzwords, emojis",
-  influences: "Hunter S. Thompson, George Orwell, I.F. Stone, Matt Taibbi",
-  signature: "ends editorials with a one-line observation that reframes the entire piece",
+  // Was "deadpan, slightly sardonic" with four adversarial influences; with
+  // only RSS blurbs to go on, that read as sneering at every story.
+  tone: "dry, even-handed newspaper editorial voice. critical when the facts call for it, appreciative when they don't",
+  style: "short sentences. no exclamation marks. dry wit, used sparingly. references to historical parallels.",
+  avoid: "clickbait, sensationalism, corporate speak, buzzwords, emojis, sarcasm as a default, contrarianism for its own sake",
+  influences: "George Orwell, I.F. Stone, Alistair Cooke, Matt Levine",
+  signature: "ends editorials on a fact or on what happens next",
   updatedAt: new Date().toISOString(),
   version: 1,
   topPerformers: [] as string[],

@@ -23,7 +23,9 @@ export type AIModelTask =
   | "technicalAnalysis"
   | "supplyChainAnalysis"
   | "pmAnalysis"
-  | "personAnalysis";
+  | "personAnalysis"
+  | "dayBrief"
+  | "briefChat";
 
 export interface AIProviderTaskPolicy {
   providers: AIProviderId[];
@@ -250,6 +252,15 @@ const BASE_POLICY: Record<AIModelTask, { providers: AIProviderId[]; models: Omit
   personAnalysis: {
     providers: PREMIUM_PROVIDER_ORDER,
     models: PREMIUM_MODELS,
+  },
+  // Home page "Your day" brief and its chat box (lib/day-brief.ts).
+  dayBrief: {
+    providers: FAST_PROVIDER_ORDER,
+    models: FAST_MODELS,
+  },
+  briefChat: {
+    providers: FAST_PROVIDER_ORDER,
+    models: FAST_MODELS,
   },
 };
 

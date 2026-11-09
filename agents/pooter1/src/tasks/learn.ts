@@ -55,6 +55,7 @@ export async function learn(): Promise<void> {
     `- Weight feedback from users who have rated/tipped highly (they're engaged)`,
     `- If something is working, keep it. If something isn't, adjust.`,
     `- Never lose the core voice — just refine it`,
+    `- Do not make the tone harsher, more sarcastic or more contrarian to chase engagement. Snark draws replies; that is not the same as being right. Keep it even-handed`,
     `- Output ONLY valid JSON matching the profile structure`,
   ].join("\n");
 

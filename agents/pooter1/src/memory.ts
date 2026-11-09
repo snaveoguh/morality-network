@@ -8,7 +8,10 @@ import {
   DEFAULT_VOICE_PROFILE,
 } from "./config.js";
 
-const VOICE_KEY = "pooter1:voice-profile";
+// v2: fresh key so the retuned DEFAULT_VOICE_PROFILE takes effect. The old
+// key holds the weekly learner's drift from the sardonic baseline; it is left
+// in Redis untouched for comparison.
+const VOICE_KEY = "pooter1:voice-profile:v2";
 const ENGAGEMENT_KEY = "pooter1:engagement";
 const FEEDBACK_KEY = "pooter1:feedback";
 const DAILY_STATS_KEY = "pooter1:daily-stats";

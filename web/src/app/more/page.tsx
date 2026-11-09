@@ -31,6 +31,7 @@ const ACT = [
   { href: "/bots", label: "Agents" },
   { href: "/proposals", label: "Governance" },
   { href: "/coop", label: "Co-op" },
+  { href: "/coops", label: "Co-op tracker" },
   { href: "/predictions", label: "Predictions" },
   { href: "/predictions/arb", label: "Arb scanner" },
   { href: "/registry", label: "Registry" },
