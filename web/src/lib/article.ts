@@ -11,6 +11,7 @@ import { getArchivedEditorial } from "./editorial-archive";
 import { generateAIEditorial } from "./claude-editorial";
 import { computeEntityHash } from "./entity";
 import { extractPodcastEpisode } from "./podcast";
+import { detachStrings, processGlobal, setBounded } from "./memory";
 import { detectStoryCountries, normalizeBiasCountry } from "./countries";
 
 // ============================================================================
@@ -165,11 +166,24 @@ interface LanguageProfile {
   isCjk: boolean;
 }
 
-const SOURCE_CONTEXT_CACHE = new Map<string, { summary: string; expiresAt: number }>();
+// Both caches below are keyed per article link / text, so they are capped
+// (setBounded) and shared process-wide (processGlobal). Uncapped, they held one
+// entry for every link the server ever rendered, and each source-context
+// summary was a V8 slice of the scraped page, keeping the whole HTML document
+// alive: the prod heap climbed to 4 GB over ~34 h (grapevine node 104).
+const SOURCE_CONTEXT_CACHE_MAX = 400;
+const SOURCE_CONTEXT_CACHE = processGlobal(
+  "article.sourceContextCache",
+  () => new Map<string, { summary: string; expiresAt: number }>(),
+);
 const CONTEXT_CACHE_TTL_MS = 30 * 60 * 1000;
 const CONTEXT_FETCH_TIMEOUT_MS = 4_000;
 const MAX_RELATED_CONTEXT_FETCH = 3;
-const ENGLISH_TRANSLATION_CACHE = new Map<string, { text: string; expiresAt: number }>();
+const TRANSLATION_CACHE_MAX = 400;
+const ENGLISH_TRANSLATION_CACHE = processGlobal(
+  "article.translationCache",
+  () => new Map<string, { text: string; expiresAt: number }>(),
+);
 const TRANSLATION_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 const TRANSLATION_TIMEOUT_MS = 5_000;
 
@@ -1016,12 +1030,16 @@ async function getContextSummaryForItem(item: FeedItem): Promise<string> {
 
   const targetKeywords = extractKeywords(`${item.title} ${item.description}`);
   const scraped = await fetchSourceSummary(item.link, targetKeywords);
-  const summary = rewriteAsBrief(scraped || fallback || item.title);
+  // detachStrings: the summary is a slice of the scraped HTML and would pin
+  // the whole page in the cache.
+  const summary = detachStrings(rewriteAsBrief(scraped || fallback || item.title));
 
-  SOURCE_CONTEXT_CACHE.set(item.link, {
-    summary,
-    expiresAt: now + CONTEXT_CACHE_TTL_MS,
-  });
+  setBounded(
+    SOURCE_CONTEXT_CACHE,
+    detachStrings(item.link),
+    { summary, expiresAt: now + CONTEXT_CACHE_TTL_MS },
+    SOURCE_CONTEXT_CACHE_MAX,
+  );
 
   return summary;
 }
@@ -1605,10 +1623,12 @@ async function translateToEnglish(input: string): Promise<string | null> {
     const translated = parseGoogleTranslatePayload(data);
     if (!translated) return null;
 
-    ENGLISH_TRANSLATION_CACHE.set(text, {
-      text: translated,
-      expiresAt: now + TRANSLATION_CACHE_TTL_MS,
-    });
+    setBounded(
+      ENGLISH_TRANSLATION_CACHE,
+      detachStrings(text),
+      { text: translated, expiresAt: now + TRANSLATION_CACHE_TTL_MS },
+      TRANSLATION_CACHE_MAX,
+    );
 
     return translated;
   } catch (e) {

@@ -43,12 +43,15 @@ function cleanup() {
   if (now - lastCleanup < CLEANUP_INTERVAL) return;
   lastCleanup = now;
 
-  for (const [, store] of stores) {
+  for (const [endpoint, store] of stores) {
     for (const [key, entry] of store) {
       if (entry.resetAt < now) {
         store.delete(key);
       }
     }
+    // Stores are keyed by pathname, which includes dynamic segments
+    // (article hashes, addresses), so drop the ones that have emptied.
+    if (store.size === 0) stores.delete(endpoint);
   }
 }
 

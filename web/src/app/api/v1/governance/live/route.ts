@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { setBounded } from "@/lib/memory";
 import {
   fetchAllProposals,
   fetchGovernanceSocialSignals,
@@ -32,6 +33,9 @@ interface GovernanceLiveCacheEntry {
 }
 
 const governanceLiveCache = new Map<string, GovernanceLiveCacheEntry>();
+// Keyed by the query's filters (free-text source/tag lists), and each entry
+// holds a full payload of up to MAX_LIMIT proposals: cap the number of keys.
+const LIVE_GOVERNANCE_CACHE_MAX = 50;
 
 interface NormalizedGovernanceSocialSignal {
   id: string;
@@ -256,10 +260,12 @@ export async function GET(request: Request) {
       },
     };
 
-    governanceLiveCache.set(cacheKey, {
-      expiresAt: now + LIVE_GOVERNANCE_CACHE_TTL_MS,
-      payload,
-    });
+    setBounded(
+      governanceLiveCache,
+      cacheKey,
+      { expiresAt: now + LIVE_GOVERNANCE_CACHE_TTL_MS, payload },
+      LIVE_GOVERNANCE_CACHE_MAX,
+    );
 
     return NextResponse.json(payload, {
       headers: {

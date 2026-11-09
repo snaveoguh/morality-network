@@ -11,6 +11,7 @@ import {
 } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { ERC20_ABI, MO_TOKEN, ZERO_ADDRESS } from "@/lib/contracts";
+import { setBounded } from "@/lib/memory";
 
 export interface TerminalSubscriptionSplit {
   key: "vault" | "lp";
@@ -56,6 +57,8 @@ const TRANSFER_EVENT = parseAbiItem(
 
 const STATUS_CACHE_TTL_MS = 30_000;
 const statusCache = new Map<string, { status: TerminalSubscriptionStatus; expiresAt: number }>();
+// Keyed by caller-supplied address: cap it so arbitrary addresses can't grow it.
+const STATUS_CACHE_MAX = 500;
 
 function envAddress(...keys: string[]): Address | null {
   for (const key of keys) {
@@ -265,12 +268,12 @@ export async function getTerminalSubscriptionStatus(
 
   if (!config.enabled) {
     const status = { ...baseStatus, reason: "terminal access gate is not configured" };
-    statusCache.set(cacheKey, { status, expiresAt: Date.now() + STATUS_CACHE_TTL_MS });
+    setBounded(statusCache, cacheKey, { status, expiresAt: Date.now() + STATUS_CACHE_TTL_MS }, STATUS_CACHE_MAX);
     return status;
   }
 
   if (!address || !isAddress(address)) {
-    statusCache.set(cacheKey, { status: baseStatus, expiresAt: Date.now() + STATUS_CACHE_TTL_MS });
+    setBounded(statusCache, cacheKey, { status: baseStatus, expiresAt: Date.now() + STATUS_CACHE_TTL_MS }, STATUS_CACHE_MAX);
     return baseStatus;
   }
 
@@ -295,6 +298,6 @@ export async function getTerminalSubscriptionStatus(
     },
   };
 
-  statusCache.set(cacheKey, { status, expiresAt: Date.now() + STATUS_CACHE_TTL_MS });
+  setBounded(statusCache, cacheKey, { status, expiresAt: Date.now() + STATUS_CACHE_TTL_MS }, STATUS_CACHE_MAX);
   return status;
 }

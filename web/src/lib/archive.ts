@@ -8,6 +8,7 @@ import { extractCanonicalClaim } from "./claim-extract";
 import { normalizeUrl, verifyEvidence } from "./evidence-verify";
 import { fetchIndexerJson, getIndexerBackendUrl } from "./server/indexer-backend";
 import { reportWarn } from "./report-error";
+import { processGlobal } from "./memory";
 
 export interface ArchivedFeedItem {
   hash: `0x${string}`;
@@ -53,8 +54,18 @@ const EMPTY_ARCHIVE: ArticleArchiveFile = {
   items: {},
 };
 
-let cache: ArticleArchiveFile | null = null;
-let cacheLoadedAtMs = 0;
+// One parsed archive per process, shared by every bundled copy of this module
+// (Next puts it in many route chunks), and one file read at a time: a plain
+// module-level cache meant one multi-MB parsed copy per chunk, and every
+// request that found it expired re-read and re-parsed the file concurrently.
+const archiveState = processGlobal("archive.localFile", () => ({
+  cache: null as ArticleArchiveFile | null,
+  loadedAtMs: 0,
+  loading: null as Promise<ArticleArchiveFile> | null,
+  // Feed arrays already archived: fetchAllFeeds returns the same array until
+  // the next crawl, so an article view only needs to archive it once.
+  archivedBatches: new WeakSet<FeedItem[]>(),
+}));
 const CACHE_TTL_MS = 30_000;
 // Capped to keep the indexer response under the Node heap budget on Railway.
 // History: 100_000 hit ~34 MB and OOM-crashed; 25_000 was *thought* to be
@@ -188,11 +199,21 @@ async function upsertRemoteArchivedItems(items: FeedItem[]): Promise<void> {
 }
 
 async function loadArchive(): Promise<ArticleArchiveFile> {
-  const now = Date.now();
-  if (cache && now - cacheLoadedAtMs < CACHE_TTL_MS) {
-    return cache;
+  const cached = archiveState.cache;
+  if (cached && Date.now() - archiveState.loadedAtMs < CACHE_TTL_MS) {
+    return cached;
   }
+  if (!archiveState.loading) {
+    archiveState.loading = readArchiveFile().finally(() => {
+      archiveState.loading = null;
+    });
+  }
+  return archiveState.loading;
+}
 
+async function readArchiveFile(): Promise<ArticleArchiveFile> {
+  const now = Date.now();
+  let cache: ArticleArchiveFile;
   try {
     const raw = await readFile(ARCHIVE_FILE_PATH, "utf8");
     const parsed = JSON.parse(raw) as Partial<ArticleArchiveFile>;
@@ -210,7 +231,8 @@ async function loadArchive(): Promise<ArticleArchiveFile> {
     cache = EMPTY_ARCHIVE;
   }
 
-  cacheLoadedAtMs = now;
+  archiveState.cache = cache;
+  archiveState.loadedAtMs = now;
   return cache;
 }
 
@@ -419,6 +441,14 @@ export async function autoArchiveItem(item: FeedItem): Promise<void> {
  */
 export async function autoArchiveBatch(items: FeedItem[]): Promise<void> {
   if (items.length === 0) return;
+  // Article pages pass the whole live feed on every view. Archive each feed
+  // array once: re-sending ~thousands of items (a multi-MB JSON body to the
+  // indexer, or a full parse + stringify of the local file) per page view is
+  // what piled up in the heap under crawler traffic.
+  if (items.length > 1) {
+    if (archiveState.archivedBatches.has(items)) return;
+    archiveState.archivedBatches.add(items);
+  }
   // Wait for any in-flight save to finish before starting a new one
   if (saveInFlight) {
     await saveInFlight.catch(() => {});
@@ -491,8 +521,8 @@ export async function autoArchiveBatch(items: FeedItem[]): Promise<void> {
       }
 
       archive.updatedAt = now;
-      cache = archive;
-      cacheLoadedAtMs = Date.now();
+      archiveState.cache = archive;
+      archiveState.loadedAtMs = Date.now();
 
       // Persist to Redis (survives Vercel cold starts + read-only FS)
       if (newCount > 0 || updatedCount > 0) {

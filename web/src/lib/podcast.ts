@@ -1,13 +1,20 @@
 import "server-only";
 
 import { reportWarn } from "./report-error";
+import { detachStrings, processGlobal, setBounded } from "./memory";
 import type { FeedItem } from "./rss";
 import type { PodcastEpisode, PodcastPlatformLink } from "./article";
 
 const PODCAST_FETCH_TIMEOUT_MS = 6_000;
 const PODCAST_CACHE_TTL_MS = 30 * 60 * 1000;
 
-const podcastCache = new Map<string, { expiresAt: number; value: PodcastEpisode | null }>();
+// Capped and shared process-wide; values are detached because the episode
+// fields are slices of the fetched page HTML (see lib/memory.ts).
+const PODCAST_CACHE_MAX = 200;
+const podcastCache = processGlobal(
+  "podcast.cache",
+  () => new Map<string, { expiresAt: number; value: PodcastEpisode | null }>(),
+);
 
 interface CneAudioData {
   title?: string;
@@ -32,8 +39,13 @@ export async function extractPodcastEpisode(primary: FeedItem): Promise<PodcastE
     return cached.value;
   }
 
-  const value = await extractPodcastEpisodeUncached(primary);
-  podcastCache.set(primary.link, { value, expiresAt: Date.now() + PODCAST_CACHE_TTL_MS });
+  const value = detachStrings(await extractPodcastEpisodeUncached(primary));
+  setBounded(
+    podcastCache,
+    detachStrings(primary.link),
+    { value, expiresAt: Date.now() + PODCAST_CACHE_TTL_MS },
+    PODCAST_CACHE_MAX,
+  );
   return value;
 }
 

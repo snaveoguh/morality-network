@@ -6,6 +6,7 @@ import { keccak256, toBytes } from "viem";
 import type { ArticleContent } from "./article";
 import { fetchIndexerJson, getIndexerBackendUrl } from "./server/indexer-backend";
 import { reportWarn } from "./report-error";
+import { processGlobal } from "./memory";
 import { stripMd } from "./strip-md";
 import { normalizeEngineSymbol } from "./trading/engine-symbol";
 import {
@@ -55,8 +56,13 @@ const EMPTY_ARCHIVE: EditorialArchiveFile = {
   items: {},
 };
 
-let cache: EditorialArchiveFile | null = null;
-let cacheLoadedAtMs = 0;
+// One parsed archive per process, shared by every bundled copy of this module,
+// and one file read at a time (same reasons as lib/archive.ts).
+const archiveState = processGlobal("editorialArchive.localFile", () => ({
+  cache: null as EditorialArchiveFile | null,
+  loadedAtMs: 0,
+  loading: null as Promise<EditorialArchiveFile> | null,
+}));
 const CACHE_TTL_MS = 30_000;
 
 /* ── Upstash Redis REST helpers (mirrors position-store.ts pattern) ── */
@@ -177,11 +183,21 @@ async function fetchRemoteMarketImpactRecords(
 }
 
 async function loadArchive(): Promise<EditorialArchiveFile> {
-  const now = Date.now();
-  if (cache && now - cacheLoadedAtMs < CACHE_TTL_MS) {
-    return cache;
+  const cached = archiveState.cache;
+  if (cached && Date.now() - archiveState.loadedAtMs < CACHE_TTL_MS) {
+    return cached;
   }
+  if (!archiveState.loading) {
+    archiveState.loading = readArchiveFile().finally(() => {
+      archiveState.loading = null;
+    });
+  }
+  return archiveState.loading;
+}
 
+async function readArchiveFile(): Promise<EditorialArchiveFile> {
+  const now = Date.now();
+  let cache: EditorialArchiveFile;
   try {
     const raw = await readFile(ARCHIVE_FILE_PATH, "utf8");
     const parsed = JSON.parse(raw) as Partial<EditorialArchiveFile>;
@@ -199,7 +215,8 @@ async function loadArchive(): Promise<EditorialArchiveFile> {
     cache = { ...EMPTY_ARCHIVE };
   }
 
-  cacheLoadedAtMs = now;
+  archiveState.cache = cache;
+  archiveState.loadedAtMs = now;
   return cache;
 }
 
@@ -213,7 +230,8 @@ async function persistArchive(archive: EditorialArchiveFile): Promise<void> {
     await mkdir(dir, { recursive: true });
     await writeFile(
       ARCHIVE_FILE_PATH,
-      JSON.stringify(archive, null, 2),
+      // Compact: pretty-printing doubles the transient string (see archive.ts).
+      JSON.stringify(archive),
       "utf8",
     );
   } finally {
@@ -289,8 +307,8 @@ export async function getArchivedEditorial(
         if (!archive.items[hash]) {
           archive.items[hash] = remote;
           archive.updatedAt = new Date().toISOString();
-          cache = archive;
-          cacheLoadedAtMs = Date.now();
+          archiveState.cache = archive;
+          archiveState.loadedAtMs = Date.now();
           persistArchive(archive).catch(() => {});
         }
         return remote;
@@ -356,8 +374,8 @@ export async function saveEditorial(
 
   archive.items[hash] = record;
   archive.updatedAt = now;
-  cache = archive;
-  cacheLoadedAtMs = Date.now();
+  archiveState.cache = archive;
+  archiveState.loadedAtMs = Date.now();
 
   // Redis first — survives serverless cold starts
   redisSetEditorial(hash, record).catch(() => {});
@@ -486,8 +504,8 @@ export async function markOnchain(
   record.onchainTxHash = txHash;
   record.onchainTimestamp = new Date().toISOString();
   archive.updatedAt = new Date().toISOString();
-  cache = archive;
-  cacheLoadedAtMs = Date.now();
+  archiveState.cache = archive;
+  archiveState.loadedAtMs = Date.now();
 
   await persistArchive(archive);
   console.log(

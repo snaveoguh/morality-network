@@ -32,3 +32,20 @@ export function processGlobal<T>(key: string, init: () => T): T {
   }
   return value;
 }
+
+/**
+ * Map.set with a size cap, for module-level caches keyed by URLs, user input
+ * or article hashes. Re-setting a key moves it to the back; past `maxEntries`
+ * the oldest entries (Map insertion order) are dropped. Expired entries in a
+ * TTL cache are otherwise only replaced, never removed, so without a cap such
+ * a cache grows with every distinct key the process ever sees.
+ */
+export function setBounded<K, V>(map: Map<K, V>, key: K, value: V, maxEntries: number): void {
+  map.delete(key);
+  map.set(key, value);
+  while (map.size > maxEntries) {
+    const oldest = map.keys().next();
+    if (oldest.done) break;
+    map.delete(oldest.value);
+  }
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detachStrings, processGlobal } from "../memory";
+import { detachStrings, processGlobal, setBounded } from "../memory";
 
 describe("detachStrings", () => {
   it("returns an equal deep copy", () => {
@@ -20,5 +20,22 @@ describe("processGlobal", () => {
     const b = processGlobal("test.memory", () => ({ n: ++calls }));
     expect(a).toBe(b);
     expect(calls).toBe(1);
+  });
+});
+
+describe("setBounded", () => {
+  it("keeps at most maxEntries, dropping the oldest", () => {
+    const map = new Map<string, number>();
+    for (let i = 0; i < 10; i++) setBounded(map, `k${i}`, i, 3);
+    expect([...map.keys()]).toEqual(["k7", "k8", "k9"]);
+  });
+
+  it("refreshes a re-set key so it is evicted last", () => {
+    const map = new Map<string, number>();
+    setBounded(map, "a", 1, 2);
+    setBounded(map, "b", 2, 2);
+    setBounded(map, "a", 3, 2);
+    setBounded(map, "c", 4, 2);
+    expect([...map.entries()]).toEqual([["a", 3], ["c", 4]]);
   });
 });

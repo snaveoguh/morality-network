@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { StumbleContextEntry } from "./stumble-context";
+import { setBounded } from "./memory";
 
 // ============================================================================
 // ENTITY CONTEXT REGISTRY
@@ -45,6 +46,8 @@ function redisEnabled(): boolean {
 /* ── In-memory cache (single serverless invocation) ── */
 
 const memCache = new Map<string, EntityContext>();
+// Every archived article adds an entry; cap it (Redis holds the full set).
+const MEM_CACHE_MAX = 1000;
 
 /* ── Merge logic ── */
 
@@ -109,7 +112,7 @@ export async function getEntityContext(
     const body = (await res.json()) as { result?: string };
     if (!body.result) return null;
     const parsed = JSON.parse(body.result) as EntityContext;
-    memCache.set(key, parsed);
+    setBounded(memCache, key, parsed, MEM_CACHE_MAX);
     return parsed;
   } catch {
     return null;
@@ -125,7 +128,7 @@ export async function setEntityContext(
   const existing = await getEntityContext(incoming.hash);
   const merged = mergeContext(existing, incoming);
 
-  memCache.set(key, merged);
+  setBounded(memCache, key, merged, MEM_CACHE_MAX);
 
   if (!redisEnabled()) return;
 
@@ -161,7 +164,7 @@ export async function setEntityContextBatch(
     const key = incoming.hash.toLowerCase();
     const existing = memCache.get(key) ?? null;
     const merged = mergeContext(existing, incoming);
-    memCache.set(key, merged);
+    setBounded(memCache, key, merged, MEM_CACHE_MAX);
 
     if (redisEnabled()) {
       commands.push([
