@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 105 · pooter1 comments stop going on-chain cut off: token headroom + unfinished-sentence check
+- **when** — 2026-11-09
+- **what** — pooter1's comment calls now ask for `maxTokens` 1500 (was 300, new `COMMENT_MAX_TOKENS` in `tasks/comment.ts`). `lintComment` gains an `unfinished` rule: a comment must end in `.`, `?` or `!` (closing quotes/brackets allowed), and a trailing `...`/`…` counts as cut off. A failing draft gets the existing one retry with the complaint; if the retry fails too, the article is skipped rather than posted.
+- **why** — the 2026-11-09 redeploy (`3431d458`) proved the full-text reader works, but the Agent Hub model reasons in a `<think>` block that spends the same token budget before `llm.ts` strips it. At 300 tokens one comment went on-chain cut off mid-sentence (tx `0x36ccda15…`, 84 bytes, ending "while only about 20%") and another came back empty. Same failure mode as node 104's Ask box.
+- **where** — `fix/pooter1-comment-tokens`; `agents/pooter1/src/tasks/comment.ts`, `agents/pooter1/src/comment-style.ts`. Checked with `tsc --noEmit` on both files and a tsx run of the lint (finished, question, quoted, cut-off, ellipsis and empty cases). Takes effect only when pooter1 is redeployed (`railway up` from a `git archive` export; no GitHub integration), and a redeploy runs a comment pass that posts on-chain.
+- **rollback** — `git revert` the fix commit and redeploy pooter1. No data, schema or env changes. The truncated comment from 2026-11-09 stays on-chain.
+
 ## ▲ node 104 · Ask box answers again: reasoning-model headroom, full provider chain, no JSON debris
 - **when** — 2026-11-09
 - **what** — `answerBriefQuestion` (the "Ask" box, `POST /api/brief/chat`) now asks for `maxTokens` 1200 (was 400), lets every configured provider try (dropped `maxAttempts: 2`) with a 20s timeout each (was 30s), and parses replies through the new `chatAnswerFromReply`: a reply cut off mid-JSON keeps its answer text (with "…" when it stops mid-sentence), and JSON debris such as `{"` or an empty reply is now an error ("try again") instead of being shown as the answer. The Agent Hub logs when it returns no text instead of falling through silently.

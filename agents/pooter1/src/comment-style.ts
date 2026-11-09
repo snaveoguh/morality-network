@@ -49,6 +49,12 @@ export function lintComment(text: string): CommentIssue[] {
   if (words > MAX_WORDS) issues.push({ rule: "length", match: `${words} words` });
   const dashes = (t.match(/[—–]|\s-\s/g) ?? []).length;
   if (dashes > 1) issues.push({ rule: "dashes", match: `${dashes} dashes` });
+  // A comment that stops mid-sentence ran out of tokens. It goes on-chain for
+  // good, so it must end on a full stop, question mark or exclamation mark
+  // (closing quotes/brackets allowed). A trailing ellipsis counts as cut off.
+  if (!/[.!?]["'”’)\]]*$/.test(t) || /(\.\.\.|…)["'”’)\]]*$/.test(t)) {
+    issues.push({ rule: "unfinished", match: t.split(/\s+/).slice(-4).join(" ") });
+  }
   return issues;
 }
 
