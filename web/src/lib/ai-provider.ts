@@ -315,7 +315,12 @@ async function tryAgentHub(request: AITextRequest): Promise<AITextResult | null>
     let text = typeof payload.text === "string" ? payload.text.trim() : "";
     // Strip <think> tags from reasoning models (Qwen, DeepSeek)
     text = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
-    if (!text) return null;
+    if (!text) {
+      // Reasoning models can spend the whole maxTokens thinking and return
+      // nothing; say so instead of falling through silently.
+      console.warn(`[ai-provider] hub returned no text for ${request.task} (${payload.provider}/${payload.model}, maxTokens ${request.maxTokens})`);
+      return null;
+    }
 
     console.log(`[ai-provider] hub success for ${request.task} (${payload.provider}/${payload.model})`);
     // Stamp the provider the hub actually used so the inference meter prices

@@ -9,6 +9,13 @@ Each node carries: **when · what · why · where · rollback**.
 
 ---
 
+## ▲ node 104 · Ask box answers again: reasoning-model headroom, full provider chain, no JSON debris
+- **when** — 2026-11-09
+- **what** — `answerBriefQuestion` (the "Ask" box, `POST /api/brief/chat`) now asks for `maxTokens` 1200 (was 400), lets every configured provider try (dropped `maxAttempts: 2`) with a 20s timeout each (was 30s), and parses replies through the new `chatAnswerFromReply`: a reply cut off mid-JSON keeps its answer text (with "…" when it stops mid-sentence), and JSON debris such as `{"` or an empty reply is now an error ("try again") instead of being shown as the answer. The Agent Hub logs when it returns no text instead of falling through silently.
+- **why** — on dev the Ask box failed or answered `{"`. The chain for `briefChat` is hub (Groq `openai/gpt-oss-120b`) → venice → openai → anthropic. gpt-oss is a reasoning model and its hidden reasoning spends the same token budget: on a full day of headlines (~3,070 input tokens) it used 285–387 of the 400 output tokens, so replies were sometimes cut to `{"` or came back empty. When the hub missed (empty text, or the hub's own 502), Venice was budget-blocked (`AI_BUDGET_VENICE_USD=0`), OpenAI returned `401` (dead `OPENAI_API_KEY` on dev), and `maxAttempts: 2` stopped the chain before Anthropic, so the route returned 502 "The assistant could not answer just now". Logs: `venice skipped for briefChat: venice budget exhausted`, `openai failed for briefChat: openai 401`, `[brief-chat] failed: Error: openai 401`. The Ask box is not on prod (`main`) yet.
+- **where** — `fix/ask-box`; `web/src/lib/day-brief.ts`, `web/src/lib/ai-provider.ts`, `web/src/lib/__tests__/day-brief.test.ts`. Config still to fix (not changed): dev `OPENAI_API_KEY` returns 401.
+- **rollback** — `git revert` the fix commit. No data, schema or env changes.
+
 ## ▲ node 103 · dev OOM fixed: cached feed items no longer pin whole RSS documents
 - **when** — 2026-11-03
 - **what** — `fetchFeed` (and the Reddit scraper) now return items copied into fresh strings (`detachStrings`, new `web/src/lib/memory.ts`). The default-feed cache and its in-flight crawl live on `globalThis` (`processGlobal`), so the 17 server chunks that bundle `rss.ts`, plus the `instrumentation.ts` warmer, share one cache and one crawl instead of one each; governance and day-brief ttl caches are shared the same way, so the warmed values are the ones pages read. Unread error bodies on non-OK feed responses are cancelled. Behaviour is otherwise unchanged (same feeds, TTLs, stale-while-revalidate).

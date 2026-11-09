@@ -238,18 +238,51 @@ export async function answerBriefQuestion(
     user: `Date: ${new Date().toUTCString()}\n\nHeadlines:\n${numberedHeadlines(pool)}\n\n${
       transcript ? `Conversation so far:\n${transcript}\n\n` : ""
     }Reader's question: ${question}`,
-    maxTokens: 400,
+    // 1200, not 400: the free hub runs a reasoning model (gpt-oss-120b on
+    // Groq) whose hidden reasoning spends the same budget, so 400 left it
+    // returning "" or a cut-off '{"' on a full day of headlines.
+    maxTokens: 1200,
     temperature: 0.2,
-    timeoutMs: 30_000,
-    maxAttempts: 2,
+    // Every configured provider gets a turn (no maxAttempts cap): with
+    // Venice capped at $0 and a dead OpenAI key, a cap of 2 stopped the chain
+    // before Anthropic, so every hub miss became an error. 20s each keeps a
+    // hung provider from eating the route's 45s.
+    timeoutMs: 20_000,
   });
 
+  return chatAnswerFromReply(result.text, pool);
+}
+
+/** Turn a model reply into an answer. Exported for tests. */
+export function chatAnswerFromReply(text: string, pool: FeedItem[]): ChatAnswer {
   try {
-    const parsed = parseJsonObject(result.text) as { answer?: unknown; cite?: unknown };
+    const parsed = parseJsonObject(text) as { answer?: unknown; cite?: unknown };
     const answer = clean(parsed.answer, 1200);
     if (answer) return { answer, sources: validCitations(parsed.cite, pool), available: true };
   } catch {
-    // Model ignored the format: show its text, without sources.
+    // Not a whole JSON object: salvage below.
   }
-  return { answer: clean(result.text, 1200), sources: [], available: true };
+  // A reply cut off mid-JSON still carries the start of the answer.
+  const partial = /"answer"\s*:\s*"((?:[^"\\]|\\.)*)/.exec(text)?.[1];
+  if (partial) {
+    let answer = partial;
+    try {
+      answer = JSON.parse(`"${partial.replace(/\\$/, "")}"`) as string;
+    } catch {
+      // keep the raw escapes
+    }
+    answer = clean(answer, 1200);
+    if (answer.length >= 20) {
+      if (!/[.!?"')\u201d]$/.test(answer)) answer += "\u2026";
+      return { answer, sources: [], available: true };
+    }
+  }
+  // Never show JSON debris such as '{"' to a reader: fail so the route says
+  // "try again" instead.
+  const plain = clean(text, 1200);
+  if (!plain || plain.startsWith("{") || plain.startsWith("```")) {
+    throw new Error("model reply was not a usable answer");
+  }
+  // Model ignored the format: show its text, without sources.
+  return { answer: plain, sources: [], available: true };
 }

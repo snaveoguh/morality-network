@@ -9,7 +9,7 @@ vi.mock("../rss", () => ({ fetchAllFeeds: async () => feed }));
 vi.mock("../ai-provider", () => ({ generateTextForTask: (...args: unknown[]) => generate(...args) }));
 vi.mock("../ai-models", () => ({ hasAIProviderForTask: () => aiAvailable }));
 
-const { selectBriefStories, getDayBrief, answerBriefQuestion } = await import("../day-brief");
+const { selectBriefStories, getDayBrief, answerBriefQuestion, chatAnswerFromReply } = await import("../day-brief");
 
 const NOW = Date.parse("2026-11-02T12:00:00Z");
 const hoursAgo = (h: number) => new Date(NOW - h * 3600_000).toUTCString();
@@ -113,10 +113,45 @@ describe("answerBriefQuestion", () => {
     expect(res.sources).toHaveLength(1);
   });
 
+  it("lets every provider try and leaves room for a reasoning model", async () => {
+    feed.push(item("a"));
+    generate.mockResolvedValue({ text: '{"answer": "Story a happened.", "cite": [1]}' });
+    await answerBriefQuestion("What happened?", "all", []);
+    const req = generate.mock.calls[0][0] as { maxTokens: number; maxAttempts?: number };
+    expect(req.maxAttempts).toBeUndefined();
+    expect(req.maxTokens).toBeGreaterThanOrEqual(1000);
+  });
+
+  it("fails rather than showing a cut-off JSON reply", async () => {
+    feed.push(item("a"));
+    generate.mockResolvedValue({ text: '{"' });
+    await expect(answerBriefQuestion("What happened?", "all", [])).rejects.toThrow();
+  });
+
   it("says it is offline without an AI provider", async () => {
     aiAvailable = false;
     const res = await answerBriefQuestion("Hi", "all", []);
     expect(res.available).toBe(false);
     expect(generate).not.toHaveBeenCalled();
+  });
+});
+
+describe("chatAnswerFromReply", () => {
+  const pool = [item("a"), item("b")];
+
+  it("salvages the answer from a reply cut off mid-JSON", () => {
+    const res = chatAnswerFromReply('{"answer": "Ministers are expected to cut EV targets, \\"sources say\\".", "cite": [1', pool);
+    expect(res.answer).toBe('Ministers are expected to cut EV targets, "sources say".');
+    expect(res.sources).toEqual([]);
+  });
+
+  it("rejects JSON debris and empty replies", () => {
+    expect(() => chatAnswerFromReply('{"', pool)).toThrow();
+    expect(() => chatAnswerFromReply("", pool)).toThrow();
+    expect(() => chatAnswerFromReply('{"answer": "', pool)).toThrow();
+  });
+
+  it("shows a plain-text reply as is", () => {
+    expect(chatAnswerFromReply("The headlines do not cover that.", pool).answer).toBe("The headlines do not cover that.");
   });
 });
