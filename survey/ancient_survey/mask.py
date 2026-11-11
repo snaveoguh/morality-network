@@ -99,6 +99,12 @@ class ModernMask:
         u = unary_union([geoms[i] for i in idx])
         return poly.intersection(u).area / poly.area if poly.area else 0.0
 
+    def urban_context(self, poly, radius_m=150):
+        """Number of mapped buildings within `radius_m`: graded pads and spoil cluster in built-up land."""
+        if self._b is None:
+            return 0
+        return int(len(self._b.query(poly.centroid.buffer(radius_m))))
+
     def check(self, poly):
         flags = []
         b = self._cover(self._b, self.buildings, poly)
@@ -118,11 +124,19 @@ class ModernMask:
 
 
 def apply_modern(cands, mask):
+    """Flags candidates on mapped modern features, and down-weights (does not drop) candidates in built-up
+    surroundings: score x (1 - 0.4 * ramp(buildings within 150 m, 2..15))."""
     for c in cands:
         if mask is None:
             c.flags.append("modern_mask_unavailable")
             continue
-        c.flags.extend(mask.check(wkt.loads(c.geom_wkt)))
+        poly = wkt.loads(c.geom_wkt)
+        c.flags.extend(mask.check(poly))
+        nb = mask.urban_context(poly)
+        if nb > 2:
+            f = 1 - 0.4 * min(max((nb - 2) / 13, 0), 1)
+            c.score = round(c.score * f, 4)
+            c.flags.append(f"urban_context:{nb}_buildings_150m")
 
 
 def load_known_sites(paths):
