@@ -56,7 +56,7 @@ def main(argv=None):
         runs.append(r)
         if a.cmd == "validate":
             evals.append(validate.evaluate(r))
-    if runs:
+    if runs and a.cmd == "run":  # validate runs never touch the combined survey outputs
         pipeline.write_combined(runs)
     if evals:
         tag = a.provider if a.provider == "offline" else (a.model or "claude-haiku-5-5")

@@ -9,6 +9,25 @@ screening NASA lidar in the Maya lowlands (unverified on the ground).
 (see `out/validation_*.md`). **For Costa Rica there is no usable open lidar yet** (see `DATA.md`), so the Costa Rica
 run is on 30 m satellite elevation, which cannot see mounds. Nothing this tool outputs is a discovery.
 
+### Validation so far (2026-11-11, `out/validation_offline.md`)
+
+Four Georgia calibration areas, USGS 3DEP 1 m lidar, 90 km², 1,522 tiles of 250 m, top 50 tiles per area reviewed:
+
+| stage | known mounds caught | known look-alikes flagged |
+|---|---|---|
+| detected by the classical filter | 12/12 | 12/13 |
+| survive the modern mask | 12/12 | 5/13 |
+| shortlisted (top 50 tiles × 2) | 9/12 | 1/13 |
+| passed review (offline rule stand-ins) | 8/12 | 0/13 |
+
+The three misses at the shortlist stage are all at Ocmulgee (Great Temple, Lesser Temple and Funeral mounds), which are
+cut by a railroad and merge with its embankment and the river bluff, inside the city of Macon. Precision is low: of
+the 91 candidates that passed review, 82 are more than 150 m from any listed site (0.5–1.6 per km²). Some are real
+unlisted mounds (Kolomoki and Etowah have more mounds than the ground-truth file lists), most are natural spurs,
+graded lots and stream banks. A model-backed review panel was not run (no API key in the build sandbox); that is
+the next measurement. `ga_macon` was used for tuning; the closure feature was added after looking at Kolomoki
+false positives, so Kolomoki is not a clean hold-out.
+
 ## Ethics rules (non-negotiable)
 
 1. **Discovery and report only, never extraction.** In Costa Rica all archaeological material belongs to the

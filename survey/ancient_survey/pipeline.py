@@ -50,9 +50,7 @@ def run(area_id, top_n=50, per_tile=2, provider="offline", model=None, budget_us
     areas = load_areas()
     a = areas[area_id]
     t0 = time.time()
-    outdir = OUT / area_id
     privdir = OUT / "private" / area_id
-    outdir.mkdir(parents=True, exist_ok=True)
 
     log(f"[{area_id}] fetching {a['source']} …")
     dem = sources.fetch_area(a)
@@ -161,7 +159,9 @@ def write_combined(runs):
                          "properties": {"id": c.id, "area": s["area"], "status": st, "score": c.score, "kind": c.kind,
                                         "height_m": c.height_m, "area_m2": c.area_m2, "flags": c.flags,
                                         "outline_utm_wkt": c.geom_wkt, "utm_epsg": r["dem"].crs}})
-            if s["kind"] != "survey" or st != "passed":
+            # Public cells only for survey areas, only for candidates passed by a real reviewer panel.
+            # Offline rule stand-ins are a test harness, not review: their passes never go public.
+            if s["kind"] != "survey" or st != "passed" or s["review_provider"] == "offline":
                 continue
             key, geom = public_cell(c.lon, c.lat)
             cell = cells.setdefault(key, {"geom": geom, "n": 0, "best": 0.0, "areas": set()})
@@ -179,6 +179,12 @@ def write_combined(runs):
                     "Candidates are unverified desk results, not discoveries."),
            "features": [{"type": "Feature", "geometry": mapping(v["geom"]),
                          "properties": {"cell": k, "n_candidates": v["n"], "best_score": round(v["best"], 2),
-                                        "areas": sorted(v["areas"])}} for k, v in sorted(cells.items())]}
+                                        "areas": sorted(v["areas"])}} for k, v in sorted(cells.items())],
+           "runs": [{"area": r["summary"]["area"], "source": r["summary"]["source"], "res_m": r["summary"]["res_m"],
+                     "review_provider": r["summary"]["review_provider"],
+                     "status_counts": r["summary"]["review_status_counts"]} for r in runs if r["summary"]["kind"] == "survey"]}
+    if not cells:
+        pub["note"] += (" EMPTY: no survey candidate has passed a real (model-backed) review yet. Runs without a model"
+                        " use offline rule stand-ins, whose passes are never published.")
     (OUT / "candidates_public.geojson").write_text(json.dumps(pub, indent=1))
     return pub
