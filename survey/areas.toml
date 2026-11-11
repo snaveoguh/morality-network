@@ -1,0 +1,97 @@
+# Survey areas. bbox = [west, south, east, north] in WGS84 degrees.
+# source: "3dep_1m" (USGS 3DEP 1 m lidar DTM, public S3), "glo30" (Copernicus GLO-30 DSM, public S3),
+#         "gliht" (NASA G-LiHT 0.5-1 m DTM; needs Earthdata token or the Scholar@UC mirror host allowed),
+#         "local" (any GeoTIFF DTM you have, path in `file`).
+# kind: "calibration" (known sites present, used to measure recall) or "survey" (looking for new things).
+
+# --- Calibration: US Southeast platform mounds, USGS 3DEP 1 m lidar (open, no login) ---
+# Ground truth: calibration/ga_mounds_verified.csv (public park coordinates, MIT, see calibration/README.md)
+[areas.ga_macon]
+kind = "calibration"
+source = "3dep_1m"
+bbox = [-83.640, 32.795, -83.570, 32.855]   # Ocmulgee Mounds NHP + Lamar mounds + floodplain lookalikes
+res_m = 1.0
+tile_m = 250
+lrm_scales_m = [25, 75]
+min_height_m = 0.6
+
+[areas.ga_etowah]
+kind = "calibration"
+source = "3dep_1m"
+bbox = [-84.830, 34.110, -84.785, 34.140]
+res_m = 1.0
+tile_m = 250
+lrm_scales_m = [25, 75]
+min_height_m = 0.6
+
+[areas.ga_kolomoki]
+kind = "calibration"
+source = "3dep_1m"
+bbox = [-84.960, 31.455, -84.920, 31.485]
+res_m = 1.0
+tile_m = 250
+lrm_scales_m = [25, 75]
+min_height_m = 0.6
+
+[areas.ga_nacoochee]
+kind = "calibration"
+source = "3dep_1m"
+bbox = [-83.735, 34.670, -83.695, 34.710]
+res_m = 1.0
+tile_m = 250
+lrm_scales_m = [25, 75]
+min_height_m = 0.6
+
+# --- Calibration: Maya lowlands, NASA G-LiHT 0.5 m DTM (needs network/login, see DATA.md) ---
+[areas.yuc_campeche_l2s502]
+kind = "calibration"
+source = "gliht"
+# Scholar@UC open mirror of the G-LiHT 2013 Campeche transect l2s502 (contains Šprajc 2026 nested complex #1)
+url = "https://scholar.uc.edu/downloads/vh53wx56r"
+file = "ChiapsCampeche_NFI_l2s502_DEM_0p5m_v1.tif"
+bbox = [-91.150, 18.320, -91.085, 18.355]
+res_m = 1.0
+tile_m = 250
+lrm_scales_m = [15, 40]
+min_height_m = 0.3
+
+# --- Costa Rica survey areas. Only GLO-30 (30 m DSM) is openly reachable: it can only see
+#     very large earthworks and cannot see mounds/house platforms. See DATA.md. ---
+[areas.cr_diquis_delta]
+kind = "survey"
+source = "glo30"
+bbox = [-83.60, 8.85, -83.30, 9.10]          # Térraba-Sierpe delta, Palmar Sur / Finca 6 region
+res_m = 30.0
+tile_m = 1500
+lrm_scales_m = [150, 450]
+min_height_m = 2.0
+
+[areas.cr_turrialba_guayabo]
+kind = "survey"
+source = "glo30"
+bbox = [-83.80, 9.85, -83.55, 10.05]          # Turrialba valley and Guayabo slopes
+res_m = 30.0
+tile_m = 1500
+lrm_scales_m = [150, 450]
+min_height_m = 2.0
+
+[areas.cr_caribbean_lineavieja]
+kind = "survey"
+source = "glo30"
+bbox = [-83.75, 10.15, -83.35, 10.45]         # Línea Vieja (Guápiles–Siquirres) Caribbean foothills
+res_m = 30.0
+tile_m = 1500
+lrm_scales_m = [150, 450]
+min_height_m = 2.0
+
+# La Selva TEAM 2009 lidar (CC BY 4.0, OpenTopography) — the only open airborne lidar found over CR.
+# Not reachable from the build sandbox; download it yourself and point `file` at the DTM GeoTIFF.
+[areas.cr_laselva_lidar]
+kind = "survey"
+source = "local"
+file = ".data/local/laselva_team_2009_dtm.tif"
+bbox = [-84.11, 10.34, -83.95, 10.50]
+res_m = 1.0
+tile_m = 250
+lrm_scales_m = [25, 75]
+min_height_m = 0.5

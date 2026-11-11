@@ -1,0 +1,11 @@
+# Raw rasters, caches, downloads: never committed (size, and some sources are licensed per-user)
+.data/
+__pycache__/
+*.pyc
+# Outputs: everything private by default. Only coarse public layers and validation numbers are committed.
+out/*
+!out/candidates_public.geojson
+!out/*_public.geojson
+!out/validation_*.md
+!out/validation_*.json
+!out/README.md
