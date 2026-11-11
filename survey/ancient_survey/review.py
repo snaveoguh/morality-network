@@ -66,7 +66,7 @@ Data: {source} at {res:g} m/pixel. Panels: multi-direction hillshade, local reli
 sky-view factor. The cyan line outlines the feature the automatic filter found.
 Measured: kind={kind}, height above surroundings={height_m} m, area={area_m2} m^2, flank slope (75th pct)=\
 {side_slope_deg} deg, rectangularity={rectangularity}, solidity={solidity}, elongation={elongation}, \
-flat-top fraction={flat_top}, regional slope={context_slope_deg} deg. Pre-filter flags: {flags}.
+flat-top fraction={flat_top}, closure (share of surrounding ring lower than mid-height)={closure}, regional slope={context_slope_deg} deg. Pre-filter flags: {flags}.
 
 Answer with ONLY a JSON object, no other text:
 {{"verdict": "archaeological" | "natural" | "modern" | "uncertain", "confidence": 0.0-1.0, \
@@ -126,6 +126,8 @@ class OfflineProvider:
         c = cand
         coarse = ctx["res"] >= 10
         if persona == "geomorphologist":
+            if c.kind == "mound" and c.closure < 0.85:
+                return {"verdict": "natural", "confidence": 0.6, "reason": "joined to higher ground on one side (spur/terrace)"}
             built = (c.side_slope_deg >= (8 if coarse else 18)) and (c.rectangularity >= 0.7 or c.solidity >= 0.9)
             hillside = c.context_slope_deg > 6
             if built and not hillside:

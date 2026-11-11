@@ -44,6 +44,7 @@ class Candidate:
     elongation: float
     flat_top: float
     context_slope_deg: float
+    closure: float
     score: float
     tile: str = ""
     geom_wkt: str = ""        # projected outline (private only)
@@ -107,8 +108,9 @@ def detect(dem, layers, area_cfg, area_id):
     for i, sl in enumerate(objs, start=1):
         if sl is None:
             continue
-        # pad the crop so flanks (just outside the threshold) are included
-        pad = 3
+        # pad the crop so flanks and the surrounding ring are included
+        k_out = 3 if coarse else max(4, int(round(12 / res)))
+        pad = k_out + 3
         r0, r1 = max(sl[0].start - pad, 0), min(sl[0].stop + pad, lab.shape[0])
         c0, c1 = max(sl[1].start - pad, 0), min(sl[1].stop + pad, lab.shape[1])
         m = lab[r0:r1, c0:c1] == i
@@ -122,6 +124,12 @@ def detect(dem, layers, area_cfg, area_id):
         # flank = ring just inside + just outside the outline
         ring = ndimage.binary_dilation(m, iterations=2) & ~ndimage.binary_erosion(m, iterations=1)
         side = float(np.percentile(slope[ring], 75)) if ring.any() else 0.0
+        # closure: is it lower all the way round? A built mound is; a spur between two gullies is joined to
+        # higher ground on one side, a terrace edge on one side, a levee along its length.
+        zc = layers.z[r0:r1, c0:c1]
+        outer = ndimage.binary_dilation(m, iterations=k_out) & ~ndimage.binary_dilation(m, iterations=2)
+        ztop = float(zc[m].max())
+        closure = float((zc[outer] < ztop - 0.5 * height).mean()) if outer.any() else 0.0
         top = m & (lrm > 0.6 * height)
         flat_top = float(((slope < (8 if not coarse else 3)) & top).sum() / max(npx, 1))
         # outline polygon in projected coordinates
@@ -144,13 +152,15 @@ def detect(dem, layers, area_cfg, area_id):
         row, col = int(rr.mean()) + r0, int(cc.mean()) + c0
         ctx = float(layers.context_slope[row, col])
         sc = score_blob(height, min_h, side, rect, solidity, elong, flat_top, ctx, kind, coarse)
+        if kind == "mound":
+            sc *= 0.5 + 0.5 * _sat(closure, 0.6, 0.95)
         cx, cy = poly.centroid.x, poly.centroid.y
         lon, lat = to_ll.transform(cx, cy)
         out.append(Candidate(
             id=f"{area_id}-{len(out) + 1:05d}", kind=kind, row=row, col=col, x=cx, y=cy, lon=lon, lat=lat,
             area_m2=round(area, 1), height_m=round(height, 2), side_slope_deg=round(side, 1),
             rectangularity=round(rect, 3), solidity=round(solidity, 3), elongation=round(elong, 2),
-            flat_top=round(flat_top, 3), context_slope_deg=round(ctx, 1), score=round(sc, 4),
+            flat_top=round(flat_top, 3), context_slope_deg=round(ctx, 1), closure=round(closure, 3), score=round(sc, 4),
             geom_wkt=poly.simplify(res / 2).wkt,
         ))
     return out

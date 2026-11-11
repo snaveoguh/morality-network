@@ -33,6 +33,8 @@ def reasons_for(c, min_h):
         r.append(f"flat summit ({c.flat_top:.0%} of footprint)")
     if c.context_slope_deg <= 2:
         r.append(f"on flat ground (regional slope {c.context_slope_deg}°), where natural knobs are rarer")
+    if c.kind == "mound" and c.closure >= 0.9:
+        r.append(f"stands clear of its surroundings on all sides ({c.closure:.0%} of the ring around it is lower)")
     if c.kind == "linear":
         r.append(f"long straight raised feature (elongation {c.elongation}): causeway, levee, terrace or road fill")
     return r
