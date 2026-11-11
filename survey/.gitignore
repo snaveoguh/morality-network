@@ -3,6 +3,7 @@
 __pycache__/
 *.pyc
 # Outputs: everything private by default. Only coarse public layers and validation numbers are committed.
+!out/
 out/*
 !out/candidates_public.geojson
 !out/*_public.geojson

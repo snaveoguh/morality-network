@@ -1,0 +1,38 @@
+{
+ "type": "FeatureCollection",
+ "name": "ancient-survey candidates (public, coarse)",
+ "note": "Each feature is a 0.05\u00b0 (~5 km) grid cell containing at least one candidate that passed agent review. No exact positions are published, to protect possible sites from looting. Candidates are unverified desk results, not discoveries. EMPTY: no survey candidate has passed a real (model-backed) review yet. Runs without a model use offline rule stand-ins, whose passes are never published.",
+ "features": [],
+ "runs": [
+  {
+   "area": "cr_diquis_delta",
+   "source": "Copernicus GLO-30 DSM (30 m)",
+   "res_m": 30.0,
+   "review_provider": "offline",
+   "status_counts": {
+    "passed": 39,
+    "rejected": 61
+   }
+  },
+  {
+   "area": "cr_turrialba_guayabo",
+   "source": "Copernicus GLO-30 DSM (30 m)",
+   "res_m": 30.0,
+   "review_provider": "offline",
+   "status_counts": {
+    "rejected": 81,
+    "passed": 19
+   }
+  },
+  {
+   "area": "cr_caribbean_lineavieja",
+   "source": "Copernicus GLO-30 DSM (30 m)",
+   "res_m": 30.0,
+   "review_provider": "offline",
+   "status_counts": {
+    "passed": 44,
+    "rejected": 56
+   }
+  }
+ ]
+}

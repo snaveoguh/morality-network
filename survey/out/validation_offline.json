@@ -1,0 +1,520 @@
+[
+ {
+  "area": "ga_macon",
+  "source": "USGS 3DEP 1 m lidar DTM",
+  "area_km2": 45.8,
+  "n_tiles": 756,
+  "top_n_tiles": 50,
+  "n_raised_features": 3260,
+  "n_eligible": 1709,
+  "n_shortlist": 100,
+  "n_passed": 25,
+  "review_provider": "offline",
+  "spend_usd": 0.0,
+  "match_m": 40.0,
+  "recall": {
+   "detected": [
+    6,
+    6
+   ],
+   "eligible": [
+    6,
+    6
+   ],
+   "shortlist": [
+    3,
+    6
+   ],
+   "passed": [
+    3,
+    6
+   ]
+  },
+  "lookalikes_flagged": {
+   "detected": [
+    11,
+    12
+   ],
+   "eligible": [
+    5,
+    12
+   ],
+   "shortlist": [
+    1,
+    12
+   ],
+   "passed": [
+    0,
+    12
+   ]
+  },
+  "false_positives": {
+   "shortlist_unmatched": 95,
+   "passed_unmatched": 22,
+   "passed_unmatched_per_km2": 0.48,
+   "precision_passed": 0.12
+  },
+  "rows": [
+   {
+    "feature": "Great Temple Mound",
+    "label": "mound",
+    "detected": true,
+    "eligible": true,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.7241,
+    "flags": []
+   },
+   {
+    "feature": "Lesser Temple Mound",
+    "label": "mound",
+    "detected": true,
+    "eligible": true,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.6996,
+    "flags": []
+   },
+   {
+    "feature": "Funeral Mound",
+    "label": "mound",
+    "detected": true,
+    "eligible": true,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.5898,
+    "flags": []
+   },
+   {
+    "feature": "Earth Lodge (reconstructed)",
+    "label": "reconstruction",
+    "detected": true,
+    "eligible": true,
+    "shortlist": true,
+    "passed": true,
+    "score": 0.7763,
+    "flags": []
+   },
+   {
+    "feature": "I-16 bridge abutment",
+    "label": "lookalike",
+    "detected": true,
+    "eligible": false,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.8029,
+    "flags": [
+     "modern:road_or_rail_corridor(100%)",
+     "urban_context:4_buildings_150m"
+    ]
+   },
+   {
+    "feature": "I-16 bridge abutment 2",
+    "label": "lookalike",
+    "detected": true,
+    "eligible": false,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.7053,
+    "flags": [
+     "modern:road_or_rail_corridor(100%)",
+     "modern:landuse:construction"
+    ]
+   },
+   {
+    "feature": "Creek bank meander",
+    "label": "lookalike",
+    "detected": true,
+    "eligible": true,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.7053,
+    "flags": []
+   },
+   {
+    "feature": "Road embankment",
+    "label": "lookalike",
+    "detected": true,
+    "eligible": true,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.7517,
+    "flags": []
+   },
+   {
+    "feature": "Village trenches",
+    "label": "earthwork",
+    "detected": true,
+    "eligible": true,
+    "shortlist": true,
+    "passed": false,
+    "score": 0.6893,
+    "flags": []
+   },
+   {
+    "feature": "Civil War earthwork (V-shaped)",
+    "label": "lookalike",
+    "detected": false,
+    "eligible": false,
+    "shortlist": false,
+    "passed": false,
+    "score": null,
+    "flags": []
+   },
+   {
+    "feature": "Irregular debris piles (floodplain S of I-16)",
+    "label": "lookalike",
+    "detected": true,
+    "eligible": false,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.6784,
+    "flags": [
+     "modern:landuse:industrial",
+     "urban_context:6_buildings_150m"
+    ]
+   },
+   {
+    "feature": "Irregular debris pile 2",
+    "label": "lookalike",
+    "detected": true,
+    "eligible": false,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.5788,
+    "flags": [
+     "modern:landuse:industrial",
+     "urban_context:13_buildings_150m"
+    ]
+   },
+   {
+    "feature": "Irregular debris piles 3",
+    "label": "lookalike",
+    "detected": true,
+    "eligible": false,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.7627,
+    "flags": [
+     "modern:landuse:industrial",
+     "urban_context:5_buildings_150m"
+    ]
+   },
+   {
+    "feature": "Oval track ring",
+    "label": "lookalike",
+    "detected": true,
+    "eligible": false,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.6177,
+    "flags": [
+     "modern:road_or_rail_corridor(54%)",
+     "modern:landuse:commercial",
+     "urban_context:8_buildings_150m"
+    ]
+   },
+   {
+    "feature": "Large graded city lot",
+    "label": "lookalike",
+    "detected": true,
+    "eligible": true,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.346,
+    "flags": [
+     "urban_context:49_buildings_150m"
+    ]
+   },
+   {
+    "feature": "Lamar Mound A",
+    "label": "mound",
+    "detected": true,
+    "eligible": true,
+    "shortlist": true,
+    "passed": true,
+    "score": 0.9321,
+    "flags": []
+   },
+   {
+    "feature": "Lamar Mound B (spiral mound)",
+    "label": "mound",
+    "detected": true,
+    "eligible": true,
+    "shortlist": true,
+    "passed": true,
+    "score": 0.9235,
+    "flags": []
+   },
+   {
+    "feature": "Pond dikes (rectangular)",
+    "label": "lookalike",
+    "detected": true,
+    "eligible": true,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.637,
+    "flags": [
+     "urban_context:5_buildings_150m"
+    ]
+   },
+   {
+    "feature": "L-shaped floodplain levee",
+    "label": "lookalike",
+    "detected": true,
+    "eligible": true,
+    "shortlist": true,
+    "passed": false,
+    "score": 0.5285,
+    "flags": []
+   }
+  ]
+ },
+ {
+  "area": "ga_etowah",
+  "source": "USGS 3DEP 1 m lidar DTM",
+  "area_km2": 14.43,
+  "n_tiles": 238,
+  "top_n_tiles": 50,
+  "n_raised_features": 833,
+  "n_eligible": 488,
+  "n_shortlist": 89,
+  "n_passed": 20,
+  "review_provider": "offline",
+  "spend_usd": 0.0,
+  "match_m": 40.0,
+  "recall": {
+   "detected": [
+    3,
+    3
+   ],
+   "eligible": [
+    3,
+    3
+   ],
+   "shortlist": [
+    3,
+    3
+   ],
+   "passed": [
+    2,
+    3
+   ]
+  },
+  "lookalikes_flagged": {
+   "detected": [
+    0,
+    0
+   ],
+   "eligible": [
+    0,
+    0
+   ],
+   "shortlist": [
+    0,
+    0
+   ],
+   "passed": [
+    0,
+    0
+   ]
+  },
+  "false_positives": {
+   "shortlist_unmatched": 86,
+   "passed_unmatched": 18,
+   "passed_unmatched_per_km2": 1.247,
+   "precision_passed": 0.1
+  },
+  "rows": [
+   {
+    "feature": "Etowah Mound A",
+    "label": "mound",
+    "detected": true,
+    "eligible": true,
+    "shortlist": true,
+    "passed": false,
+    "score": 0.7515,
+    "flags": []
+   },
+   {
+    "feature": "Etowah Mound B (square platform E of A)",
+    "label": "mound",
+    "detected": true,
+    "eligible": true,
+    "shortlist": true,
+    "passed": true,
+    "score": 0.9325,
+    "flags": []
+   },
+   {
+    "feature": "Etowah Mound C (platform S of A)",
+    "label": "mound",
+    "detected": true,
+    "eligible": true,
+    "shortlist": true,
+    "passed": true,
+    "score": 0.934,
+    "flags": []
+   }
+  ]
+ },
+ {
+  "area": "ga_kolomoki",
+  "source": "USGS 3DEP 1 m lidar DTM",
+  "area_km2": 13.13,
+  "n_tiles": 224,
+  "top_n_tiles": 50,
+  "n_raised_features": 547,
+  "n_eligible": 523,
+  "n_shortlist": 93,
+  "n_passed": 18,
+  "review_provider": "offline",
+  "spend_usd": 0.0,
+  "match_m": 40.0,
+  "recall": {
+   "detected": [
+    2,
+    2
+   ],
+   "eligible": [
+    2,
+    2
+   ],
+   "shortlist": [
+    2,
+    2
+   ],
+   "passed": [
+    2,
+    2
+   ]
+  },
+  "lookalikes_flagged": {
+   "detected": [
+    0,
+    0
+   ],
+   "eligible": [
+    0,
+    0
+   ],
+   "shortlist": [
+    0,
+    0
+   ],
+   "passed": [
+    0,
+    0
+   ]
+  },
+  "false_positives": {
+   "shortlist_unmatched": 88,
+   "passed_unmatched": 15,
+   "passed_unmatched_per_km2": 1.142,
+   "precision_passed": 0.167
+  },
+  "rows": [
+   {
+    "feature": "Mound A (Temple Mound)",
+    "label": "mound",
+    "detected": true,
+    "eligible": true,
+    "shortlist": true,
+    "passed": true,
+    "score": 0.9112,
+    "flags": []
+   },
+   {
+    "feature": "Conical mound W of plaza (likely Mound D or E)",
+    "label": "mound",
+    "detected": true,
+    "eligible": true,
+    "shortlist": true,
+    "passed": true,
+    "score": 0.7447,
+    "flags": []
+   }
+  ]
+ },
+ {
+  "area": "ga_nacoochee",
+  "source": "USGS 3DEP 1 m lidar DTM",
+  "area_km2": 17.18,
+  "n_tiles": 304,
+  "top_n_tiles": 50,
+  "n_raised_features": 996,
+  "n_eligible": 842,
+  "n_shortlist": 97,
+  "n_passed": 28,
+  "review_provider": "offline",
+  "spend_usd": 0.0,
+  "match_m": 40.0,
+  "recall": {
+   "detected": [
+    1,
+    1
+   ],
+   "eligible": [
+    1,
+    1
+   ],
+   "shortlist": [
+    1,
+    1
+   ],
+   "passed": [
+    1,
+    1
+   ]
+  },
+  "lookalikes_flagged": {
+   "detected": [
+    1,
+    1
+   ],
+   "eligible": [
+    0,
+    1
+   ],
+   "shortlist": [
+    0,
+    1
+   ],
+   "passed": [
+    0,
+    1
+   ]
+  },
+  "false_positives": {
+   "shortlist_unmatched": 96,
+   "passed_unmatched": 27,
+   "passed_unmatched_per_km2": 1.572,
+   "precision_passed": 0.036
+  },
+  "rows": [
+   {
+    "feature": "Nacoochee Mound",
+    "label": "reconstruction",
+    "detected": true,
+    "eligible": true,
+    "shortlist": true,
+    "passed": true,
+    "score": 0.9283,
+    "flags": []
+   },
+   {
+    "feature": "Rocky knoll in Helen",
+    "label": "lookalike",
+    "detected": true,
+    "eligible": false,
+    "shortlist": false,
+    "passed": false,
+    "score": 0.4651,
+    "flags": [
+     "modern:landuse:recreation_ground",
+     "urban_context:39_buildings_150m"
+    ]
+   }
+  ]
+ }
+]
