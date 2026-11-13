@@ -15,10 +15,38 @@ import {
   simulateHyperliquidOrder,
   sweepSpotUsdcToPerp,
   fetchRecentCloseFill,
+  fetchHyperliquidOrderTpsl,
+  fetchHyperliquidTriggerOrders,
+  placeHyperliquidProtectiveOrder,
+  moveHyperliquidProtectiveOrder,
+  cancelHyperliquidOrders,
+  buildProtectiveOrderPlan,
+  type HyperliquidCloseFill,
+  type HyperliquidTriggerOrder,
 } from "./hyperliquid";
+import {
+  DEFAULT_EXCHANGE_STOP_MIN_MOVE_PCT,
+  DEFAULT_LIQ_BUFFER_RATIO,
+  SCALED_TP_FULL_CLOSE_MULTIPLIER,
+  liquidationSafeStop,
+  moreProtectiveStop,
+  planLiquidationSafeLeverage,
+  priceDistancePct,
+  shouldUpdateExchangeStop,
+  stopPriceFromFill,
+  takeProfitPriceFromFill,
+  trailingStopPrice,
+  type TpslKind,
+} from "./protective-orders";
 import { fetchTokenMarketSnapshot, normalizeQuoteSymbol, type DexScreenerChainId } from "./market";
 import { PositionStore } from "./position-store";
-import { createTradeDecision, updateRuntimeStateByCloid, newCloid, recordTradeDecisionClose } from "../db/trade-decisions";
+import {
+  createTradeDecision,
+  updateRuntimeStateByCloid,
+  newCloid,
+  recordTradeDecisionClose,
+  recordProtectiveOrders,
+} from "../db/trade-decisions";
 import { fetchScannerCandidates } from "./scanner-client";
 import { getAggregatedMarketSignals, type AggregatedMarketSignal } from "./signals";
 import { estimateAmountOutMin, executeSwap, readTokenDecimals, waitForSuccess } from "./swap";
@@ -43,6 +71,8 @@ import {
 } from "./vault-strategy";
 import type {
   Position,
+  ProtectiveOrderRef,
+  ProtectiveOrdersState,
   ScannerLaunch,
   TraderCycleReport,
   TraderExecutionConfig,
@@ -178,6 +208,8 @@ class TraderEngine {
     report.readiness = readiness;
     if (!this.config.dryRun && !readiness.liveReady) {
       report.errors.push(`live-gate:${readiness.reasons.join(",")}`);
+      // Entries are gated, but open positions still need their exchange stops.
+      await this.reconcileProtectiveOrders(report);
       report.finishedAt = Date.now();
       return report;
     }
@@ -211,6 +243,7 @@ class TraderEngine {
       report.errors.push(`circuit-breaker:${cbCheck.reason}`);
       // Still evaluate exits (close losing positions) but don't open new ones
       await this.evaluateOpenPositions(report);
+      await this.reconcileProtectiveOrders(report);
       report.finishedAt = Date.now();
       return report;
     }
@@ -291,6 +324,12 @@ class TraderEngine {
       }
     }
 
+    // After exits (trail ratchets) and entries: make sure every open position
+    // has a correct exchange stop — places missing ones (failed placement,
+    // positions adopted after a restart), moves ratcheted trails, and
+    // tightens stops the live liquidation price has crept past.
+    await this.reconcileProtectiveOrders(report);
+
     report.openPositions = await this.getCurrentOpenPositionCount();
     report.finishedAt = Date.now();
     return report;
@@ -340,8 +379,12 @@ class TraderEngine {
         await this.store.upsert({ ...closedAtId, id: archiveId });
       }
 
+      const markPriceUsd = live.markPriceUsd ?? undefined;
       const position: Position = {
         id,
+        // Carry the entry cloid so runtime-state / close writes keep joining
+        // to the right pooter.trade_decisions row after every re-sync.
+        cloid: existing?.cloid,
         venue: "hyperliquid-perp",
         tokenAddress: quoteTokenAddress,
         tokenDecimals: live.szDecimals,
@@ -378,6 +421,16 @@ class TraderEngine {
         exitRationale: existing?.exitRationale,
         // Carry HL's authoritative unrealized PnL (includes funding rates + actual fees)
         hlUnrealizedPnlUsd: live.unrealizedPnlUsd,
+        // Exchange-side protection + liquidation telemetry (persisted with the
+        // trader state so /markets can show it).
+        protectiveOrders: existing?.protectiveOrders,
+        liquidationPriceUsd: live.liquidationPriceUsd,
+        liquidationDistancePct:
+          live.liquidationPriceUsd !== null && markPriceUsd
+            ? priceDistancePct(markPriceUsd, live.liquidationPriceUsd)
+            : null,
+        marginMode: live.marginMode ?? undefined,
+        markPriceUsd,
       };
 
       // Persist to store (→ Redis) so positions survive cold starts
@@ -418,11 +471,20 @@ class TraderEngine {
       // consecutive misses spread over a few minutes before declaring it gone.
       let exitPriceUsd = stored.entryPriceUsd; // fallback
       let closedPnlFromHl: number | undefined;
-      let closeFill: { exitPriceUsd: number; closedPnlUsd: number } | null = null;
+      let closeFill: HyperliquidCloseFill | null = null;
       try {
         closeFill = stored.marketSymbol
           ? await fetchRecentCloseFill(this.config, accountAddress, stored.marketSymbol)
           : null;
+        // The worker may have been down when an exchange trigger closed the
+        // position (the 10-minute window misses it). Look back to the open,
+        // but only accept a fill that took the position flat — a partial
+        // scale-out must not "confirm" a close.
+        if (!closeFill && stored.marketSymbol) {
+          const sinceMs = Math.max(stored.openedAt, Date.now() - 7 * 24 * 60 * 60 * 1000);
+          const older = await fetchRecentCloseFill(this.config, accountAddress, stored.marketSymbol, { sinceMs });
+          if (older?.closesFully) closeFill = older;
+        }
       } catch {
         closeFill = null;
       }
@@ -451,16 +513,22 @@ class TraderEngine {
       }
 
       this.disappearMisses.delete(stored.id);
+      const exitReason = await this.classifyExternalClose(stored, closeFill, accountAddress);
       const exitNote = closedPnlFromHl !== undefined
-        ? `manual (disappeared from HL, actual fill PnL: $${closedPnlFromHl.toFixed(4)})`
-        : "manual (disappeared from HL)";
+        ? `${exitReason} (disappeared from HL, actual fill PnL: $${closedPnlFromHl.toFixed(4)})`
+        : `${exitReason} (disappeared from HL)`;
+      if (exitReason !== "manual") {
+        console.log(`[trader] ${stored.marketSymbol} closed on-exchange by ${exitReason} at $${exitPriceUsd}`);
+      }
       await this.store.close(stored.id, {
-        exitReason: "manual",
+        exitReason,
         exitPriceUsd,
         closedAt: Date.now(),
-        exitRationale: this.buildExitRationale(stored, exitNote, exitPriceUsd),
+        exitRationale: this.buildExitRationale(stored, exitNote, exitPriceUsd, closedPnlFromHl),
       });
-      await this.mirrorCloseToPg(stored, "manual", exitPriceUsd, closedPnlFromHl);
+      await this.mirrorCloseToPg(stored, exitReason, exitPriceUsd, closedPnlFromHl);
+      // Plain (non-positionTpsl) triggers outlive the position — sweep ours.
+      await this.cancelProtectiveOrders(stored, "position gone");
     }
 
     return positions;
@@ -879,6 +947,9 @@ class TraderEngine {
         }
 
         // ── Trailing stop: update high/low water mark, close if retraced ──
+        // The new water mark is persisted here; reconcileProtectiveOrders (end
+        // of cycle) moves the exchange stop up to the ratcheted trail once it
+        // has improved by TRADER_EXCHANGE_STOP_MIN_MOVE_PCT.
         // Both trailingPct and activationPct are leverage-adjusted thresholds.
         // At 40x, trailingPct=0.05 means 0.125% price retrace triggers stop.
         // activationPct=0.02 means 0.05% favorable price move activates trailing.
@@ -993,7 +1064,7 @@ class TraderEngine {
           { threshold: tp,       closePct: 0.25, label: "TP1" },
           { threshold: tp * 1.5, closePct: 0.25, label: "TP2" },
           { threshold: tp * 2,   closePct: 0.25, label: "TP3" },
-          { threshold: tp * 3,   closePct: 1.0,  label: "TP-FULL" },
+          { threshold: tp * SCALED_TP_FULL_CLOSE_MULTIPLIER, closePct: 1.0, label: "TP-FULL" }, // exchange TP rests here
         ];
         const tierHit = tiers.find((t) => pnlPct >= t.threshold);
         if (tierHit) {
@@ -1034,6 +1105,359 @@ class TraderEngine {
         );
       }
     }
+  }
+
+  // ═══════════════ Exchange-side protective orders ═══════════════
+
+  private exchangeStopsActive(): boolean {
+    return (
+      this.config.executionVenue === "hyperliquid-perp" &&
+      !this.config.dryRun &&
+      this.config.risk.exchangeStopsEnabled !== false
+    );
+  }
+
+  private positionSizeDecimal(position: Position): string {
+    return formatUnits(BigInt(position.quantityTokenRaw || "0"), position.tokenDecimals);
+  }
+
+  /** Exchange stop the engine wants: the hard stop, ratcheted by an active trail. */
+  private desiredExchangeStop(position: Position): number | null {
+    const direction = position.direction === "short" ? "short" : "long";
+    const leverage = position.leverage ?? 1;
+    const hard = stopPriceFromFill({
+      fillPriceUsd: position.entryPriceUsd,
+      stopLossPct: position.stopLossPct,
+      leverage,
+      direction,
+    });
+    const trail = trailingStopPrice({
+      entryPriceUsd: position.entryPriceUsd,
+      direction,
+      leverage,
+      trailingStopPct: position.trailingStopPct ?? this.config.risk.trailingStopPct ?? 0,
+      activationPct: this.config.risk.trailingStopActivationPct ?? 0.03,
+      highWaterMark: position.highWaterMark,
+      lowWaterMark: position.lowWaterMark,
+    });
+    return moreProtectiveStop(direction, hard, trail);
+  }
+
+  private desiredExchangeTakeProfit(position: Position): number | null {
+    return takeProfitPriceFromFill({
+      fillPriceUsd: position.entryPriceUsd,
+      takeProfitPct: position.takeProfitPct,
+      leverage: position.leverage ?? 1,
+      direction: position.direction === "short" ? "short" : "long",
+    });
+  }
+
+  /** DRY_RUN: print the trigger payloads that would be sent; never place them. */
+  private logDryRunProtectiveOrders(position: Position, market: HyperliquidMarketSnapshot): void {
+    if (this.config.risk.exchangeStopsEnabled === false) return;
+    const direction = position.direction === "short" ? "short" : "long";
+    const size = this.positionSizeDecimal(position);
+    for (const [tpsl, px] of [
+      ["sl", this.desiredExchangeStop(position)],
+      ["tp", this.desiredExchangeTakeProfit(position)],
+    ] as Array<[TpslKind, number | null]>) {
+      if (px === null) continue;
+      try {
+        const plan = buildProtectiveOrderPlan({ market, direction, size, triggerPx: px, tpsl });
+        console.log(`[trader] dry-run: would place ${tpsl} trigger ${JSON.stringify(plan)}`);
+      } catch (error) {
+        console.warn(`[trader] dry-run: ${tpsl} payload for ${market.symbol} invalid: ${error instanceof Error ? error.message : error}`);
+      }
+    }
+  }
+
+  private async persistProtectiveOrders(position: Position, state: ProtectiveOrdersState): Promise<Position> {
+    const fresh = this.store.getAll().find((p) => p.id === position.id && p.status === "open") ?? position;
+    const next: Position = { ...fresh, protectiveOrders: state };
+    await this.store.upsert(next);
+    if (position.marketSymbol) {
+      const wallet = resolveHyperliquidAccountAddress(this.config, this.clients.address);
+      recordProtectiveOrders({ cloid: position.cloid, wallet, marketSymbol: position.marketSymbol }, state).catch(
+        (err) => console.warn(`[trader] protective-order DB write failed for ${position.marketSymbol}: ${err instanceof Error ? err.message : err}`),
+      );
+    }
+    return next;
+  }
+
+  /**
+   * Make one live position's exchange protection match what the engine wants.
+   * `resting` are the reduce-only trigger orders currently on HL for its
+   * symbol (empty right after an entry). Places a missing stop / TP, moves the
+   * stop when the trail ratchets ≥ TRADER_EXCHANGE_STOP_MIN_MOVE_PCT, and
+   * tightens it inside the live liquidation price. Never throws — failures are
+   * logged loudly and recorded on the position for the next cycle's retry.
+   */
+  private async ensureProtectiveOrders(
+    position: Position,
+    resting: HyperliquidTriggerOrder[],
+    report?: TraderCycleReport,
+  ): Promise<Position> {
+    const symbol = position.marketSymbol;
+    if (!symbol) return position;
+    const direction = position.direction === "short" ? "short" : "long";
+    const closingSide = direction === "short" ? "B" : "A";
+    const prev = position.protectiveOrders ?? {};
+    const state: ProtectiveOrdersState = { ...prev };
+    const errors: string[] = [];
+
+    try {
+      const market = await fetchHyperliquidMarketBySymbol(this.config, symbol);
+      if (!market) throw new Error(`missing hyperliquid market ${symbol}`);
+      const size = this.positionSizeDecimal(position);
+      if (!(Number(size) > 0)) throw new Error(`position size is zero`);
+
+      const asRef = (order: HyperliquidTriggerOrder): ProtectiveOrderRef => ({
+        oid: order.oid,
+        cloid: order.cloid ?? undefined,
+        triggerPx: order.triggerPx,
+        grouping: order.isPositionTpsl ? "positionTpsl" : "na",
+        placedAt: Date.now(),
+      });
+      const pickCurrent = (kind: TpslKind, tracked?: ProtectiveOrderRef): ProtectiveOrderRef | undefined => {
+        const candidates = resting.filter((o) => o.tpsl === kind && o.side === closingSide);
+        const match = candidates.find(
+          (o) => (tracked?.oid !== undefined && o.oid === tracked.oid) || (tracked?.cloid && o.cloid === tracked.cloid),
+        );
+        if (match) return { ...(tracked ?? asRef(match)), oid: match.oid, triggerPx: match.triggerPx };
+        if (candidates.length === 0) return undefined;
+        // Adopt a stop we don't track (previous process, or set by hand in
+        // the HL UI): the most protective one for SL, the nearest for TP.
+        const best = candidates.reduce((a, b) => {
+          if (kind === "sl") return moreProtectiveStop(direction, a.triggerPx, b.triggerPx) === a.triggerPx ? a : b;
+          return direction === "short" ? (a.triggerPx >= b.triggerPx ? a : b) : (a.triggerPx <= b.triggerPx ? a : b);
+        });
+        return asRef(best);
+      };
+
+      // ── Stop-loss ──
+      const currentStop = pickCurrent("sl", prev.stop);
+      if (prev.stop && !currentStop) {
+        console.error(`[trader] EXCHANGE STOP MISSING for ${symbol}: tracked oid=${prev.stop.oid} no longer resting — re-placing`);
+      }
+      let desiredStop = this.desiredExchangeStop(position);
+
+      const markPriceUsd = position.markPriceUsd ?? (await this.resolvePositionPriceUsd(position)) ?? 0;
+      const liq = liquidationSafeStop({
+        direction,
+        markPriceUsd,
+        stopPriceUsd: desiredStop,
+        liquidationPriceUsd: position.liquidationPriceUsd,
+        bufferRatio: this.config.risk.liqBufferRatio ?? DEFAULT_LIQ_BUFFER_RATIO,
+      });
+      if (liq.breach) {
+        console.error(
+          `[trader] ⚠️ LIQUIDATION INSIDE STOP: ${symbol} ${direction} mark=$${markPriceUsd} liq=$${position.liquidationPriceUsd} ` +
+            `stop=$${desiredStop ?? "none"} (${position.marginMode ?? "?"} margin) — tightening exchange stop to $${liq.stopPriceUsd}`,
+        );
+        report?.errors.push(`liq-guard:${symbol}:liq=${position.liquidationPriceUsd}:stop=${desiredStop}`);
+        state.liquidationBreachAt = prev.liquidationBreachAt ?? Date.now();
+        desiredStop = liq.stopPriceUsd;
+      } else if (state.liquidationBreachAt) {
+        state.liquidationBreachAt = undefined;
+      }
+
+      if (desiredStop === null) {
+        errors.push(`no stop price computable (entry=${position.entryPriceUsd} stopLossPct=${position.stopLossPct})`);
+      } else if (!currentStop || currentStop.oid === undefined) {
+        const placed = await placeHyperliquidProtectiveOrder({
+          config: this.config,
+          market,
+          direction,
+          size,
+          triggerPx: desiredStop,
+          tpsl: "sl",
+        }).catch((error) => {
+          errors.push(`sl: ${error instanceof Error ? error.message : error}`);
+          return null;
+        });
+        if (placed) {
+          state.stop = { ...placed, placedAt: Date.now() };
+          console.log(`[trader] exchange stop placed: ${symbol} ${direction} trigger=$${placed.triggerPx} oid=${placed.oid ?? "?"} (${placed.grouping})`);
+        } else {
+          state.stop = currentStop;
+        }
+      } else if (
+        shouldUpdateExchangeStop({
+          direction,
+          currentTriggerPx: currentStop.triggerPx,
+          nextTriggerPx: desiredStop,
+          minMovePct: this.config.risk.exchangeStopMinMovePct ?? DEFAULT_EXCHANGE_STOP_MIN_MOVE_PCT,
+        })
+      ) {
+        const moved = await moveHyperliquidProtectiveOrder({
+          config: this.config,
+          market,
+          direction,
+          size,
+          triggerPx: desiredStop,
+          tpsl: "sl",
+          current: { oid: currentStop.oid, grouping: currentStop.grouping },
+        }).catch((error) => {
+          errors.push(`sl-move: ${error instanceof Error ? error.message : error}`);
+          return null;
+        });
+        if (moved) {
+          state.stop = { oid: moved.oid, cloid: moved.cloid, triggerPx: moved.triggerPx, grouping: moved.grouping, placedAt: Date.now() };
+          console.log(`[trader] exchange stop moved (${moved.method}): ${symbol} $${currentStop.triggerPx} → $${moved.triggerPx}`);
+        } else {
+          state.stop = currentStop;
+        }
+      } else {
+        state.stop = currentStop;
+      }
+
+      // ── Take-profit (placed once; the software tiers do the scaling) ──
+      const desiredTp = this.desiredExchangeTakeProfit(position);
+      const currentTp = pickCurrent("tp", prev.takeProfit);
+      if (currentTp) {
+        state.takeProfit = currentTp;
+      } else if (desiredTp !== null) {
+        const placed = await placeHyperliquidProtectiveOrder({
+          config: this.config,
+          market,
+          direction,
+          size,
+          triggerPx: desiredTp,
+          tpsl: "tp",
+        }).catch((error) => {
+          errors.push(`tp: ${error instanceof Error ? error.message : error}`);
+          return null;
+        });
+        if (placed) {
+          state.takeProfit = { ...placed, placedAt: Date.now() };
+          console.log(`[trader] exchange TP placed: ${symbol} ${direction} trigger=$${placed.triggerPx} oid=${placed.oid ?? "?"} (${placed.grouping})`);
+        } else {
+          state.takeProfit = undefined;
+        }
+      } else {
+        state.takeProfit = undefined;
+      }
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+    }
+
+    if (errors.length > 0) {
+      const message = errors.join("; ");
+      console.error(`[trader] 🚨 EXCHANGE STOP FAILURE ${symbol}: ${message} — position protected by software stops only; retrying next cycle`);
+      report?.errors.push(`exchange-stop:${symbol}:${message}`);
+      state.lastError = message;
+      state.lastErrorAt = Date.now();
+    } else {
+      state.lastError = undefined;
+      state.lastErrorAt = undefined;
+    }
+
+    if (JSON.stringify(state) === JSON.stringify(prev)) return position;
+    return this.persistProtectiveOrders(position, state);
+  }
+
+  /** Per-cycle reconcile of exchange protection for every live HL position. */
+  private async reconcileProtectiveOrders(report: TraderCycleReport): Promise<void> {
+    if (!this.exchangeStopsActive()) return;
+    const accountAddress = resolveHyperliquidAccountAddress(this.config, this.clients.address);
+    let livePositions: Position[];
+    let snapshot: Awaited<ReturnType<typeof fetchHyperliquidTriggerOrders>>;
+    try {
+      [livePositions, snapshot] = await Promise.all([
+        this.getHyperliquidOpenPositionsFromVenue(),
+        fetchHyperliquidTriggerOrders(this.config, accountAddress),
+      ]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[trader] 🚨 exchange-stop reconcile could not read HL state: ${message}`);
+      report.errors.push(`exchange-stop:reconcile:${message}`);
+      return;
+    }
+    const failedDexes = new Set(snapshot.failedDexes.map((dex) => dex.toLowerCase()));
+    const liveSymbols = new Set<string>();
+
+    for (const position of livePositions) {
+      const symbol = position.marketSymbol;
+      if (!symbol) continue;
+      liveSymbols.add(symbol);
+      const dex = (builderDexOfSymbol(symbol) ?? "").toLowerCase();
+      if (failedDexes.has(dex)) {
+        // Unknown resting orders — placing now could double the stop.
+        console.warn(`[trader] exchange-stop reconcile: ${symbol} open-orders fetch failed for dex "${dex}" — skipping this cycle`);
+        continue;
+      }
+      // Re-read: getHyperliquidOpenPositionsFromVenue upserted the merged record.
+      const current = this.store.getAll().find((p) => p.id === position.id && p.status === "open") ?? position;
+      await this.ensureProtectiveOrders(
+        current,
+        snapshot.orders.filter((order) => order.symbol === symbol),
+        report,
+      );
+    }
+
+    // Orphans: triggers WE placed for positions that are gone. positionTpsl
+    // orders die with the position; plain reduce-only ones would linger.
+    const ourOids = new Set<number>();
+    for (const p of this.store.getAll()) {
+      for (const ref of [p.protectiveOrders?.stop, p.protectiveOrders?.takeProfit]) {
+        if (ref?.oid !== undefined) ourOids.add(ref.oid);
+      }
+    }
+    for (const order of snapshot.orders) {
+      if (liveSymbols.has(order.symbol) || !ourOids.has(order.oid)) continue;
+      const dex = (builderDexOfSymbol(order.symbol) ?? "").toLowerCase();
+      if (failedDexes.has(dex)) continue;
+      const market = await fetchHyperliquidMarketBySymbol(this.config, order.symbol).catch(() => null);
+      if (!market) continue;
+      try {
+        await cancelHyperliquidOrders({ config: this.config, marketId: market.marketId, oids: [order.oid] });
+        console.log(`[trader] cancelled orphan ${order.tpsl} trigger oid=${order.oid} on ${order.symbol} (no open position)`);
+      } catch (error) {
+        console.warn(`[trader] orphan trigger cancel failed oid=${order.oid}: ${error instanceof Error ? error.message : error}`);
+      }
+    }
+  }
+
+  /** Cancel a position's tracked trigger orders (best-effort, live only). */
+  private async cancelProtectiveOrders(position: Position, why: string): Promise<void> {
+    if (this.config.dryRun || this.config.executionVenue !== "hyperliquid-perp" || !position.marketSymbol) return;
+    const oids = [position.protectiveOrders?.stop?.oid, position.protectiveOrders?.takeProfit?.oid].filter(
+      (oid): oid is number => typeof oid === "number",
+    );
+    if (oids.length === 0) return;
+    try {
+      const market = await fetchHyperliquidMarketBySymbol(this.config, position.marketSymbol);
+      if (!market) return;
+      await cancelHyperliquidOrders({ config: this.config, marketId: market.marketId, oids });
+      console.log(`[trader] cancelled exchange triggers ${oids.join(",")} on ${position.marketSymbol} (${why})`);
+    } catch (error) {
+      // The reconcile orphan sweep retries next cycle.
+      console.warn(
+        `[trader] cancel exchange triggers on ${position.marketSymbol} failed (${why}): ${error instanceof Error ? error.message : error}`,
+      );
+    }
+  }
+
+  /**
+   * Why did a position disappear from HL? Our stop / TP trigger, the
+   * liquidator, or something else (manual close in the UI, ADL …).
+   */
+  private async classifyExternalClose(
+    stored: Position,
+    closeFill: HyperliquidCloseFill | null,
+    accountAddress: Address,
+  ): Promise<NonNullable<Position["exitReason"]>> {
+    if (!closeFill) return "manual";
+    if (closeFill.liquidation) return "liquidation";
+    const oid = closeFill.oid;
+    if (oid === undefined) return "manual";
+    if (stored.protectiveOrders?.stop?.oid === oid) return "exchange_stop";
+    if (stored.protectiveOrders?.takeProfit?.oid === oid) return "exchange_tp";
+    // A modify may have re-issued the oid, or the trigger was adopted/hand-set.
+    const tpsl = await fetchHyperliquidOrderTpsl(this.config, accountAddress, oid);
+    if (tpsl === "sl") return "exchange_stop";
+    if (tpsl === "tp") return "exchange_tp";
+    return "manual";
   }
 
   private async resolvePositionPriceUsd(position: Position): Promise<number | null> {
@@ -1240,6 +1664,10 @@ class TraderEngine {
     // Mirror close to pooter.trade_decisions (best-effort)
     await this.mirrorCloseToPg(position, reason, execution.fillPriceUsd);
 
+    // The engine closed it itself — pull the exchange stop/TP so nothing is
+    // left resting (positionTpsl orders die with the position; plain ones don't).
+    await this.cancelProtectiveOrders(position, reason);
+
     return closed;
   }
 
@@ -1324,6 +1752,7 @@ class TraderEngine {
           exitRationale: this.buildExitRationale(position, "take-profit (partial close completed)", currentPriceUsd),
         });
         await this.mirrorCloseToPg(position, "take-profit", currentPriceUsd);
+        await this.cancelProtectiveOrders(position, "take-profit");
       }
       return true;
     } catch (error) {
@@ -1914,7 +2343,7 @@ class TraderEngine {
     if (!Number.isFinite(exchangeMinNotionalUsd) || exchangeMinNotionalUsd <= 0) {
       return null;
     }
-    const notionalUsd = Math.max(requestedNotionalUsd, exchangeMinNotionalUsd);
+    let notionalUsd = Math.max(requestedNotionalUsd, exchangeMinNotionalUsd);
 
     // ═══ FEE-AWARENESS GATE — edge must exceed fees by a hurdle multiplier ═══
     const HL_ROUND_TRIP_FEE_RATE = 0.0007;
@@ -1949,9 +2378,49 @@ class TraderEngine {
     // Conviction leverage is already clamped to the market's HL max and is
     // deliberately NOT subject to TRADER_MAX_LEVERAGE (that cap is for the
     // generic Kelly path).
-    const orderLeverage = conviction
+    const requestedLeverage = conviction
       ? conviction.leverage
       : Math.min(rawLeverage, this.config.risk.maxLeverage);
+
+    // ═══ LIQUIDATION GUARD — the stop must sit well inside liquidation ═══
+    // Estimate liquidation for the intended leverage (isolated-margin math,
+    // which is conservative under cross margin too) and require the stop to be
+    // at most TRADER_LIQ_BUFFER_RATIO of the way there. If not, step leverage
+    // down at the same posted margin (notional shrinks) and keep the stop at
+    // the same PRICE distance; refuse when even 1x can't satisfy it.
+    const requestedStopLossPct = conviction ? conviction.stopLossPct : this.config.risk.stopLossPct;
+    const liqPlan = planLiquidationSafeLeverage({
+      entryPriceUsd: market.priceUsd ?? 0,
+      direction,
+      leverage: requestedLeverage,
+      stopPriceDistancePct: requestedStopLossPct / Math.max(1, requestedLeverage),
+      maxLeverage: market.maxLeverage,
+      bufferRatio: this.config.risk.liqBufferRatio ?? DEFAULT_LIQ_BUFFER_RATIO,
+    });
+    const marginModeLabel = market.onlyIsolated ? "isolated" : "cross (isolated estimate)";
+    if (!liqPlan.ok) {
+      console.warn(`[trader] liq-guard: refusing ${direction} ${market.symbol} — ${liqPlan.reason} [${marginModeLabel}]`);
+      return null;
+    }
+    const orderLeverage = liqPlan.leverage;
+    // Price-space stops stay put: leveraged-PnL pcts scale with leverage.
+    const leverageScale = orderLeverage / Math.max(1, requestedLeverage);
+    const scalePct = (pct: number) => (pct >= 999 ? pct : pct * leverageScale);
+    if (leverageScale < 1) {
+      const shrunk = notionalUsd * leverageScale;
+      if (shrunk < exchangeMinNotionalUsd) {
+        console.warn(
+          `[trader] liq-guard: refusing ${direction} ${market.symbol} — ${liqPlan.reason}, but shrunk notional $${shrunk.toFixed(2)} < exchange min $${exchangeMinNotionalUsd.toFixed(2)}`,
+        );
+        return null;
+      }
+      console.warn(
+        `[trader] liq-guard: ${market.symbol} ${liqPlan.reason}; notional $${notionalUsd.toFixed(2)}→$${shrunk.toFixed(2)} [${marginModeLabel}]`,
+      );
+      notionalUsd = shrunk;
+    } else {
+      console.log(`[trader] liq-guard: ${market.symbol} ok — ${liqPlan.reason} [${marginModeLabel}]`);
+    }
 
     const quoteTokenAddress = this.config.quoteTokens.USDC ?? candidate.tokenAddress;
     const quoteDecimals = this.config.quoteTokenDecimals.USDC ?? 6;
@@ -2018,12 +2487,13 @@ class TraderEngine {
       entryNotionalUsd: notionalUsd,
       // Conviction stops are price-space × leverage so the exit loop's
       // divide-by-leverage lands back on the intended price distance.
-      stopLossPct: conviction ? conviction.stopLossPct : this.config.risk.stopLossPct,
-      takeProfitPct: conviction ? conviction.takeProfitPct : this.config.risk.takeProfitPct,
+      // Scaled by the liquidation guard when it stepped leverage down.
+      stopLossPct: scalePct(requestedStopLossPct),
+      takeProfitPct: scalePct(conviction ? conviction.takeProfitPct : this.config.risk.takeProfitPct),
       openedAt: Date.now(),
       status: "open",
       direction,
-      trailingStopPct: conviction ? conviction.trailingStopPct : this.config.risk.trailingStopPct,
+      trailingStopPct: scalePct(conviction ? conviction.trailingStopPct : this.config.risk.trailingStopPct),
       signalSource: `composite:${composite.direction}`,
       signalConfidence: Math.min(1, composite.confidence),
       kellyFraction: kelly.fraction,
@@ -2100,6 +2570,16 @@ class TraderEngine {
 
     await this.store.upsert(opened);
 
+    // Exchange-side stop / TP from the ACTUAL fill. Failure is loud but not
+    // fatal: the reconcile step retries every cycle and the software stops
+    // still apply.
+    let protectedPosition = opened;
+    if (this.config.dryRun) {
+      this.logDryRunProtectiveOrders(opened, market);
+    } else if (this.exchangeStopsActive()) {
+      protectedPosition = await this.ensureProtectiveOrders(opened, []);
+    }
+
     // Mirror the entry into pooter.trade_decisions so the new HL+Postgres
     // metrics endpoint (Stage 1) can join HL fills with our rationale +
     // signal source via cloid. The Redis position store remains the live
@@ -2127,7 +2607,9 @@ class TraderEngine {
         takeProfitPct: opened.takeProfitPct ?? null,
         trailingStopPct: opened.trailingStopPct ?? null,
         dynamicTpLevels: opened.dynamicTpLevels ?? null,
-        entryRationale: opened.entryRationale ?? null,
+        entryRationale: protectedPosition.protectiveOrders
+          ? { ...(opened.entryRationale ?? {}), protectiveOrders: protectedPosition.protectiveOrders }
+          : (opened.entryRationale ?? null),
       });
     } catch (dbErr) {
       // Postgres unavailable — log and continue. Trade is still live on HL;
@@ -2137,7 +2619,7 @@ class TraderEngine {
       );
     }
 
-    return opened;
+    return protectedPosition;
   }
 
   /**
