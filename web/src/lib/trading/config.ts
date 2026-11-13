@@ -335,6 +335,12 @@ export function getTraderConfig(): TraderExecutionConfig {
       // account × MARGIN_FRACTION × LEVERAGE (leverage clamped to the HL
       // market max: BTC 40, ETH 25, SOL 20, ZEC/HYPE 10). Stops are PRICE
       // moves, not leveraged-PnL — a 2% stop is 2% of price at any leverage.
+      // Exchange-side protective orders: reduce-only stop / TP triggers rest on
+      // Hyperliquid so positions stay protected when the worker is down. The
+      // software stops in the engine remain as a second layer.
+      exchangeStopsEnabled: boolFromEnv("TRADER_EXCHANGE_STOPS", true),
+      liqBufferRatio: numberFromEnv("TRADER_LIQ_BUFFER_RATIO", 0.5),
+      exchangeStopMinMovePct: numberFromEnv("TRADER_EXCHANGE_STOP_MIN_MOVE_PCT", 0.0025),
       conviction: {
         symbols: stringFromEnv("TRADER_CONVICTION_SYMBOLS", "")
           .split(",")

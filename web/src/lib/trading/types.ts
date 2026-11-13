@@ -59,7 +59,21 @@ export interface Position {
   txHash?: Hash;
   status: "open" | "closed";
   closedAt?: number;
-  exitReason?: "stop-loss" | "take-profit" | "trailing-stop" | "signal-reversal" | "expired" | "manual" | "max-hold-time" | "dynamic-tp";
+  exitReason?:
+    | "stop-loss"
+    | "take-profit"
+    | "trailing-stop"
+    | "signal-reversal"
+    | "expired"
+    | "manual"
+    | "max-hold-time"
+    | "dynamic-tp"
+    /** Closed by our reduce-only stop trigger resting on Hyperliquid */
+    | "exchange_stop"
+    /** Closed by our reduce-only take-profit trigger resting on Hyperliquid */
+    | "exchange_tp"
+    /** Closed by the Hyperliquid liquidation engine */
+    | "liquidation";
   exitPriceUsd?: number;
   exitTxHash?: Hash;
   trailingStopPct?: number;
@@ -80,6 +94,36 @@ export interface Position {
   hlUnrealizedPnlUsd?: number;
   /** Dynamic TP levels from web intelligence — resistance for longs, support for shorts */
   dynamicTpLevels?: number[];
+  /** Reduce-only trigger orders resting on Hyperliquid for this position (exchange-side stops). */
+  protectiveOrders?: ProtectiveOrdersState;
+  /** Hyperliquid's live liquidation price (clearinghouseState.liquidationPx); null = none (e.g. fully collateralised). */
+  liquidationPriceUsd?: number | null;
+  /** |mark − liquidation| / mark at the last sync. */
+  liquidationDistancePct?: number | null;
+  /** Margin mode HL reports for the position. */
+  marginMode?: "cross" | "isolated";
+  /** Mark price at the last sync (used for the liquidation distance). */
+  markPriceUsd?: number;
+}
+
+export interface ProtectiveOrderRef {
+  /** HL order id; may be absent briefly if HL acked without one (looked up by cloid). */
+  oid?: number;
+  cloid?: `0x${string}`;
+  triggerPx: number;
+  /** "positionTpsl" (sized to the position, auto-cancelled on close) or "na" fallback. */
+  grouping: "positionTpsl" | "normalTpsl" | "na";
+  placedAt: number;
+}
+
+export interface ProtectiveOrdersState {
+  stop?: ProtectiveOrderRef;
+  takeProfit?: ProtectiveOrderRef;
+  /** Last placement/update failure — retried every cycle by the reconcile step. */
+  lastError?: string;
+  lastErrorAt?: number;
+  /** Set while the live liquidation price is past/at the stop. */
+  liquidationBreachAt?: number;
 }
 
 export interface EntryRationale {
@@ -164,6 +208,12 @@ export interface TraderRiskConfig {
    * fractions of a percent at high leverage).
    */
   conviction?: TraderConvictionConfig;
+  /** Place/maintain reduce-only stop (and TP) trigger orders on Hyperliquid. TRADER_EXCHANGE_STOPS, default on. */
+  exchangeStopsEnabled?: boolean;
+  /** Stop must be at most this fraction of the entry→liquidation distance. TRADER_LIQ_BUFFER_RATIO, default 0.5. */
+  liqBufferRatio?: number;
+  /** Minimum price improvement before the exchange stop is moved. TRADER_EXCHANGE_STOP_MIN_MOVE_PCT, default 0.0025. */
+  exchangeStopMinMovePct?: number;
 }
 
 export interface TraderConvictionConfig {
