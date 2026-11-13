@@ -4,6 +4,7 @@ import { formatPrice, formatSize } from "@nktkas/hyperliquid/utils";
 import { privateKeyToAccount } from "viem/accounts";
 import type { Address, Hash } from "viem";
 import type { ScannerLaunch, TraderExecutionConfig } from "./types";
+import { buildTriggerOrderWire, type PositionDirection, type TpslKind, type TriggerOrderWire } from "./protective-orders";
 
 // Polyfill CloseEvent for Node.js (required by @nktkas/rews WebSocket lib)
 if (typeof globalThis.CloseEvent === "undefined") {
@@ -82,6 +83,12 @@ export interface HyperliquidLivePosition {
   positionValueUsd: number;
   unrealizedPnlUsd: number;
   leverage: number | null;
+  /** clearinghouseState liquidationPx — null when HL reports none (over-collateralised). */
+  liquidationPriceUsd: number | null;
+  /** "cross" | "isolated" from position.leverage.type, when present. */
+  marginMode: "cross" | "isolated" | null;
+  /** positionValue / |szi| — HL values positions at mark. */
+  markPriceUsd: number | null;
 }
 
 interface ParsedStatus {
@@ -691,6 +698,9 @@ export async function fetchHyperliquidLivePositionsSnapshot(
       parsePositive(
         (position.leverage as { value?: string | number } | undefined)?.value
       ) ?? parsePositive(position.leverage);
+    const leverageType = (position.leverage as { type?: string } | undefined)?.type;
+    const marginMode = leverageType === "cross" || leverageType === "isolated" ? leverageType : null;
+    const markPriceUsd = parsePositive(position.positionValue) !== null ? positionValueUsd / absSize : null;
 
     live.push({
       symbol,
@@ -702,6 +712,9 @@ export async function fetchHyperliquidLivePositionsSnapshot(
       positionValueUsd,
       unrealizedPnlUsd,
       leverage: leverageValue,
+      liquidationPriceUsd: parsePositive(position.liquidationPx),
+      marginMode,
+      markPriceUsd,
     });
   }
 
@@ -768,6 +781,15 @@ export async function fetchHyperliquidAccountValueUsd(
   return perpAccountValue;
 }
 
+export interface HyperliquidCloseFill {
+  exitPriceUsd: number;
+  closedPnlUsd: number;
+  /** Order id that produced the closing fill — matched against our trigger oids. */
+  oid?: number;
+  /** True when the fill came from the HL liquidation engine. */
+  liquidation?: boolean;
+}
+
 /**
  * Fetch recent fills for a specific coin and return the actual close price + PnL.
  * Used when a position "disappears" from HL to get the real exit data instead
@@ -777,7 +799,7 @@ export async function fetchRecentCloseFill(
   config: TraderExecutionConfig,
   address: Address,
   symbol: string,
-): Promise<{ exitPriceUsd: number; closedPnlUsd: number } | null> {
+): Promise<HyperliquidCloseFill | null> {
   try {
     const clients = getHyperliquidClients(config);
     // HL API: userFillsByTime returns fills for the last N ms
@@ -799,7 +821,13 @@ export async function fetchRecentCloseFill(
       if (coin === hlCoin && closedPnl !== 0) {
         const px = parseFloat(String(fill.px ?? "0"));
         if (px > 0) {
-          return { exitPriceUsd: px, closedPnlUsd: closedPnl };
+          return {
+            exitPriceUsd: px,
+            closedPnlUsd: closedPnl,
+            oid: typeof fill.oid === "number" ? fill.oid : undefined,
+            // HL attaches a `liquidation` object to fills executed by the liquidator.
+            liquidation: Boolean(fill.liquidation),
+          };
         }
       }
     }
@@ -1177,4 +1205,218 @@ function intervalToMs(interval: CandleInterval): number {
     "1d": 86_400_000, "3d": 259_200_000, "1w": 604_800_000, "1M": 2_592_000_000,
   };
   return map[interval] ?? 900_000;
+}
+
+// ── Exchange-side protective orders (reduce-only TP/SL triggers) ────────────
+
+export interface HyperliquidTriggerOrder {
+  symbol: string;
+  oid: number;
+  cloid: `0x${string}` | null;
+  tpsl: TpslKind;
+  triggerPx: number;
+  /** Order side: "B" closes a short, "A" closes a long. */
+  side: "B" | "A";
+  size: string;
+  isPositionTpsl: boolean;
+  reduceOnly: boolean;
+}
+
+export interface HyperliquidTriggerOrdersSnapshot {
+  orders: HyperliquidTriggerOrder[];
+  /** Dexes ("" = main) whose open-order fetch failed — their orders are UNKNOWN, not absent. */
+  failedDexes: string[];
+}
+
+function tpslFromOrderType(orderType: unknown): TpslKind | null {
+  if (orderType === "Stop Market" || orderType === "Stop Limit") return "sl";
+  if (orderType === "Take Profit Market" || orderType === "Take Profit Limit") return "tp";
+  return null;
+}
+
+/**
+ * All resting reduce-only TP/SL trigger orders across the main dex and every
+ * configured builder dex. The engine reconciles against this every cycle, so
+ * stops placed by a previous process (or by hand in the HL UI) are seen.
+ */
+export async function fetchHyperliquidTriggerOrders(
+  config: TraderExecutionConfig,
+  address: Address,
+): Promise<HyperliquidTriggerOrdersSnapshot> {
+  const clients = getHyperliquidClients(config);
+  const dexes = ["", ...(config.hyperliquid.builderDexes ?? [])];
+  const failedDexes: string[] = [];
+  const results = await Promise.all(
+    dexes.map(async (dex) => {
+      try {
+        return await clients.infoClient.frontendOpenOrders({
+          user: address as `0x${string}`,
+          ...(dex ? { dex } : {}),
+        });
+      } catch {
+        failedDexes.push(dex);
+        return [];
+      }
+    }),
+  );
+  const orders: HyperliquidTriggerOrder[] = [];
+  for (const raw of results.flat()) {
+    if (!raw || raw.isTrigger !== true || raw.reduceOnly !== true) continue;
+    const tpsl = tpslFromOrderType(raw.orderType);
+    const symbol = normalizeHyperliquidSymbol(raw.coin);
+    const triggerPx = parsePositive(raw.triggerPx);
+    if (!tpsl || !symbol || triggerPx === null) continue;
+    orders.push({
+      symbol,
+      oid: raw.oid,
+      cloid: raw.cloid ?? null,
+      tpsl,
+      triggerPx,
+      side: raw.side,
+      size: raw.sz,
+      isPositionTpsl: raw.isPositionTpsl === true,
+      reduceOnly: true,
+    });
+  }
+  return { orders, failedDexes };
+}
+
+/** Classify the order behind a closing fill as our stop / take-profit trigger. */
+export async function fetchHyperliquidOrderTpsl(
+  config: TraderExecutionConfig,
+  address: Address,
+  oid: number,
+): Promise<TpslKind | null> {
+  try {
+    const clients = getHyperliquidClients(config);
+    const response = await clients.infoClient.orderStatus({ user: address as `0x${string}`, oid });
+    if (response.status !== "order") return null;
+    const order = response.order.order;
+    if (order.isTrigger !== true) return null;
+    return tpslFromOrderType(order.orderType);
+  } catch {
+    return null;
+  }
+}
+
+export interface ProtectiveOrderPlan {
+  wire: TriggerOrderWire;
+  grouping: "positionTpsl" | "na";
+}
+
+/**
+ * Exact order payload for a protective trigger — shared by the live path and
+ * the smoke script so what we print is what we send. `size` is the position
+ * size: under positionTpsl HL re-sizes the order with the position (so the
+ * scaled-TP partial closes need no update) and cancels it when the position
+ * closes.
+ */
+export function buildProtectiveOrderPlan(args: {
+  market: Pick<HyperliquidMarketSnapshot, "marketId" | "szDecimals">;
+  direction: PositionDirection;
+  size: string;
+  triggerPx: number;
+  tpsl: TpslKind;
+  cloid?: `0x${string}`;
+  grouping?: "positionTpsl" | "na";
+}): ProtectiveOrderPlan {
+  return {
+    grouping: args.grouping ?? "positionTpsl",
+    wire: buildTriggerOrderWire({
+      marketId: args.market.marketId,
+      direction: args.direction,
+      size: formatSize(args.size, args.market.szDecimals),
+      triggerPx: args.triggerPx,
+      tpsl: args.tpsl,
+      szDecimals: args.market.szDecimals,
+      formatPrice: (px, szDecimals) => formatPrice(px, szDecimals, "perp"),
+      cloid: args.cloid,
+    }),
+  };
+}
+
+function protectiveCloid(): `0x${string}` {
+  return `0x${randomUUID().replace(/-/g, "")}` as `0x${string}`;
+}
+
+function parseTriggerPlacement(response: unknown): { oid?: number; pending: boolean } {
+  const status = (response as { response?: { data?: { statuses?: unknown[] } } })?.response?.data?.statuses?.[0];
+  if (status === "waitingForTrigger" || status === "waitingForFill") return { pending: true };
+  const parsed = parseFirstOrderStatus(response);
+  return { oid: parsed.orderId, pending: false };
+}
+
+/**
+ * Place a reduce-only market trigger (stop-loss or take-profit) that closes
+ * the position on Hyperliquid itself. Tries `positionTpsl` grouping first; if
+ * HL rejects it (e.g. a builder dex that does not accept position TP/SL), falls
+ * back to a plain reduce-only trigger (`na`) sized to the current position.
+ * Never called in dry-run.
+ */
+export async function placeHyperliquidProtectiveOrder(args: {
+  config: TraderExecutionConfig;
+  market: HyperliquidMarketSnapshot;
+  direction: PositionDirection;
+  size: string;
+  triggerPx: number;
+  tpsl: TpslKind;
+}): Promise<{ oid?: number; cloid: `0x${string}`; triggerPx: number; grouping: "positionTpsl" | "na" }> {
+  if (args.config.dryRun) {
+    throw new Error("Live Hyperliquid trigger order requested in dry-run mode");
+  }
+  const clients = getHyperliquidClients(args.config);
+  const attempt = async (grouping: "positionTpsl" | "na") => {
+    const cloid = protectiveCloid();
+    const plan = buildProtectiveOrderPlan({ ...args, cloid, grouping });
+    const response = await clients.exchangeClient.order({ orders: [plan.wire], grouping });
+    const placed = parseTriggerPlacement(response);
+    let oid = placed.oid;
+    if (oid === undefined) {
+      // Acked without an oid — find it by cloid so the engine can cancel it later.
+      try {
+        const walletAddress = privateKeyToAccount(args.config.privateKey).address as Address;
+        const accountAddress = resolveHyperliquidAccountAddress(args.config, walletAddress);
+        const { orders } = await fetchHyperliquidTriggerOrders(args.config, accountAddress);
+        oid = orders.find((o) => o.cloid?.toLowerCase() === cloid.toLowerCase())?.oid;
+      } catch {
+        // reconcile will pick it up by symbol next cycle
+      }
+    }
+    return { oid, cloid, triggerPx: Number(plan.wire.t.trigger.triggerPx), grouping };
+  };
+
+  try {
+    return await attempt("positionTpsl");
+  } catch (positionError) {
+    const firstMessage = positionError instanceof Error ? positionError.message : String(positionError);
+    console.warn(
+      `[hyperliquid] positionTpsl ${args.tpsl} rejected for ${args.market.symbol} (${firstMessage}) — retrying as plain reduce-only trigger`,
+    );
+    try {
+      return await attempt("na");
+    } catch (naError) {
+      const secondMessage = naError instanceof Error ? naError.message : String(naError);
+      throw new Error(`trigger ${args.tpsl} failed for ${args.market.symbol}: positionTpsl: ${firstMessage}; na: ${secondMessage}`);
+    }
+  }
+}
+
+/** Cancel resting orders by oid. Already-gone orders are not an error. */
+export async function cancelHyperliquidOrders(args: {
+  config: TraderExecutionConfig;
+  marketId: number;
+  oids: number[];
+}): Promise<void> {
+  if (args.config.dryRun || args.oids.length === 0) return;
+  const clients = getHyperliquidClients(args.config);
+  for (const oid of args.oids) {
+    try {
+      await clients.exchangeClient.cancel({ cancels: [{ a: args.marketId, o: oid }] });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      // Filled, triggered or auto-cancelled with the position — nothing to do.
+      if (/never placed|already canceled|already cancelled|filled|not found/i.test(message)) continue;
+      throw error;
+    }
+  }
 }

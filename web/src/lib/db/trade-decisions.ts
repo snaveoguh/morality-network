@@ -237,6 +237,47 @@ export async function closeTradeDecisionByLatestOpenRow(
 }
 
 /**
+ * Record the exchange-side protective orders (stop / take-profit trigger oids,
+ * trigger prices) for an open position. No schema change: they ride in
+ * entry_rationale.protectiveOrders (jsonb), replaced wholesale on each update.
+ * Matches by cloid, then the newest open row for wallet+symbol (positions
+ * re-adopted after a restart have no cloid). Best-effort; returns rows hit.
+ */
+export async function recordProtectiveOrders(
+  target: { cloid?: string | null; wallet: string; marketSymbol: string },
+  protectiveOrders: unknown,
+): Promise<number> {
+  const payload = dbJson({ protectiveOrders });
+  if (!payload) return 0;
+  if (target.cloid) {
+    const rows = await sql`
+      UPDATE pooter.trade_decisions SET
+        entry_rationale = COALESCE(entry_rationale, '{}'::jsonb) || ${payload}::jsonb,
+        updated_at      = NOW()
+      WHERE cloid = ${target.cloid}
+        AND closed_at IS NULL
+      RETURNING id
+    `;
+    if (rows.length > 0) return rows.length;
+  }
+  const rows = await sql`
+    UPDATE pooter.trade_decisions SET
+      entry_rationale = COALESCE(entry_rationale, '{}'::jsonb) || ${payload}::jsonb,
+      updated_at      = NOW()
+    WHERE id = (
+      SELECT id FROM pooter.trade_decisions
+      WHERE lower(wallet) = lower(${target.wallet})
+        AND lower(market_symbol) = lower(${target.marketSymbol})
+        AND closed_at IS NULL
+      ORDER BY opened_at DESC
+      LIMIT 1
+    )
+    RETURNING id
+  `;
+  return rows.length;
+}
+
+/**
  * Close a trade_decisions row for a position/scalp: try the cloid first, then
  * fall back to wallet+symbol+openedAt if the cloid matched no open row.
  * Returns rows affected — 0 means nothing was recorded and the caller MUST log
