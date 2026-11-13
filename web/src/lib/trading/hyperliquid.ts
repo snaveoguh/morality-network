@@ -788,6 +788,15 @@ export interface HyperliquidCloseFill {
   oid?: number;
   /** True when the fill came from the HL liquidation engine. */
   liquidation?: boolean;
+  /** True when startPosition − size leaves the position flat (final close, not a partial). */
+  closesFully?: boolean;
+}
+
+function fillClosesFully(fill: Record<string, unknown>): boolean | undefined {
+  const start = parseFinite(fill.startPosition);
+  const size = parsePositive(fill.sz);
+  if (start === null || size === null) return undefined;
+  return Math.abs(Math.abs(start) - size) <= Math.max(1e-9, Math.abs(start) * 1e-6);
 }
 
 /**
@@ -799,12 +808,17 @@ export async function fetchRecentCloseFill(
   config: TraderExecutionConfig,
   address: Address,
   symbol: string,
+  opts?: {
+    /** Look back to this epoch ms instead of the default 10 minutes (e.g. the position's openedAt). */
+    sinceMs?: number;
+  },
 ): Promise<HyperliquidCloseFill | null> {
   try {
     const clients = getHyperliquidClients(config);
     // HL API: userFillsByTime returns fills for the last N ms
-    // Look back 10 minutes — if a position disappeared, the close fill is recent
-    const startTime = Date.now() - 10 * 60 * 1000;
+    // Default 10 minutes — if a position disappeared, the close fill is recent
+    const startTime =
+      opts?.sinceMs && Number.isFinite(opts.sinceMs) ? opts.sinceMs : Date.now() - 10 * 60 * 1000;
     const response = await clients.infoClient.userFillsByTime({
       user: address as `0x${string}`,
       startTime,
@@ -827,6 +841,7 @@ export async function fetchRecentCloseFill(
             oid: typeof fill.oid === "number" ? fill.oid : undefined,
             // HL attaches a `liquidation` object to fills executed by the liquidator.
             liquidation: Boolean(fill.liquidation),
+            closesFully: fillClosesFully(fill),
           };
         }
       }
@@ -1419,4 +1434,55 @@ export async function cancelHyperliquidOrders(args: {
       throw error;
     }
   }
+}
+
+/**
+ * Move a resting protective trigger to a new trigger price. Tries an in-place
+ * batchModify first (keeps the order's grouping, no gap); if HL refuses, places
+ * the new trigger and only then cancels the old one, so the position is never
+ * left without a stop. Returns the order now resting.
+ */
+export async function moveHyperliquidProtectiveOrder(args: {
+  config: TraderExecutionConfig;
+  market: HyperliquidMarketSnapshot;
+  direction: PositionDirection;
+  size: string;
+  triggerPx: number;
+  tpsl: TpslKind;
+  current: { oid: number; grouping: "positionTpsl" | "normalTpsl" | "na" };
+}): Promise<{ oid?: number; cloid: `0x${string}`; triggerPx: number; grouping: "positionTpsl" | "na"; method: "modify" | "replace" }> {
+  if (args.config.dryRun) {
+    throw new Error("Live Hyperliquid trigger modify requested in dry-run mode");
+  }
+  const clients = getHyperliquidClients(args.config);
+  const grouping = args.current.grouping === "na" ? "na" : "positionTpsl";
+  const cloid = protectiveCloid();
+  const plan = buildProtectiveOrderPlan({ ...args, cloid, grouping });
+  try {
+    const response = await clients.exchangeClient.batchModify({
+      modifies: [{ oid: args.current.oid, order: plan.wire }],
+    });
+    const placed = parseTriggerPlacement(response);
+    return {
+      oid: placed.oid,
+      cloid,
+      triggerPx: Number(plan.wire.t.trigger.triggerPx),
+      grouping,
+      method: "modify",
+    };
+  } catch (modifyError) {
+    console.warn(
+      `[hyperliquid] modify of ${args.tpsl} oid=${args.current.oid} on ${args.market.symbol} failed (${modifyError instanceof Error ? modifyError.message : modifyError}) — placing new then cancelling old`,
+    );
+  }
+  const placed = await placeHyperliquidProtectiveOrder(args);
+  try {
+    await cancelHyperliquidOrders({ config: args.config, marketId: args.market.marketId, oids: [args.current.oid] });
+  } catch (cancelError) {
+    // Old stop still resting: it is reduce-only and looser, so it is harmless.
+    console.warn(
+      `[hyperliquid] could not cancel superseded ${args.tpsl} oid=${args.current.oid} on ${args.market.symbol}: ${cancelError instanceof Error ? cancelError.message : cancelError}`,
+    );
+  }
+  return { ...placed, method: "replace" };
 }
