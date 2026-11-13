@@ -310,7 +310,13 @@ export function getTraderConfig(): TraderExecutionConfig {
       maxLeverage: numberFromEnv("TRADER_MAX_LEVERAGE", 40),
       minSignalConfidence: numberFromEnv("TRADER_MIN_SIGNAL_CONFIDENCE", 0.82),
       trailingStopPct: numberFromEnv("TRADER_TRAILING_STOP_PCT", 0.08),
-      trailingStopActivationPct: numberFromEnv("TRADER_TRAILING_STOP_ACTIVATION_PCT", 0.04),
+      // The worker historically set TRADER_TRAILING_ACTIVATION_PCT while this
+      // read only TRADER_TRAILING_STOP_ACTIVATION_PCT, so the worker value was
+      // silently ignored. Accept both; the canonical name wins when both exist.
+      trailingStopActivationPct: numberFromEnv(
+        "TRADER_TRAILING_STOP_ACTIVATION_PCT",
+        numberFromEnv("TRADER_TRAILING_ACTIVATION_PCT", 0.04),
+      ),
       circuitBreakerLosses: numberFromEnv("TRADER_CIRCUIT_BREAKER_LOSSES", 2),
       circuitBreakerPauseMs: numberFromEnv("TRADER_CIRCUIT_BREAKER_PAUSE_MS", 3_600_000),
       maxHoldMs: numberFromEnv("TRADER_MAX_HOLD_MS", 604_800_000), // 7 days safety net — let winners ride
