@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function SubscribePage() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "already" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,11 +27,9 @@ export default function SubscribePage() {
         return;
       }
 
-      if (data.status === "already_subscribed") {
-        setStatus("already");
-      } else {
-        setStatus("success");
-      }
+      // The API answers the same way for every address: nothing is subscribed
+      // until the emailed link is confirmed.
+      setStatus("success");
     } catch {
       setStatus("error");
       setErrorMsg("Network error. Try again.");
@@ -55,9 +53,14 @@ export default function SubscribePage() {
 
       {status === "success" ? (
         <div className="border-2 border-[var(--ink)] p-6 text-center">
-          <p className="mb-2 font-headline text-xl font-bold">You&apos;re in.</p>
+          <p className="mb-2 font-headline text-xl font-bold">Check your inbox.</p>
           <p className="font-serif text-sm text-[var(--ink-light,#555)]">
-            First edition arrives tomorrow morning. Welcome to the briefing.
+            We&apos;ve sent a confirmation link to {email.trim()}. You won&apos;t receive the
+            briefing until you open it and confirm.
+          </p>
+          <p className="mt-3 font-serif text-sm text-[var(--ink-light,#555)]">
+            If this address is already subscribed, there is nothing more to do and no
+            email will arrive.
           </p>
           <Link
             href="/"
@@ -65,13 +68,6 @@ export default function SubscribePage() {
           >
             &larr; Back to pooter.world
           </Link>
-        </div>
-      ) : status === "already" ? (
-        <div className="border border-[var(--rule)] p-6 text-center">
-          <p className="mb-2 font-headline text-lg font-bold">Already subscribed.</p>
-          <p className="font-serif text-sm text-[var(--ink-light,#555)]">
-            You&apos;re already on the list. Check your inbox tomorrow morning.
-          </p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row">
