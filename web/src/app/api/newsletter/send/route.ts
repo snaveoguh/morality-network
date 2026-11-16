@@ -1,50 +1,71 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Redis } from "@upstash/redis";
+
+import { requireCronSecret } from "@/lib/newsletter/auth";
+import {
+  deliverIndividually,
+  type DeliveryFailure,
+  type OutgoingEmail,
+} from "@/lib/newsletter/delivery";
+import { unsubscribeLinks } from "@/lib/newsletter/links";
+import { getNewsletterRedis, listNewsletterRecipients } from "@/lib/newsletter/store";
+import { newsletterTokensConfigured } from "@/lib/newsletter/tokens";
 
 export const runtime = "nodejs";
 export const maxDuration = 55;
 
-const CRON_SECRET = process.env.CRON_SECRET?.trim();
-const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim();
-const NEWSLETTER_FROM = process.env.NEWSLETTER_FROM || "pooter <daily@pooter.world>";
-const ENV_RECIPIENTS = (process.env.NEWSLETTER_RECIPIENTS || "")
-  .split(",")
-  .map((e) => e.trim())
-  .filter(Boolean);
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pooter.world";
 
-async function getAllRecipients(): Promise<string[]> {
-  const all = new Set(ENV_RECIPIENTS);
-  try {
-    const url = process.env.UPSTASH_REDIS_REST_URL;
-    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-    if (url && token) {
-      const redis = new Redis({ url, token });
-      const subs = await redis.smembers("newsletter:subscribers");
-      for (const s of subs) all.add(s as string);
-    }
-  } catch {}
-  return Array.from(all);
-}
+/** Time allowed for the Resend calls; leaves room under maxDuration to reply. */
+const SEND_BUDGET_MS = 40_000;
 
 /**
  * POST /api/newsletter/send
  * Compiles and sends The Daily Pooter morning intelligence brief.
  * Called by GitHub Actions cron or manually.
+ *
+ * Each recipient gets their own message — nobody is ever on another
+ * subscriber's `to` line — carrying their own unsubscribe link. The response
+ * lists every recipient that could not be sent to:
+ *   200 all sent · 207 some failed · 502 none sent
  */
 export async function POST(request: NextRequest) {
-  // Auth
-  const auth = request.headers.get("authorization")?.trim();
-  if (CRON_SECRET && auth !== `Bearer ${CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  // Auth — fails closed: no CRON_SECRET means nobody may send.
+  const unauthorized = requireCronSecret(request);
+  if (unauthorized) return unauthorized;
 
-  if (!RESEND_API_KEY) {
+  const cronSecret = process.env.CRON_SECRET?.trim();
+  const resendApiKey = process.env.RESEND_API_KEY?.trim();
+  if (!resendApiKey) {
     return NextResponse.json({ error: "RESEND_API_KEY not configured" }, { status: 500 });
   }
 
-  const NEWSLETTER_TO = await getAllRecipients();
-  if (NEWSLETTER_TO.length === 0) {
+  // Without these an email would go out with an unsubscribe link that cannot
+  // work, so nothing is sent.
+  if (!newsletterTokensConfigured()) {
+    return NextResponse.json(
+      { error: "NEWSLETTER_TOKEN_SECRET not configured (needs at least 32 characters)" },
+      { status: 500 },
+    );
+  }
+  const redis = getNewsletterRedis();
+  if (!redis) {
+    return NextResponse.json({ error: "Storage not configured" }, { status: 500 });
+  }
+
+  let recipients: string[];
+  try {
+    const operatorRecipients = (process.env.NEWSLETTER_RECIPIENTS || "")
+      .split(",")
+      .map((e) => e.trim())
+      .filter(Boolean);
+    recipients = await listNewsletterRecipients(redis, operatorRecipients);
+  } catch (error) {
+    // The list of who has unsubscribed is unreadable; sending anyway could
+    // mail people who opted out.
+    console.error("[newsletter] Could not read the subscriber list:", error);
+    return NextResponse.json({ error: "Subscriber list unavailable" }, { status: 503 });
+  }
+  if (recipients.length === 0) {
     return NextResponse.json({ error: "No recipients configured" }, { status: 400 });
   }
 
@@ -54,7 +75,7 @@ export async function POST(request: NextRequest) {
       fetch(`${SITE_URL}/api/feed?limit=20`, { next: { revalidate: 0 } }).then((r) => r.json()),
       fetch(`${SITE_URL}/api/signals/latest`, { next: { revalidate: 0 } }).then((r) => r.json()).catch(() => null),
       fetch(`${SITE_URL}/api/trading/performance`, {
-        headers: CRON_SECRET ? { Authorization: `Bearer ${CRON_SECRET}` } : {},
+        headers: { Authorization: `Bearer ${cronSecret}` },
         next: { revalidate: 0 },
       }).then((r) => r.json()).catch(() => null),
     ]);
@@ -73,45 +94,76 @@ export async function POST(request: NextRequest) {
       day: "numeric",
     });
 
-    // ── Build email HTML ──────────────────────────────────────────
-    const html = buildEmailHtml({
-      date: today,
-      topStories,
-      signals,
-      trading,
+    // ── Build one email per recipient ─────────────────────────────
+    // Same edition for everyone; the unsubscribe link is the recipient's own.
+    const emails: OutgoingEmail[] = recipients.map((email) => {
+      const unsubscribe = unsubscribeLinks(email);
+      return {
+        to: email,
+        subject: `The Daily Pooter — ${today}`,
+        html: buildEmailHtml({
+          date: today,
+          topStories,
+          signals,
+          trading,
+          unsubscribeUrl: unsubscribe.page,
+        }),
+        headers: {
+          "List-Unsubscribe": `<${unsubscribe.oneClick}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+      };
     });
 
     // ── Send via Resend ───────────────────────────────────────────
-    const sendRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: NEWSLETTER_FROM,
-        to: NEWSLETTER_TO,
-        subject: `The Daily Pooter — ${today}`,
-        html,
-      }),
+    const report = await deliverIndividually(emails, {
+      apiKey: resendApiKey,
+      from: process.env.NEWSLETTER_FROM || "pooter <daily@pooter.world>",
+      deadline: Date.now() + SEND_BUDGET_MS,
     });
 
-    if (!sendRes.ok) {
-      const err = await sendRes.text();
-      console.error("[newsletter] Resend error:", err);
-      return NextResponse.json({ error: "Email send failed", details: err }, { status: 502 });
+    if (report.failures.length > 0) {
+      console.error(
+        `[newsletter] ${report.failures.length} of ${recipients.length} recipients not sent:`,
+        summarizeFailures(report.failures),
+      );
     }
 
-    const result = await sendRes.json();
-    return NextResponse.json({
-      status: "sent",
-      recipients: NEWSLETTER_TO.length,
-      emailId: result.id,
-    });
-  } catch (error: any) {
+    const body = {
+      recipients: recipients.length,
+      sent: report.sent,
+      failed: report.failures.length,
+      failures: report.failures,
+    };
+    if (report.sent === 0) {
+      return NextResponse.json(
+        { status: "failed", error: "Email send failed", ...body },
+        { status: 502 },
+      );
+    }
+    if (report.failures.length > 0) {
+      return NextResponse.json({ status: "partial", ...body }, { status: 207 });
+    }
+    return NextResponse.json({ status: "sent", ...body });
+  } catch (error) {
     console.error("[newsletter] Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
+}
+
+/**
+ * Failure reasons for the server log, with addresses masked: the full list
+ * goes only to the authenticated caller, in the response.
+ */
+function summarizeFailures(failures: DeliveryFailure[]): Record<string, string[]> {
+  const byReason: Record<string, string[]> = {};
+  for (const failure of failures) {
+    const at = failure.email.lastIndexOf("@");
+    const masked = at > 0 ? `${failure.email[0]}***${failure.email.slice(at)}` : "***";
+    (byReason[failure.error] ??= []).push(masked);
+  }
+  return byReason;
 }
 
 // ── Email template ──────────────────────────────────────────────────
@@ -121,9 +173,11 @@ interface EmailData {
   topStories: any[];
   signals: any;
   trading: any;
+  /** This recipient's own unsubscribe page. */
+  unsubscribeUrl: string;
 }
 
-function buildEmailHtml({ date, topStories, signals, trading }: EmailData): string {
+function buildEmailHtml({ date, topStories, signals, trading, unsubscribeUrl }: EmailData): string {
   const storyRows = topStories
     .map(
       (item: any) => `
@@ -285,6 +339,9 @@ function buildEmailHtml({ date, topStories, signals, trading }: EmailData): stri
       are for informational and entertainment purposes only. All trading involves risk of loss.
       Past performance does not guarantee future results. Do your own research. pooter.world and its
       agents are experimental software — use at your own risk.
+      <br/><br/>
+      You are receiving this because this address is subscribed to The Daily Pooter.
+      <a href="${escHtml(unsubscribeUrl)}" style="color: #8A8A8A; text-decoration: underline;">Unsubscribe</a>
       <br/><br/>
       <a href="${SITE_URL}" style="color: #8A8A8A;">pooter.world</a> · the morality browser
     </span>
