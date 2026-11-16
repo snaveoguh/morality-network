@@ -30,6 +30,7 @@ today none do, so everything defaults to unknown/needed.
 |---|---|---|---|
 | `SESSION_SECRET` | Prod/dev web service env (`web/src/lib/session.ts`) | iron-session cookie encryption (`morality-session`) — forging it = forging any login | **Needed.** Note: `session.ts` ships a hardcoded dev fallback string; fine locally, but the code should hard-fail in production if `SESSION_SECRET` is unset rather than fall back |
 | `CRON_SECRET` | Web service env | Authenticates scheduled-job endpoints | Unknown |
+| `NEWSLETTER_TOKEN_SECRET` | Web service env (`web/src/lib/newsletter/tokens.ts`) | HMAC key for newsletter confirm and unsubscribe links — with it, anyone could subscribe or unsubscribe any address. At least 32 characters; without it the newsletter refuses to send and sign-ups are refused | **Do not rotate casually**: rotating breaks the unsubscribe link in every email already sent (and any pending confirmation). Rotate only on suspected leak |
 | `INDEXER_WORKER_SECRET` | Web + indexer worker env | Worker → web API calls | Unknown |
 | `AGENT_HUB_SECRET` | Web + `heartfelt-flow` env | Agent Hub LLM router access | Unknown |
 | `AGENT_BRIDGE_SECRET` | Web/worker env | Agent bridge auth | Unknown |

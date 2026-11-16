@@ -98,6 +98,7 @@ Runtime mode flags:
 - `INDEXER_WORKER_SECRET=<shared-write-secret>`
 - `CRON_SECRET=<shared-service-secret>`
 - `SESSION_SECRET=<long-random-session-secret>`
+- `NEWSLETTER_TOKEN_SECRET=<32+ random characters>` (signs newsletter confirm/unsubscribe links, e.g. `openssl rand -base64 48`; `/api/newsletter/send` and sign-ups refuse to run without it. Keep it stable: changing it breaks the unsubscribe links in emails already sent)
 - `OPERATOR_ADDRESSES=<comma-separated-operator-wallets>`
 - `TERMINAL_FULL_ACCESS_MIN_MO=100000` (default holder gate for full terminal access)
 
