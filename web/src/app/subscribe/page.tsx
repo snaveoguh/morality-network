@@ -27,7 +27,7 @@ export default function SubscribePage() {
         return;
       }
 
-      // The API answers the same way for every address: nothing is subscribed
+      // The API answers the same way for every address; nothing is subscribed
       // until the emailed link is confirmed.
       setStatus("success");
     } catch {
@@ -55,12 +55,11 @@ export default function SubscribePage() {
         <div className="border-2 border-[var(--ink)] p-6 text-center">
           <p className="mb-2 font-headline text-xl font-bold">Check your inbox.</p>
           <p className="font-serif text-sm text-[var(--ink-light,#555)]">
-            We&apos;ve sent a confirmation link to {email.trim()}. You won&apos;t receive the
-            briefing until you open it and confirm.
+            If {email.trim()} isn&apos;t already subscribed, a confirmation link is on its
+            way. You won&apos;t receive the briefing until you open it and confirm.
           </p>
           <p className="mt-3 font-serif text-sm text-[var(--ink-light,#555)]">
-            If this address is already subscribed, there is nothing more to do and no
-            email will arrive.
+            Nothing after a few minutes? Check your spam folder, then try again.
           </p>
           <Link
             href="/"

@@ -294,4 +294,112 @@ describe("deliverIndividually", () => {
     expect(report.failures).toHaveLength(3);
     expect(report.failures[0].error).toMatch(/ran out of time/);
   });
+
+  it("reports the real error, not 'not attempted', when time runs out between retries", async () => {
+    stubResend(() => resendError(500, "application_error", "An unexpected error occurred."));
+    const deadline = Date.now() + 40;
+
+    const report = await deliverIndividually(emailsFor(addresses(2)), {
+      ...options,
+      deadline,
+      // The back-off outlasts the deadline.
+      sleep: () => new Promise((resolve) => setTimeout(resolve, 60)),
+    });
+
+    expect(calls).toHaveLength(1);
+    expect(report.failures).toEqual(
+      addresses(2).map((email) => ({
+        email,
+        error: "An unexpected error occurred.",
+        status: 500,
+      })),
+    );
+  });
+
+  it("never splits a batch after a server error — it may already have been accepted", async () => {
+    stubResend(() => resendError(503, "service_unavailable", "API is temporarily unavailable"));
+
+    const report = await deliverIndividually(emailsFor(addresses(10)), options);
+
+    // Three attempts at the same ten-message batch under one idempotency key; no halves.
+    expect(calls.map((call) => call.emails.length)).toEqual([10, 10, 10]);
+    expect(new Set(calls.map((call) => call.body)).size).toBe(1);
+    expect(new Set(calls.map((call) => call.headers.get("idempotency-key"))).size).toBe(1);
+    expect(report.sent).toBe(0);
+    expect(report.failures).toHaveLength(10);
+  });
+
+  it("never splits a batch it could not reach Resend for", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+        calls.push({ headers: new Headers(init?.headers), body: String(init?.body), emails: [] });
+        throw new Error("socket hang up");
+      }),
+    );
+
+    const report = await deliverIndividually(emailsFor(addresses(10)), options);
+
+    expect(calls).toHaveLength(3);
+    expect(new Set(calls.map((call) => call.body)).size).toBe(1);
+    expect(report.failures).toHaveLength(10);
+  });
+
+  it("retries while an earlier attempt with the same idempotency key is still in progress", async () => {
+    stubResend((emails, attempt) =>
+      attempt === 1
+        ? resendError(409, "concurrent_idempotent_requests", "Another request is in progress.")
+        : accept(emails),
+    );
+
+    const report = await deliverIndividually(emailsFor(addresses(2)), options);
+
+    expect(report).toEqual({ sent: 2, failures: [] });
+    expect(calls).toHaveLength(2);
+    expect(calls[1].headers.get("idempotency-key")).toBe(calls[0].headers.get("idempotency-key"));
+  });
+
+  it("spaces its requests out to stay under Resend's rate limit", async () => {
+    stubResend(accept);
+
+    await deliverIndividually(emailsFor(addresses(250)), options);
+
+    // Three batches: a pause before the second and before the third.
+    expect(sleeps.filter((ms) => ms > 0)).toHaveLength(2);
+    expect(sleeps.every((ms) => ms <= 120)).toBe(true);
+  });
+
+  it("stops narrowing down when every batch is rejected, instead of two requests per recipient", async () => {
+    // A rejection that is not about any one address, e.g. a bad `from`.
+    stubResend(() => resendError(422, "validation_error", "Invalid `from` field."));
+
+    const report = await deliverIndividually(emailsFor(addresses(250)), options);
+
+    // Three batches plus a bounded number of extra requests (was 497 unbounded).
+    expect(calls.length).toBeLessThanOrEqual(3 + 100);
+    expect(report.sent).toBe(0);
+    expect(report.failures).toHaveLength(250);
+    expect(new Set(report.failures.map((failure) => failure.email)).size).toBe(250);
+    expect(report.failures.some((failure) => /not narrowed down/.test(failure.error))).toBe(true);
+  });
+
+  it("still isolates several bad addresses in one run", async () => {
+    const bad = new Set(["reader3@example.com", "reader41@example.com", "reader77@example.com"]);
+    const accepted: ResendEmail[][] = [];
+    stubResend((emails) => {
+      if (emails.some((email) => bad.has(email.to[0]))) {
+        return resendError(422, "validation_error", "Invalid `to` field.");
+      }
+      accepted.push(emails);
+      return accept(emails);
+    });
+
+    const report = await deliverIndividually(emailsFor(addresses(100)), options);
+
+    expect(report.sent).toBe(97);
+    expect(report.failures.map((failure) => failure.email).sort()).toEqual([...bad].sort());
+    const counts = acceptedCounts(accepted);
+    expect(counts.size).toBe(97);
+    expect([...counts.values()].every((count) => count === 1)).toBe(true);
+  });
 });

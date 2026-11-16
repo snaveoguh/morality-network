@@ -2,7 +2,7 @@ import "server-only";
 
 import { SITE_URL } from "@/lib/brand";
 
-import { PENDING_TTL_MS } from "./store";
+import { pendingLinkExpiry } from "./store";
 import { createNewsletterToken } from "./tokens";
 
 /**
@@ -33,8 +33,13 @@ export function unsubscribePageUrl(token: string): string {
   return `${site()}/unsubscribe${token ? `?token=${encodeURIComponent(token)}` : ""}`;
 }
 
-/** The link in a confirmation email. Valid for as long as the sign-up stays pending. */
-export function confirmationLink(email: string, now: number = Date.now()): string {
-  const token = createNewsletterToken("confirm", email, { expiresAt: now + PENDING_TTL_MS });
+/**
+ * The link in a confirmation email. `requestedAt` is the sign-up time the
+ * pending entry is recorded with; the link works only for that sign-up.
+ */
+export function confirmationLink(email: string, requestedAt: number): string {
+  const token = createNewsletterToken("confirm", email, {
+    expiresAt: pendingLinkExpiry(requestedAt),
+  });
   return `${site()}/subscribe/confirm?token=${token}`;
 }

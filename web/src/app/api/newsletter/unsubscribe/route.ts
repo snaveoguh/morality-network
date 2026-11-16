@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { unsubscribePageUrl } from "@/lib/newsletter/links";
-import { getNewsletterRedis, unsubscribeEmail } from "@/lib/newsletter/store";
+import {
+  describeStoreError,
+  getNewsletterRedis,
+  unsubscribeEmail,
+} from "@/lib/newsletter/store";
 import { verifyNewsletterToken } from "@/lib/newsletter/tokens";
 
 export const runtime = "nodejs";
@@ -19,8 +23,8 @@ export const dynamic = "force-dynamic";
  * is involved, because the mail provider calling this has none of them.
  */
 export async function POST(request: NextRequest) {
-  const email = verifyNewsletterToken("unsubscribe", request.nextUrl.searchParams.get("token"));
-  if (!email) {
+  const link = verifyNewsletterToken("unsubscribe", request.nextUrl.searchParams.get("token"));
+  if (!link) {
     return NextResponse.json({ error: "This unsubscribe link is not valid." }, { status: 400 });
   }
 
@@ -30,10 +34,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await unsubscribeEmail(redis, email);
+    await unsubscribeEmail(redis, link.email);
     return NextResponse.json({ status: "unsubscribed" });
   } catch (error) {
-    console.error("[newsletter] Unsubscribe failed:", error);
+    console.error("[newsletter] Unsubscribe failed:", describeStoreError(error));
     return NextResponse.json({ error: "Something went wrong. Try again." }, { status: 500 });
   }
 }

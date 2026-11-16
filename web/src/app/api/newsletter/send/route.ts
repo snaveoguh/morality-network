@@ -7,7 +7,13 @@ import {
   type OutgoingEmail,
 } from "@/lib/newsletter/delivery";
 import { unsubscribeLinks } from "@/lib/newsletter/links";
-import { getNewsletterRedis, listNewsletterRecipients } from "@/lib/newsletter/store";
+import {
+  describeStoreError,
+  getNewsletterRedis,
+  listNewsletterRecipients,
+  parseOperatorRecipients,
+  pruneExpiredPending,
+} from "@/lib/newsletter/store";
 import { newsletterTokensConfigured } from "@/lib/newsletter/tokens";
 
 export const runtime = "nodejs";
@@ -15,7 +21,11 @@ export const maxDuration = 55;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pooter.world";
 
-/** Time allowed for the Resend calls; leaves room under maxDuration to reply. */
+/**
+ * No new request to Resend starts once this much time has gone by since the
+ * first one, so retries or a batch being narrowed down cannot hold the
+ * request open indefinitely. A request already in flight still finishes.
+ */
 const SEND_BUDGET_MS = 40_000;
 
 /**
@@ -25,8 +35,9 @@ const SEND_BUDGET_MS = 40_000;
  *
  * Each recipient gets their own message — nobody is ever on another
  * subscriber's `to` line — carrying their own unsubscribe link. The response
- * lists every recipient that could not be sent to:
- *   200 all sent · 207 some failed · 502 none sent
+ * lists every recipient that could not be sent to. It is 200 only when
+ * everyone was sent their edition and 502 otherwise (`status` says "partial"
+ * or "failed"): the cron reads nothing but the status code.
  */
 export async function POST(request: NextRequest) {
   // Auth — fails closed: no CRON_SECRET means nobody may send.
@@ -54,17 +65,21 @@ export async function POST(request: NextRequest) {
 
   let recipients: string[];
   try {
-    const operatorRecipients = (process.env.NEWSLETTER_RECIPIENTS || "")
-      .split(",")
-      .map((e) => e.trim())
-      .filter(Boolean);
-    recipients = await listNewsletterRecipients(redis, operatorRecipients);
+    recipients = await listNewsletterRecipients(
+      redis,
+      parseOperatorRecipients(process.env.NEWSLETTER_RECIPIENTS),
+    );
   } catch (error) {
     // The list of who has unsubscribed is unreadable; sending anyway could
     // mail people who opted out.
-    console.error("[newsletter] Could not read the subscriber list:", error);
+    console.error("[newsletter] Could not read the subscriber list:", describeStoreError(error));
     return NextResponse.json({ error: "Subscriber list unavailable" }, { status: 503 });
   }
+  // Housekeeping that must not hold up the edition: forget sign-ups whose
+  // confirmation link has expired.
+  await pruneExpiredPending(redis, Date.now()).catch((error) => {
+    console.error("[newsletter] Could not prune pending sign-ups:", describeStoreError(error));
+  });
   if (recipients.length === 0) {
     return NextResponse.json({ error: "No recipients configured" }, { status: 400 });
   }
@@ -135,16 +150,17 @@ export async function POST(request: NextRequest) {
       failed: report.failures.length,
       failures: report.failures,
     };
-    if (report.sent === 0) {
-      return NextResponse.json(
-        { status: "failed", error: "Email send failed", ...body },
-        { status: 502 },
-      );
+    if (report.failures.length === 0) {
+      return NextResponse.json({ status: "sent", ...body });
     }
-    if (report.failures.length > 0) {
-      return NextResponse.json({ status: "partial", ...body }, { status: 207 });
-    }
-    return NextResponse.json({ status: "sent", ...body });
+    // Not a 2xx even when most went out: the scheduled job only fails on a
+    // 5xx, and it should fail whenever someone was not sent their edition.
+    return NextResponse.json(
+      report.sent === 0
+        ? { status: "failed", error: "Email send failed", ...body }
+        : { status: "partial", error: "Some recipients were not sent to", ...body },
+      { status: 502 },
+    );
   } catch (error) {
     console.error("[newsletter] Error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -183,7 +199,7 @@ function buildEmailHtml({ date, topStories, signals, trading, unsubscribeUrl }: 
       (item: any) => `
       <tr>
         <td style="padding: 12px 0; border-bottom: 1px solid #DDD6CA;">
-          <a href="${item.link || "#"}" style="color: #1A1A1A; text-decoration: none;">
+          <a href="${escHtml(safeLink(item.link))}" style="color: #1A1A1A; text-decoration: none;">
             <span style="font-family: Georgia, serif; font-size: 15px; font-weight: 700; line-height: 1.3;">
               ${escHtml(item.title || "Untitled")}
             </span>
@@ -396,6 +412,11 @@ function generatePredictions(stories: any[], signals: any, trading: any): string
   }
 
   return lines.join("<br/><br/>");
+}
+
+/** Feed links come from other sites: only http(s) URLs are linked. */
+function safeLink(link: unknown): string {
+  return typeof link === "string" && /^https?:\/\//i.test(link.trim()) ? link.trim() : "#";
 }
 
 function escHtml(s: string): string {

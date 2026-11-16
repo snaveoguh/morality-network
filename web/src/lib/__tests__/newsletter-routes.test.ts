@@ -7,7 +7,8 @@ import * as subscribeRoute from "@/app/api/newsletter/subscribe/route";
 import * as unsubscribeRoute from "@/app/api/newsletter/unsubscribe/route";
 
 import {
-  CONFIRMATION_COOLDOWN_MS,
+  MAX_CONFIRMATIONS_PER_ADDRESS_PER_DAY,
+  optOutId,
   PENDING_KEY,
   PENDING_TTL_MS,
   SUBSCRIBERS_KEY,
@@ -25,9 +26,24 @@ vi.mock("@upstash/redis", async () => {
   return { Redis: FakeRedis };
 });
 
+// Next runs after() callbacks once the response has gone out. Here they are
+// held back so a test can look at the reply first, then let the deferred work
+// run with `settle()`.
+const { deferred } = vi.hoisted(() => ({ deferred: [] as Array<() => unknown> }));
+vi.mock("next/server", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/server")>();
+  return {
+    ...actual,
+    after: (task: () => unknown) => {
+      deferred.push(task);
+    },
+  };
+});
+
 const SITE = "https://pooter.world";
 const CRON_SECRET = "cron-secret-for-tests";
 const AUTH = { authorization: `Bearer ${CRON_SECRET}` };
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 interface ResendEmail {
   from: string;
@@ -38,7 +54,9 @@ interface ResendEmail {
   [key: string]: unknown;
 }
 
+/** Every batch posted to the stubbed Resend, and the ones it accepted. */
 let resendCalls: ResendEmail[][];
+let acceptedBatches: ResendEmail[][];
 let respondResend: (emails: ResendEmail[]) => Response;
 let fetchMock: ReturnType<typeof vi.fn>;
 
@@ -46,9 +64,15 @@ function accept(emails: ResendEmail[]): Response {
   return Response.json({ data: emails.map((_, i) => ({ id: `email-${i}` })) });
 }
 
+function resendError(status: number, name: string, message: string): Response {
+  return Response.json({ statusCode: status, name, message }, { status });
+}
+
 beforeEach(() => {
   fakeRedis.reset();
+  deferred.length = 0;
   resendCalls = [];
+  acceptedBatches = [];
   respondResend = accept;
 
   vi.stubEnv("CRON_SECRET", CRON_SECRET);
@@ -63,18 +87,27 @@ beforeEach(() => {
     if (url === "https://api.resend.com/emails/batch" && init?.method === "POST") {
       const emails = JSON.parse(String(init.body)) as ResendEmail[];
       resendCalls.push(emails);
-      return respondResend(emails);
+      const response = respondResend(emails);
+      if (response.ok) acceptedBatches.push(emails);
+      return response;
     }
     if (url === `${SITE}/api/feed?limit=20`) {
       return Response.json({
         items: [
           {
             title: "Budget statement <moved> to March",
-            link: "https://example.org/budget",
+            link: "https://example.org/budget?a=1&b=2",
             source: "Example Wire",
             category: "Politics",
             description: "The Treasury confirmed the new date.",
           },
+          {
+            title: "A link that tries to break out",
+            link: 'https://example.org/"><img src=x onerror=alert(1)>',
+            source: "Example Wire",
+            category: "World",
+          },
+          { title: "A link that is not a web address", link: "javascript:alert(1)" },
         ],
       });
     }
@@ -94,18 +127,26 @@ afterEach(() => {
 
 // ── helpers ─────────────────────────────────────────────────────────
 
-function send(headers: Record<string, string> = AUTH) {
-  return sendRoute.POST(new NextRequest(`${SITE}/api/newsletter/send`, { method: "POST", headers }));
+function send(headers: Record<string, string> = AUTH, origin: string = SITE) {
+  return sendRoute.POST(
+    new NextRequest(`${origin}/api/newsletter/send`, { method: "POST", headers }),
+  );
 }
 
-function subscribe(email: unknown) {
+/** Calls the sign-up endpoint. The confirmation email is not sent until `settle()`. */
+function subscribe(email: unknown, headers: Record<string, string> = {}) {
   return subscribeRoute.POST(
     new NextRequest(`${SITE}/api/newsletter/subscribe`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", ...headers },
       body: JSON.stringify({ email }),
     }),
   );
+}
+
+/** Runs whatever the routes scheduled for after their response. */
+async function settle(): Promise<void> {
+  while (deferred.length > 0) await deferred.shift()!();
 }
 
 function confirm(token: string | null) {
@@ -142,6 +183,14 @@ function isSubscribed(email: string): boolean {
   return fakeRedis.set(SUBSCRIBERS_KEY).has(email);
 }
 
+function hasOptedOut(email: string): boolean {
+  return fakeRedis.set(UNSUBSCRIBED_KEY).has(optOutId(email));
+}
+
+function pendingAddresses(): string[] {
+  return [...fakeRedis.sortedSet(PENDING_KEY).keys()];
+}
+
 function linkIn(html: string, path: string): string {
   const match = html.match(new RegExp(`href="(${SITE}${path}\\?token=[^"]+)"`));
   if (!match) throw new Error(`No ${path} link in the email`);
@@ -162,13 +211,24 @@ function addresses(count: number): string[] {
   return Array.from({ length: count }, (_, i) => `reader${i}@example.com`);
 }
 
-/** Sign up and return the confirmation link from the email that was "sent". */
+/** Sign up, let the confirmation go out, and return the token from the emailed link. */
 async function signUp(email: string): Promise<string> {
   const before = sentMessages().length;
   const response = await subscribe(email);
   expect(response.status).toBe(200);
+  await settle();
   const [confirmation] = sentMessages().slice(before);
-  return linkIn(confirmation.html, "/subscribe/confirm");
+  if (!confirmation) throw new Error(`No confirmation email was sent to ${email}`);
+  return tokenOf(linkIn(confirmation.html, "/subscribe/confirm"));
+}
+
+function freezeTime(at = "2026-11-16T09:00:00Z") {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(at));
+}
+
+function advanceTime(ms: number) {
+  vi.setSystemTime(Date.now() + ms);
 }
 
 // ── send: auth ──────────────────────────────────────────────────────
@@ -198,6 +258,7 @@ describe("POST /api/newsletter/send — auth fails closed", () => {
     ["the wrong secret", { authorization: "Bearer not-the-secret" }],
     ["the secret without the scheme", { authorization: CRON_SECRET }],
     ["a prefix of the secret", { authorization: `Bearer ${CRON_SECRET.slice(0, -1)}` }],
+    ["the secret in another case", { authorization: `Bearer ${CRON_SECRET.toUpperCase()}` }],
   ])("returns 401 when the secret is wrong (%s)", async (_label, headers) => {
     const response = await send(headers as Record<string, string>);
 
@@ -280,17 +341,44 @@ describe("POST /api/newsletter/send — recipient privacy", () => {
       expect(message.html).toContain(">Unsubscribe</a>");
       // Same token in both places, and it is this recipient's.
       expect(tokenOf(footer)).toBe(tokenOf(oneClick));
-      expect(verifyNewsletterToken("unsubscribe", tokenOf(oneClick))).toBe(message.to[0]);
+      expect(verifyNewsletterToken("unsubscribe", tokenOf(oneClick))?.email).toBe(message.to[0]);
     }
     expect(new Set(messages.map((m) => tokenOf(oneClickUrlOf(m)))).size).toBe(4);
   });
 
-  it("still escapes feed content in the edition", async () => {
+  it("builds links from the site URL, not from the origin the request arrived on", async () => {
+    seedSubscribers("reader@example.com");
+
+    // Behind the hosting proxy the request's own URL is the container's.
+    await send(AUTH, "https://localhost:3000");
+
+    const [message] = sentMessages();
+    expect(oneClickUrlOf(message).startsWith(`${SITE}/`)).toBe(true);
+    expect(linkIn(message.html, "/unsubscribe").startsWith(`${SITE}/`)).toBe(true);
+    expect(JSON.stringify(message)).not.toContain("localhost");
+  });
+
+  it("accepts `Name <address>` entries in NEWSLETTER_RECIPIENTS", async () => {
+    vi.stubEnv("NEWSLETTER_RECIPIENTS", "Hugo <Owner@Example.com>, plain@example.com");
+
+    const response = await send();
+
+    expect(response.status).toBe(200);
+    expect(recipientsOf(sentMessages())).toEqual(["owner@example.com", "plain@example.com"]);
+    for (const message of sentMessages()) expect(message.to).toHaveLength(1);
+  });
+
+  it("escapes feed content, including links, in the edition", async () => {
     seedSubscribers("reader@example.com");
 
     await send();
 
-    expect(sentMessages()[0].html).toContain("Budget statement &lt;moved&gt; to March");
+    const { html } = sentMessages()[0];
+    expect(html).toContain("Budget statement &lt;moved&gt; to March");
+    expect(html).toContain('href="https://example.org/budget?a=1&amp;b=2"');
+    // A feed link cannot close its href and add markup, or carry a script URL.
+    expect(html).not.toContain("<img");
+    expect(html).not.toContain("javascript:");
   });
 });
 
@@ -327,23 +415,40 @@ describe("unsubscribe links", () => {
     expect(isSubscribed("b@example.com")).toBe(false);
     expect(isSubscribed("a@example.com")).toBe(true);
     expect(isSubscribed("c@example.com")).toBe(true);
-    expect([...fakeRedis.set(UNSUBSCRIBED_KEY)].sort()).toEqual([
-      "b@example.com",
-      "owner@example.com",
-    ]);
+    expect(hasOptedOut("b@example.com")).toBe(true);
+    expect(hasOptedOut("owner@example.com")).toBe(true);
+    expect(fakeRedis.set(UNSUBSCRIBED_KEY).size).toBe(2);
 
     resendCalls = [];
     await send();
     expect(recipientsOf(sentMessages())).toEqual(["a@example.com", "c@example.com"]);
   });
 
+  it("record the opt-out without keeping the address", async () => {
+    seedSubscribers("a@example.com");
+    await send();
+
+    await oneClickUnsubscribe(oneClickUrlOf(sentMessages()[0]));
+
+    const stored = JSON.stringify({
+      sets: [...fakeRedis.sets].map(([key, members]) => [key, [...members]]),
+      sortedSets: [...fakeRedis.sortedSets].map(([key, members]) => [key, [...members.keys()]]),
+      counters: [...fakeRedis.counters.keys()],
+    });
+    expect(stored).not.toContain("a@example.com");
+    expect(hasOptedOut("a@example.com")).toBe(true);
+  });
+
   it("do nothing on GET — a link scanner cannot unsubscribe anyone", async () => {
     seedSubscribers("a@example.com");
     await send();
     const [message] = sentMessages();
-    const oneClick = oneClickUrlOf(message);
+    const token = tokenOf(oneClickUrlOf(message));
 
-    const response = await unsubscribeRoute.GET(new NextRequest(oneClick));
+    // The request arrives on the container's own origin; the redirect must not follow it.
+    const response = await unsubscribeRoute.GET(
+      new NextRequest(`https://localhost:3000/api/newsletter/unsubscribe?token=${token}`),
+    );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(linkIn(message.html, "/unsubscribe"));
@@ -384,6 +489,18 @@ describe("unsubscribe links", () => {
     expect((await oneClickUnsubscribe(oneClick)).status).toBe(200);
     expect(isSubscribed("a@example.com")).toBe(false);
   });
+
+  it("keep working years after the email was sent", async () => {
+    freezeTime();
+    seedSubscribers("a@example.com");
+    await send();
+    const oneClick = oneClickUrlOf(sentMessages()[0]);
+
+    advanceTime(5 * 365 * DAY_MS);
+
+    expect((await oneClickUnsubscribe(oneClick)).status).toBe(200);
+    expect(isSubscribed("a@example.com")).toBe(false);
+  });
 });
 
 // ── double opt-in ───────────────────────────────────────────────────
@@ -391,34 +508,35 @@ describe("unsubscribe links", () => {
 describe("double opt-in", () => {
   it("holds a new sign-up as pending and emails only that address a confirmation link", async () => {
     const response = await subscribe("  New.Reader@Example.com ");
+    await settle();
 
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ status: "pending" });
     expect(isSubscribed("new.reader@example.com")).toBe(false);
-    expect([...fakeRedis.sortedSet(PENDING_KEY).keys()]).toEqual(["new.reader@example.com"]);
+    expect(pendingAddresses()).toEqual(["new.reader@example.com"]);
 
     const messages = sentMessages();
     expect(messages).toHaveLength(1);
     expect(messages[0].to).toEqual(["new.reader@example.com"]);
     expect(messages[0].subject).toMatch(/confirm/i);
     const link = linkIn(messages[0].html, "/subscribe/confirm");
-    expect(verifyNewsletterToken("confirm", tokenOf(link))).toBe("new.reader@example.com");
+    expect(verifyNewsletterToken("confirm", tokenOf(link))?.email).toBe("new.reader@example.com");
   });
 
   it("never sends an edition to an address that has not confirmed", async () => {
     seedSubscribers("confirmed@example.com");
-    const link = await signUp("pending@example.com");
+    const token = await signUp("pending@example.com");
 
     resendCalls = [];
     expect((await send()).status).toBe(200);
     expect(recipientsOf(sentMessages())).toEqual(["confirmed@example.com"]);
 
     // Once the owner of the address confirms, the next edition includes them.
-    const confirmed = await confirm(tokenOf(link));
+    const confirmed = await confirm(token);
     expect(confirmed.status).toBe(200);
     expect(await confirmed.json()).toEqual({ status: "confirmed" });
     expect(isSubscribed("pending@example.com")).toBe(true);
-    expect(fakeRedis.sortedSet(PENDING_KEY).size).toBe(0);
+    expect(pendingAddresses()).toEqual([]);
 
     resendCalls = [];
     await send();
@@ -430,8 +548,7 @@ describe("double opt-in", () => {
   });
 
   it("rejects a forged or altered confirmation token", async () => {
-    const link = await signUp("pending@example.com");
-    const token = tokenOf(link);
+    const token = await signUp("pending@example.com");
     const [, expiry, signature] = token.split(".");
     const other = Buffer.from("someone.else@example.com", "utf8").toString("base64url");
 
@@ -446,7 +563,7 @@ describe("double opt-in", () => {
     seedSubscribers("reader@example.com");
     await send();
     const unsubscribeToken = tokenOf(oneClickUrlOf(sentMessages()[0]));
-    const confirmToken = tokenOf(await signUp("pending@example.com"));
+    const confirmToken = await signUp("pending@example.com");
 
     // A subscriber's unsubscribe token for an address that is also pending.
     fakeRedis.sortedSet(PENDING_KEY).set("reader@example.com", Date.now());
@@ -456,12 +573,12 @@ describe("double opt-in", () => {
       `${SITE}/api/newsletter/unsubscribe?token=${confirmToken}`,
     );
     expect(response.status).toBe(400);
-    expect(fakeRedis.sortedSet(PENDING_KEY).has("pending@example.com")).toBe(true);
+    expect(pendingAddresses()).toContain("pending@example.com");
     expect(fakeRedis.set(UNSUBSCRIBED_KEY).size).toBe(0);
   });
 
   it("makes the confirmation link single-use: it cannot re-subscribe after an unsubscribe", async () => {
-    const token = tokenOf(await signUp("reader@example.com"));
+    const token = await signUp("reader@example.com");
     expect(await (await confirm(token)).json()).toEqual({ status: "confirmed" });
     // Following the link a second time is harmless.
     expect(await (await confirm(token)).json()).toEqual({ status: "already_subscribed" });
@@ -475,69 +592,193 @@ describe("double opt-in", () => {
     expect(isSubscribed("reader@example.com")).toBe(false);
   });
 
+  it("keeps a used link dead even when someone signs the address up again", async () => {
+    freezeTime();
+    const used = await signUp("reader@example.com");
+    await confirm(used);
+    await send();
+    await oneClickUnsubscribe(oneClickUrlOf(sentMessages().at(-1)!));
+
+    // Anyone can submit the address again; that must not revive the old link.
+    advanceTime(60_000);
+    const fresh = await signUp("reader@example.com");
+    expect(fresh).not.toBe(used);
+
+    expect((await confirm(used)).status).toBe(400);
+    expect(isSubscribed("reader@example.com")).toBe(false);
+    expect(hasOptedOut("reader@example.com")).toBe(true);
+
+    // The link from the new email, which only the mailbox owner has, does work.
+    expect(await (await confirm(fresh)).json()).toEqual({ status: "confirmed" });
+    expect(isSubscribed("reader@example.com")).toBe(true);
+  });
+
+  it("honours only the most recently emailed link", async () => {
+    freezeTime();
+    const first = await signUp("reader@example.com");
+    advanceTime(5 * 60_000);
+    const second = await signUp("reader@example.com");
+
+    expect((await confirm(first)).status).toBe(400);
+    expect(isSubscribed("reader@example.com")).toBe(false);
+    expect(await (await confirm(second)).json()).toEqual({ status: "confirmed" });
+  });
+
   it("lets someone who unsubscribed come back by confirming a new sign-up", async () => {
     seedSubscribers("reader@example.com");
     await send();
     await oneClickUnsubscribe(oneClickUrlOf(sentMessages()[0]));
-    expect(fakeRedis.set(UNSUBSCRIBED_KEY).has("reader@example.com")).toBe(true);
+    expect(hasOptedOut("reader@example.com")).toBe(true);
 
-    const token = tokenOf(await signUp("reader@example.com"));
+    const token = await signUp("reader@example.com");
     // Signing up alone changes nothing; they stay off the list until they confirm.
     resendCalls = [];
     expect((await send()).status).toBe(400);
     expect(sentMessages()).toHaveLength(0);
 
     await confirm(token);
-    expect(fakeRedis.set(UNSUBSCRIBED_KEY).has("reader@example.com")).toBe(false);
+    expect(hasOptedOut("reader@example.com")).toBe(false);
     await send();
     expect(recipientsOf(sentMessages())).toEqual(["reader@example.com"]);
   });
 
-  it("expires an unconfirmed sign-up and forgets the address", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-11-16T09:00:00Z"));
-    const token = tokenOf(await signUp("slow@example.com"));
+  it("expires an unconfirmed sign-up, and the next sign-up or send forgets the address", async () => {
+    freezeTime();
+    const token = await signUp("slow@example.com");
 
-    vi.setSystemTime(Date.now() + PENDING_TTL_MS + 60_000);
+    advanceTime(PENDING_TTL_MS + 60_000);
     expect((await confirm(token)).status).toBe(400);
     expect(isSubscribed("slow@example.com")).toBe(false);
+    expect(pendingAddresses()).toEqual(["slow@example.com"]);
 
-    // The next sign-up by anyone clears expired entries out of Redis.
-    await subscribe("someone.else@example.com");
-    expect([...fakeRedis.sortedSet(PENDING_KEY).keys()]).toEqual(["someone.else@example.com"]);
-  });
-
-  it("answers the same for a new, a pending and an already-subscribed address", async () => {
+    // The daily send clears expired sign-ups out of Redis...
     seedSubscribers("member@example.com");
+    await send();
+    expect(pendingAddresses()).toEqual([]);
 
-    const fresh = await subscribe("fresh@example.com");
-    const repeat = await subscribe("fresh@example.com");
-    const member = await subscribe("member@example.com");
-
-    const body = await fresh.json();
-    expect(await repeat.json()).toEqual(body);
-    expect(await member.json()).toEqual(body);
-    expect([fresh.status, repeat.status, member.status]).toEqual([200, 200, 200]);
-    // One confirmation only: none for the member, none for the immediate repeat.
-    expect(recipientsOf(sentMessages())).toEqual(["fresh@example.com"]);
-    expect(fakeRedis.sortedSet(PENDING_KEY).has("member@example.com")).toBe(false);
+    // ...and so does the next sign-up by anyone.
+    fakeRedis.sortedSet(PENDING_KEY).set("stale@example.com", Date.now() - PENDING_TTL_MS - 1);
+    await signUp("someone.else@example.com");
+    expect(pendingAddresses()).toEqual(["someone.else@example.com"]);
   });
 
-  it("sends a fresh confirmation once the cooldown has passed", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-11-16T09:00:00Z"));
-    await subscribe("fresh@example.com");
+  it("gives the same reply, after the same work, for a new, a pending and a subscribed address", async () => {
+    seedSubscribers("member@example.com");
+    await signUp("pending@example.com");
+    fakeRedis.log = [];
+    resendCalls = [];
+    fetchMock.mockClear();
 
-    vi.setSystemTime(Date.now() + CONFIRMATION_COOLDOWN_MS + 1_000);
-    await subscribe("fresh@example.com");
+    const replies = [];
+    const workBeforeReply = [];
+    for (const email of ["fresh@example.com", "pending@example.com", "member@example.com"]) {
+      const before = fakeRedis.log.length;
+      const response = await subscribe(email);
+      replies.push({ status: response.status, body: await response.json() });
+      workBeforeReply.push(fakeRedis.log.slice(before));
+    }
 
-    expect(recipientsOf(sentMessages())).toEqual(["fresh@example.com", "fresh@example.com"]);
+    // Identical status and body, one Redis read each, and nothing sent yet.
+    expect(replies[1]).toEqual(replies[0]);
+    expect(replies[2]).toEqual(replies[0]);
+    expect(replies[0].status).toBe(200);
+    expect(workBeforeReply).toEqual([
+      [`sismember ${SUBSCRIBERS_KEY}`],
+      [`sismember ${SUBSCRIBERS_KEY}`],
+      [`sismember ${SUBSCRIBERS_KEY}`],
+    ]);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    // Afterwards: a confirmation for the two that are not subscribed, none for the member.
+    await settle();
+    expect(recipientsOf(sentMessages())).toEqual(["fresh@example.com", "pending@example.com"]);
+    expect(pendingAddresses()).not.toContain("member@example.com");
+  });
+
+  it("gives the same reply when the confirmation email cannot be sent, and keeps nothing", async () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    respondResend = () => resendError(403, "validation_error", "The domain is not verified.");
+
+    const failed = await subscribe("fresh@example.com");
+    await settle();
+    respondResend = accept;
+    const worked = await subscribe("other@example.com");
+    await settle();
+
+    expect(failed.status).toBe(200);
+    expect(await failed.json()).toEqual(await worked.json());
+    expect(pendingAddresses()).toEqual(["other@example.com"]);
+    expect(isSubscribed("fresh@example.com")).toBe(false);
+    expect(JSON.stringify(logged.mock.calls)).toContain("The domain is not verified.");
+    expect(JSON.stringify(logged.mock.calls)).not.toContain("fresh@example.com");
+  });
+
+  it("does not count a failed send against the address", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    respondResend = () => resendError(403, "validation_error", "The domain is not verified.");
+    for (let i = 0; i < MAX_CONFIRMATIONS_PER_ADDRESS_PER_DAY + 2; i++) {
+      await subscribe("fresh@example.com");
+      await settle();
+    }
+    expect(pendingAddresses()).toEqual([]);
+
+    respondResend = accept;
+    resendCalls = [];
+    await signUp("fresh@example.com");
+
+    expect(pendingAddresses()).toEqual(["fresh@example.com"]);
+  });
+
+  it("leaves an earlier, delivered link working when a later confirmation fails to send", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    freezeTime();
+    const delivered = await signUp("reader@example.com");
+
+    advanceTime(60 * 60_000);
+    respondResend = () => resendError(403, "validation_error", "The domain is not verified.");
+    await subscribe("reader@example.com");
+    await settle();
+
+    expect(await (await confirm(delivered)).json()).toEqual({ status: "confirmed" });
+  });
+
+  it("sends one address at most three confirmation emails a day", async () => {
+    freezeTime("2026-11-16T09:00:00Z");
+    for (let i = 0; i < 6; i++) {
+      advanceTime(10 * 60_000);
+      await subscribe("fresh@example.com");
+      await settle();
+    }
+    expect(MAX_CONFIRMATIONS_PER_ADDRESS_PER_DAY).toBe(3);
+    expect(recipientsOf(sentMessages())).toEqual(Array(3).fill("fresh@example.com"));
+
+    // Another address is unaffected, and the allowance comes back the next day.
+    await signUp("other@example.com");
+    advanceTime(DAY_MS);
+    resendCalls = [];
+    await signUp("fresh@example.com");
+    expect(recipientsOf(sentMessages())).toEqual(["fresh@example.com"]);
+
+    // The counters expire on their own.
+    expect(fakeRedis.counters.size).toBe(3);
+    expect([...fakeRedis.expiries.keys()].sort()).toEqual([...fakeRedis.counters.keys()].sort());
+  });
+
+  it("holds that limit when many sign-ups for one address arrive at once", async () => {
+    await Promise.all(Array.from({ length: 10 }, () => subscribe("fresh@example.com")));
+    expect(deferred).toHaveLength(10);
+
+    // All ten run interleaved, as they would on a busy server.
+    await Promise.all(deferred.splice(0).map((task) => task()));
+
+    expect(recipientsOf(sentMessages())).toEqual(Array(3).fill("fresh@example.com"));
   });
 
   it("rejects anything that is not one plain address", async () => {
     for (const email of [
       "a@example.com, b@example.com",
       "a@example.com,b@example.com",
+      "a@example.com，b＠example.com", // full-width comma and @
       "Someone <a@example.com>",
       "not-an-address",
       "",
@@ -546,23 +787,9 @@ describe("double opt-in", () => {
     ]) {
       expect((await subscribe(email)).status).toBe(400);
     }
+    await settle();
     expect(fetchMock).not.toHaveBeenCalled();
     expect(fakeRedis.commands).toBe(0);
-  });
-
-  it("says so, and keeps nothing, when the confirmation email cannot be sent", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    respondResend = () =>
-      Response.json(
-        { statusCode: 403, name: "validation_error", message: "The domain is not verified." },
-        { status: 403 },
-      );
-
-    const response = await subscribe("fresh@example.com");
-
-    expect(response.status).toBe(502);
-    expect(fakeRedis.sortedSet(PENDING_KEY).size).toBe(0);
-    expect(isSubscribed("fresh@example.com")).toBe(false);
   });
 
   it("refuses sign-ups when links cannot be signed", async () => {
@@ -570,10 +797,71 @@ describe("double opt-in", () => {
     vi.stubEnv("NEWSLETTER_TOKEN_SECRET", undefined);
 
     const response = await subscribe("fresh@example.com");
+    await settle();
 
     expect(response.status).toBe(503);
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(fakeRedis.sortedSet(PENDING_KEY).size).toBe(0);
+    expect(pendingAddresses()).toEqual([]);
+  });
+
+  it("reports a Redis outage without logging the address", async () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    fakeRedis.down = true;
+
+    const response = await subscribe("private.person@example.com");
+
+    expect(response.status).toBe(500);
+    expect(JSON.stringify(await response.json())).not.toContain("private.person");
+    expect(logged).toHaveBeenCalled();
+    expect(JSON.stringify(logged.mock.calls)).not.toContain("command was");
+  });
+
+  it("never puts the confirmation link in the reply or, with a mail provider, in the log", async () => {
+    const logs = [
+      vi.spyOn(console, "log").mockImplementation(() => {}),
+      vi.spyOn(console, "info").mockImplementation(() => {}),
+      vi.spyOn(console, "warn").mockImplementation(() => {}),
+      vi.spyOn(console, "error").mockImplementation(() => {}),
+    ];
+
+    const response = await subscribe("fresh@example.com");
+    const body = JSON.stringify(await response.json());
+    await settle();
+
+    const token = tokenOf(linkIn(sentMessages()[0].html, "/subscribe/confirm"));
+    expect(body).not.toContain("token");
+    expect(body).not.toContain(token);
+    for (const log of logs) expect(JSON.stringify(log.mock.calls)).not.toContain(token);
+  });
+
+  it("without a mail provider, logs the link for local use and still keeps it out of the reply", async () => {
+    const warned = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.stubEnv("RESEND_API_KEY", undefined);
+
+    const response = await subscribe("fresh@example.com");
+    const body = JSON.stringify(await response.json());
+    await settle();
+
+    expect(response.status).toBe(200);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(pendingAddresses()).toEqual(["fresh@example.com"]);
+    const link = String(warned.mock.calls[0]?.[0]).match(/https:\/\/\S+/)?.[0] ?? "";
+    expect(body).not.toContain(tokenOf(link));
+    // The logged link is a working one.
+    expect(await (await confirm(tokenOf(link))).json()).toEqual({ status: "confirmed" });
+  });
+
+  it("limits how many sign-ups one client can make in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const client = { "x-forwarded-for": "203.0.113.77" };
+
+    const statuses = [];
+    for (let i = 0; i < 12; i++) {
+      statuses.push((await subscribe(`reader${i}@example.com`, client)).status);
+    }
+
+    expect(statuses.slice(0, 10)).toEqual(Array(10).fill(200));
+    expect(statuses.slice(10)).toEqual([429, 429]);
   });
 });
 
@@ -585,22 +873,23 @@ describe("POST /api/newsletter/send — failures", () => {
     seedSubscribers("a@example.com", "broken@example.com", "c@example.com");
     respondResend = (emails) =>
       emails.some((email) => email.to[0] === "broken@example.com")
-        ? Response.json(
-            { statusCode: 422, name: "validation_error", message: "Invalid `to` field." },
-            { status: 422 },
-          )
+        ? resendError(422, "validation_error", "Invalid `to` field.")
         : accept(emails);
 
     const response = await send();
 
-    expect(response.status).toBe(207);
+    // Not a 2xx: the scheduled job only fails on a 5xx, and it should fail here.
+    expect(response.status).toBe(502);
     expect(await response.json()).toEqual({
       status: "partial",
+      error: "Some recipients were not sent to",
       recipients: 3,
       sent: 2,
       failed: 1,
       failures: [{ email: "broken@example.com", error: "Invalid `to` field.", status: 422 }],
     });
+    // Each good address was accepted exactly once while the bad one was narrowed down.
+    expect(recipientsOf(acceptedBatches.flat())).toEqual(["a@example.com", "c@example.com"]);
     // The server log names the reason but not the full address.
     expect(JSON.stringify(logged.mock.calls)).toContain("Invalid `to` field.");
     expect(JSON.stringify(logged.mock.calls)).not.toContain("broken@example.com");
@@ -609,11 +898,7 @@ describe("POST /api/newsletter/send — failures", () => {
   it("returns 502 and lists everyone when nothing could be sent", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     seedSubscribers("a@example.com", "b@example.com");
-    respondResend = () =>
-      Response.json(
-        { statusCode: 403, name: "validation_error", message: "The domain is not verified." },
-        { status: 403 },
-      );
+    respondResend = () => resendError(403, "validation_error", "The domain is not verified.");
 
     const response = await send();
 
@@ -632,12 +917,31 @@ describe("POST /api/newsletter/send — failures", () => {
 
     const response = await send();
 
-    expect(response.status).toBe(207);
+    expect(response.status).toBe(502);
     expect(recipientsOf(sentMessages())).toEqual(["a@example.com"]);
     const body = await response.json();
+    expect(body.status).toBe("partial");
     expect(body.failures).toEqual([
       { email: "a@example.com,b@example.com", error: expect.stringMatching(/not a valid email/i) },
     ]);
+  });
+
+  it("stops when its time is up and reports who was not reached", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    freezeTime();
+    seedSubscribers(...addresses(150));
+    respondResend = (emails) => {
+      advanceTime(41_000); // the first batch takes longer than the whole budget
+      return accept(emails);
+    };
+
+    const response = await send();
+
+    expect(response.status).toBe(502);
+    const body = await response.json();
+    expect(body).toMatchObject({ status: "partial", recipients: 150, sent: 100, failed: 50 });
+    expect(resendCalls).toHaveLength(1);
+    expect(body.failures[0].error).toMatch(/ran out of time/);
   });
 
   it("sends nothing when unsubscribe links cannot be signed", async () => {
@@ -653,16 +957,31 @@ describe("POST /api/newsletter/send — failures", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("sends nothing when the list of who has unsubscribed cannot be read", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
+  it.each([
+    ["the list of opt-outs", UNSUBSCRIBED_KEY],
+    ["the subscriber list", SUBSCRIBERS_KEY],
+  ])("sends nothing when %s cannot be read", async (_label, key) => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
     seedSubscribers("a@example.com");
     vi.stubEnv("NEWSLETTER_RECIPIENTS", "owner@example.com");
-    fakeRedis.down = true;
+    fakeRedis.failingKeys.add(key);
 
     const response = await send();
 
     expect(response.status).toBe(503);
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(JSON.stringify(logged.mock.calls)).not.toContain("command was");
+  });
+
+  it("still sends when only the clean-up of expired sign-ups fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    seedSubscribers("a@example.com");
+    fakeRedis.failingKeys.add(PENDING_KEY);
+
+    const response = await send();
+
+    expect(response.status).toBe(200);
+    expect(recipientsOf(sentMessages())).toEqual(["a@example.com"]);
   });
 
   it("sends nothing when Redis is not configured", async () => {
@@ -729,5 +1048,19 @@ describe("/api/newsletter/subscribe — operator access", () => {
     const body = await (await list(AUTH)).json();
     expect(body.count).toBe(2);
     expect(body.subscribers.sort()).toEqual(["a@example.com", "b@example.com"]);
+  });
+
+  it("does not show the addresses to anyone when CRON_SECRET is not set", async () => {
+    seedSubscribers("a@example.com");
+    vi.stubEnv("CRON_SECRET", undefined);
+
+    const attempts: Record<string, string>[] = [
+      {},
+      { authorization: "Bearer undefined" },
+      { authorization: "Bearer " },
+    ];
+    for (const headers of attempts) {
+      expect(await (await list(headers)).json()).toEqual({ count: 1 });
+    }
   });
 });

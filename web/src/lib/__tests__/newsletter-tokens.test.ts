@@ -23,14 +23,14 @@ describe("newsletter tokens", () => {
   it("round-trips the address for both purposes", () => {
     for (const purpose of ["confirm", "unsubscribe"] as const) {
       const token = createNewsletterToken(purpose, EMAIL);
-      expect(verifyNewsletterToken(purpose, token)).toBe(EMAIL);
+      expect(verifyNewsletterToken(purpose, token)).toEqual({ email: EMAIL, expiresAt: 0 });
     }
   });
 
   it("round-trips addresses with plus tags, dots and non-ASCII characters", () => {
     for (const email of ["first.last+pooter@sub.example.co.uk", "jörg@exämple.de"]) {
       const token = createNewsletterToken("unsubscribe", email);
-      expect(verifyNewsletterToken("unsubscribe", token)).toBe(email);
+      expect(verifyNewsletterToken("unsubscribe", token)?.email).toBe(email);
     }
   });
 
@@ -79,7 +79,10 @@ describe("newsletter tokens", () => {
   it("honours the expiry and cannot have it extended", () => {
     const now = Date.UTC(2026, 10, 16);
     const token = createNewsletterToken("confirm", EMAIL, { expiresAt: now + 60_000 });
-    expect(verifyNewsletterToken("confirm", token, now)).toBe(EMAIL);
+    expect(verifyNewsletterToken("confirm", token, now)).toEqual({
+      email: EMAIL,
+      expiresAt: now + 60_000,
+    });
     expect(verifyNewsletterToken("confirm", token, now + 61_000)).toBeNull();
 
     const [email, expiry, signature] = token.split(".");
@@ -92,7 +95,7 @@ describe("newsletter tokens", () => {
   it("never expires when minted without an expiry", () => {
     const token = createNewsletterToken("unsubscribe", EMAIL);
     const tenYears = Date.now() + 10 * 365 * 86_400_000;
-    expect(verifyNewsletterToken("unsubscribe", token, tenYears)).toBe(EMAIL);
+    expect(verifyNewsletterToken("unsubscribe", token, tenYears)?.email).toBe(EMAIL);
   });
 
   it("rejects malformed input without throwing", () => {

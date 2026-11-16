@@ -64,15 +64,16 @@ export function createNewsletterToken(
 }
 
 /**
- * Returns the address a token was minted for, or null if the token is
- * malformed, altered, minted for another purpose, expired, or the secret is
- * not configured. Never throws.
+ * Returns the address a token was minted for and when it expires (ms; 0 for
+ * a token that does not expire), or null if the token is malformed, altered,
+ * minted for another purpose, expired, or the secret is not configured.
+ * Never throws.
  */
 export function verifyNewsletterToken(
   purpose: NewsletterTokenPurpose,
   token: string | null | undefined,
   now: number = Date.now(),
-): string | null {
+): { email: string; expiresAt: number } | null {
   const secret = getSecret();
   if (!secret || typeof token !== "string") return null;
 
@@ -89,8 +90,8 @@ export function verifyNewsletterToken(
     return null;
   }
 
-  const expiry = Number(expiryText);
-  if (expiry !== 0 && now > expiry * 1000) return null;
+  const expiresAt = Number(expiryText) * 1000;
+  if (expiresAt !== 0 && now > expiresAt) return null;
 
-  return Buffer.from(encodedEmail, "base64url").toString("utf8");
+  return { email: Buffer.from(encodedEmail, "base64url").toString("utf8"), expiresAt };
 }

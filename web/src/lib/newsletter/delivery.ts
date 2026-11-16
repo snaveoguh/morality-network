@@ -33,6 +33,14 @@ const MIN_REQUEST_INTERVAL_MS = 120;
 const MAX_ATTEMPTS = 3;
 const MAX_RETRY_DELAY_MS = 5_000;
 
+/**
+ * Extra requests one run may spend halving rejected batches. Finding one bad
+ * address among 100 takes about 14, so this covers several; it also stops a
+ * rejection that has nothing to do with any one address (a bad `from`, say)
+ * from costing two requests per recipient.
+ */
+const MAX_ISOLATION_REQUESTS = 100;
+
 /** A request that hangs is abandoned and retried under the same idempotency key. */
 const REQUEST_TIMEOUT_MS = 15_000;
 
@@ -84,6 +92,7 @@ interface DeliveryContext {
   deadline: number;
   sleep: (ms: number) => Promise<void>;
   lastRequestAt: number;
+  isolationRequestsLeft: number;
   report: DeliveryReport;
 }
 
@@ -101,6 +110,7 @@ export async function deliverIndividually(
     deadline: options.deadline ?? Number.POSITIVE_INFINITY,
     sleep: options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms))),
     lastRequestAt: 0,
+    isolationRequestsLeft: MAX_ISOLATION_REQUESTS,
     report: { sent: 0, failures: [] },
   };
 
@@ -145,17 +155,22 @@ async function deliverChunk(chunk: OutgoingEmail[], context: DeliveryContext): P
 
   // Resend rejects a whole batch when one email in it is invalid. Halve the
   // batch and try again so the problem address is the only one that fails.
+  let error = outcome.error;
   if (outcome.isolate && chunk.length > 1) {
-    const middle = Math.ceil(chunk.length / 2);
-    await deliverChunk(chunk.slice(0, middle), context);
-    await deliverChunk(chunk.slice(middle), context);
-    return;
+    if (context.isolationRequestsLeft >= 2) {
+      context.isolationRequestsLeft -= 2;
+      const middle = Math.ceil(chunk.length / 2);
+      await deliverChunk(chunk.slice(0, middle), context);
+      await deliverChunk(chunk.slice(middle), context);
+      return;
+    }
+    error = `${outcome.error} (rejected as a batch of ${chunk.length}; not narrowed down to one address)`;
   }
 
   for (const email of chunk) {
     context.report.failures.push({
       email: email.to,
-      error: outcome.error,
+      error,
       ...(outcome.status ? { status: outcome.status } : {}),
     });
   }
@@ -186,7 +201,10 @@ async function postBatch(chunk: OutgoingEmail[], context: DeliveryContext): Prom
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     if (Date.now() > context.deadline) {
-      return { ok: false, error: "Not attempted — the send ran out of time", isolate: false };
+      // Out of time. If this batch was already tried, that error is the one to report.
+      return attempt === 1
+        ? { ok: false, error: "Not attempted — the send ran out of time", isolate: false }
+        : failure;
     }
 
     const wait = context.lastRequestAt + MIN_REQUEST_INTERVAL_MS - Date.now();

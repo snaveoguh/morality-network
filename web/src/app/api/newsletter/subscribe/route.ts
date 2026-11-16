@@ -1,15 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 
 import { requireCronSecret } from "@/lib/newsletter/auth";
 import { deliverIndividually } from "@/lib/newsletter/delivery";
 import { confirmationLink } from "@/lib/newsletter/links";
 import {
-  addPendingSubscriber,
+  claimConfirmation,
+  describeStoreError,
   getNewsletterRedis,
+  isSubscribed,
   isValidEmail,
   normalizeEmail,
   PENDING_TTL_MS,
-  removePendingSubscriber,
+  recordPendingSubscriber,
+  releaseConfirmation,
   SUBSCRIBERS_KEY,
   unsubscribeEmail,
 } from "@/lib/newsletter/store";
@@ -18,16 +21,21 @@ import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
+type NewsletterStore = NonNullable<ReturnType<typeof getNewsletterRedis>>;
+
 /**
  * POST /api/newsletter/subscribe  { email }
  *
- * Starts a sign-up to The Daily Pooter. The address is held as pending and
- * emailed a confirmation link; it joins the subscriber list only when that
- * link is followed (see ../confirm), so nobody can sign up an address they do
- * not control.
+ * Starts a sign-up to The Daily Pooter. The address is emailed a confirmation
+ * link and held as pending; it joins the subscriber list only when that link
+ * is followed (see ../confirm), so nobody can sign up an address they do not
+ * control.
  *
- * The reply is the same whether the address is new, already pending or
- * already subscribed — otherwise this would be a way to test who subscribes.
+ * The reply does not depend on the address. Whether a confirmation is sent,
+ * and whether sending it worked, is decided after the reply has gone, so a
+ * new, a pending and an already-subscribed address get the same answer in the
+ * same time — otherwise this would be a way to test who subscribes. Failures
+ * go to the server log, as with the sign-in mailer.
  */
 export async function POST(request: NextRequest) {
   // Each accepted request can send an email to a stranger. Keep it slow.
@@ -54,23 +62,41 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Sign-ups are not available right now" }, { status: 503 });
   }
 
-  const pending = NextResponse.json({
-    status: "pending",
-    message: "Check your inbox for a link to confirm your subscription.",
-  });
-
+  let subscribed: boolean;
   try {
-    const outcome = await addPendingSubscriber(redis, email);
-    // Already on the list, or sent a link in the last few minutes: no new email.
-    if (outcome !== "pending") return pending;
+    subscribed = await isSubscribed(redis, email);
+  } catch (error) {
+    console.error("[newsletter] Sign-up failed:", describeStoreError(error));
+    return NextResponse.json({ error: "Something went wrong. Try again." }, { status: 500 });
+  }
 
-    const link = confirmationLink(email);
+  if (!subscribed) after(() => sendConfirmation(redis, email));
+
+  return NextResponse.json({
+    status: "pending",
+    message: "If this address is not already subscribed, a confirmation link is on its way.",
+  });
+}
+
+/**
+ * Email one address its confirmation link and record the sign-up as pending.
+ * Runs after the reply to the sign-up request; never throws.
+ */
+async function sendConfirmation(redis: NewsletterStore, email: string): Promise<void> {
+  const now = Date.now();
+  try {
+    // At most a few of these per address per day, however often the form is
+    // submitted and however many submissions arrive at once.
+    if (!(await claimConfirmation(redis, email, now))) return;
+
+    const link = confirmationLink(email, now);
     const resendApiKey = process.env.RESEND_API_KEY?.trim();
     if (!resendApiKey) {
       // Same arrangement as the sign-in mailer: without a mail provider the
-      // link is logged so local and staging sign-up still works, never returned.
+      // link is logged so local and staging sign-up still works.
       console.warn(`[newsletter] RESEND_API_KEY unset — confirmation link for ${email}: ${link}`);
-      return pending;
+      await recordPendingSubscriber(redis, email, now);
+      return;
     }
 
     const report = await deliverIndividually(
@@ -88,17 +114,16 @@ export async function POST(request: NextRequest) {
     );
     if (report.sent === 0) {
       console.error("[newsletter] Confirmation email failed:", report.failures[0]?.error);
-      // Forget the request so the cooldown does not block a retry.
-      await removePendingSubscriber(redis, email);
-      return NextResponse.json(
-        { error: "We could not send the confirmation email. Try again in a moment." },
-        { status: 502 },
-      );
+      // The failure should not count against the address.
+      await releaseConfirmation(redis, email, now);
+      return;
     }
-    return pending;
+
+    // Recorded only now: a send that failed leaves nothing behind, and does
+    // not replace a sign-up whose link was delivered earlier.
+    await recordPendingSubscriber(redis, email, now);
   } catch (error) {
-    console.error("[newsletter] Sign-up failed:", error);
-    return NextResponse.json({ error: "Something went wrong. Try again." }, { status: 500 });
+    console.error("[newsletter] Sign-up failed:", describeStoreError(error));
   }
 }
 
@@ -157,7 +182,7 @@ function renderConfirmationEmail(link: string): string {
     <p style="margin:0 0 28px">
       <a href="${link}" style="display:inline-block;background:#111;color:#fffdf7;text-decoration:none;padding:14px 24px;font-family:Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase">Confirm subscription</a>
     </p>
-    <p style="margin:0;font-size:13px;line-height:1.5;color:#555">If you didn't ask for this, ignore this email and you will not be subscribed. The link expires in ${days} days.</p>
+    <p style="margin:0;font-size:13px;line-height:1.5;color:#555">If you didn't ask for this, ignore this email and you will not be subscribed. The link expires in ${days} days. If you asked more than once, only the newest email's link works.</p>
   </div>
 </body></html>`;
 }
