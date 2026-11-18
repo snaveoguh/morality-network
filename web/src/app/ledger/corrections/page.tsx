@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCorrectionsRegister } from "@/lib/ledger/corrections-service";
-import type { CorrectionKind, MinisterialCorrection } from "@/lib/ledger/corrections";
+import type { CorrectionKind } from "@/lib/ledger/corrections";
+import { CorrectionRow, KIND_LABEL, days, formatDate } from "@/components/ledger/CorrectionRow";
 import { BRAND_NAME, withBrand } from "@/lib/brand";
 
 export const revalidate = 3600;
@@ -14,27 +15,6 @@ export const metadata = {
 // Same sworn style as /ledger: dates, sources, counts. A correction is a fact
 // on the record; this page never characterises the original error or infers
 // motive. Match proposals are labelled as proposals.
-
-const KIND_LABEL: Record<CorrectionKind, string> = {
-  "written-answer": "Written answer",
-  "written-statement": "Correction statement",
-  "oral-point-of-order": "Oral (point of order)",
-};
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "—";
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
-
-function days(n: number | null): string {
-  if (n === null) return "—";
-  return n === 1 ? "1 day" : `${Number.isInteger(n) ? n : n.toFixed(1)} days`;
-}
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
@@ -55,90 +35,6 @@ function SectionHead({ title, note }: { title: string; note?: string }) {
         <p className="mt-1 font-body-serif text-sm italic text-[var(--ink-light)]">{note}</p>
       )}
     </div>
-  );
-}
-
-function CorrectionRow({ c }: { c: MinisterialCorrection }) {
-  return (
-    <li className="py-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="font-headline-serif text-lg font-bold text-[var(--ink)]">
-          {c.member.memberId ? (
-            <Link
-              href={`/ledger/member/${c.member.memberId}`}
-              className="transition-colors hover:text-[var(--accent-red)]"
-            >
-              {c.member.name}
-            </Link>
-          ) : (
-            c.member.name
-          )}
-          <span className="ml-2 font-body-serif text-sm font-normal text-[var(--ink-light)]">
-            {c.heading}
-          </span>
-        </p>
-        <span
-          className={`border px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.2em] ${
-            c.daysToCorrect !== null && c.daysToCorrect > 30
-              ? "border-[var(--accent-red)] bg-[var(--accent-red)] text-[var(--paper)]"
-              : "border-[var(--ink)] text-[var(--ink)]"
-          }`}
-        >
-          {c.daysToCorrect === null ? "date unknown" : `${days(c.daysToCorrect)} to correct`}
-        </span>
-      </div>
-
-      <div className="mt-1 flex flex-wrap items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-        <span>{KIND_LABEL[c.kind]}</span>
-        <span className="text-[var(--rule-light)]">|</span>
-        <span>{c.house}{c.alsoLaidIn ? ` + ${c.alsoLaidIn}` : ""}</span>
-        {c.department && (
-          <>
-            <span className="text-[var(--rule-light)]">|</span>
-            <span>{c.department}</span>
-          </>
-        )}
-        <span className="text-[var(--rule-light)]">|</span>
-        <span>
-          said {formatDate(c.originalDate)} &rarr; corrected {formatDate(c.correctedOn)}
-        </span>
-      </div>
-
-      <details className="mt-2 pl-4">
-        <summary className="cursor-pointer font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--ink-light)] hover:text-[var(--accent-red)]">
-          Show the record
-        </summary>
-        {c.originalText && (
-          <blockquote className="mt-2 border-l-2 border-[var(--rule-light)] pl-4 font-body-serif text-sm leading-relaxed text-[var(--ink-faint)] line-through decoration-[var(--accent-red)]/60">
-            {c.originalText}
-          </blockquote>
-        )}
-        <blockquote className="mt-2 border-l-2 border-[var(--rule)] pl-4 font-body-serif text-sm leading-relaxed text-[var(--ink)]">
-          {c.correctedText}
-        </blockquote>
-      </details>
-
-      <div className="mt-2 flex flex-wrap gap-3 pl-4 font-mono text-[9px] uppercase tracking-[0.2em]">
-        <a
-          href={c.correctionUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[var(--accent-red)] underline decoration-1 underline-offset-2 hover:text-[var(--ink)]"
-        >
-          Correction
-        </a>
-        {c.originalUrl && c.originalUrl !== c.correctionUrl && (
-          <a
-            href={c.originalUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[var(--accent-red)] underline decoration-1 underline-offset-2 hover:text-[var(--ink)]"
-          >
-            Original statement{c.originalRef ? ` (${c.originalRef})` : ""}
-          </a>
-        )}
-      </div>
-    </li>
   );
 }
 
@@ -273,6 +169,19 @@ export default async function CorrectionsPage() {
         </section>
       )}
 
+      <Link
+        href="/ledger/network"
+        className="group mt-10 block border border-[var(--rule)] p-4 transition-colors hover:bg-[var(--paper-dark)]"
+      >
+        <span className="font-headline-serif text-lg font-bold text-[var(--ink)] group-hover:underline">
+          See the network &rarr;
+        </span>
+        <p className="mt-1 font-body-serif text-sm text-[var(--ink-light)]">
+          {stats.byDepartment.length} departments and {stats.byMinister.length} ministers, drawn as one
+          picture. Tap anyone to open their record.
+        </p>
+      </Link>
+
       <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2">
         <section>
           <SectionHead title="By department" />
@@ -308,7 +217,18 @@ export default async function CorrectionsPage() {
             <tbody>
               {stats.byMinister.slice(0, 25).map((m) => (
                 <tr key={`${m.memberId ?? m.name}`} className="border-b border-[var(--rule-light)] text-[var(--ink)]">
-                  <td className="py-1.5 pr-2 normal-case tracking-normal">{m.name}</td>
+                  <td className="py-1.5 pr-2 normal-case tracking-normal">
+                    {m.memberId ? (
+                      <Link
+                        href={`/ledger/member/${m.memberId}`}
+                        className="underline decoration-[var(--rule-light)] decoration-1 underline-offset-2 hover:decoration-[var(--ink)]"
+                      >
+                        {m.name}
+                      </Link>
+                    ) : (
+                      m.name
+                    )}
+                  </td>
                   <td className="py-1.5 pl-2 text-right font-bold">{m.count}</td>
                   <td className="whitespace-nowrap py-1.5 pl-3 text-right">{days(m.medianDays)}</td>
                 </tr>
@@ -317,7 +237,10 @@ export default async function CorrectionsPage() {
           </table>
           {stats.byMinister.length > 25 && (
             <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-              + {stats.byMinister.length - 25} more ministers
+              + {stats.byMinister.length - 25} more ministers &middot;{" "}
+              <Link href="/ledger/network" className="text-[var(--ink)] underline decoration-1 underline-offset-2">
+                see all {stats.byMinister.length} in the network
+              </Link>
             </p>
           )}
         </section>

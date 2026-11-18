@@ -47,6 +47,9 @@ Reference mockups: the Design canvas "Pooter Mobile-First Redesign" (claude.ai/a
 - **Bearometer** (the buy/hold/sell signals app, formerly "barometer") has its own tab and a card in the feed.
 - Source lines show the outlet and its rated bias in plain words (Left, Lean left, Centre, Right). Don't colour-code bias red/blue.
 
+- **Every person named in the ledger links to a profile** (Hugo, 2026-11-18): `/ledger/member/[id]` shows who they are, the posts they hold, their corrections, claims and registered interests, and the colleagues in the same departments. Never print a minister's name as dead text where an id exists. Why: the record is about people, and a name you can't open is a dead end.
+- **Profiles join up into a network of government** (Hugo, 2026-11-18): `/ledger/network` draws departments (filled circles) and ministers (open circles) as one picture; tapping a circle opens a bottom sheet that leads to the profile. One ink on a cream panel, size carries the count, and a line only ever means something a register states. Why: Hugo wants the visual that shows the structure behind closed doors. Add new kinds of link (interests, donors, APPGs) only from register data and only once the MP Record legal review allows it.
+
 ## Charts
 - Make our own charts from data we crawl or collect live (feed bias mix, ledger claims, signals). Use a cream panel with black bars and a plain-language title that states the finding, then a source line with the date and "updates live". (2026-10-28)
 - Use one ink colour. Never encode meaning with red vs. green or red vs. blue.
